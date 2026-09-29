@@ -1,11 +1,13 @@
 // A `preserve` import and the source master's p:otherStyle, which a table cell's text takes its size
-// and italic from (see table-text-inheritance.test.js).
+// and italic from, and the source theme, which its colour resolves against (see
+// table-text-inheritance.test.js).
 //
-// table-text-inheritance.pptx's p:otherStyle lvl1 is 14pt and italic; default-text-style.pptx's is
-// 18pt and upright. Pasting the one slide into the other in PowerPoint
-// (test/read/fixtures/authoring/probe-table-text-paste.ps1) with "Keep Source Formatting" leaves
-// every cell 14pt italic, with StyledTable's header still bold from its table style; with "Use
-// Destination Theme" every cell turns 18pt upright. `preserve` is the first. PowerPoint gets there
+// table-text-inheritance.pptx's p:otherStyle lvl1 is 14pt and italic and its dk1 is 7030A0;
+// default-text-style.pptx's p:otherStyle lvl1 is 18pt and upright. Pasting the one slide into the
+// other in PowerPoint (test/read/fixtures/authoring/probe-table-text-paste.ps1) with "Keep Source
+// Formatting" leaves every cell 14pt italic in 7030A0, with StyledTable's header still bold white
+// from its table style; with "Use Destination Theme" every cell turns 18pt upright in the
+// destination's dk1. `preserve` is the first. PowerPoint gets there
 // by keeping the slide on a copy of the source master, writing nothing onto the cells; a `preserve`
 // import rebinds to the destination master, so it bakes the values onto the runs instead.
 
@@ -44,6 +46,18 @@ describe("importSlide({ theme: 'preserve' }) keeps what table cells took from th
 		}
 	})
 
+	test('every cell keeps the colour it painted on the source theme', async () => {
+		const target = await openFixture('default-text-style')
+		const imported = target.importSlide(await openFixture('table-text-inheritance'), 0, { theme: 'preserve' })
+		const slide = await reopened(target, imported.partName)
+		for (const name of TABLES) {
+			const [header, ...body] = cellRuns(slide, name)
+			const headerHex = name === 'StyledTable' ? 'FFFFFF' : '7030A0'
+			for (const run of header) assertEqual(run.resolvedColor?.effectiveHex, headerHex, `${name}: header`)
+			for (const run of body.flat()) assertEqual(run.resolvedColor?.effectiveHex, '7030A0', `${name}: the source dk1`)
+		}
+	})
+
 	// StyledTable's header takes its bold from Medium Style 2's firstRow text style, which states no
 	// italic. The destination does not define that style, so the header resolves nothing for bold
 	// through the read model; PowerPoint paints it from its built-in definition of the same id.
@@ -70,6 +84,7 @@ describe("importSlide({ theme: 'preserve' }) keeps what table cells took from th
 			const rPr = run.element_.getElementsByTagName('a:rPr')[0]
 			assertEqual(rPr.getAttribute('sz'), '1400', 'a table style never states a size')
 			assertEqual(rPr.getAttribute('i'), null, 'what an unknown style states is unknown')
+			assertEqual(rPr.getElementsByTagName('a:solidFill').length, 0, 'and so is its colour')
 		}
 	})
 
@@ -82,6 +97,17 @@ describe("importSlide({ theme: 'preserve' }) keeps what table cells took from th
 		assertEqual(cellRuns(slide, 'NoStyleTable')[1][0].resolvedSizePt, 40, 'an own size is not baked over')
 	})
 
+	test('a cell run that states its own colour keeps it', async () => {
+		const target = await openFixture('default-text-style')
+		const source = await openFixture('table-text-inheritance')
+		cellRuns(source.slides[0], 'StyledTable')[1][0].color = '00B050'
+		const imported = target.importSlide(source, 0, { theme: 'preserve' })
+		const slide = await reopened(target, imported.partName)
+		const rPr = cellRuns(slide, 'StyledTable')[1][0].element_.getElementsByTagName('a:rPr')[0]
+		assertEqual(rPr.getElementsByTagName('a:solidFill').length, 1, 'no second fill is written')
+		assertEqual(cellRuns(slide, 'StyledTable')[1][0].resolvedColor?.effectiveHex, '00B050')
+	})
+
 	test('importShape bakes a lifted table the same way', async () => {
 		const target = await openFixture('default-text-style')
 		const source = await openFixture('table-text-inheritance')
@@ -91,6 +117,7 @@ describe("importSlide({ theme: 'preserve' }) keeps what table cells took from th
 		for (const run of cellRuns(slide, 'NoGridTable').flat()) {
 			assertEqual(run.resolvedSizePt, 14, 'the source 14pt')
 			assertEqual(run.resolvedItalic, true, 'the source italic')
+			assertEqual(run.resolvedColor?.effectiveHex, '7030A0', 'the source dk1')
 		}
 	})
 })

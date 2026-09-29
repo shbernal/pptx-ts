@@ -59,6 +59,7 @@ import {
 	ownerDocumentOf,
 	removeChildrenByQName,
 	setAttr,
+	type Document,
 	type Element,
 } from '../../oxml/dom.js'
 import { hasFillChoice } from '../../oxml/fill.js'
@@ -106,7 +107,7 @@ import {
 } from '../../../ooxml/sequence.js'
 import { THEME_COLOR_SLOTS } from '../../../ooxml/st-enums.js'
 import { cSldOf, nvPrOf } from '../../oxml/slide-dom.js'
-import { resolveTableCellTextStyle, type TableConditionFlags } from '../table-style-resolve.js'
+import { resolveTableCellTextStyle, type TableCellTextStyle, type TableConditionFlags } from '../table-style-resolve.js'
 
 /**
  * A {@link ThemeContext} plus the one thing only the flatten pass needs to write from.
@@ -142,7 +143,7 @@ export interface FlattenContext extends ThemeContext {
  * 4. bake each placeholder run's effective colour and size/weight (inherited from
  *    the source layout/master text styles) explicitly onto the run, each other
  *    shape's run the ones it takes from the source `p:defaultTextStyle`, and each
- *    table cell's run the ones it takes from the source `p:otherStyle`;
+ *    table cell's run the ones it takes from the source `p:otherStyle` and theme;
  * 5. rewrite every remaining `a:schemeClr` to its literal `a:srgbClr`.
  *
  * Steps run in this order so the inherited/materialized backgrounds are present
@@ -574,25 +575,26 @@ function resolveDefaultTextStyleRuns(root: Element, ctx: FlattenContext): void {
 }
 
 /**
- * Bake what a table cell's runs take from the source master's `p:otherStyle`: size, and bold and
- * italic where the cell's table style states neither, per paragraph level, wherever the run, its
- * paragraph and the cell's own list style state none of them.
+ * Bake what a table cell's runs take from the source deck: size, and bold and italic where the
+ * cell's table style states neither, from the master's `p:otherStyle` per paragraph level, and the
+ * colour from the table style's text style, else `tx1`, resolved against the source theme. Each is
+ * written wherever the run, its paragraph and the cell's own list style state none of it.
  *
  * Cell text resolves through `p:otherStyle`, not `p:defaultTextStyle` (`TableCell.textFrame`), and
- * the rebind swaps the source master for the destination's, so without this a cell's text changes
- * size between two decks whose masters differ there. PowerPoint's Keep Source Formatting paste
- * writes nothing onto the cells; it keeps them on a copy of the source master instead
- * (`test/read/fixtures/authoring/probe-table-text-paste.ps1`), which is the look this pins.
+ * the rebind swaps the source master and theme for the destination's, so without this a cell's text
+ * changes size and colour between two decks whose masters or themes differ. PowerPoint's Keep Source
+ * Formatting paste writes nothing onto the cells; it keeps them on a copy of the source master
+ * instead (`test/read/fixtures/authoring/probe-table-text-paste.ps1`), which is the look this pins.
  *
- * The table style travels with the slide, so what it states is left to it. Where the table names a
- * style the source does not define, a built-in PowerPoint draws from its own definition, and bold
- * and italic are left alone because what that style states is unknown. A cell's colour and face do
- * not come from `p:otherStyle` at all, so they are not visited.
+ * Only the table's style id travels with the slide, and PowerPoint resolves that id against its own
+ * built-in gallery, never a definition in the package. The source's `tableStyles.xml` says what the
+ * style states, so bold and italic it states are left to it. Where the source does not define the
+ * style, bold, italic and colour are left alone because what the style states is unknown. The face
+ * re-binds to the destination theme, as it does for every other text tier.
  */
 function resolveTableCellRuns(root: Element, ctx: FlattenContext): void {
 	const txStyles = ctx.masterRoot ? firstChild(ctx.masterRoot, 'p:txStyles') : null
 	const otherStyle = txStyles && firstChild(txStyles, 'p:otherStyle')
-	if (!otherStyle) return
 	for (const tbl of descendantsByTag(root, OOXML_NS.a, 'tbl')) {
 		const tblPr = firstChild(tbl, 'a:tblPr')
 		const idEl = tblPr && firstChild(tblPr, 'a:tableStyleId')
@@ -618,24 +620,49 @@ function resolveTableCellRuns(root: Element, ctx: FlattenContext): void {
 				const styled = style
 					? resolveTableCellTextStyle(style, flags, rowIndex, colIndex, rows.length, colCount, ctx)
 					: null
+				const color = styleUnknown ? null : tableCellTextColor(styled, ownerDocumentOf(tbl), ctx)
 				const cellLst = firstChild(txBody, 'a:lstStyle')
 				for (const p of getElements(txBody, 'a:p')) {
 					const runs = [...getElements(p, 'a:r'), ...getElements(p, 'a:fld')]
 					if (runs.length === 0) continue
 					const pPr = firstChild(p, 'a:pPr')
 					const level = (pPr && numberValue(attr(pPr, 'lvl'))) ?? 0
-					const defRPr = lstStyleLevelDefRPr(otherStyle, level)
-					if (!defRPr) continue
+					const defRPr = otherStyle && lstStyleLevelDefRPr(otherStyle, level)
 					const props: RunProps = {
-						sz: attr(defRPr, 'sz'),
-						b: styleUnknown || styled?.bold != null ? null : attr(defRPr, 'b'),
-						i: styleUnknown || styled?.italic != null ? null : attr(defRPr, 'i'),
+						sz: defRPr ? attr(defRPr, 'sz') : null,
+						b: !defRPr || styleUnknown || styled?.bold != null ? null : attr(defRPr, 'b'),
+						i: !defRPr || styleUnknown || styled?.italic != null ? null : attr(defRPr, 'i'),
 					}
-					for (const run of runs) writeRunProps(run, props, pPr, cellLst, level)
+					for (const run of runs) {
+						writeRunProps(run, props, pPr, cellLst, level)
+						if (color && !slideDefinesColor(run, pPr, cellLst, level)) writeRunColor(run, color)
+					}
 				}
 			})
 		})
 	}
+}
+
+/**
+ * The colour a cell's text paints on the source deck: what its table style's text style names,
+ * else `tx1`, as `TableCell.textFrame` resolves it. The transforms are rebuilt as elements so
+ * {@link writeRunColor} re-emits them.
+ */
+function tableCellTextColor(
+	styled: TableCellTextStyle | null,
+	doc: Document,
+	ctx: FlattenContext
+): ResolvedColorRef | null {
+	if (styled?.color) {
+		const transforms = styled.color.transforms.map(({ name, value }) => {
+			const t = createElement(doc, `a:${name}`)
+			if (value !== null) setAttr(t, 'val', value)
+			return t
+		})
+		return { hex: styled.color.hex, transforms }
+	}
+	const tx1 = resolveSchemeToken('tx1', ctx)
+	return tx1 ? { hex: tx1, transforms: [] } : null
 }
 
 /** The source deck's `a:tblStyle` with this id, or `null` when the source defines none. */
