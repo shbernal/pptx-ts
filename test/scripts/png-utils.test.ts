@@ -16,7 +16,7 @@ import { describe, expect, test } from 'vitest'
 import { decodePng, solidPngBase64 } from '../../scripts/png-utils.mjs'
 
 /** CRC-32, as PNG defines it. */
-function crc32(buf) {
+function crc32(buf: Uint8Array) {
 	const table = Int32Array.from({ length: 256 }, (_, n) => {
 		let c = n
 		for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1
@@ -28,7 +28,7 @@ function crc32(buf) {
 }
 
 /** One PNG chunk: length, type, data, CRC. */
-function chunk(type, data) {
+function chunk(type: string, data: Buffer) {
 	const len = Buffer.alloc(4)
 	len.writeUInt32BE(data.length)
 	const body = Buffer.concat([Buffer.from(type, 'ascii'), data])
@@ -46,11 +46,11 @@ const SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
  * exporter picks per row, so a decoder that handled only `None` would pass a naive test and fail
  * on a real export.
  */
-function encodeRgb(rows, filters = []) {
+function encodeRgb(rows: number[][][], filters: number[] = []) {
 	const h = rows.length
 	const w = rows[0].length
 	const stride = w * 3
-	const flat = []
+	const flat: Buffer[] = []
 	for (let y = 0; y < h; y++) {
 		const filter = filters[y] ?? 0
 		const line = Buffer.alloc(stride)
@@ -93,10 +93,10 @@ function encodeRgb(rows, filters = []) {
 }
 
 /** An 8-bit indexed PNG: PowerPoint writes one of these for a blank slide. */
-function encodeIndexed(rows, palette) {
+function encodeIndexed(rows: number[][], palette: number[][]) {
 	const h = rows.length
 	const w = rows[0].length
-	const flat = []
+	const flat: Buffer[] = []
 	for (const row of rows) flat.push(Buffer.from([0]), Buffer.from(row))
 	const ihdr = Buffer.alloc(13)
 	ihdr.writeUInt32BE(w, 0)
@@ -124,7 +124,7 @@ const CHECKER = [
 ]
 
 /** Every pixel of `png`, as rows of `[r, g, b]`. */
-function pixels(png) {
+function pixels(png: Buffer) {
 	const image = decodePng(png)
 	return Array.from({ length: image.h }, (_, y) => Array.from({ length: image.w }, (_, x) => image.rgb(x, y)))
 }

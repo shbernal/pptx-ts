@@ -13,8 +13,7 @@ import { apiSidebar } from '../../scripts/docs-api-sidebar.mjs'
 let root = ''
 let outDir = ''
 
-/** @param {string} rel @param {string} [content] */
-function write(rel, content = '# page\n') {
+function write(rel: string, content = '# page\n') {
 	const file = path.join(outDir, ...rel.split('/'))
 	mkdirSync(path.dirname(file), { recursive: true })
 	writeFileSync(file, content)

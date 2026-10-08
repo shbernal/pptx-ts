@@ -15,7 +15,7 @@ import { describe, expect, test } from 'vitest'
 import { FRAME, PLAYBTN_PATH, playbtnModule, renderPlayButton } from '../../scripts/gen-playbtn.mjs'
 
 /** The RGBA pixel at `(x, y)` of a rendered frame. */
-function pixel(rgba, w, x, y) {
+function pixel(rgba: Uint8Array, w: number, x: number, y: number) {
 	const i = (y * w + x) * 4
 	return [rgba[i], rgba[i + 1], rgba[i + 2], rgba[i + 3]]
 }
@@ -27,7 +27,7 @@ function pixel(rgba, w, x, y) {
  * coverage instrumentation. Each case rendering its own put the file past vitest's per-test
  * timeout in most `test:coverage` runs.
  */
-let fullFrame
+let fullFrame: Uint8Array | undefined
 const renderedFrame = () => (fullFrame ??= renderPlayButton(FRAME))
 
 describe('gen-playbtn', () => {

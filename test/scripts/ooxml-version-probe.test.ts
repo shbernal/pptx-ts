@@ -5,18 +5,18 @@
 // "NO RESULT" and exit 0, and nothing checked that the control row, the one fixture invalid at
 // every version, was actually non-zero.
 
+import type { FileFormat, ProbeReport } from 'ooxml-validate'
 import { describe, expect, test } from 'vitest'
 import { verdict } from '../../scripts/ooxml-version-probe.mjs'
 
-/** @type {import('ooxml-validate').FileFormat[]} */
-const FORMATS = ['Office2007', 'Office2010', 'Microsoft365']
+const FORMATS: FileFormat[] = ['Office2007', 'Office2010', 'Microsoft365']
 const TARGETS = [
 	{ name: 'base', file: '/t/base.pptx' },
 	{ name: 'corruption (control)', file: '/t/control.pptx', control: true },
 ]
 
 /** A probe report over {@link FORMATS}, one row per `[file, counts]` pair. */
-const probe = (rows, violated = false) => ({
+const probe = (rows: [file: string, counts: number[]][], violated = false): ProbeReport => ({
 	formats: FORMATS,
 	rows: rows.map(([file, counts]) => ({ file, counts, regresses: false })),
 	violated,

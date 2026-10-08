@@ -82,8 +82,7 @@ describe('the matched modes', () => {
 		expect(store.id).toBe('store')
 		expect(deflate.props.pptxgenjs).not.toEqual(store.props.pptxgenjs)
 		expect(deflate.props['ts-pptx']).not.toEqual(store.props['ts-pptx'])
-		/** @param {object} props */
-		const outputType = (props) => /** @type {{ outputType?: string }} */ (props).outputType
+		const outputType = (props: object) => (props as { outputType?: string }).outputType
 		expect(outputType(deflate.props.pptxgenjs)).toBe(outputType(store.props.pptxgenjs))
 	})
 })

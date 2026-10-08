@@ -61,8 +61,8 @@ describe('budgetKeyDrift', () => {
 	test('a value that is not a complete budget counts as missing, by the rule the gate passes', () => {
 		expect(budgetKeyDrift(['a.js'], { 'a.js': '1024' })).toEqual({ missing: ['a.js'], stale: [] })
 
-		/** @param {{ initial?: number, total?: number } | undefined} figures */
-		const bothFigures = (figures) => typeof figures?.initial === 'number' && typeof figures?.total === 'number'
+		const bothFigures = (figures: { initial?: number; total?: number } | undefined) =>
+			typeof figures?.initial === 'number' && typeof figures?.total === 'number'
 		const tiers = { text: { initial: 1, total: 2 }, full: { initial: 1 } }
 		expect(budgetKeyDrift(['text', 'full'], tiers, bothFigures)).toEqual({ missing: ['full'], stale: [] })
 	})

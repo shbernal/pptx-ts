@@ -17,36 +17,36 @@ import { PROGRAMS, programFrame, programModule, programSource } from '../../scri
 import { PROBES, probeSource, SUBJECTS } from '../../scripts/comparison/probes.mjs'
 import { functionBody, literal, renderSource } from '../../scripts/comparison/source.mjs'
 import { ROOT } from '../../scripts/script-utils.mjs'
+import {
+	FIRST,
+	PNG,
+	SECOND,
+	addSlideBuild,
+	asyncBuild,
+	conciseBuild,
+	imageBuild,
+	multiLineBuild,
+	twoConstantBuild,
+} from './comparison-source.fixtures.mjs'
 
 describe('functionBody', () => {
 	test('drops the arrow wrapper and the indentation the corpus nests it in', () => {
-		const build = (pres) => {
-			pres.addSlide()
-		}
-		expect(functionBody(build)).toBe('pres.addSlide()')
+		expect(functionBody(addSlideBuild)).toBe('pres.addSlide()')
 	})
 
 	test('keeps relative depth inside a multi-line body', () => {
-		const build = (pres) => {
-			pres.addSlide().addText('probe', {
-				x: 1,
-			})
-		}
-		expect(functionBody(build)).toBe("pres.addSlide().addText('probe', {\n\tx: 1,\n})")
+		expect(functionBody(multiLineBuild)).toBe("pres.addSlide().addText('probe', {\n\tx: 1,\n})")
 	})
 
 	test('keeps the await an async arm needs', () => {
-		const build = async (pres) => {
-			await pres.embedFont({ typeface: 'Silkscreen' })
-		}
-		expect(functionBody(build)).toBe("await pres.embedFont({ typeface: 'Silkscreen' })")
+		expect(functionBody(asyncBuild)).toBe("await pres.embedFont({ typeface: 'Silkscreen' })")
 	})
 
 	// A concise body renders as an expression with no statement around it, and a `function`
 	// keyword brings its own `this`. Neither is wrong code; both would print as something the
 	// page's stated frame does not wrap, so the corpus is held to one shape.
 	test('refuses a shape it cannot print', () => {
-		expect(() => functionBody((pres) => pres.addSlide())).toThrow(/block-bodied arrow function/)
+		expect(() => functionBody(conciseBuild)).toThrow(/block-bodied arrow function/)
 	})
 })
 
@@ -83,11 +83,7 @@ describe('literal', () => {
 
 describe('renderSource', () => {
 	test('declares only the constants the body names', () => {
-		const PNG = 'data:image/png;base64,AAA'
-		const build = (pres) => {
-			pres.addSlide().addImage({ data: PNG })
-		}
-		expect(renderSource(build, { PNG, UNUSED: 'no' })).toBe(
+		expect(renderSource(imageBuild, { PNG, UNUSED: 'no' })).toBe(
 			"const PNG = 'data:image/png;base64,AAA'\n\npres.addSlide().addImage({ data: PNG })"
 		)
 	})
@@ -96,12 +92,7 @@ describe('renderSource', () => {
 	// sources to report how many probes call both libraries identically, and a preamble
 	// ordered by the body would let that number move on a formatting change.
 	test('declares constants in the order the corpus declares them', () => {
-		const FIRST = 'a'
-		const SECOND = 'b'
-		const build = (pres) => {
-			pres.addSlide().addImage({ data: SECOND, alt: FIRST })
-		}
-		const rendered = renderSource(build, { FIRST, SECOND })
+		const rendered = renderSource(twoConstantBuild, { FIRST, SECOND })
 		expect(rendered.split('\n').slice(0, 2)).toEqual(["const FIRST = 'a'", "const SECOND = 'b'"])
 	})
 })

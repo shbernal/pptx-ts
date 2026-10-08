@@ -2,19 +2,21 @@
 // fake executor and fake Windows hooks. Nothing here starts PowerPoint.
 
 import fs from 'node:fs'
+import type http from 'node:http'
+import type { AddressInfo } from 'node:net'
 import os from 'node:os'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { JobError, MAX_TIMEOUT_MS, validateJob } from '../../scripts/powerpoint/job.mjs'
-import { createRunner } from '../../scripts/powerpoint/runner.mjs'
+import { JobError, MAX_TIMEOUT_MS, type PowerPointInfo, validateJob } from '../../scripts/powerpoint/job.mjs'
+import { type Executor, createRunner } from '../../scripts/powerpoint/runner.mjs'
 import { parsePowerPointVersion, parseRegValue } from '../../scripts/powerpoint/windows.mjs'
 import { WORKER_VERSION, createWorker, tokenMatches } from '../../scripts/powerpoint/worker.mjs'
 
-const b64 = (text) => Buffer.from(text).toString('base64')
+const b64 = (text: string) => Buffer.from(text).toString('base64')
 const ENTRY = 'test/read/fixtures/authoring/author-x.ps1'
 
 /** A wire job with sensible defaults. */
-const wireJob = (overrides = {}) => ({
+const wireJob = (overrides: Record<string, unknown> = {}) => ({
 	runner: 'pwsh',
 	entry: ENTRY,
 	files: { [ENTRY]: b64('# recipe') },
@@ -23,12 +25,15 @@ const wireJob = (overrides = {}) => ({
 
 /** Hooks that record their calls. */
 const fakeHooks = () => ({
-	clearResiliency: vi.fn(),
-	killPowerPoint: vi.fn(),
-	powerpointInfo: vi.fn(async () => ({ version: '16.0', build: '16.0.17928.20114' })),
+	clearResiliency: vi.fn<() => void>(),
+	killPowerPoint: vi.fn<() => void>(),
+	powerpointInfo: vi.fn<() => Promise<PowerPointInfo | null>>(async () => ({
+		version: '16.0',
+		build: '16.0.17928.20114',
+	})),
 })
 
-let tmpRoot
+let tmpRoot: string
 beforeEach(() => {
 	tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'powerpoint-worker-test-'))
 })
@@ -78,8 +83,7 @@ describe('validateJob', () => {
 describe('runner', () => {
 	test('returns new and changed files, never unchanged ones, the entry or scratch', async () => {
 		const hooks = fakeHooks()
-		/** @type {import('../../scripts/powerpoint/runner.mjs').Executor} */
-		const executor = async (command, args, { cwd }) => {
+		const executor: Executor = async (command, args, { cwd }) => {
 			fs.writeFileSync(path.join(cwd, 'out', 'deck.pptx'), 'new deck')
 			fs.writeFileSync(path.join(cwd, 'changed.txt'), 'after')
 			fs.writeFileSync(path.join(cwd, ENTRY), 'rewritten entry')
@@ -106,7 +110,7 @@ describe('runner', () => {
 	})
 
 	test("Office's owner files never come back", async () => {
-		const executor = async (command, args, { cwd }) => {
+		const executor: Executor = async (_command, _args, { cwd }) => {
 			fs.writeFileSync(path.join(cwd, 'deck.pptx'), 'deck')
 			fs.writeFileSync(path.join(cwd, '~$deck.pptx'), 'owner')
 			return { code: 0, out: '', err: '', timedOut: false }
@@ -132,10 +136,9 @@ describe('runner', () => {
 	})
 
 	test('two concurrent jobs run one after the other', async () => {
-		const events = []
-		/** @type {(() => void)[]} */
-		const release = []
-		const executor = async (command, args) => {
+		const events: string[] = []
+		const release: (() => void)[] = []
+		const executor: Executor = async (_command, args) => {
 			const name = args.at(-1)
 			events.push(`start ${name}`)
 			await new Promise((resolve) => release.push(() => resolve(undefined)))
@@ -213,20 +216,19 @@ describe('tokenMatches', () => {
 
 describe('worker HTTP', () => {
 	const TOKEN = 'test-token'
-	/** @type {import('node:http').Server} */
-	let server
-	let base
+	let server: http.Server | undefined
+	let base: string
 
-	/** @param {Partial<Parameters<typeof createWorker>[0]>} [options] */
-	async function start(options = {}) {
+	async function start(options: Partial<Parameters<typeof createWorker>[0]> = {}) {
 		const runner = createRunner({
 			executor: async () => ({ code: 0, out: 'ran', err: '', timedOut: false }),
 			hooks: fakeHooks(),
 			tmpRoot,
 		})
-		server = createWorker({ runner, token: TOKEN, powerpointInfo: async () => null, ...options })
-		await new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve(undefined)))
-		const address = /** @type {import('node:net').AddressInfo} */ (server.address())
+		const listening = createWorker({ runner, token: TOKEN, powerpointInfo: async () => null, ...options })
+		server = listening
+		await new Promise((resolve) => listening.listen(0, '127.0.0.1', () => resolve(undefined)))
+		const address = listening.address() as AddressInfo
 		base = `http://127.0.0.1:${address.port}`
 	}
 	afterEach(async () => {
@@ -278,8 +280,7 @@ describe('worker HTTP', () => {
 	})
 
 	test('503 when the queue is full', async () => {
-		/** @type {(() => void)[]} */
-		const release = []
+		const release: (() => void)[] = []
 		const runner = createRunner({
 			executor: () =>
 				new Promise((resolve) => {
@@ -302,8 +303,7 @@ describe('worker HTTP', () => {
 	})
 
 	test('/health answers mid-job with the last PowerPoint read rather than reading again', async () => {
-		/** @type {(() => void)[]} */
-		const release = []
+		const release: (() => void)[] = []
 		const runner = createRunner({
 			executor: () =>
 				new Promise((resolve) => {
@@ -312,7 +312,10 @@ describe('worker HTTP', () => {
 			hooks: fakeHooks(),
 			tmpRoot,
 		})
-		const powerpointInfo = vi.fn(async () => ({ version: '16.0', build: '16.0.1.2' }))
+		const powerpointInfo = vi.fn<() => Promise<PowerPointInfo | null>>(async () => ({
+			version: '16.0',
+			build: '16.0.1.2',
+		}))
 		await start({ runner, powerpointInfo })
 		const health = async () => (await (await fetch(`${base}/health`, { headers: auth })).json()).powerpoint
 		expect(await health()).toEqual({ version: '16.0', build: '16.0.1.2' })

@@ -14,7 +14,7 @@ import { ROOT } from '../../scripts/script-utils.mjs'
 const GATES = { minimumSlack: 1, thresholds: { statements: 93, branches: 83, functions: 97, lines: 95 } }
 
 /** A merged summary with every axis at `pct`, or at the value `overrides` names. */
-const summary = (pct, overrides = {}) => ({
+const summary = (pct: number, overrides: Record<string, number | string> = {}) => ({
 	total: Object.fromEntries(
 		AXES.map((axis) => [axis, { total: 100, covered: 50, skipped: 0, pct: overrides[axis] ?? pct }])
 	),

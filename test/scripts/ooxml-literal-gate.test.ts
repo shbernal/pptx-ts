@@ -7,12 +7,8 @@ import { describe, expect, test } from 'vitest'
 import { OOXML_LITERAL, compareToAllowlist } from '../../scripts/ooxml-literal-gate.mjs'
 import { scanSource } from '../../scripts/raw-xml-ratchet.mjs'
 
-/**
- * The literals the gate's scan reports for a snippet.
- * @param {string} source
- * @returns {string[]}
- */
-const scan = (source) => scanSource(source, 'input.ts', OOXML_LITERAL).map((finding) => finding.text)
+/** The literals the gate's scan reports for a snippet. */
+const scan = (source: string): string[] => scanSource(source, 'input.ts', OOXML_LITERAL).map((finding) => finding.text)
 
 describe('what counts', () => {
 	test('a schema URI in a string literal, whole', () => {

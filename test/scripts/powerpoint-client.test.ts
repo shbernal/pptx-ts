@@ -4,6 +4,7 @@
 
 import fs from 'node:fs'
 import http from 'node:http'
+import type { AddressInfo } from 'node:net'
 import os from 'node:os'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
@@ -16,8 +17,8 @@ import {
 	runJob,
 	writeReturnedFiles,
 } from '../../scripts/powerpoint/client.mjs'
-import { createRunner } from '../../scripts/powerpoint/runner.mjs'
-/** @import { JobResult } from '../../scripts/powerpoint/job.mjs' */
+import type { Job, JobResult } from '../../scripts/powerpoint/job.mjs'
+import { type Executor, createRunner } from '../../scripts/powerpoint/runner.mjs'
 import { createWorker } from '../../scripts/powerpoint/worker.mjs'
 import {
 	buildGeomVbs,
@@ -31,7 +32,7 @@ import {
 } from '../../scripts/com/vbs.mjs'
 
 describe('resolveTransport', () => {
-	const linux = { platform: /** @type {const} */ ('linux'), comRegistered: () => false }
+	const linux = { platform: 'linux' as const, comRegistered: () => false }
 
 	test('a URL with a token selects the remote transport', () => {
 		const env = { TSPPTX_POWERPOINT_URL: 'http://127.0.0.1:8765/', TSPPTX_POWERPOINT_TOKEN: 't' }
@@ -74,17 +75,15 @@ describe('resolveTransport', () => {
 
 describe('runJob against a worker', () => {
 	const TOKEN = 'client-test-token'
-	let tmpRoot
-	/** @type {import('node:http').Server} */
-	let server
-	let url
+	let tmpRoot: string
+	let server: http.Server
+	let url: string
 
 	beforeEach(async () => {
 		tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'powerpoint-client-test-'))
 		// Answers as `buildModel3dVbs` does: the open, a read-back line, and a PNG beside itself.
-		/** @type {import('../../scripts/powerpoint/runner.mjs').Executor} */
-		const executor = async (command, args, { cwd }) => {
-			const script = /** @type {string} */ (args.at(-1))
+		const executor: Executor = async (_command, args, { cwd }) => {
+			const script = args.at(-1) as string
 			fs.writeFileSync(path.join(path.dirname(script), 'deck.png'), 'png bytes')
 			const deck = fs.readFileSync(path.join(cwd, 'com-smoke', 'deck.pptx'), 'utf8')
 			return { code: 0, out: `OPEN_OK\t1\r\nDECK\t${deck}\r\nEXPORT\tdeck.png\r\nDONE\r\n`, err: '', timedOut: false }
@@ -93,15 +92,15 @@ describe('runJob against a worker', () => {
 		const runner = createRunner({ executor, hooks, tmpRoot })
 		server = createWorker({ runner, token: TOKEN, powerpointInfo: async () => null })
 		await new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve(undefined)))
-		url = `http://127.0.0.1:${/** @type {import('node:net').AddressInfo} */ (server.address()).port}`
+		url = `http://127.0.0.1:${(server.address() as AddressInfo).port}`
 	})
 	afterEach(async () => {
 		await new Promise((resolve) => server.close(() => resolve(undefined)))
 		fs.rmSync(tmpRoot, { recursive: true, force: true })
 	})
 
-	const job = () => ({
-		runner: /** @type {const} */ ('cscript'),
+	const job = (): Job => ({
+		runner: 'cscript',
 		entry: 'com-smoke/deck.vbs',
 		files: encodeFiles({ 'com-smoke/deck.pptx': 'deck bytes', 'com-smoke/deck.vbs': buildNavVbs('deck.pptx') }),
 	})
@@ -125,7 +124,7 @@ describe('runJob against a worker', () => {
 		// A port that was free a moment ago and has nothing listening on it now.
 		const probe = http.createServer()
 		await new Promise((resolve) => probe.listen(0, '127.0.0.1', () => resolve(undefined)))
-		const port = /** @type {import('node:net').AddressInfo} */ (probe.address()).port
+		const port = (probe.address() as AddressInfo).port
 		await new Promise((resolve) => probe.close(() => resolve(undefined)))
 		await expect(runJob({ kind: 'remote', url: `http://127.0.0.1:${port}`, token: TOKEN }, job())).rejects.toThrow(
 			expect.objectContaining({ name: 'TransportError', message: expect.stringMatching(/unreachable/) })
@@ -153,8 +152,7 @@ describe('file helpers', () => {
 	test('writeReturnedFiles refuses a path outside its directory', () => {
 		const into = fs.mkdtempSync(path.join(os.tmpdir(), 'powerpoint-client-write-'))
 		try {
-			/** @type {JobResult} */
-			const result = {
+			const result: JobResult = {
 				exitCode: 0,
 				timedOut: false,
 				stdout: '',
@@ -179,7 +177,7 @@ describe('COM smoke VBScripts', () => {
 		ole: buildOleVbs,
 		model3d: buildModel3dVbs,
 		prstgeom: buildPresetGeomVbs,
-		file: (/** @type {string} */ name) => vbsOpenHeader(name) + vbsFooter(),
+		file: (name: string) => vbsOpenHeader(name) + vbsFooter(),
 	}
 
 	test.each(Object.entries(builders))('%s splices in no absolute path', (label, build) => {

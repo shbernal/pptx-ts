@@ -66,8 +66,8 @@ describe('relativeImportsOf', () => {
 })
 
 describe('closureOf', () => {
-	const dirs = []
-	const emit = (files) => {
+	const dirs: string[] = []
+	const emit = (files: Record<string, string>) => {
 		const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ts-pptx-closure-'))
 		dirs.push(dir)
 		for (const [name, text] of Object.entries(files)) {
@@ -117,8 +117,8 @@ describe('closureOf', () => {
 // v3.7.0..147951de it booked the "state it once" refactors as a 10.2 KiB regression on the
 // browser entry while the code in that closure had *shrunk* by 14.5 KiB.
 describe('shippedBytes', () => {
-	const dirs = []
-	const emit = (text) => {
+	const dirs: string[] = []
+	const emit = (text: string) => {
 		const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ts-pptx-shipped-'))
 		dirs.push(dir)
 		fs.writeFileSync(path.join(dir, 'chunk.js'), text)

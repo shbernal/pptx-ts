@@ -13,7 +13,7 @@ import { describe, expect, test, vi } from 'vitest'
 import { CliExit, ROOT, collect, isMain, parseCli, resolveLocalBin, runCli } from '../../scripts/script-utils.mjs'
 
 const OPTIONS = { dir: { type: 'string' }, verbose: { type: 'boolean', default: false } }
-const parse = (argv) => parseCli(argv, { options: OPTIONS, usage: 'usage: thing [--dir <path>]' })
+const parse = (argv: string[]) => parseCli(argv, { options: OPTIONS, usage: 'usage: thing [--dir <path>]' })
 
 /** Swallow the usage/error output these paths print on the way out. */
 const quiet = () => {
@@ -98,7 +98,7 @@ describe('isMain', () => {
 })
 
 describe('runCli', () => {
-	const withExitCode = async (fn) => {
+	const withExitCode = async (fn: () => unknown) => {
 		const before = process.exitCode
 		try {
 			await fn()
@@ -150,7 +150,7 @@ describe('resolveLocalBin', () => {
 	])('%s resolves its %s bin to a real JS entry, not a .cmd shim', (pkg, bin, from) => {
 		const entry = resolveLocalBin(pkg, bin, from ? { from } : {})
 		expect(entry).toBeTruthy()
-		expect(fs.existsSync(/** @type {string} */ (entry))).toBe(true)
+		expect(fs.existsSync(entry as string)).toBe(true)
 		expect(entry).not.toMatch(/\.cmd$/i)
 	})
 

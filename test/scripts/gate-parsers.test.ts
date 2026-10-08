@@ -8,6 +8,7 @@
 // stands between the whole suite and a stale `dist/`, and `coverage-project.mjs` decides which
 // of the browser lane's hits the merged report is allowed to count.
 
+import type { FileCoverageData } from 'istanbul-lib-coverage'
 import { describe, expect, test } from 'vitest'
 import path from 'node:path'
 import fs from 'node:fs/promises'
@@ -102,7 +103,7 @@ describe('path-refs citation resolution', () => {
 })
 
 describe('sync-version replacement', () => {
-	const source = (body) => `const x = 1\n${body}\nexport const y = 2\n`
+	const source = (body: string) => `const x = 1\n${body}\nexport const y = 2\n`
 
 	test('replaces the one version line and reports what was there', () => {
 		const { text, previous } = replaceVersion(source("const VERSION = '1.2.3'"), '4.5.6')
@@ -130,8 +131,11 @@ describe('ensure-dist staleness', () => {
 	const NEW = new Date('2020-01-02T00:00:00Z')
 
 	/** A tree holding the inputs and outputs `ensure-dist` looks at, each at a chosen mtime. */
-	/** @param {{ inputsAt?: Date, outputsAt?: Date, omit?: string[] }} [options] */
-	async function tree({ inputsAt = OLD, outputsAt = NEW, omit = [] } = {}) {
+	async function tree({
+		inputsAt = OLD,
+		outputsAt = NEW,
+		omit = [],
+	}: { inputsAt?: Date; outputsAt?: Date; omit?: string[] } = {}) {
 		const root = await fs.mkdtemp(path.join(os.tmpdir(), 'ensure-dist-'))
 		await fs.mkdir(path.join(root, 'src', 'gen'), { recursive: true })
 		await fs.mkdir(path.join(root, 'dist'), { recursive: true })
@@ -156,7 +160,7 @@ describe('ensure-dist staleness', () => {
 	}
 
 	/** Move one file's mtime past `NEW`, i.e. past every build output. */
-	const touch = (root, file) => fs.utimes(path.join(root, file), NEW, new Date(NEW.getTime() + 1000))
+	const touch = (root: string, file: string) => fs.utimes(path.join(root, file), NEW, new Date(NEW.getTime() + 1000))
 
 	test('a build newer than every input is current', async () => {
 		expect(await stale(await tree())).toBe(null)
@@ -201,7 +205,7 @@ describe('ensure-dist staleness', () => {
 
 describe('coverage projection onto the Node report shape', () => {
 	/** One file's istanbul coverage over N single-statement lines. */
-	const fileData = (lines, hits) => ({
+	const fileData = (lines: number[], hits: number[]): FileCoverageData => ({
 		path: '/dist/x.js',
 		statementMap: Object.fromEntries(
 			lines.map((line, i) => [String(i), { start: { line, column: 0 }, end: { line, column: 10 } }])
@@ -253,6 +257,7 @@ describe('coverage projection onto the Node report shape', () => {
 		// One side has been through JSON (`null`) and the other has not (`Infinity`). Treating
 		// those as two locations is what would double-count a statement.
 		const node = fileData([10], [0])
+		// @ts-expect-error JSON spells an open-ended column `null`, which istanbul's type does not admit
 		node.statementMap['0'].end = { line: 10, column: null }
 		const browser = fileData([10], [4])
 		browser.statementMap['0'].end = { line: 10, column: Infinity }

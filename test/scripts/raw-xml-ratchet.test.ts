@@ -14,10 +14,8 @@ import { scanSource } from '../../scripts/raw-xml-ratchet.mjs'
  * `TAG_DELIMITER` stops one character past the colon, so `<a:bodyPr` reports as `<a:b`.
  * That is deliberate — the gate counts occurrences, it does not extract element names —
  * and the expectations below are written against the truncated form on purpose.
- * @param {string} source
- * @returns {string[]}
  */
-const scan = (source) => scanSource(source).map((finding) => finding.text)
+const scan = (source: string): string[] => scanSource(source).map((finding) => finding.text)
 
 describe('what counts', () => {
 	test('a namespaced delimiter in a plain string literal', () => {

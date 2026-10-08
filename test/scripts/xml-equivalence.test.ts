@@ -12,6 +12,8 @@
 
 import { describe, expect, test } from 'vitest'
 import {
+	type ProofFail,
+	type ProofPass,
 	XmlSyntaxError,
 	isTextFrozen,
 	proveWhitespaceOnly,
@@ -21,26 +23,21 @@ import {
 
 const DECL = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
 
-// The three helpers take the proof result unannotated on purpose. `ProofPass`/`ProofFail`
-// discriminate on a literal `ok`, and this project runs with `strictNullChecks: false`
-// (see the reasoning in `tsconfig.test.json`), under which TypeScript does not narrow a
-// union by its discriminant at all. Annotating them would therefore not buy the checking
-// it looks like it buys; it would just make every `.reason` read an error.
-
 /** Prove `current` against `base`, both wrapped in the declaration every real part carries. */
-const prove = (base, current) => proveWhitespaceOnly(DECL + base, DECL + current)
+const prove = (base: string, current: string) => proveWhitespaceOnly(DECL + base, DECL + current)
 
 /**
  * The failure text, or a marker that reads wrong in an assertion if the proof unexpectedly
  * passed -- so a red case that silently turns green fails on the message rather than passing.
  */
-const reasonOf = (result) => (result.ok ? '(the proof PASSED; there is no reason)' : result.reason)
+const reasonOf = (result: ProofPass | ProofFail) =>
+	result.ok ? '(the proof PASSED; there is no reason)' : result.reason
 
 /**
  * The relaxed positions, or a throw naming why the proof failed. The throw is the point: a
  * green case that goes red should say what the prover objected to, not just miss a count.
  */
-const relaxationsOf = (result) => {
+const relaxationsOf = (result: ProofPass | ProofFail) => {
 	if (!result.ok) throw new Error('expected a proof, got a failure at ' + result.path + ': ' + result.reason)
 	return result.relaxations
 }
@@ -261,8 +258,7 @@ describe('the tokenizer preserves what it must', () => {
 })
 
 describe('isTextFrozen', () => {
-	/** @param {string} xml @returns {boolean} */
-	const frozen = (xml) => {
+	const frozen = (xml: string): boolean => {
 		const first = buildTree(tokenizeXml(xml)).children[0]
 		if (first?.type !== 'element') throw new Error('expected an element, got ' + first?.type)
 		return isTextFrozen(first)

@@ -35,7 +35,7 @@ beforeAll(() => {
 afterAll(() => rmSync(root, { force: true, recursive: true }))
 
 /** The errors reported for a page whose body is `markdown`. */
-function check(markdown) {
+function check(markdown: string) {
 	writeFileSync(path.join(docsDir, 'page.md'), markdown)
 	return checkLinks(docsDir, 'page.md', routes)
 }
@@ -150,7 +150,7 @@ describe('the repository-only tree', () => {
 	})
 
 	/** The errors reported for the page at docs-relative `rel` whose body is `markdown`. */
-	function checkAt(rel, markdown) {
+	function checkAt(rel: string, markdown: string) {
 		writeFileSync(path.join(docsDir, rel), markdown)
 		return checkLinks(docsDir, rel, routes, repoOnly)
 	}
@@ -181,7 +181,7 @@ describe('the repository-only tree', () => {
 
 describe('navigation and the repository-only tree', () => {
 	/** The navigation errors for `pages` under a docs.json holding `config`. */
-	function checkNav(config, pages) {
+	function checkNav(config: unknown, pages: string[]) {
 		writeFileSync(path.join(docsDir, 'docs.json'), JSON.stringify(config))
 		return checkDocsJson(docsDir, pages)
 	}
