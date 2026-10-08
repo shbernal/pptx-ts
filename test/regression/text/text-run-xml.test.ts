@@ -4,6 +4,8 @@ import {
 	genXmlParagraphProperties,
 	genXmlTextRunProperties,
 } from '../../../src/gen/drawingml/text-run.ts'
+import type { TextPropsOptions } from '../../../src/types/index.ts'
+import type { HyperlinkPropsInternal, TextBulletPropsInternal } from '../../../src/types/internal.ts'
 
 // Characterization tests for text-run XML that the byte-identity harness CANNOT see: the demo
 // deck emits zero parts containing `rtl="1"`, `<a:buClr>`, `<a:buBlip>` or `altLang`, so a green
@@ -11,8 +13,14 @@ import {
 //
 // Pinning is not endorsement — where the current output is quirky it is called out as such below.
 
-const pPr = (options, isDefault = false) => genXmlParagraphProperties({ options }, isDefault)
-const rPr = (options, isDefault = false) => genXmlTextRunProperties(options, isDefault)
+/** Options as the add-time pass leaves them: a picture bullet and a hyperlink carry their rel ids. */
+type StampedOptions = Omit<TextPropsOptions, 'bullet' | 'hyperlink'> & {
+	bullet?: boolean | 'inherit' | TextBulletPropsInternal
+	hyperlink?: HyperlinkPropsInternal
+}
+
+const pPr = (options: StampedOptions, isDefault = false) => genXmlParagraphProperties({ options }, isDefault)
+const rPr = (options: StampedOptions, isDefault = false) => genXmlTextRunProperties(options, isDefault)
 
 describe('paragraph properties: right-to-left', () => {
 	test('rtlMode alone emits a stray space before the closing bracket', () => {

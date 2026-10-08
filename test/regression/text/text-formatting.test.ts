@@ -1,4 +1,4 @@
-/** @import { TextPropsOptions } from '../../../dist/node.js' */
+import type { TextPropsOptions } from '../../../dist/node.js'
 import { defineRegressionSuite, build, readEntry, assert, defined } from '../../helpers.ts'
 
 defineRegressionSuite('Text formatting [legacy bug-01]', [
@@ -57,10 +57,8 @@ defineRegressionSuite('Text formatting [legacy bug-01]', [
 		// one <a:pPr rtl="1">, and the leading-"\n" split must not leave a junk empty <a:t></a:t> run.
 		name: 'mixed RTL/LTR runs with newlines split into clean paragraphs',
 		fn: async () => {
-			/** @type {TextPropsOptions} */
-			const ar = { align: 'right', fontSize: 12, rtlMode: true, lang: 'AR' }
-			/** @type {TextPropsOptions} */
-			const en = { align: 'right', fontSize: 12, rtlMode: true, lang: 'EN' }
+			const ar: TextPropsOptions = { align: 'right', fontSize: 12, rtlMode: true, lang: 'AR' }
+			const en: TextPropsOptions = { align: 'right', fontSize: 12, rtlMode: true, lang: 'EN' }
 			const { zip } = await build((p) => {
 				const s = p.addSlide()
 				s.addText(
@@ -83,7 +81,7 @@ defineRegressionSuite('Text formatting [legacy bug-01]', [
 			assert(paragraphs.length === 3, 'expected 3 paragraphs, got ' + paragraphs.length)
 			// No empty-string run artifact survives the leading-"\n" split
 			assert(!body.includes('<a:t></a:t>'), 'expected no empty <a:t></a:t> runs: ' + body)
-			const text = (p) => (p.match(/<a:t>[^<]*<\/a:t>/g) || []).map((t) => t.replace(/<\/?a:t>/g, '')).join('')
+			const text = (p: string) => (p.match(/<a:t>[^<]*<\/a:t>/g) || []).map((t) => t.replace(/<\/?a:t>/g, '')).join('')
 			assert(text(paragraphs[0]) === 'A', 'p1 text should be "A", got "' + text(paragraphs[0]) + '"')
 			// Lang change alone must NOT break the line: all four runs stay together
 			assert(
@@ -112,7 +110,7 @@ defineRegressionSuite('Text formatting [legacy bug-01]', [
 			const body = defined(xml.match(/<p:txBody>[\s\S]*?<\/p:txBody>/))[0]
 			const paragraphs = body.match(/<a:p>[\s\S]*?<\/a:p>/g) || []
 			assert(paragraphs.length === 3, 'expected 3 paragraphs (incl. blank middle), got ' + paragraphs.length)
-			const text = (p) => (p.match(/<a:t>[^<]*<\/a:t>/g) || []).map((t) => t.replace(/<\/?a:t>/g, '')).join('')
+			const text = (p: string) => (p.match(/<a:t>[^<]*<\/a:t>/g) || []).map((t) => t.replace(/<\/?a:t>/g, '')).join('')
 			assert(text(paragraphs[0]) === 'line1', 'p1 should be "line1"')
 			assert(text(paragraphs[1]) === '', 'p2 should be the blank line')
 			assert(text(paragraphs[2]) === 'line3', 'p3 should be "line3"')

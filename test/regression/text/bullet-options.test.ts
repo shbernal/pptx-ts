@@ -1,7 +1,8 @@
+import type JSZip from 'jszip'
 import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 // Extract the first slide's <a:pPr ...>...</a:pPr> block (paragraph properties)
-async function getPPr(zip) {
+async function getPPr(zip: JSZip) {
 	const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 	const m = xml.match(/<a:pPr[^>]*\/?>(?:[\s\S]*?<\/a:pPr>)?/)
 	if (!m) throw new Error('no <a:pPr> found in slide1.xml; xml=' + xml)

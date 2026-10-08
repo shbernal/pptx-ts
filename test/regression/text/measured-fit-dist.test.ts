@@ -11,7 +11,14 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, test, expect } from 'vitest'
-import TsPptx, { setDiagnosticHandler } from '../../../dist/node.js'
+import TsPptx, {
+	setDiagnosticHandler,
+	type Diagnostic,
+	type TableCell,
+	type TableProps,
+	type TableRow,
+	type TextPropsOptions,
+} from '../../../dist/node.js'
 import { defined, expectDefined, partXml, caughtSync } from '../../helpers.ts'
 // The `ts-pptx/measure` entry publishes the calibrated constants the bake uses, so a test
 // can state "inflated by the height safety factor" instead of re-pinning its value here.
@@ -29,7 +36,7 @@ const OVERFLOW = 'The quick brown fox jumps over the lazy dog. '.repeat(6).trim(
 const SLIDE1 = 'ppt/slides/slide1.xml'
 
 /** First non-group xfrm (the spTree opens with a zero-size group). */
-function firstXfrm(xml) {
+function firstXfrm(xml: string) {
 	const re = /<a:off x="(-?\d+)" y="(-?\d+)"\/><a:ext cx="(\d+)" cy="(\d+)"\/>/g
 	for (const m of xml.matchAll(re)) {
 		const cx = Number(m[3])
@@ -39,7 +46,7 @@ function firstXfrm(xml) {
 	throw new Error('no non-zero xfrm found')
 }
 
-const szValues = (xml) => [...xml.matchAll(/sz="(\d+)"/g)].map((m) => Number(m[1]))
+const szValues = (xml: string) => [...xml.matchAll(/sz="(\d+)"/g)].map((m) => Number(m[1]))
 
 async function pptxWithSilkscreen() {
 	const pres = new TsPptx()
@@ -244,13 +251,13 @@ describe("applyMeasuredFit: fit:'resize' through dist export", () => {
 // (autofit-calibration-oracle) and must stay free to move.
 
 /** Baked `<a:normAutofit fontScale>` (thousandths of a percent), or null for the bare flag. */
-function bakedScale(xml) {
+function bakedScale(xml: string) {
 	const m = xml.match(/<a:normAutofit fontScale="(\d+)"/)
 	return m ? Number(m[1]) : null
 }
 
 /** Build one Silkscreen text box with `fit:'shrink'` and return its baked scale. */
-async function shrinkScale(extraOpts, text = OVERFLOW) {
+async function shrinkScale(extraOpts: TextPropsOptions, text = OVERFLOW) {
 	const pres = await pptxWithSilkscreen()
 	pres.addSlide().addText(text, {
 		x: 1,
@@ -554,7 +561,7 @@ describe('tableLayout() through dist (Silkscreen metrics)', () => {
 		expect(res.heightExact).toBe(false)
 		expect(res.heightIn).toBeGreaterThan(0)
 		// The wrapping OVERFLOW cell drives its row taller than the short-text header row.
-		const rowH = (r) => defined(res.cells.find((c) => c.row === r && c.col === 0)).hIn
+		const rowH = (r: number) => defined(res.cells.find((c) => c.row === r && c.col === 0)).hIn
 		expect(rowH(1)).toBeGreaterThan(rowH(0))
 	})
 
@@ -716,9 +723,9 @@ describe('applyMeasuredFit: the table cell shrink pass', () => {
 	const LONG = 'This is a deliberately long cell sentence that overflows a short fixed-height table row.'
 
 	/** Smallest `sz` (hundredths of a point) emitted on slide 1. */
-	const minSz = (xml) => Math.min(...szValues(xml))
+	const minSz = (xml: string) => Math.min(...szValues(xml))
 
-	async function tableDeck(rows, opts) {
+	async function tableDeck(rows: TableRow[], opts: TableProps) {
 		const pres = await pptxWithSilkscreen()
 		pres.addSlide().addTable(rows, { x: 0.5, y: 0.5, w: 3, ...opts })
 		return partXml(await pres.toBytes(), SLIDE1)
@@ -747,13 +754,14 @@ describe('applyMeasuredFit: the table cell shrink pass', () => {
 	})
 
 	test('a scalar rowH pins the row the same way an array does', async () => {
-		const cell = { text: LONG, options: { fit: 'shrink', fontFace: 'Silkscreen', fontSize: 18 } }
+		const cell: TableCell = { text: LONG, options: { fit: 'shrink', fontFace: 'Silkscreen', fontSize: 18 } }
 		const scalar = await tableDeck([[{ ...cell }]], { rowH: 0.4 })
 		const array = await tableDeck([[{ ...cell }]], { rowH: [0.4] })
 		expect(minSz(scalar)).toBe(minSz(array))
 	})
 
 	test('a table with no `w` is measured against the 75% default width', async () => {
+		// @ts-expect-error an explicit `w: undefined` is what overrides tableDeck's `w: 3`; exactOptionalPropertyTypes rejects it
 		const xml = await tableDeck([[{ text: LONG, options: { fit: 'shrink', fontFace: 'Silkscreen', fontSize: 18 } }]], {
 			w: undefined,
 			rowH: [0.4],
@@ -865,8 +873,8 @@ describe('measured fit: code points the registered face has no glyph for', () =>
 	const WITH_NBH = 'Fine print\u2011here'
 
 	/** Run `fn` with the process-global diagnostic handler capturing, then restore it. */
-	async function captured(fn) {
-		const seen = []
+	async function captured(fn: () => Promise<unknown>) {
+		const seen: Diagnostic[] = []
 		setDiagnosticHandler((d) => seen.push(d))
 		try {
 			await fn()

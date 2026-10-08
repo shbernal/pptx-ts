@@ -29,9 +29,10 @@ import {
 	isFontCollection,
 	InvalidOptionError,
 	MediaError,
+	type FontMetrics,
 } from '../../../dist/measure.js'
 
-const fixture = (name) => fileURLToPath(new URL(`../../read/fixtures/fonts/${name}`, import.meta.url))
+const fixture = (name: string) => fileURLToPath(new URL(`../../read/fixtures/fonts/${name}`, import.meta.url))
 const REG_BYTES = new Uint8Array(readFileSync(fixture('Silkscreen-Regular.ttf')))
 const BOLD_BYTES = new Uint8Array(readFileSync(fixture('Silkscreen-Bold.ttf')))
 
@@ -39,7 +40,7 @@ const BOLD_BYTES = new Uint8Array(readFileSync(fixture('Silkscreen-Bold.ttf')))
 const SWEEP = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,;:!?()[]{}/@#$%&*-+='
 
 /** Every advance in `SWEEP`, one per character, at a size that keeps design units visible. */
-function advanceProfile(metrics) {
+function advanceProfile(metrics: FontMetrics) {
 	return [...SWEEP].map((ch) => metrics.advanceWidthPt(ch, 1000))
 }
 
@@ -54,7 +55,7 @@ function advanceProfile(metrics) {
 const RECORD_SIZE = 16
 
 /** Read a plain sfnt's table directory into records. */
-function readTables(data) {
+function readTables(data: Uint8Array) {
 	const dv = new DataView(data.buffer, data.byteOffset, data.byteLength)
 	const numTables = dv.getUint16(4)
 	const tables = []
@@ -70,21 +71,17 @@ function readTables(data) {
 	return { sfntVersion: dv.getUint32(0), tables }
 }
 
-const align4 = (n) => (n + 3) & ~3
+const align4 = (n: number) => (n + 3) & ~3
 
-/**
- * Pack plain sfnt fonts into one `ttcf` collection, in the order given.
- * @param {Uint8Array[]} fonts
- * @returns {Uint8Array}
- */
-function buildCollection(fonts) {
+/** Pack plain sfnt fonts into one `ttcf` collection, in the order given. */
+function buildCollection(fonts: Uint8Array[]): Uint8Array {
 	const parsed = fonts.map(readTables)
 	let cursor = align4(12 + fonts.length * 4 + parsed.reduce((n, p) => n + 12 + p.tables.length * RECORD_SIZE, 0))
 
 	// Place table data once per distinct (tag, bytes), so a table two members share is
 	// stored once and pointed at twice.
-	const placed = new Map()
-	const blocks = []
+	const placed = new Map<string, number>()
+	const blocks: { offset: number; bytes: Uint8Array }[] = []
 	const placements = parsed.map((p, f) =>
 		p.tables.map((t) => {
 			const bytes = fonts[f].subarray(t.offset, t.offset + t.length)
@@ -251,7 +248,7 @@ describe('a malformed collection is refused, not read into garbage', () => {
 	// These guards are the difference between a legible error and advances taken from the
 	// wrong bytes: every one of them sits on a path where the file still *parses*.
 	/** A copy of the good collection with one field rewritten. */
-	function corrupt(mutate) {
+	function corrupt(mutate: (dv: DataView, raw: Uint8Array) => void) {
 		const bytes = TTC.slice()
 		mutate(new DataView(bytes.buffer), bytes)
 		return bytes
@@ -336,7 +333,7 @@ describe('a malformed collection is refused, not read into garbage', () => {
 	// face is still measurable — and still selectable by its other names — without it.
 
 	/** Offset of member 0's `name` table inside `TTC`, and its declared length. */
-	function nameTable(bytes) {
+	function nameTable(bytes: Uint8Array) {
 		const dv = new DataView(bytes.buffer)
 		const dirOff = dv.getUint32(12)
 		const numTables = dv.getUint16(dirOff + 4)
@@ -349,7 +346,7 @@ describe('a malformed collection is refused, not read into garbage', () => {
 	}
 
 	/** Offset of the record for `nameID` within member 0's `name` table. */
-	function nameRecord(bytes, nameID) {
+	function nameRecord(bytes: Uint8Array, nameID: number) {
 		const { base } = nameTable(bytes)
 		const dv = new DataView(bytes.buffer)
 		const count = dv.getUint16(base + 2)
@@ -448,16 +445,30 @@ const FONT_DIR = `${process.env.SystemRoot ?? 'C:\\Windows'}\\Fonts`
 const MSGOTHIC = `${FONT_DIR}\\msgothic.ttc`
 const hasMsGothic = existsSync(MSGOTHIC)
 
-const oracle = existsSync(ORACLE_PATH) ? JSON.parse(readFileSync(ORACLE_PATH, 'utf8')) : null
+/** One collection member as `windows-collections.oracle.json` records it: advances in ems, by `U+XXXX`. */
+interface OracleFace {
+	file: string
+	index: number
+	family: string
+	advances: Record<string, number>
+}
+
+const oracle: { faces?: OracleFace[] } | null = existsSync(ORACLE_PATH)
+	? JSON.parse(readFileSync(ORACLE_PATH, 'utf8'))
+	: null
 const oracleFaces = (oracle?.faces ?? []).filter((f) => existsSync(`${FONT_DIR}\\${f.file}`))
 
 describe.skipIf(process.platform !== 'win32' || oracleFaces.length === 0)(
 	'genuine Windows collections agree with WPF, an independent reader',
 	() => {
-		const bytesFor = new Map()
-		const load = (file) => {
-			if (!bytesFor.has(file)) bytesFor.set(file, new Uint8Array(readFileSync(`${FONT_DIR}\\${file}`)))
-			return bytesFor.get(file)
+		const bytesFor = new Map<string, Uint8Array>()
+		const load = (file: string) => {
+			let bytes = bytesFor.get(file)
+			if (!bytes) {
+				bytes = new Uint8Array(readFileSync(`${FONT_DIR}\\${file}`))
+				bytesFor.set(file, bytes)
+			}
+			return bytes
 		}
 
 		test('the oracle still describes the fonts on this machine', () => {

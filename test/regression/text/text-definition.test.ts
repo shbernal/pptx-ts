@@ -1,3 +1,6 @@
+import type JSZip from 'jszip'
+import type TsPptx from '../../../dist/node.js'
+import type { Diagnostic, TextBulletProps } from '../../../dist/node.js'
 import {
 	setDiagnosticHandler,
 	build,
@@ -68,8 +71,8 @@ const JPG_PATH = 'demos/common/images/cc_logo.jpg'
 const SVG_PATH = 'demos/common/images/lock-green.svg'
 
 /** Build, capturing library diagnostics as `{ code, message }` pairs. */
-async function buildCapturingLogs(buildFn) {
-	const warnings = []
+async function buildCapturingLogs(buildFn: (pres: TsPptx) => unknown) {
+	const warnings: Diagnostic[] = []
 	setDiagnosticHandler((d) => warnings.push(d))
 	try {
 		const result = await build(buildFn)
@@ -80,10 +83,10 @@ async function buildCapturingLogs(buildFn) {
 }
 
 /** Media part names in the package, in zip order. */
-const mediaEntries = (zip) => listEntries(zip).filter((name) => name.startsWith('ppt/media/'))
+const mediaEntries = (zip: JSZip) => listEntries(zip).filter((name) => name.startsWith('ppt/media/'))
 
 /** Build a one-slide deck whose only text carries `bullet.image`, and return its media parts. */
-async function bulletMedia(image) {
+async function bulletMedia(image: NonNullable<TextBulletProps['image']>) {
 	const { zip } = await build((p) => {
 		p.addSlide().addText('bulleted', { x: 1, y: 1, w: 4, h: 1, bullet: { image } })
 	})
@@ -96,14 +99,16 @@ defineRegressionSuite('Text definition', [
 		// caller reaches for, and it failed inside the definer with a `TypeError`.
 		name: 'a single run object where an array belongs is refused on addText and on a text descriptor',
 		fn: async () => {
-			const refused = (buildFn) => caught(() => build(buildFn))
+			const refused = (buildFn: (pres: TsPptx) => unknown) => caught(() => build(buildFn))
 			const run = { text: 'x' }
 			const box = { x: 1, y: 1, w: 2, h: 1 }
+			// @ts-expect-error a lone run object is not one of the text overloads
 			const viaAddText = await refused((p) => p.addSlide().addText(run, box))
 			assertEqual(viaAddText?.code, 'text/invalid-text', 'addText')
 			const viaGroup = await refused((p) =>
 				p
 					.addSlide()
+					// @ts-expect-error a lone run object is not a valid descriptor text
 					.addGroup([{ text: { text: run, options: box } }, { text: { text: 'y', options: { ...box, x: 4 } } }])
 			)
 			assertEqual(viaGroup?.code, 'text/invalid-text', 'a text descriptor in a group')
@@ -174,10 +179,10 @@ defineRegressionSuite('Text definition', [
 			const shapes = xml.match(/<p:sp>[\s\S]*?<\/p:sp>/g) || []
 			assertEqual(shapes.length, 2, 'expected both line shapes')
 			// The defaults: 1pt (12700 EMU), DEF_SHAPE_LINE_COLOR, solid dash.
-			for (const [idx, label] of /** @type {[number, string][]} */ ([
+			for (const [idx, label] of [
 				[0, 'the string overload'],
 				[1, 'the array overload'],
-			])) {
+			] as [number, string][]) {
 				assertIncludes(shapes[idx], '<a:ln w="12700"', label)
 				assertIncludes(shapes[idx], '<a:prstDash val="solid"/>', label)
 			}
@@ -234,6 +239,7 @@ defineRegressionSuite('Text definition', [
 				const s = p.addSlide()
 				s.addText([{ text: 'too few' }], { x: 1, y: 1, w: 4, h: 1, columns: 0 })
 				s.addText([{ text: 'too many' }], { x: 1, y: 2, w: 4, h: 1, columns: 17 })
+				// @ts-expect-error columns is a number; a string is the invalid input under test
 				s.addText([{ text: 'not a number' }], { x: 1, y: 3, w: 4, h: 1, columns: 'three' })
 			})
 			assertEqual(

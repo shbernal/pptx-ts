@@ -1,10 +1,19 @@
-import { setDiagnosticHandler, defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
+import type JSZip from 'jszip'
+import {
+	setDiagnosticHandler,
+	defineRegressionSuite,
+	build,
+	readEntry,
+	assert,
+	asError,
+	type ThrownError,
+} from '../../helpers.ts'
 
 // Custom bullet glyph font and size. Authored decks emit
 // `<a:buFont typeface="Wingdings"/>` for symbol bullets and `<a:buSzPct/>` values
 // other than 100% for resized glyphs; neither was previously controllable.
 
-async function getPPr(zip) {
+async function getPPr(zip: JSZip) {
 	const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 	const m = xml.match(/<a:pPr[^>]*\/?>(?:[\s\S]*?<\/a:pPr>)?/)
 	if (!m) throw new Error('no <a:pPr> found in slide1.xml; xml=' + xml)
@@ -46,7 +55,7 @@ defineRegressionSuite('Bullet glyph font and size', [
 	{
 		name: 'out-of-range bullet.size warns and clamps to the nearest bound',
 		fn: async () => {
-			const warnings = []
+			const warnings: string[] = []
 			setDiagnosticHandler((d) => warnings.push(d.message))
 			let ppr
 			try {
@@ -91,13 +100,13 @@ defineRegressionSuite('Bullet glyph font and size', [
 	{
 		name: 'a bullet.size that is not a number throws rather than emitting val="NaN"',
 		fn: async () => {
-			let err
+			let err: ThrownError | undefined
 			try {
 				await build((p) => {
 					p.addSlide().addText('item', { x: 1, y: 1, w: 4, h: 1, bullet: { size: Number.NaN } })
 				})
 			} catch (e) {
-				err = e
+				err = asError(e)
 			}
 			assert(err && err.code === 'percent/non-finite', 'expected percent/non-finite; got: ' + String(err && err.code))
 		},

@@ -16,10 +16,10 @@ import { readFixture } from '../../read/corpus.ts'
 // object to the shape and to its lone run, and `shadow` was on the list of options a run inherits
 // from its shape. Two shadows over one string is a state no single PowerPoint action produces.
 
-const SHADOW = { type: /** @type {const} */ ('outer'), color: '000000', blur: 3, offset: 2, angle: 45, opacity: 0.5 }
+const SHADOW = { type: 'outer' as const, color: '000000', blur: 3, offset: 2, angle: 45, opacity: 0.5 }
 
 /** Whether the first `<p:sp>` on slide 1 carries an `<a:effectLst>` in its spPr / in a run's rPr. */
-async function shadowSites(zip) {
+async function shadowSites(zip: JSZip) {
 	const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 	const sp = /<p:sp>[\s\S]*?<\/p:sp>/.exec(xml)
 	assert(sp, 'expected a shape on the slide; got: ' + xml)
@@ -124,7 +124,7 @@ defineRegressionSuite('shadow: the shape and the glyphs are two effects', [
 		fn: async () => {
 			const zip = await JSZip.loadAsync(await readFixture('shadow-shape-vs-text'))
 			const xml = await defined(zip.file('ppt/slides/slide1.xml')).async('string')
-			const sites = {}
+			const sites: Record<string, { shape: boolean; run: boolean }> = {}
 			for (const sp of xml.match(/<p:sp>[\s\S]*?<\/p:sp>/g) || []) {
 				const name = /name="([^"]+)"/.exec(sp)?.[1]
 				const spPr = /<p:spPr>[\s\S]*?<\/p:spPr>/.exec(sp)

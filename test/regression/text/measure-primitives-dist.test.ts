@@ -27,12 +27,15 @@ import {
 	getHeuristicFontMetrics,
 	SINGLE_LINE_PITCH,
 	MIN_FONT_SCALE_PCT,
+	type FitBox,
+	type FitParagraph,
+	type MetricsResolver,
 } from '../../../dist/measure.js'
 
 const REG_PATH = fileURLToPath(new URL('../../read/fixtures/fonts/Silkscreen-Regular.ttf', import.meta.url))
 
 /** Resolver backed by real Silkscreen metrics for every run. */
-let resolve
+let resolve: MetricsResolver
 /** Resolver that knows no face — the "unmeasurable" input every solver must detect. */
 const resolveNone = () => undefined
 
@@ -41,7 +44,10 @@ beforeAll(async () => {
 	resolve = () => metrics
 })
 
-const para = (text, extra = {}) => ({ runs: [{ text, sizePt: 12 }], ...extra })
+const para = (text: string, extra: Omit<FitParagraph, 'runs'> = {}): FitParagraph => ({
+	runs: [{ text, sizePt: 12 }],
+	...extra,
+})
 
 describe('measureLayout: a newline inside a hand-built run', () => {
 	test('starts a new line without splitting the paragraph', () => {
@@ -127,20 +133,19 @@ describe('measureLayout / measureHeightPt: unmeasurable and degenerate inputs', 
 })
 
 describe('solvers through dist', () => {
-	const box = (w, h, wrap) => ({ innerWidthPt: w, innerHeightPt: h, ...(wrap === undefined ? {} : { wrap }) })
+	const box = (w: number, h: number, wrap?: boolean): FitBox => ({
+		innerWidthPt: w,
+		innerHeightPt: h,
+		...(wrap === undefined ? {} : { wrap }),
+	})
 
 	/**
 	 * Assert a discriminated outcome's `kind` and narrow to it, so the assertions that
 	 * follow can read the payload without a cast.
-	 * @template {{ kind: string }} T
-	 * @template {T['kind']} K
-	 * @param {T} outcome
-	 * @param {K} kind
-	 * @returns {Extract<T, { kind: K }>}
 	 */
-	function expectKind(outcome, kind) {
+	function expectKind<T extends { kind: string }, K extends T['kind']>(outcome: T, kind: K): Extract<T, { kind: K }> {
 		expect(outcome.kind).toBe(kind)
-		return /** @type {Extract<T, { kind: K }>} */ (outcome)
+		return outcome as Extract<T, { kind: K }>
 	}
 
 	test('solveShrink reports `fits` when the text already fits', () => {
@@ -186,7 +191,7 @@ describe('getHeuristicFontMetrics through dist: the per-character width buckets'
 	// bundle, where an entry dropped by the emitter would otherwise go unnoticed.
 	const h = getHeuristicFontMetrics()
 	/** Advance of `text` in em, at the 1000pt size that makes an em 1000pt. */
-	const em = (text) => h.advanceWidthPt(text, 1000) / 1000
+	const em = (text: string) => h.advanceWidthPt(text, 1000) / 1000
 
 	test('every bucket is a distinct width, widest to narrowest', () => {
 		// One character per branch, in the order the model ranks them. Asserting the whole

@@ -1,4 +1,12 @@
-import { setDiagnosticHandler, defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
+import {
+	setDiagnosticHandler,
+	defineRegressionSuite,
+	build,
+	readEntry,
+	assert,
+	asError,
+	type ThrownError,
+} from '../../helpers.ts'
 
 // upstream-issue-1199: `fit: 'shrink'` historically emitted a bare <a:normAutofit/>,
 // so PowerPoint only shrank text after an edit/resize. The object form bakes explicit
@@ -56,7 +64,7 @@ defineRegressionSuite('Text fit shrink (normAutofit fontScale/lnSpcReduction) [u
 	{
 		name: 'out-of-range values clamp to the nearest bound and warn',
 		fn: async () => {
-			const warnings = []
+			const warnings: string[] = []
 			setDiagnosticHandler((d) => warnings.push(d.message))
 			let xml
 			try {
@@ -83,7 +91,7 @@ defineRegressionSuite('Text fit shrink (normAutofit fontScale/lnSpcReduction) [u
 	{
 		name: 'a fit percentage that is not a number throws rather than emitting val="NaN"',
 		fn: async () => {
-			let err
+			let err: ThrownError | undefined
 			try {
 				await build((p) => {
 					p.addSlide().addText('bad', {
@@ -95,7 +103,7 @@ defineRegressionSuite('Text fit shrink (normAutofit fontScale/lnSpcReduction) [u
 					})
 				})
 			} catch (e) {
-				err = e
+				err = asError(e)
 			}
 			assert(err && err.code === 'percent/non-finite', 'expected percent/non-finite; got: ' + String(err && err.code))
 		},

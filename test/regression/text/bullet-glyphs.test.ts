@@ -1,18 +1,19 @@
+import type JSZip from 'jszip'
 import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
-async function getSlide1(zip) {
+async function getSlide1(zip: JSZip) {
 	return readEntry(zip, 'ppt/slides/slide1.xml')
 }
 
 // Extract the first <a:t>...</a:t> block (text run text) from slide1.xml
-function firstATText(xml) {
+function firstATText(xml: string) {
 	const m = xml.match(/<a:t>([\s\S]*?)<\/a:t>/)
 	if (!m) throw new Error('no <a:t> found in slide1.xml; xml=' + xml)
 	return m[1]
 }
 
 // Extract the first <a:pPr ...>...</a:pPr> (or self-closing) block
-function firstPPr(xml) {
+function firstPPr(xml: string) {
 	const m = xml.match(/<a:pPr[^>]*\/?>(?:[\s\S]*?<\/a:pPr>)?/)
 	if (!m) throw new Error('no <a:pPr> found in slide1.xml; xml=' + xml)
 	return m[0]

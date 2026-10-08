@@ -21,10 +21,10 @@
 // holds ⌊144 / 9.27⌋ = 15 characters per line.
 import { describe, test, expect } from 'vitest'
 import { measureText } from '../../../src/measure/fit.ts'
-import { FontMetricsRegistry } from '../../../src/measure/font-metrics.ts'
+import { FontMetricsRegistry, type FontMetrics } from '../../../src/measure/font-metrics.ts'
 import { isCjkBreakCharacter } from '../../../src/measure/text-fit.ts'
 
-const mono = (emPerChar = 0.5) => ({
+const mono = (emPerChar = 0.5): FontMetrics => ({
 	unitsPerEm: 1000,
 	advanceWidthPt(text, sizePt, charSpacingPt = 0) {
 		const n = [...text].length
@@ -104,7 +104,7 @@ describe('CJK line breaking', () => {
 })
 
 describe('isCjkBreakCharacter: range boundaries', () => {
-	const breaks = (ch) => isCjkBreakCharacter(ch)
+	const breaks = (ch: string) => isCjkBreakCharacter(ch)
 
 	test('breaks per character', () => {
 		for (const cp of [

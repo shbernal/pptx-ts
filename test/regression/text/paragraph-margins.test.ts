@@ -1,8 +1,9 @@
+import type JSZip from 'jszip'
 import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 // Every `<a:pPr>` on slide 1, in document order — these cases are mostly about the *pairing*
 // of two paragraphs, since either half alone passes against the bug they cover.
-async function paragraphProps(zip) {
+async function paragraphProps(zip: JSZip) {
 	const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 	const paras = [...xml.matchAll(/<a:p>[\s\S]*?<\/a:p>/g)].map((m) => m[0])
 	return { xml, paras, pPrs: paras.map((p) => (p.match(/<a:pPr[^>]*(?:\/>|>[\s\S]*?<\/a:pPr>)/) ?? [''])[0]) }

@@ -14,13 +14,9 @@ import { build, readEntry, setDiagnosticHandler } from '../../helpers.ts'
 const FFFE = String.fromCharCode(0xfffe)
 const FFFF = String.fromCharCode(0xffff)
 
-/**
- * The code points of `text` outside XML 1.0's `Char` production, as hex.
- * @param {string} text
- * @returns {string[]}
- */
-function forbiddenCodePoints(text) {
-	const found = []
+/** The code points of `text` outside XML 1.0's `Char` production, as hex. */
+function forbiddenCodePoints(text: string): string[] {
+	const found: string[] = []
 	for (const char of text) {
 		const cp = char.codePointAt(0) ?? 0
 		const allowed =
@@ -46,8 +42,7 @@ describe('characters XML 1.0 forbids', () => {
 	})
 
 	test('in an object name are reported before they are stripped', async () => {
-		/** @type {string[]} */
-		const codes = []
+		const codes: string[] = []
 		setDiagnosticHandler((diagnostic) => codes.push(diagnostic.code))
 		try {
 			await build((pres) => {

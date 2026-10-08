@@ -1,6 +1,7 @@
 import { describe, test, expect } from 'vitest'
 import { DOMParser, onErrorStopParsing } from '@xmldom/xmldom'
 import { latexToOmml, mathmlToOmml } from '../../../dist/math.js'
+import { asError, type ThrownError } from '../../helpers.ts'
 
 // `pptx-ts/math` converts LaTeX/MathML to OMML for the `math:` option on
 // addText (upstream-issue-1456). Pipeline: LaTeX --temml--> MathML --mathml2omml--> OMML.
@@ -12,9 +13,8 @@ const M_NS = 'http://schemas.openxmlformats.org/officeDocument/2006/math'
 
 // Parse OMML by declaring the `m` prefix (the `math:` envelope supplies it at runtime);
 // @xmldom's onErrorStopParsing turns any well-formedness fault into a thrown error.
-function assertWellFormed(omml, label) {
-	/** @type {string | null} */
-	let threw = null
+function assertWellFormed(omml: string, label: string) {
+	let threw: string | null = null
 	const doc = new DOMParser({ onError: onErrorStopParsing }).parseFromString(
 		`<root xmlns:m="${M_NS}">${omml}</root>`,
 		'text/xml'
@@ -86,7 +86,7 @@ describe('math/latexToOmml — accents become m:acc, not m:limUpp', () => {
 	// it. These pin the whole table, because a missing entry is silent: the deck still opens.
 
 	/** `[element kinds, m:chr code points]` for one inline conversion. */
-	function convert(latex) {
+	function convert(latex: string) {
 		const omml = latexToOmml(latex, { display: false })
 		assertWellFormed(omml, latex)
 		return {
@@ -99,7 +99,7 @@ describe('math/latexToOmml — accents become m:acc, not m:limUpp', () => {
 	// an `accPr` character should be (U+0300–U+036F or U+20D0–U+20EF). temml emits the
 	// *spacing* modifiers instead (U+02C6, U+2192, …) and mathml2omml passes them straight
 	// through, so without the swap `\vec{v}` hangs a full-size arrow over the base.
-	const ACCENTS = [
+	const ACCENTS: [string, number][] = [
 		['\\hat{a}', 0x0302],
 		['\\^{a}', 0x0302],
 		['\\tilde{n}', 0x0303],
@@ -199,11 +199,11 @@ describe('math/mathmlToOmml', () => {
 		// mathml2omml converts anything it is handed, and for non-MathML it returns `'undefined'`,
 		// which went into the slide as if it were OMML.
 		for (const input of ['', 'x + y', '<mrow><mi>a</mi></mrow>']) {
-			let caught
+			let caught: ThrownError | undefined
 			try {
 				mathmlToOmml(input)
 			} catch (error) {
-				caught = error
+				caught = asError(error)
 			}
 			expect(caught?.code, JSON.stringify(input)).toBe('math/invalid-mathml')
 		}

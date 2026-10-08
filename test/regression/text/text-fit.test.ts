@@ -14,11 +14,15 @@ import {
 	MIN_FONT_SCALE_PCT,
 	WIDTH_SAFETY_FACTOR,
 	HEIGHT_SAFETY_FACTOR,
+	type FitParagraph,
+	type ResizeOutcome,
+	type ShrinkOutcome,
 } from '../../../src/measure/text-fit.ts'
+import type { FontMetrics } from '../../../src/measure/font-metrics.ts'
 
 // Monospace-ish synthetic metrics: every code point advances `emPerChar` ems.
 // advanceWidthPt(text, size) === count(text) * emPerChar * size (+ charSpacing).
-const mono = (emPerChar = 0.5) => ({
+const mono = (emPerChar = 0.5): FontMetrics => ({
 	unitsPerEm: 1000,
 	advanceWidthPt(text, sizePt, charSpacingPt = 0) {
 		const n = [...text].length
@@ -29,17 +33,20 @@ const mono = (emPerChar = 0.5) => ({
 	hasCodepoint: () => true,
 })
 
-const para = (text, extra = {}) => ({ runs: [{ text, sizePt: 18, fontFace: 'Mono' }], ...extra })
+const para = (text: string, extra: Omit<FitParagraph, 'runs'> = {}): FitParagraph => ({
+	runs: [{ text, sizePt: 18, fontFace: 'Mono' }],
+	...extra,
+})
 const resolveMono = () => mono()
-const linesOf = (height, sizePt = 18) => Math.round(height / (SINGLE_LINE_PITCH * sizePt))
+const linesOf = (height: number | null, sizePt = 18) => Math.round(defined(height) / (SINGLE_LINE_PITCH * sizePt))
 
 // Narrow a solver's discriminated outcome to the expected variant (and fail
 // loudly otherwise), so the test can reach the variant-only members.
-const shrinkResult = (out) => {
+const shrinkResult = (out: ShrinkOutcome) => {
 	if (out.kind !== 'shrink') throw new Error(`expected a shrink outcome, got ${out.kind}`)
 	return out.result
 }
-const resizeHeight = (out) => {
+const resizeHeight = (out: ResizeOutcome) => {
 	if (out.kind !== 'resize') throw new Error(`expected a resize outcome, got ${out.kind}`)
 	return out.neededInnerHeightPt
 }
@@ -102,7 +109,7 @@ describe('text-fit: measureHeightPt', () => {
 })
 
 describe('text-fit: solveShrink', () => {
-	const box = (innerWidthPt, innerHeightPt) => ({ innerWidthPt, innerHeightPt })
+	const box = (innerWidthPt: number, innerHeightPt: number) => ({ innerWidthPt, innerHeightPt })
 
 	test('fits at 100% → no shrink', () => {
 		expect(solveShrink([para('hi')], box(1000, 100), resolveMono)).toEqual({ kind: 'fits' })
@@ -123,7 +130,7 @@ describe('text-fit: solveShrink', () => {
 		expect(fontScalePct).toBeLessThan(100)
 		expect(fontScalePct).toBeGreaterThanOrEqual(MIN_FONT_SCALE_PCT)
 		// Mirror the solver's safety-inflated fit criterion.
-		const fitsInflated = (scale) =>
+		const fitsInflated = (scale: number) =>
 			defined(measureHeightPt(paras, b.innerWidthPt, resolveMono, scale, 0, WIDTH_SAFETY_FACTOR)) *
 				HEIGHT_SAFETY_FACTOR <=
 			b.innerHeightPt
@@ -148,9 +155,9 @@ describe('text-fit: solveShrink', () => {
 // triggers the vertical shrink. solveShrink must then also enforce the box WIDTH
 // against the widest line, or the line spills out of the box in PowerPoint.
 describe('text-fit: solveShrink wrap=false (horizontal overflow)', () => {
-	const noWrapBox = (innerWidthPt, innerHeightPt) => ({ innerWidthPt, innerHeightPt, wrap: false })
+	const noWrapBox = (innerWidthPt: number, innerHeightPt: number) => ({ innerWidthPt, innerHeightPt, wrap: false })
 	// Natural width of `n` mono chars at 18pt·scale, with the solver's width-safety inflation.
-	const naturalWidthAt = (n, scale) => n * (0.5 * 18 * (scale / 100)) * WIDTH_SAFETY_FACTOR
+	const naturalWidthAt = (n: number, scale: number) => n * (0.5 * 18 * (scale / 100)) * WIDTH_SAFETY_FACTOR
 
 	test('single line too wide → shrinks on width even though height fits', () => {
 		// 10 chars ≈ 92.7pt wide; a 50pt-wide but very tall box: height always fits.
@@ -189,7 +196,7 @@ describe('text-fit: solveShrink wrap=false (horizontal overflow)', () => {
 })
 
 describe('text-fit: solveResize', () => {
-	const box = (innerWidthPt, innerHeightPt) => ({ innerWidthPt, innerHeightPt })
+	const box = (innerWidthPt: number, innerHeightPt: number) => ({ innerWidthPt, innerHeightPt })
 
 	test('unmeasurable propagates', () => {
 		expect(solveResize([para('hi')], box(1000, 100), () => undefined)).toEqual({ kind: 'unmeasurable' })

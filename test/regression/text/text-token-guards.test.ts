@@ -1,3 +1,4 @@
+import type TsPptx from '../../../dist/node.js'
 import { defineRegressionSuite, build, readEntry, assert, captureDiagnostics } from '../../helpers.ts'
 
 // Enumerated text tokens a caller supplies reach an attribute only when the schema has them. A token
@@ -7,7 +8,7 @@ import { defineRegressionSuite, build, readEntry, assert, captureDiagnostics } f
 const SLIDE_XML = 'ppt/slides/slide1.xml'
 
 /** Build a one-slide deck, returning its slide XML and the diagnostic codes raised. */
-async function slideWith(build_) {
+async function slideWith(build_: (pres: TsPptx) => unknown) {
 	const { result: xml, codes } = await captureDiagnostics(async () => {
 		const { zip } = await build(build_)
 		return readEntry(zip, SLIDE_XML)
@@ -25,8 +26,11 @@ defineRegressionSuite('Text token guards', [
 						{
 							text: 'run',
 							options: {
+								// @ts-expect-error strike is a closed union
 								strike: 'bogusStrike',
+								// @ts-expect-error caps is a closed union
 								caps: 'bogusCaps',
+								// @ts-expect-error underline.style is a closed union
 								underline: { style: 'bogusU' },
 							},
 						},
@@ -35,11 +39,7 @@ defineRegressionSuite('Text token guards', [
 				)
 			})
 			assert(!/bogus/.test(xml), `no bad token reaches the part; got: ${xml}`)
-			for (const code of /** @type {const} */ ([
-				'text/invalid-strike',
-				'text/invalid-caps',
-				'text/invalid-underline',
-			])) {
+			for (const code of ['text/invalid-strike', 'text/invalid-caps', 'text/invalid-underline'] as const) {
 				assert(codes.includes(code), `${code} is raised; got ${JSON.stringify(codes)}`)
 			}
 		},
@@ -67,6 +67,7 @@ defineRegressionSuite('Text token guards', [
 					w: 4,
 					h: 1,
 					tabStops: [
+						// @ts-expect-error tab stop alignment is a closed union
 						{ position: 1, alignment: 'bogusAlign' },
 						{ position: 2, alignment: 'dec' },
 					],
@@ -87,6 +88,7 @@ defineRegressionSuite('Text token guards', [
 					y: 1,
 					w: 4,
 					h: 1,
+					// @ts-expect-error bullet.numberType is a closed union of ST_TextAutonumberScheme tokens
 					bullet: { type: 'number', numberType: 'bogusNum' },
 				})
 			})

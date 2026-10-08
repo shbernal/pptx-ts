@@ -1,3 +1,4 @@
+import type { TextProps, TextPropsOptions } from '../../../dist/node.js'
 import { defineRegressionSuite, build, readEntry, assert, assertEqual, captureDiagnostics } from '../../helpers.ts'
 
 // What a run inherits from its shape, and what it does not.
@@ -15,16 +16,16 @@ import { defineRegressionSuite, build, readEntry, assert, assertEqual, captureDi
 // every later run and every later paragraph.
 
 /** The `<a:rPr>` of each run in the slide's first text body, in document order. */
-function runProps(xml) {
+function runProps(xml: string): string[] {
 	return xml.match(/<a:rPr[^>]*(?:\/>|>[\s\S]*?<\/a:rPr>)/g) || []
 }
 
 /** Every `<a:endParaRPr>` in document order. */
-function endParaProps(xml) {
+function endParaProps(xml: string): string[] {
 	return xml.match(/<a:endParaRPr[^>]*\/>/g) || []
 }
 
-async function slideFor(text, opts) {
+async function slideFor(text: string | TextProps[], opts: TextPropsOptions) {
 	const { zip } = await build((p) => {
 		p.addSlide().addText(text, { x: 1, y: 1, w: 6, h: 3, ...opts })
 	})
@@ -89,6 +90,7 @@ defineRegressionSuite('Run options inherited from the shape', [
 		// `ST_TextAnchoringType` is an enumeration, so that is a repair prompt.
 		name: 'an unrecognised valign warns and takes the default anchor, not the caller-s string',
 		fn: async () => {
+			// @ts-expect-error 'sideways' is not a VAlign; the guard for an unknown string is under test
 			const { result: xml, codes } = await captureDiagnostics(() => slideFor('hi', { valign: 'sideways' }))
 			const bodyPr = (/<a:bodyPr[^>]*>/.exec(xml) ?? [''])[0]
 			assert(!bodyPr.includes('sideways'), 'the string never reaches the attribute; got: ' + bodyPr)
@@ -106,7 +108,8 @@ defineRegressionSuite('Run options inherited from the shape', [
 				['ctr', 'ctr'],
 				['btm', 'b'],
 				['MIDDLE', 'ctr'],
-			]) {
+			] as [string, string][]) {
+				// @ts-expect-error ctr, btm and MIDDLE are accepted at runtime but are not VAlign members
 				const xml = await slideFor('hi', { valign })
 				assert(
 					new RegExp(`<a:bodyPr[^>]*\\banchor="${anchor}"`).test(xml),

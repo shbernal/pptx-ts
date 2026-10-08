@@ -16,6 +16,7 @@ import {
 	FontMetricsRegistry,
 	parseFontMetrics,
 	getHeuristicFontMetrics,
+	type FontMetrics,
 } from '../../../src/measure/font-metrics.ts'
 import { solveResize, solveShrink, HEIGHT_SAFETY_FACTOR, WIDTH_SAFETY_FACTOR } from '../../../src/measure/text-fit.ts'
 import TsPptx from '../../../dist/node.js'
@@ -30,7 +31,7 @@ import { fixturePath } from '../../read/corpus.ts'
 const APTOS = resolveGenuineFontFile({ family: 'Aptos' })
 
 // Monospace synthetic metrics: every code point advances `emPerChar` ems.
-const mono = (emPerChar = 0.5) => ({
+const mono = (emPerChar = 0.5): FontMetrics => ({
 	unitsPerEm: 1000,
 	advanceWidthPt(text, sizePt, charSpacingPt = 0) {
 		const n = [...text].length
@@ -214,7 +215,7 @@ describe('ts-pptx/measure subpath (P1 re-exports, built)', () => {
 			'buildFitParagraphs',
 			'makeRegistryResolver',
 			'measureText',
-		]) {
+		] as const) {
 			expect(mod[name], `missing export: ${name}`).toBeDefined()
 		}
 		const reg = new mod.FontMetricsRegistry()
@@ -245,13 +246,13 @@ describe('measureText.uncoveredCodepoints (the font-fallback gap)', () => {
 	// anything else is charged a NARROW `.notdef` — the shape of the gap this reports.
 	// Malgun Gothic is the real-world case: its .notdef advances 0.663 em while the
 	// Plane-2 ideographs it lacks are 1.0 em in the face PowerPoint substitutes.
-	const withCmap = (covers, { emCovered = 1.0, emNotdef = 0.5 } = {}) => ({
+	const withCmap = (covers: (cp: number) => boolean, { emCovered = 1.0, emNotdef = 0.5 } = {}): FontMetrics => ({
 		unitsPerEm: 1000,
 		advanceWidthPt(text, sizePt, charSpacingPt = 0) {
 			let w = 0
 			let n = 0
 			for (const ch of text) {
-				w += (covers(ch.codePointAt(0)) ? emCovered : emNotdef) * sizePt
+				w += (covers(ch.codePointAt(0) as number) ? emCovered : emNotdef) * sizePt
 				n++
 			}
 			return w + n * charSpacingPt
@@ -259,7 +260,7 @@ describe('measureText.uncoveredCodepoints (the font-fallback gap)', () => {
 		hasCodepoint: (cp) => covers(cp),
 	})
 
-	const asciiOnly = (cp) => cp < 0x80
+	const asciiOnly = (cp: number) => cp < 0x80
 
 	test('fully covered text reports nothing', () => {
 		const reg = new FontMetricsRegistry()

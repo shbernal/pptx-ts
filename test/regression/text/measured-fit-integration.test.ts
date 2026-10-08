@@ -26,7 +26,7 @@ const EMU_PER_PT = 12700
  * group `<a:off 0 0/><a:ext 0 0/>`, so skip the zero-size group and take the first
  * xfrm with a non-zero extent.
  */
-function firstXfrm(xml) {
+function firstXfrm(xml: string) {
 	const re = /<a:off x="(-?\d+)" y="(-?\d+)"\/><a:ext cx="(\d+)" cy="(\d+)"\/>/g
 	for (const m of xml.matchAll(re)) {
 		const cx = Number(m[3])
@@ -203,7 +203,7 @@ describe("measured fit: fit:'resize' integration", () => {
 		// write skipped the text box's object-form `fit` and measured the resized box and the shrunk cell
 		// from the first write's result, so a face registered between the writes never reached them.
 		const LATER = 'LaterFace'
-		const build = (pres) => {
+		const build = (pres: TsPptx) => {
 			const slide = pres.addSlide()
 			slide.addText(OVERFLOW, { x: 1, y: 1, w: 3, h: 1, fontFace: LATER, fontSize: 18, fit: 'shrink' })
 			slide.addText(OVERFLOW, { x: 5, y: 1, w: 3, h: 1, fontFace: LATER, fontSize: 18, fit: 'resize' })
