@@ -215,6 +215,7 @@ defineRegressionSuite('Connector shapes', [
 		name: 'missing endpoints throw',
 		fn: async () => {
 			await assertRejects(
+				// @ts-expect-error a connector missing y2
 				() => build((p) => p.addSlide().addConnector({ x1: 1, y1: 1, x2: 4 })),
 				/x1, y1, x2, y2/,
 				'addConnector without all endpoints'

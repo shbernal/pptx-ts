@@ -4,7 +4,7 @@
 // a round-trip bug in fflate can't mask itself by being used on both sides.
 // Keep jszip as a devDep for this reason — do not "consolidate" onto src/zip.ts.
 import JSZip from 'jszip'
-import TsPptx, { setDiagnosticHandler } from '../dist/node.js'
+import TsPptx, { setDiagnosticHandler, type Diagnostic } from '../dist/node.js'
 import { describe, expect, test } from 'vitest'
 
 /**
@@ -22,7 +22,7 @@ const PNG_1X1 =
 /** The same bytes with the `data:` scheme, for the paths that assert both spellings are taken. */
 const PNG_1X1_DATA_URI = `data:${PNG_1X1}`
 
-async function build(buildFn) {
+async function build(buildFn: (pres: TsPptx) => unknown) {
 	const pres = new TsPptx()
 	await buildFn(pres)
 	const buf = await pres.toBytes()
@@ -33,11 +33,9 @@ async function build(buildFn) {
 /**
  * One package part as a string, throwing when the part is absent.
  *
- * @param {JSZip} zip
- * @param {string} path the part's zip path, e.g. `ppt/slides/slide1.xml`
- * @returns {Promise<string>}
+ * @param path the part's zip path, e.g. `ppt/slides/slide1.xml`
  */
-async function readEntry(zip, path) {
+async function readEntry(zip: JSZip, path: string): Promise<string> {
 	const entry = zip.file(path)
 	if (!entry) throw new Error('zip entry not found: ' + path)
 	return entry.async('string')
@@ -50,11 +48,9 @@ async function readEntry(zip, path) {
  * differed only in whether they took a `pres` or a slide number. Three operations spelled five
  * ways, over helpers this module already exported.
  *
- * @param {(pres: any) => void | Promise<void>} buildFn
- * @param {number} [n] 1-based slide number
- * @returns {Promise<string>}
+ * @param n 1-based slide number
  */
-async function slideXml(buildFn, n = 1) {
+async function slideXml(buildFn: (pres: TsPptx) => unknown, n = 1): Promise<string> {
 	const { zip } = await build(buildFn)
 	return readEntry(zip, `ppt/slides/slide${n}.xml`)
 }
@@ -66,16 +62,14 @@ async function slideXml(buildFn, n = 1) {
  * so a renamed part failed with `Cannot read properties of null` rather than naming the part it
  * could not find. `readEntry` says which one it wanted.
  *
- * @param {Uint8Array | Buffer} pptxBytes
- * @param {string} partName absolute (`/ppt/slides/slide1.xml`) or zip-relative
- * @returns {Promise<string>}
+ * @param partName absolute (`/ppt/slides/slide1.xml`) or zip-relative
  */
-async function partXml(pptxBytes, partName) {
+async function partXml(pptxBytes: Uint8Array, partName: string): Promise<string> {
 	const zip = await JSZip.loadAsync(pptxBytes)
 	return readEntry(zip, partName.replace(/^\//, ''))
 }
 
-function listEntries(zip) {
+function listEntries(zip: JSZip): string[] {
 	return Object.keys(zip.files)
 }
 
@@ -86,13 +80,10 @@ function listEntries(zip) {
  * `'string'`; this is the byte spelling, which is the stronger of the two — a decoded
  * comparison cannot see a BOM or an encoding change, and every caller is asking whether
  * the bytes moved.
- *
- * @param {Uint8Array | Buffer} pptxBytes
- * @returns {Promise<Map<string, Uint8Array>>}
  */
-async function partBodies(pptxBytes) {
+async function partBodies(pptxBytes: Uint8Array): Promise<Map<string, Uint8Array>> {
 	const zip = await JSZip.loadAsync(pptxBytes)
-	const bodies = new Map()
+	const bodies = new Map<string, Uint8Array>()
 	for (const entry of Object.values(zip.files)) {
 		if (entry.dir) continue
 		bodies.set(entry.name, await entry.async('uint8array'))
@@ -118,13 +109,13 @@ async function partBodies(pptxBytes) {
  * `allowedToChange` is permission, not obligation: it says nothing about whether those
  * parts actually differ. Where that matters the caller asserts it separately, which keeps
  * the two claims legible instead of folding them into one helper that means both.
- *
- * @param {Map<string, Uint8Array>} before
- * @param {Map<string, Uint8Array>} after
- * @param {Iterable<string>} [allowedToChange]
- * @param {string} [label]
  */
-function assertUnchangedExcept(before, after, allowedToChange = [], label = '') {
+function assertUnchangedExcept(
+	before: Map<string, Uint8Array>,
+	after: Map<string, Uint8Array>,
+	allowedToChange: Iterable<string> = [],
+	label = ''
+): void {
 	const allowed = new Set(allowedToChange)
 	const prefix = label ? label + ': ' : ''
 	let checked = 0
@@ -140,6 +131,20 @@ function assertUnchangedExcept(before, after, allowedToChange = [], label = '') 
 		`${prefix}compared no parts — every one of the ${before.size} input parts was allowed to change, ` +
 			'so this assertion proved nothing'
 	)
+}
+
+/** One case of {@link defineRegressionSuite}: a name, a body, and Vitest's modifiers. */
+interface RegressionCase {
+	name: string
+	fn?: () => unknown
+	only?: boolean
+	skip?: boolean
+	skipIf?: unknown
+	runIf?: unknown
+	todo?: boolean
+	fails?: boolean
+	concurrent?: boolean
+	timeout?: number
 }
 
 /**
@@ -161,13 +166,8 @@ function assertUnchangedExcept(before, after, allowedToChange = [], label = '') 
  * `{ name, todo: true }`, `{ name, fn, timeout: 30_000 }`. Note that `concurrent` is safe only
  * for cases that touch no process global — `captureDiagnostics` and `setDiagnosticHandler` are
  * process-wide, and their safety rests on cases within a file running serially.
- *
- * @param {string} suiteName
- * @param {{ name: string, fn?: () => unknown, only?: boolean, skip?: boolean, skipIf?: unknown,
- *           runIf?: unknown, todo?: boolean, fails?: boolean, concurrent?: boolean,
- *           timeout?: number }[]} cases
  */
-function defineRegressionSuite(suiteName, cases) {
+function defineRegressionSuite(suiteName: string, cases: readonly RegressionCase[]): void {
 	if (!Array.isArray(cases)) {
 		throw new Error(
 			`defineRegressionSuite(${JSON.stringify(suiteName)}, …) takes an array of test cases as its ` +
@@ -184,8 +184,7 @@ function defineRegressionSuite(suiteName, cases) {
 			}
 			// `any`, because this *is* dynamic dispatch: each step narrows vitest's chainable to a
 			// different member of the family, and the whole point is that a case picks its own.
-			/** @type {any} */
-			let define = fixture.concurrent ? test.concurrent : test
+			let define: any = fixture.concurrent ? test.concurrent : test
 			if (fixture.fails) define = define.fails
 			// `vitest/no-focused-tests` guards the literal `it.only`, and cannot see this one:
 			// a case committed with `only: true` narrows the suite exactly the way a literal
@@ -207,25 +206,15 @@ function defineRegressionSuite(suiteName, cases) {
 	})
 }
 
-/**
- * @param {unknown} cond
- * @param {string} [msg]
- * @returns {asserts cond}
- */
-function assert(cond, msg) {
+function assert(cond: unknown, msg?: string): asserts cond {
 	if (!cond) throw new Error('assertion failed: ' + msg)
 }
 
 /**
  * Narrow `value` past `null` and `undefined`, failing the test through Vitest's `expect` when
  * it is absent, so the failure reads as an assertion rather than a later `TypeError`.
- *
- * @template T
- * @param {T} value
- * @param {string} [message]
- * @returns {asserts value is NonNullable<T>}
  */
-function expectDefined(value, message) {
+function expectDefined<T>(value: T, message?: string): asserts value is NonNullable<T> {
 	expect(value, message).toBeDefined()
 	expect(value, message).not.toBeNull()
 }
@@ -233,30 +222,37 @@ function expectDefined(value, message) {
 /**
  * The expression form of {@link expectDefined}, for chained reads such as
  * `defined(slide.shapes.find(...)).text`.
- *
- * @template T
- * @param {T} value
- * @param {string} [message]
- * @returns {NonNullable<T>}
  */
-function defined(value, message) {
+function defined<T>(value: T, message?: string): NonNullable<T> {
 	expectDefined(value, message)
 	return value
 }
 
-function assertEqual(actual, expected, msg) {
+function assertEqual(actual: unknown, expected: unknown, msg?: string): void {
 	if (actual !== expected)
 		throw new Error(
 			'assertion failed: ' + (msg || '') + ' expected ' + JSON.stringify(expected) + ' got ' + JSON.stringify(actual)
 		)
 }
 
-function assertIncludes(haystack, needle, label) {
-	assert(haystack.includes(needle), `expected ${label || 'value'} to include ${needle}; got: ${haystack}`)
+/** A string to search for a substring, or an array to search for an element. */
+type Haystack<T> = string | readonly T[]
+
+/** `haystack.includes(needle)` for either spelling of {@link Haystack}. */
+function includes<T>(haystack: Haystack<T>, needle: string | T): boolean {
+	return typeof haystack === 'string' ? haystack.includes(String(needle)) : haystack.includes(needle as T)
 }
 
-function assertNotIncludes(haystack, needle, label) {
-	assert(!haystack.includes(needle), `expected ${label || 'value'} not to include ${needle}; got: ${haystack}`)
+function assertIncludes(haystack: string, needle: string, label?: string): void
+function assertIncludes<T>(haystack: readonly T[], needle: T, label?: string): void
+function assertIncludes<T>(haystack: Haystack<T>, needle: string | T, label?: string): void {
+	assert(includes(haystack, needle), `expected ${label || 'value'} to include ${needle}; got: ${haystack}`)
+}
+
+function assertNotIncludes(haystack: string, needle: string, label?: string): void
+function assertNotIncludes<T>(haystack: readonly T[], needle: T, label?: string): void
+function assertNotIncludes<T>(haystack: Haystack<T>, needle: string | T, label?: string): void {
+	assert(!includes(haystack, needle), `expected ${label || 'value'} not to include ${needle}; got: ${haystack}`)
 }
 
 /**
@@ -266,7 +262,7 @@ function assertNotIncludes(haystack, needle, label) {
  * the guarded one, which is the superset: an absent part compares unequal rather than throwing,
  * which is what "did this part change?" means at the fifteen call sites that ask it.
  */
-function bytesEqual(a, b) {
+function bytesEqual(a: Uint8Array | null | undefined, b: Uint8Array | null | undefined): boolean {
 	return Boolean(a && b && a.length === b.length && a.every((value, index) => value === b[index]))
 }
 
@@ -280,14 +276,13 @@ function bytesEqual(a, b) {
  * where the message genuinely does not matter, so that it is a decision rather than an
  * omission.
  *
- * @param {() => unknown} fn the call under test; may be async
- * @param {RegExp} expected pattern the error message must match
- * @param {string} [label] what was being called, for the failure text
- * @returns {Promise<Error & { code?: string }>} the error, for any further assertion
+ * @param fn the call under test; may be async
+ * @param expected pattern the error message must match
+ * @param label what was being called, for the failure text
+ * @returns the error, for any further assertion
  */
-async function assertRejects(fn, expected, label) {
-	/** @type {Error | null} */
-	let error = null
+async function assertRejects(fn: () => unknown, expected: RegExp, label?: string): Promise<ThrownError> {
+	let error: ThrownError | null = null
 	try {
 		await fn()
 	} catch (err) {
@@ -309,7 +304,7 @@ async function assertRejects(fn, expected, label) {
  * Synchronous only. Reach for {@link assertRejects} when there is a message worth pinning, or
  * when the call under test is async.
  */
-function throws(fn) {
+function throws(fn: () => unknown): boolean {
 	try {
 		fn()
 		return false
@@ -318,14 +313,14 @@ function throws(fn) {
 	}
 }
 
+/** What a test reads off a thrown error: an `Error`, with the `code` a `TsPptxError` carries. */
+type ThrownError = Error & { code?: string }
+
 /**
  * A thrown value narrowed to an `Error`, failing when something else was thrown. `code` is read
  * off a `TsPptxError`; any other `Error` leaves it `undefined`.
- *
- * @param {unknown} err
- * @returns {Error & { code?: string }}
  */
-function asError(err) {
+function asError(err: unknown): ThrownError {
 	assert(err instanceof Error, `expected an Error to be thrown; got: ${String(err)}`)
 	return err
 }
@@ -335,10 +330,9 @@ function asError(err) {
  * `code`, its class, its `cause`) rather than matching the message, which is what
  * {@link assertRejects} is for.
  *
- * @param {() => unknown} fn the call under test; may be async
- * @returns {Promise<(Error & { code?: string }) | null>}
+ * @param fn the call under test; may be async
  */
-async function caught(fn) {
+async function caught(fn: () => unknown): Promise<ThrownError | null> {
 	try {
 		await fn()
 		return null
@@ -347,13 +341,8 @@ async function caught(fn) {
 	}
 }
 
-/**
- * {@link caught} for a synchronous call.
- *
- * @param {() => unknown} fn the call under test
- * @returns {(Error & { code?: string }) | null}
- */
-function caughtSync(fn) {
+/** {@link caught} for a synchronous call. */
+function caughtSync(fn: () => unknown): ThrownError | null {
 	try {
 		fn()
 		return null
@@ -362,52 +351,52 @@ function caughtSync(fn) {
 	}
 }
 
-function xmlBlocks(xml, tagName) {
+function xmlBlocks(xml: string, tagName: string): string[] {
 	const escapedName = tagName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')
 	const re = new RegExp(`<${escapedName}\\b[\\s\\S]*?<\\/${escapedName}>`, 'g')
 	return xml.match(re) || []
 }
 
-function firstXmlBlock(xml, tagName, label = tagName) {
+function firstXmlBlock(xml: string, tagName: string, label = tagName): string {
 	const block = xmlBlocks(xml, tagName)[0]
 	assert(block, `expected ${label} block in XML; got: ${xml}`)
 	return block
 }
 
-function xmlAttributes(tag) {
-	const attrs = {}
+function xmlAttributes(tag: string): Record<string, string> {
+	const attrs: Record<string, string> = {}
 	for (const match of tag.matchAll(/\s([\w:-]+)="([^"]*)"/g)) {
 		attrs[match[1]] = match[2]
 	}
 	return attrs
 }
 
-function selfClosingTags(xml, tagName) {
+function selfClosingTags(xml: string, tagName: string): string[] {
 	const escapedName = tagName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')
 	const re = new RegExp(`<${escapedName}\\b[^>]*/>`, 'g')
 	return xml.match(re) || []
 }
 
-function xmlOpeningTags(xml, tagName) {
+function xmlOpeningTags(xml: string, tagName: string): string[] {
 	const escapedName = tagName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')
 	const re = new RegExp(`<${escapedName}\\b[^>]*(?:/>|>)`, 'g')
 	return xml.match(re) || []
 }
 
-function contentTypeDefaultExtensions(xml) {
+function contentTypeDefaultExtensions(xml: string): (string | undefined)[] {
 	return selfClosingTags(xml, 'Default').map((tag) => xmlAttributes(tag).Extension)
 }
 
-function contentTypeOverrideParts(xml) {
+function contentTypeOverrideParts(xml: string): (string | undefined)[] {
 	return selfClosingTags(xml, 'Override').map((tag) => xmlAttributes(tag).PartName)
 }
 
-function contentTypeForExtension(xml, extension) {
+function contentTypeForExtension(xml: string, extension: string): string | undefined {
 	const tag = selfClosingTags(xml, 'Default').find((t) => xmlAttributes(t).Extension === extension)
 	return tag ? xmlAttributes(tag).ContentType : undefined
 }
 
-function assertContentTypeDefault(xml, extension) {
+function assertContentTypeDefault(xml: string, extension: string): void {
 	const extensions = contentTypeDefaultExtensions(xml)
 	assert(
 		extensions.includes(extension),
@@ -415,7 +404,7 @@ function assertContentTypeDefault(xml, extension) {
 	)
 }
 
-function assertNoContentTypeDefault(xml, extension) {
+function assertNoContentTypeDefault(xml: string, extension: string): void {
 	const extensions = contentTypeDefaultExtensions(xml)
 	assert(
 		!extensions.includes(extension),
@@ -423,12 +412,12 @@ function assertNoContentTypeDefault(xml, extension) {
 	)
 }
 
-function assertContentTypeOverride(xml, partName) {
+function assertContentTypeOverride(xml: string, partName: string): void {
 	const parts = contentTypeOverrideParts(xml)
 	assert(parts.includes(partName), `expected Content_Types Override for ${partName}; got: ${parts.join(', ')}`)
 }
 
-function assertXmlOrder(xml, before, after, label) {
+function assertXmlOrder(xml: string, before: string, after: string, label?: string): void {
 	const beforeIndex = xml.indexOf(before)
 	const afterIndex = xml.indexOf(after)
 	assert(beforeIndex !== -1, `expected ${before} in ${label || 'XML'}; got: ${xml}`)
@@ -439,18 +428,18 @@ function assertXmlOrder(xml, before, after, label) {
 	)
 }
 
-function nonVisualDrawingProperties(xml) {
+function nonVisualDrawingProperties(xml: string): { tag: string; attrs: Record<string, string> }[] {
 	const tags = xmlOpeningTags(xml, 'p:cNvPr')
 	return tags.map((tag) => ({ tag, attrs: xmlAttributes(tag) }))
 }
 
-function findNonVisualDrawingProperty(xml, attrs) {
+function findNonVisualDrawingProperty(xml: string, attrs: Record<string, string>) {
 	return nonVisualDrawingProperties(xml).find(({ attrs: actual }) =>
 		Object.entries(attrs).every(([name, value]) => actual[name] === value)
 	)
 }
 
-function assertNonVisualDrawingProperty(xml, attrs, label) {
+function assertNonVisualDrawingProperty(xml: string, attrs: Record<string, string>, label?: string) {
 	const match = findNonVisualDrawingProperty(xml, attrs)
 	assert(match, `expected ${label || 'p:cNvPr'} with ${JSON.stringify(attrs)}; got: ${xml}`)
 	return match
@@ -464,8 +453,8 @@ function assertNonVisualDrawingProperty(xml, attrs, label) {
  * The handler is process-global (see `setDiagnosticHandler`), so this must not be used from two
  * concurrently-running cases; vitest runs cases within a file serially, which is what makes it safe.
  */
-async function captureDiagnostics(fn) {
-	const diagnostics = []
+async function captureDiagnostics<R>(fn: () => R | Promise<R>) {
+	const diagnostics: Diagnostic[] = []
 	setDiagnosticHandler((d) => diagnostics.push(d))
 	try {
 		const result = await fn()
@@ -479,6 +468,8 @@ async function captureDiagnostics(fn) {
 		setDiagnosticHandler(null)
 	}
 }
+
+export type { RegressionCase, ThrownError }
 
 export {
 	TsPptx,

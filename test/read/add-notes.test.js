@@ -170,8 +170,8 @@ describe('Slide.addNotes on a loaded deck', () => {
 		const masters = registeredNotesMasters(reopened.opc)
 		assertEqual(masters.length, 1, 'exactly one notesMaster registered')
 
-		const notesA = resolveSingle(reopened.opc, reopened.slides[a.index].partName, NOTES_SLIDE_REL)
-		const notesB = resolveSingle(reopened.opc, reopened.slides[b.index].partName, NOTES_SLIDE_REL)
+		const notesA = defined(resolveSingle(reopened.opc, reopened.slides[a.index].partName, NOTES_SLIDE_REL))
+		const notesB = defined(resolveSingle(reopened.opc, reopened.slides[b.index].partName, NOTES_SLIDE_REL))
 		assert(notesA !== notesB, 'each slide got its own notes part')
 		assertEqual(
 			resolveSingle(reopened.opc, notesA, NOTES_MASTER_REL),
@@ -260,8 +260,8 @@ describe('Slide.addNotes on a loaded deck', () => {
 		// were added, so the refusal left both.
 		const deck = await openFixture('empty')
 		const slide = deck.slides[0]
-		const layout = resolveSingle(deck.opc, slide.partName, SLIDE_LAYOUT_REL)
-		const master = resolveSingle(deck.opc, layout, SLIDE_MASTER_REL)
+		const layout = defined(resolveSingle(deck.opc, slide.partName, SLIDE_LAYOUT_REL))
+		const master = defined(resolveSingle(deck.opc, layout, SLIDE_MASTER_REL))
 		const masterRels = deck.opc.relationshipsFor(master)
 		masterRels.remove(defined([...masterRels].find((rel) => rel.type === THEME_REL)).id)
 		const before = await deck.save()

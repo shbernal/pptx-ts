@@ -118,6 +118,7 @@ defineRegressionSuite('Schema value guards', [
 		fn: async () => {
 			const { result: xml, codes } = await captureDiagnostics(async () => {
 				const { zip } = await build((p) => {
+					// @ts-expect-error a dash type outside the schema
 					p.addSlide().addShape('rect', { x: 1, y: 1, w: 2, h: 1, line: { color: 'FF0000', dashType: 'bogusDash' } })
 				})
 				return readEntry(zip, SLIDE_XML)
@@ -138,6 +139,7 @@ defineRegressionSuite('Schema value guards', [
 						y: 1,
 						w: 2,
 						h: 1,
+						// @ts-expect-error an arrowhead outside the schema
 						line: { color: 'FF0000', beginArrowType: 'wedge', endArrowType: 'arrow' },
 					})
 				})
@@ -155,6 +157,7 @@ defineRegressionSuite('Schema value guards', [
 		fn: async () => {
 			const { result: xml, codes } = await captureDiagnostics(async () => {
 				const { zip } = await build((p) => {
+					// @ts-expect-error a text warp outside the schema
 					p.addSlide().addText('warped', { x: 1, y: 1, w: 4, h: 1, textWarp: 'textLoopTheLoop' })
 				})
 				return readEntry(zip, SLIDE_XML)
@@ -203,6 +206,7 @@ defineRegressionSuite('Schema value guards', [
 		fn: async () => {
 			const { result: xml, codes } = await captureDiagnostics(async () => {
 				const { zip } = await build((p) => {
+					// @ts-expect-error a legend position outside the schema
 					p.addSlide().addChart([{ name: 'S1', labels: ['A', 'B'], values: [1, 2] }], {
 						type: ChartType.bar,
 						x: 1,
@@ -269,6 +273,7 @@ defineRegressionSuite('Schema value guards', [
 		fn: async () => {
 			const { result: xml, codes } = await captureDiagnostics(async () => {
 				const { zip } = await build((p) => {
+					// @ts-expect-error a transition type the writer does not know
 					p.addSlide().transition = { type: 'bogus x="1', variant: { dir: 'u' } }
 				})
 				return readEntry(zip, SLIDE_XML)

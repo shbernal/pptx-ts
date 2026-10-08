@@ -1,4 +1,13 @@
-import { defineRegressionSuite, build, readEntry, captureDiagnostics, assert, assertEqual } from '../../helpers.ts'
+import {
+	defineRegressionSuite,
+	build,
+	readEntry,
+	captureDiagnostics,
+	assert,
+	assertEqual,
+	defined,
+} from '../../helpers.ts'
+/** @import { TableRow } from '../../../dist/node.js' */
 
 // `BorderProps.dashType` -> `a:prstDash/@val` on a table cell border and on a custom
 // table-style region.
@@ -12,7 +21,7 @@ import { defineRegressionSuite, build, readEntry, captureDiagnostics, assert, as
 // reports as a corrupt file rather than a mis-set option, so it is checked before emission.
 
 /** Every `ST_PresetLineDashVal` value, which is exactly what `dashType` accepts. */
-const ALL_DASHES = [
+const ALL_DASHES = /** @type {const} */ ([
 	'solid',
 	'dot',
 	'dash',
@@ -24,7 +33,7 @@ const ALL_DASHES = [
 	'sysDot',
 	'sysDashDot',
 	'sysDashDotDot',
-]
+])
 
 /** The `a:prstDash/@val` of every border in the part, in document order. */
 function dashValues(xml) {
@@ -41,6 +50,7 @@ defineRegressionSuite('Table border dashType', [
 				build((p) => {
 					// One single-sided cell per dash: `border` as a bare object broadcasts to all
 					// four sides, so each cell contributes four identical prstDash values.
+					/** @type {TableRow} */
 					const row = ALL_DASHES.map((dash) => ({ text: dash, options: { border: { type: 'solid', dashType: dash } } }))
 					p.addSlide().addTable([row], AT)
 				})
@@ -103,6 +113,7 @@ defineRegressionSuite('Table border dashType', [
 		fn: async () => {
 			const { result, codes, diagnostics } = await captureDiagnostics(() =>
 				build((p) => {
+					// @ts-expect-error 'dotted' is the unrecognized dashType under test
 					p.addSlide().addTable([[{ text: 'A', options: { border: { type: 'dash', dashType: 'dotted' } } }]], AT)
 				})
 			)
@@ -112,7 +123,7 @@ defineRegressionSuite('Table border dashType', [
 				'expected the border/invalid-dash-type code; got: ' + JSON.stringify(codes)
 			)
 			const diagnostic = diagnostics.find((d) => d.code === 'border/invalid-dash-type')
-			assertEqual(diagnostic.detail.received, 'dotted', 'the diagnostic names the offending value')
+			assertEqual(defined(defined(diagnostic).detail).received, 'dotted', 'the diagnostic names the offending value')
 
 			const values = dashValues(await readEntry(result.zip, 'ppt/slides/slide1.xml'))
 			assertEqual(values.join(','), 'sysDash,sysDash,sysDash,sysDash', "falls back to what type:'dash' implies")

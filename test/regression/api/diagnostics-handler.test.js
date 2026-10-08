@@ -137,10 +137,15 @@ defineRegressionSuite('Diagnostics handler', [
 					const slide = p.addSlide()
 					slide.addText('x', { x: 1, y: 1, w: 2, h: 1, columns: 99 })
 					slide.addText('y', { x: 1, y: 2, w: 2, h: 1, columnSpacing: -5 })
+					// @ts-expect-error a section with no title
 					p.addSection({})
 				})
 			)
-			for (const expected of ['text/invalid-columns', 'text/invalid-column-spacing', 'section/missing-title']) {
+			for (const expected of /** @type {const} */ ([
+				'text/invalid-columns',
+				'text/invalid-column-spacing',
+				'section/missing-title',
+			])) {
 				assert(codes.includes(expected), `expected ${expected}; got: ` + JSON.stringify(codes))
 			}
 			// Every code is `area/condition` — the shape consumers pattern-match on.

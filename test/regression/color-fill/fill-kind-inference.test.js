@@ -1,3 +1,4 @@
+/** @import { BackgroundOption, GradientFillProps, PatternFillProps, ShapeFillProps, ShapeLineProps } from '../../../dist/node.js' */
 import { assert, assertEqual, captureDiagnostics, defineRegressionSuite, slideXml } from '../../helpers.ts'
 
 // Which fill kind a props object asks for used to be answered in seven places, and they
@@ -13,6 +14,7 @@ import { assert, assertEqual, captureDiagnostics, defineRegressionSuite, slideXm
 // and an explicit `type` beats a sub-object that disagrees.
 
 const BOX = { x: 1, y: 1, w: 2, h: 1 }
+/** @type {GradientFillProps} */
 const GRADIENT = {
 	kind: 'linear',
 	angle: 0,
@@ -21,6 +23,7 @@ const GRADIENT = {
 		{ position: 100, color: 'FF0000' },
 	],
 }
+/** @type {PatternFillProps} */
 const PATTERN = { preset: 'diagCross', fgColor: '003366', bgColor: 'FFFFFF' }
 /** A 1x1 transparent PNG — the smallest thing that resolves to a real media relationship. */
 const PNG =
@@ -55,11 +58,11 @@ defineRegressionSuite('Fill kind inference', [
 	{
 		name: 'a fill sub-object selects its kind without a `type` (gradient, pattern, image)',
 		fn: async () => {
-			for (const [label, fill, expected] of [
+			for (const [label, fill, expected] of /** @type {[string, ShapeFillProps, string][]} */ ([
 				['gradient', { gradient: GRADIENT }, 'gradFill'],
 				['pattern', { pattern: PATTERN }, 'pattFill'],
 				['image', { image: { data: PNG } }, 'blipFill'],
-			]) {
+			])) {
 				// The bug this pins is specifically silent: the shape came out black, and the only
 				// diagnostic named a colour the caller never wrote. So assert on both.
 				const { result: xml, codes } = await captureDiagnostics(() =>
@@ -73,7 +76,7 @@ defineRegressionSuite('Fill kind inference', [
 	{
 		name: 'a fill sub-object and its explicit `type` spelling emit the same bytes',
 		fn: async () => {
-			for (const [type, sub] of /** @type {[string, Record<string, unknown>][]} */ ([
+			for (const [type, sub] of /** @type {[NonNullable<ShapeFillProps['type']>, ShapeFillProps][]} */ ([
 				['gradient', { gradient: GRADIENT }],
 				['pattern', { pattern: PATTERN }],
 				['image', { image: { data: PNG } }],
@@ -104,7 +107,7 @@ defineRegressionSuite('Fill kind inference', [
 	{
 		name: 'a line sub-object selects its stroke kind, and a bare line still inherits its colour',
 		fn: async () => {
-			for (const [label, line, expected] of [
+			for (const [label, line, expected] of /** @type {[string, ShapeLineProps, string][]} */ ([
 				['gradient', { width: 2, gradient: GRADIENT }, 'gradFill'],
 				['pattern', { width: 2, pattern: PATTERN }, 'pattFill'],
 				['color', { width: 2, color: 'FF0000' }, 'solidFill'],
@@ -112,7 +115,7 @@ defineRegressionSuite('Fill kind inference', [
 				// stays a solid stroke rather than becoming an inherited one.
 				['nothing', { width: 2 }, 'solidFill'],
 				['none', { width: 2, type: 'none' }, 'noFill'],
-			]) {
+			])) {
 				const xml = await slideXml((p) => p.addSlide().addShape('rect', { ...BOX, line }))
 				assertEqual(lineFill(xml).join(','), expected, `line: { ${label} } emits <a:${expected}>`)
 			}
@@ -132,6 +135,7 @@ defineRegressionSuite('Fill kind inference', [
 			]) {
 				let err
 				try {
+					// @ts-expect-error ShapeLineProps has no image paint
 					await slideXml((p) => p.addSlide().addShape('rect', { ...BOX, line }))
 				} catch (e) {
 					err = e
@@ -156,10 +160,10 @@ defineRegressionSuite('Fill kind inference', [
 			// define/text.ts carries a second, near-duplicate ShapeLineProps rebuild. It stamped
 			// `type: 'solid'` on unconditionally and defaulted the colour with it, so a pattern
 			// stroke on this path came out a default-black solid line.
-			for (const [label, line, expected] of [
+			for (const [label, line, expected] of /** @type {[string, ShapeLineProps, string][]} */ ([
 				['gradient', { width: 2, gradient: GRADIENT }, 'gradFill'],
 				['pattern', { width: 2, pattern: PATTERN }, 'pattFill'],
-			]) {
+			])) {
 				const xml = await slideXml((p) => p.addSlide().addText('x', { shape: 'line', x: 1, y: 1, w: 4, h: 0, line }))
 				assertEqual(lineFill(xml).join(','), expected, `addText line: { ${label} } emits <a:${expected}>`)
 			}
@@ -168,13 +172,13 @@ defineRegressionSuite('Fill kind inference', [
 	{
 		name: 'a background sub-object selects its kind, and an empty background still emits no <p:bg>',
 		fn: async () => {
-			for (const [label, background, expected] of [
+			for (const [label, background, expected] of /** @type {[string, BackgroundOption, string][]} */ ([
 				['gradient', { gradient: GRADIENT }, 'gradFill'],
 				['pattern', { pattern: PATTERN }, 'pattFill'],
 				['type + pattern', { type: 'pattern', pattern: PATTERN }, 'pattFill'],
 				['color', { color: 'FF0000' }, 'solidFill'],
 				['none', { type: 'none' }, 'noFill'],
-			]) {
+			])) {
 				const xml = await slideXml((p) => {
 					p.addSlide().background = background
 				})
@@ -186,10 +190,10 @@ defineRegressionSuite('Fill kind inference', [
 			// The two spellings of silence stay silent: `<p:bgPr>` requires a fill child, so
 			// emitting the element for a background that names no paint would be invalid as well
 			// as wrong.
-			for (const [label, background] of [
+			for (const [label, background] of /** @type {[string, BackgroundOption][]} */ ([
 				['empty', {}],
 				['inherit', { type: 'inherit' }],
-			]) {
+			])) {
 				const xml = await slideXml((p) => {
 					p.addSlide().background = background
 				})

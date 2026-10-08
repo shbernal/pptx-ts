@@ -105,10 +105,10 @@ defineRegressionSuite('Public accessors', [
 	{
 		name: 'newAutoPagedSlides is empty until a table pages, then names the slides it made',
 		fn: async () => {
-			const rows = Array.from({ length: 40 }, (_, i) => [`r${i}c0`, `r${i}c1`])
+			const rows = Array.from({ length: 40 }, (_, i) => [{ text: `r${i}c0` }, { text: `r${i}c1` }])
 
 			const { pres } = await build((p) => {
-				p.addSlide().addTable([['a', 'b']], { x: 0.5, y: 0.5, w: 9, colW: [4.5, 4.5] })
+				p.addSlide().addTable([[{ text: 'a' }, { text: 'b' }]], { x: 0.5, y: 0.5, w: 9, colW: [4.5, 4.5] })
 
 				p.addSlide().addTable(rows, {
 					x: 0.5,
@@ -143,7 +143,7 @@ defineRegressionSuite('Public accessors', [
 			// the first table's report while its continuations stayed in the deck. It appends now,
 			// and by identity: a later table lands on the earlier one's continuations rather than
 			// making its own, so the same slide is spilled onto twice and named once.
-			const rows = (n) => Array.from({ length: n }, (_, i) => [`r${i}c0`, `r${i}c1`])
+			const rows = (n) => Array.from({ length: n }, (_, i) => [{ text: `r${i}c0` }, { text: `r${i}c1` }])
 			const opts = (y) => ({
 				x: 0.5,
 				y,

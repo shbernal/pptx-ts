@@ -31,7 +31,9 @@ defineRegressionSuite('Placeholder type attribute [genXmlPlaceholder-type-map]',
 				p.defineSlideMaster({
 					title: 'PH_TYPE_MASTER_KEYS',
 					objects: [
+						// @ts-expect-error PLACEHOLDER_TYPE names only the OOXML values, not the friendly enum keys
 						{ placeholder: { options: { name: 'pic1', type: 'image', x: 0.5, y: 0.5, w: 4, h: 3 }, text: '' } },
+						// @ts-expect-error PLACEHOLDER_TYPE names only the OOXML values, not the friendly enum keys
 						{ placeholder: { options: { name: 'tbl1', type: 'table', x: 5, y: 0.5, w: 4, h: 3 }, text: '' } },
 					],
 				})

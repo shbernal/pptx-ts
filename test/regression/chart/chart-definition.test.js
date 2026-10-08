@@ -91,7 +91,7 @@ defineRegressionSuite('Chart definition', [
 			const dataBorder = { color: '00FF00' }
 			const layout = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 }
 			const serGridLine = { color: 'CCCCCC', size: 1 }
-			const shadow = { type: 'outer', angle: 45, opacity: 0.5, blur: 3 }
+			const shadow = { type: /** @type {const} */ ('outer'), angle: 45, opacity: 0.5, blur: 3 }
 			const before = JSON.stringify({ plotArea, chartArea, dataBorder, layout, serGridLine, shadow })
 			await build((p) => {
 				p.addSlide().addChart(SERIES, {

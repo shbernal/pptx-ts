@@ -334,6 +334,7 @@ defineRegressionSuite('Numeric conversion guards', [
 		// message named an option that appears in no API. Each caller now passes its own spelling.
 		name: 'a refused line width names the option the caller set',
 		fn: async () => {
+			/** @type {[string, (p: TsPptx) => unknown][]} */
 			const cases = [
 				['line: width', (p) => p.addSlide().addShape('rect', { ...BOX, line: { color: 'FF0000', width: NaN } })],
 				['outline.size', (p) => p.addSlide().addText('x', { ...BOX, outline: { color: 'FF0000', size: NaN } })],

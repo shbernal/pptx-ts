@@ -16,7 +16,7 @@ import { readFixture } from '../../read/corpus.ts'
 // object to the shape and to its lone run, and `shadow` was on the list of options a run inherits
 // from its shape. Two shadows over one string is a state no single PowerPoint action produces.
 
-const SHADOW = { type: 'outer', color: '000000', blur: 3, offset: 2, angle: 45, opacity: 0.5 }
+const SHADOW = { type: /** @type {const} */ ('outer'), color: '000000', blur: 3, offset: 2, angle: 45, opacity: 0.5 }
 
 /** Whether the first `<p:sp>` on slide 1 carries an `<a:effectLst>` in its spPr / in a run's rPr. */
 async function shadowSites(zip) {

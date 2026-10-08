@@ -19,8 +19,8 @@ defineRegressionSuite('Table headerRow inline sugar', [
 				const s = p.addSlide()
 				s.addTable(
 					[
-						['A', 'B'],
-						['c', 'd'],
+						[{ text: 'A' }, { text: 'B' }],
+						[{ text: 'c' }, { text: 'd' }],
 					],
 					{
 						x: 0.5,
@@ -58,7 +58,7 @@ defineRegressionSuite('Table headerRow inline sugar', [
 		fn: async () => {
 			const { zip } = await build((p) => {
 				const s = p.addSlide()
-				s.addTable([[{ text: 'A', options: { fill: { color: 'AA0000' } } }, 'B']], {
+				s.addTable([[{ text: 'A', options: { fill: { color: 'AA0000' } } }, { text: 'B' }]], {
 					x: 0.5,
 					y: 0.5,
 					w: 6,
@@ -82,8 +82,8 @@ defineRegressionSuite('Table headerRow inline sugar', [
 				const s = p.addSlide()
 				s.addTable(
 					[
-						['A', 'B'],
-						['c', 'd'],
+						[{ text: 'A' }, { text: 'B' }],
+						[{ text: 'c' }, { text: 'd' }],
 					],
 					{
 						x: 0.5,

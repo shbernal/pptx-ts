@@ -246,6 +246,7 @@ defineRegressionSuite('Table styling: built-in styles and the direct-formatting 
 			// it has nothing to mean. Passing it must not change the bytes.
 			const { result, codes } = await captureDiagnostics(() =>
 				build((p) => {
+					// @ts-expect-error styleDrivenCells is the removed, unknown option under test
 					p.addSlide().addTable([[{ text: 'H1' }]], { ...AT, styleDrivenCells: true })
 				})
 			)

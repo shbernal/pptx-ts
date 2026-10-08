@@ -66,6 +66,7 @@ defineRegressionSuite('Chart input immutability', [
 				const before = structuredClone(options)
 
 				await build((p) => {
+					// @ts-expect-error the options carry invalid values on purpose
 					p.addSlide().addChart([{ name: 'S', labels: ['A', 'B'], values: [1, 2] }], options)
 				})
 
@@ -160,6 +161,7 @@ defineRegressionSuite('Chart input immutability', [
 
 			await build((p) => {
 				p.defineSlideMaster({ title: 'CHART_MASTER', objects: [{ chart }] })
+				// @ts-expect-error masterName is not an addSlide option (masterTitle is)
 				p.addSlide({ masterName: 'CHART_MASTER' })
 			})
 

@@ -1,3 +1,4 @@
+/** @import { CHART_NAME, ChartOpts, OptsChartData } from '../../../dist/node.js' */
 import TsPptx, { ChartType, InvalidOptionError } from '../../../dist/node.js'
 import {
 	defineRegressionSuite,
@@ -81,9 +82,11 @@ defineRegressionSuite('Chart option validation', [
 		name: 'invalid gridLine cap is dropped (never emitted)',
 		fn: async () => {
 			const { zip } = await build((p) => {
+				// @ts-expect-error a gridline cap that is not one
 				p.addSlide().addChart(SERIES, {
 					...BASE,
 					type: ChartType.bar,
+					// oxlint-disable-next-line typescript/no-deprecated -- the deprecated `size`/`style` spellings are what this case validates.
 					valGridLine: { size: 2, style: 'solid', cap: 'INVALID' },
 				})
 			})
@@ -94,9 +97,12 @@ defineRegressionSuite('Chart option validation', [
 	{
 		name: 'invalid gridLine style is dropped',
 		fn: async () => {
+			/* oxlint-disable typescript/no-deprecated -- the deprecated `size`/`style` spellings are what this case validates. */
 			const { zip } = await build((p) => {
+				// @ts-expect-error a gridline style that is not one
 				p.addSlide().addChart(SERIES, { ...BASE, type: ChartType.bar, valGridLine: { size: 2, style: 'wavy' } })
 			})
+			/* oxlint-enable typescript/no-deprecated */
 			const xml = await chartXml(zip)
 			assertNotIncludes(xml, 'wavy', 'an unrecognized gridLine style must be scrubbed before emit')
 		},
@@ -192,6 +198,7 @@ defineRegressionSuite('Chart option validation', [
 			let thrown = null
 			try {
 				await build((p) => {
+					// @ts-expect-error a font size given as a string
 					p.addSlide().addChart(SERIES, {
 						...BASE,
 						type: ChartType.bar,
@@ -212,6 +219,7 @@ defineRegressionSuite('Chart option validation', [
 			// A negative size with a real style takes the `size <= 0` branch (the
 			// early `style === 'none'` return would otherwise skip validation).
 			const { zip } = await build((p) => {
+				// oxlint-disable-next-line typescript/no-deprecated -- the deprecated `size`/`style` spellings are what this case validates.
 				p.addSlide().addChart(SERIES, { ...BASE, type: ChartType.bar, valGridLine: { size: -5, style: 'dash' } })
 			})
 			const xml = await chartXml(zip)
@@ -229,6 +237,7 @@ defineRegressionSuite('Chart option validation', [
 				messages,
 			} = await captureDiagnostics(async () => {
 				const { zip } = await build((p) => {
+					// @ts-expect-error a cap that is not one
 					p.addSlide().addChart(SERIES, {
 						...BASE,
 						type: ChartType.bar,
@@ -482,6 +491,7 @@ defineRegressionSuite('Chart option validation', [
 		name: 'axisPos placed nothing, which is why it could be removed',
 		fn: async () => {
 			const { zip } = await build((p) => {
+				// @ts-expect-error axisPos was removed from the options
 				p.addSlide().addChart(SERIES, { ...BASE, type: ChartType.bar, axisPos: 't' })
 			})
 			const xml = await chartXml(zip)
@@ -587,6 +597,7 @@ defineRegressionSuite('Chart option validation', [
 		// `$C$2:$C$1`), and every series after the first on a chart that plots one.
 		name: 'series the chart cannot plot as given are reported',
 		fn: async () => {
+			/** @type {[string, CHART_NAME, OptsChartData[]][]} */
 			const cases = [
 				['more values than labels', ChartType.bar, [{ name: 'S', labels: ['a', 'b'], values: [1, 2, 3, 4] }]],
 				[
@@ -649,6 +660,7 @@ defineRegressionSuite('Chart option validation', [
 		// 0 became 50, while the same options inside a combo kept it.
 		name: 'a stacked bar keeps a stated gap width of 0, standalone and inside a combo',
 		fn: async () => {
+			/** @type {ChartOpts} */
 			const stacked = { barGrouping: 'stacked', barGapWidthPct: 0 }
 			const standalone = await build((p) => {
 				p.addSlide().addChart(SERIES, { ...BASE, type: ChartType.bar, ...stacked })

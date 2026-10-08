@@ -32,7 +32,18 @@
 // titles/labels), native math (OMML/LaTeX), bullets, groups, transitions/animations,
 // theme & fonts, notes/comments, and value-clamp/metadata edge cases.
 
-import TsPptx, { ChartType, SchemeColor, ShapeType } from '../dist/node.js'
+import TsPptx, {
+	ChartType,
+	SchemeColor,
+	ShapeType,
+	type ChartPropsChartStock,
+	type GradientFillProps,
+	type OptsChartData,
+	type PatternFillProps,
+	type ShapeFillProps,
+	type StrokeProps,
+} from '../dist/node.js'
+import type { ValidationDiagnostic } from 'ooxml-validate'
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -55,7 +66,17 @@ const fontsDir = path.join(__dirname, 'read', 'fixtures', 'fonts')
 /** Content type of a generic (non-OPC-package) embedded OLE object part. */
 const OLE_BLOB_CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.oleObject'
 
-async function expectNoSchemaErrors(buf, label) {
+/**
+ * One fixture. `exclusive` routes it to the sequential block of
+ * `schema-validation.test.js` (see the file header).
+ */
+export interface SchemaCase {
+	name: string
+	fn: () => Promise<void> | void
+	exclusive?: boolean
+}
+
+async function expectNoSchemaErrors(buf: Uint8Array, label: string) {
 	const errors = await validateBuf(buf)
 	if (errors.length === 0) return
 	assert(false, `${label}: ${errors.length} schema error(s):\n${formatSchemaErrors(errors)}`)
@@ -73,11 +94,8 @@ async function expectNoSchemaErrors(buf, label) {
  * `partUri` and `xpath` are both `null` on a package-level failure — the file is not a
  * readable OPC package at all, so there is nothing to point at — and must not be
  * printed blind. The self-check case at the end of this file pins that shape.
- *
- * @param {readonly import('ooxml-validate').ValidationDiagnostic[]} errors
- * @param {number} limit
  */
-function formatSchemaErrors(errors, limit = 5) {
+function formatSchemaErrors(errors: readonly ValidationDiagnostic[], limit = 5) {
 	const lines = errors.slice(0, limit).map((e) => {
 		const where = e.partUri ? `${e.partUri} ${e.xpath || '(no xpath)'}` : '(package level — no part)'
 		return `  - [${e.type}/${e.id}] ${e.description}\n      at ${where}`
@@ -287,6 +305,7 @@ export default [
 					w: 4,
 					h: 1,
 					fill: { color: '00B0B9' },
+					// @ts-expect-error `opacity` is a removed shadow input (now `transparency`); it is inert at runtime
 					shadow: { type: 'outer', blur: 6, offset: 2, color: '000000', opacity: 0.15 },
 				})
 			})
@@ -304,6 +323,7 @@ export default [
 					w: 4,
 					h: 1,
 					fill: { color: '00B0B9' },
+					// @ts-expect-error `opacity` is a removed shadow input (now `transparency`); it is inert at runtime
 					shadow: { type: 'inner', blur: 6, offset: 2, color: '000000', opacity: 0.15 },
 				})
 			})
@@ -321,6 +341,7 @@ export default [
 						[
 							{
 								text: 'Shadowed cell',
+								// @ts-expect-error TableCellProps does not declare `shadow`, though cell text emits it (the shadow also carries the removed `opacity`)
 								options: { shadow: { type: 'outer', blur: 4, offset: 3, angle: 45, color: '404040', opacity: 0.6 } },
 							},
 						],
@@ -334,6 +355,7 @@ export default [
 					w: 4,
 					h: 1,
 					glow: { size: 6, color: 'FFFF00', opacity: 0.5 },
+					// @ts-expect-error `opacity` is a removed shadow input (now `transparency`); it is inert at runtime
 					shadow: { type: 'outer', blur: 5, offset: 2, color: '000000', opacity: 0.5 },
 				})
 			})
@@ -348,6 +370,7 @@ export default [
 		fn: async () => {
 			const { buf } = await build((p) => {
 				const s = p.addSlide()
+				// @ts-expect-error TableCellProps does not declare `shadow`, though cell text emits it (the shadow also carries the removed `opacity`)
 				s.addTable([[{ text: 'A', options: { shadow: { type: 'outer', color: '404040CC', opacity: 0.6 } } }]], {
 					x: 1,
 					y: 1,
@@ -736,7 +759,7 @@ export default [
 		fn: async () => {
 			const pngData =
 				'image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
-			const imgFill = () => ({ type: 'image', image: { data: pngData } })
+			const imgFill = (): ShapeFillProps => ({ type: 'image', image: { data: pngData } })
 			const { buf, zip } = await build((p) => {
 				p.addSlide().addTable(
 					[
@@ -810,7 +833,7 @@ export default [
 		name: 'pattern and sub-object-inferred slide backgrounds emit a valid p:bgPr',
 		fn: async () => {
 			const { buf } = await build((p) => {
-				const gradient = {
+				const gradient: GradientFillProps = {
 					kind: 'linear',
 					angle: 90,
 					stops: [
@@ -818,7 +841,7 @@ export default [
 						{ position: 100, color: '0B003D' },
 					],
 				}
-				const pattern = { preset: 'diagCross', fgColor: '003366', bgColor: 'FFFFFF' }
+				const pattern: PatternFillProps = { preset: 'diagCross', fgColor: '003366', bgColor: 'FFFFFF' }
 				p.addSlide().background = { gradient }
 				p.addSlide().background = { pattern }
 				p.addSlide().background = { type: 'pattern', pattern }
@@ -1016,13 +1039,13 @@ export default [
 		name: 'table with merged cells carrying borders and fill (colspan + rowspan)',
 		fn: async () => {
 			const { buf } = await build((p) => {
-				const red = [
+				const red: [StrokeProps, StrokeProps, StrokeProps, StrokeProps] = [
 					{ type: 'solid', color: 'FF0000', width: 2 },
 					{ type: 'solid', color: 'FF0000', width: 2 },
 					{ type: 'solid', color: 'FF0000', width: 2 },
 					{ type: 'solid', color: 'FF0000', width: 2 },
 				]
-				const blue = [
+				const blue: [StrokeProps, StrokeProps, StrokeProps, StrokeProps] = [
 					{ type: 'solid', color: '0000FF', width: 2 },
 					{ type: 'solid', color: '0000FF', width: 2 },
 					{ type: 'solid', color: '0000FF', width: 2 },
@@ -1146,6 +1169,7 @@ export default [
 								options: {
 									name: 'body-ph',
 									type: 'body',
+									// @ts-expect-error `idx` is not a PlaceholderProps option; it is inert at runtime
 									idx: 1,
 									x: 0.5,
 									y: 1.8,
@@ -1194,6 +1218,7 @@ export default [
 					title: 'TBL_MASTER',
 					objects: [
 						{
+							// @ts-expect-error `idx` is not a PlaceholderProps option; it is inert at runtime
 							placeholder: { options: { name: 'content', type: 'body', idx: 1, x: 0.5, y: 1.5, w: 9, h: 4 }, text: '' },
 						},
 					],
@@ -1202,8 +1227,8 @@ export default [
 				// No x/y/w/h: geometry must come from the placeholder.
 				slide.addTable(
 					[
-						['A1', 'B1'],
-						['A2', 'B2'],
+						[{ text: 'A1' }, { text: 'B1' }],
+						[{ text: 'A2' }, { text: 'B2' }],
 					],
 					{ placeholder: 'content' }
 				)
@@ -1591,6 +1616,7 @@ export default [
 					w: 2,
 					h: 2,
 					line: { color: '0088CC', width: 2 },
+					// @ts-expect-error `opacity` is a removed shadow input (now `transparency`); it is inert at runtime
 					shadow: { type: 'outer', color: '000000', opacity: 0.5, blur: 8, offset: 4, angle: 270 },
 				})
 				// dashed border
@@ -1748,7 +1774,7 @@ export default [
 				{ name: 'X-Axis', values: [0, 1, 2] },
 				{ name: 'Y-Value 1', values: [1, 4, 9], labels: ['A', 'B', 'C'] },
 			]
-			for (const format of ['custom', 'customXY']) {
+			for (const format of ['custom', 'customXY'] as const) {
 				const { buf } = await build((p) => {
 					p.addSlide().addChart(series, {
 						type: ChartType.scatter,
@@ -1771,6 +1797,7 @@ export default [
 			const { buf } = await build((p) => {
 				p.addSlide().addChart(
 					[
+						// @ts-expect-error ChartMulti requires `options`, though a subchart without them builds
 						{
 							type: ChartType.bar,
 							data: [{ name: 'Bars', labels: ['A', 'B', 'C'], values: [3, 5, 2] }],
@@ -1983,7 +2010,7 @@ export default [
 					values: [750, 650, 880, 3900, 970, 1340],
 				},
 			]
-			for (const type of ['treemap', 'sunburst']) {
+			for (const type of ['treemap', 'sunburst'] as const) {
 				const { buf, zip } = await build((p) => {
 					p.addSlide().addChart(data, { type, x: 1, y: 1, w: 8, h: 4.5, showValue: true })
 				})
@@ -2124,20 +2151,20 @@ export default [
 		name: 'stock charts (all four styles) are schema-valid',
 		fn: async () => {
 			const LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
-			const S = (name, values) => ({ name, labels: LABELS, values })
+			const S = (name: string, values: number[]): OptsChartData => ({ name, labels: LABELS, values })
 			const HIGH = S('High', [55, 57, 57, 58, 58])
 			const LOW = S('Low', [11, 12, 13, 11, 35])
 			const CLOSE = S('Close', [32, 35, 34, 35, 43])
 			const OPEN = S('Open', [20, 33, 30, 33, 37])
 			const VOL = S('Volume', [1200, 1500, 900, 1700, 1400])
-			const byStyle = {
-				hlc: [HIGH, LOW, CLOSE],
-				ohlc: [OPEN, HIGH, LOW, CLOSE],
-				vhlc: [VOL, HIGH, LOW, CLOSE],
-				vohlc: [VOL, OPEN, HIGH, LOW, CLOSE],
-			}
+			const byStyle: [NonNullable<ChartPropsChartStock['stockStyle']>, OptsChartData[]][] = [
+				['hlc', [HIGH, LOW, CLOSE]],
+				['ohlc', [OPEN, HIGH, LOW, CLOSE]],
+				['vhlc', [VOL, HIGH, LOW, CLOSE]],
+				['vohlc', [VOL, OPEN, HIGH, LOW, CLOSE]],
+			]
 			const { buf, zip } = await build((p) => {
-				for (const [stockStyle, data] of Object.entries(byStyle)) {
+				for (const [stockStyle, data] of byStyle) {
 					p.addSlide().addChart(data, { type: 'stock', stockStyle, x: 1, y: 1, w: 8, h: 4.5 })
 				}
 			})
@@ -2331,7 +2358,7 @@ export default [
 		name: 'chart with non-finite (NaN) values emits a valid sparse numCache',
 		exclusive: true,
 		fn: async () => {
-			const warnings = []
+			const warnings: string[] = []
 			const origWarn = console.warn
 			console.warn = (...args) => warnings.push(args.join(' '))
 			let buf
@@ -2361,7 +2388,7 @@ export default [
 		name: 'line chart marker size out of range is clamped to valid ST_MarkerSize',
 		exclusive: true,
 		fn: async () => {
-			const warnings = []
+			const warnings: string[] = []
 			const origWarn = console.warn
 			console.warn = (...args) => warnings.push(args.join(' '))
 			let buf
@@ -2404,7 +2431,7 @@ export default [
 		name: 'out-of-range chart gap/overlap/holeSize/firstSliceAng are clamped to valid ranges',
 		exclusive: true,
 		fn: async () => {
-			const warnings = []
+			const warnings: string[] = []
 			const origWarn = console.warn
 			console.warn = (...args) => warnings.push(args.join(' '))
 			let buf
@@ -2443,7 +2470,7 @@ export default [
 		name: 'out-of-range text fontSize/charSpacing/lineSpacing are clamped to valid ranges',
 		exclusive: true,
 		fn: async () => {
-			const warnings = []
+			const warnings: string[] = []
 			const origWarn = console.warn
 			console.warn = (...args) => warnings.push(args.join(' '))
 			let buf
@@ -2479,7 +2506,7 @@ export default [
 		name: 'out-of-range shape transparency/line-width are clamped to valid ranges',
 		exclusive: true,
 		fn: async () => {
-			const warnings = []
+			const warnings: string[] = []
 			const origWarn = console.warn
 			console.warn = (...args) => warnings.push(args.join(' '))
 			let buf
@@ -2519,7 +2546,7 @@ export default [
 		fn: async () => {
 			const b64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
 			const png = 'image/png;base64,' + b64
-			const warnings = []
+			const warnings: string[] = []
 			const origWarn = console.warn
 			console.warn = (...args) => warnings.push(args.join(' '))
 			let buf
@@ -2717,7 +2744,7 @@ export default [
 			// and the marker (fill + border) must all resolve to <a:noFill/> — never a black 000000
 			// fallback, and without warning that 'transparent' is an invalid colour.
 			const origWarn = console.warn
-			const warnings = []
+			const warnings: string[] = []
 			console.warn = (m) => warnings.push(String(m))
 			let buf, zip
 			try {
@@ -2762,6 +2789,7 @@ export default [
 		name: 'line chart with null values defaults to gap',
 		fn: async () => {
 			const { buf } = await build((p) => {
+				// @ts-expect-error OptsChartData.values is number[], though a null value is the gap this case covers
 				p.addSlide().addChart([{ name: 'S1', labels: ['A', 'B', 'C', 'D'], values: [1, null, 3, 4] }], {
 					type: ChartType.line,
 					x: 1,
@@ -3022,7 +3050,7 @@ export default [
 		name: 'chart axis, error-bar and legend-layout options outside their schema types are corrected',
 		exclusive: true,
 		fn: async () => {
-			const warnings = []
+			const warnings: string[] = []
 			const origWarn = console.warn
 			console.warn = (...args) => warnings.push(args.join(' '))
 			let buf
@@ -3031,6 +3059,7 @@ export default [
 					p.addSlide().addChart(
 						[
 							{
+								// @ts-expect-error the series and options carry values outside their schema types on purpose
 								name: 'S1',
 								labels: ['A', 'B', 'C'],
 								values: [1, 2, 3],
@@ -3071,7 +3100,7 @@ export default [
 		name: 'combo subchart shadow and border are checked as a single chart is',
 		exclusive: true,
 		fn: async () => {
-			const warnings = []
+			const warnings: string[] = []
 			const origWarn = console.warn
 			console.warn = (...args) => warnings.push(args.join(' '))
 			let buf
@@ -3082,6 +3111,7 @@ export default [
 							{
 								type: ChartType.bar,
 								data: [{ name: 'Bar', labels: ['A', 'B', 'C'], values: [1, 2, 3] }],
+								// @ts-expect-error shadow type and border color are invalid on purpose
 								options: { shadow: { type: 'weird', angle: 9999 }, dataBorder: { width: -2, color: 'red' } },
 							},
 							{
@@ -3106,6 +3136,7 @@ export default [
 			const { buf } = await build((p) => {
 				p.firstSlideNum = 5
 				const slide = p.addSlide()
+				// @ts-expect-error `slideNumber` is not a TextPropsOptions option; it is inert at runtime
 				slide.addText('', { x: 0, y: 0, w: 1, h: 1, slideNumber: { x: 0.5, y: 0.5 } })
 			})
 			await expectNoSchemaErrors(buf, 'first-slide-num')
@@ -3697,7 +3728,7 @@ export default [
 		fn: async () => {
 			const { buf } = await build((p) => {
 				const s = p.addSlide()
-				const presets = ['appear', 'wipe', 'spin', 'flyOut']
+				const presets = ['appear', 'wipe', 'spin', 'flyOut'] as const
 				presets.forEach((preset, i) => {
 					const nm = `shape-${preset}`
 					s.addText(nm, { x: 1, y: 1 + i, w: 3, h: 1, objectName: nm })
@@ -3733,7 +3764,7 @@ export default [
 		name: 'slide transitions edited through the read model (sound kept, sound removed, spd kept absent)',
 		fn: async () => {
 			const { Presentation } = await import('../dist/read.js')
-			const load = async (/** @type {string} */ name) =>
+			const load = async (name: string) =>
 				Presentation.load(await readFile(new URL(`./read/fixtures/${name}.pptx`, import.meta.url)))
 			const sounds = await load('slide-transition-sound')
 			const [first, second, third] = sounds.slides
@@ -4090,7 +4121,7 @@ export default [
 		name: 'custGeom drops a guide with an unknown formula operation and stays schema-valid',
 		exclusive: true,
 		fn: async () => {
-			const warnings = []
+			const warnings: string[] = []
 			const origWarn = console.warn
 			console.warn = (...args) => warnings.push(args.join(' '))
 			let buf
@@ -4405,8 +4436,10 @@ export default [
 						w: 6,
 						h: 3,
 						barGrouping: 'stacked',
+						/* oxlint-disable typescript/no-deprecated -- the gridline fixtures keep the deprecated `size`/`style` spelling, which still has to emit valid XML. */
 						valGridLine: { color: SchemeColor.accent1, size: 1, style: 'dash' },
 						catGridLine: { color: SchemeColor.text2, size: 1, style: 'solid' },
+						/* oxlint-enable typescript/no-deprecated */
 						barSeriesLine: { color: SchemeColor.accent3, size: 1, style: 'dash' },
 					}
 				)
@@ -4441,6 +4474,7 @@ export default [
 					y: 1,
 					w: 6,
 					h: 3,
+					// oxlint-disable-next-line typescript/no-deprecated -- the gridline fixtures keep the deprecated `size`/`style` spelling, which still has to emit valid XML.
 					valGridLine: { color: '#d9d9d9', size: 1, style: 'solid' },
 				})
 			})
@@ -4528,6 +4562,7 @@ export default [
 							type: ChartType.bar,
 							data: [{ name: 'B', labels, values: [40, 30, 20, 10] }],
 							// Neither value is in ST_Grouping / ST_BarDir.
+							// @ts-expect-error neither value is in ST_Grouping / ST_BarDir, on purpose
 							options: { barGrouping: 'sideways', barDir: 'diagonal' },
 						},
 						{
@@ -4549,7 +4584,8 @@ export default [
 			await expectNoSchemaErrors(buf, 'combo subchart option clamping')
 
 			const chartXml = await readEntry(zip, 'ppt/charts/chart1.xml')
-			const vals = (tag) => [...chartXml.matchAll(new RegExp(`<c:${tag} val="([^"]*)"\\/>`, 'g'))].map((m) => m[1])
+			const vals = (tag: string) =>
+				[...chartXml.matchAll(new RegExp(`<c:${tag} val="([^"]*)"\\/>`, 'g'))].map((m) => m[1])
 			assertEqual(vals('overlap').join(','), '100,0', 'subchart barOverlapPct clamped into ST_Overlap')
 			assertEqual(vals('gapWidth').join(','), '500,150', 'subchart barGapWidthPct clamped into ST_GapAmount')
 			// The third value is the line group, whose <c:grouping> is always 'standard'.
@@ -4581,7 +4617,9 @@ export default [
 						w: 8,
 						h: 4,
 						showValue: true,
+						// @ts-expect-error invalid on purpose
 						barGrouping: 'sideways', // not in ST_Grouping
+						// @ts-expect-error invalid on purpose
 						dataLabelPosition: 'nonsense', // not in ST_DLblPos
 					}
 				)
@@ -4748,7 +4786,7 @@ export default [
 		fn: async () => {
 			const { Presentation } = await import('../dist/read.js')
 			const { readFile } = await import('node:fs/promises')
-			const load = async (/** @type {string} */ name) =>
+			const load = async (name: string) =>
 				Presentation.load(await readFile(new URL(`./read/fixtures/${name}.pptx`, import.meta.url)))
 			const source = await load('slide-animation-rich')
 			const target = await load('slide-transition')
@@ -4757,7 +4795,7 @@ export default [
 				Number(shape.element_.getElementsByTagNameNS(pNs, 'cNvPr')[0].getAttribute('id'))
 			)
 			const slide = target.slides[0]
-			const options = /** @type {const} */ ({ carryAnimation: true, theme: 'copy' })
+			const options = { carryAnimation: true, theme: 'copy' } as const
 			target.importShapes(slide, source.slides[0], [ids.indexOf(2)], options)
 			target.importShapes(slide, source.slides[0], [ids.indexOf(3), ids.indexOf(4)], options)
 			await expectNoSchemaErrors(Buffer.from(await target.save()), 'carried-animation-pruned')
@@ -4934,10 +4972,12 @@ export default [
 				p.defineSlideMaster({
 					title: 'CLAMPS',
 					textStyles: {
+						// @ts-expect-error `title` is a single level, not an array of levels
 						title: [{ fontSize: 99999 }],
 						body: [{ fontSize: 0.001, marginLeft: 1e6, indent: -1e6 }],
 					},
 				})
+				// @ts-expect-error `masterName` is not an AddSlideProps option (it is `masterTitle`); it is inert at runtime
 				p.addSlide({ masterName: 'CLAMPS' }).addText('x', { x: 1, y: 1, w: 4, h: 1 })
 			})
 			await expectNoSchemaErrors(buf, 'master-text-style-clamps')
@@ -4987,9 +5027,12 @@ export default [
 					y: 0.5,
 					w: 3,
 					h: 1,
+					// @ts-expect-error dash and arrow types outside their unions, on purpose
 					line: { color: 'FF0000', dashType: 'bogusDash', beginArrowType: 'wedge' },
 				})
+				// @ts-expect-error a preset warp outside the union, on purpose
 				s.addText('warped', { x: 0.5, y: 2, w: 3, h: 1, textWarp: 'textLoopTheLoop' })
+				// @ts-expect-error a text direction outside the union, on purpose
 				s.addText('sideways', { x: 0.5, y: 3.5, w: 3, h: 1, vert: 'sideways' })
 			})
 			await expectNoSchemaErrors(buf, 'enum-guards')
@@ -5057,4 +5100,4 @@ export default [
 			assertEqual(err.xpath, null, 'package-level error xpath')
 		},
 	},
-]
+] satisfies SchemaCase[]

@@ -65,7 +65,7 @@ describe('image geometry', () => {
 	})
 
 	test('cover and contain on a zero-size box write a plain stretch rather than NaN', async () => {
-		for (const type of ['cover', 'contain']) {
+		for (const type of /** @type {const} */ (['cover', 'contain'])) {
 			const { result } = await captureDiagnostics(() =>
 				slideXml((p) => p.addSlide().addImage({ data: pngData(32, 32), x: 1, y: 1, w: 0, h: 0, sizing: { type } }))
 			)
@@ -125,12 +125,14 @@ describe('image geometry', () => {
 		const unset = null
 		const tableXml = await slideXml((p) => {
 			withPlaceholder(p)
+			// @ts-expect-error a null coordinate, which a JavaScript caller can pass for an unset axis
 			p.addSlide({ masterTitle: 'M' }).addTable([[{ text: 't' }]], { placeholder: 'body', x: unset })
 		})
 		const tableX = /<p:graphicFrame>[\s\S]*?<a:off x="(-?\d+)"/.exec(tableXml)?.[1]
 		assertEqual(Number(tableX), 3 * EMU_PER_INCH, 'the table')
 		const imageXml = await slideXml((p) => {
 			withPlaceholder(p)
+			// @ts-expect-error a null coordinate, which a JavaScript caller can pass for an unset axis
 			p.addSlide({ masterTitle: 'M' }).addImage({ data: pngData(32, 32), placeholder: 'body', x: unset })
 		})
 		assertEqual(pictureFrame(imageXml).x, 3 * EMU_PER_INCH, 'the image')

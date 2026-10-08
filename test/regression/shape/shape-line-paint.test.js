@@ -1,3 +1,4 @@
+/** @import { LineCap } from '../../../dist/node.js' */
 import { assert, build, defineRegressionSuite, firstXmlBlock, slideXml } from '../../helpers.ts'
 
 // A stroke is painted like a fill: `ShapeLineProps extends ShapeFillProps`, so `line` accepts
@@ -36,11 +37,11 @@ defineRegressionSuite('Shape line paint and cap', [
 	{
 		name: "addShape line `cap` reaches the <a:ln cap=> attribute ('round' -> rnd, 'square' -> sq)",
 		fn: async () => {
-			for (const [cap, expected] of [
+			for (const [cap, expected] of /** @type {[LineCap, string][]} */ ([
 				['round', 'rnd'],
 				['square', 'sq'],
 				['flat', 'flat'],
-			]) {
+			])) {
 				const xml = await slideXml((p) => {
 					p.addSlide().addShape('rect', { x: 1, y: 1, w: 2, h: 1, line: { color: '0070C0', width: 3, cap } })
 				})

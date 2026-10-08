@@ -10,6 +10,7 @@ defineRegressionSuite('Table margins [legacy bug-14]', [
 		fn: async () => {
 			const { zip } = await build((p) => {
 				const s = p.addSlide()
+				// @ts-expect-error a string margin is the invalid input under test
 				s.addTable([[{ text: 'a', options: { margin: 'foo' } }]], { x: 1, y: 1, w: 4, colW: [4] })
 			})
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
@@ -26,6 +27,7 @@ defineRegressionSuite('Table margins [legacy bug-14]', [
 		fn: async () => {
 			const { zip } = await build((p) => {
 				const s = p.addSlide()
+				// @ts-expect-error an object margin is the invalid input under test
 				s.addTable([[{ text: 'b', options: { margin: { top: 5 } } }]], { x: 1, y: 1, w: 4, colW: [4] })
 			})
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
@@ -41,6 +43,7 @@ defineRegressionSuite('Table margins [legacy bug-14]', [
 		fn: async () => {
 			const { zip } = await build((p) => {
 				const s = p.addSlide()
+				// @ts-expect-error a string margin is the invalid input under test
 				s.addTable([[{ text: 'c' }]], { x: 1, y: 1, w: 4, colW: [4], margin: 'bad' })
 			})
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')

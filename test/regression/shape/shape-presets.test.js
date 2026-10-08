@@ -16,6 +16,7 @@ defineRegressionSuite('Shape preset mapping [legacy bug-10]', [
 		fn: async () => {
 			const { zip } = await build((p) => {
 				const s = p.addSlide()
+				// @ts-expect-error SHAPE_NAME omits the friendly aliases addShape resolves
 				s.addShape('oval', { x: 1, y: 1, w: 0.4, h: 0.4, fill: { color: '00B0B9' } })
 			})
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
@@ -28,6 +29,7 @@ defineRegressionSuite('Shape preset mapping [legacy bug-10]', [
 		fn: async () => {
 			const { zip } = await build((p) => {
 				const s = p.addSlide()
+				// @ts-expect-error SHAPE_NAME omits the friendly aliases addShape resolves
 				s.addShape('roundedRectangle', { x: 1, y: 1, w: 2, h: 1 })
 			})
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
@@ -46,6 +48,7 @@ defineRegressionSuite('Shape preset mapping [legacy bug-10]', [
 		fn: async () => {
 			const { zip } = await build((p) => {
 				const s = p.addSlide()
+				// @ts-expect-error SHAPE_NAME omits the friendly aliases addShape resolves
 				s.addShape('rectangle', { x: 1, y: 1, w: 2, h: 1 })
 			})
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
@@ -75,6 +78,7 @@ defineRegressionSuite('Shape preset mapping [legacy bug-10]', [
 				() =>
 					build((p) => {
 						const s = p.addSlide()
+						// @ts-expect-error a misspelled preset
 						s.addShape('hexgon', { x: 1, y: 1, w: 2, h: 1 }) // typo for "hexagon"
 					}),
 				/Invalid shape "hexgon"/,
@@ -123,6 +127,7 @@ defineRegressionSuite('Shape preset mapping [legacy bug-10]', [
 				() =>
 					build((p) => {
 						const s = p.addSlide()
+						// @ts-expect-error a misspelled preset
 						s.addText('hi', { shape: 'ellipsee', x: 1, y: 1, w: 1, h: 1 }) // typo
 					}),
 				/Invalid shape "ellipsee"/,

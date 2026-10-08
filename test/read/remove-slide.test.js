@@ -57,7 +57,7 @@ describe('Presentation.removeSlide', () => {
 
 	test('keeps shared chrome (layout/master/theme) when a slide is removed', async () => {
 		const deck = await openFixture('mixed')
-		const layout = resolveSingle(deck.opc, deck.slides[0].partName, SLIDE_LAYOUT_REL)
+		const layout = defined(resolveSingle(deck.opc, deck.slides[0].partName, SLIDE_LAYOUT_REL))
 		const master = resolveSingle(deck.opc, layout, SLIDE_MASTER_REL)
 		deck.removeSlide(0)
 		const reopened = await Presentation.load(await deck.save())

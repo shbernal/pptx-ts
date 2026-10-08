@@ -18,6 +18,7 @@
 // than degrading to null the way the old top-level-only `slide.shapeById` did.
 
 import { ShapeType } from '../../dist/node.js'
+import { isConnector } from '../../dist/read.js'
 import { describe, test } from 'vitest'
 import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.ts'
 import { assert, assertEqual } from '../helpers.ts'
@@ -25,7 +26,7 @@ import { assert, assertEqual } from '../helpers.ts'
 /** The single connector on any slide of `presentation`. */
 function connectorOf(presentation) {
 	const cxn = firstShape(presentation, (s) => s.shapeType === 'connector')
-	assert(cxn, 'the authored connector is read back')
+	assert(cxn !== null && isConnector(cxn), 'the authored connector is read back')
 	return cxn
 }
 

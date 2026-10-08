@@ -1,4 +1,5 @@
 import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
+/** @import { StrokeProps } from '../../../dist/node.js' */
 
 // Regression: borders (and fill) configured on a colspan/rowspan table cell must
 // render across the whole merged region. PowerPoint defines a merged region's
@@ -79,7 +80,9 @@ defineRegressionSuite('Table merged-cell borders [upstream-issue-680]', [
 	},
 ])
 
+/** @returns {[StrokeProps, StrokeProps, StrokeProps, StrokeProps]} */
 function makeBorder(color) {
+	/** @type {StrokeProps} */
 	const side = { type: 'solid', color, width: 2 }
 	return [side, side, side, side]
 }

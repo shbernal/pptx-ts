@@ -176,7 +176,7 @@ describe('AutoShape.pictureFill — p:spPr/a:blipFill (PowerPoint oracle)', () =
 		const { presentation } = await authorRead((pres) => {
 			pres.addSlide().addText('plain', { x: 1, y: 1, w: 3, h: 1, fill: { color: '1F4E79' } })
 		})
-		const shape = firstShape(presentation, (s) => s.shapeType === 'autoShape')
+		const shape = defined(firstShape(presentation, (s) => s.shapeType === 'autoShape'))
 		assertEqual(shape.pictureFill, null, 'a solid-filled shape has no picture fill')
 		assertEqual(shape.resolvedFill?.effectiveHex, '1F4E79', 'and its solid fill is untouched')
 	})
@@ -185,7 +185,7 @@ describe('AutoShape.pictureFill — p:spPr/a:blipFill (PowerPoint oracle)', () =
 		const { presentation } = await authorRead((pres) => {
 			pres.addSlide().addText('img', { x: 1, y: 1, w: 3, h: 1, fill: { type: 'image', image: { data: PNG_1X1 } } })
 		})
-		const shape = firstShape(presentation, (s) => s.shapeType === 'autoShape')
+		const shape = defined(firstShape(presentation, (s) => s.shapeType === 'autoShape'))
 		const fill = shape.pictureFill
 		assert(fill, "the writer's blipFill decodes through the same reader")
 		assert(fill.partName?.endsWith('.png'), `resolves to the embedded png, got ${fill.partName}`)
@@ -205,7 +205,7 @@ describe('AutoShape.pictureFill — p:spPr/a:blipFill (PowerPoint oracle)', () =
 				fill: { type: 'image', image: { data: PNG_1X1 }, transparency: 25 },
 			})
 		})
-		const fill = firstShape(presentation, (s) => s.shapeType === 'autoShape').pictureFill
+		const fill = defined(defined(firstShape(presentation, (s) => s.shapeType === 'autoShape')).pictureFill)
 		// The writer's `transparency` is a percentage *lost*; a:alphaModFix/@amt is the
 		// opacity that remains, so 25 % transparent is 0.75 opaque.
 		assertEqual(fill.alpha, 0.75, 'transparency 25 → a:alphaModFix amt=75000 → 0.75')
@@ -221,7 +221,7 @@ describe('AutoShape.pictureFill — p:spPr/a:blipFill (PowerPoint oracle)', () =
 		const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
 		zip.file('ppt/slides/slide1.xml', slideXml.replace(/<a:blip r:embed="rId\d+"/, '<a:blip r:embed="rIdNope"'))
 		const presentation = await Presentation.load(await zip.generateAsync({ type: 'uint8array' }))
-		const fill = firstShape(presentation, (s) => s.shapeType === 'autoShape').pictureFill
+		const fill = defined(defined(firstShape(presentation, (s) => s.shapeType === 'autoShape')).pictureFill)
 		assertEqual(fill.relId, 'rIdNope', 'the id is reported verbatim')
 		assertEqual(fill.partName, null, 'and resolves to nothing rather than throwing')
 	})
@@ -252,15 +252,15 @@ describe('TableCell.resolvedFill — a non-solid own fill suppresses the style g
 
 	test('an image-filled cell reports no colour while its plain neighbour inherits one', async () => {
 		const { presentation } = await authorReadWithFixtureStyles(styledTable)
-		const table = firstTable(presentation)
+		const table = defined(firstTable(presentation))
 		assert(table.resolvedStyle, 'the authored tableStyle resolves, so the style graph is live')
 
 		// The control: same row, same style, no fill of its own — it must still inherit.
-		const plain = table.cell(0, 1)
+		const plain = defined(table.cell(0, 1))
 		assertEqual(plain.pictureFill, null, 'the neighbour is not image-filled')
 		assert(plain.resolvedFill?.effectiveHex, 'and it inherits the firstRow shading from the style')
 
-		const picture = table.cell(0, 0)
+		const picture = defined(table.cell(0, 0))
 		assert(picture.pictureFill, 'the image-filled cell surfaces its picture')
 		assertEqual(
 			picture.resolvedFill,
@@ -279,7 +279,7 @@ describe('TableCell.resolvedFill — a non-solid own fill suppresses the style g
 				hasHeader: true,
 			})
 		})
-		const cell = firstTable(presentation).cell(0, 0)
+		const cell = defined(defined(firstTable(presentation)).cell(0, 0))
 		assertEqual(cell.pictureFill, null, 'no picture fill')
 		assert(cell.resolvedFill?.effectiveHex, 'the style-graph fallback is intact for the unfilled case')
 	})

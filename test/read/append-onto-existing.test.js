@@ -476,7 +476,7 @@ describe('Presentation.appendSlides', () => {
 		// The slide reaches the chart through the MS chartEx rel, not the ECMA `chart` one, and the
 		// body's `<cx:chart r:id>` is that rel.
 		const reopened = await Presentation.load(out)
-		const chartPart = resolveSingle(reopened.opc, added.partName, CHARTEX_REL)
+		const chartPart = defined(resolveSingle(reopened.opc, added.partName, CHARTEX_REL))
 		assertEqual(`/${chartZipPath}`, chartPart, "the slide's chartEx rel resolves to the chartEx part")
 		assertEqual(resolveSingle(reopened.opc, added.partName, CHART_REL), null, 'no classic chart rel was written')
 		const body = new TextDecoder().decode(after.get(added.partName.slice(1)))

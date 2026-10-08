@@ -273,6 +273,7 @@ defineRegressionSuite('Group shapes', [
 				const { zip } = await build((p) => {
 					p.addSlide().addGroup([
 						{ rect: { x: 1, y: 1, w: 1, h: 1 } },
+						// @ts-expect-error a table is not a group child kind
 						{ table: { rows: [[{ text: 'x' }]] } }, // unsupported in MVP
 					])
 				})
@@ -601,6 +602,7 @@ defineRegressionSuite('Group shapes', [
 			setDiagnosticHandler((d) => warnings.push(d.message))
 			try {
 				await build((p) => {
+					// @ts-expect-error a table is not a group child kind
 					p.addSlide().addGroup([{ table: { rows: [[{ text: 'x' }]] } }], { objectName: 'AllSkipped' })
 				})
 			} finally {

@@ -7,6 +7,8 @@ import { defineRegressionSuite, build, readEntry, assert, captureDiagnostics } f
 
 const ONE_IN_EMU = 914400
 
+const row = (...texts) => texts.map((text) => ({ text }))
+
 function gridColWidths(xml) {
 	return [...xml.matchAll(/<a:gridCol w="(\d+)"\/>/g)].map((m) => Number(m[1]))
 }
@@ -17,7 +19,7 @@ defineRegressionSuite('Table column-width distribution', [
 		fn: async () => {
 			const { zip } = await build((p) => {
 				const s = p.addSlide()
-				s.addTable([['A', 'B', 'C']], { x: 0.5, y: 0.5, w: 9, h: 1 })
+				s.addTable([row('A', 'B', 'C')], { x: 0.5, y: 0.5, w: 9, h: 1 })
 			})
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 			const cols = gridColWidths(xml)
@@ -33,7 +35,7 @@ defineRegressionSuite('Table column-width distribution', [
 		fn: async () => {
 			const { zip } = await build((p) => {
 				const s = p.addSlide()
-				s.addTable([['A', 'B', 'C', 'D']], { x: 0.5, y: 0.5, h: 1 })
+				s.addTable([row('A', 'B', 'C', 'D')], { x: 0.5, y: 0.5, h: 1 })
 			})
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 			const cols = gridColWidths(xml)
@@ -50,7 +52,7 @@ defineRegressionSuite('Table column-width distribution', [
 		fn: async () => {
 			const { zip } = await build((p) => {
 				const s = p.addSlide()
-				s.addTable([['A', 'B', 'C']], { x: 0.5, y: 0.5, colW: 2.4, h: 1 })
+				s.addTable([row('A', 'B', 'C')], { x: 0.5, y: 0.5, colW: 2.4, h: 1 })
 			})
 			const cols = gridColWidths(await readEntry(zip, 'ppt/slides/slide1.xml'))
 			const expected = Math.round(2.4 * ONE_IN_EMU)
@@ -68,7 +70,7 @@ defineRegressionSuite('Table column-width distribution', [
 		fn: async () => {
 			const { zip } = await build((p) => {
 				const s = p.addSlide()
-				s.addTable([['A', 'B', 'C']], { x: 0.5, y: 0.5, colW: [1.5], h: 1 })
+				s.addTable([row('A', 'B', 'C')], { x: 0.5, y: 0.5, colW: [1.5], h: 1 })
 			})
 			const cols = gridColWidths(await readEntry(zip, 'ppt/slides/slide1.xml'))
 			const expected = Math.round(1.5 * ONE_IN_EMU)
@@ -87,7 +89,8 @@ defineRegressionSuite('Table column-width distribution', [
 			const { result, codes } = await captureDiagnostics(() =>
 				build((p) => {
 					const s = p.addSlide()
-					s.addTable([['A', 'B', 'C']], { x: 0.5, y: 0.5, colW: 'wide', h: 1 })
+					// @ts-expect-error a string colW is the invalid input under test
+					s.addTable([row('A', 'B', 'C')], { x: 0.5, y: 0.5, colW: 'wide', h: 1 })
 				})
 			)
 			assert(
@@ -106,7 +109,7 @@ defineRegressionSuite('Table column-width distribution', [
 		fn: async () => {
 			const { zip } = await build((p) => {
 				const s = p.addSlide()
-				s.addTable([['A', 'B', 'C']], { x: 0.5, y: 0.5, colW: [2, 3, 4], h: 1 })
+				s.addTable([row('A', 'B', 'C')], { x: 0.5, y: 0.5, colW: [2, 3, 4], h: 1 })
 			})
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 			const cols = gridColWidths(xml)

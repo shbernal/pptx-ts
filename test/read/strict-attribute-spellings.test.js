@@ -72,7 +72,7 @@ describe('xsd:boolean spelled true/false', () => {
 			assert(xml.includes('firstRow="1"'), 'the authored deck writes the digit form')
 			return xml.replaceAll('firstRow="1"', 'firstRow="true"')
 		})
-		assertEqual(firstTable(reopened).firstRowHeader, true, 'firstRow="true" is a header row')
+		assertEqual(defined(firstTable(reopened)).firstRowHeader, true, 'firstRow="true" is a header row')
 	})
 
 	test('TableCell.isMergeContinuation reads a:tc/@hMerge="true"', async () => {
@@ -81,7 +81,11 @@ describe('xsd:boolean spelled true/false', () => {
 			assert(xml.includes('hMerge="1"'), 'the colspan authors a digit-form hMerge')
 			return xml.replaceAll('hMerge="1"', 'hMerge="true"')
 		})
-		assertEqual(firstTable(reopened).cell(1, 1).isMergeContinuation, true, 'hMerge="true" covers the cell')
+		assertEqual(
+			defined(defined(firstTable(reopened)).cell(1, 1)).isMergeContinuation,
+			true,
+			'hMerge="true" covers the cell'
+		)
 	})
 
 	test('Slide.hidden reads p:sld/@show="false"', async () => {
@@ -136,7 +140,8 @@ describe('what the digit-only readings cost downstream', () => {
 		})
 		const digits = await Presentation.load(buf)
 		const words = await reloadWithSlideXml(buf, (xml) => xml.replaceAll('firstRow="1"', 'firstRow="true"'))
-		const fillOf = (presentation) => firstTable(presentation).cell(0, 0).resolvedFill?.effectiveHex ?? null
+		const fillOf = (presentation) =>
+			defined(defined(firstTable(presentation)).cell(0, 0)).resolvedFill?.effectiveHex ?? null
 		assert(fillOf(digits), 'the digit spelling resolves a header fill')
 		assertEqual(fillOf(words), fillOf(digits), 'and so does the word spelling')
 	})

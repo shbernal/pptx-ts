@@ -1,5 +1,13 @@
 import { ChartType } from '../../../dist/node.js'
-import { defineRegressionSuite, build, readEntry, captureDiagnostics, assert, assertEqual } from '../../helpers.ts'
+import {
+	defineRegressionSuite,
+	build,
+	readEntry,
+	captureDiagnostics,
+	assert,
+	assertEqual,
+	defined,
+} from '../../helpers.ts'
 
 // A key that is not part of `BorderProps` used to be discarded in total silence, so a border
 // authored with the wrong name for its thickness rendered at the 1pt default and nothing said so.
@@ -32,7 +40,7 @@ defineRegressionSuite('Border unknown key', [
 		fn: async () => {
 			// `pt` is not a `BorderProps` key -- the thickness field is `width`. Assigning to a
 			// variable first is what slips it past the excess-property check.
-			const border = { type: 'solid', color: 'FF0000', pt: 0.5 }
+			const border = { type: /** @type {const} */ ('solid'), color: 'FF0000', pt: 0.5 }
 			const { result, codes, diagnostics } = await captureDiagnostics(() =>
 				build((p) => {
 					p.addSlide().addTable(ROWS, { ...AT, border })
@@ -46,8 +54,8 @@ defineRegressionSuite('Border unknown key', [
 
 			// The code is the contract, but the offending key is the whole point of the report, so
 			// pin that it travels -- in `detail`, which is structured and safe to assert on.
-			const diagnostic = diagnostics.find((d) => d.code === 'border/unknown-key')
-			assertEqual(diagnostic.detail.received, 'pt', 'the diagnostic names the offending key')
+			const diagnostic = defined(diagnostics.find((d) => d.code === 'border/unknown-key'))
+			assertEqual(defined(diagnostic.detail).received, 'pt', 'the diagnostic names the offending key')
 
 			// And confirm the premise: the authored 0.5 really was discarded for the 1pt default.
 			const xml = await readEntry(result.zip, 'ppt/slides/slide1.xml')
@@ -62,7 +70,7 @@ defineRegressionSuite('Border unknown key', [
 	{
 		name: 'the same border spelled `width` is silent and reaches the XML',
 		fn: async () => {
-			const border = { type: 'solid', color: 'FF0000', width: 0.5 }
+			const border = { type: /** @type {const} */ ('solid'), color: 'FF0000', width: 0.5 }
 			const { result, codes } = await captureDiagnostics(() =>
 				build((p) => {
 					p.addSlide().addTable(ROWS, { ...AT, border })
@@ -112,8 +120,8 @@ defineRegressionSuite('Border unknown key', [
 				codes.includes('border/unknown-key'),
 				'expected the border/unknown-key code from the chart path; got: ' + JSON.stringify(codes)
 			)
-			const diagnostic = diagnostics.find((d) => d.code === 'border/unknown-key')
-			assertEqual(diagnostic.detail.received, 'thickness', 'the diagnostic names the offending key')
+			const diagnostic = defined(diagnostics.find((d) => d.code === 'border/unknown-key'))
+			assertEqual(defined(diagnostic.detail).received, 'thickness', 'the diagnostic names the offending key')
 		},
 	},
 ])

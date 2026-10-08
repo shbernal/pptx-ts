@@ -7,6 +7,7 @@
 //
 // Not a test file (no `.test.` in the name) — vitest's default glob skips it.
 
+import type { OpcPackage } from '../../dist/read.js'
 import { assert } from '../helpers.ts'
 
 /**
@@ -14,7 +15,7 @@ import { assert } from '../helpers.ts'
  * has none. Takes the first if there are several — every caller asks about a relationship the
  * format allows at most one of.
  */
-export function resolveSingle(opc, partName, type) {
+export function resolveSingle(opc: OpcPackage, partName: string, type: string): string | null {
 	const rels = opc.relationshipsFor(partName)
 	const match = [...rels].find((rel) => rel.type === type)
 	return match ? rels.resolveTarget(match.id) : null
@@ -28,7 +29,7 @@ export function resolveSingle(opc, partName, type) {
  * a repair prompt naming nothing, and schema validation does not see it at all: each part is
  * individually valid, and it is the graph between them that is broken.
  */
-export function assertNoDanglingRels(opc) {
+export function assertNoDanglingRels(opc: OpcPackage): void {
 	for (const partName of opc.parts.keys()) {
 		if (partName.endsWith('.rels')) continue
 		for (const rel of opc.relationshipsFor(partName)) {

@@ -34,6 +34,7 @@ defineRegressionSuite('Shape text bodies [legacy bug-13]', [
 			const { zip } = await build((p) => {
 				const s = p.addSlide()
 				s.addShape(ShapeType.rect, { x: 1, y: 1, w: 2, h: 1 })
+				// @ts-expect-error ShapeProps has no text option
 				s.addShape(ShapeType.rect, { x: 1, y: 3, w: 2, h: 1, text: 'a line long enough to need wrapping' })
 			})
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')

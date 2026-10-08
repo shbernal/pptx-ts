@@ -1,4 +1,5 @@
 import { defineRegressionSuite, build, readEntry, captureDiagnostics, assert, assertEqual } from '../../helpers.ts'
+/** @import { StrokeProps } from '../../../dist/node.js' */
 
 // `TableProps.outerBorder` -> the table's perimeter only.
 //
@@ -14,6 +15,7 @@ import { defineRegressionSuite, build, readEntry, captureDiagnostics, assert, as
 
 const AT = { x: 1, y: 1, w: 9 }
 
+/** @type {StrokeProps} */
 const SOLID = { type: 'solid', color: 'FF0000', width: 2 }
 
 /** Each `<a:tc>` in the part, in document (row-major) order. */
@@ -42,9 +44,9 @@ defineRegressionSuite('Table outerBorder', [
 				build((p) => {
 					p.addSlide().addTable(
 						[
-							['A', 'B', 'C'],
-							['D', 'E', 'F'],
-							['G', 'H', 'I'],
+							[{ text: 'A' }, { text: 'B' }, { text: 'C' }],
+							[{ text: 'D' }, { text: 'E' }, { text: 'F' }],
+							[{ text: 'G' }, { text: 'H' }, { text: 'I' }],
 						],
 						{ ...AT, outerBorder: SOLID }
 					)
@@ -69,11 +71,12 @@ defineRegressionSuite('Table outerBorder', [
 				build((p) => {
 					p.addSlide().addTable(
 						[
-							['A', 'B'],
-							['C', 'D'],
+							[{ text: 'A' }, { text: 'B' }],
+							[{ text: 'C' }, { text: 'D' }],
 						],
 						// TRBL, with the right and left entries left out: those edges keep whatever
 						// `border` (here: nothing) already put there.
+						// @ts-expect-error the documented undefined hole is rejected by the optional tuple under exactOptionalPropertyTypes
 						{ ...AT, outerBorder: [SOLID, undefined, SOLID, undefined] }
 					)
 				})
@@ -94,8 +97,8 @@ defineRegressionSuite('Table outerBorder', [
 				build((p) => {
 					p.addSlide().addTable(
 						[
-							['A', 'B'],
-							['C', 'D'],
+							[{ text: 'A' }, { text: 'B' }],
+							[{ text: 'C' }, { text: 'D' }],
 						],
 						// `border` draws a full grid on every cell; `outerBorder` overrides the outside.
 						{ ...AT, border: { type: 'solid', color: 'CCCCCC', width: 0.5 }, outerBorder: SOLID }
@@ -132,7 +135,7 @@ defineRegressionSuite('Table outerBorder', [
 							// One cell spanning both columns of a 2-column table: its origin sits in
 							// column 0 and PowerPoint defines the region's right edge on the hMerge dummy.
 							[{ text: 'wide', options: { colspan: 2 } }],
-							['C', 'D'],
+							[{ text: 'C' }, { text: 'D' }],
 						],
 						{ ...AT, outerBorder: SOLID }
 					)
@@ -152,7 +155,7 @@ defineRegressionSuite('Table outerBorder', [
 		fn: async () => {
 			const { result } = await captureDiagnostics(() =>
 				build((p) => {
-					p.addSlide().addTable([[{ text: 'tall', options: { rowspan: 2 } }, 'B'], ['D']], {
+					p.addSlide().addTable([[{ text: 'tall', options: { rowspan: 2 } }, { text: 'B' }], [{ text: 'D' }]], {
 						...AT,
 						outerBorder: SOLID,
 					})
@@ -170,10 +173,11 @@ defineRegressionSuite('Table outerBorder', [
 		name: 'an unset outerBorder changes nothing',
 		fn: async () => {
 			const rows = [
-				['A', 'B'],
-				['C', 'D'],
+				[{ text: 'A' }, { text: 'B' }],
+				[{ text: 'C' }, { text: 'D' }],
 			]
 			const { result: withOut } = await captureDiagnostics(() =>
+				// @ts-expect-error an explicit undefined outerBorder is the input under test
 				build((p) => p.addSlide().addTable(rows, { ...AT, outerBorder: undefined }))
 			)
 			const { result: without } = await captureDiagnostics(() => build((p) => p.addSlide().addTable(rows, AT)))
@@ -194,8 +198,8 @@ defineRegressionSuite('Table outerBorder', [
 				const built = await build((p) => {
 					p.addSlide().addTable(
 						[
-							['A', 'B'],
-							['C', 'D'],
+							[{ text: 'A' }, { text: 'B' }],
+							[{ text: 'C' }, { text: 'D' }],
 						],
 						{ ...AT, outerBorder: SOLID }
 					)

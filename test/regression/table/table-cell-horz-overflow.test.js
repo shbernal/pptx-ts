@@ -1,4 +1,12 @@
-import { defineRegressionSuite, build, readEntry, captureDiagnostics, assert, assertEqual } from '../../helpers.ts'
+import {
+	defineRegressionSuite,
+	build,
+	readEntry,
+	captureDiagnostics,
+	assert,
+	assertEqual,
+	defined,
+} from '../../helpers.ts'
 
 // `TableCellProps.horzOverflow` -> `a:tcPr/@horzOverflow`.
 //
@@ -62,6 +70,7 @@ defineRegressionSuite('Table cell horzOverflow', [
 		fn: async () => {
 			const { result, codes, diagnostics } = await captureDiagnostics(() =>
 				build((p) => {
+					// @ts-expect-error 'ellipsis' is the unrecognized value under test
 					p.addSlide().addTable([[{ text: 'A', options: { horzOverflow: 'ellipsis' } }]], AT)
 				})
 			)
@@ -71,7 +80,7 @@ defineRegressionSuite('Table cell horzOverflow', [
 				'expected the table/invalid-horz-overflow code; got: ' + JSON.stringify(codes)
 			)
 			const diagnostic = diagnostics.find((d) => d.code === 'table/invalid-horz-overflow')
-			assertEqual(diagnostic.detail.received, 'ellipsis', 'the diagnostic names the offending value')
+			assertEqual(defined(defined(diagnostic).detail).received, 'ellipsis', 'the diagnostic names the offending value')
 
 			const xml = await readEntry(result.zip, 'ppt/slides/slide1.xml')
 			assert(!xml.includes('horzOverflow'), 'the invalid value must not reach the XML')

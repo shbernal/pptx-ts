@@ -49,39 +49,39 @@ function decoratedTable(pres) {
 describe('TableCell.anchorCtr — a:tcPr/@anchorCtr', () => {
 	test('an anchorCtr cell reads true and its sibling reads false', async () => {
 		const { presentation } = await authorRead(decoratedTable)
-		const table = firstTable(presentation)
-		assertEqual(table.cell(0, 0).anchorCtr, true, 'the authored cell reports true')
+		const table = defined(firstTable(presentation))
+		assertEqual(defined(table.cell(0, 0)).anchorCtr, true, 'the authored cell reports true')
 		// `false` is the schema default and is never written, so absent must read as false —
 		// not null. An accessor that reported null here would make "off" and "unset" two
 		// different answers to a question that has one.
-		assertEqual(table.cell(0, 1).anchorCtr, false, 'an unset cell reports false, not null')
+		assertEqual(defined(table.cell(0, 1)).anchorCtr, false, 'an unset cell reports false, not null')
 	})
 })
 
 describe('TableCell.cell3D — a:tcPr/a:cell3D', () => {
 	test('the bevel, material and light rig all read back', async () => {
 		const { presentation } = await authorRead(decoratedTable)
-		const cell3D = firstTable(presentation).cell(0, 0).cell3D
+		const cell3D = defined(defined(firstTable(presentation)).cell(0, 0)).cell3D
 		assert(cell3D, 'the authored cell surfaces a cell3D')
 		assertEqual(cell3D.material, 'metal', 'prstMaterial')
 		assertEqual(cell3D.bevel.preset, 'artDeco', 'bevel preset')
 		// The write option is points and the attribute is EMU; the accessor converts back.
 		assertEqual(cell3D.bevel.widthPt, 7, 'bevel width in points')
 		assertEqual(cell3D.bevel.heightPt, 7, 'bevel height in points')
-		assertEqual(cell3D.lightRig.rig, 'threePt', 'light rig type')
-		assertEqual(cell3D.lightRig.dir, 't', 'light rig direction')
+		assertEqual(defined(cell3D.lightRig).rig, 'threePt', 'light rig type')
+		assertEqual(defined(cell3D.lightRig).dir, 't', 'light rig direction')
 	})
 
 	test('a cell with no cell3D reports null', async () => {
 		const { presentation } = await authorRead(decoratedTable)
-		assertEqual(firstTable(presentation).cell(0, 1).cell3D, null, 'no a:cell3D → null')
+		assertEqual(defined(defined(firstTable(presentation)).cell(0, 1)).cell3D, null, 'no a:cell3D → null')
 	})
 
 	test('an empty cell3D reads its required bevel with every field unset', async () => {
 		const { presentation } = await authorRead((pres) => {
 			pres.addSlide().addTable([[{ text: 'A', options: { cell3D: {} } }]], { x: 1, y: 1, w: 4 })
 		})
-		const cell3D = firstTable(presentation).cell(0, 0).cell3D
+		const cell3D = defined(defined(firstTable(presentation)).cell(0, 0)).cell3D
 		assert(cell3D, 'CT_Cell3D requires a bevel, so an empty option still produces one')
 		assertEqual(cell3D.bevel.preset, null, 'an unwritten preset reads null, not its default')
 		assertEqual(cell3D.bevel.widthPt, null, 'and so does an unwritten width')
@@ -92,7 +92,7 @@ describe('TableCell.cell3D — a:tcPr/a:cell3D', () => {
 describe('TableCell.borders — the two diagonals', () => {
 	test('an authored diagonal reads its width, colour and dash', async () => {
 		const { presentation } = await authorRead(decoratedTable)
-		const borders = firstTable(presentation).cell(0, 0).borders
+		const borders = defined(defined(firstTable(presentation)).cell(0, 0)).borders
 		assert(borders, 'the cell surfaces borders')
 
 		assert(borders.tlToBr, 'the ╲ diagonal is read')
@@ -107,7 +107,7 @@ describe('TableCell.borders — the two diagonals', () => {
 
 	test('a cell with no diagonals still reads its four edges', async () => {
 		const { presentation } = await authorRead(decoratedTable)
-		const borders = firstTable(presentation).cell(0, 1).borders
+		const borders = defined(defined(firstTable(presentation)).cell(0, 1)).borders
 		assert(borders, 'the plain cell still carries the writer default border set')
 		assertEqual(borders.tlToBr, null, 'no ╲ authored')
 		assertEqual(borders.blToTr, null, 'no ╱ authored')
@@ -169,14 +169,14 @@ describe('TableCell.id / .headerIds — a:tc/@id and a:tcPr/a:headers', () => {
 	}
 
 	test('a header cell reports its id and a data cell reports the headers governing it', async () => {
-		const table = firstTable(await withHeaderAssociation())
-		assertEqual(table.cell(0, 1).id, 'HeaderA', 'the column header carries its id')
-		assertEqual(table.cell(1, 0).id, 'HeaderC', 'the row header carries its id')
-		assertEqual(table.cell(0, 0).id, null, 'a cell with no id reports null')
+		const table = defined(firstTable(await withHeaderAssociation()))
+		assertEqual(defined(table.cell(0, 1)).id, 'HeaderA', 'the column header carries its id')
+		assertEqual(defined(table.cell(1, 0)).id, 'HeaderC', 'the row header carries its id')
+		assertEqual(defined(table.cell(0, 0)).id, null, 'a cell with no id reports null')
 
-		assertEqual(table.cell(1, 1).headerIds.join(','), 'HeaderA,HeaderC', 'x1 names its column and row headers')
-		assertEqual(table.cell(1, 2).headerIds.join(','), 'HeaderB,HeaderC', 'x2 names its own column header')
-		assertEqual(table.cell(2, 1).headerIds.length, 0, 'a cell with no association reports an empty list')
+		assertEqual(defined(table.cell(1, 1)).headerIds.join(','), 'HeaderA,HeaderC', 'x1 names its column and row headers')
+		assertEqual(defined(table.cell(1, 2)).headerIds.join(','), 'HeaderB,HeaderC', 'x2 names its own column header')
+		assertEqual(defined(table.cell(2, 1)).headerIds.length, 0, 'a cell with no association reports an empty list')
 	})
 })
 
@@ -197,14 +197,14 @@ describe('TableCell.textFrame carries the owning part-s relationships', () => {
 			slide.addText([{ text: 'docs', options: { hyperlink: { url: URL } } }], { x: 0.5, y: 2, w: 4, h: 1 })
 		})
 
-		const cellRun = firstTable(presentation).cell(0, 0).textFrame.paragraphs[0].runs[0]
-		assertEqual(cellRun.hyperlink.url, URL, 'the cell run resolves its url')
+		const cellRun = defined(defined(defined(firstTable(presentation)).cell(0, 0)).textFrame).paragraphs[0].runs[0]
+		assertEqual(defined(cellRun.hyperlink).url, URL, 'the cell run resolves its url')
 
 		const box = defined(
 			presentation.slides[0].shapes.find((shape) => shape.shapeType === 'autoShape' && shape.textFrame),
 			'the text box'
 		)
 		const boxRun = defined(box.textFrame).paragraphs[0].runs[0]
-		assertEqual(cellRun.hyperlink.url, defined(boxRun.hyperlink).url, 'both runs on the slide agree')
+		assertEqual(defined(cellRun.hyperlink).url, defined(boxRun.hyperlink).url, 'both runs on the slide agree')
 	})
 })

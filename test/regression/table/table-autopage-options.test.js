@@ -1,4 +1,5 @@
 import { defineRegressionSuite, build, readEntry, listEntries, assert, assertEqual } from '../../helpers.ts'
+/** @import { TableRow } from '../../../dist/node.js' */
 
 // Exercises the option surface of the auto-paging engine (getSlidesForTableRows /
 // parseTextToLines in src/gen/table/autopage.ts) through the public `addTable({autoPage:true})`
@@ -132,6 +133,7 @@ defineRegressionSuite('Table autoPage option surface', [
 		fn: async () => {
 			async function pageCount(useMargins) {
 				const { zip } = await build((p) => {
+					/** @type {TableRow[]} */
 					const rows = Array.from({ length: 24 }, (_, i) => [
 						// One cell carries its own margin; the paginator takes the max of cell vs table margin.
 						{ text: `Row ${i} A`, options: useMargins ? { margin: [0.15, 0.05, 0.15, 0.05] } : {} },
@@ -211,7 +213,9 @@ defineRegressionSuite('Table autoPage option surface', [
 	{
 		name: 'degenerate cell text (empty / numeric / whitespace) does not crash autoPage',
 		fn: async () => {
+			/** @type {TableRow[]} */
 			const rows = [
+				// @ts-expect-error a numeric cell text is the degenerate input under test
 				[{ text: '' }, { text: 2024 }],
 				[{ text: '   ' }, { text: 'ok', options: { fontSize: 18 } }],
 				...bodyRows(30),
@@ -356,6 +360,7 @@ defineRegressionSuite('Table autoPage option surface', [
 					colW: [4.5, 4.5],
 					margin: 0,
 					// A string is the untyped-caller shape the engine's own `isNaN` check absorbs.
+					// @ts-expect-error a string slideMargin is the invalid input under test
 					slideMargin: 'nope',
 					autoPage: true,
 					fontSize: 12,

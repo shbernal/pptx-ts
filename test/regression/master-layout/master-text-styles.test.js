@@ -139,6 +139,7 @@ defineRegressionSuite('Master text styles', [
 					p.defineSlideMaster({
 						title: 'BAD_NUMBERS',
 						textStyles: {
+							// @ts-expect-error indent and fontSize given as unit strings
 							body: [{ marginLeft: Number.NaN, indent: '0.5in', fontSize: '18pt' }],
 						},
 					})

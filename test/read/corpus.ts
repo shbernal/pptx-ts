@@ -20,6 +20,8 @@
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { corpusDecks } from '../../scripts/script-utils.mjs'
+import type { Presentation } from '../../dist/read.js'
+import type { DeckIr } from '../../dist/script.js'
 import { FIXTURES } from './fixtures-dir.ts'
 
 // Re-exported so this module stays the one place a test reads the corpus from. The constant
@@ -47,15 +49,12 @@ export const SCRATCH = path.join(REPO, '.tmp')
  * `fixturePath('mixed.pptx')` are the same file and both spellings already in the suite
  * keep working; anything carrying its own extension (`template.potx`,
  * `slide-transition.oracle.json`) is taken as written.
- *
- * @param {string} name
  */
-export function fixturePath(name) {
+export function fixturePath(name: string): string {
 	return path.join(FIXTURES, /\.[A-Za-z0-9]+$/.test(name) ? name : `${name}.pptx`)
 }
 
-/** @param {string} name */
-export function readFixture(name) {
+export function readFixture(name: string): Promise<Buffer> {
 	return readFile(fixturePath(name))
 }
 
@@ -67,9 +66,9 @@ export function readFixture(name) {
  * tree for it (`'..', '..', 'read', 'fixtures'`) rather than through `fixturePath`, which has
  * taken an explicit extension since it was written.
  *
- * @param {string} name
+ * The shape is the fixture's own; the caller reads the fields it knows.
  */
-export async function readOracle(name) {
+export async function readOracle(name: string): Promise<any> {
 	return JSON.parse(await readFile(fixturePath(`${name}.oracle.json`), 'utf8'))
 }
 
@@ -96,8 +95,7 @@ if (fixtureNames.length < MIN_CORPUS) {
 // `dist/read.js` and `dist/script.js` are pulled in on first use rather than at import time.
 // Two dozen read tests want nothing from this module but `fixturePath`, and making them each
 // load the script converter to get it would trade one duplication for a slower one.
-/** @type {ReturnType<typeof importDeps> | null} */
-let deps = null
+let deps: ReturnType<typeof importDeps> | null = null
 function importDeps() {
 	return Promise.all([import('../../dist/read.js'), import('../../dist/script.js')])
 }
@@ -106,8 +104,7 @@ function loadDeps() {
 	return deps
 }
 
-/** @type {Map<string, Promise<import('../../dist/script.js').DeckIr>>} */
-const irCache = new Map()
+const irCache = new Map<string, Promise<DeckIr>>()
 
 /**
  * The deck IR for a fixture, converted once per test file and shared thereafter.
@@ -120,10 +117,8 @@ const irCache = new Map()
  * structure and the printers only read, so the existing callers are safe; a test that needs
  * to perturb one must `structuredClone` it first, and one that needs two independent
  * conversions wants {@link freshIr}.
- *
- * @param {string} name
  */
-export function irFor(name) {
+export function irFor(name: string): Promise<DeckIr> {
 	const key = fixturePath(name)
 	let pending = irCache.get(key)
 	if (pending === undefined) {
@@ -136,22 +131,14 @@ export function irFor(name) {
 /**
  * A conversion that does not touch the cache — for the determinism check, which compares two
  * runs and would compare a cached IR against itself.
- *
- * @param {string} name
- * @returns {Promise<import('../../dist/script.js').DeckIr>}
  */
-export async function freshIr(name) {
+export async function freshIr(name: string): Promise<DeckIr> {
 	const [{ Presentation }, { readModelToIr }] = await loadDeps()
 	return readModelToIr(await Presentation.load(await readFixture(name)))
 }
 
-/**
- * The fixture loaded into the deep read model. Not cached — most callers then mutate it.
- *
- * @param {string} name
- * @returns {Promise<import('../../dist/read.js').Presentation>}
- */
-export async function openFixture(name) {
+/** The fixture loaded into the deep read model. Not cached — most callers then mutate it. */
+export async function openFixture(name: string): Promise<Presentation> {
 	const [{ Presentation }] = await loadDeps()
 	return Presentation.load(await readFixture(name))
 }

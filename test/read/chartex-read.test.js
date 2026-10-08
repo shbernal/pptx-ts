@@ -12,7 +12,8 @@
 import { ChartType } from '../../dist/node.js'
 import { describe, test } from 'vitest'
 import { authorRead, firstChartEx, firstShape, schemaErrors, validatorInstalled } from './authored.ts'
-import { assert, assertEqual } from '../helpers.ts'
+import { isGraphicFrame } from '../../dist/read.js'
+import { assert, assertEqual, defined } from '../helpers.ts'
 
 describe('ChartEx — write→read fidelity', () => {
 	test('a chartEx frame is surfaced through its mc:AlternateContent wrapper', async () => {
@@ -27,7 +28,7 @@ describe('ChartEx — write→read fidelity', () => {
 		})
 		// The frame lives inside mc:Choice; the reader must unwrap it (not skip the AlternateContent).
 		const frame = firstShape(presentation, (s) => s.shapeType === 'graphicFrame')
-		assert(frame !== null, 'the chartEx graphicFrame is enumerated as a shape')
+		assert(frame !== null && isGraphicFrame(frame), 'the chartEx graphicFrame is enumerated as a shape')
 		assertEqual(frame.hasChartEx, true, 'the frame reports a chartEx host')
 		assertEqual(frame.hasChart, false, 'and is NOT a classic chart')
 		assert(frame.chart === null, 'the classic chart getter is null for a chartEx frame')
@@ -78,7 +79,7 @@ describe('ChartEx — write→read fidelity', () => {
 				showValue: true,
 			})
 		})
-		const labels = firstChartEx(presentation).series[0].dataLabels
+		const labels = defined(firstChartEx(presentation)).series[0].dataLabels
 		assert(labels !== null, 'showValue produced a data-label block')
 		assertEqual(labels.value, true, 'the value toggle is on')
 		assertEqual(labels.seriesName, false, 'the series-name toggle is off')
@@ -95,7 +96,7 @@ describe('ChartEx — write→read fidelity', () => {
 				h: 3,
 			})
 		})
-		const axes = firstChartEx(presentation).axes
+		const axes = defined(firstChartEx(presentation)).axes
 		assertEqual(axes.length, 2, 'a waterfall carries a category + value axis')
 		const cat = axes.find((a) => a.kind === 'cat')
 		const val = axes.find((a) => a.kind === 'val')
@@ -116,7 +117,7 @@ describe('ChartEx — write→read fidelity', () => {
 				h: 3,
 			})
 		})
-		const cx = firstChartEx(presentation)
+		const cx = defined(firstChartEx(presentation))
 		assertEqual(cx.layoutIds.join(','), 'clusteredColumn,paretoLine', 'pareto emits a column + a cumulative line')
 		assertEqual(cx.series.length, 2, 'both series are read')
 		assertEqual(cx.series[0].name, 'Defects', 'the column series is named')
@@ -142,7 +143,7 @@ describe('ChartEx — write→read fidelity', () => {
 				{ type: ChartType.treemap, x: 1, y: 1, w: 5, h: 3 }
 			)
 		})
-		const cx = firstChartEx(presentation)
+		const cx = defined(firstChartEx(presentation))
 		assertEqual(cx.layoutId, 'treemap', 'the treemap layout token')
 		// The writer emits levels leaf-first, so the first cx:lvl is the leaf labels.
 		assertEqual(cx.categories.join(','), 'US,CA,DE', 'the leaf level of the category hierarchy reads')
@@ -161,6 +162,7 @@ describe('ChartEx — write→read fidelity', () => {
 			})
 		})
 		const frame = firstShape(presentation, (s) => s.shapeType === 'graphicFrame')
+		assert(frame !== null && isGraphicFrame(frame), 'the classic chart graphicFrame is enumerated as a shape')
 		assertEqual(frame.hasChart, true, 'a classic chart still reports hasChart')
 		assertEqual(frame.hasChartEx, false, 'and is not mistaken for a chartEx chart')
 		assert(frame.chartEx === null, 'the chartEx getter is null for a classic chart')

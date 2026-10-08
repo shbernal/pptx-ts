@@ -16,7 +16,7 @@
 // upstream prose and can be reworded in any release, so assert on `id`. `partUri` and
 // `xpath` are null on a package-level failure, where there is no part to point at.
 
-import { FILE_FORMAT, validateBuffer, validatorAvailable, validatorPath } from 'ooxml-validate'
+import { FILE_FORMAT, validateBuffer, validatorAvailable, validatorPath, type FileFormat } from 'ooxml-validate'
 
 // The conformance target, pinned by the package at `Microsoft365` and re-exported so
 // the suites keep reading it from one place.
@@ -38,7 +38,7 @@ import { FILE_FORMAT, validateBuffer, validatorAvailable, validatorPath } from '
  * about one path on disk. Prefer `validatorAvailable` at a call site that gates
  * assertions; this is for the two places that need the plain answer.
  */
-async function isInstalled() {
+async function isInstalled(): Promise<boolean> {
 	return (await validatorPath()) !== null
 }
 
@@ -48,11 +48,8 @@ async function isInstalled() {
  * Batching, the one-child-at-a-time queue and the temp-file bookkeeping all live in
  * the package. Correlation between a buffer and its result is by the handle the
  * package tracks, never by position in a batch.
- *
- * @param {Uint8Array} buf
- * @param {import('ooxml-validate').FileFormat} [fileFormat]
  */
-async function validateBuf(buf, fileFormat = FILE_FORMAT) {
+async function validateBuf(buf: Uint8Array, fileFormat: FileFormat = FILE_FORMAT) {
 	const result = await validateBuffer(buf, { ext: '.pptx', format: fileFormat })
 	return result.errors
 }

@@ -1,3 +1,4 @@
+/** @import { CHART_NAME, ChartOpts } from '../../../dist/node.js' */
 import { ChartType } from '../../../dist/node.js'
 import JSZip from 'jszip'
 import {
@@ -119,7 +120,7 @@ defineRegressionSuite('Multi-level category chart embedded workbook [upstream-pr
 		name: 'a single-column category reference over nested labels points at the leaf column',
 		fn: async () => {
 			const leafRef = '<c:f>Sheet1!$B$2:$B$10</c:f>'
-			/** @type {[string, object, string][]} */
+			/** @type {[string, ChartOpts & { type: CHART_NAME }, string][]} */
 			const cases = [
 				['a bar with a category format code', { type: ChartType.bar, catLabelFormatCode: '0' }, 'numRef'],
 				['a stock chart', { type: ChartType.stock }, 'strRef'],

@@ -62,7 +62,7 @@ defineRegressionSuite('Combo subchart normalization', [
 			const outer = first(single.xml, /<a:outerShdw[^>]*>/)
 			assert(outer.length > 0, 'the single chart draws an outer shadow')
 			assertIncludes(combo.xml, outer, 'the subchart draws the same shadow')
-			for (const code of ['shadow/invalid-type', 'shadow/angle-out-of-range']) {
+			for (const code of /** @type {const} */ (['shadow/invalid-type', 'shadow/angle-out-of-range'])) {
 				assert(combo.codes.includes(code), `${code} is raised; got ${JSON.stringify(combo.codes)}`)
 			}
 			assertEqual(shadow.type, 'weird', "the caller's shadow is not rewritten")

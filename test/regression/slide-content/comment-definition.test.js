@@ -57,7 +57,7 @@ const attrs = (tag) => /** @type {Record<string, string>} */ (xmlAttributes(tag)
 function assertNoComments(zip, contentTypes) {
 	const entries = listEntries(zip).filter((name) => /^ppt\/(comments\/|commentAuthors\.xml)/.test(name))
 	assertEqual(entries.length, 0, `expected no comment parts; got ${JSON.stringify(entries)}`)
-	const overrides = contentTypeOverrideParts(contentTypes).filter((part) => /comment/i.test(part))
+	const overrides = contentTypeOverrideParts(contentTypes).filter((part) => part !== undefined && /comment/i.test(part))
 	assertEqual(overrides.length, 0, `expected no comment content-type Overrides; got ${JSON.stringify(overrides)}`)
 }
 

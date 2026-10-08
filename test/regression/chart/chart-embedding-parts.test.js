@@ -1,3 +1,4 @@
+/** @import { CHART_NAME, OptsChartData } from '../../../dist/node.js' */
 import TsPptx, { ChartType } from '../../../dist/node.js'
 import JSZip from 'jszip'
 import {
@@ -91,6 +92,7 @@ defineRegressionSuite('Chart embedding parts [legacy bug-17]', [
 		name: 'no family writes a non-finite number into the embedded workbook',
 		fn: async () => {
 			const labels = ['a', 'b', 'c']
+			/** @type {[string, CHART_NAME, OptsChartData[]][]} */
 			const cases = [
 				['bar', ChartType.bar, [{ name: 'S1', labels, values: [1, Infinity, 3] }]],
 				['pie', ChartType.pie, [{ name: 'S1', labels, values: [1, -Infinity, 3] }]],
@@ -134,6 +136,7 @@ defineRegressionSuite('Chart embedding parts [legacy bug-17]', [
 
 			// The spelling a gap has always had, so the fix above is the only thing that changed.
 			const { buf } = await build((p) => {
+				// @ts-expect-error values is typed number[], so the null that spells a gap is rejected
 				p.addSlide().addChart([{ name: 'S1', labels: ['a', 'b', 'c'], values: [1, null, 3] }], {
 					type: ChartType.bar,
 					x: 1,

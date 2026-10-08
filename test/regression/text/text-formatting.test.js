@@ -1,3 +1,4 @@
+/** @import { TextPropsOptions } from '../../../dist/node.js' */
 import { defineRegressionSuite, build, readEntry, assert, defined } from '../../helpers.ts'
 
 defineRegressionSuite('Text formatting [legacy bug-01]', [
@@ -56,7 +57,9 @@ defineRegressionSuite('Text formatting [legacy bug-01]', [
 		// one <a:pPr rtl="1">, and the leading-"\n" split must not leave a junk empty <a:t></a:t> run.
 		name: 'mixed RTL/LTR runs with newlines split into clean paragraphs',
 		fn: async () => {
+			/** @type {TextPropsOptions} */
 			const ar = { align: 'right', fontSize: 12, rtlMode: true, lang: 'AR' }
+			/** @type {TextPropsOptions} */
 			const en = { align: 'right', fontSize: 12, rtlMode: true, lang: 'EN' }
 			const { zip } = await build((p) => {
 				const s = p.addSlide()

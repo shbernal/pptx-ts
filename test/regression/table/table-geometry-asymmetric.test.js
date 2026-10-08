@@ -51,7 +51,7 @@ defineRegressionSuite('Table geometry under asymmetric input', [
 					p.defineLayout({ name: 'TEN', width: 10, height: 5.625 })
 					p.layout = 'TEN'
 					p.defineSlideMaster({ title: 'M', margin })
-					p.addSlide({ masterTitle: 'M' }).addTable([['a', 'b']], { x: 1, autoPage: false })
+					p.addSlide({ masterTitle: 'M' }).addTable([[{ text: 'a' }, { text: 'b' }]], { x: 1, autoPage: false })
 				})
 				return gridWidthEmu(await readEntry(zip, SLIDE_XML))
 			}
@@ -72,7 +72,7 @@ defineRegressionSuite('Table geometry under asymmetric input', [
 				const { zip } = await build((p) => {
 					p.defineLayout({ name: 'TEN', width: 10, height: 5.625 })
 					p.layout = 'TEN'
-					p.addSlide().addTable([['a', 'b']], { autoPage: false, slideMargin })
+					p.addSlide().addTable([[{ text: 'a' }, { text: 'b' }]], { autoPage: false, slideMargin })
 				})
 				return gridWidthEmu(await readEntry(zip, SLIDE_XML))
 			}
@@ -95,7 +95,7 @@ defineRegressionSuite('Table geometry under asymmetric input', [
 					p.defineLayout({ name: 'TEN', width: 10, height: 5.625 })
 					p.layout = 'TEN'
 					p.defineSlideMaster({ title: 'M', margin })
-					p.addSlide({ masterTitle: 'M' }).addTable([['a', 'b']], { autoPage: false, slideMargin })
+					p.addSlide({ masterTitle: 'M' }).addTable([[{ text: 'a' }, { text: 'b' }]], { autoPage: false, slideMargin })
 				})
 				return gridWidthEmu(await readEntry(zip, SLIDE_XML)) / 914400
 			}
@@ -204,7 +204,12 @@ defineRegressionSuite('Table geometry under asymmetric input', [
 		fn: async () => {
 			const { result: xml, codes } = await captureDiagnostics(async () => {
 				const { zip } = await build((p) => {
-					p.addSlide().addTable([[{ text: 'a', options: { colspan: 'x' } }, 'b', 'c']], { x: 1, y: 1, w: 6 })
+					// @ts-expect-error a string colspan is the invalid input under test
+					p.addSlide().addTable([[{ text: 'a', options: { colspan: 'x' } }, { text: 'b' }, { text: 'c' }]], {
+						x: 1,
+						y: 1,
+						w: 6,
+					})
 				})
 				return readEntry(zip, SLIDE_XML)
 			})

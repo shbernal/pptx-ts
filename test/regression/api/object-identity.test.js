@@ -393,6 +393,7 @@ defineRegressionSuite('Object identity [legacy bug-21]', [
 							{ placeholder: { options: { name: 'title-ph', type: 'title', x: 0.5, y: 0.3, w: 9, h: 1 }, text: '' } },
 							{
 								placeholder: {
+									// @ts-expect-error idx is not a placeholder option; the index is assigned per object
 									options: { name: 'body-ph', type: 'body', idx: 1, x: 0.5, y: 1.5, w: 9, h: 4 },
 									text: '',
 								},
@@ -442,7 +443,7 @@ defineRegressionSuite('Object identity [legacy bug-21]', [
 				slide.addShape(ShapeType.rect, { x: 0.4, y: 0.9, w: 1, h: 0.4 })
 				slide.addImage({ data: `image/png;base64,${PNG_1X1}`, x: 1.7, y: 0.9, w: 0.4, h: 0.4 })
 				slide.addConnector({ type: 'straight', x1: 3, y1: 1, x2: 4, y2: 1 })
-				slide.addTable([['a']], { x: 0.4, y: 1.5, w: 2 })
+				slide.addTable([[{ text: 'a' }]], { x: 0.4, y: 1.5, w: 2 })
 				slide.addChart([{ name: 's', labels: ['a'], values: [1] }], { type: ChartType.bar, x: 3, y: 2, w: 3, h: 2 })
 				slide.addGroup([{ rect: { x: 6, y: 1, w: 1, h: 1 } }])
 			})

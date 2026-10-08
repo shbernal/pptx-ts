@@ -34,7 +34,7 @@ async function editable(build) {
 /** Reload a presentation from its own saved bytes, and return it with its first table. */
 async function reload(presentation) {
 	const reloaded = await Presentation.load(await presentation.save())
-	return { presentation: reloaded, table: firstTable(reloaded) }
+	return { presentation: reloaded, table: defined(firstTable(reloaded), 'the reloaded table is found') }
 }
 
 /**
@@ -261,21 +261,25 @@ describe('structural edits on a merged region, in both forms a merge is written 
 		const { table } = await editable(build)
 		merge(table)
 		table.addRow(1)
-		assertEqual(table.cell(0, 0).rowSpan, 3, 'the origin spans the new row')
-		assertEqual(table.cell(0, 1).element_.getAttribute('rowSpan') ?? '3', '3', 'a covered cell claims no other span')
+		assertEqual(defined(table.cell(0, 0)).rowSpan, 3, 'the origin spans the new row')
+		assertEqual(
+			defined(table.cell(0, 1)).element_.getAttribute('rowSpan') ?? '3',
+			'3',
+			'a covered cell claims no other span'
+		)
 	})
 
 	test.for(MERGE_FORMS)('removing a merge’s first column by $form keeps its origin', async ({ build, merge }) => {
 		const { table } = await editable(build)
 		merge(table)
-		const text = table.cell(0, 0).text
+		const text = defined(table.cell(0, 0)).text
 		table.removeColumn(0)
-		const origin = table.cell(0, 0)
+		const origin = defined(table.cell(0, 0))
 		assertEqual(origin.text, text, 'the origin and its text stay')
 		assertEqual(origin.gridSpan, 1, 'one column narrower')
 		assertEqual(origin.rowSpan, 2, 'and still two rows tall')
-		assertEqual(table.cell(1, 0).isMergeContinuation, true, 'the cell under it is still covered')
-		assertEqual(mergeFlag(table.cell(1, 0), 'hMerge'), false, 'but not from the left')
+		assertEqual(defined(table.cell(1, 0)).isMergeContinuation, true, 'the cell under it is still covered')
+		assertEqual(mergeFlag(defined(table.cell(1, 0)), 'hMerge'), false, 'but not from the left')
 	})
 
 	test.for(MERGE_FORMS)(
@@ -284,9 +288,13 @@ describe('structural edits on a merged region, in both forms a merge is written 
 			const { table } = await editable(build)
 			merge(table)
 			table.removeRow(0)
-			assertEqual(table.cell(0, 0).isMergeContinuation, false, 'the promoted cell is an origin')
-			assertEqual(table.cell(0, 0).gridSpan, 2, 'spanning both columns')
-			assertEqual(mergeFlag(table.cell(0, 1), 'vMerge'), false, 'nothing in the new first row is covered from above')
+			assertEqual(defined(table.cell(0, 0)).isMergeContinuation, false, 'the promoted cell is an origin')
+			assertEqual(defined(table.cell(0, 0)).gridSpan, 2, 'spanning both columns')
+			assertEqual(
+				mergeFlag(defined(table.cell(0, 1)), 'vMerge'),
+				false,
+				'nothing in the new first row is covered from above'
+			)
 		}
 	)
 
@@ -300,7 +308,7 @@ describe('structural edits on a merged region, in both forms a merge is written 
 			[1, 0],
 			[1, 1],
 		]) {
-			const tc = table.cell(r, c).element_
+			const tc = defined(table.cell(r, c)).element_
 			for (const name of ['gridSpan', 'rowSpan', 'hMerge', 'vMerge']) {
 				assertEqual(tc.getAttribute(name) || null, null, `(${r},${c}) has no ${name}`)
 			}
@@ -331,7 +339,7 @@ describe('structural and border edits refuse numbers the schema cannot hold', ()
 
 	test('setBorder and setFillSchemeColor refuse a dash or theme token outside the schema, changing nothing', async () => {
 		const { presentation, table } = await editable(plainTable)
-		const cell = table.cell(0, 0)
+		const cell = defined(table.cell(0, 0))
 		cell.setBorder('top', { widthPt: 2, color: 'C00000' })
 		const before = await savedSlide(presentation)
 		assertEqual(
@@ -356,7 +364,7 @@ describe('structural and border edits refuse numbers the schema cannot hold', ()
 
 	test('setBorder refuses a width outside ST_LineWidth', async () => {
 		const { table } = await editable(plainTable)
-		const cell = table.cell(0, 0)
+		const cell = defined(table.cell(0, 0))
 		assertEqual(
 			codeOfThrow(() => cell.setBorder('top', { widthPt: -2 })),
 			'table/invalid-cell-border',
@@ -378,7 +386,7 @@ describe('structural and border edits refuse numbers the schema cannot hold', ()
 describe('TableCell setters — a:tcPr attributes', () => {
 	test('anchor, vert, horzOverflow and anchorCtr all set, and null clears', async () => {
 		const { presentation, table } = await editable(plainTable)
-		const cell = table.cell(0, 0)
+		const cell = defined(table.cell(0, 0))
 		cell.setAnchor('ctr')
 		cell.setVerticalText('vert270')
 		cell.setHorzOverflow('overflow')
@@ -393,7 +401,7 @@ describe('TableCell setters — a:tcPr attributes', () => {
 		// Re-read the saved bytes rather than trusting the live model, so the assertion is
 		// about what a consumer would actually open.
 		const { presentation: reloaded, table: reloadedTable } = await reload(presentation)
-		const back = reloadedTable.cell(0, 0)
+		const back = defined(reloadedTable.cell(0, 0))
 		assertEqual(back.anchor, 'ctr', 'anchor reads back')
 		assertEqual(back.verticalText, 'vert270', 'vert reads back')
 		assertEqual(back.anchorCtr, true, 'anchorCtr reads back')
@@ -410,7 +418,7 @@ describe('TableCell setters — a:tcPr attributes', () => {
 
 	test('a value outside its schema enum throws rather than being written', async () => {
 		const { table } = await editable(plainTable)
-		const cell = table.cell(0, 0)
+		const cell = defined(table.cell(0, 0))
 		// Throwing, not warn-and-drop: a caller editing one attribute would otherwise be left
 		// looking at an unchanged deck with nothing to explain it.
 		const cases = [
@@ -426,7 +434,7 @@ describe('TableCell setters — a:tcPr attributes', () => {
 
 	test('margins set per side, and a null side returns to the schema default', async () => {
 		const { presentation, table } = await editable(plainTable)
-		table.cell(0, 0).setMarginsEmu({ left: 0, top: 12700 })
+		defined(table.cell(0, 0)).setMarginsEmu({ left: 0, top: 12700 })
 
 		const xml = await savedSlide(presentation)
 		let tag = defined(xml.match(/<a:tcPr[^>]*>/))[0]
@@ -436,7 +444,7 @@ describe('TableCell setters — a:tcPr attributes', () => {
 		assert(tag.includes('marR="91440"'), 'the right inset is untouched; got: ' + tag)
 
 		const { presentation: reloaded, table: reloadedTable } = await reload(presentation)
-		reloadedTable.cell(0, 0).setMarginsEmu({ left: null })
+		defined(reloadedTable.cell(0, 0)).setMarginsEmu({ left: null })
 		tag = defined((await savedSlide(reloaded)).match(/<a:tcPr[^>]*>/))[0]
 		assert(!tag.includes('marL='), 'a null side removes the attribute; got: ' + tag)
 	})
@@ -444,7 +452,7 @@ describe('TableCell setters — a:tcPr attributes', () => {
 	test('a non-finite margin throws instead of writing NaN', async () => {
 		const { table } = await editable(plainTable)
 		assertEqual(
-			codeOfThrow(() => table.cell(0, 0).setMarginsEmu({ left: Number.NaN })),
+			codeOfThrow(() => defined(table.cell(0, 0)).setMarginsEmu({ left: Number.NaN })),
 			'table/invalid-cell-margin',
 			'NaN is rejected rather than reaching the attribute'
 		)
@@ -457,7 +465,7 @@ describe('TableCell setters — fill and borders keep a:tcPr in schema order', (
 		// borders happens to be correct, but appending a BORDER to one that already has a fill
 		// is not — and a setter that appends cannot tell the difference.
 		const { presentation, table } = await editable(plainTable)
-		const cell = table.cell(0, 0)
+		const cell = defined(table.cell(0, 0))
 		cell.setFillColor('#FF0000')
 		cell.setBorder('top', { widthPt: 2, color: '00FF00' })
 
@@ -470,7 +478,7 @@ describe('TableCell setters — fill and borders keep a:tcPr in schema order', (
 
 	test('a diagonal set last still lands between lnB and the fill', async () => {
 		const { presentation, table } = await editable(plainTable)
-		const cell = table.cell(0, 0)
+		const cell = defined(table.cell(0, 0))
 		cell.setFillColor('#EEEEEE')
 		cell.setBorder('tlToBr', { widthPt: 1, color: 'C00000' })
 
@@ -480,7 +488,7 @@ describe('TableCell setters — fill and borders keep a:tcPr in schema order', (
 
 	test('setBorder writes width, colour and dash, and null removes the edge', async () => {
 		const { presentation, table } = await editable(plainTable)
-		table.cell(0, 0).setBorder('left', { widthPt: 3, color: '#336699', dash: 'sysDot' })
+		defined(table.cell(0, 0)).setBorder('left', { widthPt: 3, color: '#336699', dash: 'sysDot' })
 
 		let xml = await savedSlide(presentation)
 		const lnL = defined(xml.match(/<a:lnL[\s\S]*?<\/a:lnL>/))[0]
@@ -489,9 +497,9 @@ describe('TableCell setters — fill and borders keep a:tcPr in schema order', (
 		assert(lnL.includes('<a:prstDash val="sysDot"/>'), 'the dash is written; got: ' + lnL)
 
 		const { presentation: reloaded, table: reloadedTable } = await reload(presentation)
-		const cell = reloadedTable.cell(0, 0)
-		assertEqual(cell.borders.left.widthPt, 3, 'the width reads back in points')
-		assertEqual(cell.borders.left.dash, 'sysDot', 'and the dash')
+		const cell = defined(reloadedTable.cell(0, 0))
+		assertEqual(defined(defined(cell.borders).left).widthPt, 3, 'the width reads back in points')
+		assertEqual(defined(defined(cell.borders).left).dash, 'sysDot', 'and the dash')
 
 		cell.setBorder('left', null)
 		xml = await savedSlide(reloaded)
@@ -501,8 +509,8 @@ describe('TableCell setters — fill and borders keep a:tcPr in schema order', (
 
 	test('a scheme colour wins over a literal, and noFill is distinct from clearing', async () => {
 		const { presentation, table } = await editable(plainTable)
-		table.cell(0, 0).setBorder('top', { color: 'FF0000', schemeColor: 'accent1' })
-		table.cell(0, 1).setBorder('top', { noFill: true })
+		defined(table.cell(0, 0)).setBorder('top', { color: 'FF0000', schemeColor: 'accent1' })
+		defined(table.cell(0, 1)).setBorder('top', { noFill: true })
 
 		const xml = await savedSlide(presentation)
 		const lnTs = [...xml.matchAll(/<a:lnT[\s\S]*?<\/a:lnT>/g)].map((m) => m[0])
@@ -513,12 +521,12 @@ describe('TableCell setters — fill and borders keep a:tcPr in schema order', (
 
 	test('noFill() and setFillColor(null) are different edits', async () => {
 		const { presentation, table } = await editable(plainTable)
-		table.cell(0, 0).setFillSchemeColor('accent2')
-		table.cell(1, 0).setFillSchemeColor('accent2')
+		defined(table.cell(0, 0)).setFillSchemeColor('accent2')
+		defined(table.cell(1, 0)).setFillSchemeColor('accent2')
 
 		const { presentation: reloaded, table: t } = await reload(presentation)
-		t.cell(0, 0).noFill() // explicit transparent — suppresses inherited shading
-		t.cell(1, 0).setFillColor(null) // back to inheriting
+		defined(t.cell(0, 0)).noFill() // explicit transparent — suppresses inherited shading
+		defined(t.cell(1, 0)).setFillColor(null) // back to inheriting
 
 		const tcPrs = tcPrFillOnly(await savedSlide(reloaded))
 		assert(tcPrs[0].includes('<a:noFill/>'), 'the first cell is explicitly transparent; got: ' + tcPrs[0])
@@ -541,7 +549,7 @@ describe('Table structural edits — rows', () => {
 
 		table.removeRow(0)
 		assertEqual(table.rowCount, 3, 'a row was removed')
-		assertEqual(table.cell(0, 0).text, 'A2', 'and it was the first one')
+		assertEqual(defined(table.cell(0, 0)).text, 'A2', 'and it was the first one')
 		assertGridConsistent(table)
 
 		const xml = await savedSlide(presentation)
@@ -552,9 +560,9 @@ describe('Table structural edits — rows', () => {
 		const { table } = await editable(plainTable)
 		table.addRow(1)
 		assertEqual(table.rowCount, 4, 'the row landed')
-		assertEqual(table.cell(0, 0).text, 'A1', 'the row above is untouched')
-		assertEqual(table.cell(1, 0).text, '', 'the new row is where it was asked for')
-		assertEqual(table.cell(2, 0).text, 'A2', 'and the old row 1 moved down')
+		assertEqual(defined(table.cell(0, 0)).text, 'A1', 'the row above is untouched')
+		assertEqual(defined(table.cell(1, 0)).text, '', 'the new row is where it was asked for')
+		assertEqual(defined(table.cell(2, 0)).text, 'A2', 'and the old row 1 moved down')
 		assertGridConsistent(table)
 	})
 
@@ -573,11 +581,11 @@ describe('Table structural edits — rows', () => {
 				{ x: 1, y: 1, w: 9 }
 			)
 		})
-		assertEqual(table.cell(0, 0).rowSpan, 3, 'the span starts at 3')
+		assertEqual(defined(table.cell(0, 0)).rowSpan, 3, 'the span starts at 3')
 
 		table.addRow(1)
-		assertEqual(table.cell(0, 0).rowSpan, 4, 'the span grew with the table')
-		assert(table.cell(1, 0).isMergeContinuation, 'the new cell continues the span')
+		assertEqual(defined(table.cell(0, 0)).rowSpan, 4, 'the span grew with the table')
+		assert(defined(table.cell(1, 0)).isMergeContinuation, 'the new cell continues the span')
 		assertGridConsistent(table)
 	})
 
@@ -592,8 +600,8 @@ describe('Table structural edits — rows', () => {
 		table.removeRow(0)
 		assertEqual(table.rowCount, 2, 'the row is gone')
 		// The merged region survives one row shorter; only the removed row's own text is lost.
-		assert(!table.cell(0, 0).isMergeContinuation, 'the first continuation became the origin')
-		assertEqual(table.cell(0, 0).rowSpan, 2, 'and inherited the remaining extent')
+		assert(!defined(table.cell(0, 0)).isMergeContinuation, 'the first continuation became the origin')
+		assertEqual(defined(table.cell(0, 0)).rowSpan, 2, 'and inherited the remaining extent')
 		assertGridConsistent(table)
 	})
 
@@ -606,7 +614,7 @@ describe('Table structural edits — rows', () => {
 		})
 
 		table.removeRow(2)
-		assertEqual(table.cell(0, 0).rowSpan, 2, 'the span shrank to match')
+		assertEqual(defined(table.cell(0, 0)).rowSpan, 2, 'the span shrank to match')
 		assertGridConsistent(table)
 	})
 })
@@ -619,8 +627,8 @@ describe('Table structural edits — columns', () => {
 		table.addColumn(1, 457200)
 		assertEqual(table.columnCount, 4, 'the gridCol landed')
 		assertEqual(table.columnWidths[1], 457200, 'with the width asked for')
-		assertEqual(table.cell(0, 1).text, '', 'the new column is empty')
-		assertEqual(table.cell(0, 2).text, 'B1', 'and the old column 1 moved right')
+		assertEqual(defined(table.cell(0, 1)).text, '', 'the new column is empty')
+		assertEqual(defined(table.cell(0, 2)).text, 'B1', 'and the old column 1 moved right')
 		assertGridConsistent(table)
 
 		const xml = await savedSlide(presentation)
@@ -635,7 +643,7 @@ describe('Table structural edits — columns', () => {
 		const { presentation, table } = await editable(plainTable)
 		table.removeColumn(0)
 		assertEqual(table.columnCount, 2, 'the gridCol is gone')
-		assertEqual(table.cell(0, 0).text, 'B1', 'and so is the first column')
+		assertEqual(defined(table.cell(0, 0)).text, 'B1', 'and so is the first column')
 		assertGridConsistent(table)
 
 		const xml = await savedSlide(presentation)
@@ -648,10 +656,10 @@ describe('Table structural edits — columns', () => {
 		const { table } = await editable((p) => {
 			p.addSlide().addTable([[{ text: 'wide', options: { colspan: 3 } }], ['A2', 'B2', 'C2']], { x: 1, y: 1, w: 9 })
 		})
-		assertEqual(table.cell(0, 0).gridSpan, 3, 'the span starts at 3')
+		assertEqual(defined(table.cell(0, 0)).gridSpan, 3, 'the span starts at 3')
 
 		table.addColumn(1)
-		assertEqual(table.cell(0, 0).gridSpan, 4, 'the span grew with the table')
+		assertEqual(defined(table.cell(0, 0)).gridSpan, 4, 'the span grew with the table')
 		assertEqual(table.columnCount, 4, 'and the grid did too')
 		assertGridConsistent(table)
 	})
@@ -663,9 +671,9 @@ describe('Table structural edits — columns', () => {
 
 		table.removeColumn(1)
 		assertEqual(table.columnCount, 2, 'the grid narrowed')
-		assertEqual(table.cell(0, 0).gridSpan, 2, 'the span narrowed with it')
+		assertEqual(defined(table.cell(0, 0)).gridSpan, 2, 'the span narrowed with it')
 		// A covered cell is dropped rather than the origin, so the region keeps its text.
-		assertEqual(table.cell(0, 0).text, 'wide', 'and the merged region kept its content')
+		assertEqual(defined(table.cell(0, 0)).text, 'wide', 'and the merged region kept its content')
 		assertGridConsistent(table)
 	})
 
@@ -684,26 +692,26 @@ describe('Table structural edits — merging', () => {
 		const { presentation, table } = await editable(plainTable)
 		table.mergeCells(0, 0, 1, 1)
 
-		const origin = table.cell(0, 0)
+		const origin = defined(table.cell(0, 0))
 		assertEqual(origin.gridSpan, 2, 'the origin spans two columns')
 		assertEqual(origin.rowSpan, 2, 'and two rows')
 		// The covered cells' text moves into the origin, row-major, as PowerPoint's Merge Cells
 		// does. This used to assert `'A1'` alone, which was the old behaviour of discarding the
 		// other three written down as an expectation.
 		assertEqual(origin.text, ['A1', 'B1', 'A2', 'B2'].join('\n'), 'and gathers what it covered, row-major')
-		assert(table.cell(0, 1).isMergeContinuation, '(0,1) is covered')
-		assert(table.cell(1, 0).isMergeContinuation, '(1,0) is covered')
-		assert(table.cell(1, 1).isMergeContinuation, '(1,1) is covered')
-		assertEqual(table.cell(1, 1).text, '', 'a covered cell is emptied — it is never rendered')
+		assert(defined(table.cell(0, 1)).isMergeContinuation, '(0,1) is covered')
+		assert(defined(table.cell(1, 0)).isMergeContinuation, '(1,0) is covered')
+		assert(defined(table.cell(1, 1)).isMergeContinuation, '(1,1) is covered')
+		assertEqual(defined(table.cell(1, 1)).text, '', 'a covered cell is emptied — it is never rendered')
 		assertGridConsistent(table)
 
 		const xml = await savedSlide(presentation)
 		assert(xml.includes('gridSpan="2"') && xml.includes('rowSpan="2"'), 'the spans reach the part')
 
 		table.unmergeCell(0, 0)
-		assertEqual(table.cell(0, 0).gridSpan, 1, 'the span is gone')
-		assertEqual(table.cell(0, 0).rowSpan, 1, 'both of them')
-		assert(!table.cell(1, 1).isMergeContinuation, 'and the covered cells are free again')
+		assertEqual(defined(table.cell(0, 0)).gridSpan, 1, 'the span is gone')
+		assertEqual(defined(table.cell(0, 0)).rowSpan, 1, 'both of them')
+		assert(!defined(table.cell(1, 1)).isMergeContinuation, 'and the covered cells are free again')
 		assertGridConsistent(table)
 	})
 
@@ -718,7 +726,7 @@ describe('Table structural edits — merging', () => {
 			'table/merge-range-invalid',
 			'the overlapping range is rejected'
 		)
-		assertEqual(table.cell(0, 0).gridSpan, 2, 'and the existing merge is untouched')
+		assertEqual(defined(table.cell(0, 0)).gridSpan, 2, 'and the existing merge is untouched')
 		assertGridConsistent(table)
 	})
 
@@ -741,7 +749,7 @@ describe('Table structural edits — merging', () => {
 	test('unmerging an unmerged cell is a no-op', async () => {
 		const { table } = await editable(plainTable)
 		table.unmergeCell(1, 1)
-		assertEqual(table.cell(1, 1).gridSpan, 1, 'nothing changed')
+		assertEqual(defined(table.cell(1, 1)).gridSpan, 1, 'nothing changed')
 		assertGridConsistent(table)
 	})
 })

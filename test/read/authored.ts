@@ -21,23 +21,28 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import JSZip from 'jszip'
 import TsPptx from '../../dist/node.js'
-import { Presentation } from '../../dist/read.js'
+import { Presentation, isGraphicFrame, type AnyShape, type Chart, type ChartEx, type Table } from '../../dist/read.js'
 import { defined } from '../helpers.ts'
+import type { ValidationDiagnostic } from 'ooxml-validate'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 
 // Re-exported rather than recomputed: `validator.ts` owns the fact, and this module is where
 // most read-side tests already import from.
 export { validatorInstalled }
 
+/** What {@link authorRead} hands back: the read model, the bytes it was loaded from, and the writer. */
+export interface Authored {
+	presentation: Presentation
+	buf: Uint8Array
+	pres: TsPptx
+}
+
 /**
  * Author a deck in memory with the write API and load it into the deep read
  * model. `build` receives a fresh TsPptx instance — add slides / shapes /
  * charts / tables with the normal write API — and may be async.
- *
- * @param {(pres: InstanceType<typeof TsPptx>) => void | Promise<void>} build
- * @returns {Promise<{ presentation: Presentation, buf: Uint8Array, pres: InstanceType<typeof TsPptx> }>}
  */
-export async function authorRead(build) {
+export async function authorRead(build: (pres: TsPptx) => unknown): Promise<Authored> {
 	const pres = new TsPptx()
 	await build(pres)
 	const buf = await pres.toBytes()
@@ -59,14 +64,11 @@ export async function authorRead(build) {
  *
  * Author the table with `tableStyle: TableStyle.MEDIUM_STYLE_2_ACCENT_1` — the fixture defines
  * that GUID, with `firstRow` shading and `band1H`/`band1V` banding.
- *
- * @param {(pres: InstanceType<typeof TsPptx>) => void | Promise<void>} build
- * @returns {Promise<{ presentation: Presentation, buf: Uint8Array, pres: InstanceType<typeof TsPptx> }>}
  */
-export async function authorReadWithFixtureStyles(build) {
+export async function authorReadWithFixtureStyles(build: (pres: TsPptx) => unknown): Promise<Authored> {
 	const pres = new TsPptx()
 	await build(pres)
-	const authored = /** @type {Uint8Array} */ (await pres.toBytes())
+	const authored = await pres.toBytes()
 
 	const fixture = await JSZip.loadAsync(
 		await readFile(path.join(path.dirname(fileURLToPath(import.meta.url)), 'fixtures', 'table-styles.pptx'))
@@ -80,41 +82,43 @@ export async function authorReadWithFixtureStyles(build) {
 }
 
 /** Every shape on every slide, in document (slide, then shape) order. */
-export function allShapes(presentation) {
+export function allShapes(presentation: Presentation): AnyShape[] {
 	return presentation.slides.flatMap((slide) => slide.shapes)
 }
 
-/** The first shape on any slide matching `predicate`, or null. */
-export function firstShape(presentation, predicate) {
+/** The first shape on any slide matching `predicate`, or null. A type guard narrows the result. */
+export function firstShape<T extends AnyShape>(
+	presentation: Presentation,
+	predicate: (shape: AnyShape) => shape is T
+): T | null
+export function firstShape(presentation: Presentation, predicate: (shape: AnyShape) => unknown): AnyShape | null
+export function firstShape(presentation: Presentation, predicate: (shape: AnyShape) => unknown): AnyShape | null {
 	return allShapes(presentation).find(predicate) ?? null
 }
 
 /** The first chart on any slide, or null. */
-export function firstChart(presentation) {
-	const frame = firstShape(presentation, (s) => s.shapeType === 'graphicFrame' && s.chart)
-	return frame ? frame.chart : null
+export function firstChart(presentation: Presentation): Chart | null {
+	const frame = firstShape(presentation, (s) => isGraphicFrame(s) && s.chart)
+	return frame && isGraphicFrame(frame) ? frame.chart : null
 }
 
 /** The first chartEx (waterfall/funnel/treemap/…) chart on any slide, or null. */
-export function firstChartEx(presentation) {
-	const frame = firstShape(presentation, (s) => s.shapeType === 'graphicFrame' && s.chartEx)
-	return frame ? frame.chartEx : null
+export function firstChartEx(presentation: Presentation): ChartEx | null {
+	const frame = firstShape(presentation, (s) => isGraphicFrame(s) && s.chartEx)
+	return frame && isGraphicFrame(frame) ? frame.chartEx : null
 }
 
 /** The first table on any slide, or null. */
-export function firstTable(presentation) {
-	const frame = firstShape(presentation, (s) => s.shapeType === 'graphicFrame' && s.table)
-	return frame ? frame.table : null
+export function firstTable(presentation: Presentation): Table | null {
+	const frame = firstShape(presentation, (s) => isGraphicFrame(s) && s.table)
+	return frame && isGraphicFrame(frame) ? frame.table : null
 }
 
 /**
  * Schema-validate authored bytes. Returns the oracle's diagnostics (empty ⇒ valid).
  * Gate the calling test with `test.skipIf(!validatorInstalled)` so the suite stays
  * green where the oracle cannot be obtained.
- *
- * @param {Uint8Array} buf
- * @returns {Promise<readonly import('ooxml-validate').ValidationDiagnostic[]>}
  */
-export async function schemaErrors(buf) {
+export async function schemaErrors(buf: Uint8Array): Promise<readonly ValidationDiagnostic[]> {
 	return validateBuf(Buffer.from(buf))
 }

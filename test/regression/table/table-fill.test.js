@@ -45,8 +45,8 @@ defineRegressionSuite('Table fill', [
 				build((p) => {
 					p.addSlide().addTable(
 						[
-							['A', 'B'],
-							['C', 'D'],
+							[{ text: 'A' }, { text: 'B' }],
+							[{ text: 'C' }, { text: 'D' }],
 						],
 						{ ...AT, tableFill: { color: 'F2F2F2' } }
 					)
@@ -69,8 +69,8 @@ defineRegressionSuite('Table fill', [
 				build((p) => {
 					p.addSlide().addTable(
 						[
-							['A', 'B'],
-							['C', 'D'],
+							[{ text: 'A' }, { text: 'B' }],
+							[{ text: 'C' }, { text: 'D' }],
 						],
 						{ ...AT, fill: { color: 'F2F2F2' } }
 					)
@@ -88,7 +88,7 @@ defineRegressionSuite('Table fill', [
 		fn: async () => {
 			const { result } = await captureDiagnostics(() =>
 				build((p) => {
-					p.addSlide().addTable([['A']], {
+					p.addSlide().addTable([[{ text: 'A' }]], {
 						...AT,
 						tableFill: { color: 'F2F2F2' },
 						tableStyle: TableStyle.MEDIUM_STYLE_2_ACCENT_1,
@@ -175,7 +175,7 @@ defineRegressionSuite('Table fill', [
 		fn: async () => {
 			const { result } = await captureDiagnostics(() =>
 				build((p) => {
-					p.addSlide().addTable([['A']], {
+					p.addSlide().addTable([[{ text: 'A' }]], {
 						...AT,
 						tableFill: {
 							type: 'gradient',
@@ -199,7 +199,7 @@ defineRegressionSuite('Table fill', [
 	{
 		name: 'an unset tableFill leaves a:tblPr self-closing',
 		fn: async () => {
-			const { result } = await captureDiagnostics(() => build((p) => p.addSlide().addTable([['A']], AT)))
+			const { result } = await captureDiagnostics(() => build((p) => p.addSlide().addTable([[{ text: 'A' }]], AT)))
 			const xml = await readEntry(result.zip, 'ppt/slides/slide1.xml')
 			assert(tblPr(xml).endsWith('/>'), 'the no-background path keeps the empty-element form; got: ' + tblPr(xml))
 		},

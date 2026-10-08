@@ -35,7 +35,11 @@ defineRegressionSuite('Text token guards', [
 				)
 			})
 			assert(!/bogus/.test(xml), `no bad token reaches the part; got: ${xml}`)
-			for (const code of ['text/invalid-strike', 'text/invalid-caps', 'text/invalid-underline']) {
+			for (const code of /** @type {const} */ ([
+				'text/invalid-strike',
+				'text/invalid-caps',
+				'text/invalid-underline',
+			])) {
 				assert(codes.includes(code), `${code} is raised; got ${JSON.stringify(codes)}`)
 			}
 		},

@@ -1,4 +1,6 @@
 import { defineRegressionSuite, build, readEntry, assert, assertEqual } from '../../helpers.ts'
+import { TableStyle } from '../../../dist/node.js'
+/** @import { StrokeProps } from '../../../dist/node.js' */
 
 // The shape of every bug here: build the same literal into TWO objects and the second behaves
 // differently from the first, because the first build wrote into it. `addTableDefinition` takes
@@ -63,6 +65,7 @@ defineRegressionSuite('Table literals the caller still owns', [
 		// reference, the filling propagated into cells that had already captured it.
 		name: 'a hole in a table-level border tuple is left alone, as it is on a cell',
 		fn: async () => {
+			/** @type {[StrokeProps, null, StrokeProps, null]} */
 			const sparse = [
 				{ type: 'solid', color: '333333', width: 1 },
 				null,
@@ -71,12 +74,18 @@ defineRegressionSuite('Table literals the caller still owns', [
 			]
 			const { zip } = await build((p) => {
 				const s = p.addSlide()
-				s.addTable([['A', 'B']], { x: 0.5, y: 0.5, w: 6, tableStyle: 'MEDIUM_STYLE_2_ACCENT_1', border: sparse })
-				s.addTable([[{ text: 'A', options: { border: sparse } }, 'B']], {
+				s.addTable([[{ text: 'A' }, { text: 'B' }]], {
+					x: 0.5,
+					y: 0.5,
+					w: 6,
+					tableStyle: TableStyle.MEDIUM_STYLE_2_ACCENT_1,
+					border: sparse,
+				})
+				s.addTable([[{ text: 'A', options: { border: sparse } }, { text: 'B' }]], {
 					x: 0.5,
 					y: 3,
 					w: 6,
-					tableStyle: 'MEDIUM_STYLE_2_ACCENT_1',
+					tableStyle: TableStyle.MEDIUM_STYLE_2_ACCENT_1,
 				})
 			})
 			const [tableLevel, cellLevel] = tables(await readEntry(zip, SLIDE_XML))
@@ -94,12 +103,13 @@ defineRegressionSuite('Table literals the caller still owns', [
 	{
 		name: 'a border tuple literal reused across two tables is not completed in place',
 		fn: async () => {
+			/** @type {[StrokeProps, null, null, null]} */
 			const sparse = [{ type: 'solid' }, null, null, null]
 			const before = JSON.stringify(sparse)
 			await build((p) => {
 				const s = p.addSlide()
-				s.addTable([['A']], { x: 0.5, y: 0.5, w: 4, border: sparse })
-				s.addTable([['B']], { x: 0.5, y: 3, w: 4, border: sparse })
+				s.addTable([[{ text: 'A' }]], { x: 0.5, y: 0.5, w: 4, border: sparse })
+				s.addTable([[{ text: 'B' }]], { x: 0.5, y: 3, w: 4, border: sparse })
 			})
 			assertEqual(JSON.stringify(sparse), before, 'the caller-owned border tuple after two tables')
 		},

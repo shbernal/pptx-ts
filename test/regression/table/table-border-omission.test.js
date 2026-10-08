@@ -1,5 +1,6 @@
 import { defineRegressionSuite, build, captureDiagnostics, readEntry, assert } from '../../helpers.ts'
 import { TableStyle } from '../../../dist/node.js'
+/** @import { StrokeProps } from '../../../dist/node.js' */
 
 const SLIDE_XML = 'ppt/slides/slide1.xml'
 
@@ -22,6 +23,7 @@ defineRegressionSuite('Table border tuple null sides [upstream-23]', [
 	{
 		name: 'null tuple sides stay absent while authored sides draw',
 		fn: async () => {
+			/** @type {StrokeProps} */
 			const solid = { type: 'solid', color: '4472C4', width: 1 }
 			const { zip } = await build((p) => {
 				p.addSlide().addTable([[{ text: 'sparse', options: { border: [solid, null, solid, null] } }]], {
@@ -58,7 +60,7 @@ defineRegressionSuite('Table border tuple null sides [upstream-23]', [
 		name: 'a styled table with no border authored emits no cell edges at all',
 		fn: async () => {
 			const { zip } = await build((p) => {
-				p.addSlide().addTable([['A', 'B']], {
+				p.addSlide().addTable([[{ text: 'A' }, { text: 'B' }]], {
 					x: 1,
 					y: 1,
 					w: 6,
@@ -73,7 +75,7 @@ defineRegressionSuite('Table border tuple null sides [upstream-23]', [
 		name: 'an unstyled table still takes the four-side no-fill default',
 		fn: async () => {
 			const { zip } = await build((p) => {
-				p.addSlide().addTable([['A', 'B']], { x: 1, y: 1, w: 6 })
+				p.addSlide().addTable([[{ text: 'A' }, { text: 'B' }]], { x: 1, y: 1, w: 6 })
 			})
 			const xml = await readEntry(zip, SLIDE_XML)
 			assert(
@@ -86,7 +88,7 @@ defineRegressionSuite('Table border tuple null sides [upstream-23]', [
 		name: 'a styled table with an outerBorder draws the perimeter and leaves the interior to the style',
 		fn: async () => {
 			const { zip } = await build((p) => {
-				p.addSlide().addTable([['A', 'B']], {
+				p.addSlide().addTable([[{ text: 'A' }, { text: 'B' }]], {
 					x: 1,
 					y: 1,
 					w: 6,
@@ -109,8 +111,10 @@ defineRegressionSuite('Table border tuple null sides [upstream-23]', [
 			const { codes } = await captureDiagnostics(() =>
 				build((p) => {
 					const slide = p.addSlide()
+					// @ts-expect-error a string border is the invalid input under test
 					slide.addTable([[{ text: 'cell', options: { border: 'FF0000' } }]], { x: 1, y: 1, w: 4 })
-					slide.addTable([['table']], { x: 1, y: 3, w: 4, border: 'FF0000' })
+					// @ts-expect-error a string border is the invalid input under test
+					slide.addTable([[{ text: 'table' }]], { x: 1, y: 3, w: 4, border: 'FF0000' })
 				})
 			)
 			assert(

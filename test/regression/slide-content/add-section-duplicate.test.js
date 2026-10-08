@@ -27,6 +27,7 @@ defineRegressionSuite('addSection duplicate-title guard [upstream-issue-1152]', 
 		fn: async () => {
 			const { pres } = await build((p) => {
 				p.addSection({ title: 'Intro' })
+				// @ts-expect-error a section with no title
 				p.addSection({}) // missing title — should be ignored, not pushed titleless
 			})
 

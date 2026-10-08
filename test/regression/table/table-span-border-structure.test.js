@@ -1,4 +1,5 @@
 import { defineRegressionSuite, build, readEntry, assert, defined } from '../../helpers.ts'
+/** @import { StrokeProps } from '../../../dist/node.js' */
 
 // Verification suite for several historical upstream table reports that this project already
 // emits correctly. These guard against regressing back into the reported symptoms:
@@ -10,7 +11,9 @@ import { defineRegressionSuite, build, readEntry, assert, defined } from '../../
 // declared spans, and (2) every cell — including span continuation (hMerge/vMerge) cells — carries
 // the full four-sided border when a uniform border is configured.
 
+/** @type {StrokeProps} */
 const SOLID = { type: 'solid', width: 1, color: 'FF0000' }
+/** @type {[StrokeProps, StrokeProps, StrokeProps, StrokeProps]} */
 const BORDER4 = [SOLID, SOLID, SOLID, SOLID]
 
 async function tableXml(zip) {

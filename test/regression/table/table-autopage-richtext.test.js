@@ -146,6 +146,7 @@ defineRegressionSuite('Table autoPage rich-text line wrapping [upstream-pr-1237]
 			const rows = [[{ text: [{ text: 'keep' }, { text: 2024 }, { text: 'also' }] }]]
 
 			const { zip } = await build((p) => {
+				// @ts-expect-error a numeric run text is the untyped input under test
 				p.addSlide().addTable(rows, {
 					x: 0.25,
 					y: 0.25,
@@ -174,6 +175,7 @@ defineRegressionSuite('Table autoPage rich-text line wrapping [upstream-pr-1237]
 			const rows = [[{ text: { text: 'lonely' } }, { text: 'sibling' }]]
 
 			const { zip } = await build((p) => {
+				// @ts-expect-error a lone object `text` is the untyped input under test
 				p.addSlide().addTable(rows, {
 					x: 0.25,
 					y: 0.25,

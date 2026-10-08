@@ -1,3 +1,4 @@
+/** @import { TableRow } from '../../../dist/node.js' */
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import JSZip from 'jszip'
@@ -345,8 +346,8 @@ defineRegressionSuite('Table cell image (blip) fills', [
 				const s = p.addSlide()
 				s.addTable(
 					[
-						['a', 'b'],
-						['c', 'd'],
+						[{ text: 'a' }, { text: 'b' }],
+						[{ text: 'c' }, { text: 'd' }],
 					],
 					{
 						x: 1,
@@ -374,9 +375,9 @@ defineRegressionSuite('Table cell image (blip) fills', [
 				const s = p.addSlide()
 				s.addTable(
 					[
-						['h1', 'h2'],
-						['b1', 'b2'],
-						['b3', 'b4'],
+						[{ text: 'h1' }, { text: 'h2' }],
+						[{ text: 'b1' }, { text: 'b2' }],
+						[{ text: 'b3' }, { text: 'b4' }],
 					],
 					{
 						x: 1,
@@ -431,6 +432,7 @@ defineRegressionSuite('Table cell image (blip) fills', [
 			// Registration runs after the auto-pager has shredded the rows, mirroring
 			// `createHyperlinkRels` — otherwise every relationship would pile onto slide 1
 			// and the overflow slides would emit a dangling `r:embed`.
+			/** @type {TableRow[]} */
 			const rows = Array.from({ length: 60 }, (_, i) => [
 				{ text: `row ${i}`, options: { fill: { type: 'image', image: { data: PNG_1X1 } } } },
 			])

@@ -15,7 +15,7 @@
 import { describe, test } from 'vitest'
 import { TableStyle } from '../../dist/node.js'
 import { authorRead, firstTable, schemaErrors, validatorInstalled } from './authored.ts'
-import { assert, assertEqual } from '../helpers.ts'
+import { assert, assertEqual, defined } from '../helpers.ts'
 
 /** A 2×2 table whose top-left cell carries a full four-side border set. */
 function borderedTable(pres) {
@@ -50,15 +50,16 @@ describe('Table.styleId — a:tblPr/a:tableStyleId', () => {
 		const { presentation } = await authorRead((pres) => {
 			pres.addSlide().addTable([[{ text: 'x' }]], { x: 1, y: 1, w: 4 })
 		})
-		assertEqual(firstTable(presentation).styleId, null, 'no a:tableStyleId → null')
+		assertEqual(defined(firstTable(presentation)).styleId, null, 'no a:tableStyleId → null')
 	})
 })
 
 describe('TableCell.borders — a:tcPr/a:lnL|lnR|lnT|lnB', () => {
 	test('a fully bordered cell reads each side (width / dash / colour / suppressed)', async () => {
 		const { presentation } = await authorRead(borderedTable)
-		const borders = firstTable(presentation).cell(0, 0).borders
+		const borders = defined(firstTable(presentation)).cell(0, 0)?.borders
 		assert(borders, 'the bordered cell surfaces borders')
+		assert(borders.top && borders.right && borders.bottom, 'the three drawn sides are present')
 
 		// Writer maps the [top,right,bottom,left] option tuple onto a:lnT/lnR/lnB/lnL.
 		assertEqual(borders.top.widthPt, 3, 'top width in points')
@@ -86,12 +87,15 @@ describe('TableCell.borders — a:tcPr/a:lnL|lnR|lnT|lnB', () => {
 	test('a cell given no border option still reads a four-side noFill set', async () => {
 		// The writer defaults every unspecified cell to four w=0 noFill edges, so
 		// cell D reads a border object with all four sides suppressed (not null).
-		const borders = firstTable(await authorRead(borderedTable).then((r) => r.presentation)).cell(1, 1).borders
+		const borders = defined(
+			defined(firstTable(await authorRead(borderedTable).then((r) => r.presentation))).cell(1, 1)
+		).borders
 		assert(borders, 'even an unstyled cell carries an authored border set')
 		for (const side of ['left', 'right', 'top', 'bottom']) {
-			assert(borders[side], `${side} edge is present`)
-			assertEqual(borders[side].noFill, true, `${side} edge reads noFill`)
-			assertEqual(borders[side].colorRef.resolved, null, `${side} edge has no colour`)
+			const edge = borders[side]
+			assert(edge, `${side} edge is present`)
+			assertEqual(edge.noFill, true, `${side} edge reads noFill`)
+			assertEqual(edge.colorRef.resolved, null, `${side} edge has no colour`)
 		}
 	})
 
@@ -99,12 +103,17 @@ describe('TableCell.borders — a:tcPr/a:lnL|lnR|lnT|lnB', () => {
 		// The distinction issue #26 is about: `transforms: []` has to mean "this edge
 		// stated none", which is only readable as such because the field exists at all.
 		const { presentation } = await authorRead(borderedTable)
-		const top = firstTable(presentation).cell(0, 0).borders.top
+		const top = defined(defined(defined(firstTable(presentation)).cell(0, 0)).borders).top
+		assert(top, 'the top edge is present')
 		assert(top.colorRef.resolved, 'a drawn border carries a full ResolvedColor')
 		assertEqual(top.colorRef.resolved.hex, 'FF0000', 'base hex is the authored literal')
 		assertEqual(top.colorRef.resolved.transforms.length, 0, 'a bare srgbClr carries no transform children')
 		assertEqual(top.colorRef.srgb, 'FF0000', 'the literal the border states is reported beside its resolution')
-		assertEqual(firstTable(presentation).cell(0, 0).borders.left.colorRef.resolved, null, 'a noFill edge resolves none')
+		assertEqual(
+			defined(defined(defined(defined(firstTable(presentation)).cell(0, 0)).borders).left).colorRef.resolved,
+			null,
+			'a noFill edge resolves none'
+		)
 	})
 
 	test.skipIf(!validatorInstalled)('the authored bordered/styled decks are schema-valid', async () => {

@@ -1,3 +1,4 @@
+/** @import { CHART_NAME, OptsChartData } from '../../../dist/node.js' */
 import { DOMParser } from '@xmldom/xmldom'
 import JSZip from 'jszip'
 import { ChartType } from '../../../dist/node.js'
@@ -480,7 +481,7 @@ defineRegressionSuite('Chart formulas resolve to their cache through the embedde
 		// `X-Values0` and `Y-Value 1`, and a bubble's X column `X-Values`, names no header cell held.
 		name: 'the table names each column by its header cell',
 		fn: async () => {
-			for (const [type, data] of [
+			for (const [type, data] of /** @type {[CHART_NAME, OptsChartData[]][]} */ ([
 				[
 					ChartType.scatter,
 					[
@@ -495,7 +496,7 @@ defineRegressionSuite('Chart formulas resolve to their cache through the embedde
 						{ name: 'Up', values: [5, 6, 7], sizes: [1, 2, 3] },
 					],
 				],
-			]) {
+			])) {
 				const { zip } = await build((p) => p.addSlide().addChart(data, { type, ...FRAME }))
 				const read = await readWorkbook(zip)
 				const name = defined(listEntries(zip).find((entry) => /^ppt\/embeddings\/.*\.xlsx$/.test(entry)))

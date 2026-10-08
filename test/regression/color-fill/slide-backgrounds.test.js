@@ -200,8 +200,8 @@ async function assertBackgroundResolves(zip, partName, expected) {
 
 	const embed = /<p:bg>[\s\S]*?<a:blip r:embed="([^"]+)"/.exec(await readEntry(zip, partName))?.[1]
 	assert(embed, `${partName} has an image background`)
-	const rel = rels.find((candidate) => candidate.Id === embed)
-	assert(rel?.Type.endsWith('/image'), `${partName} background ${embed} names an image rel`)
+	const rel = defined(rels.find((candidate) => candidate.Id === embed))
+	assert(rel.Type.endsWith('/image'), `${partName} background ${embed} names an image rel`)
 
 	const mediaPath = `ppt/${rel.Target.replace(/^\.\.\//, '')}`
 	assert(listEntries(zip).includes(mediaPath), `${rel.Target} is in the package`)

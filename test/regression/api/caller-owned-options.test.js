@@ -1,6 +1,8 @@
+/** @import { MediaProps, ShadowProps } from '../../../dist/node.js' */
 import {
 	setDiagnosticHandler,
 	build,
+	defined,
 	readEntry,
 	defineRegressionSuite,
 	assertEqual,
@@ -68,7 +70,7 @@ defineRegressionSuite('Caller-owned options', [
 			})
 			const shapes = await shapesOn(zip)
 			assertEqual(shapes.length, 3, 'expected all three shapes')
-			assertNonVisualDrawingProperty(shapes[0], { name: 'Shape 1' }, 'the first shape')
+			assertNonVisualDrawingProperty(defined(shapes[0]), { name: 'Shape 1' }, 'the first shape')
 			assertNonVisualDrawingProperty(shapes[1], { name: 'Shape 2' }, 'the second shape')
 			assertNonVisualDrawingProperty(shapes[2], { name: 'Shape 3' }, 'the third shape')
 			assertEqual(warnings.length, 0, `expected no diagnostics; got ${JSON.stringify(warnings)}`)
@@ -92,12 +94,13 @@ defineRegressionSuite('Caller-owned options', [
 		name: 'shape line normalization does not write back onto the caller',
 		fn: async () => {
 			const LINE = { color: '0088CC', width: 3 }
+			/** @type {ShadowProps} */
 			const SHADOW = { type: 'outer', blur: 6, transparency: 40, color: 'FF0000' }
 			const STYLE = { x: 1, y: 1, w: 2, h: 1, line: LINE, shadow: SHADOW }
 			const { zip } = await build((p) => {
 				p.addSlide().addShape('rect', STYLE)
 			})
-			assertIncludes((await shapesOn(zip))[0], '<a:srgbClr val="0088CC"/>', 'the requested stroke')
+			assertIncludes(defined((await shapesOn(zip))[0]), '<a:srgbClr val="0088CC"/>', 'the requested stroke')
 			// `line` is replaced wholesale by the normalized copy, so the caller's own line object
 			// keeps the two keys it was written with rather than gaining `type`/`transparency`/`dashType`.
 			assertEqual(
@@ -134,7 +137,7 @@ defineRegressionSuite('Caller-owned options', [
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 			const frames = xml.match(/<p:graphicFrame>[\s\S]*?<\/p:graphicFrame>/g) || []
 			assertEqual(frames.length, 2, 'expected both tables')
-			assertNonVisualDrawingProperty(frames[0], { name: 'Table 1' }, 'the first table')
+			assertNonVisualDrawingProperty(defined(frames[0]), { name: 'Table 1' }, 'the first table')
 			assertNonVisualDrawingProperty(frames[1], { name: 'Table 2' }, 'the second table')
 			assertEqual(warnings.length, 0, `expected no diagnostics; got ${JSON.stringify(warnings)}`)
 			assertEqual(
@@ -156,6 +159,7 @@ defineRegressionSuite('Caller-owned options', [
 			const STYLE = { x: 0.5, y: 0.5, w: 6, border: BORDER }
 			const { zip } = await build((p) => {
 				const s = p.addSlide()
+				// @ts-expect-error bare-string cells are the subject; TableRow types only cell objects
 				s.addTable([['A1', 'B1']], STYLE)
 			})
 			assertIncludes(await readEntry(zip, 'ppt/slides/slide1.xml'), 'FF0000', 'the table border colour')
@@ -178,6 +182,7 @@ defineRegressionSuite('Caller-owned options', [
 		name: 'image and media options are left untouched',
 		fn: async () => {
 			const IMG = { data: PNG_DATA, x: 1, y: 1, w: 1, h: 1 }
+			/** @type {MediaProps} */
 			const VID = { type: 'video', data: 'video/mp4;base64,AAAA', x: 3, y: 1, w: 2, h: 1 }
 			await build((p) => {
 				const s = p.addSlide()

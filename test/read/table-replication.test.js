@@ -308,7 +308,7 @@ describe("table replication — a cell's own fill versus the style's banding", (
 				hasBandedRows: true,
 			})
 		})
-		const [ghost, inherits] = firstTable(await Presentation.load(buf)).rows[0].cells
+		const [ghost, inherits] = defined(firstTable(await Presentation.load(buf))).rows[0].cells
 		assertEqual(ghost.fillNoFill, true, 'the reader sees the explicit a:noFill')
 		assertEqual(inherits.fillNoFill, false, 'and an inheriting cell is not one')
 		assertEqual(ghost.hasOwnFill, true, 'hasOwnFill reports true for both kinds of own fill…')

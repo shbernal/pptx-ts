@@ -54,6 +54,7 @@ defineRegressionSuite('table-level text options a cell inherits', [
 			// Two cells with the same text rendering differently by how they were spelled is the
 			// failure this pins; the string form takes the same resolution as the object form.
 			const { zip } = await build((p) => {
+				// @ts-expect-error a bare-string cell is the spelling under test
 				p.addSlide().addTable([[{ text: 'same' }, 'same']], {
 					x: 1,
 					y: 1,

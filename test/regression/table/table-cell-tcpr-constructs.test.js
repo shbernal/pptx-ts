@@ -230,6 +230,7 @@ defineRegressionSuite('Table cell a:tcPr constructs', [
 							[
 								{
 									text: 'X',
+									// @ts-expect-error 'rounded' is the invalid preset under test
 									options: { cell3D: { preset: 'rounded', material: 'metal' } },
 								},
 							],
@@ -241,7 +242,7 @@ defineRegressionSuite('Table cell a:tcPr constructs', [
 
 			assert(codes.includes('table/invalid-cell3d'), 'expected table/invalid-cell3d; got: ' + JSON.stringify(codes))
 			const diagnostic = diagnostics.find((d) => d.code === 'table/invalid-cell3d')
-			assertEqual(diagnostic.detail.received, 'rounded', 'the diagnostic names the offending value')
+			assertEqual(defined(defined(diagnostic).detail).received, 'rounded', 'the diagnostic names the offending value')
 
 			const tcPr = firstTcPr(await readEntry(result.zip, 'ppt/slides/slide1.xml'))
 			assert(!tcPr.includes('prst='), 'the invalid preset never reaches the XML; got: ' + tcPr)
@@ -253,6 +254,7 @@ defineRegressionSuite('Table cell a:tcPr constructs', [
 		fn: async () => {
 			const { result, codes } = await captureDiagnostics(() =>
 				build((p) => {
+					// @ts-expect-error a lightRig without its dir is the invalid input under test
 					p.addSlide().addTable([[{ text: 'X', options: { cell3D: { lightRig: { rig: 'threePt' } } } }]], AT)
 				})
 			)
@@ -266,7 +268,9 @@ defineRegressionSuite('Table cell a:tcPr constructs', [
 	{
 		name: 'none of the three changes a cell that does not ask for them',
 		fn: async () => {
-			const { result } = await captureDiagnostics(() => build((p) => p.addSlide().addTable([['A', 'B']], AT)))
+			const { result } = await captureDiagnostics(() =>
+				build((p) => p.addSlide().addTable([[{ text: 'A' }, { text: 'B' }]], AT))
+			)
 			const xml = await readEntry(result.zip, 'ppt/slides/slide1.xml')
 			for (const marker of ['lnTlToBr', 'lnBlToTr', 'anchorCtr', 'cell3D']) {
 				assert(!xml.includes(marker), `${marker} must not appear when unrequested`)

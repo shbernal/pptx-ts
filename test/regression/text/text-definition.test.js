@@ -174,10 +174,10 @@ defineRegressionSuite('Text definition', [
 			const shapes = xml.match(/<p:sp>[\s\S]*?<\/p:sp>/g) || []
 			assertEqual(shapes.length, 2, 'expected both line shapes')
 			// The defaults: 1pt (12700 EMU), DEF_SHAPE_LINE_COLOR, solid dash.
-			for (const [idx, label] of [
+			for (const [idx, label] of /** @type {[number, string][]} */ ([
 				[0, 'the string overload'],
 				[1, 'the array overload'],
-			]) {
+			])) {
 				assertIncludes(shapes[idx], '<a:ln w="12700"', label)
 				assertIncludes(shapes[idx], '<a:prstDash val="solid"/>', label)
 			}
@@ -208,10 +208,10 @@ defineRegressionSuite('Text definition', [
 			})
 			const shapes = (await readEntry(zip, 'ppt/slides/slide1.xml')).match(/<p:sp>[\s\S]*?<\/p:sp>/g) || []
 			assertEqual(shapes.length, 3, 'expected all three text boxes')
-			assertNotIncludes(shapes[0], 'numCol', 'the box added before the two-column one')
+			assertNotIncludes(defined(shapes[0]), 'numCol', 'the box added before the two-column one')
 			assertIncludes(shapes[1], 'numCol="2"', 'the box that actually asked for two columns')
 			assertNotIncludes(shapes[2], 'numCol', 'the box added after the two-column one')
-			assertNonVisualDrawingProperty(shapes[0], { name: 'Text 1' }, 'the first box')
+			assertNonVisualDrawingProperty(defined(shapes[0]), { name: 'Text 1' }, 'the first box')
 			assertNonVisualDrawingProperty(shapes[1], { name: 'Text 2' }, 'the second box')
 			assertNonVisualDrawingProperty(shapes[2], { name: 'Text 3' }, 'the third box')
 			assertEqual(warnings.length, 0, `expected no diagnostics; got ${JSON.stringify(warnings)}`)
@@ -265,7 +265,7 @@ defineRegressionSuite('Text definition', [
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 			const shapes = xml.match(/<p:sp>[\s\S]*?<\/p:sp>/g) || []
 			assertEqual(shapes.length, 3, 'expected all three text boxes')
-			assertNotIncludes(shapes[0], 'spcCol', 'the rejected negative spacing')
+			assertNotIncludes(defined(shapes[0]), 'spcCol', 'the rejected negative spacing')
 			assertNotIncludes(shapes[1], 'spcCol', 'the accepted zero spacing')
 			assertIncludes(shapes[2], 'spcCol="254000"', 'the positive spacing, 20pt in EMU')
 			// Every box kept its columns: the spacing is judged on its own, not the whole block.
@@ -280,14 +280,16 @@ defineRegressionSuite('Text definition', [
 		fn: async () => {
 			const { zip } = await build((p) => {
 				const s = p.addSlide()
+				// @ts-expect-error the underline type has no boolean shorthand
 				s.addText('shorthand', { x: 1, y: 1, w: 4, h: 1, underline: true })
 				s.addText('explicit', { x: 1, y: 2, w: 4, h: 1, underline: { style: 'dbl' } })
+				// @ts-expect-error the underline type has no boolean shorthand
 				s.addText('off', { x: 1, y: 3, w: 4, h: 1, underline: false })
 			})
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 			const shapes = xml.match(/<p:sp>[\s\S]*?<\/p:sp>/g) || []
 			assertEqual(shapes.length, 3, 'expected all three text boxes')
-			assertIncludes(shapes[0], 'u="sng"', 'the shorthand form')
+			assertIncludes(defined(shapes[0]), 'u="sng"', 'the shorthand form')
 			assertIncludes(shapes[1], 'u="dbl"', 'the explicit form')
 			assertNotIncludes(shapes[2], ' u="', 'underline: false')
 		},

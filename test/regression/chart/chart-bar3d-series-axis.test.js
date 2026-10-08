@@ -86,7 +86,7 @@ defineRegressionSuite('Chart bar3d series axis', [
 			// Regression: the value was previously only read as a truthiness test — a
 			// missing pair of parentheses (`a || b === c ? x : y`) made every set value
 			// emit val="low". Each explicit position must now round-trip verbatim.
-			for (const pos of ['none', 'low', 'high', 'nextTo']) {
+			for (const pos of /** @type {const} */ (['none', 'low', 'high', 'nextTo'])) {
 				const { zip } = await build((p) => {
 					p.addSlide().addChart(DATA, {
 						type: ChartType.bar3d,
@@ -118,6 +118,7 @@ defineRegressionSuite('Chart bar3d series axis', [
 		fn: async () => {
 			// The category axis is where the time units live, and this is its date-axis arm.
 			const { zip } = await build((p) => {
+				// @ts-expect-error a time unit that is not one
 				p.addSlide().addChart(DATA, {
 					type: ChartType.line,
 					x: 1,
@@ -147,10 +148,12 @@ defineRegressionSuite('Chart bar3d series axis', [
 					y: 1,
 					w: 6,
 					h: 4,
+					/* oxlint-disable typescript/no-deprecated -- the flat `serAxisLine*` keys are still honoured, and this case pins that. */
 					serAxisLineShow: true,
 					serAxisLineColor: '4472C4',
 					serAxisLineSize: 3,
 					serAxisLineStyle: 'dash',
+					/* oxlint-enable typescript/no-deprecated */
 				})
 			})
 			const serAx = serAxBlock(await chartXml(zip))

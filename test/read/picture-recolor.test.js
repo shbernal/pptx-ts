@@ -10,9 +10,10 @@
 // style-accessors.test.js via hand-authored `a:clrChange`/`a:grayscl`/`a:biLevel`
 // XML; this file proves the *writer* now produces those same bytes.)
 
+import { isPicture } from '../../dist/read.js'
 import { describe, test } from 'vitest'
 import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.ts'
-import { assert, assertEqual } from '../helpers.ts'
+import { assert, assertEqual, defined } from '../helpers.ts'
 
 // A 1×1 PNG — the smallest valid raster the writer will embed; the recolour
 // effect lives on the blip, not the pixels, so its content is irrelevant.
@@ -25,7 +26,7 @@ async function recolorOf(imgOpts) {
 		pres.addSlide().addImage({ data: PNG_1x1, x: 1, y: 1, w: 2, h: 2, ...imgOpts })
 	})
 	const picture = firstShape(presentation, (s) => s.shapeType === 'picture')
-	assert(picture, 'the authored image is read back as a picture')
+	assert(picture !== null && isPicture(picture), 'the authored image is read back as a picture')
 	return { recolor: picture.recolor, buf }
 }
 
@@ -39,33 +40,33 @@ describe('Picture recolour — write→read fidelity (T1.1)', () => {
 	test('biLevel authors a:biLevel@thresh and round-trips the 0–1 threshold', async () => {
 		const { recolor } = await recolorOf({ biLevel: { threshold: 0.5 } })
 		assert(recolor, 'the authored biLevel recolour reads back')
-		assertEqual(recolor.kind, 'biLevel', 'biLevel → a:biLevel → kind "biLevel"')
+		assert(recolor.kind === 'biLevel', 'biLevel → a:biLevel → kind "biLevel"')
 		assertEqual(recolor.threshold, 0.5, 'threshold 0.5 → thresh 50000 → 0.5')
 	})
 
 	test('biLevel threshold 0 is authored (not dropped) and reads back 0', async () => {
 		const { recolor } = await recolorOf({ biLevel: { threshold: 0 } })
 		assert(recolor, 'a zero threshold still authors a biLevel effect')
-		assertEqual(recolor.kind, 'biLevel', 'kind "biLevel"')
+		assert(recolor.kind === 'biLevel', 'kind "biLevel"')
 		assertEqual(recolor.threshold, 0, 'threshold 0 → thresh 0 → 0')
 	})
 
 	test('clrChange authors a:clrChange and round-trips two explicit hex colours', async () => {
 		const { recolor } = await recolorOf({ clrChange: { from: '000000', to: 'FF0000' } })
 		assert(recolor, 'the authored clrChange recolour reads back')
-		assertEqual(recolor.kind, 'clrChange', 'clrChange → a:clrChange → kind "clrChange"')
-		assertEqual(recolor.from.srgb, '000000', 'clrFrom is the explicit source hex')
-		assertEqual(recolor.from.scheme, null, 'a hex clrFrom carries no scheme token')
-		assertEqual(recolor.to.srgb, 'FF0000', 'clrTo is the explicit replacement hex')
+		assert(recolor.kind === 'clrChange', 'clrChange → a:clrChange → kind "clrChange"')
+		assertEqual(defined(recolor.from).srgb, '000000', 'clrFrom is the explicit source hex')
+		assertEqual(defined(recolor.from).scheme, null, 'a hex clrFrom carries no scheme token')
+		assertEqual(defined(recolor.to).srgb, 'FF0000', 'clrTo is the explicit replacement hex')
 	})
 
 	test('clrChange preserves a scheme-colour target as a theme token', async () => {
 		const { recolor } = await recolorOf({ clrChange: { from: 'FF0000', to: 'accent1' } })
 		assert(recolor, 'the authored clrChange reads back')
-		assertEqual(recolor.kind, 'clrChange', 'kind "clrChange"')
-		assertEqual(recolor.from.srgb, 'FF0000', 'the hex source round-trips')
-		assertEqual(recolor.to.scheme, 'accent1', 'a scheme clrTo is left as a token for the resolver')
-		assertEqual(recolor.to.srgb, null, 'a scheme clrTo carries no explicit hex')
+		assert(recolor.kind === 'clrChange', 'kind "clrChange"')
+		assertEqual(defined(recolor.from).srgb, 'FF0000', 'the hex source round-trips')
+		assertEqual(defined(recolor.to).scheme, 'accent1', 'a scheme clrTo is left as a token for the resolver')
+		assertEqual(defined(recolor.to).srgb, null, 'a scheme clrTo carries no explicit hex')
 	})
 
 	test.skipIf(!validatorInstalled)('all three authored recolour decks are schema-valid', async () => {

@@ -15,7 +15,7 @@
 import { assert, assertEqual, build, defineRegressionSuite, listEntries, readEntry } from '../../helpers.ts'
 
 const EMU_PER_INCH = 914400
-const ROWS = Array.from({ length: 90 }, (_unused, i) => [`Row ${i} column A`, `Row ${i} column B`])
+const ROWS = Array.from({ length: 90 }, (_unused, i) => [{ text: `Row ${i} column A` }, { text: `Row ${i} column B` }])
 
 /** The `y` (EMU) of the table frame and its row count on every emitted slide, in slide order. */
 async function pages(opts) {

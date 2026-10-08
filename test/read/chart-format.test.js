@@ -9,7 +9,7 @@
 import { ChartType } from '../../dist/node.js'
 import { describe, test } from 'vitest'
 import { authorRead, firstChart, schemaErrors, validatorInstalled } from './authored.ts'
-import { assert, assertEqual } from '../helpers.ts'
+import { assert, assertEqual, defined } from '../helpers.ts'
 
 /** A bar chart carrying axis / legend / data-label / series-colour formatting. */
 function formattedBar(pres) {
@@ -62,7 +62,7 @@ function formattedLine(pres) {
 
 describe('Chart axes — c:catAx / c:valAx', () => {
 	test('the value axis reads min/max/major-unit, title, gridlines, and number format', async () => {
-		const chart = firstChart((await authorRead(formattedBar)).presentation)
+		const chart = defined(firstChart((await authorRead(formattedBar)).presentation))
 		assert(chart, 'authored bar chart is read back')
 
 		const valAxis = chart.valueAxis
@@ -81,7 +81,7 @@ describe('Chart axes — c:catAx / c:valAx', () => {
 	})
 
 	test('the value axis exposes id, orientation, and tick/scale accessors', async () => {
-		const chart = firstChart((await authorRead(formattedBar)).presentation)
+		const chart = defined(firstChart((await authorRead(formattedBar)).presentation))
 		const valAxis = chart.valueAxis
 		assert(valAxis, 'chart exposes a value axis')
 
@@ -105,42 +105,44 @@ describe('Chart axes — c:catAx / c:valAx', () => {
 	})
 
 	test('the category axis reads its title and its (default) number format', async () => {
-		const chart = firstChart((await authorRead(formattedBar)).presentation)
+		const chart = defined(firstChart((await authorRead(formattedBar)).presentation))
 		const catAxis = chart.categoryAxis
 		assert(catAxis, 'chart exposes a category axis')
 		assertEqual(catAxis.kind, 'cat', 'category axis kind')
 		assertEqual(catAxis.title, 'Quarter', 'authored category-axis title')
-		assertEqual(catAxis.numberFormat.formatCode, 'General', 'category axis defaults to General')
-		assertEqual(catAxis.numberFormat.sourceLinked, true, 'category-axis format is source-linked')
+		assertEqual(defined(catAxis.numberFormat).formatCode, 'General', 'category axis defaults to General')
+		assertEqual(defined(catAxis.numberFormat).sourceLinked, true, 'category-axis format is source-linked')
 	})
 
 	test('axes lists both plot axes in document order', async () => {
-		const chart = firstChart((await authorRead(formattedBar)).presentation)
+		const chart = defined(firstChart((await authorRead(formattedBar)).presentation))
 		assertEqual(chart.axes.map((a) => a.kind).join(','), 'cat,val', 'category axis precedes value axis')
 	})
 })
 
 describe('Chart legend — c:legend', () => {
 	test('a shown legend reads its position and overlay flag', async () => {
-		const chart = firstChart((await authorRead(formattedBar)).presentation)
+		const chart = defined(firstChart((await authorRead(formattedBar)).presentation))
 		assert(chart.legend, 'chart exposes a legend')
 		assertEqual(chart.legend.position, 'b', 'authored legend position')
 		assertEqual(chart.legend.overlay, false, 'writer emits overlay=0')
 	})
 
 	test('a chart authored without a legend reports null', async () => {
-		const chart = firstChart(
-			(
-				await authorRead((pres) => {
-					pres.addSlide().addChart([{ name: 'S', labels: ['A'], values: [1] }], {
-						type: ChartType.bar,
-						x: 1,
-						y: 1,
-						w: 6,
-						showLegend: false,
+		const chart = defined(
+			firstChart(
+				(
+					await authorRead((pres) => {
+						pres.addSlide().addChart([{ name: 'S', labels: ['A'], values: [1] }], {
+							type: ChartType.bar,
+							x: 1,
+							y: 1,
+							w: 6,
+							showLegend: false,
+						})
 					})
-				})
-			).presentation
+				).presentation
+			)
 		)
 		assertEqual(chart.legend, null, 'no c:legend → null')
 	})
@@ -148,7 +150,7 @@ describe('Chart legend — c:legend', () => {
 
 describe('Chart data labels — c:dLbls', () => {
 	test('the aggregate data-label block reads its show flags, position, and format', async () => {
-		const chart = firstChart((await authorRead(formattedBar)).presentation)
+		const chart = defined(firstChart((await authorRead(formattedBar)).presentation))
 		const labels = chart.dataLabels
 		assert(labels, 'chart exposes an aggregate data-label block')
 		assertEqual(labels.showValue, true, 'showValue authored true')
@@ -156,24 +158,24 @@ describe('Chart data labels — c:dLbls', () => {
 		assertEqual(labels.showCategoryName, false, 'showCatName defaults false')
 		assertEqual(labels.showPercent, false, 'showPercent defaults false')
 		assertEqual(labels.position, 'inEnd', 'authored data-label position')
-		assertEqual(labels.numberFormat.formatCode, '0%', 'authored data-label format code')
+		assertEqual(defined(labels.numberFormat).formatCode, '0%', 'authored data-label format code')
 	})
 })
 
 describe('Chart series appearance — c:ser/c:spPr', () => {
 	test('bar series read their authored fill colours', async () => {
-		const chart = firstChart((await authorRead(formattedBar)).presentation)
+		const chart = defined(firstChart((await authorRead(formattedBar)).presentation))
 		const series = chart.series
 		assertEqual(series.length, 2, 'two series')
 		assert(series[0].fill, 'first series has a fill')
 		assertEqual(series[0].fill.colorRef.srgb, 'FF0000', 'first series colour from chartColors[0]')
 		assertEqual(series[0].fill.noFill, false, 'a coloured series is not noFill')
-		assertEqual(series[1].fill.colorRef.srgb, '00FF00', 'second series colour from chartColors[1]')
+		assertEqual(defined(series[1].fill).colorRef.srgb, '00FF00', 'second series colour from chartColors[1]')
 		assertEqual(series[0].line, null, 'bar series carry no stroke by default')
 	})
 
 	test('line series read their authored stroke width / dash / colour', async () => {
-		const chart = firstChart((await authorRead(formattedLine)).presentation)
+		const chart = defined(firstChart((await authorRead(formattedLine)).presentation))
 		const series = chart.series[0]
 		assert(series.line, 'line series has a stroke')
 		assertEqual(series.line.widthPt, 3, 'authored line width in points')

@@ -1,3 +1,4 @@
+/** @import { PresetEffect, TransitionProps } from '../../../dist/node.js' */
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import JSZip from 'jszip'
@@ -50,6 +51,7 @@ defineRegressionSuite('Slide transitions (write)', [
 		name: 'emits each PowerPoint transition form byte-for-byte (bare + mc:AlternateContent)',
 		fn: async () => {
 			const oracle = await readOracle('slide-transition')
+			/** @type {TransitionProps[]} */
 			const inputs = [
 				{ type: 'fade' },
 				{ type: 'push', durationMs: 1250, speed: 'slow', variant: { dir: 'd' } },
@@ -98,6 +100,7 @@ defineRegressionSuite('Preset build animations (write)', [
 		name: 'emits every preset (incl. appear/wipe/spin/flyOut) byte-for-byte',
 		fn: async () => {
 			const oracle = await readOracle('slide-animation-presets')
+			/** @type {PresetEffect[]} */
 			const order = ['fadeIn', 'flyIn', 'appear', 'wipe', 'grow', 'spin', 'fadeOut', 'flyOut']
 			const names = [
 				'entr-fadeIn',
@@ -272,6 +275,7 @@ defineRegressionSuite('Preset build animations (write)', [
 				xml = await slideXml((p) => {
 					const s = p.addSlide()
 					s.addText('only', { x: 1, y: 1, w: 1, h: 1, objectName: 'only' })
+					// @ts-expect-error a misspelled preset
 					s.addAnimation({ preset: 'fadeInn', objectName: 'only' })
 				})
 			} finally {

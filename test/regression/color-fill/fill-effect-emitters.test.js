@@ -213,14 +213,15 @@ defineRegressionSuite('Fill and effect emitters the byte-identity corpus never r
 				{ position: 0, color: 'FF0000' },
 				{ position: 100, color: '0000FF' },
 			]
-			for (const [scaled, expected] of [
+			for (const [scaled, expected] of /** @type {[boolean | undefined, string][]} */ ([
 				[undefined, '<a:lin ang="2700000"/>'],
 				[true, '<a:lin ang="2700000" scaled="1"/>'],
 				[false, '<a:lin ang="2700000" scaled="0"/>'],
-			]) {
+			])) {
 				const xml = await slideXml((pres) => {
 					pres.addSlide().addShape('rect', {
 						...BOX,
+						// @ts-expect-error exactOptionalPropertyTypes rejects the explicit `scaled: undefined` case
 						fill: { type: 'gradient', gradient: { kind: 'linear', angle: 45, scaled, stops } },
 					})
 				})

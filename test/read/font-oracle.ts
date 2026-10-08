@@ -51,7 +51,7 @@
 import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
-import { parseFontMetrics } from '../../dist/measure.js'
+import { parseFontMetrics, type FontMetrics } from '../../dist/measure.js'
 import { FIXTURES } from './fixtures-dir.ts'
 
 /** The committed metrics sidecar. */
@@ -77,14 +77,14 @@ export const GENUINE_REQUIRED = (process.env.FONT_ORACLES_GENUINE ?? '')
 	.map((s) => s.trim())
 	.filter(Boolean)
 
-/**
- * A face, as both oracles and the sidecar name one.
- *
- * @typedef {{ family: string, bold?: boolean, italic?: boolean }} Face
- */
+/** A face, as both oracles and the sidecar name one. */
+export interface Face {
+	family: string
+	bold?: boolean
+	italic?: boolean
+}
 
-/** @param {Face} face */
-export function faceLabel(face) {
+export function faceLabel(face: Face): string {
 	const style = [face.bold ? 'Bold' : '', face.italic ? 'Italic' : ''].filter(Boolean).join(' ')
 	return style ? `${face.family} ${style}` : face.family
 }
@@ -93,8 +93,7 @@ export function faceLabel(face) {
 // Genuine font files
 // ---------------------------------------------------------------------------
 
-/** @type {Map<string, string> | null} */
-let winFontIndex = null
+let winFontIndex: Map<string, string> | null = null
 
 /**
  * Display name (`arial bold`) to file path, read from the Windows font registry.
@@ -104,9 +103,9 @@ let winFontIndex = null
  * A value can name several files separated by `|`; the first is the one the display name
  * refers to.
  */
-function windowsFontIndex() {
+function windowsFontIndex(): Map<string, string> {
 	if (winFontIndex) return winFontIndex
-	const index = new Map()
+	const index = new Map<string, string>()
 	const systemFonts = path.join(process.env.SystemRoot ?? 'C:\\Windows', 'Fonts')
 	for (const hive of ['HKLM', 'HKCU']) {
 		let out
@@ -138,11 +137,8 @@ function windowsFontIndex() {
 /**
  * Resolve `face` to a genuine installed font file, or null when it is absent or would be
  * substituted.
- *
- * @param {Face} face
- * @returns {string | null}
  */
-export function resolveGenuineFontFile(face) {
+export function resolveGenuineFontFile(face: Face): string | null {
 	if (process.platform === 'win32') return windowsFontIndex().get(faceLabel(face).toLowerCase()) ?? null
 	const styleBits = [face.bold ? 'bold' : '', face.italic ? 'italic' : ''].filter(Boolean).join(' ')
 	if (!styleBits) return fcMatch(face.family, face)
@@ -155,12 +151,8 @@ export function resolveGenuineFontFile(face) {
 /**
  * One `fc-match` query, accepted only when it answers with the requested face rather than
  * a substitute.
- *
- * @param {string} pattern
- * @param {Face} face
- * @returns {string | null}
  */
-function fcMatch(pattern, face) {
+function fcMatch(pattern: string, face: Face): string | null {
 	try {
 		const out = execFileSync('fc-match', ['-f', '%{family}\t%{style}\t%{file}', pattern], {
 			encoding: 'utf8',
@@ -181,12 +173,8 @@ function fcMatch(pattern, face) {
  * Whether a fontconfig style list (`SemiBold,Regular`, `Bold Italic`) is the face asked
  * for. Weight and slant must both agree, word for word, so `SemiBold` is not bold and a
  * regular face does not stand in for a bold one.
- *
- * @param {string} style
- * @param {{ bold?: boolean, italic?: boolean }} face
- * @returns {boolean}
  */
-export function fcStyleMatches(style, face) {
+export function fcStyleMatches(style: string, face: { bold?: boolean; italic?: boolean }): boolean {
 	const words = new Set(style.toLowerCase().split(/[\s,]+/))
 	const italic = words.has('italic') || words.has('oblique')
 	return words.has('bold') === !!face.bold && italic === !!face.italic
@@ -196,17 +184,30 @@ export function fcStyleMatches(style, face) {
 // The metrics sidecar
 // ---------------------------------------------------------------------------
 
-/** @type {{ schema: string, faces: Array<{ family: string, bold: boolean, italic: boolean, unitsPerEm: number, advances: Record<string, number>, uncovered: number[] }> } | null} */
-let sidecarDoc = null
-
-/** The committed sidecar, parsed once. */
-export function readSidecar() {
-	sidecarDoc ??= JSON.parse(readFileSync(SIDECAR_PATH, 'utf8'))
-	return /** @type {NonNullable<typeof sidecarDoc>} */ (sidecarDoc)
+/** One face as the sidecar records it. */
+export interface SidecarFace {
+	family: string
+	bold: boolean
+	italic: boolean
+	unitsPerEm: number
+	advances: Record<string, number>
+	uncovered: number[]
 }
 
-/** @param {Face} face */
-function sidecarEntry(face) {
+interface SidecarDoc {
+	schema: string
+	faces: SidecarFace[]
+}
+
+let sidecarDoc: SidecarDoc | null = null
+
+/** The committed sidecar, parsed once. */
+export function readSidecar(): SidecarDoc {
+	sidecarDoc ??= JSON.parse(readFileSync(SIDECAR_PATH, 'utf8')) as SidecarDoc
+	return sidecarDoc
+}
+
+function sidecarEntry(face: Face): SidecarFace | null {
 	return (
 		readSidecar().faces.find(
 			(f) =>
@@ -221,15 +222,12 @@ function sidecarEntry(face) {
  * Deliberately throws on a code point the sidecar does not carry instead of charging a
  * default: an unrecorded code point means a case was added or edited without the sidecar
  * being regenerated, and the whole point of this file is that such a gap cannot pass.
- *
- * @param {{ family: string, bold: boolean, italic: boolean, unitsPerEm: number, advances: Record<string, number>, uncovered: number[] }} entry
  */
-function sidecarFontMetrics(entry) {
+function sidecarFontMetrics(entry: SidecarFace): FontMetrics {
 	const advances = new Map(Object.entries(entry.advances).map(([cp, adv]) => [Number(cp), adv]))
 	const uncovered = new Set(entry.uncovered ?? [])
 	const label = faceLabel(entry)
-	/** @param {number} cp */
-	const advanceOf = (cp) => {
+	const advanceOf = (cp: number): number => {
 		const adv = advances.get(cp)
 		if (adv === undefined) {
 			const hex = cp.toString(16).toUpperCase().padStart(4, '0')
@@ -242,12 +240,7 @@ function sidecarFontMetrics(entry) {
 	}
 	return {
 		unitsPerEm: entry.unitsPerEm,
-		/**
-		 * @param {string} text
-		 * @param {number} sizePt
-		 * @param {number} [charSpacingPt]
-		 */
-		advanceWidthPt(text, sizePt, charSpacingPt = 0) {
+		advanceWidthPt(text: string, sizePt: number, charSpacingPt = 0) {
 			if (!text) return 0
 			// Same arithmetic as OpentypeFontMetrics: raw advances, no shaping, char spacing
 			// added per code point. See src/measure/font-metrics.ts.
@@ -255,14 +248,13 @@ function sidecarFontMetrics(entry) {
 			let width = 0
 			let count = 0
 			for (const ch of text) {
-				width += advanceOf(/** @type {number} */ (ch.codePointAt(0))) * scale
+				width += advanceOf(ch.codePointAt(0) as number) * scale
 				count++
 			}
 			if (charSpacingPt) width += charSpacingPt * count
 			return width
 		},
-		/** @param {number} cp */
-		hasCodepoint(cp) {
+		hasCodepoint(cp: number) {
 			advanceOf(cp) // same staleness guard: an unknown code point is not an uncovered one
 			return !uncovered.has(cp)
 		},
@@ -274,20 +266,15 @@ function sidecarFontMetrics(entry) {
 // ---------------------------------------------------------------------------
 
 /** What each requested face resolved to, for the end-of-suite accounting. */
-/** @type {Map<string, 'genuine' | 'sidecar' | 'missing'>} */
-const sources = new Map()
+const sources = new Map<string, 'genuine' | 'sidecar' | 'missing'>()
 
-/** @type {Map<string, unknown>} */
-const cache = new Map()
+const cache = new Map<string, FontMetrics | null>()
 
 /**
  * Metrics for `face`: the genuine font where this machine has it, the committed sidecar
  * otherwise, and null when neither can answer (which throws under `FONT_ORACLES=required`).
- *
- * @param {Face} face
- * @returns {Promise<import('../../dist/measure.js').FontMetrics | null>}
  */
-export async function oracleMetrics(face) {
+export async function oracleMetrics(face: Face): Promise<FontMetrics | null> {
 	const key = faceLabel(face).toLowerCase()
 	if (!cache.has(key)) {
 		const file = SIDECAR_ONLY ? null : resolveGenuineFontFile(face)
@@ -308,14 +295,14 @@ export async function oracleMetrics(face) {
 				`that has it: pnpm run font-metrics:build`
 		)
 	}
-	return /** @type {import('../../dist/measure.js').FontMetrics | null} */ (metrics ?? null)
+	return metrics ?? null
 }
 
 /** How every face requested so far resolved. Read by the suites' accounting tests. */
 export function resolutionTally() {
 	let genuine = 0
 	let sidecar = 0
-	const missing = []
+	const missing: string[] = []
 	for (const [key, source] of sources) {
 		if (source === 'genuine') genuine++
 		else if (source === 'sidecar') sidecar++
@@ -337,29 +324,35 @@ export function resolutionTally() {
 const CASE_FILES = ['autofit-shrink.cases.json', 'autofit-resize.cases.json']
 const CJK_ORACLE = 'autofit-cjk-wrap.oracle.json'
 
-/**
- * Every (face, code point) pair the committed cases measure, keyed by `faceLabel`.
- *
- * @returns {Array<{ family: string, bold: boolean, italic: boolean, codepoints: number[] }>}
- */
-export function neededFaces() {
-	/** @type {Map<string, { family: string, bold: boolean, italic: boolean, codepoints: Set<number> }>} */
-	const faces = new Map()
-	/**
-	 * @param {string} family
-	 * @param {boolean} bold
-	 * @param {boolean} italic
-	 * @param {string} text
-	 */
-	const add = (family, bold, italic, text) => {
+/** A face and the code points the committed cases measure in it. */
+export interface NeededFace {
+	family: string
+	bold: boolean
+	italic: boolean
+	codepoints: number[]
+}
+
+/** The fields of a committed `*.cases.json` and the CJK oracle that name a face and its text. */
+interface CaseSpec {
+	cases: { paragraphs: { runs: { font: string; bold?: boolean; italic?: boolean; text: string }[] }[] }[]
+}
+interface CjkOracle {
+	fontFace: string
+	cases: { fontFace?: string; bold?: boolean; italic?: boolean; text: string }[]
+}
+
+/** Every (face, code point) pair the committed cases measure, keyed by `faceLabel`. */
+export function neededFaces(): NeededFace[] {
+	const faces = new Map<string, Omit<NeededFace, 'codepoints'> & { codepoints: Set<number> }>()
+	const add = (family: string, bold: boolean, italic: boolean, text: string) => {
 		const key = faceLabel({ family, bold, italic }).toLowerCase()
 		let face = faces.get(key)
 		if (!face) faces.set(key, (face = { family, bold, italic, codepoints: new Set() }))
-		for (const ch of text) face.codepoints.add(/** @type {number} */ (ch.codePointAt(0)))
+		for (const ch of text) face.codepoints.add(ch.codePointAt(0) as number)
 	}
 
 	for (const file of CASE_FILES) {
-		const spec = JSON.parse(readFileSync(path.join(FIXTURES, file), 'utf8'))
+		const spec = JSON.parse(readFileSync(path.join(FIXTURES, file), 'utf8')) as CaseSpec
 		for (const c of spec.cases) {
 			for (const para of c.paragraphs) {
 				for (const run of para.runs) add(run.font, !!run.bold, !!run.italic, run.text)
@@ -367,7 +360,7 @@ export function neededFaces() {
 		}
 	}
 
-	const cjk = JSON.parse(readFileSync(path.join(FIXTURES, CJK_ORACLE), 'utf8'))
+	const cjk = JSON.parse(readFileSync(path.join(FIXTURES, CJK_ORACLE), 'utf8')) as CjkOracle
 	for (const c of cjk.cases) add(c.fontFace ?? cjk.fontFace, !!c.bold, !!c.italic, c.text)
 
 	return [...faces.values()]
@@ -387,15 +380,10 @@ export function neededFaces() {
  * advance: a code point the face lacks still has the `.notdef` advance charged against it
  * (see `OpentypeFontMetrics.advanceWidthPt`), and the CJK oracle needs to tell the two
  * apart to skip the cases PowerPoint resolved by falling back to another face.
- *
- * @param {{ family: string, bold: boolean, italic: boolean, codepoints: number[] }} face
- * @param {import('../../dist/measure.js').FontMetrics} metrics
  */
-export function deriveFace(face, metrics) {
-	/** @type {Record<string, number>} */
-	const advances = {}
-	/** @type {number[]} */
-	const uncovered = []
+export function deriveFace(face: NeededFace, metrics: FontMetrics): SidecarFace {
+	const advances: Record<string, number> = {}
+	const uncovered: number[] = []
 	for (const cp of face.codepoints) {
 		const units = metrics.advanceWidthPt(String.fromCodePoint(cp), metrics.unitsPerEm)
 		const rounded = Math.round(units)
@@ -418,13 +406,9 @@ export function deriveFace(face, metrics) {
 /**
  * Differences between a recorded entry and one freshly derived from the genuine font, as
  * human-readable lines. Empty means the sidecar still describes the font it came from.
- *
- * @param {ReturnType<typeof deriveFace>} recorded
- * @param {ReturnType<typeof deriveFace>} derived
  */
-export function diffFace(recorded, derived) {
-	/** @type {string[]} */
-	const diffs = []
+export function diffFace(recorded: SidecarFace, derived: SidecarFace): string[] {
+	const diffs: string[] = []
 	if (recorded.unitsPerEm !== derived.unitsPerEm) {
 		diffs.push(`unitsPerEm: recorded ${recorded.unitsPerEm}, font says ${derived.unitsPerEm}`)
 	}
@@ -455,12 +439,8 @@ export function diffFace(recorded, derived) {
 	return diffs
 }
 
-/**
- * Parse the genuine font for `face`, or null when this machine does not have it.
- *
- * @param {Face} face
- */
-export async function genuineMetrics(face) {
+/** Parse the genuine font for `face`, or null when this machine does not have it. */
+export async function genuineMetrics(face: Face): Promise<FontMetrics | null> {
 	const file = resolveGenuineFontFile(face)
 	return file ? await parseFontMetrics(new Uint8Array(readFileSync(file))) : null
 }
