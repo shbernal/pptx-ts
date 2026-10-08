@@ -718,7 +718,7 @@ iterate on a fixture:
 pnpm run test:schema
 ```
 
-`test/schema-cases.ts` is a fixture data module. `test/schema-validation.test.js` is the runner
+`test/schema-cases.ts` is a fixture data module. `test/schema-validation.test.ts` is the runner
 that consumes it.
 
 Validation goes through [`ooxml-validate`](https://github.com/shbernal/ooxml-validate), a shared

@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, test } from 'vitest'
 import TsPptx from '../dist/node.js'
 import { isInstalled, validateBuf } from './validator.ts'
-import cases from './schema-cases.ts'
+import cases, { type SchemaCase } from './schema-cases.ts'
 
 // Most fixtures run concurrently (see `describe.concurrent` below). Validate one
 // minimal deck serially first: the oracle is a .NET single-file app whose first
@@ -20,7 +20,7 @@ beforeAll(async () => {
 	}
 	const pres = new TsPptx()
 	pres.addSlide()
-	await validateBuf(/** @type {Uint8Array} */ (await pres.toBytes()))
+	await validateBuf(await pres.toBytes())
 })
 
 /**
@@ -58,9 +58,8 @@ beforeAll(async () => {
  * so each concurrent fixture collects into its own store. That is a real fix for
  * concurrency rather than an avoidance of it, and it is not worth its cost for 8
  * of 157 fixtures.
- * @param {{ name: string, fn: Function, exclusive?: boolean }} fixture
  */
-function needsExclusiveProcess(fixture) {
+function needsExclusiveProcess(fixture: SchemaCase): boolean {
 	return fixture.exclusive === true
 }
 

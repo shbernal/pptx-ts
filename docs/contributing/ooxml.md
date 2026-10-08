@@ -190,7 +190,7 @@ A claim about whether PowerPoint paints a construct needs render evidence:
 
 ## Local files
 
-- `test/schema-cases.ts` holds the schema fixtures, `test/schema-validation.test.js` runs them, and
+- `test/schema-cases.ts` holds the schema fixtures, `test/schema-validation.test.ts` runs them, and
   `test/validator.ts` adapts `ooxml-validate`, which fetches and caches its oracle binary on first
   use.
 - `src/gen/` holds the generators: `define/*` normalizes options, and

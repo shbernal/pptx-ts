@@ -1,6 +1,6 @@
 // Schema-validation fixtures — a DATA MODULE, not a runnable test file.
 //
-// This exports a flat `[{ name, fn }, …]` array that `schema-validation.test.js`
+// This exports a flat `[{ name, fn }, …]` array that `schema-validation.test.ts`
 // imports and wraps in `test()` calls. It has no `test()`/`describe()` of its own,
 // so it is deliberately named `schema-cases.ts` (not `*.test.ts`) to keep vitest's
 // discovery from treating it as a suite. Run the fixtures with: pnpm run test:schema
@@ -18,7 +18,7 @@
 // process-global — every one of them swaps `console.warn` for a collector — and it
 // must not run alongside the concurrent fixtures, which would restore the global out
 // from under it. The marker is the only thing that routes a case to the sequential
-// block; `schema-validation.test.js` fails the run if an unmarked case captures
+// block; `schema-validation.test.ts` fails the run if an unmarked case captures
 // warnings inline, but it cannot see a capture made through a helper, so set the flag
 // by hand for those.
 //
@@ -68,7 +68,7 @@ const OLE_BLOB_CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.ole
 
 /**
  * One fixture. `exclusive` routes it to the sequential block of
- * `schema-validation.test.js` (see the file header).
+ * `schema-validation.test.ts` (see the file header).
  */
 export interface SchemaCase {
 	name: string

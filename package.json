@@ -94,7 +94,7 @@
 		"check:package": "node scripts/run-steps.mjs ensure-dist package:lint test:package bundle-size:check bundle-tier:check",
 		"test": "pnpm run ensure-dist && vitest run",
 		"test:unit": "pnpm run ensure-dist && vitest run test/regression",
-		"test:schema": "pnpm run ensure-dist && vitest run test/schema-validation.test.js",
+		"test:schema": "pnpm run ensure-dist && vitest run test/schema-validation.test.ts",
 		"schema:versions": "pnpm run ensure-dist && node scripts/ooxml-version-probe.mjs",
 		"test:read": "pnpm run ensure-dist && vitest run test/read",
 		"test:oracles": "pnpm run ensure-dist && node scripts/font-oracle-probe.mjs && vitest run test/read/autofit-calibration-oracle.test.ts test/read/cjk-line-breaking-oracle.test.ts test/read/font-metrics-sidecar.test.ts",
