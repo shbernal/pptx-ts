@@ -11,7 +11,7 @@ import { readFileSync } from 'node:fs'
 import { describe, test, expect } from 'vitest'
 import JSZip from 'jszip'
 import TsPptx from '../../../dist/node.js'
-import { readEntry } from '../../helpers.js'
+import { readEntry } from '../../helpers.ts'
 
 async function slide1Xml(pres) {
 	const buf = await pres.toBytes()

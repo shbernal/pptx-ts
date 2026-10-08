@@ -23,8 +23,8 @@
 // which maps (clrMap tx1→dk1) to the default theme dk1 (black, 000000).
 
 import { describe, test } from 'vitest'
-import { authorRead, schemaErrors, validatorInstalled } from './authored.js'
-import { assert, assertEqual } from '../helpers.js'
+import { authorRead, schemaErrors, validatorInstalled } from './authored.ts'
+import { assert, assertEqual } from '../helpers.ts'
 
 // From the writer's own notesMaster / theme constants, not the reader under test.
 const NOTES_STYLE_SIZE_PT = 12 // p:notesStyle lvl defRPr @sz=1200 -> /100

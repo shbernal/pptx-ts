@@ -6,7 +6,7 @@ import {
 	assertIncludes,
 	captureDiagnostics,
 	caught,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 // Every definer spelled its own default for an omitted `x`/`y`/`w`/`h`, and they disagreed on what
 // "omitted" meant. `w: 0, h: 0` gave media a 2in square, a chart half the slide and an image its

@@ -1,6 +1,6 @@
 import { Window } from 'happy-dom'
 import { describe, expect, it } from 'vitest'
-import { defined } from '../../helpers.js'
+import { defined } from '../../helpers.ts'
 import { counted, slideList, splitDeck, summarizeNotes } from '../../../www/demos/deck-preview.ts'
 
 /**

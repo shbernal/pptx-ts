@@ -1,6 +1,6 @@
 import TsPptx, { ChartType, SchemeColor } from '../../../dist/node.js'
-import { defineRegressionSuite, build, assertEqual, assertIncludes, assertNotIncludes, defined } from '../../helpers.js'
-import { chartXml } from './chart-parts.js'
+import { defineRegressionSuite, build, assertEqual, assertIncludes, assertNotIncludes, defined } from '../../helpers.ts'
+import { chartXml } from './chart-parts.ts'
 
 // A chart stroke used to be spelled three ways the rest of the library did not know: `size`
 // for the width, `style` for the dash, and a flat `*AxisLineShow` flag for the state

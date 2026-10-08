@@ -1,5 +1,5 @@
 import { ChartType } from '../../../dist/node.js'
-import { defineRegressionSuite, build, readEntry, listEntries, assert, captureDiagnostics } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, listEntries, assert, captureDiagnostics } from '../../helpers.ts'
 
 const DATA = [{ name: 'Region', labels: ['North', 'South', 'East'], values: [10, 20, 30] }]
 

@@ -2,7 +2,7 @@
 // deck turns into confusing failures far from the cause. These cases pin the helper contracts
 // that other suites rely on.
 import { describe, expect, test } from 'vitest'
-import { assertIncludes, defined, expectDefined, slideXml } from './helpers.js'
+import { assertIncludes, defined, expectDefined, slideXml } from './helpers.ts'
 
 const SILKSCREEN = 'test/read/fixtures/fonts/Silkscreen-Regular.ttf'
 

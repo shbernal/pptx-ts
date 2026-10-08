@@ -1,4 +1,4 @@
-import { assert, build, defineRegressionSuite, firstXmlBlock, slideXml } from '../../helpers.js'
+import { assert, build, defineRegressionSuite, firstXmlBlock, slideXml } from '../../helpers.ts'
 
 // A stroke is painted like a fill: `ShapeLineProps extends ShapeFillProps`, so `line` accepts
 // `gradient`/`pattern`/`image` as well as a solid `color`, plus its own `cap`. The emitters

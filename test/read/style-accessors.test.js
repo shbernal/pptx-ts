@@ -17,8 +17,8 @@ import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
 import { Presentation, AutoShape, GroupShape, Picture } from '../../dist/read.js'
 /** @import { ShapeHost } from '../../dist/read.js' */
-import { assert, assertEqual, defined } from '../helpers.js'
-import { openFixture } from './corpus.js'
+import { assert, assertEqual, defined } from '../helpers.ts'
+import { openFixture } from './corpus.ts'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'

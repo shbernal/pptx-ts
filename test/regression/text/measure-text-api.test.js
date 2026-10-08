@@ -8,7 +8,7 @@
 // the height the export-time resize bake (solveResize) uses for the same input.
 import { readFileSync } from 'node:fs'
 import { describe, test, expect } from 'vitest'
-import { defined } from '../../helpers.js'
+import { defined } from '../../helpers.ts'
 import { measureText } from '../../../src/measure/fit.ts'
 import { buildFitParagraphs } from '../../../src/measure/paragraphs.ts'
 import {
@@ -19,8 +19,8 @@ import {
 } from '../../../src/measure/font-metrics.ts'
 import { solveResize, solveShrink, HEIGHT_SAFETY_FACTOR, WIDTH_SAFETY_FACTOR } from '../../../src/measure/text-fit.ts'
 import TsPptx from '../../../dist/node.js'
-import { resolveGenuineFontFile } from '../../read/font-oracle.js'
-import { fixturePath } from '../../read/corpus.js'
+import { resolveGenuineFontFile } from '../../read/font-oracle.ts'
+import { fixturePath } from '../../read/corpus.ts'
 
 // The genuine Aptos file, or null. The one case that reads it asserts Aptos's own cmap, so
 // no other face and no recorded-advance sidecar can stand in — but it now reports as SKIPPED

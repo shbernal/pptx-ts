@@ -14,8 +14,8 @@
 
 import { describe, test } from 'vitest'
 import { TableStyle } from '../../dist/node.js'
-import { authorRead, firstTable, schemaErrors, validatorInstalled } from './authored.js'
-import { assert, assertEqual } from '../helpers.js'
+import { authorRead, firstTable, schemaErrors, validatorInstalled } from './authored.ts'
+import { assert, assertEqual } from '../helpers.ts'
 
 /** A 2×2 table whose top-left cell carries a full four-side border set. */
 function borderedTable(pres) {

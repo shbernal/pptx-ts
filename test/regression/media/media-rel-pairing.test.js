@@ -10,7 +10,7 @@
  * `<a:videoFile r:link>` went on pointing at the first of them. The probe is scoped to the media
  * loop now, which is the only collection the pairing lives in.
  */
-import { assert, assertEqual, build, defineRegressionSuite, readEntry } from '../../helpers.js'
+import { assert, assertEqual, build, defineRegressionSuite, readEntry } from '../../helpers.ts'
 
 const VIDEO_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/video'
 const AUDIO_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/audio'

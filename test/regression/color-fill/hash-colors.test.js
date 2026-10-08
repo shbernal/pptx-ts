@@ -1,6 +1,6 @@
 import TsPptx, { ChartType, ShapeType } from '../../../dist/node.js'
 import JSZip from 'jszip'
-import { defineRegressionSuite, assert, readEntry } from '../../helpers.js'
+import { defineRegressionSuite, assert, readEntry } from '../../helpers.ts'
 
 async function buildSlide1(pres) {
 	const buf = await pres.toBytes()

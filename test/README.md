@@ -20,9 +20,9 @@ tooling keys on the directory names.
 
 | Path | Harness | What it covers |
 |---|---|---|
-| `test/regression/<subject>/*.test.js` | `defineRegressionSuite()` (`helpers.js`) — see [docs/contributing/testing.md](../docs/contributing/testing.md) | write side: public API → emitted OOXML/package parts |
+| `test/regression/<subject>/*.test.js` | `defineRegressionSuite()` (`helpers.ts`) — see [docs/contributing/testing.md](../docs/contributing/testing.md) | write side: public API → emitted OOXML/package parts |
 | `test/read/*.test.js` | Vitest `describe`/`test` | `src/read/**` lossless read + edit round-trip |
-| `test/schema-cases.js` (+ `schema-validation.test.js`) | fixture data module | OOXML schema validation of emitted parts |
+| `test/schema-cases.ts` (+ `schema-validation.test.js`) | fixture data module | OOXML schema validation of emitted parts |
 | `test/scripts/*.test.js` | Vitest | the `scripts/` gates and shared helpers — the parsing and exemption logic whose failure mode is a gate that silently stops counting (see [scripts/README.md](../scripts/README.md)) |
 | `test/browser/*.spec.mjs` | **Playwright** (`playwright.config.ts`, `pnpm run test:browser`) — see [docs/contributing/testing.md](../docs/contributing/testing.md#browser-tests-testbrowser) | `dist/browser.js` + all four `src/runtime/browser.ts` adapter functions in a real Chromium, Node↔browser byte identity, and `tableToSlides` against a table a browser laid out |
 | `test/browser/harness/*` | served to the page, not run by a harness | the two fixtures the specs drive: `index.html` for an unbundled load of the shipped `dist/browser.js` (plus the deck definitions both runtimes build from), and `table.html` for a rendered `<table>` with a real `offsetWidth` |
@@ -40,12 +40,12 @@ helper had been re-derived in seven to twenty-six files, with the drift that alw
 
 | Module | What it holds |
 |---|---|
-| `test/helpers.js` | `build()`, `readEntry()`, the `assert*` family, `expectDefined()` and `defined()` (narrow past `null`/`undefined` with a test failure, not a `TypeError`; prefer them to `!` or a cast), the XML/content-type probes, `captureDiagnostics()`, `defineRegressionSuite()`, `bytesEqual`, `throws`, and `PNG_1X1` — the 1x1 transparent PNG that had six different names |
-| `test/validator.js` | the OOXML schema validator: `validatorAvailable()`, `validateBuf()`, a thin adapter over `ooxml-validate`, which does the batching |
-| `test/read/corpus.js` | the read fixture corpus — `FIXTURES`, `fixturePath()`, `readFixture()`, `openFixture()`, `SNAPSHOTS`, `SCRATCH`, `REPO`, the enumerated `fixtureNames` (with the floor that stops an empty corpus passing silently), and the memoized `irFor()` / uncached `freshIr()` |
-| `test/read/authored.js` | the write→read fidelity harness: `authorRead()`, the `first*` locators, `schemaErrors()` |
-| `test/read/opc.js` | relationship-graph checks over a loaded package: `resolveSingle()`, `assertNoDanglingRels()` |
-| `test/regression/chart/chart-parts.js` | locating the emitted chart part: `chartXml()`, `chartExPath()`, `chartExXml()` |
+| `test/helpers.ts` | `build()`, `readEntry()`, the `assert*` family, `expectDefined()` and `defined()` (narrow past `null`/`undefined` with a test failure, not a `TypeError`; prefer them to `!` or a cast), the XML/content-type probes, `captureDiagnostics()`, `defineRegressionSuite()`, `bytesEqual`, `throws`, and `PNG_1X1` — the 1x1 transparent PNG that had six different names |
+| `test/validator.ts` | the OOXML schema validator: `validatorAvailable()`, `validateBuf()`, a thin adapter over `ooxml-validate`, which does the batching |
+| `test/read/corpus.ts` | the read fixture corpus — `FIXTURES`, `fixturePath()`, `readFixture()`, `openFixture()`, `SNAPSHOTS`, `SCRATCH`, `REPO`, the enumerated `fixtureNames` (with the floor that stops an empty corpus passing silently), and the memoized `irFor()` / uncached `freshIr()` |
+| `test/read/authored.ts` | the write→read fidelity harness: `authorRead()`, the `first*` locators, `schemaErrors()` |
+| `test/read/opc.ts` | relationship-graph checks over a loaded package: `resolveSingle()`, `assertNoDanglingRels()` |
+| `test/regression/chart/chart-parts.ts` | locating the emitted chart part: `chartXml()`, `chartExPath()`, `chartExXml()` |
 
 ## `src/*.ts` → representative regression tests
 

@@ -13,7 +13,7 @@ import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
 import { TextFrame, AutoShape, resolveColorElement } from '../../dist/read.js'
 /** @import { Part, ShapeHost } from '../../dist/read.js' */
-import { assertEqual, defined } from '../helpers.js'
+import { assertEqual, defined } from '../helpers.ts'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'

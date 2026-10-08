@@ -71,7 +71,7 @@ are stored byte-for-byte as saved by PowerPoint.
 These decks were authored locally with desktop PowerPoint COM on Windows
 (2026-06-19) as **serialization oracles**: they pin the exact OOXML PowerPoint
 writes for write-side behaviours so the corresponding writer fixes can be
-compared against authentic XML in `test/schema-cases.js`. They are not consumed
+compared against authentic XML in `test/schema-cases.ts`. They are not consumed
 by the `ts-pptx/read` harness. Two groups:
 
 - **Placeholder / notes**: `layout-placeholder-bodypr.pptx`,

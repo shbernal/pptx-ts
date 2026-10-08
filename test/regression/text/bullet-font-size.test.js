@@ -1,4 +1,4 @@
-import { setDiagnosticHandler, defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { setDiagnosticHandler, defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 // Custom bullet glyph font and size. Authored decks emit
 // `<a:buFont typeface="Wingdings"/>` for symbol bullets and `<a:buSzPct/>` values

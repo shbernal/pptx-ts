@@ -7,7 +7,7 @@ import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import TsPptx from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual, defined } from '../helpers.js'
+import { assert, assertEqual, defined } from '../helpers.ts'
 
 const SLIDE_PATH = 'ppt/slides/slide1.xml'
 const SLIDE_RELS_PATH = 'ppt/slides/_rels/slide1.xml.rels'

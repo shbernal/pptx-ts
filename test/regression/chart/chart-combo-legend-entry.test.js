@@ -1,6 +1,6 @@
 import { ChartType } from '../../../dist/node.js'
-import { assertEqual, build, defineRegressionSuite } from '../../helpers.js'
-import { chartXml } from './chart-parts.js'
+import { assertEqual, build, defineRegressionSuite } from '../../helpers.ts'
+import { chartXml } from './chart-parts.ts'
 
 // A combo subchart with `showLegend: false` deletes its series' legend entries, and
 // `c:legendEntry/c:idx` counts positions in the legend rather than series indexes: PowerPoint,

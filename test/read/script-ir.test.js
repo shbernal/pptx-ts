@@ -18,9 +18,9 @@ import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import { Presentation, isAutoShape } from '../../dist/read.js'
 import { canonicalDeckIr, readModelToIr } from '../../dist/script.js'
-import { PNG_1X1, assert, assertEqual, defined, expectDefined, readEntry } from '../helpers.js'
-import { authorRead } from './authored.js'
-import { fixtureNames, fixturePath, freshIr, irFor, readFixture } from './corpus.js'
+import { PNG_1X1, assert, assertEqual, defined, expectDefined, readEntry } from '../helpers.ts'
+import { authorRead } from './authored.ts'
+import { fixtureNames, fixturePath, freshIr, irFor, readFixture } from './corpus.ts'
 
 /** A 1x1 SVG; only the blip it produces matters here. */
 const SVG_SQUARE =

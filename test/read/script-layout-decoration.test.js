@@ -44,8 +44,8 @@ import {
 	readModelToIr,
 	LAYOUT_NOTE_PREFIX,
 } from '../../dist/script.js'
-import { assert, assertEqual, defined, readEntry } from '../helpers.js'
-import { FIXTURES } from './corpus.js'
+import { assert, assertEqual, defined, readEntry } from '../helpers.ts'
+import { FIXTURES } from './corpus.ts'
 
 const run = promisify(execFile)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))

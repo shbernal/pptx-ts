@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
-import { build, readEntry, listEntries } from '../../helpers.js'
-import { chartExPath } from './chart-parts.js'
+import { build, readEntry, listEntries } from '../../helpers.ts'
+import { chartExPath } from './chart-parts.ts'
 
 // Region map (`regionMap`, a filled/geographic map) is a chartEx (cx:) layout. Confirmed against a
 // map PowerPoint authored (`Shapes.AddChart2(-1, 140, …)`) and read back as ChartType 140, the

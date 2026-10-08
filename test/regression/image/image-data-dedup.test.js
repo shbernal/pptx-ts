@@ -1,4 +1,4 @@
-import { PNG_1X1 as PNG_A, defineRegressionSuite, build, readEntry, listEntries, assert } from '../../helpers.js'
+import { PNG_1X1 as PNG_A, defineRegressionSuite, build, readEntry, listEntries, assert } from '../../helpers.ts'
 
 // Identical base64 `data:` images added to a slide previously embedded one media part PER
 // insertion: the duplicate-media check matched on `path`, but inline images carry no real

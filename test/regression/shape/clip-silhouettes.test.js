@@ -7,7 +7,7 @@ import {
 	assertEqual,
 	caughtSync,
 	defined,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 import { clipPath, EMU_PER_INCH } from '../../../dist/node.js'
 
 // `clipPath` resolves a named silhouette to the freeform `points` path `addImage` emits as a

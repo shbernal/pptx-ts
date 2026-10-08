@@ -21,9 +21,9 @@ import {
 	expectDefined,
 	partBodies,
 	throws,
-} from '../helpers.js'
-import { validateBuf, validatorInstalled } from '../validator.js'
-import { fixturePath, openFixture } from './corpus.js'
+} from '../helpers.ts'
+import { validateBuf, validatorInstalled } from '../validator.ts'
+import { fixturePath, openFixture } from './corpus.ts'
 
 // A 1×1 transparent PNG.
 const PNG_1X1 = new Uint8Array(

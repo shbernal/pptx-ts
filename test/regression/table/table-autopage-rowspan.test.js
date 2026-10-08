@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, listEntries, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, listEntries, assert } from '../../helpers.ts'
 
 // Regression: when a table is auto-paged and a page break would fall inside a
 // rowspan group, the rows under the span must NOT be placed on a new slide —

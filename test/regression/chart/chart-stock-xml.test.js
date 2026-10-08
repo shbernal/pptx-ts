@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { build, readEntry, listEntries } from '../../helpers.js'
+import { build, readEntry, listEntries } from '../../helpers.ts'
 
 // Stock (high-low-close) is a CLASSIC (c:) chart, not a chartEx layout. Confirmed against the four
 // stock charts PowerPoint authors (`Shapes.AddChart2(-1, {88|89|90|91}, …)`) and reads back as

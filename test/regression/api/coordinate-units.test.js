@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert, caught } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert, caught } from '../../helpers.ts'
 
 // Coordinates resolve through a single boundary (coordToEmu) with NO magnitude guessing:
 // a bare number is ALWAYS inches; other units use an explicit string suffix. This replaces the

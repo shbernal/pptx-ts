@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, captureDiagnostics, assert, assertEqual } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, captureDiagnostics, assert, assertEqual } from '../../helpers.ts'
 import { TableStyle } from '../../../dist/node.js'
 
 // The two table-level fill options, and the non-solid cell fills that were emitting all

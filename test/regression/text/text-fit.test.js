@@ -4,7 +4,7 @@
 // conservative-against-PowerPoint assertions against real fonts live in
 // test/read/autofit-calibration-oracle.test.mjs (skipped when fonts are absent).
 import { describe, test, expect } from 'vitest'
-import { defined } from '../../helpers.js'
+import { defined } from '../../helpers.ts'
 import {
 	solveShrink,
 	solveResize,

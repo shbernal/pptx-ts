@@ -1,6 +1,6 @@
 import JSZip from 'jszip'
 import TsPptx from '../../../dist/node.js'
-import { defineRegressionSuite, assert, xmlOpeningTags, xmlAttributes } from '../../helpers.js'
+import { defineRegressionSuite, assert, xmlOpeningTags, xmlAttributes } from '../../helpers.ts'
 
 async function buildSlideXml(pres) {
 	const buf = await pres.toBytes()

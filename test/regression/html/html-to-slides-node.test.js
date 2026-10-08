@@ -2,7 +2,7 @@ import JSZip from 'jszip'
 import { Window } from 'happy-dom'
 import { tableToSlides } from '../../../dist/html.js'
 import BrowserTsPptx from '../../../dist/browser.js'
-import { build, readEntry, listEntries, assert, assertEqual, defineRegressionSuite } from '../../helpers.js'
+import { build, readEntry, listEntries, assert, assertEqual, defineRegressionSuite } from '../../helpers.ts'
 
 // Acceptance: the `ts-pptx/html` subpath converts an HTML table to slides outside a browser.
 // This is the case the whole portability effort exists for, and it is the one the pure-helper

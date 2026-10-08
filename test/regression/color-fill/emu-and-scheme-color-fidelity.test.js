@@ -6,7 +6,7 @@
 // vocabulary boundaries executable rather than inferred from type declarations: widening
 // `Margin`/`colW` to `Coord`, or extending `SchemeColor` towards the full
 // `ST_SchemeColorVal` set, should fail here and be recorded as a deliberate change.
-import { defineRegressionSuite, assert, assertIncludes, slideXml, assertRejects } from '../../helpers.js'
+import { defineRegressionSuite, assert, assertIncludes, slideXml, assertRejects } from '../../helpers.ts'
 
 const EMU_PER_INCH = 914400
 

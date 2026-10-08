@@ -6,7 +6,7 @@ import { buildDeckBase64 } from './harness/decks.mjs'
 
 /**
  * `value`, narrowed past `null` and `undefined`, failing the spec through Playwright's
- * `expect` when it is absent. The Playwright counterpart of `defined` in `test/helpers.js`,
+ * `expect` when it is absent. The Playwright counterpart of `defined` in `test/helpers.ts`,
  * which asserts through Vitest and so cannot be imported here.
  *
  * @template T

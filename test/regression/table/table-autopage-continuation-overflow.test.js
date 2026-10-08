@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, listEntries, readEntry, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, listEntries, readEntry, assert } from '../../helpers.ts'
 
 // Regression: autoPage created a continuation slide, but the
 // reporter saw rows on that *new* slide overflow past the bottom — pagination was applied to the

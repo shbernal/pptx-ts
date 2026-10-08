@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 // A slide object that names a layout placeholder takes options from it at definition time and its
 // frame and `<p:ph>` from it at write time. The two lookups disagreed about what counts as a layout

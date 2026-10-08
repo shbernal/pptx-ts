@@ -19,10 +19,10 @@
 
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual } from '../helpers.js'
-import { validateBuf, validatorInstalled } from '../validator.js'
-import { openFixture } from './corpus.js'
-import { assertNoDanglingRels } from './opc.js'
+import { assert, assertEqual } from '../helpers.ts'
+import { validateBuf, validatorInstalled } from '../validator.ts'
+import { openFixture } from './corpus.ts'
+import { assertNoDanglingRels } from './opc.ts'
 
 /** Index of the `mixed` fixture pages this file leans on. */
 const NOTES_PAGE = 0 // a page with speaker notes

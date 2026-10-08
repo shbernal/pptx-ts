@@ -1,5 +1,5 @@
 import { describe, test } from 'vitest'
-import { assert } from '../../helpers.js'
+import { assert } from '../../helpers.ts'
 import { extendColBasis, measureGridColumns } from '../../../src/gen/table/html-dom.ts'
 import { createRowSpanOccupancy } from '../../../src/gen/table/grid.ts'
 

@@ -11,8 +11,8 @@
 // XML; this file proves the *writer* now produces those same bytes.)
 
 import { describe, test } from 'vitest'
-import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.js'
-import { assert, assertEqual } from '../helpers.js'
+import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.ts'
+import { assert, assertEqual } from '../helpers.ts'
 
 // A 1×1 PNG — the smallest valid raster the writer will embed; the recolour
 // effect lives on the blip, not the pixels, so its content is irrelevant.

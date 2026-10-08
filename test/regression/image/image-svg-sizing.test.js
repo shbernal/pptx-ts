@@ -6,7 +6,7 @@ import {
 	assert,
 	assertEqual,
 	captureDiagnostics,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 import { EMU_PER_INCH } from '../../../dist/node.js'
 
 // A square SVG (1:1) — its intrinsic aspect must come from width/height or viewBox,

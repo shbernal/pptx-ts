@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 // Regression: when a table with autoPage overflows and the originating slide is
 // NOT in the last-defined section, continuation slides must land in the same

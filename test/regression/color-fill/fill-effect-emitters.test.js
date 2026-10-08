@@ -8,7 +8,7 @@ import {
 	readEntry,
 	slideXml,
 	defined,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 // The byte-identity harness (`scripts/byte-identity.mjs`) is what gates a behavior-preserving
 // refactor of `src/gen/`, but its corpus is only what the showcase decks emit — and no showcase

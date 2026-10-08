@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 // Every `<a:pPr>` on slide 1, in document order — these cases are mostly about the *pairing*
 // of two paragraphs, since either half alone passes against the bug they cover.

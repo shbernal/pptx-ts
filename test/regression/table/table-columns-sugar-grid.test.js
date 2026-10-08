@@ -7,7 +7,7 @@
  * checked, so a string or negative colspan moved the cursor. The sugar now reads the placements the
  * emitter, the auto-pager and the measured fit read.
  */
-import { assertEqual, captureDiagnostics, defineRegressionSuite, build, readEntry } from '../../helpers.js'
+import { assertEqual, captureDiagnostics, defineRegressionSuite, build, readEntry } from '../../helpers.ts'
 
 const RED = { fill: { color: 'FF0000' } }
 const BLUE = { fill: { color: '0000FF' } }

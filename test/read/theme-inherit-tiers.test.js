@@ -24,7 +24,7 @@ import { describe, test } from 'vitest'
 import TsPptx from '../../dist/node.js'
 import { Presentation, TextFrame, AutoShape, resolveColorElement } from '../../dist/read.js'
 /** @import { Part, ShapeHost } from '../../dist/read.js' */
-import { assert, assertEqual, defined, expectDefined } from '../helpers.js'
+import { assert, assertEqual, defined, expectDefined } from '../helpers.ts'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'

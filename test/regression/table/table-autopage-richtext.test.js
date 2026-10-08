@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, listEntries, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, listEntries, assert } from '../../helpers.ts'
 
 // Regression: parseTextToLines grouped each styled run as a separate inputLines2
 // entry, so the word-wrap column counter reset between runs.  Two runs that together

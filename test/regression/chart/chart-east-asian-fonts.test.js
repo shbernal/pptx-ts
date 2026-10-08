@@ -1,6 +1,6 @@
 import { ChartType } from '../../../dist/node.js'
-import { defineRegressionSuite, build, assertIncludes } from '../../helpers.js'
-import { chartXml } from './chart-parts.js'
+import { defineRegressionSuite, build, assertIncludes } from '../../helpers.ts'
+import { chartXml } from './chart-parts.ts'
 
 // chart title, legend, and axis/category label font settings did not
 // take effect for Chinese (and other East Asian) text, most visibly on PowerPoint for Mac.

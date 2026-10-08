@@ -1,4 +1,4 @@
-import { setDiagnosticHandler, defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { setDiagnosticHandler, defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 // upstream-issue-1199: `fit: 'shrink'` historically emitted a bare <a:normAutofit/>,
 // so PowerPoint only shrank text after an edit/resize. The object form bakes explicit

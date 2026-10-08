@@ -34,7 +34,7 @@ opts in. `docs/contributing/scope-and-policy.md` ("Out of active scope") has the
 ## OOXML and PowerPoint work
 
 - Before changing emitted OOXML, read `docs/contributing/ooxml.md`. A serialization change
-  adds or updates a fixture in `test/schema-cases.js`.
+  adds or updates a fixture in `test/schema-cases.ts`.
 - Do not vendor standards PDFs or large spec extracts. Write small notes with section
   references.
 - Where behavior can only be judged against genuine PowerPoint output, do not implement

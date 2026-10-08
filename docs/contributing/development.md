@@ -182,7 +182,7 @@ for. `resolveSubchartOptions` applies that distinction at the merge and drops wh
 plot builders still receive an ordinary bag.
 
 The test project inherits the flag, and `strictNullChecks` with it, from `tsconfig.base.json`. A
-test narrows a nullable read with `expectDefined` or `defined` from `test/helpers.js` rather than
+test narrows a nullable read with `expectDefined` or `defined` from `test/helpers.ts` rather than
 a `!` or a cast.
 
 ## Lint policy
@@ -216,7 +216,7 @@ a `!` or a cast.
 
 Before changing emitted OOXML, read [OOXML agent context](ooxml.md). It sets the order for looking
 up schema and PowerPoint behavior, and says what counts as evidence for a change. A change to
-emitted XML carries a focused fixture in `test/schema-cases.js`. The [testing guide](testing.md)
+emitted XML carries a focused fixture in `test/schema-cases.ts`. The [testing guide](testing.md)
 covers schema validation and `pnpm run test:schema`.
 
 ## Package boundary changes
@@ -418,7 +418,7 @@ To work it:
 2. Take the diagnostic's `id`, `description`, `partUri` and `xpath` to the `ooxml` MCP server's
    `ooxml_explain`, which answers what was legal at that position. The
    [testing guide](testing.md) describes what a validation error carries.
-3. Add or update a focused fixture in `test/schema-cases.js`, and iterate with
+3. Add or update a focused fixture in `test/schema-cases.ts`, and iterate with
    `pnpm run test:schema`.
 
 A deck can pass the schema and still fail in PowerPoint, with `0x80070570` or a dropped

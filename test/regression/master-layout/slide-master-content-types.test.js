@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, listEntries, assert, defined } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, listEntries, assert, defined } from '../../helpers.ts'
 
 defineRegressionSuite('Slide master content types [legacy bug-02]', [
 	{

@@ -1,5 +1,5 @@
 # Installs the Aptos family for the current user, the way the font oracle in
-# test/read/font-oracle.js expects to find it: files under %LOCALAPPDATA%, registered in HKCU
+# test/read/font-oracle.ts expects to find it: files under %LOCALAPPDATA%, registered in HKCU
 # with absolute paths. install.bat runs it at the first logon. It is rerunnable, and it also
 # works as a worker job, since the worker runs as the same user.
 #

@@ -5,7 +5,7 @@ import {
 	assertEqual,
 	captureDiagnostics,
 	setDiagnosticHandler,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 // The diagnostics seam: every library warning is a structured `{ code, message }` delivered to a
 // handler a consumer can install, rather than an unconditional `console.warn` line.

@@ -10,7 +10,7 @@ import {
 	selfClosingTags,
 	xmlAttributes,
 	xmlOpeningTags,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 // The *definition* side of `slide.addComment()` (`gen/define/comment.ts`), as distinct from
 // `comments-xml.test.mjs`, which byte-pins the emitters given already-normalized `SlideComment`
@@ -19,7 +19,7 @@ import {
 // display name, and refusing — with a warning, never an exception — a comment that has no author
 // or no body.
 //
-// The refusals were the whole gap. Every existing caller (schema-cases.js, the read round-trips)
+// The refusals were the whole gap. Every existing caller (schema-cases.ts, the read round-trips)
 // passes a valid author and text, so neither guard had ever executed against `dist/`, and nothing
 // would have noticed the day one of them started emitting a degenerate `<p:cm>` instead.
 //

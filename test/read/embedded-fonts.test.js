@@ -9,9 +9,9 @@ import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual, bytesEqual, caughtSync, readEntry } from '../helpers.js'
-import { validateBuf, validatorInstalled } from '../validator.js'
-import { openFixture, readFixture } from './corpus.js'
+import { assert, assertEqual, bytesEqual, caughtSync, readEntry } from '../helpers.ts'
+import { validateBuf, validatorInstalled } from '../validator.ts'
+import { openFixture, readFixture } from './corpus.ts'
 
 async function entries(pptxBytes) {
 	const zip = await JSZip.loadAsync(pptxBytes)

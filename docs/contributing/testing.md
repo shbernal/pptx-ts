@@ -255,7 +255,7 @@ intent does not.
 
 Two mechanisms replace the guarantee isolation gave:
 
-- `test/setup-globals.js` resets `setDiagnosticHandler`, the one process-global the library
+- `test/setup-globals.ts` resets `setDiagnosticHandler`, the one process-global the library
   owns, after every test. `test/regression/api/global-state-reset.test.js` guards the reset.
 - `sequence.shuffle.files` randomizes file order, so an order dependence fails instead of
   hiding. Vitest prints the seed, and `--sequence.seed=<n>` reproduces a run. Tests inside a
@@ -298,12 +298,12 @@ happy-dom.
   `slide-master-placeholders.test.js`, never after a bug number.
 - When a file could sit in two directories, put it with the subsystem whose emission it
   asserts on. No tooling keys on the directory, so a file can move freely.
-- Paths inside a suite are relative to its directory, for example `../../helpers.js` and
+- Paths inside a suite are relative to its directory, for example `../../helpers.ts` and
   `../../../dist/node.js`.
 - A Vitest file is `*.test.ts` or `*.test.js`. The Playwright specs in `test/browser/` are
   `*.spec.ts` or `*.spec.mjs`.
 
-Each regression file calls `defineRegressionSuite(suiteName, cases)` from `test/helpers.js`,
+Each regression file calls `defineRegressionSuite(suiteName, cases)` from `test/helpers.ts`,
 with exactly two arguments. Put legacy provenance in the suite name, as in
 `'Table margins [legacy bug-14]'`, where the reporter prints it.
 
@@ -320,7 +320,7 @@ Prefer public API deck generation plus focused package and XML assertions:
 - Narrow a nullable value with `expectDefined(x)`, or `defined(x)` inside an expression. The test
   project typechecks with `strictNullChecks`, and both helpers fail as an assertion where a bare
   dereference would fail as a `TypeError`. A Playwright spec imports `defined` from
-  `test/browser/helpers.mjs` instead, since `test/helpers.js` asserts through Vitest.
+  `test/browser/helpers.mjs` instead, since `test/helpers.ts` asserts through Vitest.
 - Assert a failure without a hand-rolled `try`/`catch`: a catch variable is `unknown`. Use
   `assertRejects()` to match the message, `caught()` or `caughtSync()` to get the thrown
   `Error` back (or `null`) and check its `code`, class or `cause`, or Vitest's `toThrow()`.
@@ -344,7 +344,7 @@ pnpm run test:read
 ```
 
 `test/read/roundtrip.test.js` runs its contracts against every `.pptx` in `test/read/fixtures/`,
-enumerated by `fixtureNames` in `test/read/corpus.js`, so a deck added there is round-tripped on
+enumerated by `fixtureNames` in `test/read/corpus.ts`, so a deck added there is round-tripped on
 the next run. The contracts are part-set stability, byte identity for untouched parts, lazy
 parsing, save idempotence, content-type and relationship resolution, the mutate-and-reserialize
 path, and schema validity. The fixtures are PowerPoint-authored, with provenance in that
@@ -358,10 +358,10 @@ deck in the corpus, and an empty verdict before a round trip still demands an em
 after it.
 
 When the OOXML oracle cannot be fetched, the schema cases skip locally with a notice on stderr
-and fail under `CI`. `validatorInstalled` in `test/validator.js` carries that policy.
+and fail under `CI`. `validatorInstalled` in `test/validator.ts` carries that policy.
 
 The files below pin the read model and its edits. Files marked *authored* build their decks
-with `test/read/authored.js`. They author a feature with the write API, load the bytes through
+with `test/read/authored.ts`. They author a feature with the write API, load the bytes through
 `pptx-ts/read`, and assert the decoded model. The write path and the read path are separate
 code, so a bug in one cannot hide a bug in the other.
 
@@ -449,7 +449,7 @@ layouts, masters, theme and notes. `script:census` adds `--names <count>`, to na
 behind the long tail. `append-ceiling` takes `--template <path>` instead.
 
 The corpus is whatever `corpusDecks` in `scripts/script-utils.mjs` returns: every `.pptx` in
-`test/read/fixtures/`, sorted. `template.potx` is skipped. `test/read/corpus.js` enumerates
+`test/read/fixtures/`, sorted. `template.potx` is skipped. `test/read/corpus.ts` enumerates
 through the same function and fails collection below 40 decks.
 
 ### The round trip
@@ -710,14 +710,14 @@ markdown links only, so this gate resolves the backticked paths.
 ## OOXML schema validation
 
 **An OOXML change needs a schema fixture.** Add or update a focused fixture in
-`test/schema-cases.js` and run the schema suite. `verify` already runs it, so run it alone to
+`test/schema-cases.ts` and run the schema suite. `verify` already runs it, so run it alone to
 iterate on a fixture:
 
 ```bash
 pnpm run test:schema
 ```
 
-`test/schema-cases.js` is a fixture data module. `test/schema-validation.test.js` is the runner
+`test/schema-cases.ts` is a fixture data module. `test/schema-validation.test.js` is the runner
 that consumes it.
 
 Validation goes through [`ooxml-validate`](https://github.com/shbernal/ooxml-validate), a shared
@@ -725,7 +725,7 @@ oracle around Microsoft's `OpenXmlValidator` that `ts-xlsx` also uses. Nothing n
 The package fetches its binary from GitHub Releases on first use, verifies the checksum and
 build provenance, and caches it under `~/.cache/ooxml-validate/<version>/`. The Open XML SDK
 version is pinned in that package, so an SDK bump arrives as an `ooxml-validate` release.
-`test/validator.js` is a thin adapter over it. Batching and the process queue live in the
+`test/validator.ts` is a thin adapter over it. Batching and the process queue live in the
 package.
 
 How the schema suite runs:
@@ -744,16 +744,16 @@ How the schema suite runs:
 | Construct | What the validator does | How it is covered |
 | --- | --- | --- |
 | Modelled markup | Reports schema and semantic errors (`Sch_*`, `Sem_*`), so a dangling `r:id` is caught here | `test:schema`, and the schema cases in `test:read` |
-| A file that is not a readable package | Reports a `PackageOpenError` row | the non-package case in `test/schema-cases.js` |
+| A file that is not a readable package | Reports a `PackageOpenError` row | the non-package case in `test/schema-cases.ts` |
 | Content inside `mc:Choice` | Validates only the `mc:Fallback` branch. The payloads of 3D models (`am3d:model3d`), zoom frames and OLE objects (`p:oleObj`) go unvalidated, including a deleted required attribute | a byte diff against a PowerPoint-authored fixture (`test/read/model3d-roundtrip.test.js`), and `test:com` |
 | Version gating | An older schema set skips markup it does not model instead of rejecting it, so a clean run at a lower version does not mean that Office version opens the deck | the `Microsoft365` pin; decide `mc:Choice Requires=` against `[MS-PPTX]` and PowerPoint; `schema:versions` dates a divergence |
-| Markup PowerPoint writes that the SDK does not model | Reports it as errors, as in the chart `c:extLst` of `bar-chart-data-labels.pptx` and the chartEx `cx:axisId` divergence | the read round trip compares verdicts before and after; `test/schema-cases.js` documents the tolerated `cx:axisId` errors |
+| Markup PowerPoint writes that the SDK does not model | Reports it as errors, as in the chart `c:extLst` of `bar-chart-data-labels.pptx` and the chartEx `cx:axisId` divergence | the read round trip compares verdicts before and after; `test/schema-cases.ts` documents the tolerated `cx:axisId` errors |
 | Errors PowerPoint raises on open | Cannot see a package PowerPoint reports as corrupt (`0x80070570`) or opens with a shape dropped | `test:com`, and a manual open of `test:read:emit` output |
 | Whether markup is painted | Cannot see it | PNG export and `test:lo`; see [Which oracle proves what](#which-oracle-proves-what) |
 
 ### The schema tier proves it can still fail
 
-Every fixture in `test/schema-cases.js` asserts zero errors, so no fixture alone can tell a
+Every fixture in `test/schema-cases.ts` asserts zero errors, so no fixture alone can tell a
 valid deck from a validator that reports nothing. Two cases at the end of that file expect
 errors, and they are the only ones that do:
 
@@ -768,7 +768,7 @@ Both fail when `validateBuf` is stubbed to return `[]`. Both assert on `id` and 
 ### What a validation error carries
 
 The oracle emits five fields per diagnostic, and a failure message should use all of them
-(`formatSchemaErrors` in `test/schema-cases.js` does):
+(`formatSchemaErrors` in `test/schema-cases.ts` does):
 
 | Field | Notes |
 | --- | --- |
@@ -784,7 +784,7 @@ point at. Guard both before printing them.
 ### The conformance target is pinned
 
 Everything validates at `Microsoft365`. `ooxml-validate` pins it as `FILE_FORMAT`,
-`test/validator.js` re-exports it, and every call passes it explicitly, so a dependency bump
+`test/validator.ts` re-exports it, and every call passes it explicitly, so a dependency bump
 cannot move the bar without a line changing here. The Open XML SDK's own default is
 `Office2007`.
 
@@ -1075,7 +1075,7 @@ the derived `autofit-calibration.json`. `autofit-cjk-wrap.pptx` is read directly
 ### Where the fonts come from
 
 Both suites need the faces PowerPoint measured with: Aptos, Aptos SemiBold, Arial, Calibri,
-Tahoma and Malgun Gothic. None of them can be committed. `test/read/font-oracle.js` takes each
+Tahoma and Malgun Gothic. None of them can be committed. `test/read/font-oracle.ts` takes each
 face from one of two sources:
 
 - The installed font. On Windows it reads the font registry under both `HKLM` and `HKCU`. That is

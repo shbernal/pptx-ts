@@ -9,7 +9,7 @@ import {
 	selfClosingTags,
 	xmlAttributes,
 	defined,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 defineRegressionSuite('Slide backgrounds [legacy bug-12]', [
 	{

@@ -438,7 +438,7 @@
 				// category rather than a one-off site:
 				//   `expect*`   — `expect` plus `expectKind`, which wraps it.
 				//   `assert*`   — the `assert`/`assertEqual`/`assertXmlOrder`… family in
-				//                 `test/helpers.js`. `throws` is deliberately *not* listed: it
+				//                 `test/helpers.ts`. `throws` is deliberately *not* listed: it
 				//                 returns a boolean instead of throwing, so it is only ever an
 				//                 argument to `assert` and listing it would sanction a bare
 				//                 `throws(…)` statement that asserts nothing.

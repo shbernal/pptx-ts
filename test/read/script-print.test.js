@@ -23,9 +23,9 @@ import { promisify } from 'node:util'
 import { describe, test } from 'vitest'
 import { Presentation, isGraphicFrame } from '../../dist/read.js'
 import { printScript, printStandaloneScript, readModelToIr } from '../../dist/script.js'
-import { assert, assertEqual, defined } from '../helpers.js'
-import { authorRead } from './authored.js'
-import { REPO, SCRATCH, fixtureNames, irFor, readFixture } from './corpus.js'
+import { assert, assertEqual, defined } from '../helpers.ts'
+import { authorRead } from './authored.ts'
+import { REPO, SCRATCH, fixtureNames, irFor, readFixture } from './corpus.ts'
 
 const run = promisify(execFile)
 

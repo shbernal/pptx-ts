@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 // Acceptance: emitted <a:tcPr> must never carry NaN in marL/R/T/B even when
 // the user supplies a non-numeric/non-array `margin` (string, plain object,

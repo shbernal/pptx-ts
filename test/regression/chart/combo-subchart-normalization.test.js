@@ -7,8 +7,8 @@ import {
 	assertIncludes,
 	assertNotIncludes,
 	captureDiagnostics,
-} from '../../helpers.js'
-import { chartXml } from './chart-parts.js'
+} from '../../helpers.ts'
+import { chartXml } from './chart-parts.ts'
 
 // A combo subchart's `options` is a whole `ChartOpts`, merged over the chart's options when the part
 // is written. Only thirteen hand-listed keys used to be checked, and none of the defaults that depend

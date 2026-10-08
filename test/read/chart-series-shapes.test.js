@@ -10,9 +10,9 @@ import { describe, expect, test } from 'vitest'
 import JSZip from 'jszip'
 import { ChartType } from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual, captureDiagnostics, readEntry } from '../helpers.js'
-import { authorRead } from './authored.js'
-import { openFixture, readFixture } from './corpus.js'
+import { assert, assertEqual, captureDiagnostics, readEntry } from '../helpers.ts'
+import { authorRead } from './authored.ts'
+import { openFixture, readFixture } from './corpus.ts'
 
 /** The chart in the graphic frame named `name`, on any slide. */
 function chartNamed(presentation, name) {

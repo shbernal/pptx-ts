@@ -10,8 +10,8 @@
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual, defined, readEntry } from '../helpers.js'
-import { openFixture } from './corpus.js'
+import { assert, assertEqual, defined, readEntry } from '../helpers.ts'
+import { openFixture } from './corpus.ts'
 
 const EDITED = 'EDITED IN SESSION'
 

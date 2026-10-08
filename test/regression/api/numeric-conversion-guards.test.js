@@ -8,7 +8,7 @@ import {
 	assertIncludes,
 	captureDiagnostics,
 	caught,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 // A converter that accepts garbage emits it: `Math.round(NaN * 100)` is `NaN` and
 // `Math.round(Infinity * 60000)` is `Infinity`, and both serialize straight into an attribute

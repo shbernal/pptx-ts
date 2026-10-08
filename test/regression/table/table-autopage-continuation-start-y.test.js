@@ -12,7 +12,7 @@
  *
  * The same three cases as `html-table-continuation-start-y.test.js`, which covers `tableToSlides`.
  */
-import { assert, assertEqual, build, defineRegressionSuite, listEntries, readEntry } from '../../helpers.js'
+import { assert, assertEqual, build, defineRegressionSuite, listEntries, readEntry } from '../../helpers.ts'
 
 const EMU_PER_INCH = 914400
 const ROWS = Array.from({ length: 90 }, (_unused, i) => [`Row ${i} column A`, `Row ${i} column B`])

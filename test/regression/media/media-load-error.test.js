@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import JSZip from 'jszip'
 import { describe, expect, test } from 'vitest'
 import TsPptx from '../../../dist/node.js'
-import { assert, assertRejects, captureDiagnostics, readEntry } from '../../helpers.js'
+import { assert, assertRejects, captureDiagnostics, readEntry } from '../../helpers.ts'
 
 const BROKEN_SVG = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../browser/harness/broken.svg')
 

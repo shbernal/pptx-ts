@@ -12,7 +12,7 @@
 
 import path from 'node:path'
 import { describe, expect, test } from 'vitest'
-import { defined } from '../helpers.js'
+import { defined } from '../helpers.ts'
 import { PROGRAMS, programFrame, programModule, programSource } from '../../scripts/comparison/programs.mjs'
 import { PROBES, probeSource, SUBJECTS } from '../../scripts/comparison/probes.mjs'
 import { functionBody, literal, renderSource } from '../../scripts/comparison/source.mjs'

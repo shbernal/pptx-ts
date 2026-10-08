@@ -11,8 +11,8 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, test } from 'vitest'
 import { applyColorTransforms } from '../../dist/read.js'
-import { assert, defined } from '../helpers.js'
-import { openFixture } from './corpus.js'
+import { assert, defined } from '../helpers.ts'
+import { openFixture } from './corpus.ts'
 
 /** Parse `RRGGBB` → [r,g,b] 0–255. */
 function channels(hex) {

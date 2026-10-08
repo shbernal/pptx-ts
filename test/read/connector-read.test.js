@@ -19,8 +19,8 @@
 
 import { ShapeType } from '../../dist/node.js'
 import { describe, test } from 'vitest'
-import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.js'
-import { assert, assertEqual } from '../helpers.js'
+import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.ts'
+import { assert, assertEqual } from '../helpers.ts'
 
 /** The single connector on any slide of `presentation`. */
 function connectorOf(presentation) {

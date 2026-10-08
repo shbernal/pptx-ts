@@ -11,9 +11,9 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, test } from 'vitest'
 
-import { assert, assertEqual, assertRejects, defined, expectDefined } from '../helpers.js'
-import { authorRead, schemaErrors, validatorInstalled } from './authored.js'
-import { openFixture } from './corpus.js'
+import { assert, assertEqual, assertRejects, defined, expectDefined } from '../helpers.ts'
+import { authorRead, schemaErrors, validatorInstalled } from './authored.ts'
+import { openFixture } from './corpus.ts'
 
 // A 1×1 transparent PNG, as the writer's `background: { data }` expects it.
 const PNG_1PX =

@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, listEntries, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, listEntries, assert } from '../../helpers.ts'
 
 // `defineSlideMaster` text objects previously wrapped `text.text` in a fresh
 // one-item array unconditionally. A rich-text array (`text: [{ text, options }, ...]`)

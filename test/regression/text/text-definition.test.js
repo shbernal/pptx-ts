@@ -11,7 +11,7 @@ import {
 	assertNonVisualDrawingProperty,
 	defined,
 	caught,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 // The option-normalization half of `gen/define/text.ts` — the work `addTextDefinition` does before
 // any XML exists: defaulting an empty text array, computing line defaults for a line-shaped text

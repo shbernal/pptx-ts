@@ -24,10 +24,10 @@ import {
 	PRESENTATION_METHOD_FAMILIES,
 	SLIDE_METHOD_FAMILIES,
 } from '../../../src/families/shared.ts'
-// From `src/`, not `dist/`: `warn` here is the src-side module, and `test/helpers.js`'s
+// From `src/`, not `dist/`: `warn` here is the src-side module, and `test/helpers.ts`'s
 // `captureDiagnostics` installs its handler on the built one, which is a different singleton.
 import { setDiagnosticHandler } from '../../../src/diagnostics.ts'
-import { assert, assertEqual } from '../../helpers.js'
+import { assert, assertEqual } from '../../helpers.ts'
 
 const SERIES = [{ name: 'Rev', labels: ['Q1', 'Q2'], values: [1, 2] }]
 

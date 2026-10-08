@@ -1,4 +1,4 @@
-import { PNG_1X1, defineRegressionSuite, build, readEntry, assert, assertRejects } from '../../helpers.js'
+import { PNG_1X1, defineRegressionSuite, build, readEntry, assert, assertRejects } from '../../helpers.ts'
 
 defineRegressionSuite('Image shape clipping', [
 	{

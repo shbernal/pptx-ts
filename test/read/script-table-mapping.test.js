@@ -9,8 +9,8 @@ import JSZip from 'jszip'
 import TsPptx from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
 import { readModelToIr } from '../../dist/script.js'
-import { assert, assertEqual, captureDiagnostics, readEntry } from '../helpers.js'
-import { authorRead } from './authored.js'
+import { assert, assertEqual, captureDiagnostics, readEntry } from '../helpers.ts'
+import { authorRead } from './authored.ts'
 
 /** Apply `rewrite` to every slide part of `buf`, reload, and convert. */
 async function irWithSlideXml(buf, rewrite) {

@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 // upstream-issue-1434: `loop`/`loopCount` make embedded audio/video repeat.
 // PowerPoint stores looping as `repeatCount` on the media node's <p:cTn> inside a

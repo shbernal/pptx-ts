@@ -22,10 +22,10 @@ import { fileURLToPath } from 'node:url'
 import JSZip from 'jszip'
 import TsPptx from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { defined } from '../helpers.js'
-import { validateBuf, validatorInstalled } from '../validator.js'
+import { defined } from '../helpers.ts'
+import { validateBuf, validatorInstalled } from '../validator.ts'
 
-// Re-exported rather than recomputed: `validator.js` owns the fact, and this module is where
+// Re-exported rather than recomputed: `validator.ts` owns the fact, and this module is where
 // most read-side tests already import from.
 export { validatorInstalled }
 

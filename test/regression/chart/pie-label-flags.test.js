@@ -1,6 +1,6 @@
 import { ChartType } from '../../../dist/node.js'
-import { defineRegressionSuite, build, assert, assertEqual, captureDiagnostics } from '../../helpers.js'
-import { chartXml } from './chart-parts.js'
+import { defineRegressionSuite, build, assert, assertEqual, captureDiagnostics } from '../../helpers.ts'
+import { chartXml } from './chart-parts.ts'
 
 // A pie labels its *points*, not its series, so it emits two kinds of `<c:dLbls>`: one per point
 // carrying the overrides, and one at the plot level carrying the defaults. The per-point block

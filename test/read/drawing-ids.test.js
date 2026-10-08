@@ -8,8 +8,8 @@
 // old id, which on the host names a different shape.
 
 import { describe, test } from 'vitest'
-import { assert, assertEqual } from '../helpers.js'
-import { openFixture } from './corpus.js'
+import { assert, assertEqual } from '../helpers.ts'
+import { openFixture } from './corpus.ts'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'

@@ -10,8 +10,8 @@ import { describe, test } from 'vitest'
 import { Presentation, setDiagnosticHandler } from '../../src/read.ts'
 import { CopyPlan } from '../../src/read/api/ops/part-copy.ts'
 import { copyBatch, planSlideImport } from '../../src/read/api/presentation-imports.ts'
-import { assertEqual, caughtSync } from '../helpers.js'
-import { fixtureNames, readFixture } from './corpus.js'
+import { assertEqual, caughtSync } from '../helpers.ts'
+import { fixtureNames, readFixture } from './corpus.ts'
 
 // Rescaling a fixture onto the destination's canvas warns, and warnings are not what this measures.
 setDiagnosticHandler(() => {})

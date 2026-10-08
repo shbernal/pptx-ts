@@ -8,9 +8,9 @@
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { throws, assert, assertEqual, partBodies, assertUnchangedExcept, defined } from '../helpers.js'
-import { validateBuf, validatorInstalled } from '../validator.js'
-import { fixturePath, openFixture } from './corpus.js'
+import { throws, assert, assertEqual, partBodies, assertUnchangedExcept, defined } from '../helpers.ts'
+import { validateBuf, validatorInstalled } from '../validator.ts'
+import { fixturePath, openFixture } from './corpus.ts'
 
 /**
  * The text frame of the first shape on `slide` that has one.

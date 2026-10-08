@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert, captureDiagnostics } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert, captureDiagnostics } from '../../helpers.ts'
 
 // Enumerated text tokens a caller supplies reach an attribute only when the schema has them. A token
 // outside its `ST_` type used to be written as given, which is a part PowerPoint reports as needing

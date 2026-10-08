@@ -12,8 +12,8 @@ import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import TsPptx from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual } from '../helpers.js'
-import { openFixture } from './corpus.js'
+import { assert, assertEqual } from '../helpers.ts'
+import { openFixture } from './corpus.ts'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 

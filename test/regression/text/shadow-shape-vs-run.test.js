@@ -1,6 +1,6 @@
 import JSZip from 'jszip'
-import { defineRegressionSuite, build, readEntry, assert, assertEqual, defined } from '../../helpers.js'
-import { readFixture } from '../../read/corpus.js'
+import { defineRegressionSuite, build, readEntry, assert, assertEqual, defined } from '../../helpers.ts'
+import { readFixture } from '../../read/corpus.ts'
 
 // Acceptance: `shadow` on a SHAPE's options is the shape's shadow, and `shadow` on a RUN's options
 // is the text shadow. They are two different effects in two different places, and one option bag

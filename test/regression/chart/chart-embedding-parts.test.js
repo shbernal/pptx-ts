@@ -9,7 +9,7 @@ import {
 	assertNotIncludes,
 	expectDefined,
 	defined,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 // 1x1 PNG (red pixel) for image-only deck case
 const PNG_DATA =

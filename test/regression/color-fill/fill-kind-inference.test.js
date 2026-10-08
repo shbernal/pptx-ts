@@ -1,4 +1,4 @@
-import { assert, assertEqual, captureDiagnostics, defineRegressionSuite, slideXml } from '../../helpers.js'
+import { assert, assertEqual, captureDiagnostics, defineRegressionSuite, slideXml } from '../../helpers.ts'
 
 // Which fill kind a props object asks for used to be answered in seven places, and they
 // disagreed. `fill: { gradient }` painted a black `<a:solidFill>` and warned that the caller's

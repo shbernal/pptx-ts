@@ -14,9 +14,9 @@ import JSZip from 'jszip'
 import ts from 'typescript-6'
 import { Presentation } from '../../dist/read.js'
 import { printScript, printStandaloneScript, readModelToIr } from '../../dist/script.js'
-import { assert, assertEqual, readEntry } from '../helpers.js'
-import { authorRead } from './authored.js'
-import { readFixture } from './corpus.js'
+import { assert, assertEqual, readEntry } from '../helpers.ts'
+import { authorRead } from './authored.ts'
+import { readFixture } from './corpus.ts'
 
 /** A name that ends a block comment and, separately, a line comment. */
 const HOSTILE = `Band */ one${String.fromCharCode(0x2028)}two`

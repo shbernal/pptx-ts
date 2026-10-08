@@ -30,7 +30,7 @@ generated output live. The project site keeps its content in `docs/` and its the
 in `www/`. `pnpm run docs:dev` serves it, and
 [Site changes](docs/contributing/development.md#site-changes) covers both trees.
 
-A change to emitted OOXML needs a fixture in `test/schema-cases.js` and evidence behind it, per
+A change to emitted OOXML needs a fixture in `test/schema-cases.ts` and evidence behind it, per
 AGENTS.md. The [testing guide](docs/contributing/testing.md) covers schema validation.
 
 A change to the package boundary (exports, entry points, shipped artifacts) also needs

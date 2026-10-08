@@ -12,9 +12,9 @@ import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
 import { ChartType } from '../../dist/node.js'
 import { Presentation, isGraphicFrame } from '../../dist/read.js'
-import { authorRead } from './authored.js'
-import { bytesEqual, assert, assertEqual, defined, partBodies } from '../helpers.js'
-import { fixturePath } from './corpus.js'
+import { authorRead } from './authored.ts'
+import { bytesEqual, assert, assertEqual, defined, partBodies } from '../helpers.ts'
+import { fixturePath } from './corpus.ts'
 
 /**
  * Load `input`, run `mutate(presentation)` (which is expected to reach the DOM

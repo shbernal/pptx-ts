@@ -5,7 +5,7 @@ import {
 	listEntries,
 	assertIncludes,
 	assertNotIncludes,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 const SLIDE_XML = 'ppt/slides/slide1.xml'
 const SLIDE_RELS = 'ppt/slides/_rels/slide1.xml.rels'

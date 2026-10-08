@@ -2,7 +2,7 @@
 //
 // This exports a flat `[{ name, fn }, …]` array that `schema-validation.test.mjs`
 // imports and wraps in `test()` calls. It has no `test()`/`describe()` of its own,
-// so it is deliberately named `schema-cases.js` (not `*.test.js`) to keep vitest's
+// so it is deliberately named `schema-cases.ts` (not `*.test.ts`) to keep vitest's
 // discovery from treating it as a suite. Run the fixtures with: pnpm run test:schema
 //
 // Each case builds a representative `.pptx` and asserts the OpenXmlValidator (via
@@ -47,8 +47,8 @@ import {
 	assertIncludes,
 	firstXmlBlock,
 	listEntries,
-} from './helpers.js'
-import { validateBuf } from './validator.js'
+} from './helpers.ts'
+import { validateBuf } from './validator.ts'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const fontsDir = path.join(__dirname, 'read', 'fixtures', 'fonts')

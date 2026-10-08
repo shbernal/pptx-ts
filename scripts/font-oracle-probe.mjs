@@ -33,7 +33,7 @@ import {
 	readSidecar,
 	resolveGenuineFontFile,
 	SIDECAR_PATH,
-} from '../test/read/font-oracle.js'
+} from '../test/read/font-oracle.ts'
 
 const sidecar = readSidecar()
 const faces = neededFaces()

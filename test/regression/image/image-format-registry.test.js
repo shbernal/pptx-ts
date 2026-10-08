@@ -18,7 +18,7 @@ import {
 	imageFormatForExtension,
 } from '../../../src/media/image-formats.ts'
 import { assetFilenameExtension, imageContentType } from '../../../src/media/content-type.ts'
-import { assert, assertEqual } from '../../helpers.js'
+import { assert, assertEqual } from '../../helpers.ts'
 
 /** Leading bytes that satisfy each row's signature, built independently of the matchers. */
 const HEADERS = {

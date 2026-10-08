@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert, captureDiagnostics } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert, captureDiagnostics } from '../../helpers.ts'
 
 const SLIDE_XML = 'ppt/slides/slide1.xml'
 

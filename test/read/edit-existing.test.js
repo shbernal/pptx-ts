@@ -13,9 +13,9 @@
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { throws, bytesEqual, assert, assertEqual, defined, expectDefined, partBodies } from '../helpers.js'
-import { validateBuf, validatorInstalled } from '../validator.js'
-import { fixturePath, openFixture } from './corpus.js'
+import { throws, bytesEqual, assert, assertEqual, defined, expectDefined, partBodies } from '../helpers.ts'
+import { validateBuf, validatorInstalled } from '../validator.ts'
+import { fixturePath, openFixture } from './corpus.ts'
 
 // A 1×1 transparent PNG.
 const PNG_1X1 = new Uint8Array(

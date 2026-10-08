@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, listEntries, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, listEntries, assert } from '../../helpers.ts'
 
 async function layoutXmlMatching(zip, re) {
 	const layouts = listEntries(zip).filter((p) => /^ppt\/slideLayouts\/slideLayout\d+\.xml$/.test(p))

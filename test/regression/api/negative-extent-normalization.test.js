@@ -1,4 +1,4 @@
-import { PNG_1X1, assert, defineRegressionSuite, firstXmlBlock, slideXml, xmlBlocks } from '../../helpers.js'
+import { PNG_1X1, assert, defineRegressionSuite, firstXmlBlock, slideXml, xmlBlocks } from '../../helpers.ts'
 
 // Regression (dn-negative-extent-normalization): a negative `w`/`h` must never reach
 // `<a:ext cx>`/`<a:ext cy>`. Both are ST_PositiveCoordinate, so a negative value is out of range and

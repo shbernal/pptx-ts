@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 // A proposed change would have stripped every placeholder <p:sp> from
 // notesMaster1.xml down to an empty <p:spTree>, on the theory that PowerPoint's repair

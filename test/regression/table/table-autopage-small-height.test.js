@@ -6,7 +6,7 @@ import {
 	readEntry,
 	assert,
 	defined,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 // Regression: an autoPage table whose height (`h`) is too small to fit even a single line of text
 // must NOT emit a degenerate output (an empty `rows:[]` overflow page that made the recursive

@@ -6,7 +6,7 @@ import {
 	assert,
 	assertEqual,
 	defined,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 // `colspan`/`rowspan` arrive from the calling program, and the merge-grid builder used to trust
 // them: `new Array(colspan - 1).fill(undefined)` at `colspan: 4294967295` is not a slow path but

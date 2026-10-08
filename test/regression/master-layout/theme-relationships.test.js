@@ -7,7 +7,7 @@ import {
 	assertContentTypeOverride,
 	assertIncludes,
 	assertNotIncludes,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 defineRegressionSuite('Theme relationships [legacy bug-15]', [
 	{

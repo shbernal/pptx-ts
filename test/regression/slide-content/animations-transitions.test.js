@@ -1,7 +1,7 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import JSZip from 'jszip'
-import { fixturePath, readOracle } from '../../read/corpus.js'
+import { fixturePath, readOracle } from '../../read/corpus.ts'
 import {
 	TsPptx,
 	PNG_1X1_DATA_URI,
@@ -14,7 +14,7 @@ import {
 	setDiagnosticHandler,
 	slideXml,
 	defined,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 // Write-side slide transitions and preset build animations
 // (docs/contributing/design/animations.md). The emitters reproduce

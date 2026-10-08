@@ -197,7 +197,7 @@ DEFLATE pass.
   and both relationships.
 - The OLE package choices were checked against a deck PowerPoint authored with `Shapes.AddOLEObject`. That
   deck is not committed.
-- `test/schema-cases.js` builds both objects and asserts parts, relationship types, content types,
+- `test/schema-cases.ts` builds both objects and asserts parts, relationship types, content types,
   attributes and the de-duplication counts. Schema validation reaches only the `mc:Fallback` branch, so it
   says nothing about `p:oleObj` or `am3d:model3d` inside `mc:Choice`. See
   [What the validator cannot see](../testing.md#what-the-validator-cannot-see).

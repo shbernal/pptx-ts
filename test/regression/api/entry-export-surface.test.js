@@ -1,5 +1,5 @@
 import { describe, test } from 'vitest'
-import { assert, assertEqual } from '../../helpers.js'
+import { assert, assertEqual } from '../../helpers.ts'
 
 // Guards against export-condition drift between the package's runtime entries.
 //

@@ -17,7 +17,7 @@
 import { describe, test, expect } from 'vitest'
 import JSZip from 'jszip'
 import TsPptx, { setDiagnosticHandler } from '../../../dist/node.js'
-import { readEntry } from '../../helpers.js'
+import { readEntry } from '../../helpers.ts'
 import { computeTableLayout } from '../../../src/measure/table-fit.ts'
 import { applyMeasuredFit } from '../../../src/measure/fit.ts'
 import { FontMetricsRegistry } from '../../../src/measure/font-metrics.ts'

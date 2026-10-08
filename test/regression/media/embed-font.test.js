@@ -4,7 +4,7 @@
 // accumulation under one typeface, and input validation — plus the emitted package
 // pieces (font parts, content-type Default, presentation rels, embeddedFontLst,
 // embedTrueTypeFonts/saveSubsetFonts). Schema validity is covered in
-// test/schema-cases.js; structural emit is covered here without the validator.
+// test/schema-cases.ts; structural emit is covered here without the validator.
 
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
@@ -12,8 +12,8 @@ import { fileURLToPath } from 'node:url'
 import JSZip from 'jszip'
 import { describe, test, beforeAll } from 'vitest'
 import TsPptx from '../../../dist/node.js'
-import { assert, assertEqual, assertRejects, readEntry, defined } from '../../helpers.js'
-import { FIXTURES } from '../../read/corpus.js'
+import { assert, assertEqual, assertRejects, readEntry, defined } from '../../helpers.ts'
+import { FIXTURES } from '../../read/corpus.ts'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const fontsDir = path.join(FIXTURES, 'fonts')

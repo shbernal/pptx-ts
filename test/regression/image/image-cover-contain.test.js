@@ -1,4 +1,4 @@
-import { PNG_1X1, defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { PNG_1X1, defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 // `cover`/`contain` crop the *source* bitmap, so the emitted `<a:srcRect>` must be derived
 // from the image's NATURAL pixel ratio — not the displayed box (options.w/h). Previously the

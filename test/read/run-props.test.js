@@ -6,8 +6,8 @@
 // extracted values match what was written. The writer's bytes are the fixture.
 
 import { describe, test } from 'vitest'
-import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.js'
-import { assert, assertEqual } from '../helpers.js'
+import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.ts'
+import { assert, assertEqual } from '../helpers.ts'
 
 /** A text box whose runs each carry one character-formatting property. */
 function formattedRuns(pres) {

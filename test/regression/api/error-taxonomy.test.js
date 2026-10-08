@@ -1,4 +1,4 @@
-import { defineRegressionSuite, assert, assertEqual, defined, caught } from '../../helpers.js'
+import { defineRegressionSuite, assert, assertEqual, defined, caught } from '../../helpers.ts'
 import TsPptx, {
 	TsPptxError,
 	InvalidOptionError,

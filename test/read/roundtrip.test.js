@@ -15,9 +15,9 @@ import {
 	bytesEqual,
 	defined,
 	partBodies,
-} from '../helpers.js'
-import { validateBuf, validatorInstalled } from '../validator.js'
-import { fixtureNames, readFixture } from './corpus.js'
+} from '../helpers.ts'
+import { validateBuf, validatorInstalled } from '../validator.ts'
+import { fixtureNames, readFixture } from './corpus.ts'
 
 const OFFICE_DOCUMENT_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument'
 const SLIDE_CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.presentationml.slide+xml'
@@ -139,7 +139,7 @@ function errorFingerprint(errors) {
 // forced the choice between excluding that fixture and pretending the library caused it.
 //
 // Concurrent, and its own block for that reason: the validator batches whatever is in
-// flight (test/validator.js), so 88 sequential validations would pay the ~0.4s .NET startup
+// flight (test/validator.ts), so 88 sequential validations would pay the ~0.4s .NET startup
 // 88 times where concurrent ones go out in a handful of invocations. Nothing here touches a
 // process global, which is what makes that safe.
 describe.concurrent('OPC round-trip — schema validity', () => {

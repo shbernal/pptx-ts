@@ -10,7 +10,7 @@
 
 import { describe, test } from 'vitest'
 import { Chart, Part } from '../../dist/read.js'
-import { assert, assertEqual, defined } from '../helpers.js'
+import { assert, assertEqual, defined } from '../helpers.ts'
 
 const CHART_CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.drawingml.chart+xml'
 const NS =

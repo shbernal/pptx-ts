@@ -26,8 +26,8 @@
 
 import { describe, test } from 'vitest'
 import { NotesPlaceholder, Placeholder } from '../../dist/read.js'
-import { authorRead, schemaErrors, validatorInstalled } from './authored.js'
-import { assert, assertEqual } from '../helpers.js'
+import { authorRead, schemaErrors, validatorInstalled } from './authored.ts'
+import { assert, assertEqual } from '../helpers.ts'
 
 /** The first slide of `presentation`. */
 function firstSlide(presentation) {

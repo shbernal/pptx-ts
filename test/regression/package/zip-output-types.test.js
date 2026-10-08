@@ -6,7 +6,7 @@
 import { Buffer } from 'node:buffer'
 import { describe, test } from 'vitest'
 import TsPptx from '../../../dist/node.js'
-import { assert, assertRejects } from '../../helpers.js'
+import { assert, assertRejects } from '../../helpers.ts'
 
 const PK_MAGIC = [0x50, 0x4b] // "PK" — local file header of any zip
 

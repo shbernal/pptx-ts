@@ -8,8 +8,8 @@ import {
 	assertIncludes,
 	expectDefined,
 	defined,
-} from '../../helpers.js'
-import { chartXml } from './chart-parts.js'
+} from '../../helpers.ts'
+import { chartXml } from './chart-parts.ts'
 
 const LABELS = [
 	['Gear', 'Berg', 'Motr', 'Swch', 'Plug', 'Cord', 'Pump', 'Leak', 'Seal'], // leaf (inner) — labels[0]

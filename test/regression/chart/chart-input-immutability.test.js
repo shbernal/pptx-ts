@@ -9,7 +9,7 @@
  */
 import { ChartType } from '../../../dist/node.js'
 import { expect, vi } from 'vitest'
-import { defineRegressionSuite, build, readEntry, listEntries, assert, assertIncludes, defined } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, listEntries, assert, assertIncludes, defined } from '../../helpers.ts'
 
 /** @param {string} path */
 const chartNumber = (path) => Number(defined(path.match(/\d+/))[0])

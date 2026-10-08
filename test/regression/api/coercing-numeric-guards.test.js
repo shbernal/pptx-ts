@@ -6,7 +6,7 @@ import {
 	defineRegressionSuite,
 	slideXml,
 	caught,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 // The companion to `numeric-conversion-guards.test.js`: that file pins what the *converters*
 // refuse, this one pins what the *guards in front of them* let through. `src/` used three tests

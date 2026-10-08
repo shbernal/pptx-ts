@@ -9,9 +9,9 @@
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { throws, bytesEqual, assert, assertEqual, partBodies, assertUnchangedExcept, caughtSync } from '../helpers.js'
-import { validateBuf, validatorInstalled } from '../validator.js'
-import { fixturePath, openFixture } from './corpus.js'
+import { throws, bytesEqual, assert, assertEqual, partBodies, assertUnchangedExcept, caughtSync } from '../helpers.ts'
+import { validateBuf, validatorInstalled } from '../validator.ts'
+import { fixturePath, openFixture } from './corpus.ts'
 
 async function editAndReopen(name, edit) {
 	const presentation = await openFixture(name)

@@ -10,9 +10,9 @@ import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import TsPptx, { ShapeType } from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { throws, bytesEqual, assert, assertEqual, partBodies, assertUnchangedExcept, readEntry } from '../helpers.js'
-import { validateBuf, validatorInstalled } from '../validator.js'
-import { fixturePath, openFixture } from './corpus.js'
+import { throws, bytesEqual, assert, assertEqual, partBodies, assertUnchangedExcept, readEntry } from '../helpers.ts'
+import { validateBuf, validatorInstalled } from '../validator.ts'
+import { fixturePath, openFixture } from './corpus.ts'
 
 describe('Slide.addTextBox', () => {
 	test('appends a text box that reloads with its text and geometry', async () => {

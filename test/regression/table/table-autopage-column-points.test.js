@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, listEntries, assert, assertEqual } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, listEntries, assert, assertEqual } from '../../helpers.ts'
 
 // The chars-per-line figure the auto-pager wraps on comes from the column's width in POINTS, and
 // that conversion used to take a detour: `(colWidth / EMU_PER_POINT) * EMU_PER_INCH` is the same

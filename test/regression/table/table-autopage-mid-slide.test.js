@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, listEntries, readEntry, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, listEntries, readEntry, assert } from '../../helpers.ts'
 
 // Regression: an autoPage table that starts mid-slide with an
 // explicit height `h` rendered only a few rows on the FIRST slide while later slides filled up.

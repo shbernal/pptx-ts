@@ -11,7 +11,7 @@ import {
 	defined,
 	caughtSync,
 	assertRejects,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 // Group shapes: slide.addGroup() wraps child objects in a PowerPoint group (<p:grpSp>) with an
 // identity child coordinate space (chOff/chExt == off/ext) at every depth, so children — including

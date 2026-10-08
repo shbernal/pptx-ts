@@ -20,12 +20,12 @@ import {
 	defined,
 	setDiagnosticHandler,
 	caught,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { FIXTURES } from '../../read/corpus.js'
+import { FIXTURES } from '../../read/corpus.ts'
 
 const PNG_1X1 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
 
@@ -43,7 +43,7 @@ function assertWithin(actual, expected, tolerance, msg) {
  * A minimal OPC package: one slide part per entry of `spTrees` (`slide1.xml` up),
  * listed in `p:sldIdLst` in `order` — 1-based slide numbers, defaulting to part
  * order. Built with jszip so the fflate reader under test is not also the writer
- * (see helpers.js).
+ * (see helpers.ts).
  *
  * Every part here is load-bearing: inspect reaches the slides through the package
  * relationships and `p:sldIdLst`, the same route `ts-pptx/read` takes, so a bare zip

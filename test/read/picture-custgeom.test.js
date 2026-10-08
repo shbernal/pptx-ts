@@ -13,8 +13,8 @@
 
 import { describe, test } from 'vitest'
 
-import { assert, assertEqual } from '../helpers.js'
-import { openFixture } from './corpus.js'
+import { assert, assertEqual } from '../helpers.ts'
+import { openFixture } from './corpus.ts'
 
 async function pictureNamed(name) {
 	const slide = (await openFixture('picture-custgeom')).slides[0]

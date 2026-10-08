@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { build, readEntry, listEntries } from '../../helpers.js'
+import { build, readEntry, listEntries } from '../../helpers.ts'
 
 // Surface is a CLASSIC (c:) chart, not a chartEx layout. Confirmed against the four surface charts
 // PowerPoint authors (`Shapes.AddChart2(-1, {83|84|85|86}, …)`) and reads back as ChartType

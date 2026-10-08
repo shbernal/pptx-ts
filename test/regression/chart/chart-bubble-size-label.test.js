@@ -1,6 +1,6 @@
 import { ChartType } from '../../../dist/node.js'
-import { defineRegressionSuite, build, assert, assertIncludes } from '../../helpers.js'
-import { chartXml } from './chart-parts.js'
+import { defineRegressionSuite, build, assert, assertIncludes } from '../../helpers.ts'
+import { chartXml } from './chart-parts.ts'
 
 // bubble charts could not show each bubble's size as a data label.
 // The bubble `sizes` data already flowed into <c:bubbleSize>, but the data-label block hard-coded

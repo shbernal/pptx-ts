@@ -17,8 +17,8 @@
 
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
-import { assert, assertEqual, readEntry } from '../helpers.js'
-import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.js'
+import { assert, assertEqual, readEntry } from '../helpers.ts'
+import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.ts'
 
 /** The German built-in layout name, split across two lines exactly as PowerPoint ships it. */
 const LAYOUT_TITLE = 'Abschnitts-\nüberschrift'

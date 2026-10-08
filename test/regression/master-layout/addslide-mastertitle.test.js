@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 // A master with a single title placeholder; a slide created against it should
 // inherit the placeholder (rendered as a <p:sp> with <p:ph type="title" .../>).

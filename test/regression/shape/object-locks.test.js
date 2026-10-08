@@ -1,4 +1,4 @@
-import { PNG_1X1, setDiagnosticHandler, defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { PNG_1X1, setDiagnosticHandler, defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 // Object lock flags (upstream-issue-438): user-facing spLocks / picLocks /
 // graphicFrameLocks. Each flag maps 1:1 to the OOXML attribute of the same name;

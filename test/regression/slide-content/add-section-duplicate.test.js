@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, assertEqual, captureDiagnostics } from '../../helpers.js'
+import { defineRegressionSuite, build, assertEqual, captureDiagnostics } from '../../helpers.ts'
 
 // Regression: addSection() must not create a second section with a title that
 // already exists. Duplicate section titles confuse section-by-title lookups

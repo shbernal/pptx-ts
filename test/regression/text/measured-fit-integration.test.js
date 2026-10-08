@@ -13,8 +13,8 @@
 import { readFileSync } from 'node:fs'
 import { describe, test, expect } from 'vitest'
 import TsPptx from '../../../dist/node.js'
-import { expectDefined, partXml } from '../../helpers.js'
-import { resolveGenuineFontFile } from '../../read/font-oracle.js'
+import { expectDefined, partXml } from '../../helpers.ts'
+import { resolveGenuineFontFile } from '../../read/font-oracle.ts'
 
 const SLIDE1 = 'ppt/slides/slide1.xml'
 

@@ -7,7 +7,7 @@
 //
 // Not a test file (no `.test.` in the name) — vitest's default glob skips it.
 
-import { assert } from '../helpers.js'
+import { assert } from '../helpers.ts'
 
 /**
  * The resolved target part name of `partName`'s single relationship of `type`, or null when it

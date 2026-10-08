@@ -7,9 +7,9 @@
 
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual, captureDiagnostics } from '../helpers.js'
-import { openFixture, readFixture } from './corpus.js'
-import { assertNoDanglingRels } from './opc.js'
+import { assert, assertEqual, captureDiagnostics } from '../helpers.ts'
+import { openFixture, readFixture } from './corpus.ts'
+import { assertNoDanglingRels } from './opc.ts'
 
 /** The left edge of every picture on `slide`, in EMU. */
 function pictureLefts(slide) {

@@ -22,7 +22,7 @@ import {
 	listEntries,
 	readEntry,
 	defined,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 /** A few bytes standing in for a metafile. Nothing reads them as one; only the declared type matters. */
 const METAFILE = 'AQAAAGwAAAAAAAAAAAAAAA=='

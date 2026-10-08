@@ -23,8 +23,8 @@
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { assert, readEntry } from '../helpers.js'
-import { readFixture } from './corpus.js'
+import { assert, readEntry } from '../helpers.ts'
+import { readFixture } from './corpus.ts'
 
 /** Element children of `presentation.xml`'s root, in document order, as qnames. */
 function childOrder(presentation) {

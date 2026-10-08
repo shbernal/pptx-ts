@@ -1,4 +1,4 @@
-import { PNG_1X1, defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { PNG_1X1, defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 async function expectCropError(sizingOpts, expectedFragment) {
 	let err

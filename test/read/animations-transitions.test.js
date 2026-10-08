@@ -13,9 +13,9 @@ import assert from 'node:assert/strict'
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { validateBuf, validatorInstalled } from '../validator.js'
-import { fixturePath, openFixture, readOracle } from './corpus.js'
-import { partBodies, assertUnchangedExcept, asError, defined, readEntry } from '../helpers.js'
+import { validateBuf, validatorInstalled } from '../validator.ts'
+import { fixturePath, openFixture, readOracle } from './corpus.ts'
+import { partBodies, assertUnchangedExcept, asError, defined, readEntry } from '../helpers.ts'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 

@@ -23,9 +23,9 @@ import JSZip from 'jszip'
 import { ChartType } from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
 import { describe, test } from 'vitest'
-import { authorRead } from './authored.js'
-import { assert, assertEqual, captureDiagnostics } from '../helpers.js'
-import { readFixture } from './corpus.js'
+import { authorRead } from './authored.ts'
+import { assert, assertEqual, captureDiagnostics } from '../helpers.ts'
+import { readFixture } from './corpus.ts'
 
 /** Author a chart, rewrite its chart part with `edit`, load the result back and hand it to `read`. */
 async function authorEditRead(chartType, edit, read) {

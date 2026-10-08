@@ -1,6 +1,6 @@
 import { Window } from 'happy-dom'
 import { tableToSlides } from '../../../dist/html.js'
-import { build, readEntry, assert, assertEqual, defineRegressionSuite, setDiagnosticHandler } from '../../helpers.js'
+import { build, readEntry, assert, assertEqual, defineRegressionSuite, setDiagnosticHandler } from '../../helpers.ts'
 
 // Acceptance: what an imported RAGGED HTML table looks like on the slide.
 //

@@ -8,7 +8,7 @@ import {
 	selfClosingTags,
 	setDiagnosticHandler,
 	xmlAttributes,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 // `crop: { l, t, r, b }` emits an explicit OOXML <a:srcRect> (percentage edge insets) verbatim.
 // Regression guard for two things that the schema fixture alone cannot catch:

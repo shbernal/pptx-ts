@@ -6,7 +6,7 @@ import {
 	assert,
 	assertEqual,
 	captureDiagnostics,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 // Every case here pins an ASYMMETRIC or non-default input. The bugs these cover all cancel out
 // under the symmetric default margin and the default `x`, which is exactly why the rest of the

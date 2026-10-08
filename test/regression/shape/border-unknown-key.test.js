@@ -1,5 +1,5 @@
 import { ChartType } from '../../../dist/node.js'
-import { defineRegressionSuite, build, readEntry, captureDiagnostics, assert, assertEqual } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, captureDiagnostics, assert, assertEqual } from '../../helpers.ts'
 
 // A key that is not part of `BorderProps` used to be discarded in total silence, so a border
 // authored with the wrong name for its thickness rendered at the 1pt default and nothing said so.

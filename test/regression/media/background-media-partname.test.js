@@ -6,7 +6,7 @@ import {
 	defineRegressionSuite,
 	assert,
 	assertEqual,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 // A background image rel's `Target` is used twice: written into the `.rels` part, and (with
 // `..` swapped for `ppt`) used verbatim as the ZIP entry name. The part used to be named after

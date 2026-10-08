@@ -12,7 +12,7 @@
 import { describe, expect, test } from 'vitest'
 import TsPptx, { createPresentation } from '../../../dist/node.js'
 import { charts, comments, tables } from '../../../dist/families.js'
-import { assert, assertEqual, caughtSync } from '../../helpers.js'
+import { assert, assertEqual, caughtSync } from '../../helpers.ts'
 
 const SERIES = [{ name: 'Rev', labels: ['Q1', 'Q2'], values: [1, 2] }]
 

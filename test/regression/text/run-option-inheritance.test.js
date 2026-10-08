@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert, assertEqual, captureDiagnostics } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert, assertEqual, captureDiagnostics } from '../../helpers.ts'
 
 // What a run inherits from its shape, and what it does not.
 //

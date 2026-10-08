@@ -19,8 +19,8 @@ import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
 import { AutoShape } from '../../dist/read.js'
 /** @import { ShapeHost } from '../../dist/read.js' */
-import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.js'
-import { assert, assertEqual, defined, expectDefined } from '../helpers.js'
+import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.ts'
+import { assert, assertEqual, defined, expectDefined } from '../helpers.ts'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'

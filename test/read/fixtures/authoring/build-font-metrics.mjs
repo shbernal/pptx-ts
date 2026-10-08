@@ -34,7 +34,7 @@ import {
 	neededFaces,
 	resolveGenuineFontFile,
 	SIDECAR_PATH,
-} from '../../font-oracle.js'
+} from '../../font-oracle.ts'
 
 const faces = neededFaces()
 

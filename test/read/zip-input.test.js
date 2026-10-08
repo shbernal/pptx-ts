@@ -15,7 +15,7 @@ import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { readZip } from '../../dist/zip.js'
 import { OpcPackage } from '../../dist/read.js'
-import { build, assert, assertEqual, caught, assertRejects } from '../helpers.js'
+import { build, assert, assertEqual, caught, assertRejects } from '../helpers.ts'
 
 // One real .pptx worth of bytes, shared across the input-shape cases so each
 // branch is proven to decode identical content to the same part set.

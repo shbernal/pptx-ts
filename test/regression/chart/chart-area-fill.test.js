@@ -1,6 +1,6 @@
 import { ChartType } from '../../../dist/node.js'
-import { defineRegressionSuite, build, captureDiagnostics, assert, assertEqual } from '../../helpers.js'
-import { chartXml } from './chart-parts.js'
+import { defineRegressionSuite, build, captureDiagnostics, assert, assertEqual } from '../../helpers.ts'
+import { chartXml } from './chart-parts.ts'
 
 // The fill slot of the two `c:spPr` elements a chart part carries: the plot area's (written by
 // `makeChartPlotAreaPropsXml`) and the chartSpace-level one (STEP 5 of `makeXmlCharts`).

@@ -1,6 +1,6 @@
 import { ChartType } from '../../../dist/node.js'
-import { defineRegressionSuite, build, assert, assertIncludes, assertNotIncludes } from '../../helpers.js'
-import { chartXml } from './chart-parts.js'
+import { defineRegressionSuite, build, assert, assertIncludes, assertNotIncludes } from '../../helpers.ts'
+import { chartXml } from './chart-parts.ts'
 
 // Chart title layout options (`genXmlTitle`): alignment, rotation, and manual
 // positioning (`titlePos`). `titlePos` emits a `<c:manualLayout>` whose x and y

@@ -12,7 +12,7 @@ import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import TsPptx from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { assertEqual, readEntry, caught } from '../helpers.js'
+import { assertEqual, readEntry, caught } from '../helpers.ts'
 
 /** A one-page deck at the given layout. */
 async function deck(layout = 'LAYOUT_16x9') {

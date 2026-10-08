@@ -8,8 +8,8 @@
 
 import { ChartType } from '../../dist/node.js'
 import { describe, test } from 'vitest'
-import { authorRead, firstChart, schemaErrors, validatorInstalled } from './authored.js'
-import { assert, assertEqual } from '../helpers.js'
+import { authorRead, firstChart, schemaErrors, validatorInstalled } from './authored.ts'
+import { assert, assertEqual } from '../helpers.ts'
 
 /** A bar chart carrying axis / legend / data-label / series-colour formatting. */
 function formattedBar(pres) {

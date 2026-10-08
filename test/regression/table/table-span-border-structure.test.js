@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert, defined } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert, defined } from '../../helpers.ts'
 
 // Verification suite for several historical upstream table reports that this project already
 // emits correctly. These guard against regressing back into the reported symptoms:

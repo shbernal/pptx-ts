@@ -6,7 +6,7 @@
 
 import { describe, test } from 'vitest'
 import { FontMetricsRegistry } from '../../../dist/measure.js'
-import { TsPptx, assert, assertEqual, build, captureDiagnostics, caughtSync, readEntry } from '../../helpers.js'
+import { TsPptx, assert, assertEqual, build, captureDiagnostics, caughtSync, readEntry } from '../../helpers.ts'
 
 const BOX = { x: 1, y: 1, w: 4, h: 1 }
 

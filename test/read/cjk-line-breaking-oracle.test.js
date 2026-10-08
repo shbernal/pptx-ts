@@ -15,7 +15,7 @@
 //      sidecar honest — a hand-edited oracle stops matching its own deck.
 //   2. `lines` / `lineCount` came from `TextRange.Lines()` over COM at authoring
 //      time (nothing in the package records where a line broke). Checking the model
-//      against them needs Malgun Gothic's advances, which `font-oracle.js` supplies
+//      against them needs Malgun Gothic's advances, which `font-oracle.ts` supplies
 //      either from the installed font or from the committed metrics sidecar. A case
 //      still skips when neither can answer, unless `FONT_ORACLES=required` says a
 //      silent skip is itself the failure.
@@ -24,9 +24,9 @@ import { unzipSync } from 'fflate'
 import { describe, test, expect } from 'vitest'
 import { measureLayout, WIDTH_SAFETY_FACTOR, HEIGHT_SAFETY_FACTOR } from '../../src/measure/text-fit.ts'
 import { collectUncoveredCodepoints, FontMetricsRegistry } from '../../src/measure/font-metrics.ts'
-import { oracleMetrics } from './font-oracle.js'
-import { fixturePath, readOracle } from './corpus.js'
-import { defined, expectDefined } from '../helpers.js'
+import { oracleMetrics } from './font-oracle.ts'
+import { fixturePath, readOracle } from './corpus.ts'
+import { defined, expectDefined } from '../helpers.ts'
 
 const EMU_PER_PT = 12700
 const DECK = 'autofit-cjk-wrap'

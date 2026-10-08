@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert, assertEqual } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert, assertEqual } from '../../helpers.ts'
 
 // What a cell inherits from its table, and the agreement between the two paths that resolve it.
 //

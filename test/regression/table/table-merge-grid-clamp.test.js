@@ -12,7 +12,7 @@
  *
  * Either one is a table PowerPoint offers to repair.
  */
-import { assert, assertEqual, captureDiagnostics, defineRegressionSuite, build, readEntry } from '../../helpers.js'
+import { assert, assertEqual, captureDiagnostics, defineRegressionSuite, build, readEntry } from '../../helpers.ts'
 
 /** Each row's `<a:tc>` count, the `<a:gridCol>` count, and every span attribute with its position. */
 async function structure(rows) {

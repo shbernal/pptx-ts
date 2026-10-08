@@ -110,7 +110,7 @@ async function partBodies(pptxBytes) {
  *
  * **It fails when it compared nothing.** A loop whose filter stops matching passes having
  * checked nothing, and that is indistinguishable from success in a reporter — the same
- * failure mode `test/read/corpus.js` guards the fixture list against.
+ * failure mode `test/read/corpus.ts` guards the fixture list against.
  *
  * **A part missing from `after` is a failure, not a skip.** One hand-rolled copy skipped
  * absent parts, which turns "this part was deleted" into a pass.

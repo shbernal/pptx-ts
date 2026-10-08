@@ -6,7 +6,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 
 import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 import { Presentation } from '../../../dist/read.js'
-import { validateBuf, validatorInstalled } from '../../validator.js'
+import { validateBuf, validatorInstalled } from '../../validator.ts'
 
 /**
  * The complete program on "Your first deck" runs, and writes a deck that opens.

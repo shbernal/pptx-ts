@@ -9,7 +9,7 @@
 // check here. The production itself can: the part's every code point is walked against it.
 
 import { describe, expect, test } from 'vitest'
-import { build, readEntry, setDiagnosticHandler } from '../../helpers.js'
+import { build, readEntry, setDiagnosticHandler } from '../../helpers.ts'
 
 const FFFE = String.fromCharCode(0xfffe)
 const FFFF = String.fromCharCode(0xffff)

@@ -1,6 +1,6 @@
 import { ChartType } from '../../../dist/node.js'
-import { defineRegressionSuite, build, assert, assertIncludes, assertNotIncludes } from '../../helpers.js'
-import { chartXml } from './chart-parts.js'
+import { defineRegressionSuite, build, assert, assertIncludes, assertNotIncludes } from '../../helpers.ts'
+import { chartXml } from './chart-parts.ts'
 
 // Scatter data labels (`showLabel` + `dataLabelFormatScatter`) drive a large,
 // otherwise-uncovered block of gen-charts. The three formats emit structurally

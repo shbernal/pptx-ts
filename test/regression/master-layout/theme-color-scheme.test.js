@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 // Regression: ThemeProps.colorScheme must let callers override the theme1.xml <a:clrScheme>
 // slots; unset slots keep the Office defaults, dk1/lt1 overrides switch from <a:sysClr> to

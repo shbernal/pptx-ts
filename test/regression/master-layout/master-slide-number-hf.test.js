@@ -6,7 +6,7 @@ import {
 	assert,
 	assertIncludes,
 	assertNotIncludes,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 // slide numbers defined on a master disappeared on slides that
 // PowerPoint inserts from that master. Root cause: makeXmlMaster always emitted

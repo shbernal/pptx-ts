@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest'
 import { makeXmlCommentAuthors, makeXmlComments, resolveCommentAuthors } from '../../../src/gen/slide/comments.ts'
 
 // Characterization tests for comments XML that the byte-identity harness CANNOT see — the demo
-// deck has no comments, so `<p:cmAuthor>`/`<p:cm>` carry ZERO baseline parts. schema-cases.js
+// deck has no comments, so `<p:cmAuthor>`/`<p:cm>` carry ZERO baseline parts. schema-cases.ts
 // covers the happy path (author/idx numbering) through the public API; these pin the byte-level
 // details the migration to el()/voidEl() must preserve: attribute order, the optional `dt`
 // attribute, and metacharacter escaping (already correct pre-migration — characterized, not fixed).

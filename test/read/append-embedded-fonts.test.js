@@ -13,9 +13,9 @@ import JSZip from 'jszip'
 import { describe, test, beforeAll } from 'vitest'
 import TsPptx from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual, readEntry } from '../helpers.js'
-import { validateBuf, validatorInstalled } from '../validator.js'
-import { FIXTURES, fixturePath } from './corpus.js'
+import { assert, assertEqual, readEntry } from '../helpers.ts'
+import { validateBuf, validatorInstalled } from '../validator.ts'
+import { FIXTURES, fixturePath } from './corpus.ts'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const fontsDir = path.join(FIXTURES, 'fonts')

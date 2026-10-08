@@ -8,8 +8,8 @@
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { bytesEqual, assert, assertEqual, partBodies } from '../helpers.js'
-import { fixturePath, openFixture } from './corpus.js'
+import { bytesEqual, assert, assertEqual, partBodies } from '../helpers.ts'
+import { fixturePath, openFixture } from './corpus.ts'
 
 /** The first chart on any slide of the fixture. */
 function firstChart(presentation) {

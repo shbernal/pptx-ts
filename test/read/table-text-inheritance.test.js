@@ -18,8 +18,8 @@
 
 import { describe, test } from 'vitest'
 
-import { assertEqual, defined } from '../helpers.js'
-import { openFixture } from './corpus.js'
+import { assertEqual, defined } from '../helpers.ts'
+import { openFixture } from './corpus.ts'
 
 /** The first run of every cell of the table named `name`, row by row. */
 async function cellRuns(name) {

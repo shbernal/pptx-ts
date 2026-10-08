@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 // Regression: ThemeProps must let callers set the theme's East Asian (<a:ea>) and complex-script
 // (<a:cs>) font slots for both the major and minor fonts. PowerPoint emits these empty by default

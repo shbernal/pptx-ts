@@ -1,7 +1,7 @@
 import { ChartType } from '../../../dist/node.js'
 import { describe, expect, test } from 'vitest'
-import { build } from '../../helpers.js'
-import { chartXml } from './chart-parts.js'
+import { build } from '../../helpers.ts'
+import { chartXml } from './chart-parts.ts'
 
 // Characterization test for the chart `metadata` extLst that the byte-identity harness CANNOT see —
 // the demo deck never sets chart `metadata`, so `<c:extLst>`/`<pgm:item>` carry ZERO baseline parts.

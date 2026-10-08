@@ -21,7 +21,7 @@
 //      of falling through to the sidecar and reporting green, which is the exact failure
 //      this whole arrangement exists to prevent.
 import { describe, test, expect } from 'vitest'
-import { expectDefined } from '../helpers.js'
+import { expectDefined } from '../helpers.ts'
 import {
 	deriveFace,
 	diffFace,
@@ -32,7 +32,7 @@ import {
 	neededFaces,
 	readSidecar,
 	resolveGenuineFontFile,
-} from './font-oracle.js'
+} from './font-oracle.ts'
 
 const needed = neededFaces()
 const sidecar = readSidecar()

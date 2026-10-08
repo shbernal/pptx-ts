@@ -20,8 +20,8 @@ import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
 import { TableStyle } from '../../dist/node.js'
-import { PNG_1X1, assert, assertEqual, defined, readEntry } from '../helpers.js'
-import { authorRead, authorReadWithFixtureStyles, firstTable } from './authored.js'
+import { PNG_1X1, assert, assertEqual, defined, readEntry } from '../helpers.ts'
+import { authorRead, authorReadWithFixtureStyles, firstTable } from './authored.ts'
 
 /** Apply `rewrite` to every slide part of `buf` and reload the result. */
 async function reloadWithSlideXml(buf, rewrite) {

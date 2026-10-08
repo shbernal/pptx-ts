@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
-import { build, readEntry, listEntries } from '../../helpers.js'
-import { chartExPath } from './chart-parts.js'
+import { build, readEntry, listEntries } from '../../helpers.ts'
+import { chartExPath } from './chart-parts.ts'
 
 // Waterfall is the first chartEx (cx:) chart type. Unlike the classic 2007 charts it emits a
 // SEPARATE part (`ppt/charts/chartExN.xml`) in the Office-2016 chart-extension namespace, gets the

@@ -44,12 +44,12 @@ export function repoRel(file) {
  * The read-side fixture corpus: the PowerPoint-authored decks every read, round-trip and
  * census gate runs over.
  *
- * `test/read/corpus.js`'s header states the problem this closes -- "a glob is a claim about
+ * `test/read/corpus.ts`'s header states the problem this closes -- "a glob is a claim about
  * how many decks are under test, and a claim spelled four times is one that can quietly become
  * false in one of them" -- and then five more copies lived in `scripts/`, two of them with no
  * empty-corpus guard and one with a different filter (`.pptx` **or** `.potx`, so `template.potx`
  * was in the inspect snapshot's corpus and nobody else's). The enumerator is here rather than in
- * `test/read/corpus.js` because the scripts must not import out of `test/`, and not in
+ * `test/read/corpus.ts` because the scripts must not import out of `test/`, and not in
  * `pack-utils.mjs` because that module's header deliberately scopes it to the two package gates.
  */
 export const FIXTURES_DIR = path.join(ROOT, 'test', 'read', 'fixtures')
@@ -96,7 +96,7 @@ export async function corpusDecks({ dir = FIXTURES_DIR, only = null, extensions 
  * the first down to the `try`/`catch` around `fs.access`.
  *
  * Prints and exits rather than throwing, unlike {@link corpusDecks}: a missing `dist/` is only
- * ever a CLI's problem, while the corpus enumerator is shared with `test/read/corpus.js`, where
+ * ever a CLI's problem, while the corpus enumerator is shared with `test/read/corpus.ts`, where
  * exiting the process would take the whole test run with it.
  * @param {string} entry - a file name under `dist/`, e.g. `read.js`
  * @param {string} [scriptName] - the package script that builds first, named in the message

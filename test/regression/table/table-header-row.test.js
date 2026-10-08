@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 // Acceptance for `headerRow` inline sugar (upstream gitbrent/PptxGenJS#1256):
 // `addTable(rows, { headerRow:{…} })` styles the first row distinctly *without* first

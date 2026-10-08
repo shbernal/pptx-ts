@@ -1,5 +1,5 @@
 import TsPptx from '../../../dist/node.js'
-import { PNG_1X1_DATA_URI, defineRegressionSuite, assert } from '../../helpers.js'
+import { PNG_1X1_DATA_URI, defineRegressionSuite, assert } from '../../helpers.ts'
 
 // Exports previously defaulted to STORE (and the typed-output `write()` branch
 // ignored `compression` entirely), producing packages several times larger than

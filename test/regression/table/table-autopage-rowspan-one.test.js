@@ -7,7 +7,7 @@
  * every cell paged onto 2, with 46 rows on the first. The measured-fit layout already tests the
  * span itself (`rowSpan === 1`), so the two disagreed.
  */
-import { assertEqual, build, defineRegressionSuite, listEntries } from '../../helpers.js'
+import { assertEqual, build, defineRegressionSuite, listEntries } from '../../helpers.ts'
 
 /** How many slides 80 two-cell rows page onto, with `cellOptions` on every cell. */
 async function pages(cellOptions) {

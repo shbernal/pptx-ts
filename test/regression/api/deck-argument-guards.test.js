@@ -5,7 +5,7 @@ import {
 	assert,
 	assertEqual,
 	assertIncludes,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 import { InvalidOptionError } from '../../../dist/node.js'
 
 // The deck-level argument guards: `addSection`, `addSlide`, `defineLayout`, `defineSlideMaster`

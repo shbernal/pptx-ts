@@ -15,9 +15,9 @@ import { fileURLToPath } from 'node:url'
 import { describe, test } from 'vitest'
 import TsPptx from '../../dist/node.js'
 import { Presentation, OpcPackage } from '../../dist/read.js'
-import { bytesEqual, assert, assertEqual, defined, partBodies } from '../helpers.js'
-import { validateBuf, validatorInstalled } from '../validator.js'
-import { FIXTURES, fixturePath } from './corpus.js'
+import { bytesEqual, assert, assertEqual, defined, partBodies } from '../helpers.ts'
+import { validateBuf, validatorInstalled } from '../validator.ts'
+import { FIXTURES, fixturePath } from './corpus.ts'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 

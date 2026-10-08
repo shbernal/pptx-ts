@@ -14,8 +14,8 @@ import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
 import { readModelToIr } from '../../dist/script.js'
 import TsPptx from '../../dist/node.js'
-import { assert, assertEqual } from '../helpers.js'
-import { openFixture } from './corpus.js'
+import { assert, assertEqual } from '../helpers.ts'
+import { openFixture } from './corpus.ts'
 
 /** Every shape on every slide, flattened. */
 const allShapes = (presentation) => presentation.slides.flatMap((slide) => slide.shapes)

@@ -25,10 +25,10 @@ import {
 	assertUnchangedExcept,
 	readEntry,
 	caughtSync,
-} from '../helpers.js'
-import { validateBuf, validatorInstalled } from '../validator.js'
-import { fixturePath, openFixture } from './corpus.js'
-import { assertNoDanglingRels, resolveSingle } from './opc.js'
+} from '../helpers.ts'
+import { validateBuf, validatorInstalled } from '../validator.ts'
+import { fixturePath, openFixture } from './corpus.ts'
+import { assertNoDanglingRels, resolveSingle } from './opc.ts'
 
 const R_NS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
 const THEME_REL = `${R_NS}/theme`

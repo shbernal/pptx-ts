@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 // Acceptance for `fitColumns: 'shrink'`: an explicit `colW` array (or a `w`)
 // wider than the space between the table's `x` and the right slide margin is scaled

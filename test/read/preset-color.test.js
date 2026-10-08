@@ -11,7 +11,7 @@
 import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
 import { presetColorHex, resolveColorElement } from '../../dist/read.js'
-import { assert, assertEqual, defined, expectDefined } from '../helpers.js'
+import { assert, assertEqual, defined, expectDefined } from '../helpers.ts'
 
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
 

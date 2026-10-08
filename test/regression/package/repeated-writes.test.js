@@ -1,6 +1,6 @@
 import TsPptx, { ShapeType } from '../../../dist/node.js'
 import JSZip from 'jszip'
-import { defineRegressionSuite, assert } from '../../helpers.js'
+import { defineRegressionSuite, assert } from '../../helpers.ts'
 
 async function buildOnce(pres) {
 	const buf = await pres.toBytes()

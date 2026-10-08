@@ -6,7 +6,7 @@ import {
 	setDiagnosticHandler,
 	slideXml,
 	defined,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 // Regression: slide.addConnector emits a PowerPoint connector (<p:cxnSp>) — not a plain line
 // shape — with the correct connector preset, a min-corner origin + flip flags derived from the

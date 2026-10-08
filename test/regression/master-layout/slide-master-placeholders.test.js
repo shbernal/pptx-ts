@@ -6,7 +6,7 @@ import {
 	listEntries,
 	selfClosingTags,
 	xmlAttributes,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 // A slide seeds every layout placeholder it leaves empty with a copy of that placeholder's options.
 // The copy was shallow, so its nested `fill` and `hyperlink` objects were the layout's own:

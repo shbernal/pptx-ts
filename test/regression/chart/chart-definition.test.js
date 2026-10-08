@@ -10,8 +10,8 @@ import {
 	assertIncludes,
 	assertNotIncludes,
 	caught,
-} from '../../helpers.js'
-import { chartXml } from './chart-parts.js'
+} from '../../helpers.ts'
+import { chartXml } from './chart-parts.ts'
 
 // The normalization half of `gen/define/chart.ts` -- everything `addChartDefinition` does to the
 // options bag before a byte of chart XML exists: the defensive copy, the enum corrections keyed to

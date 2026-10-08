@@ -7,8 +7,8 @@ import {
 	assertEqual,
 	assertIncludes,
 	assertNotIncludes,
-} from '../../helpers.js'
-import { chartXml } from './chart-parts.js'
+} from '../../helpers.ts'
+import { chartXml } from './chart-parts.ts'
 
 // The fragments several plot builders share, pinned at the byte.
 //

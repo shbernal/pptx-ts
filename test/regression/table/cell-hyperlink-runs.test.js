@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert, assertEqual } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert, assertEqual } from '../../helpers.ts'
 
 // A table cell's hyperlink reaches the cell's runs through the run emitter, which copies the run
 // options a cell states (its link among them) onto each run that does not state its own. The

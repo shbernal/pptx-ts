@@ -1,5 +1,5 @@
 import { describe, test } from 'vitest'
-import { assert } from '../../helpers.js'
+import { assert } from '../../helpers.ts'
 import {
 	cssColorToHex,
 	parseCssPx,

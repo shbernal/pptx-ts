@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 // Extract the first slide's <a:pPr ...>...</a:pPr> block (paragraph properties)
 async function getPPr(zip) {

@@ -6,7 +6,7 @@ import {
 	readEntry,
 	assert,
 	assertEqual,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 import { InvalidOptionError } from '../../../dist/node.js'
 
 // `p:sldSz/@cx` and `@cy` are `ST_SlideSizeCoordinate`, bounded 914400 to 51206400 EMU — one to

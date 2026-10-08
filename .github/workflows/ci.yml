@@ -74,7 +74,7 @@ jobs:
     # sidecar where it does not. No hosted Linux runner has any of the six faces, so this
     # leg always takes the sidecar path, and `required` is what makes that a real run: a
     # face that resolves through neither source fails the suite instead of skipping the
-    # case and reporting green. See test/read/font-oracle.js.
+    # case and reporting green. See test/read/font-oracle.ts.
     env:
       FONT_ORACLES: required
 

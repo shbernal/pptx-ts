@@ -30,8 +30,8 @@ import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import { Presentation } from '../../dist/read.js'
 import { TableStyle } from '../../dist/node.js'
-import { PNG_1X1, assert, assertEqual, defined, readEntry } from '../helpers.js'
-import { openFixture, readFixture } from './corpus.js'
+import { PNG_1X1, assert, assertEqual, defined, readEntry } from '../helpers.ts'
+import { openFixture, readFixture } from './corpus.ts'
 import {
 	authorRead,
 	authorReadWithFixtureStyles,
@@ -39,7 +39,7 @@ import {
 	firstTable,
 	schemaErrors,
 	validatorInstalled,
-} from './authored.js'
+} from './authored.ts'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 

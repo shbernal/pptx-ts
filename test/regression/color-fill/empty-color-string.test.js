@@ -1,5 +1,5 @@
 import { ShapeType } from '../../../dist/node.js'
-import { assert, assertEqual, captureDiagnostics, defineRegressionSuite, slideXml } from '../../helpers.js'
+import { assert, assertEqual, captureDiagnostics, defineRegressionSuite, slideXml } from '../../helpers.ts'
 
 // An empty colour string had four readings depending on which path it fell down. `fill: ''`
 // emitted nothing and inherited; `fill: { color: '' }` fell through to `createColorElement` and

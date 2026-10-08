@@ -11,7 +11,7 @@ import {
 	assertContentTypeOverride,
 	contentTypeDefaultExtensions,
 	contentTypeForExtension,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 // 1x1 PNG (red pixel)
 const PNG_DATA =

@@ -21,7 +21,7 @@ import { DOMParser } from '@xmldom/xmldom'
 import JSZip from 'jszip'
 import { CHILD_SEQUENCES } from '../../../src/ooxml/sequence.ts'
 import { TsPptx, ChartType } from '../../../dist/node.js'
-import { assert, readEntry } from '../../helpers.js'
+import { assert, readEntry } from '../../helpers.ts'
 
 const PNG_DATA =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP8z8DwHwAFAAH/Re1ZlAAAAABJRU5ErkJggg=='

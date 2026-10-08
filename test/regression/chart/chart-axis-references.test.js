@@ -1,7 +1,7 @@
 import { DOMParser } from '@xmldom/xmldom'
 import { ChartType } from '../../../dist/node.js'
-import { defineRegressionSuite, build, assert, captureDiagnostics, asError } from '../../helpers.js'
-import { chartXml } from './chart-parts.js'
+import { defineRegressionSuite, build, assert, captureDiagnostics, asError } from '../../helpers.ts'
+import { chartXml } from './chart-parts.ts'
 
 // Every `<c:axId>` a plot group carries has to name an axis the plot area emits, and the category
 // and value axes a plot group names have to cross each other. PowerPoint enforces the second: a

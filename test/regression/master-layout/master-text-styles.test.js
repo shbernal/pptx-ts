@@ -8,7 +8,7 @@ import {
 	assertEqual,
 	assertIncludes,
 	assertNotIncludes,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 // upstream-issue-1360: defineSlideMaster({ textStyles }) configures the shared slide master's
 // per-level <p:txStyles> (titleStyle / bodyStyle / otherStyle). Previously the block was a fixed

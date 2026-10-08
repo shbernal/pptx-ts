@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 // Acceptance: table cell `margin` is INCHES (matching x/y/w/h and the PowerPoint dialog).
 // The pre-v3.8.0 magnitude heuristic — a component `>= 1` read as POINTS — is gone; every

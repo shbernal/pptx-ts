@@ -14,7 +14,7 @@
 		// package's public types. Temporary: each file leaves this project for
 		// `tsconfig.test.json` when it is renamed to `.ts`, and this config goes once none are
 		// left. Null-safety is on, `exactOptionalPropertyTypes` with it, as in `src/`: a test
-		// narrows a nullable read with `expectDefined`/`defined` from `test/helpers.js`, which
+		// narrows a nullable read with `expectDefined`/`defined` from `test/helpers.ts`, which
 		// fail as an assertion rather than a later `TypeError`.
 		//
 		// What stays relaxed is the strictness that only pays for annotated sources: implicit

@@ -1,4 +1,4 @@
-import { assert, assertEqual, build, defineRegressionSuite, readEntry, slideXml } from '../../helpers.js'
+import { assert, assertEqual, build, defineRegressionSuite, readEntry, slideXml } from '../../helpers.ts'
 
 // A bare colour is the solid-fill shorthand: `fill: 'FF0000'` says exactly what
 // `fill: { color: 'FF0000' }` says, at every fill option in the API. The runtime accepted it at

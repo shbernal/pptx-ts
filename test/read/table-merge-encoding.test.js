@@ -14,8 +14,8 @@
 
 import { describe, test } from 'vitest'
 
-import { assert, assertEqual, defined } from '../helpers.js'
-import { openFixture } from './corpus.js'
+import { assert, assertEqual, defined } from '../helpers.ts'
+import { openFixture } from './corpus.ts'
 
 const SPAN_ATTRIBUTES = ['rowSpan', 'gridSpan', 'hMerge', 'vMerge']
 

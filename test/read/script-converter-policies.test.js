@@ -12,8 +12,8 @@ import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import { Presentation } from '../../dist/read.js'
 import { readModelToIr } from '../../dist/script.js'
-import { assert, assertEqual, defined, readEntry } from '../helpers.js'
-import { authorRead } from './authored.js'
+import { assert, assertEqual, defined, readEntry } from '../helpers.ts'
+import { authorRead } from './authored.ts'
 
 /** Apply `rewrite` to every slide part of `buf`, reload, and convert. */
 async function irWithSlideXml(buf, rewrite) {

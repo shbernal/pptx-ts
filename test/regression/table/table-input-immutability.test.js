@@ -14,7 +14,7 @@
  * cannot say which key moved.
  */
 import { expect } from 'vitest'
-import { assert, assertEqual, build, defineRegressionSuite, readEntry } from '../../helpers.js'
+import { assert, assertEqual, build, defineRegressionSuite, readEntry } from '../../helpers.ts'
 
 const POS = { x: 0.5, y: 0.5, w: 9 }
 

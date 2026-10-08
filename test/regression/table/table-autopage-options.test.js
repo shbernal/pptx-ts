@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, listEntries, assert, assertEqual } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, listEntries, assert, assertEqual } from '../../helpers.ts'
 
 // Exercises the option surface of the auto-paging engine (getSlidesForTableRows /
 // parseTextToLines in src/gen/table/autopage.ts) through the public `addTable({autoPage:true})`

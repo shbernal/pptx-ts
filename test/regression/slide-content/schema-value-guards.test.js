@@ -1,5 +1,5 @@
 import { ChartType } from '../../../dist/node.js'
-import { defineRegressionSuite, build, readEntry, assert, captureDiagnostics, caught } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert, captureDiagnostics, caught } from '../../helpers.ts'
 
 const SLIDE_XML = 'ppt/slides/slide1.xml'
 const MASTER_XML = 'ppt/slideMasters/slideMaster1.xml'

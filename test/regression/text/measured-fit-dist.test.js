@@ -12,7 +12,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, test, expect } from 'vitest'
 import TsPptx, { setDiagnosticHandler } from '../../../dist/node.js'
-import { defined, expectDefined, partXml, caughtSync } from '../../helpers.js'
+import { defined, expectDefined, partXml, caughtSync } from '../../helpers.ts'
 // The `ts-pptx/measure` entry publishes the calibrated constants the bake uses, so a test
 // can state "inflated by the height safety factor" instead of re-pinning its value here.
 import { HEIGHT_SAFETY_FACTOR } from '../../../dist/measure.js'

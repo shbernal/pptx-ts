@@ -14,10 +14,10 @@ import { fileURLToPath } from 'node:url'
 import { describe, test } from 'vitest'
 import TsPptx, { ChartType } from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { bytesEqual, PNG_1X1, assert, assertEqual, assertIncludes, partBodies, defined, caught } from '../helpers.js'
-import { validateBuf, validatorInstalled } from '../validator.js'
-import { FIXTURES, fixturePath } from './corpus.js'
-import { resolveSingle } from './opc.js'
+import { bytesEqual, PNG_1X1, assert, assertEqual, assertIncludes, partBodies, defined, caught } from '../helpers.ts'
+import { validateBuf, validatorInstalled } from '../validator.ts'
+import { FIXTURES, fixturePath } from './corpus.ts'
+import { resolveSingle } from './opc.ts'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 

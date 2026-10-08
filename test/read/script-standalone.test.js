@@ -26,8 +26,8 @@ import { describe, expect, test } from 'vitest'
 import TsPptx, { ChartType, SchemeColor } from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
 import { canonicalDeckIr, diffDeckIr, printScript, printStandaloneScript, readModelToIr } from '../../dist/script.js'
-import { assert, assertEqual, defined, readEntry } from '../helpers.js'
-import { REPO, SCRATCH, SNAPSHOTS, fixtureNames, irFor, readFixture } from './corpus.js'
+import { assert, assertEqual, defined, readEntry } from '../helpers.ts'
+import { REPO, SCRATCH, SNAPSHOTS, fixtureNames, irFor, readFixture } from './corpus.ts'
 
 /** The `schemeClr` tokens the write path can carry as tokens (`SchemeColor`), for the ladder below. */
 const WRITABLE_SCHEME_TOKENS = new Set(/** @type {string[]} */ (Object.values(SchemeColor)))

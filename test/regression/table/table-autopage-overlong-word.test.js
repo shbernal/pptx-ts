@@ -14,7 +14,7 @@
  * The word still overflows its column after this. Nothing here breaks inside a word, and
  * whether it should is a separate question this does not answer.
  */
-import { assert, assertEqual, build, defineRegressionSuite, listEntries, readEntry } from '../../helpers.js'
+import { assert, assertEqual, build, defineRegressionSuite, listEntries, readEntry } from '../../helpers.ts'
 
 const POS = { x: 0.5, y: 0.5, colW: [0.4], autoPage: true }
 

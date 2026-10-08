@@ -39,8 +39,8 @@ import {
 	printStandaloneScript,
 	readModelToIr,
 } from '../../dist/script.js'
-import { assert, assertEqual, defined } from '../helpers.js'
-import { SNAPSHOTS, fixtureNames, irFor, readFixture } from './corpus.js'
+import { assert, assertEqual, defined } from '../helpers.ts'
+import { SNAPSHOTS, fixtureNames, irFor, readFixture } from './corpus.ts'
 
 // The whole-corpus round trip itself is NOT here. It is `pnpm run script:roundtrip:all`
 // (`scripts/script-roundtrip.mjs`), which ran the identical comparison — same corpus, same

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
-import { build, readEntry, listEntries } from '../../helpers.js'
-import { chartExPath } from './chart-parts.js'
+import { build, readEntry, listEntries } from '../../helpers.ts'
+import { chartExPath } from './chart-parts.ts'
 
 // Funnel is the second chartEx (cx:) chart type, landing on the subsystem waterfall introduced.
 // This pins the parts that are SPECIFIC to funnel (and were confirmed against a chart PowerPoint

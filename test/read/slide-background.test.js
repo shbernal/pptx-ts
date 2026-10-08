@@ -17,9 +17,9 @@ import JSZip from 'jszip'
 import { describe, expect, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
 import { readModelToIr } from '../../dist/script.js'
-import { assert, assertEqual, defined, readEntry } from '../helpers.js'
-import { authorRead } from './authored.js'
-import { irFor, openFixture } from './corpus.js'
+import { assert, assertEqual, defined, readEntry } from '../helpers.ts'
+import { authorRead } from './authored.ts'
+import { irFor, openFixture } from './corpus.ts'
 
 const FIXTURE = 'slide-background.pptx'
 

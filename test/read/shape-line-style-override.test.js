@@ -12,8 +12,8 @@
 
 import { describe, test } from 'vitest'
 
-import { assert, assertEqual, partXml } from '../helpers.js'
-import { openFixture } from './corpus.js'
+import { assert, assertEqual, partXml } from '../helpers.ts'
+import { openFixture } from './corpus.ts'
 
 /** The theme's accent2, which the lnRef names. */
 const STYLE_HEX = 'E97132'

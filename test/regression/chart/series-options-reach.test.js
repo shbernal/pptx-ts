@@ -1,6 +1,6 @@
 import { ChartType } from '../../../dist/node.js'
-import { defineRegressionSuite, build, assert } from '../../helpers.js'
-import { chartXml } from './chart-parts.js'
+import { defineRegressionSuite, build, assert } from '../../helpers.ts'
+import { chartXml } from './chart-parts.ts'
 
 // `seriesOptions` is indexed by the series' OWN position -- the number it carries in `<c:idx>` and
 // `<c:order>` -- not by a position in the `data` array. The two differ on exactly the plots covered

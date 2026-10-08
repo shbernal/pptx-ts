@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert, defined } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert, defined } from '../../helpers.ts'
 
 defineRegressionSuite('Text formatting [legacy bug-01]', [
 	{

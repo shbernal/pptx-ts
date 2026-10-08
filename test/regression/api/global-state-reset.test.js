@@ -5,10 +5,10 @@ import {
 	captureDiagnostics,
 	assert,
 	assertEqual,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 import { resetDiagnosticState } from '../../../dist/node.js'
 
-// Guards `test/setup-globals.js`, which is what makes `isolate: false` safe rather than
+// Guards `test/setup-globals.ts`, which is what makes `isolate: false` safe rather than
 // merely fast (vitest.config.ts, and docs/contributing/testing.md "Test files share module state").
 //
 // With one module registry per worker, a diagnostic handler left installed by one test is

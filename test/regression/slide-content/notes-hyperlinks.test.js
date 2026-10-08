@@ -11,7 +11,7 @@ import {
 	assertIncludes,
 	assertNotIncludes,
 	caughtSync,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 /** A package's entry by name, from a written deck. */
 async function entryOf(pres, name) {

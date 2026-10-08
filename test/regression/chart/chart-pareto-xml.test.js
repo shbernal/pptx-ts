@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
-import { build, readEntry, listEntries } from '../../helpers.js'
-import { chartExPath } from './chart-parts.js'
+import { build, readEntry, listEntries } from '../../helpers.ts'
+import { chartExPath } from './chart-parts.ts'
 
 // Pareto is the first MULTI-SERIES chartEx (cx:) layout. Confirmed against a chart PowerPoint
 // authored (`Shapes.AddChart2(-1, 122, …)`) and read back as ChartType 122, the pieces SPECIFIC to

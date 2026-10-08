@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, captureDiagnostics, assert, assertEqual } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, captureDiagnostics, assert, assertEqual } from '../../helpers.ts'
 
 // `TableCellProps.horzOverflow` -> `a:tcPr/@horzOverflow`.
 //

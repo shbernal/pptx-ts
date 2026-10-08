@@ -6,7 +6,7 @@ import {
 	assertEqual,
 	assertIncludes,
 	assertNonVisualDrawingProperty,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 // The definers write their normalization back onto the options object they are handed -- assigned
 // `objectName`s, defaulted `line`/`fontSize`/`margin`/`color`, the resolved `autoPage*` family --

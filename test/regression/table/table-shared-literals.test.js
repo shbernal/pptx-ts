@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert, assertEqual } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert, assertEqual } from '../../helpers.ts'
 
 // The shape of every bug here: build the same literal into TWO objects and the second behaves
 // differently from the first, because the first build wrote into it. `addTableDefinition` takes

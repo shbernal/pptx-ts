@@ -2,7 +2,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import JSZip from 'jszip'
 import { ShapeType } from '../../../dist/node.js'
-import { readFixture } from '../../read/corpus.js'
+import { readFixture } from '../../read/corpus.ts'
 import {
 	PNG_1X1,
 	setDiagnosticHandler,
@@ -17,7 +17,7 @@ import {
 	assertXmlOrder,
 	defined,
 	assertRejects,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 

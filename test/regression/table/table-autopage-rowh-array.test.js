@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, listEntries, assert, defined } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, listEntries, assert, defined } from '../../helpers.ts'
 
 // Regression: a `rowH` *array* is keyed by the ORIGINAL row
 // index. Auto-paging splits rows across slides (and can repeat the header row), so applying the

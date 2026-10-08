@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assertXmlOrder } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assertXmlOrder } from '../../helpers.ts'
 
 defineRegressionSuite('Presentation child order [legacy bug-20]', [
 	{

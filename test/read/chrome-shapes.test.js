@@ -35,9 +35,9 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual, defined } from '../helpers.js'
-import { authorRead, schemaErrors, validatorInstalled } from './authored.js'
-import { openFixture } from './corpus.js'
+import { assert, assertEqual, defined } from '../helpers.ts'
+import { authorRead, schemaErrors, validatorInstalled } from './authored.ts'
+import { openFixture } from './corpus.ts'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 

@@ -17,7 +17,7 @@ import { buildPackageParts } from '../../../src/package/assemble.ts'
 import { composeFamilies } from '../../../src/families/shared.ts'
 import { ALL_CONSTRUCT_FAMILIES } from '../../../src/entry-families.ts'
 import { chartContributor } from '../../../src/package/parts/chart.ts'
-import { assert, assertEqual } from '../../helpers.js'
+import { assert, assertEqual } from '../../helpers.ts'
 
 const composed = composeFamilies(ALL_CONSTRUCT_FAMILIES)
 const ALL_PART_CONTRIBUTORS = composed.partContributors

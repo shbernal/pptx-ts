@@ -1,6 +1,6 @@
 import { ChartType } from '../../../dist/node.js'
-import { defineRegressionSuite, build, assert, assertIncludes, assertNotIncludes } from '../../helpers.js'
-import { chartXml } from './chart-parts.js'
+import { defineRegressionSuite, build, assert, assertIncludes, assertNotIncludes } from '../../helpers.ts'
+import { chartXml } from './chart-parts.ts'
 
 // A `bar3d` chart emits a third axis — the series axis (`<c:serAx>`, `makeSerAxis`)
 // — that no other chart type produces. Its title, gridlines, tick-label skip and

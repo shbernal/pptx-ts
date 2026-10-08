@@ -8,7 +8,7 @@ import { ALL_CONSTRUCT_FAMILIES } from '../../../src/entry-families.ts'
 const ALL_OBJECT_RENDERERS = composeFamilies(ALL_CONSTRUCT_FAMILIES).renderers
 import { SlideObjectType } from '../../../src/enums.ts'
 import { InternalError } from '../../../src/errors.ts'
-import { defined } from '../../helpers.js'
+import { defined } from '../../helpers.ts'
 
 // Characterization tests for slide-object XML that the byte-identity harness CANNOT see. The demo
 // deck emits ZERO parts containing `<a:duotone>`, `<a:stCxn>`, `mc:AlternateContent`,

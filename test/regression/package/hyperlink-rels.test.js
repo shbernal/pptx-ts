@@ -7,7 +7,7 @@ import {
 	assertEqual,
 	assertIncludes,
 	caught,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 // `createHyperlinkRels` walks the text/table-cell tree and mints one slide relationship per
 // hyperlink, stamping the resolved `_rId` back onto the hyperlink so the emitter can write

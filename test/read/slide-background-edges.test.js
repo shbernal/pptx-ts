@@ -20,9 +20,9 @@ import { fileURLToPath } from 'node:url'
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual, defined, readEntry } from '../helpers.js'
-import { authorRead } from './authored.js'
-import { openFixture } from './corpus.js'
+import { assert, assertEqual, defined, readEntry } from '../helpers.ts'
+import { authorRead } from './authored.ts'
+import { openFixture } from './corpus.ts'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 

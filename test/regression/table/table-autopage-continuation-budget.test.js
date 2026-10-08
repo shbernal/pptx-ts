@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, listEntries, readEntry, assert, assertEqual } from '../../helpers.js'
+import { defineRegressionSuite, build, listEntries, readEntry, assert, assertEqual } from '../../helpers.ts'
 
 // Regression: upstream gitbrent/PptxGenJS#1200 — "tableToSlides autoPaging not working": a table
 // paged onto several slides, but the rows on the generated slides ran off the bottom edge.

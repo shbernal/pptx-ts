@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, describe, test } from 'vitest'
-import { PNG_1X1, assert, build } from '../../helpers.js'
+import { PNG_1X1, assert, build } from '../../helpers.ts'
 
 // An inline source carries a placeholder path that the media pass must not try to load. That pass
 // used to recognise the placeholder by the word in it, so a real file whose name merely contained

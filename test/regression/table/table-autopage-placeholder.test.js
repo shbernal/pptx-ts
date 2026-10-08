@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, listEntries, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, listEntries, assert } from '../../helpers.ts'
 
 // Regression: an autoPage table that overflows onto continuation slides should be able to
 // carry the source slide's populated placeholders (e.g. a title) onto every overflow slide.

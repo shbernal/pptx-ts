@@ -1,5 +1,5 @@
 import { ShapeType } from '../../../dist/node.js'
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 defineRegressionSuite('Shape text bodies [legacy bug-13]', [
 	{

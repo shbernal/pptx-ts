@@ -16,7 +16,7 @@
  * Every case reads the page count rather than the wrapped lines, because that is the thing the
  * weight exists to move and the thing a caller sees.
  */
-import { assert, assertEqual, build, defineRegressionSuite, listEntries } from '../../helpers.js'
+import { assert, assertEqual, build, defineRegressionSuite, listEntries } from '../../helpers.ts'
 
 const POS = { x: 0.5, y: 0.5, w: 3, h: 2 }
 const TEXT = 'alpha beta gamma delta epsilon zeta eta theta'

@@ -6,7 +6,7 @@ import {
 	assertEqual,
 	captureDiagnostics,
 	caught,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 // `shadow.transparency` and `shadow.angle` were the last two options outside the rule
 // `docs/contributing/development.md` states for an out-of-range number: clamp to the nearest bound and warn,

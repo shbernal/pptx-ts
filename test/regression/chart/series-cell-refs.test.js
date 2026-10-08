@@ -1,6 +1,6 @@
 import { ChartType } from '../../../dist/node.js'
-import { defineRegressionSuite, build, assert, assertNotIncludes } from '../../helpers.js'
-import { chartXml } from './chart-parts.js'
+import { defineRegressionSuite, build, assert, assertNotIncludes } from '../../helpers.ts'
+import { chartXml } from './chart-parts.ts'
 
 // The embedded workbook lays every series out behind the FIRST series' label columns, one row
 // per that series' categories. The chart XML derived both numbers from each series' own labels,

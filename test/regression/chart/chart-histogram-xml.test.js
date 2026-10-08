@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
-import { build, readEntry, listEntries } from '../../helpers.js'
-import { chartExPath } from './chart-parts.js'
+import { build, readEntry, listEntries } from '../../helpers.ts'
+import { chartExPath } from './chart-parts.ts'
 
 // Histogram is the category-less chartEx (cx:) layout. Unlike every other chart, it is fed RAW
 // OBSERVATIONS (a single `values` series, no `labels`) and PowerPoint bins them itself. Confirmed

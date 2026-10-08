@@ -6,7 +6,7 @@ import {
 	assert,
 	assertEqual,
 	defined,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 // The three `a:tcPr` constructs that had no write surface: the two diagonals
 // (`a:lnTlToBr` / `a:lnBlToTr`), `@anchorCtr`, and `a:cell3D`.

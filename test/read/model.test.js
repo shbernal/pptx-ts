@@ -7,8 +7,8 @@
 
 import { describe, test } from 'vitest'
 import { Presentation, isAutoShape, isConnector, isGraphicFrame, isGroupShape, isPicture } from '../../dist/read.js'
-import { assert, assertEqual, defined, expectDefined } from '../helpers.js'
-import { openFixture } from './corpus.js'
+import { assert, assertEqual, defined, expectDefined } from '../helpers.ts'
+import { openFixture } from './corpus.ts'
 
 describe('Presentation', () => {
 	test('resolves the presentation part and slide size', async () => {

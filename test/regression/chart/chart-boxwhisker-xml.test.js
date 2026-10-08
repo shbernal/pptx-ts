@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
-import { build, readEntry, listEntries } from '../../helpers.js'
-import { chartExPath } from './chart-parts.js'
+import { build, readEntry, listEntries } from '../../helpers.ts'
+import { chartExPath } from './chart-parts.ts'
 
 // Box-and-whisker (`boxWhisker`) is a chartEx (cx:) layout. Confirmed against a chart PowerPoint
 // authored (`Shapes.AddChart2(-1, 121, …)`) and read back as ChartType 121, the pieces SPECIFIC to

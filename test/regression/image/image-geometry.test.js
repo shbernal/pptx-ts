@@ -9,7 +9,7 @@ import { describe, test } from 'vitest'
 import { fitSrcRectPercents, getImageSizeFromBytes } from '../../../src/media/image-size.ts'
 import { Presentation } from '../../../dist/read.js'
 import { EMU_PER_INCH } from '../../../dist/node.js'
-import { assert, assertEqual, build, captureDiagnostics, caughtSync, slideXml, defined } from '../../helpers.js'
+import { assert, assertEqual, build, captureDiagnostics, caughtSync, slideXml, defined } from '../../helpers.ts'
 
 /**
  * A PNG header carrying an arbitrary intrinsic size. The size reader looks at the IHDR dimensions

@@ -1,5 +1,5 @@
 import { describe, test } from 'vitest'
-import { assert } from '../../helpers.js'
+import { assert } from '../../helpers.ts'
 import { resolveHtmlColWidth } from '../../../src/gen/table/html-dom.ts'
 
 // Acceptance: HTML-table conversion must honor `data-pptx-width` (exact) and

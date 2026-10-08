@@ -11,7 +11,7 @@ import {
 	xmlAttributes,
 	xmlOpeningTags,
 	listEntries,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 const PNG_1X1 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
 

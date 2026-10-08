@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, captureDiagnostics, readEntry, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, captureDiagnostics, readEntry, assert } from '../../helpers.ts'
 import { TableStyle } from '../../../dist/node.js'
 
 const SLIDE_XML = 'ppt/slides/slide1.xml'

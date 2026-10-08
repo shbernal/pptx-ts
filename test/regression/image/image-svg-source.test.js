@@ -2,7 +2,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { PNG_1X1, defineRegressionSuite, build, readEntry, listEntries, assert, defined } from '../../helpers.js'
+import { PNG_1X1, defineRegressionSuite, build, readEntry, listEntries, assert, defined } from '../../helpers.ts'
 
 const SVG_MARKUP =
 	'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" data-marker="svg-source"><circle cx="12" cy="12" r="10"/></svg>'

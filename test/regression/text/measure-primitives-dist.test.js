@@ -17,7 +17,7 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, test, expect, beforeAll } from 'vitest'
-import { defined } from '../../helpers.js'
+import { defined } from '../../helpers.ts'
 import {
 	measureLayout,
 	measureHeightPt,

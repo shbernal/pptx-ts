@@ -8,7 +8,7 @@ import {
 	assertXmlOrder,
 	captureDiagnostics,
 	firstXmlBlock,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 async function expectBuildError(buildFn, expectedMessage) {
 	let err

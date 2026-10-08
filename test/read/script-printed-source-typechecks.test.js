@@ -16,8 +16,8 @@ import path from 'node:path'
 import { describe, test } from 'vitest'
 import ts from 'typescript-6'
 import { printScript, printStandaloneScript } from '../../dist/script.js'
-import { assert, assertEqual } from '../helpers.js'
-import { SCRATCH, fixtureNames, irFor } from './corpus.js'
+import { assert, assertEqual } from '../helpers.ts'
+import { SCRATCH, fixtureNames, irFor } from './corpus.ts'
 
 /** Where the in-memory scripts claim to live: inside the package, so `pptx-ts` resolves to itself. */
 const ROOT = path.join(SCRATCH, 'printed-typecheck').replaceAll('\\', '/')

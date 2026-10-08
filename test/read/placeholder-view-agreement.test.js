@@ -11,8 +11,8 @@
 // answers were being computed twice with nothing keeping them in step.
 
 import { describe, test } from 'vitest'
-import { assert, assertEqual, defined } from '../helpers.js'
-import { openFixture } from './corpus.js'
+import { assert, assertEqual, defined } from '../helpers.ts'
+import { openFixture } from './corpus.ts'
 
 /** The `resolved*` family plus identity and geometry, from whichever view is passed. */
 function readable(view) {

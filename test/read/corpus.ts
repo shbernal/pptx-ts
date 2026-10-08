@@ -20,10 +20,10 @@
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { corpusDecks } from '../../scripts/script-utils.mjs'
-import { FIXTURES } from './fixtures-dir.js'
+import { FIXTURES } from './fixtures-dir.ts'
 
 // Re-exported so this module stays the one place a test reads the corpus from. The constant
-// itself lives in `fixtures-dir.js` because importing it should not also import the
+// itself lives in `fixtures-dir.ts` because importing it should not also import the
 // enumeration and floor below -- see the note there.
 export { FIXTURES }
 

@@ -1,5 +1,5 @@
 import { ChartType } from '../../../dist/node.js'
-import { defineRegressionSuite, build, listEntries, assert, assertEqual } from '../../helpers.js'
+import { defineRegressionSuite, build, listEntries, assert, assertEqual } from '../../helpers.ts'
 
 // Chart part filenames must be a pure function of deck structure, not of process
 // history. They used to be drawn from a never-reset module global (`_chartCounter`),

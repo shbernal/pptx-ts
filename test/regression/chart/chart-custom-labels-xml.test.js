@@ -1,7 +1,7 @@
 import { ChartType } from '../../../dist/node.js'
 import { describe, expect, test } from 'vitest'
-import { build } from '../../helpers.js'
-import { chartXml } from './chart-parts.js'
+import { build } from '../../helpers.ts'
+import { chartXml } from './chart-parts.ts'
 
 // Characterization test for per-point `customLabels` (makeCustomDLblXml) on a category-axis chart
 // (bar/line/area/radar) — ZERO coverage anywhere: no demo chart sets `customLabels`, so this

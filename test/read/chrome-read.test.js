@@ -17,8 +17,8 @@
 // reads `null` on an authored deck (asserted null here, documented, not faked).
 
 import { describe, test } from 'vitest'
-import { authorRead, schemaErrors, validatorInstalled } from './authored.js'
-import { assert, assertEqual } from '../helpers.js'
+import { authorRead, schemaErrors, validatorInstalled } from './authored.ts'
+import { assert, assertEqual } from '../helpers.ts'
 
 /** The first slide of `presentation`. */
 function firstSlide(presentation) {

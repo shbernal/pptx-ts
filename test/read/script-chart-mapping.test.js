@@ -14,9 +14,9 @@ import JSZip from 'jszip'
 import { Presentation } from '../../dist/read.js'
 import { readModelToIr } from '../../dist/script.js'
 import { ChartType } from '../../dist/node.js'
-import { assert, assertEqual, defined, readEntry } from '../helpers.js'
-import { authorRead } from './authored.js'
-import { readFixture } from './corpus.js'
+import { assert, assertEqual, defined, readEntry } from '../helpers.ts'
+import { authorRead } from './authored.ts'
+import { readFixture } from './corpus.ts'
 
 const SERIES = [{ name: 'S1', labels: ['A', 'B', 'C'], values: [1, 2, 3] }]
 

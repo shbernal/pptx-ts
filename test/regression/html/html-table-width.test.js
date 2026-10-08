@@ -10,7 +10,7 @@
  */
 import { Window } from 'happy-dom'
 import { tableToSlides } from '../../../dist/html.js'
-import { assert, assertEqual, build, defineRegressionSuite, readEntry, defined } from '../../helpers.js'
+import { assert, assertEqual, build, defineRegressionSuite, readEntry, defined } from '../../helpers.ts'
 
 const EMU_PER_INCH = 914400
 const inches = (emu) => Math.round((emu / EMU_PER_INCH) * 1000) / 1000

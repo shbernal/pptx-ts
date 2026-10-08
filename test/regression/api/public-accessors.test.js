@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { assert, assertEqual, build, defineRegressionSuite, readEntry } from '../../helpers.js'
+import { assert, assertEqual, build, defineRegressionSuite, readEntry } from '../../helpers.ts'
 
 // Acceptance: the public read-back accessors on `Presentation` and `Slide` return what was
 // put in.

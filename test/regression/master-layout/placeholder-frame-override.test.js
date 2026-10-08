@@ -1,6 +1,6 @@
 import JSZip from 'jszip'
-import { defineRegressionSuite, build, readEntry, assert, assertEqual, defined } from '../../helpers.js'
-import { readFixture } from '../../read/corpus.js'
+import { defineRegressionSuite, build, readEntry, assert, assertEqual, defined } from '../../helpers.ts'
+import { readFixture } from '../../read/corpus.ts'
 
 // What wins when an object names a placeholder AND states options of its own.
 //

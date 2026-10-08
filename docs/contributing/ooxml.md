@@ -147,7 +147,7 @@ Do not start implementing without at least one evidence path from this checkout:
 - an Open XML SDK or Microsoft documentation reference, when PowerPoint behavior is not obvious
   from the schema.
 
-An emitted OOXML change carries a focused fixture in `test/schema-cases.js`.
+An emitted OOXML change carries a focused fixture in `test/schema-cases.ts`.
 [OOXML schema validation](testing.md#ooxml-schema-validation) covers running it.
 
 ### Fixture-gated work waits for the fixture
@@ -171,7 +171,7 @@ Either way the order is:
 2. Record provenance and SHA-256 in
    [test/read/fixtures/README.md](https://github.com/shbernal/pptx-ts/blob/main/test/read/fixtures/README.md).
 3. Wire the test to the fixture: through the read harness for a read accessor, or a
-   `test/schema-cases.js` comparison for a write-side oracle.
+   `test/schema-cases.ts` comparison for a write-side oracle.
 4. Implement last.
 
 A claim about whether PowerPoint paints a construct needs render evidence:
@@ -190,8 +190,8 @@ A claim about whether PowerPoint paints a construct needs render evidence:
 
 ## Local files
 
-- `test/schema-cases.js` holds the schema fixtures, `test/schema-validation.test.js` runs them, and
-  `test/validator.js` adapts `ooxml-validate`, which fetches and caches its oracle binary on first
+- `test/schema-cases.ts` holds the schema fixtures, `test/schema-validation.test.js` runs them, and
+  `test/validator.ts` adapts `ooxml-validate`, which fetches and caches its oracle binary on first
   use.
 - `src/gen/` holds the generators: `define/*` normalizes options, and
   `slide|drawingml|chart|pres|opc|anim|table/*` serialize.

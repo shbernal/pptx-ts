@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 // Regression: a custom `fontFace` must be written the way PowerPoint writes a font picked from the
 // UI — into the Latin (<a:latin>) and complex-script (<a:cs>) slots only. Forcing a Latin-only face

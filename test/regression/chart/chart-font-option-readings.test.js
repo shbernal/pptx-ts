@@ -1,6 +1,6 @@
 import { ChartType } from '../../../dist/node.js'
-import { assert, assertEqual, build, captureDiagnostics, defineRegressionSuite } from '../../helpers.js'
-import { chartXml } from './chart-parts.js'
+import { assert, assertEqual, build, captureDiagnostics, defineRegressionSuite } from '../../helpers.ts'
+import { chartXml } from './chart-parts.ts'
 
 // One chart part used to carry two readings of the same data-label font option. Two builders
 // emit the run properties a `<c:dLbls>` wraps, and they defaulted differently -- `??` in one,

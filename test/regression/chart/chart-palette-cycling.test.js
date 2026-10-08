@@ -1,6 +1,6 @@
 import { ChartType } from '../../../dist/node.js'
-import { defineRegressionSuite, build, assert, assertEqual } from '../../helpers.js'
-import { chartXml } from './chart-parts.js'
+import { defineRegressionSuite, build, assert, assertEqual } from '../../helpers.ts'
+import { chartXml } from './chart-parts.ts'
 
 // The default series palettes are shorter than the number of series or data points a caller may
 // hand in, so every palette lookup has to wrap. It used to draw a *random* colour past the end

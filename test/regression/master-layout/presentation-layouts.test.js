@@ -9,7 +9,7 @@ import {
 	pixelsToEmu,
 	pointsToEmu,
 } from '../../../dist/index.js'
-import { defineRegressionSuite, build, readEntry, assert, assertEqual, assertRejects } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert, assertEqual, assertRejects } from '../../helpers.ts'
 
 const WIDE = STANDARD_LAYOUTS.LAYOUT_WIDE
 

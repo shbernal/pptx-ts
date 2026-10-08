@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 // PowerPoint's accessibility checker reports "Missing Slide Title" unless a
 // slide has a shape with a title placeholder (<p:ph type="title"/>). A standalone

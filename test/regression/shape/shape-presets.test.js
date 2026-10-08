@@ -8,7 +8,7 @@ import {
 	assertEqual,
 	assertRejects,
 	assertXmlOrder,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 defineRegressionSuite('Shape preset mapping [legacy bug-10]', [
 	{

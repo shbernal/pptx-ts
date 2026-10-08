@@ -7,7 +7,7 @@
 //
 // Not a test file (no `.test.` in the name) — vitest's default glob skips it.
 
-import { assert, listEntries, readEntry } from '../../helpers.js'
+import { assert, listEntries, readEntry } from '../../helpers.ts'
 
 /** The XML of the package's first `ppt/charts/chartN.xml`. */
 export function chartXml(zip) {

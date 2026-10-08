@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 async function getSlide1(zip) {
 	return readEntry(zip, 'ppt/slides/slide1.xml')

@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 // genXmlPlaceholder previously re-looked-up the already-mapped OOXML value
 // (e.g. 'pic', 'tbl') in PLACEHOLDER_TYPE_MAP, whose keys are the friendly

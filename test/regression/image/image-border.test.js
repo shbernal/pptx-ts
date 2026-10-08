@@ -10,7 +10,7 @@
 // `lineColor`/`lineWidthPt`/`lineDash` — so the last case here is the round trip that proves the
 // two halves now meet.
 
-import { PNG_1X1, defineRegressionSuite, build, readEntry, assert, assertEqual, defined } from '../../helpers.js'
+import { PNG_1X1, defineRegressionSuite, build, readEntry, assert, assertEqual, defined } from '../../helpers.ts'
 import { Presentation } from '../../../dist/read.js'
 
 /** The `<a:ln …>` opening tag inside the slide's one `p:pic`, or `null`. */

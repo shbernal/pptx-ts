@@ -8,8 +8,8 @@ import {
 	assertNotIncludes,
 	captureDiagnostics,
 	defined,
-} from '../../helpers.js'
-import { chartXml } from './chart-parts.js'
+} from '../../helpers.ts'
+import { chartXml } from './chart-parts.ts'
 
 // addChart normalizes/validates several numeric and enum options before emitting.
 // These branches (clamping an out-of-range line-marker size; dropping invalid

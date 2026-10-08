@@ -10,7 +10,7 @@
 // dist/zip.js is imported dynamically *after* the mock is registered.
 
 import { describe, test, vi, beforeEach, afterEach } from 'vitest'
-import { assert, caught } from '../helpers.js'
+import { assert, caught } from '../helpers.ts'
 
 describe('readFileAsBytes when node:fs is unavailable (browser build)', () => {
 	beforeEach(() => {

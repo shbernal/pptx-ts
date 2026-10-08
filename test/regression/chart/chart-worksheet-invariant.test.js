@@ -1,7 +1,7 @@
 import { DOMParser } from '@xmldom/xmldom'
 import JSZip from 'jszip'
 import { ChartType } from '../../../dist/node.js'
-import { defineRegressionSuite, build, listEntries, assert, expectDefined, defined } from '../../helpers.js'
+import { defineRegressionSuite, build, listEntries, assert, expectDefined, defined } from '../../helpers.ts'
 
 // Every formula a chart part carries names cells in its own embedded workbook, and the cache
 // beside it is a copy of what those cells hold. The workbook writer and the chart emitters work

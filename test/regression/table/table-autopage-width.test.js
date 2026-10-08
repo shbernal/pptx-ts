@@ -1,5 +1,5 @@
 import { SlideObjectType } from '../../../dist/node.js'
-import { defineRegressionSuite, build, readEntry, assert, assertEqual, defined } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert, assertEqual, defined } from '../../helpers.ts'
 // The pager's core is not exported from the package, and the last case here is about a guard
 // only a direct caller can reach. Every other case goes through the public `addTable`.
 import { getSlidesForTableRows } from '../../../src/gen/table/autopage.ts'

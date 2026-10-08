@@ -1,4 +1,4 @@
-import { defineRegressionSuite, assert, assertEqual } from '../../helpers.js'
+import { defineRegressionSuite, assert, assertEqual } from '../../helpers.ts'
 import { buildSnapshot, SNAPSHOT_PATH } from '../../../scripts/gen-inspect-snapshot.mjs'
 import { readFileSync } from 'node:fs'
 

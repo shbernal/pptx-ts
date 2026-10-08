@@ -1,5 +1,5 @@
 import TsPptx, { ChartType } from '../../../dist/node.js'
-import { defineRegressionSuite, build, readEntry, assert, assertEqual, assertRejects } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert, assertEqual, assertRejects } from '../../helpers.ts'
 
 defineRegressionSuite('Combo chart axes [legacy bug-06]', [
 	{

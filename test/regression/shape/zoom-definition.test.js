@@ -13,7 +13,7 @@ import {
 	selfClosingTags,
 	xmlAttributes,
 	xmlOpeningTags,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 
 // The *definition* side of Insert ▸ Zoom (`gen/define/zoom.ts` + `gen/define/preview-image.ts`),
 // as distinct from `zoom-links.test.js`, which byte-pins the emitter given an already-built

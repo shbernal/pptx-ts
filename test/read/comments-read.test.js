@@ -4,8 +4,8 @@
 // writer emits these via slide.addComment(...), so this is a genuine round-trip.
 
 import { describe, test } from 'vitest'
-import { assertEqual } from '../helpers.js'
-import { authorRead, schemaErrors, validatorInstalled } from './authored.js'
+import { assertEqual } from '../helpers.ts'
+import { authorRead, schemaErrors, validatorInstalled } from './authored.ts'
 
 const EMU_PER_INCH = 914400
 const inchToEmu = (inches) => Math.round(inches * EMU_PER_INCH)

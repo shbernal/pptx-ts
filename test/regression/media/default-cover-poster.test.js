@@ -10,7 +10,7 @@
  * bytes are asserted at the part, not the rel.
  */
 import JSZip from 'jszip'
-import { TsPptx, assert, assertEqual, build, defineRegressionSuite, defined } from '../../helpers.js'
+import { TsPptx, assert, assertEqual, build, defineRegressionSuite, defined } from '../../helpers.ts'
 
 /** Smaller than the play-button artwork (14,484 bytes), far larger than any 1x1 test PNG (69). */
 const POSTER_FLOOR = 5_000

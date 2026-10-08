@@ -20,8 +20,8 @@ import {
 	defined,
 	expectDefined,
 	partBodies,
-} from '../helpers.js'
-import { openFixture, readFixture } from './corpus.js'
+} from '../helpers.ts'
+import { openFixture, readFixture } from './corpus.ts'
 
 const DIAGRAM_URI = 'http://schemas.openxmlformats.org/drawingml/2006/diagram'
 

@@ -8,7 +8,7 @@
  * rows with `fontSize: 24` on each cell paged as 12 slides of 3. Both emitted `sz="2400"`, so the
  * table-level form ran rows off the bottom of every page.
  */
-import { assertEqual, build, defineRegressionSuite, listEntries, readEntry } from '../../helpers.js'
+import { assertEqual, build, defineRegressionSuite, listEntries, readEntry } from '../../helpers.ts'
 
 const POS = { x: 0.5, y: 0.5, w: 4 }
 const TEXT = 'alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu nu xi omicron pi rho sigma'

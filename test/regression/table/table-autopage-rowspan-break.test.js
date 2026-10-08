@@ -12,7 +12,7 @@
  */
 import TsPptx from '../../../dist/node.js'
 import { Presentation } from '../../../dist/read.js'
-import { assert, captureDiagnostics, defineRegressionSuite } from '../../helpers.js'
+import { assert, captureDiagnostics, defineRegressionSuite } from '../../helpers.ts'
 
 const WORDS = Array.from({ length: 40 }, (_unused, i) => `word${i}`).join(' ')
 

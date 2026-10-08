@@ -7,7 +7,7 @@ import {
 	assert,
 	assertEqual,
 	expectDefined,
-} from '../../helpers.js'
+} from '../../helpers.ts'
 import { TableStyle } from '../../../dist/node.js'
 
 // What a table style can and cannot do, and which tier of the styling stack actually paints.

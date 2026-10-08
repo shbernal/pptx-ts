@@ -20,8 +20,8 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, test } from 'vitest'
 
-import { assert, assertEqual } from '../helpers.js'
-import { openFixture } from './corpus.js'
+import { assert, assertEqual } from '../helpers.ts'
+import { openFixture } from './corpus.ts'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 

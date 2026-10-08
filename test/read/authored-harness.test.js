@@ -1,4 +1,4 @@
-// Self-test for the shared write→read fidelity harness (test/read/authored.js).
+// Self-test for the shared write→read fidelity harness (test/read/authored.ts).
 //
 // Proves the author→read→validate plumbing end-to-end against the real dist
 // entries, so the read-side-expansion batches build a feature on top of a
@@ -9,10 +9,10 @@
 
 import { ShapeType } from '../../dist/node.js'
 import { describe, test } from 'vitest'
-import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.js'
-import { assert, assertEqual } from '../helpers.js'
+import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.ts'
+import { assert, assertEqual } from '../helpers.ts'
 
-describe('write→read harness (authored.js)', () => {
+describe('write→read harness (authored.ts)', () => {
 	test('authorRead: a written rect round-trips into the deep read model', async () => {
 		const { presentation, buf } = await authorRead((pres) => {
 			pres.addSlide().addShape(ShapeType.rect, { x: 1, y: 1, w: 3, h: 1, fill: { color: 'CCCCCC' } })

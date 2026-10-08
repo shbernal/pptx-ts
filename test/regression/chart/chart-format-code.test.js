@@ -6,8 +6,8 @@ import {
 	assertIncludes,
 	assertNotIncludes,
 	firstXmlBlock,
-} from '../../helpers.js'
-import { chartXml } from './chart-parts.js'
+} from '../../helpers.ts'
+import { chartXml } from './chart-parts.ts'
 
 // a chart's `dataLabelFormatCode` / `valLabelFormatCode` renders in
 // LibreOffice but is ignored by PowerPoint and Google Slides (e.g. `0.1` shows instead of `10%`).

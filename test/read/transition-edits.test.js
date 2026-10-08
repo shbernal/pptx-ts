@@ -12,7 +12,7 @@
 
 import { describe, test } from 'vitest'
 import { Part, Slide } from '../../dist/read.js'
-import { assert, assertEqual, defined } from '../helpers.js'
+import { assert, assertEqual, defined } from '../helpers.ts'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const SLIDE_CT = 'application/vnd.openxmlformats-officedocument.presentationml.slide+xml'

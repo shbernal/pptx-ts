@@ -134,12 +134,12 @@ export default defineConfig({
 		// overlap between the two groups — taking wall clock down 22-37%. Two smaller wins
 		// come along with it, both from module state that now survives a file boundary:
 		// the validator's batch queue can join requests across files instead of spawning
-		// one .NET validator per file, and corpus.js's `irFor` memo stops being rebuilt
+		// one .NET validator per file, and corpus.ts's `irFor` memo stops being rebuilt
 		// per file.
 		//
 		// What this gives up is a real guarantee, not a formality: isolation is what made
 		// cross-file state leakage impossible rather than merely absent. Two things replace
-		// it. `test/setup-globals.js` resets the one process-global the library owns
+		// it. `test/setup-globals.ts` resets the one process-global the library owns
 		// (`setDiagnosticHandler`) after every test, so the leak channel is closed by
 		// construction. And `sequence.shuffle.files` below means a suite that grows an
 		// order dependence fails on it instead of hiding behind a stable file order.
@@ -157,7 +157,7 @@ export default defineConfig({
 			// nothing.
 			shuffle: { files: true, tests: false },
 		},
-		setupFiles: ['./test/setup-globals.js'],
+		setupFiles: ['./test/setup-globals.ts'],
 		// The schema fixtures are `describe.concurrent` and `test/read` validates
 		// too. This used to be half of a `workers × maxConcurrency` process ceiling:
 		// every concurrent test spawned its own .NET validator process, so this number

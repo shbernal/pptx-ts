@@ -1,7 +1,7 @@
 import { writeFileSync, mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { PNG_1X1, defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { PNG_1X1, defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 // addImage() previously fell back to a 1in x 1in square whenever `w`/`h` were omitted, which
 // squished every dimensionless image into the wrong aspect ratio. For base64

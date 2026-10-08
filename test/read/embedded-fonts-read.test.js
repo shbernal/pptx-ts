@@ -6,8 +6,8 @@
 
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual } from '../helpers.js'
-import { openFixture } from './corpus.js'
+import { assert, assertEqual } from '../helpers.ts'
+import { openFixture } from './corpus.ts'
 
 describe('Presentation.embeddedFonts', () => {
 	test('enumerates the embedded typeface and resolves each face to its font part', async () => {

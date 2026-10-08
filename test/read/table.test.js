@@ -8,9 +8,9 @@
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { bytesEqual, assert, assertEqual, partBodies, assertUnchangedExcept } from '../helpers.js'
-import { validateBuf, validatorInstalled } from '../validator.js'
-import { fixturePath, openFixture } from './corpus.js'
+import { bytesEqual, assert, assertEqual, partBodies, assertUnchangedExcept } from '../helpers.ts'
+import { validateBuf, validatorInstalled } from '../validator.ts'
+import { fixturePath, openFixture } from './corpus.ts'
 
 /** First table on any slide of the fixture. */
 function firstTable(presentation) {

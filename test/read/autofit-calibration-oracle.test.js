@@ -8,7 +8,7 @@
 // recorded from them.
 //
 // Proprietary fonts (Aptos/Calibri/Tahoma/Arial) cannot be committed, so the faces come
-// from `font-oracle.js`: the genuine installed file where the machine has one, and the
+// from `font-oracle.ts`: the genuine installed file where the machine has one, and the
 // committed metrics sidecar otherwise. Under `FONT_ORACLES=required` a face that resolves
 // through neither is a failure rather than a skip, which is what CI sets.
 import { readFileSync } from 'node:fs'
@@ -16,8 +16,8 @@ import { resolve } from 'node:path'
 import { describe, test, expect } from 'vitest'
 import { solveShrink, solveResize } from '../../src/measure/text-fit.ts'
 import { FontMetricsRegistry } from '../../src/measure/font-metrics.ts'
-import { oracleMetrics, resolutionTally } from './font-oracle.js'
-import { FIXTURES } from './corpus.js'
+import { oracleMetrics, resolutionTally } from './font-oracle.ts'
+import { FIXTURES } from './corpus.ts'
 
 const EMU_PER_PT = 12700
 

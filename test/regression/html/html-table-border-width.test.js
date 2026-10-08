@@ -1,5 +1,5 @@
 import { describe, test } from 'vitest'
-import { assert } from '../../helpers.js'
+import { assert } from '../../helpers.ts'
 import { htmlBorderToProps } from '../../../src/gen/table/html-dom.ts'
 
 // Two properties of the HTML-table border read, and they pull against each other.

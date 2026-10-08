@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert, captureDiagnostics } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert, captureDiagnostics } from '../../helpers.ts'
 
 // Acceptance: when a table is sized with `w` (or nothing) but no explicit `colW`,
 // the emitted <a:gridCol w=…> must be the table width split evenly in EMU — not the

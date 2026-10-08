@@ -11,8 +11,8 @@
 
 import { ChartType } from '../../dist/node.js'
 import { describe, test } from 'vitest'
-import { authorRead, firstChartEx, firstShape, schemaErrors, validatorInstalled } from './authored.js'
-import { assert, assertEqual } from '../helpers.js'
+import { authorRead, firstChartEx, firstShape, schemaErrors, validatorInstalled } from './authored.ts'
+import { assert, assertEqual } from '../helpers.ts'
 
 describe('ChartEx — write→read fidelity', () => {
 	test('a chartEx frame is surfaced through its mc:AlternateContent wrapper', async () => {

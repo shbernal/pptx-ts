@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, captureDiagnostics, assert, assertEqual } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, captureDiagnostics, assert, assertEqual } from '../../helpers.ts'
 
 // `BorderProps.dashType` -> `a:prstDash/@val` on a table cell border and on a custom
 // table-style region.

@@ -7,7 +7,7 @@
 // an undeclared part has no content type, and an Override for a part nobody wrote dangles.
 // Nothing compared them, so the whole class was invisible to a suite of 3,900 tests.
 
-import { defineRegressionSuite, build, readEntry, listEntries, assert, assertEqual } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, listEntries, assert, assertEqual } from '../../helpers.ts'
 import { ChartType } from '../../../dist/node.js'
 
 const PNG_DATA =

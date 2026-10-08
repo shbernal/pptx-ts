@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, test } from 'vitest'
 import TsPptx from '../dist/node.js'
-import { isInstalled, validateBuf } from './validator.js'
-import cases from './schema-cases.js'
+import { isInstalled, validateBuf } from './validator.ts'
+import cases from './schema-cases.ts'
 
 // Most fixtures run concurrently (see `describe.concurrent` below). Validate one
 // minimal deck serially first: the oracle is a .NET single-file app whose first
@@ -35,7 +35,7 @@ beforeAll(async () => {
  * makes it such an expensive failure to read.
  *
  * It is a race, so it was always latent — it surfaced when validator batching
- * (test/validator.js) changed how fixtures interleave, not because batching broke
+ * (test/validator.ts) changed how fixtures interleave, not because batching broke
  * anything. Routing these to a sequential block is the fix that matches the cause:
  * a fixture that needs exclusive access to a global must not share the process.
  *
@@ -76,7 +76,7 @@ const exclusiveCases = cases.filter(needsExclusiveProcess)
 describe('TsPptx schema validation fixtures (quarantine)', { concurrent: false }, () => {
 	test('every fixture that captures console.warn is marked exclusive', () => {
 		const unmarked = concurrentCases.filter((c) => WARN_CAPTURE.test(String(c.fn))).map((c) => c.name)
-		const hint = `add \`exclusive: true\` to these fixtures in test/schema-cases.js:\n  ${unmarked.join('\n  ')}`
+		const hint = `add \`exclusive: true\` to these fixtures in test/schema-cases.ts:\n  ${unmarked.join('\n  ')}`
 		expect(unmarked, hint).toEqual([])
 	})
 })

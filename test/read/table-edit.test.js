@@ -17,8 +17,8 @@ import { describe, test } from 'vitest'
 import TsPptx from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
 import JSZip from 'jszip'
-import { firstTable } from './authored.js'
-import { assert, assertEqual, defined, readEntry, caughtSync } from '../helpers.js'
+import { firstTable } from './authored.ts'
+import { assert, assertEqual, defined, readEntry, caughtSync } from '../helpers.ts'
 
 /** Author a deck, load it for editing, and return the presentation plus its first table. */
 async function editable(build) {

@@ -17,8 +17,8 @@ import path from 'node:path'
 import JSZip from 'jszip'
 import { describe, test, expect, beforeAll } from 'vitest'
 import TsPptx from '../../../dist/node.js'
-import { FIXTURES } from '../../read/corpus.js'
-import { readEntry } from '../../helpers.js'
+import { FIXTURES } from '../../read/corpus.ts'
+import { readEntry } from '../../helpers.ts'
 
 /** A vertical tab: legal in a JavaScript string, forbidden in XML 1.0 in any spelling. */
 const VERTICAL_TAB = String.fromCharCode(11)

@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 // Regression: borders (and fill) configured on a colspan/rowspan table cell must
 // render across the whole merged region. PowerPoint defines a merged region's

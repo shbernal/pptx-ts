@@ -12,7 +12,7 @@
  * identical and `autoPageSlideStartY` equals `y`, so every page has the same usable height and the
  * same header; a full continuation page therefore holds exactly as many body rows as the first.
  */
-import { assert, assertEqual, build, defineRegressionSuite, listEntries, readEntry } from '../../helpers.js'
+import { assert, assertEqual, build, defineRegressionSuite, listEntries, readEntry } from '../../helpers.ts'
 
 const LONG = 'a header label long enough to wrap onto several lines in a narrow column'
 

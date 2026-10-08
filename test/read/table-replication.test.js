@@ -12,8 +12,8 @@ import TsPptx, { TableStyle } from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
 import { readModelToIr } from '../../dist/script.js'
 import JSZip from 'jszip'
-import { authorRead, authorReadWithFixtureStyles, firstTable } from './authored.js'
-import { assert, assertEqual, defined } from '../helpers.js'
+import { authorRead, authorReadWithFixtureStyles, firstTable } from './authored.ts'
+import { assert, assertEqual, defined } from '../helpers.ts'
 
 /** The IR's single `addTable` call, or a failing assertion. */
 function tableCall(ir) {

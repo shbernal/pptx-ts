@@ -3,11 +3,11 @@
 // set, same emission order, and byte-identical per part. `toParts` is the public seam over
 // the assembly pipeline, so a drift between it and `write()` (a part only one path emits, a
 // reordering, a byte difference) would be a silent contract break. JSZip reads the `write()`
-// output back as an independent oracle (the write path zips with fflate), mirroring helpers.js.
+// output back as an independent oracle (the write path zips with fflate), mirroring helpers.ts.
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import TsPptx from '../../../dist/node.js'
-import { assert } from '../../helpers.js'
+import { assert } from '../../helpers.ts'
 
 /** Author an identical text-only deck each call so two builds differ only in core.xml timestamps. */
 function makePres() {

@@ -12,8 +12,8 @@
 import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import { Presentation } from '../../dist/read.js'
-import { authorRead, firstTable, schemaErrors, validatorInstalled } from './authored.js'
-import { assert, assertEqual, defined, readEntry } from '../helpers.js'
+import { authorRead, firstTable, schemaErrors, validatorInstalled } from './authored.ts'
+import { assert, assertEqual, defined, readEntry } from '../helpers.ts'
 
 /** A one-cell table carrying every new `a:tcPr` construct at once. */
 function decoratedTable(pres) {
