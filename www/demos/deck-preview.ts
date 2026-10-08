@@ -10,7 +10,8 @@
  * copies.
  */
 import { importDeck, renderDeck } from 'pptx-html'
-import { build, compose, showcase } from 'ts-pptx-demos-showcases/quarterly-review'
+import type TsPptx from 'pptx-ts'
+import { showcase as quarterlyReview } from 'ts-pptx-demos-showcases/quarterly-review'
 
 /**
  * One entry from `pptx-html`'s fidelity ledger, flattened for display.
@@ -48,24 +49,49 @@ export interface DeckPreview {
 	fidelity: FidelityRow[]
 }
 
-/** The deck this page previews, for the page's own headings and file name. */
-export const DECK = showcase
+/**
+ * A deck the page can preview and build: what to call it, and how to assemble it.
+ *
+ * The showcase modules export this shape as their `showcase` value, so a showcase is a
+ * source as it stands. Nothing here names a particular deck except {@link SHOWCASES}.
+ */
+export interface DeckSource {
+	slug: string
+	title: string
+	description: string
+	fileName: string
+	/** Assemble the deck and return the presentation, having written nothing. */
+	compose(): Promise<TsPptx>
+}
 
-/** Assemble the showcase deck and return the package bytes. Nothing is written. */
-export async function buildDeckBytes(): Promise<Uint8Array> {
-	const pptx = await compose()
+/** The decks the site can preview, by slug. */
+export const SHOWCASES: Readonly<Record<string, DeckSource>> = {
+	[quarterlyReview.slug]: quarterlyReview,
+}
+
+/** The showcase registered under `slug`, or a throw naming the ones that are. */
+export function showcaseSource(slug: string): DeckSource {
+	const source = SHOWCASES[slug]
+	if (!source) throw new Error(`unknown showcase "${slug}"; known: ${Object.keys(SHOWCASES).join(', ')}`)
+	return source
+}
+
+/** Assemble a deck and return the package bytes. Nothing is written. */
+export async function buildDeckBytes(source: DeckSource): Promise<Uint8Array> {
+	const pptx = await source.compose()
 	return await pptx.toBytes()
 }
 
 /**
- * Build the deck straight to the visitor's downloads.
+ * Build a deck straight to the visitor's downloads.
  *
  * Deliberately *not* `buildDeckBytes` plus a hand-rolled anchor: `writeFile` on the
  * browser runtime is the object-URL `<a download>` path, and routing the button through
  * it is what keeps that path exercised by something other than a human with a tab open.
  */
-export async function downloadDeck(): Promise<void> {
-	await build(DECK.fileName)
+export async function downloadDeck(source: DeckSource): Promise<void> {
+	const pptx = await source.compose()
+	await pptx.writeFile({ fileName: source.fileName })
 }
 
 /**

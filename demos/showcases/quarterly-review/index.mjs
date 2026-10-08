@@ -760,5 +760,6 @@ export const showcase = {
 	title: 'Kestrel Q3 FY26 Business Review',
 	description: 'Corporate flagship: themed masters, KPI cards, charts, a styled table, and speaker notes.',
 	fileName: 'Kestrel_Q3_Business_Review.pptx',
+	compose,
 	build,
 }

@@ -712,5 +712,6 @@ export const showcase = {
 	description:
 		'Visual flagship: full-bleed photography, gradient scrims, duotone, an embedded video, an embedded 3D model, hyperlinks.',
 	fileName: 'Field_Notes_Four_Cities.pptx',
+	compose,
 	build,
 }

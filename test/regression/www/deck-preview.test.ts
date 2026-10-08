@@ -1,7 +1,15 @@
 import { Window } from 'happy-dom'
 import { describe, expect, it } from 'vitest'
 import { defined, at, take } from '../../helpers.ts'
-import { counted, slideList, splitDeck, summarizeNotes, type FidelityRow } from '../../../www/demos/deck-preview.ts'
+import {
+	counted,
+	SHOWCASES,
+	showcaseSource,
+	slideList,
+	splitDeck,
+	summarizeNotes,
+	type FidelityRow,
+} from '../../../www/demos/deck-preview.ts'
 
 /**
  * The demos page's pure helpers.
@@ -162,5 +170,23 @@ describe('splitDeck', () => {
 		expect(defined(doc.querySelector('p')).getAttribute('style')).toBe('margin:0;line-height:1.2')
 		expect(doc.querySelector('[contenteditable]')).toBeNull()
 		expect(defined(doc.querySelector('image')).getAttribute('href')).toBe('data:image/png;base64,iVBORw0K')
+	})
+})
+
+describe('showcaseSource', () => {
+	it('finds a registered deck by its slug', () => {
+		const source = showcaseSource('quarterly-review')
+
+		expect(source.slug).toBe('quarterly-review')
+		expect(source.fileName).toMatch(/\.pptx$/)
+		expect(typeof source.compose).toBe('function')
+	})
+
+	it('keys every deck by its own slug', () => {
+		for (const [slug, source] of Object.entries(SHOWCASES)) expect(source.slug).toBe(slug)
+	})
+
+	it('names the known slugs when asked for one that is not registered', () => {
+		expect(() => showcaseSource('no-such-deck')).toThrow(/unknown showcase "no-such-deck"; known: quarterly-review/)
 	})
 })

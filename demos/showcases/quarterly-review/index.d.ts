@@ -26,5 +26,6 @@ export const showcase: {
 	title: string
 	description: string
 	fileName: string
+	compose: typeof compose
 	build: typeof build
 }

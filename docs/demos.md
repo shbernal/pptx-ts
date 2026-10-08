@@ -22,7 +22,7 @@ each slide as SVG.
 That round trip is the point. A screenshot would prove nothing about the package, but this
 preview can only appear if the bytes are a deck a reader can open.
 
-<DeckPreview />
+<DeckPreview slug="quarterly-review" />
 
 ## What you are looking at
 

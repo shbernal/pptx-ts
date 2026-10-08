@@ -3,14 +3,19 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import {
 	buildDeckBytes,
 	counted,
-	DECK,
 	downloadDeck,
 	failureMessage,
 	previewDeck,
+	showcaseSource,
 	slideList,
 	summarizeNotes,
 } from './deck-preview.ts'
 import SlideFrame from './SlideFrame.vue'
+
+// Which deck to show, by its slug in `SHOWCASES`. An unknown slug throws here, while the
+// site is pre-rendered, rather than painting an empty viewer.
+const props = defineProps({ slug: { type: String, required: true } })
+const source = computed(() => showcaseSource(props.slug))
 
 // `preview` runs on mount; `download` runs on the button. Two states rather than one
 // because either can fail on its own, and a failed render must not be reported as a
@@ -39,7 +44,7 @@ const aspect = computed(() => ({ '--deck-aspect': String(deck.value?.aspectRatio
 async function render() {
 	preview.value = { status: 'rendering', deck: null, error: '' }
 	try {
-		const built = await previewDeck(await buildDeckBytes())
+		const built = await previewDeck(await buildDeckBytes(source.value))
 		slide.value = 1
 		preview.value = { status: 'ready', deck: built, error: '' }
 	} catch (error) {
@@ -50,7 +55,7 @@ async function render() {
 async function saveDeck() {
 	download.value = { status: 'saving', error: '' }
 	try {
-		await downloadDeck()
+		await downloadDeck(source.value)
 		download.value = { status: 'saved', error: '' }
 	} catch (error) {
 		download.value = { status: 'failed', error: failureMessage(error) }
@@ -122,8 +127,8 @@ onBeforeUnmount(() => document.removeEventListener('fullscreenchange', onFullscr
 					<span class="deck-viewer__live" aria-hidden="true" />
 					Built in this tab
 				</p>
-				<h2 class="deck-viewer__title">{{ DECK.title }}</h2>
-				<p class="deck-viewer__blurb">{{ DECK.description }}</p>
+				<h2 class="deck-viewer__title">{{ source.title }}</h2>
+				<p class="deck-viewer__blurb">{{ source.description }}</p>
 			</div>
 			<div role="group" aria-label="Download" class="deck-viewer__download">
 				<button type="button" class="deck-viewer__build" :disabled="!ready || download.status === 'saving'" @click="saveDeck">
@@ -133,12 +138,12 @@ onBeforeUnmount(() => document.removeEventListener('fullscreenchange', onFullscr
 					{{ download.status === 'saving' ? 'Building…' : 'Build the .pptx' }}
 				</button>
 				<p v-if="download.status === 'saved'" role="status" class="deck-viewer__note">
-					Built <code>{{ DECK.fileName }}</code>. Check your downloads.
+					Built <code>{{ source.fileName }}</code>. Check your downloads.
 				</p>
 				<p v-else-if="download.status === 'failed'" role="alert" class="deck-viewer__note deck-viewer__note--bad">
 					{{ download.error }}
 				</p>
-				<p v-else class="deck-viewer__note">{{ DECK.fileName }}</p>
+				<p v-else class="deck-viewer__note">{{ source.fileName }}</p>
 			</div>
 		</header>
 
