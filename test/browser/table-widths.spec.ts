@@ -4,7 +4,15 @@ import type { Page } from '@playwright/test'
 import { explodePackage } from '../../scripts/pptx-parts.mjs'
 import { ROOT } from '../../scripts/script-utils.mjs'
 import { expect, test } from './fixtures.ts'
-import { built, buildTableInHarness, buildTableInNode, openTableHarness, packageBytes, tableBases } from './helpers.ts'
+import {
+	built,
+	buildTableInHarness,
+	buildTableInNode,
+	openTableHarness,
+	packageBytes,
+	tableBases,
+	at,
+} from './helpers.ts'
 
 /**
  * `tableToSlides` against a table a browser actually laid out.
@@ -36,7 +44,7 @@ const OUT_ROOT = path.join(ROOT, '.tmp', 'browser-table')
 const ONE_IN_EMU = 914400
 
 /** Proportions relative to the first column — the only thing a basis determines. */
-const ratios = (widths: number[]): number[] => widths.map((width) => width / widths[0])
+const ratios = (widths: number[]): number[] => widths.map((width) => width / at(widths, 0))
 
 /** `<a:gridCol w="…"/>`, in column order. The same read the Node table suites make. */
 const gridColWidths = (xml: string): number[] =>
@@ -83,8 +91,8 @@ test('the measured fixture discriminates: offsetWidth and computed CSS disagree 
 	const cssPx = css.map((value) => Number(String(value).replace('px', '')))
 	expect(cssPx.every(Number.isFinite), `computed widths are not px: ${css.join(', ')}`).toBe(true)
 
-	const measuredRatio = ratios(measured)[1]
-	const cssRatio = ratios(cssPx)[1]
+	const measuredRatio = at(ratios(measured), 1)
+	const cssRatio = at(ratios(cssPx), 1)
 	expect(
 		Math.abs(measuredRatio - cssRatio),
 		`the two bases have converged (measured ${measured.join(':')}, css ${css.join(':')}) — ` +
@@ -101,16 +109,16 @@ test('the rendered offsetWidth is what sizes the columns, not the computed CSS w
 
 	// The proportional calc rounds to 2dp of an inch before converting to EMU, so a
 	// percentage-point of tolerance is the rounding, not slack in the claim.
-	const emitted = ratios(cols)[1]
+	const emitted = at(ratios(cols), 1)
 	expect(
-		Math.abs(emitted - ratios(measured)[1]),
+		Math.abs(emitted - at(ratios(measured), 1)),
 		`emitted ${cols.join(':')} does not follow the measured basis ${measured.join(':')}`
 	).toBeLessThan(0.01)
 
 	// Stated as its own assertion rather than left implied by the one above: this is the
 	// half that fails if `pickColWidthBasis` ever silently prefers the CSS arm.
 	expect(
-		Math.abs(emitted - ratios(cssPx)[1]),
+		Math.abs(emitted - at(ratios(cssPx), 1)),
 		`emitted ${cols.join(':')} followed the CSS basis ${cssPx.join(':')} — the measured arm did not run`
 	).toBeGreaterThan(0.1)
 })
@@ -124,7 +132,10 @@ test('data-pptx-width still wins outright against a live measurement', async ({ 
 	// downstream rescales it. The Node suite proves this against a basis of zeroes, which is
 	// the easy half — here it has a real 1:3 measurement to override.
 	expect(cols[0], `expected exactly 4in; got ${cols[0]} EMU`).toBe(4 * ONE_IN_EMU)
-	expect(measured[1] / measured[0], 'the fixture should measure column B three times column A').toBeCloseTo(3, 1)
+	expect(at(measured, 1) / at(measured, 0), 'the fixture should measure column B three times column A').toBeCloseTo(
+		3,
+		1
+	)
 	// And the un-overridden column still came from the measurement rather than inheriting
 	// the override.
 	expect(cols[1]).not.toBe(cols[0])

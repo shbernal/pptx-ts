@@ -225,7 +225,7 @@ export async function buildTableInNode(scenario: string): Promise<string> {
 	const { TABLE_HTML, TABLE_ID } = await import('./harness/table-fixture.mjs')
 
 	const win = new Window()
-	win.document.body.innerHTML = TABLE_HTML[scenario]
+	win.document.body.innerHTML = defined(TABLE_HTML[scenario], `unknown table fixture: ${scenario}`)
 	const pres = new TsPptx()
 	const table = win.document.getElementById(TABLE_ID)
 	if (!table) throw new Error(`fixture "${scenario}" rendered no #${TABLE_ID}`)

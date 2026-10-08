@@ -85,8 +85,10 @@ async function build(name, options = {}) {
  * @returns {Promise<string>} the file name `writeFile` reports
  */
 async function download(name) {
+	const deck = DECKS[name]
+	if (!deck) throw new Error(`unknown harness deck: ${name}`)
 	const pres = new TsPptx()
-	await DECKS[name](pres, ASSETS)
+	await deck(pres, ASSETS)
 	return await pres.writeFile({ fileName: 'harness.pptx' })
 }
 

@@ -55,7 +55,9 @@ function render(scenario) {
  */
 function bases(scenario) {
 	const table = render(scenario)
-	const cells = [...table.rows[0].cells]
+	const row = table.rows[0]
+	if (!row) throw new Error(`fixture "${scenario}" rendered a table with no rows`)
+	const cells = [...row.cells]
 	return {
 		measured: cells.map((cell) => cell.offsetWidth),
 		css: cells.map((cell) => getComputedStyle(cell).getPropertyValue('width')),

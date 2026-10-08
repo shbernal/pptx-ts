@@ -13,6 +13,7 @@ import {
 	NODE_ASSETS,
 	openHarness,
 	packageBytes,
+	at,
 } from './helpers.ts'
 
 /**
@@ -71,7 +72,7 @@ test('loadMedia: a raster image fetched in the browser lands as the same bytes N
 	// the embedded part against the source bytes so the test cannot pass on two identical
 	// wrong answers.
 	expect(mediaParts(browserDir)).toHaveLength(1)
-	const embedded = fs.readFileSync(path.join(browserDir, mediaParts(browserDir)[0]))
+	const embedded = fs.readFileSync(path.join(browserDir, at(mediaParts(browserDir), 0)))
 	expect(embedded.equals(fs.readFileSync(NODE_ASSETS.png))).toBe(true)
 })
 

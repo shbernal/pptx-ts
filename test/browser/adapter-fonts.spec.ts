@@ -11,6 +11,7 @@ import {
 	NODE_ASSETS,
 	openHarness,
 	packageBytes,
+	at,
 } from './helpers.ts'
 
 /**
@@ -51,7 +52,7 @@ test('loadFontData: a font fetched over HTTP measures and embeds exactly as one 
 	// the font file, and only the second rules out two identical wrong answers.
 	const fontParts = listParts(browserDir).filter((part) => part.startsWith('ppt/fonts/'))
 	expect(fontParts).toHaveLength(1)
-	expect(fs.readFileSync(path.join(browserDir, fontParts[0])).equals(fs.readFileSync(NODE_ASSETS.font))).toBe(true)
+	expect(fs.readFileSync(path.join(browserDir, at(fontParts, 0))).equals(fs.readFileSync(NODE_ASSETS.font))).toBe(true)
 
 	// And the metrics were actually consulted: `fit:'shrink'` bakes a real scale only when
 	// a registered face could measure the text. Without it the emitter falls back to a bare

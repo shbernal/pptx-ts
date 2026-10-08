@@ -5,7 +5,7 @@ import { explodePackage } from '../../scripts/pptx-parts.mjs'
 import { ROOT } from '../../scripts/script-utils.mjs'
 import { AUTOPAGE_ROWS } from './harness/table-fixture.mjs'
 import { expect, test } from './fixtures.ts'
-import { built, buildTableInHarness, buildTableInNode, openTableHarness, packageBytes } from './helpers.ts'
+import { built, buildTableInHarness, buildTableInNode, openTableHarness, packageBytes, at } from './helpers.ts'
 
 /**
  * The headless-browser `tableToSlides` auto-paging repro — upstream gitbrent/PptxGenJS#1200.
@@ -54,7 +54,7 @@ const rowsPerSlide = (dir: string): number[] => slideParts(dir).map((xml) => (xm
 /** Every `R<n>` key cell, in emission order across the whole deck. */
 const keyCells = (dir: string): string[] =>
 	slideParts(dir)
-		.flatMap((xml) => [...xml.matchAll(/<a:t>([^<]*)<\/a:t>/g)].map((match) => match[1]))
+		.flatMap((xml) => [...xml.matchAll(/<a:t>([^<]*)<\/a:t>/g)].map((match) => at(match, 1)))
 		.filter((text) => /^R\d+$/.test(text))
 
 async function explodeBrowserBuild(page: Page): Promise<string> {
