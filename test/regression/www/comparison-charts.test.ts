@@ -12,6 +12,8 @@ import {
 	timingRatios,
 	validitySegments,
 	validitySummary,
+	type SnapshotInput,
+	type ValidityBar,
 } from '../../../www/comparison/comparison.ts'
 
 /**
@@ -23,11 +25,14 @@ import {
  * same way, in the table the page prints under it.
  */
 
-const read = (relative) => JSON.parse(readFileSync(new URL(relative, import.meta.url), 'utf8'))
-const snapshot = read('../../../scripts/comparison/snapshot.json')
-const labels = read('../../../scripts/comparison/groups.json')
+/** The committed snapshot carries timing cases; `SnapshotInput` only says it may. */
+type Snapshot = SnapshotInput & { timing: { cases: NonNullable<NonNullable<SnapshotInput['timing']>['cases']> } }
+
+const read = (relative: string): unknown => JSON.parse(readFileSync(new URL(relative, import.meta.url), 'utf8'))
+const snapshot = read('../../../scripts/comparison/snapshot.json') as Snapshot
+const labels = read('../../../scripts/comparison/groups.json') as Record<string, string>
 const data = shapeComparison(snapshot, labels)
-const SUBJECTS = ['ts-pptx', 'pptxgenjs']
+const SUBJECTS = ['ts-pptx', 'pptxgenjs'] as const
 
 describe('coverage matrix', () => {
 	it('keeps every intent, in snapshot order, under the labels the tables use', () => {
@@ -62,8 +67,7 @@ describe('validity bars', () => {
 	})
 
 	it('leaves out an empty segment and names what the bar holds', () => {
-		/** @type {import('../../../www/comparison/comparison.ts').ValidityBar} */
-		const bar = { subject: 'ts-pptx', clean: 21, withErrors: 0, notBuilt: 1, total: 22 }
+		const bar: ValidityBar = { subject: 'ts-pptx', clean: 21, withErrors: 0, notBuilt: 1, total: 22 }
 		expect(validitySegments(bar).map((segment) => segment.key)).toEqual(['clean', 'none'])
 		expect(validitySummary(bar)).toBe(
 			'ts-pptx: 21 decks with no schema error, 0 with errors, and 1 of 22 intents with no deck'

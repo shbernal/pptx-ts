@@ -1,7 +1,7 @@
 import { Window } from 'happy-dom'
 import { describe, expect, it } from 'vitest'
 import { defined } from '../../helpers.ts'
-import { counted, slideList, splitDeck, summarizeNotes } from '../../../www/demos/deck-preview.ts'
+import { counted, slideList, splitDeck, summarizeNotes, type FidelityRow } from '../../../www/demos/deck-preview.ts'
 
 /**
  * The demos page's pure helpers.
@@ -13,7 +13,13 @@ import { counted, slideList, splitDeck, summarizeNotes } from '../../../www/demo
  */
 
 /** One fidelity row, with only the fields the helpers read. */
-function note(slide, construct, disposition = 'dropped', cause = 'unread', detail = 'because') {
+function note(
+	slide: number,
+	construct: string,
+	disposition = 'dropped',
+	cause = 'unread',
+	detail = 'because'
+): FidelityRow {
 	return { slide, construct, disposition, cause, detail }
 }
 
@@ -92,7 +98,7 @@ describe('counted', () => {
 
 /** A rendered deck document in the renderer's shape, cut down to what `splitDeck` reads. */
 function renderedDeck() {
-	const slide = (number, body) =>
+	const slide = (number: number, body: string) =>
 		`<section class="pxh-slide" data-pxh-slide="${number}">` +
 		`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12192000 6858000">${body}</svg></section>`
 	const html = `<!doctype html><html><head><style>.pxh-text { font-family: Calibri }</style></head><body>
@@ -117,7 +123,7 @@ function renderedDeck() {
 	const window = new Window()
 	window.document.write(html)
 	// happy-dom's `Document` is not the DOM lib's, though it has every member `splitDeck` reads.
-	return /** @type {Document} */ (/** @type {unknown} */ (window.document))
+	return window.document as unknown as Document
 }
 
 describe('splitDeck', () => {

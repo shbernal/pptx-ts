@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url'
-import { createMarkdownRenderer } from 'vitepress'
+import { createMarkdownRenderer, type MarkdownRenderer } from 'vitepress'
 import { beforeAll, describe, expect, it } from 'vitest'
 import siteConfig from '../../../docs/.vitepress/config.mts'
 import { decodeGraph, MERMAID_COMPONENT } from '../../../www/diagrams/fence.ts'
@@ -15,19 +15,14 @@ import { decodeGraph, MERMAID_COMPONENT } from '../../../www/diagrams/fence.ts'
 
 const docsDir = fileURLToPath(new URL('../../../docs/', import.meta.url))
 
-/** @type {import('vitepress').MarkdownRenderer} */
-let md
+let md: MarkdownRenderer
 
 beforeAll(async () => {
 	md = await createMarkdownRenderer(docsDir, siteConfig.markdown, '/')
 })
 
-/**
- * The encoded `graph` attribute of the diagram component in `html`.
- * @param {string} html
- * @returns {string}
- */
-function graphAttribute(html) {
+/** The encoded `graph` attribute of the diagram component in `html`. */
+function graphAttribute(html: string): string {
 	const match = html.match(new RegExp(`<${MERMAID_COMPONENT} graph="([^"]*)" />`))
 	if (!match) throw new Error(`no <${MERMAID_COMPONENT}> in: ${html}`)
 	return match[1]
