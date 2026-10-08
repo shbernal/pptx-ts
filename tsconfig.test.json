@@ -10,28 +10,20 @@
 		"allowImportingTsExtensions": true,
 		"incremental": true,
 		"tsBuildInfoFile": ".tmp/tsconfig.test.tsbuildinfo",
-		// The test suite is plain untyped ESM (`.js`/`.mjs`) run through Vitest.
-		// Relax the strictness that only makes sense for annotated `.ts` sources and
-		// would otherwise force ceremony on tests that operate on known fixtures:
-		// implicit `any` params/vars, index-signature property access, unused
-		// locals/params (tests routinely bind for clarity or destructure a subset),
-		// unchecked index access and null-safety (a test knows its fixture has the
-		// shape it asserts), and `unknown` catch variables (an assert-on-throw test
-		// controls what it throws). What stays on is the high-value signal: property
-		// existence, argument assignability, and object-literal shape against the
-		// package's public types — the checks that catch real API drift, e.g. a test
-		// calling a renamed/removed method or passing an option that no longer exists.
+		// The test suite is plain ESM (`.js`/`.mjs`) run through Vitest, checked against the
+		// package's public types. Null-safety is on, `exactOptionalPropertyTypes` with it, as in
+		// `src/`: a test narrows a nullable read with `expectDefined`/`defined` from
+		// `test/helpers.js`, which fail as an assertion rather than a later `TypeError`.
+		//
+		// What stays relaxed is the strictness that only pays for annotated `.ts` sources:
+		// implicit `any` params/vars, index-signature property access, unused locals/params
+		// (tests routinely bind for clarity or destructure a subset), unchecked index access, and
+		// `unknown` catch variables (an assert-on-throw test controls what it throws).
 		"noImplicitAny": false,
 		"noPropertyAccessFromIndexSignature": false,
 		"noUnusedLocals": false,
 		"noUnusedParameters": false,
 		"noUncheckedIndexedAccess": false,
-		"strictNullChecks": false,
-		// Off because it cannot be on: TypeScript rejects `exactOptionalPropertyTypes` without
-		// `strictNullChecks`, which the line above turns off. It would have nothing to say here
-		// anyway — the distinction it draws is between an absent key and one holding `undefined`,
-		// and without null-safety `undefined` is assignable everywhere regardless.
-		"exactOptionalPropertyTypes": false,
 		"useUnknownInCatchVariables": false
 	},
 	"include": ["test/**/*.js", "test/**/*.mjs"],

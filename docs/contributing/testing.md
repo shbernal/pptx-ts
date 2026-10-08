@@ -288,7 +288,12 @@ installs is process-global and assumes the cases in a file run serially.
 Prefer public API deck generation plus focused package and XML assertions:
 
 - Use `build()` to create a presentation and inspect the generated package.
-- Use `readEntry()` for one package part, such as `ppt/slides/slide1.xml`.
+- Use `readEntry()` for one package part, such as `ppt/slides/slide1.xml`. It throws when the
+  part is absent.
+- Narrow a nullable value with `expectDefined(x)`, or `defined(x)` inside an expression. The test
+  project typechecks with `strictNullChecks`, and both helpers fail as an assertion where a bare
+  dereference would fail as a `TypeError`. A Playwright spec imports `defined` from
+  `test/browser/helpers.mjs` instead, since `test/helpers.js` asserts through Vitest.
 - Use `assertContentTypeDefault()`, `assertContentTypeOverride()`, `assertXmlOrder()` and
   `assertNonVisualDrawingProperty()` when they match the behaviour under test.
 - Keep a raw XML substring or regex assertion local and narrow when a helper would hide the

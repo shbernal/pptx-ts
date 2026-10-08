@@ -181,8 +181,9 @@ subchart supplied an override the schema rejects, and the chart-level value is o
 for. `resolveSubchartOptions` applies that distinction at the merge and drops what is left, so the
 plot builders still receive an ordinary bag.
 
-`tsconfig.test.json` sets the flag `false`, because TypeScript rejects it without
-`strictNullChecks` and the test project turns that off (see the comment there).
+The test project inherits the flag, and `strictNullChecks` with it, from `tsconfig.base.json`. A
+test narrows a nullable read with `expectDefined` or `defined` from `test/helpers.js` rather than
+a `!` or a cast.
 
 ## Lint policy
 

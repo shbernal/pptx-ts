@@ -30,6 +30,13 @@ async function build(buildFn) {
 	return { pres, zip, buf }
 }
 
+/**
+ * One package part as a string, throwing when the part is absent.
+ *
+ * @param {JSZip} zip
+ * @param {string} path the part's zip path, e.g. `ppt/slides/slide1.xml`
+ * @returns {Promise<string>}
+ */
 async function readEntry(zip, path) {
 	const entry = zip.file(path)
 	if (!entry) throw new Error('zip entry not found: ' + path)
