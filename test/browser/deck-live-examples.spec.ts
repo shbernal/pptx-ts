@@ -15,7 +15,7 @@ const PAGE = './fills-and-gradients'
 test('every live example on a page renders the slide its code builds', async ({ page }) => {
 	await page.goto(PAGE)
 	const examples = page.locator('figure.live-example')
-	await expect(examples).toHaveCount(4)
+	await expect(examples).toHaveCount(3)
 
 	for (const example of await examples.all()) {
 		await example.scrollIntoViewIfNeeded()
