@@ -7,7 +7,7 @@ import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { JobError, MAX_TIMEOUT_MS, validateJob } from '../../scripts/powerpoint/job.mjs'
 import { createRunner } from '../../scripts/powerpoint/runner.mjs'
-import { parsePowerPointVersion } from '../../scripts/powerpoint/windows.mjs'
+import { parsePowerPointVersion, parseRegValue } from '../../scripts/powerpoint/windows.mjs'
 import { WORKER_VERSION, createWorker, tokenMatches } from '../../scripts/powerpoint/worker.mjs'
 
 const b64 = (text) => Buffer.from(text).toString('base64')
@@ -178,6 +178,21 @@ describe('parsePowerPointVersion', () => {
 	})
 })
 
+describe('parseRegValue', () => {
+	const OUTPUT = [
+		'',
+		'HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Office\\ClickToRun\\Configuration',
+		'    VersionToReport    REG_SZ    16.0.19127.20264',
+		'',
+	].join('\r\n')
+
+	test('reads the named value and nothing else', () => {
+		expect(parseRegValue(OUTPUT, 'VersionToReport')).toBe('16.0.19127.20264')
+		expect(parseRegValue(OUTPUT, 'Platform')).toBeNull()
+		expect(parseRegValue('', 'VersionToReport')).toBeNull()
+	})
+})
+
 describe('tokenMatches', () => {
 	test('matches only the exact token', () => {
 		expect(tokenMatches('secret', 'secret')).toBe(true)
@@ -274,6 +289,34 @@ describe('worker HTTP', () => {
 		await vi.waitFor(() => expect(release).toHaveLength(1))
 		release.shift()?.()
 		await queued
+	})
+
+	test('/health answers mid-job with the last PowerPoint read rather than reading again', async () => {
+		/** @type {(() => void)[]} */
+		const release = []
+		const runner = createRunner({
+			executor: () =>
+				new Promise((resolve) => {
+					release.push(() => resolve({ code: 0, out: '', err: '', timedOut: false }))
+				}),
+			hooks: fakeHooks(),
+			tmpRoot,
+		})
+		const powerpointInfo = vi.fn(async () => ({ version: '16.0', build: '16.0.1.2' }))
+		await start({ runner, powerpointInfo })
+		const health = async () => (await (await fetch(`${base}/health`, { headers: auth })).json()).powerpoint
+		expect(await health()).toEqual({ version: '16.0', build: '16.0.1.2' })
+		expect(powerpointInfo).toHaveBeenCalledOnce()
+
+		const job = fetch(`${base}/jobs`, { method: 'POST', headers: auth, body: JSON.stringify(wireJob()) })
+		await vi.waitFor(() => expect(release).toHaveLength(1))
+		expect(await health()).toEqual({ version: '16.0', build: '16.0.1.2' })
+		expect(powerpointInfo).toHaveBeenCalledOnce()
+
+		release.shift()?.()
+		await job
+		await health()
+		expect(powerpointInfo).toHaveBeenCalledTimes(2)
 	})
 
 	test('404 for an unknown route', async () => {

@@ -94,13 +94,17 @@ function send(res, status, body, headers = {}) {
  * @param {object} options
  * @param {import('./runner.mjs').Runner} options.runner
  * @param {string} options.token
- * @param {() => Promise<import('./job.mjs').PowerPointInfo | null>} options.powerpointInfo - for `/health`
+ * @param {() => Promise<import('./job.mjs').PowerPointInfo | null>} options.powerpointInfo - for `/health`,
+ *   which reads it only while no job runs. Mid-job it answers with the last value read, by
+ *   `/health` or by the job itself, since an installer can stall the read for as long as it runs.
  * @param {number} [options.bodyLimit]
  * @param {number} [options.maxWaiting]
  * @returns {http.Server}
  */
 export function createWorker({ runner, token, powerpointInfo, bodyLimit = BODY_LIMIT, maxWaiting = MAX_WAITING }) {
 	if (!token) throw new Error('the worker needs a non-empty token')
+	/** @type {import('./job.mjs').PowerPointInfo | null | undefined} */
+	let lastInfo
 	return http.createServer(async (req, res) => {
 		try {
 			const auth = req.headers.authorization ?? ''
@@ -113,7 +117,7 @@ export function createWorker({ runner, token, powerpointInfo, bodyLimit = BODY_L
 			if (url.pathname === '/health' && req.method === 'GET') {
 				send(res, 200, {
 					ok: true,
-					powerpoint: await powerpointInfo(),
+					powerpoint: runner.busy && lastInfo !== undefined ? lastInfo : (lastInfo = await powerpointInfo()),
 					busy: runner.busy,
 					workerVersion: WORKER_VERSION,
 				})
@@ -142,7 +146,9 @@ export function createWorker({ runner, token, powerpointInfo, bodyLimit = BODY_L
 					send(res, 503, { error: `${runner.waiting} jobs are already queued` }, { 'Retry-After': '30' })
 					return
 				}
-				send(res, 200, await runner.run(job))
+				const result = await runner.run(job)
+				lastInfo = result.powerpoint
+				send(res, 200, result)
 				return
 			}
 			send(res, 404, { error: `no route for ${req.method} ${url.pathname}` })
