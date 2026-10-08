@@ -21,7 +21,9 @@ Everything except the Office sign-in is automatic. The container runs only while
 
 ## Bring-up
 
-1. Copy `.env.example` to `.env` and set `VM_PASSWORD`.
+1. Copy `.env.example` to `.env` and set `VM_PASSWORD`. Set `VM_KEYBOARD` to the host's layout,
+   such as `es-ES`, so typing through the web viewer produces the keys you press. It defaults to
+   `en-US`, and Windows reads it only while it installs, so set it before the first boot.
 2. Run `pnpm ppt:vm:up`. It generates the worker token into `.env`, stages the worker in
    `shared/`, creates `storage/` with copy-on-write off (on btrfs a VM image under
    copy-on-write fragments and can break Windows Setup), and starts the container.
@@ -39,7 +41,7 @@ Everything except the Office sign-in is automatic. The container runs only while
 5. Reboot the VM with `pnpm ppt:vm:sync`, which restarts a running container. Windows signs in on
    its own and the logon task starts the worker.
 6. Run `pnpm ppt:health`. It prints the PowerPoint build the worker drives.
-7. Back the VM up, as described below.
+7. Back the VM up, as described in [Backup](#backup).
 
 ### Office updates
 
@@ -92,8 +94,10 @@ the directory:
 
 ```sh
 pnpm ppt:vm:down
-cp -r --sparse=always --preserve=timestamps tools/powerpoint-vm/storage ~/backups/powerpoint-vm-$(date +%F)
+cp -r --sparse=always --preserve=timestamps tools/powerpoint-vm/storage ~/backups/powerpoint-vm-$(date +%F-%H%M)
 ```
+
+The time in the name keeps a second backup on the same day from landing inside the first.
 
 The container owns `storage/` as root, but its files are world-readable, so the copy needs no
 `sudo`. The image is a 64 GB sparse file. A provisioned VM occupies about 16 GB, and
