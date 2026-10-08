@@ -16,7 +16,7 @@ import {
 } from '../../helpers.ts'
 
 // The *definition* side of Insert ▸ Zoom (`gen/define/zoom.ts` + `gen/define/preview-image.ts`),
-// as distinct from `zoom-links.test.js`, which byte-pins the emitter given an already-built
+// as distinct from `zoom-links.test.ts`, which byte-pins the emitter given an already-built
 // `SlideObject`. Everything here goes through the public builder, because that is the only way to
 // reach the resolution the definer does: turning a Slide/number/section title into the `sldId`,
 // section GUID and rIds the emitter consumes, and refusing — with a warning, never an exception —

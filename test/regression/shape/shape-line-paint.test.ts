@@ -11,7 +11,7 @@ import { assert, build, defineRegressionSuite, firstXmlBlock, slideXml } from '.
 //
 // Both rebuilds now spread the caller's object and override only what they default. These pin
 // the paths that were dropping keys — one per rebuild site (define/shape.ts, define/text.ts).
-// Table borders are pinned in border-shadow-ppt-props.test.js, and the schema fixture
+// Table borders are pinned in border-shadow-ppt-props.test.ts, and the schema fixture
 // "shape with pattern line" checks a `<a:pattFill>` stroke against the validator.
 
 /** The `<a:ln>` element of the part's first shape. */
@@ -124,7 +124,7 @@ defineRegressionSuite('Shape line paint and cap', [
 			// real and `cap` is written straight into an attribute — an unknown value would reach
 			// the package as cap="INVALID" and PowerPoint would offer to repair the file. Note the
 			// chart path differs deliberately: `define/chart.ts` scrubs an unrecognized gridLine
-			// cap before emit (chart-option-validation.test.js), so only the shape path throws.
+			// cap before emit (chart-option-validation.test.ts), so only the shape path throws.
 			await expectBuildError((p) => {
 				p.addSlide().addShape('rect', { x: 1, y: 1, w: 2, h: 1, line: { color: '0070C0', cap: 'INVALID' } })
 			}, 'Invalid line cap')
