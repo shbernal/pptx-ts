@@ -7,6 +7,7 @@ import { ALL_CONSTRUCT_FAMILIES } from '../../../src/entry-families.ts'
 /** Every renderer the full authoring surface writes with, assembled the way a presentation does. */
 const ALL_OBJECT_RENDERERS = composeFamilies(ALL_CONSTRUCT_FAMILIES).renderers
 import { SlideObjectType } from '../../../src/enums.ts'
+import type { PresSlideInternal } from '../../../src/types/internal.ts'
 
 // Byte-pin for Slide / Section / Summary Zoom (dn-zoom-links). These emit `<mc:AlternateContent>`
 // wrappers the demo deck never produces, so the byte-identity harness is blind to them — pin the
@@ -16,18 +17,21 @@ import { SlideObjectType } from '../../../src/enums.ts'
 
 const LAYOUT = { name: 'test', width: 12192000, height: 6858000 }
 
-const mkSlide = (objects, extra = {}) => ({
-	_slideNum: 5,
-	_slideObjects: objects,
-	_presLayout: LAYOUT,
-	_rels: [],
-	_relsChart: [],
-	_relsMedia: [],
-	...extra,
-})
-const render = (objects, extra = {}) => slideObjectToXml(mkSlide(objects, extra), ALL_OBJECT_RENDERERS)
+// A stub carrying only the fields the emitters read; the objects are partial slide objects.
+const mkSlide = (objects: readonly object[], extra: Record<string, unknown> = {}) =>
+	({
+		_slideNum: 5,
+		_slideObjects: objects,
+		_presLayout: LAYOUT,
+		_rels: [],
+		_relsChart: [],
+		_relsMedia: [],
+		...extra,
+	}) as unknown as PresSlideInternal
+const render = (objects: readonly object[], extra: Record<string, unknown> = {}) =>
+	slideObjectToXml(mkSlide(objects, extra), ALL_OBJECT_RENDERERS)
 
-const zoomObj = (variant, zoom, options = {}) => ({
+const zoomObj = (variant: string, zoom: Record<string, unknown>, options: Record<string, unknown> = {}) => ({
 	_type: SlideObjectType.zoom,
 	options: { x: 1, y: 1, w: 3, h: 1.7, objectName: `${variant} zoom`, ...options },
 	zoom: { variant, returnToParent: false, transitionDur: 1000, ...zoom },

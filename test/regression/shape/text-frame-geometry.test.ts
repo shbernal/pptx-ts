@@ -1,4 +1,5 @@
 import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
+import type { TextPropsOptions } from '../../../dist/node.js'
 
 const SLIDE_XML = 'ppt/slides/slide1.xml'
 
@@ -7,12 +8,11 @@ const SLIDE_XML = 'ppt/slides/slide1.xml'
 // styled text frame and honors them. The runtime worked while TypeScript rejected the
 // identical object literal (TS2353), so correct code failed to compile.
 //
-// The JSDoc annotation below routes this literal through the published declarations
-// under `typecheck:test` (checkJs keeps object-literal shape checking), so a key that
-// disappears from TextPropsOptions fails CI even though plain-JS tests would pass.
+// The annotation below routes this literal through the published declarations under
+// `typecheck:test`, so a key that disappears from TextPropsOptions fails CI even though the
+// runtime test would pass.
 
-/** @type {import('../../../dist/node.js').TextPropsOptions} */
-const geometryTextOptions = {
+const geometryTextOptions: TextPropsOptions = {
 	shape: 'blockArc',
 	angleRange: [350, 10],
 	arcThicknessRatio: 0.25,

@@ -142,7 +142,7 @@ defineRegressionSuite('Connector shapes', [
 		// raw string, and the shared resolver compares it with the raw name the shape stores.
 		name: 'startShape/endShape bind to names containing XML metacharacters',
 		fn: async () => {
-			const warnings = []
+			const warnings: string[] = []
 			setDiagnosticHandler((d) => warnings.push(d.message))
 			let xml
 			try {
@@ -177,7 +177,7 @@ defineRegressionSuite('Connector shapes', [
 	{
 		name: 'unresolved binding name warns and falls back to empty <p:cNvCxnSpPr/>',
 		fn: async () => {
-			const warnings = []
+			const warnings: string[] = []
 			setDiagnosticHandler((d) => warnings.push(d.message))
 			let xml
 			try {

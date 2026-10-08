@@ -7,6 +7,8 @@ import {
 	captureDiagnostics,
 	caught,
 } from '../../helpers.ts'
+import type JSZip from 'jszip'
+import type { PositionProps, Slide } from '../../../dist/node.js'
 
 // Every definer spelled its own default for an omitted `x`/`y`/`w`/`h`, and they disagreed on what
 // "omitted" meant. `w: 0, h: 0` gave media a 2in square, a chart half the slide and an image its
@@ -19,7 +21,7 @@ const PNG =
 const SERIES = [{ name: 'S', labels: ['A', 'B'], values: [1, 2] }]
 
 /** Each definer that takes a frame, handed `frame` on a fresh slide. */
-const DEFINERS = {
+const DEFINERS: Record<string, (slide: Slide, frame: PositionProps) => unknown> = {
 	addShape: (slide, frame) => slide.addShape('rect', frame),
 	addText: (slide, frame) => slide.addText('x', frame),
 	addImage: (slide, frame) => slide.addImage({ data: PNG, ...frame }),
@@ -30,7 +32,7 @@ const DEFINERS = {
 }
 
 /** The slide's shapes, after the spTree's own zero-size group properties. */
-async function shapesXml(zip) {
+async function shapesXml(zip: JSZip) {
 	const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 	return xml.slice(xml.indexOf('</p:grpSpPr>'))
 }

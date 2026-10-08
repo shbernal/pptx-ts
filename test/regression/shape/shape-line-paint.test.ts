@@ -1,5 +1,6 @@
-/** @import { LineCap } from '../../../dist/node.js' */
-import { assert, build, defineRegressionSuite, firstXmlBlock, slideXml } from '../../helpers.ts'
+import type TsPptx from '../../../dist/node.js'
+import type { LineCap } from '../../../dist/node.js'
+import { assert, build, caught, defineRegressionSuite, firstXmlBlock, slideXml } from '../../helpers.ts'
 
 // A stroke is painted like a fill: `ShapeLineProps extends ShapeFillProps`, so `line` accepts
 // `gradient`/`pattern`/`image` as well as a solid `color`, plus its own `cap`. The emitters
@@ -15,21 +16,16 @@ import { assert, build, defineRegressionSuite, firstXmlBlock, slideXml } from '.
 // "shape with pattern line" checks a `<a:pattFill>` stroke against the validator.
 
 /** The `<a:ln>` element of the part's first shape. */
-function lineBlock(xml) {
+function lineBlock(xml: string) {
 	const ln = firstXmlBlock(xml, 'a:ln')
 	assert(ln, 'expected an <a:ln> in:\n' + xml)
 	return ln
 }
 
-async function expectBuildError(buildFn, expectedMessage) {
-	let err
-	try {
-		await build(buildFn)
-	} catch (e) {
-		err = e
-	}
+async function expectBuildError(buildFn: (pres: TsPptx) => unknown, expectedMessage: string) {
+	const err = await caught(() => build(buildFn))
 	assert(err, 'expected build to fail')
-	const message = String(err?.message || err)
+	const message = err.message
 	assert(message.includes(expectedMessage), `expected error to include "${expectedMessage}"; got: ${message}`)
 }
 
@@ -37,11 +33,11 @@ defineRegressionSuite('Shape line paint and cap', [
 	{
 		name: "addShape line `cap` reaches the <a:ln cap=> attribute ('round' -> rnd, 'square' -> sq)",
 		fn: async () => {
-			for (const [cap, expected] of /** @type {[LineCap, string][]} */ ([
+			for (const [cap, expected] of [
 				['round', 'rnd'],
 				['square', 'sq'],
 				['flat', 'flat'],
-			])) {
+			] as [LineCap, string][]) {
 				const xml = await slideXml((p) => {
 					p.addSlide().addShape('rect', { x: 1, y: 1, w: 2, h: 1, line: { color: '0070C0', width: 3, cap } })
 				})
@@ -126,6 +122,7 @@ defineRegressionSuite('Shape line paint and cap', [
 			// chart path differs deliberately: `define/chart.ts` scrubs an unrecognized gridLine
 			// cap before emit (chart-option-validation.test.ts), so only the shape path throws.
 			await expectBuildError((p) => {
+				// @ts-expect-error 'INVALID' is not a LineCap; this case stands in for an untyped caller
 				p.addSlide().addShape('rect', { x: 1, y: 1, w: 2, h: 1, line: { color: '0070C0', cap: 'INVALID' } })
 			}, 'Invalid line cap')
 		},

@@ -243,7 +243,7 @@ defineRegressionSuite('Shape preset mapping [legacy bug-10]', [
 	{
 		name: 'custGeom invalid guide (empty name/formula) is dropped and warns',
 		fn: async () => {
-			const warnings = []
+			const warnings: string[] = []
 			setDiagnosticHandler((d) => warnings.push(d.message))
 			let xml
 			try {
@@ -274,7 +274,7 @@ defineRegressionSuite('Shape preset mapping [legacy bug-10]', [
 	{
 		name: 'custGeom guide with an unknown formula operation is dropped and warns',
 		fn: async () => {
-			const warnings = []
+			const warnings: string[] = []
 			setDiagnosticHandler((d) => warnings.push(d.message))
 			let xml
 			try {
@@ -332,7 +332,7 @@ defineRegressionSuite('Shape preset mapping [legacy bug-10]', [
 				'tan',
 				'val',
 			]
-			const warnings = []
+			const warnings: string[] = []
 			setDiagnosticHandler((d) => warnings.push(d.message))
 			let xml
 			try {
@@ -360,7 +360,7 @@ defineRegressionSuite('Shape preset mapping [legacy bug-10]', [
 	{
 		name: 'custGeom invalid connectionSite (non-finite ang) is dropped and warns',
 		fn: async () => {
-			const warnings = []
+			const warnings: string[] = []
 			setDiagnosticHandler((d) => warnings.push(d.message))
 			let xml
 			try {

@@ -2,7 +2,7 @@ import JSZip from 'jszip'
 import TsPptx from '../../../dist/node.js'
 import { defineRegressionSuite, assert } from '../../helpers.ts'
 
-async function buildSlide1(pres) {
+async function buildSlide1(pres: TsPptx) {
 	const buf = await pres.toBytes()
 	const zip = await JSZip.loadAsync(buf)
 	const entry = zip.file('ppt/slides/slide1.xml')

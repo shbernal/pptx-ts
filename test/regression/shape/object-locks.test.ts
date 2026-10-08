@@ -121,7 +121,7 @@ defineRegressionSuite('Object locks', [
 	{
 		name: 'flag invalid for the element type is dropped with a warning',
 		fn: async () => {
-			const warnings = []
+			const warnings: string[] = []
 			setDiagnosticHandler((d) => warnings.push(d.message))
 			let xml
 			try {

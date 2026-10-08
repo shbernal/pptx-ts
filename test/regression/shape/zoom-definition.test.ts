@@ -13,7 +13,11 @@ import {
 	selfClosingTags,
 	xmlAttributes,
 	xmlOpeningTags,
+	asError,
+	type ThrownError,
 } from '../../helpers.ts'
+import type JSZip from 'jszip'
+import type TsPptx from '../../../dist/node.js'
 
 // The *definition* side of Insert ▸ Zoom (`gen/define/zoom.ts` + `gen/define/preview-image.ts`),
 // as distinct from `zoom-links.test.ts`, which byte-pins the emitter given an already-built
@@ -41,8 +45,8 @@ import {
 const COVER_JPG = 'demos/common/images/cc_logo.jpg'
 
 /** Build, capturing library warnings (`log.ts` routes every one through `console.warn`). */
-async function buildCapturingWarnings(buildFn) {
-	const warnings = []
+async function buildCapturingWarnings(buildFn: (pres: TsPptx) => unknown) {
+	const warnings: string[] = []
 	setDiagnosticHandler((d) => warnings.push(d.message))
 	try {
 		const result = await build(buildFn)
@@ -52,22 +56,17 @@ async function buildCapturingWarnings(buildFn) {
 	}
 }
 
-function assertWarned(warnings, pattern, label) {
+function assertWarned(warnings: string[], pattern: RegExp, label?: string) {
 	assert(
 		warnings.some((message) => pattern.test(message)),
 		`expected a warning matching ${pattern} ${label || ''}; got: ${JSON.stringify(warnings)}`
 	)
 }
 
-/** @param {string} tag @returns {Record<string, string>} */
-const attrs = (tag) => /** @type {Record<string, string>} */ (xmlAttributes(tag))
+const attrs = (tag: string): Record<string, string> => xmlAttributes(tag)
 
-/**
- * The `<a:off>`/`<a:ext>` of a graphicFrame's own `<p:xfrm>` (the zoom frame, not a tile).
- * @param {string} xml
- * @returns {Record<string, string>}
- */
-function frameExtent(xml) {
+/** The `<a:off>`/`<a:ext>` of a graphicFrame's own `<p:xfrm>` (the zoom frame, not a tile). */
+function frameExtent(xml: string): Record<string, string> {
 	const frame = firstXmlBlock(xml, 'p:graphicFrame')
 	const xfrm = firstXmlBlock(frame, 'p:xfrm')
 	const [off, ext] = [selfClosingTags(xfrm, 'a:off')[0], selfClosingTags(xfrm, 'a:ext')[0]]
@@ -75,7 +74,7 @@ function frameExtent(xml) {
 }
 
 /** Every `Relationship` in slide 1's rels part, as `{ id, type, target }`. */
-async function slideRels(zip) {
+async function slideRels(zip: JSZip) {
 	const xml = await readEntry(zip, 'ppt/slides/_rels/slide1.xml.rels')
 	return selfClosingTags(xml, 'Relationship')
 		.map((tag) => xmlAttributes(tag))
@@ -91,6 +90,7 @@ defineRegressionSuite('Zoom definition', [
 			const { zip, warnings } = await buildCapturingWarnings((p) => {
 				const host = p.addSlide()
 				p.addSlide()
+				// @ts-expect-error `target` is required; this case stands in for an untyped caller
 				host.addSlideZoom({ x: 1, y: 1, w: 3, h: 1.7 })
 				host.addSlideZoom({ target: 0, x: 5, y: 1, w: 3, h: 1.7 })
 			})
@@ -106,6 +106,7 @@ defineRegressionSuite('Zoom definition', [
 		fn: async () => {
 			const { zip, warnings } = await buildCapturingWarnings((p) => {
 				const host = p.addSlide()
+				// @ts-expect-error `{}` is neither a Slide nor a slide number
 				host.addSlideZoom({ target: {}, x: 1, y: 1, w: 3, h: 1.7 })
 			})
 			assertWarned(warnings, /addSlideZoom: could not resolve the target slide/, 'for a non-slide target')
@@ -131,13 +132,13 @@ defineRegressionSuite('Zoom definition', [
 	{
 		name: 'addSlideZoom to a slide number past the last slide is refused when the deck is written',
 		fn: async () => {
-			let error
+			let error: ThrownError | undefined
 			try {
 				await build((p) => {
 					p.addSlide().addSlideZoom({ target: 99, x: 1, y: 1, w: 3, h: 1.7 })
 				})
 			} catch (err) {
-				error = err
+				error = asError(err)
 			}
 			assertEqual(error?.code, 'slide/link-past-last-slide', 'the write')
 		},
@@ -191,6 +192,7 @@ defineRegressionSuite('Zoom definition', [
 		fn: async () => {
 			const { zip, warnings } = await buildCapturingWarnings((p) => {
 				p.addSection({ title: 'Alpha' })
+				// @ts-expect-error `sectionTitle` is required; this case stands in for an untyped caller
 				p.addSlide({ sectionTitle: 'Alpha' }).addSectionZoom({ x: 1, y: 1, w: 3, h: 1.7 })
 			})
 			assertWarned(warnings, /addSectionZoom requires a `sectionTitle`/, 'for a missing title')

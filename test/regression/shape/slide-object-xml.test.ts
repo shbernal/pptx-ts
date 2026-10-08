@@ -8,7 +8,8 @@ import { ALL_CONSTRUCT_FAMILIES } from '../../../src/entry-families.ts'
 const ALL_OBJECT_RENDERERS = composeFamilies(ALL_CONSTRUCT_FAMILIES).renderers
 import { SlideObjectType } from '../../../src/enums.ts'
 import { InternalError } from '../../../src/errors.ts'
-import { defined } from '../../helpers.ts'
+import { caughtSync, defined } from '../../helpers.ts'
+import type { PresSlideInternal } from '../../../src/types/internal.ts'
 
 // Characterization tests for slide-object XML that the byte-identity harness CANNOT see. The demo
 // deck emits ZERO parts containing `<a:duotone>`, `<a:stCxn>`, `mc:AlternateContent`,
@@ -20,17 +21,20 @@ import { defined } from '../../helpers.ts'
 
 const LAYOUT = { name: 'test', width: 9144000, height: 6858000 }
 
-const mkSlide = (objects, extra = {}) => ({
-	_slideNum: 1,
-	_slideObjects: objects,
-	_presLayout: LAYOUT,
-	_rels: [],
-	_relsChart: [],
-	_relsMedia: [],
-	...extra,
-})
+// A stub carrying only the fields the emitters read; the objects are partial slide objects.
+const mkSlide = (objects: readonly object[], extra: Record<string, unknown> = {}) =>
+	({
+		_slideNum: 1,
+		_slideObjects: objects,
+		_presLayout: LAYOUT,
+		_rels: [],
+		_relsChart: [],
+		_relsMedia: [],
+		...extra,
+	}) as unknown as PresSlideInternal
 
-const render = (objects, extra = {}) => slideObjectToXml(mkSlide(objects, extra), ALL_OBJECT_RENDERERS)
+const render = (objects: readonly object[], extra: Record<string, unknown> = {}) =>
+	slideObjectToXml(mkSlide(objects, extra), ALL_OBJECT_RENDERERS)
 
 const textObj = (options = {}) => ({
 	_type: SlideObjectType.text,
@@ -69,7 +73,7 @@ describe('escaping: cNvPrEl escapes objectName and altText; cSld-name is escaped
 })
 
 describe('action buttons: navigation hlinkClick on the shape cNvPr', () => {
-	const actionBtn = (action) => textObj({ shape: 'actionButtonForwardNext', hyperlink: { action } })
+	const actionBtn = (action: string) => textObj({ shape: 'actionButtonForwardNext', hyperlink: { action } })
 
 	test('action emits a relationship-less hlinkClick with an empty r:id', () => {
 		const xml = render([actionBtn('nextslide')])
@@ -84,7 +88,7 @@ describe('action buttons: navigation hlinkClick on the shape cNvPr', () => {
 })
 
 describe('table properties (ZERO baseline parts for every flag below)', () => {
-	const table = (options) => ({
+	const table = (options: Record<string, unknown>) => ({
 		_type: SlideObjectType.table,
 		arrTabRows: [[{ _type: SlideObjectType.tablecell, text: 'a', options: {} }]],
 		options: { objectName: 'T', ...options },
@@ -124,8 +128,12 @@ describe('table properties (ZERO baseline parts for every flag below)', () => {
 })
 
 describe('table cells', () => {
-	const cell = (text, options = {}) => ({ _type: SlideObjectType.tablecell, text, options })
-	const table = (rows, options = {}) => ({
+	const cell = (text: string, options: Record<string, unknown> = {}) => ({
+		_type: SlideObjectType.tablecell,
+		text,
+		options,
+	})
+	const table = (rows: object[][], options: Record<string, unknown> = {}) => ({
 		_type: SlideObjectType.table,
 		arrTabRows: rows,
 		options: { objectName: 'T', ...options },
@@ -180,7 +188,7 @@ describe('table cells', () => {
 })
 
 describe('connector shape bindings (stCxn has ZERO baseline parts)', () => {
-	const withConnector = (options) =>
+	const withConnector = (options: Record<string, unknown>) =>
 		render([
 			textObj({ objectName: 'A' }),
 			textObj({ objectName: 'B' }),
@@ -245,7 +253,8 @@ describe('image blip effects (duotone has ZERO baseline parts)', () => {
 })
 
 describe('media (audio/video/online share one body)', () => {
-	const media = (mtype) => render([{ _type: SlideObjectType.media, mtype, mediaRid: 6, options: { objectName: 'M' } }])
+	const media = (mtype: string) =>
+		render([{ _type: SlideObjectType.media, mtype, mediaRid: 6, options: { objectName: 'M' } }])
 
 	test('audio uses a:audioFile, bound by r:link', () => {
 		expect(media('audio')).toContain('<a:audioFile r:link="rId6"/>')
@@ -293,7 +302,7 @@ describe('equation shapes (mc:AlternateContent has ZERO baseline parts)', () => 
 })
 
 describe('slide number placeholder', () => {
-	const sn = (props) => render([], { _slideNumberProps: { x: 1, y: 1, ...props } })
+	const sn = (props: Record<string, unknown>) => render([], { _slideNumberProps: { x: 1, y: 1, ...props } })
 
 	test('bold emits b="0" when unset — it is NOT omitted like other run properties', () => {
 		expect(sn({})).toContain('<a:rPr b="0" lang="en-US"/>')
@@ -353,7 +362,7 @@ describe('slide number placeholder', () => {
 })
 
 describe('groups', () => {
-	const kid = (name, o = {}) => ({
+	const kid = (name: string, o: Record<string, unknown> = {}) => ({
 		_type: SlideObjectType.text,
 		text: [{ text: name }],
 		shape: 'rect',
@@ -381,8 +390,11 @@ describe('groups', () => {
 
 describe('relationships', () => {
 	// `selfPath` decides how a slide link is spelled; these cases emit a slide's own rels.
-	const rels = (extra, defaults = [], selfPath = slidePath(1)) =>
-		slideObjectRelationsToXml(mkSlide([], extra), defaults, selfPath)
+	const rels = (
+		extra: Record<string, unknown>,
+		defaults: { target: string; type: string }[] = [],
+		selfPath = slidePath(1)
+	) => slideObjectRelationsToXml(mkSlide([], extra), defaults, selfPath)
 
 	test('an online-video pair shares one Target: ECMA video first, MS media second', () => {
 		const target = 'https://y.t/?v=1&t=2'
@@ -427,7 +439,10 @@ describe('renderer table', () => {
 		])
 		for (const kind of Object.values(SlideObjectType)) {
 			if (notShapes.has(kind)) continue
-			expect(typeof ALL_OBJECT_RENDERERS[kind], `no family renders ${kind}`).toBe('function')
+			expect(
+				typeof (ALL_OBJECT_RENDERERS as Partial<Record<SlideObjectType, unknown>>)[kind],
+				`no family renders ${kind}`
+			).toBe('function')
 		}
 	})
 
@@ -438,29 +453,19 @@ describe('renderer table', () => {
 
 	test('an object whose family is not in the table throws rather than emitting nothing', () => {
 		const chart = { _type: SlideObjectType.chart, options: { objectName: 'C' }, chartRid: 3 }
-		let err
-		try {
-			slideObjectToXml(mkSlide([chart]), textOnly)
-		} catch (e) {
-			err = e
-		}
+		const err = caughtSync(() => slideObjectToXml(mkSlide([chart]), textOnly))
 		// Emitting nothing would be worse than failing: the object has already reserved a
 		// `<p:cNvPr>` id, so a connector binding or an animation target would point at a shape that
 		// is not in the tree, and PowerPoint reports that as a repair rather than as a missing shape.
 		expect(err).toBeInstanceOf(InternalError)
-		expect(err.code).toBe('slide/object-type-not-routed')
-		expect(err.message).toContain('chart')
+		expect(err?.code).toBe('slide/object-type-not-routed')
+		expect(err?.message).toContain('chart')
 	})
 
 	test('a group child goes through the same table as a top-level object', () => {
 		const chart = { _type: SlideObjectType.chart, options: { objectName: 'C' }, chartRid: 3 }
 		const group = { _type: SlideObjectType.group, _groupObjects: [chart], options: { objectName: 'G' } }
-		let err
-		try {
-			slideObjectToXml(mkSlide([group]), textOnly)
-		} catch (e) {
-			err = e
-		}
+		const err = caughtSync(() => slideObjectToXml(mkSlide([group]), textOnly))
 		expect(err?.code).toBe('slide/object-type-not-routed')
 	})
 })

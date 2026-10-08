@@ -1,8 +1,8 @@
-import TsPptx, { ShapeType } from '../../../dist/node.js'
+import TsPptx, { ShapeType, type ShadowProps } from '../../../dist/node.js'
 import JSZip from 'jszip'
 import { defineRegressionSuite, assert } from '../../helpers.ts'
 
-async function buildSlideXml(pres) {
+async function buildSlideXml(pres: TsPptx) {
 	const buf = await pres.toBytes()
 	const zip = await JSZip.loadAsync(buf)
 	const entry = zip.file('ppt/slides/slide1.xml')
@@ -12,8 +12,8 @@ async function buildSlideXml(pres) {
 
 // Extract each <p:sp>...</p:sp> block and return only the <a:effectLst>...</a:effectLst>
 // substring inside, so we can compare shadow XML between shapes regardless of position.
-function extractEffectLsts(xml) {
-	const blocks = []
+function extractEffectLsts(xml: string) {
+	const blocks: string[] = []
 	const re = /<p:sp>[\s\S]*?<\/p:sp>/g
 	let m
 	while ((m = re.exec(xml)) !== null) {
@@ -30,9 +30,14 @@ defineRegressionSuite('Shared shadow options [legacy bug-05]', [
 		fn: async () => {
 			const pres = new TsPptx()
 			const slide = pres.addSlide()
-			/** The caller authors public `ShadowProps`; the writer stamps the derived internal `_alpha` onto it.
-			 * @type {import('../../../dist/node.js').ShadowProps & { _alpha?: number }} */
-			const shadow = { type: 'outer', blur: 6, offset: 2, color: '000000', transparency: 85 }
+			/** The caller authors public `ShadowProps`; the writer stamps the derived internal `_alpha` onto it. */
+			const shadow: ShadowProps & { _alpha?: number } = {
+				type: 'outer',
+				blur: 6,
+				offset: 2,
+				color: '000000',
+				transparency: 85,
+			}
 			slide.addShape(ShapeType.rect, { x: 1, y: 1, w: 2, h: 1, shadow })
 			slide.addShape(ShapeType.rect, { x: 1, y: 3, w: 2, h: 1, shadow })
 
@@ -64,9 +69,14 @@ defineRegressionSuite('Shared shadow options [legacy bug-05]', [
 		fn: async () => {
 			const pres = new TsPptx()
 			const slide = pres.addSlide()
-			/** The caller's own `ShadowProps`; the definer normalizes a COPY per shape.
-			 * @type {import('../../../dist/node.js').ShadowProps & { _alpha?: number }} */
-			const shadow = { type: 'outer', blur: 6, offset: 2, color: '000000', transparency: 85 }
+			/** The caller's own `ShadowProps`; the definer normalizes a COPY per shape. */
+			const shadow: ShadowProps & { _alpha?: number } = {
+				type: 'outer',
+				blur: 6,
+				offset: 2,
+				color: '000000',
+				transparency: 85,
+			}
 			slide.addShape(ShapeType.rect, { x: 1, y: 1, w: 2, h: 1, shadow })
 			slide.addShape(ShapeType.rect, { x: 1, y: 3, w: 2, h: 1, shadow })
 			await buildSlideXml(pres)
@@ -85,9 +95,14 @@ defineRegressionSuite('Shared shadow options [legacy bug-05]', [
 			const slide = pres.addSlide()
 			const png =
 				'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkAAIAAAoAAv/lxKUAAAAASUVORK5CYII='
-			/** The caller authors public `ShadowProps`; the writer stamps the derived internal `_alpha` onto it.
-			 * @type {import('../../../dist/node.js').ShadowProps & { _alpha?: number }} */
-			const shadow = { type: 'outer', blur: 6, offset: 2, color: '000000', transparency: 85 }
+			/** The caller authors public `ShadowProps`; the writer stamps the derived internal `_alpha` onto it. */
+			const shadow: ShadowProps & { _alpha?: number } = {
+				type: 'outer',
+				blur: 6,
+				offset: 2,
+				color: '000000',
+				transparency: 85,
+			}
 			slide.addShape(ShapeType.rect, { x: 1, y: 1, w: 2, h: 1, shadow })
 			slide.addImage({ data: png, x: 1, y: 3, w: 1, h: 1, shadow })
 
@@ -100,7 +115,7 @@ defineRegressionSuite('Shared shadow options [legacy bug-05]', [
 			// Whitespace differs between shape and image emission templates (cosmetic), but
 			// the EMU values must match — that is what this regression guards against. Normalise spaces
 			// then compare.
-			const norm = (s) => s.replace(/\s+/g, ' ').replace(/ ?\/>/g, '/>').replace(/> </g, '><').trim()
+			const norm = (s: string) => s.replace(/\s+/g, ' ').replace(/ ?\/>/g, '/>').replace(/> </g, '><').trim()
 			const a = norm(matches[0])
 			const b = norm(matches[1])
 			assert(

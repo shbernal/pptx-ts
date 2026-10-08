@@ -7,6 +7,7 @@ import {
 	captureDiagnostics,
 	caught,
 } from '../../helpers.ts'
+import type { ShadowProps } from '../../../dist/node.js'
 
 // `shadow.transparency` and `shadow.angle` were the last two options outside the rule
 // `docs/contributing/development.md` states for an out-of-range number: clamp to the nearest bound and warn,
@@ -19,9 +20,9 @@ import {
 // `dir="NaN"` in the package, which is the degenerate output the guard was there to prevent.
 
 const BOX = { x: 1, y: 1, w: 2, h: 1 }
-const SHADOW = { type: 'outer', blur: 6, offset: 2, color: '000000' }
+const SHADOW: ShadowProps = { type: 'outer', blur: 6, offset: 2, color: '000000' }
 
-async function shadowXml(shadow) {
+async function shadowXml(shadow: ShadowProps) {
 	const { zip } = await build((p) => p.addSlide().addShape('rect', { ...BOX, shadow }))
 	const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 	const match = /<a:outerShdw[^>]*>[\s\S]*?<\/a:outerShdw>/.exec(xml)
@@ -29,7 +30,7 @@ async function shadowXml(shadow) {
 	return match[0]
 }
 
-async function codeThrownBy(shadow) {
+async function codeThrownBy(shadow: ShadowProps) {
 	return (await caught(() => build((p) => p.addSlide().addShape('rect', { ...BOX, shadow }))))?.code ?? null
 }
 

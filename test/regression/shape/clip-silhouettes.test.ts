@@ -8,7 +8,7 @@ import {
 	caughtSync,
 	defined,
 } from '../../helpers.ts'
-import { clipPath, EMU_PER_INCH } from '../../../dist/node.js'
+import { clipPath, EMU_PER_INCH, type ClipShape } from '../../../dist/node.js'
 
 // `clipPath` resolves a named silhouette to the freeform `points` path `addImage` emits as a
 // `<a:custGeom>` clip. The one non-obvious property it must keep is the coordinate space:
@@ -17,27 +17,26 @@ import { clipPath, EMU_PER_INCH } from '../../../dist/node.js'
 // that leaked normalized (0..1) coordinates would clip a sliver at the slide's top-left corner
 // on every box smaller than the slide, which is why the scaling is asserted directly.
 
-/**
- * @typedef {{ x?: number, y?: number, moveTo?: boolean, close?: boolean,
- *              curve?: { type: string, x1: number, y1: number, x2: number, y2: number } }} FlatPoint
- */
+type FlatPoint = {
+	x?: number
+	y?: number
+	moveTo?: boolean
+	close?: boolean
+	curve?: { type: string; x1: number; y1: number; x2: number; y2: number }
+}
 
 /**
  * The resolved path as plain records. `GeometryPoint` is a union whose arms carry different
  * keys, and these tests deliberately look across all of them (is this node a curve? where does
  * it sit?), so the union is flattened once here rather than narrowed at every read.
- * @param {Parameters<typeof clipPath>[0]} shape
- * @param {number} w
- * @param {number} h
- * @returns {FlatPoint[]}
  */
-function path(shape, w, h) {
-	return /** @type {FlatPoint[]} */ (clipPath(shape, w, h))
+function path(shape: ClipShape, w: number, h: number): FlatPoint[] {
+	return clipPath(shape, w, h) as FlatPoint[]
 }
 
 /** Every x (or y) appearing in the path, control points included. */
-function axisValues(points, axis) {
-	const out = []
+function axisValues(points: FlatPoint[], axis: 'x' | 'y') {
+	const out: number[] = []
 	for (const p of points) {
 		const v = p[axis]
 		if (typeof v === 'number') out.push(v)
@@ -127,7 +126,9 @@ defineRegressionSuite('Clip silhouettes (clipPath)', [
 		// `undefined`, an unknown kind returned nothing and an unknown flat side traced the right-flat path.
 		name: 'a shape clipPath does not name is refused with the values it takes',
 		fn: () => {
-			const refused = (shape) => caughtSync(() => clipPath(shape, 4, 6))
+			const refused = (shape: unknown) =>
+				// @ts-expect-error the cases below are not ClipShapes; they stand in for an untyped caller
+				caughtSync(() => clipPath(shape, 4, 6))
 			for (const shape of [
 				{ kind: 'half-disc', flat: 'right', preset: 'bogus' },
 				{ kind: 'half-disc', flat: 'top' },

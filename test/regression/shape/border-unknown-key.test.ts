@@ -27,7 +27,7 @@ import {
 // attribute that reaches the XML. `w` is in hundredths of a point -- 0.5pt = 6350, 1pt = 12700.
 
 /** Pull every `w="…"` on an `<a:ln>` in document order. */
-function lineWidths(xml) {
+function lineWidths(xml: string) {
 	return [...xml.matchAll(/<a:ln[^>]*\sw="(\d+)"/g)].map((m) => m[1])
 }
 
@@ -40,7 +40,7 @@ defineRegressionSuite('Border unknown key', [
 		fn: async () => {
 			// `pt` is not a `BorderProps` key -- the thickness field is `width`. Assigning to a
 			// variable first is what slips it past the excess-property check.
-			const border = { type: /** @type {const} */ ('solid'), color: 'FF0000', pt: 0.5 }
+			const border = { type: 'solid' as const, color: 'FF0000', pt: 0.5 }
 			const { result, codes, diagnostics } = await captureDiagnostics(() =>
 				build((p) => {
 					p.addSlide().addTable(ROWS, { ...AT, border })
@@ -70,7 +70,7 @@ defineRegressionSuite('Border unknown key', [
 	{
 		name: 'the same border spelled `width` is silent and reaches the XML',
 		fn: async () => {
-			const border = { type: /** @type {const} */ ('solid'), color: 'FF0000', width: 0.5 }
+			const border = { type: 'solid' as const, color: 'FF0000', width: 0.5 }
 			const { result, codes } = await captureDiagnostics(() =>
 				build((p) => {
 					p.addSlide().addTable(ROWS, { ...AT, border })
