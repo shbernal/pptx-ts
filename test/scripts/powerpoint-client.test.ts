@@ -30,6 +30,7 @@ import {
 	vbsFooter,
 	vbsOpenHeader,
 } from '../../scripts/com/vbs.mjs'
+import { defined } from '../helpers.ts'
 
 describe('resolveTransport', () => {
 	const linux = { platform: 'linux' as const, comRegistered: () => false }
@@ -145,7 +146,7 @@ describe('file helpers', () => {
 	test('packFiles reads repo files at their repo-relative paths', () => {
 		const files = packFiles(['scripts/powerpoint/job.mjs'])
 		expect(Object.keys(files)).toEqual(['scripts/powerpoint/job.mjs'])
-		expect(Buffer.from(files['scripts/powerpoint/job.mjs'], 'base64').toString()).toContain('validateJob')
+		expect(Buffer.from(defined(files['scripts/powerpoint/job.mjs']), 'base64').toString()).toContain('validateJob')
 		expect(() => packFiles(['../outside'])).toThrow("contains '..'")
 	})
 

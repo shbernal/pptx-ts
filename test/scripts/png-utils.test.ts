@@ -14,6 +14,7 @@
 import zlib from 'node:zlib'
 import { describe, expect, test } from 'vitest'
 import { decodePng, solidPngBase64 } from '../../scripts/png-utils.mjs'
+import { at, take } from '../helpers.ts'
 
 /** CRC-32, as PNG defines it. */
 function crc32(buf: Uint8Array) {
@@ -23,7 +24,7 @@ function crc32(buf: Uint8Array) {
 		return c
 	})
 	let c = -1
-	for (const byte of buf) c = table[(c ^ byte) & 0xff] ^ (c >>> 8)
+	for (const byte of buf) c = at(table, (c ^ byte) & 0xff) ^ (c >>> 8)
 	return (c ^ -1) >>> 0
 }
 
@@ -48,23 +49,24 @@ const SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
  */
 function encodeRgb(rows: number[][][], filters: number[] = []) {
 	const h = rows.length
-	const w = rows[0].length
+	const w = at(rows, 0).length
 	const stride = w * 3
 	const flat: Buffer[] = []
 	for (let y = 0; y < h; y++) {
 		const filter = filters[y] ?? 0
 		const line = Buffer.alloc(stride)
 		for (let x = 0; x < w; x++) {
-			line[x * 3] = rows[y][x][0]
-			line[x * 3 + 1] = rows[y][x][1]
-			line[x * 3 + 2] = rows[y][x][2]
+			const [r, g, b] = take(at(at(rows, y), x), 3)
+			line[x * 3] = r
+			line[x * 3 + 1] = g
+			line[x * 3 + 2] = b
 		}
 		const encoded = Buffer.alloc(stride)
 		for (let i = 0; i < stride; i++) {
-			const a = i >= 3 ? line[i - 3] : 0
-			const b = y > 0 ? rows[y - 1][Math.floor(i / 3)][i % 3] : 0
-			const c = y > 0 && i >= 3 ? rows[y - 1][Math.floor((i - 3) / 3)][(i - 3) % 3] : 0
-			let v = line[i]
+			const a = i >= 3 ? at(line, i - 3) : 0
+			const b = y > 0 ? at(at(at(rows, y - 1), Math.floor(i / 3)), i % 3) : 0
+			const c = y > 0 && i >= 3 ? at(at(at(rows, y - 1), Math.floor((i - 3) / 3)), (i - 3) % 3) : 0
+			let v = at(line, i)
 			if (filter === 1) v -= a
 			else if (filter === 2) v -= b
 			else if (filter === 3) v -= (a + b) >> 1
@@ -95,7 +97,7 @@ function encodeRgb(rows: number[][][], filters: number[] = []) {
 /** An 8-bit indexed PNG: PowerPoint writes one of these for a blank slide. */
 function encodeIndexed(rows: number[][], palette: number[][]) {
 	const h = rows.length
-	const w = rows[0].length
+	const w = at(rows, 0).length
 	const flat: Buffer[] = []
 	for (const row of rows) flat.push(Buffer.from([0]), Buffer.from(row))
 	const ihdr = Buffer.alloc(13)
@@ -213,7 +215,7 @@ describe('decodePng', () => {
 		const idatStart = bad.indexOf(Buffer.from('IDAT', 'ascii')) + 4
 		const idatLen = bad.readUInt32BE(idatStart - 8)
 		const raw = zlib.inflateSync(bad.subarray(idatStart, idatStart + idatLen))
-		raw[1 + CHECKER[0].length * 3] = 0 // row 1's filter: Up -> None
+		raw[1 + at(CHECKER, 0).length * 3] = 0 // row 1's filter: Up -> None
 
 		const patched = Buffer.concat([
 			SIGNATURE,

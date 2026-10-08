@@ -19,6 +19,7 @@ import { replaceVersion } from '../../scripts/sync-version.mjs'
 import { stale } from '../../scripts/ensure-dist.mjs'
 import { hitsByLocation, project } from '../../scripts/coverage-project.mjs'
 import { ROOT } from '../../scripts/script-utils.mjs'
+import { defined } from '../helpers.ts'
 
 describe('run-steps expansion', () => {
 	test('a leaf script expands to its own command', () => {
@@ -260,7 +261,7 @@ describe('coverage projection onto the Node report shape', () => {
 		// @ts-expect-error JSON spells an open-ended column `null`, which istanbul's type does not admit
 		node.statementMap['0'].end = { line: 10, column: null }
 		const browser = fileData([10], [4])
-		browser.statementMap['0'].end = { line: 10, column: Infinity }
+		defined(browser.statementMap['0']).end = { line: 10, column: Infinity }
 		expect(project(node, browser).coverage.s).toEqual({ 0: 4 })
 	})
 })

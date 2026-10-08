@@ -12,7 +12,7 @@
 
 import path from 'node:path'
 import { describe, expect, test } from 'vitest'
-import { defined } from '../helpers.ts'
+import { defined, at } from '../helpers.ts'
 import { PROGRAMS, programFrame, programModule, programSource } from '../../scripts/comparison/programs.mjs'
 import { PROBES, probeSource, SUBJECTS } from '../../scripts/comparison/probes.mjs'
 import { functionBody, literal, renderSource } from '../../scripts/comparison/source.mjs'
@@ -160,7 +160,7 @@ describe('the bundle corpus', () => {
 	test('the frame the page prints is the frame that was compiled', () => {
 		for (const subject of SUBJECTS) {
 			const frame = programFrame(subject)
-			const module = programModule(PROGRAMS[0], subject)
+			const module = programModule(at(PROGRAMS, 0), subject)
 			for (const line of frame.split('\n').filter((line) => line.trim() !== '' && !line.startsWith('//')))
 				expect(module, subject).toContain(line)
 		}

@@ -19,6 +19,7 @@ import { describe, expect, test } from 'vitest'
 import { SUBJECTS } from '../../scripts/comparison/probes.mjs'
 import { bytesAgreement, MODES, quantile, summarise } from '../../scripts/comparison/timing.mjs'
 import { scaleSource, scaleWorkload, SCALE_ARMS, SCALE_SIZES, WORKLOADS } from '../../scripts/comparison/workloads.mjs'
+import { at, take, defined } from '../helpers.ts'
 
 describe('the timing statistics', () => {
 	test('quantile interpolates between neighbours and hits the ends exactly', () => {
@@ -77,13 +78,13 @@ describe('the matched modes', () => {
 	// control, and the page's claim that the two tables isolate the compressor would be
 	// measuring one thing twice.
 	test('the two modes differ, and upstream stays on one code path across them', () => {
-		const [deflate, store] = MODES
+		const [deflate, store] = take(MODES, 2)
 		expect(deflate.id).toBe('deflate')
 		expect(store.id).toBe('store')
 		expect(deflate.props.pptxgenjs).not.toEqual(store.props.pptxgenjs)
 		expect(deflate.props['ts-pptx']).not.toEqual(store.props['ts-pptx'])
 		const outputType = (props: object) => (props as { outputType?: string }).outputType
-		expect(outputType(deflate.props.pptxgenjs)).toBe(outputType(store.props.pptxgenjs))
+		expect(outputType(defined(deflate.props.pptxgenjs))).toBe(outputType(defined(store.props.pptxgenjs)))
 	})
 })
 
@@ -108,7 +109,7 @@ describe('the scale corpus', () => {
 		expect(ours.length).toBe(upstream.length)
 		const differing = ours.map((line, index) => [line, upstream[index]]).filter(([a, b]) => a !== b)
 		expect(differing.length).toBe(1)
-		for (const line of differing[0]) expect(line).toContain('addChart')
+		for (const line of at(differing, 0)) expect(line).toContain('addChart')
 	})
 
 	// The harness's own vocabulary must not reach the page. A body that mentions the subject
@@ -136,7 +137,7 @@ describe('the scale corpus', () => {
 				return slide
 			},
 		}
-		scaleWorkload(3).build['ts-pptx'](pres)
+		defined(scaleWorkload(3).build['ts-pptx'])(pres)
 		expect(built.length).toBe(3)
 	})
 })
@@ -154,7 +155,7 @@ describe('the arms agree with what the timing loop runs', () => {
 	test('the printed body is the body a workload was built from', () => {
 		for (const subject of SUBJECTS) {
 			const printed = scaleSource(subject)
-			const armBody = SCALE_ARMS[subject](7).toString()
+			const armBody = defined(SCALE_ARMS[subject])(7).toString()
 			for (const line of printed.split('\n').filter((line) => line.trim() !== ''))
 				expect(armBody, subject).toContain(line.trim())
 		}

@@ -392,7 +392,7 @@ function firstXmlBlock(xml: string, tagName: string, label = tagName): string {
 function xmlAttributes(tag: string): Record<string, string> {
 	const attrs: Record<string, string> = {}
 	for (const match of tag.matchAll(/\s([\w:-]+)="([^"]*)"/g)) {
-		attrs[match[1]] = match[2]
+		attrs[at(match, 1)] = at(match, 2)
 	}
 	return attrs
 }

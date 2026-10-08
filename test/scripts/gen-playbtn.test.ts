@@ -13,11 +13,12 @@
 import fs from 'node:fs'
 import { describe, expect, test } from 'vitest'
 import { FRAME, PLAYBTN_PATH, playbtnModule, renderPlayButton } from '../../scripts/gen-playbtn.mjs'
+import { at } from '../helpers.ts'
 
 /** The RGBA pixel at `(x, y)` of a rendered frame. */
-function pixel(rgba: Uint8Array, w: number, x: number, y: number) {
+function pixel(rgba: Uint8Array, w: number, x: number, y: number): [number, number, number, number] {
 	const i = (y * w + x) * 4
-	return [rgba[i], rgba[i + 1], rgba[i + 2], rgba[i + 3]]
+	return [at(rgba, i), at(rgba, i + 1), at(rgba, i + 2), at(rgba, i + 3)]
 }
 
 /**
@@ -73,7 +74,7 @@ describe('gen-playbtn', () => {
 		const rgba = renderedFrame()
 		const cx = Math.round(w / 2)
 		const rOuter = (357 / 1383) * h
-		const edge = []
+		const edge: [y: number, r: number, a: number][] = []
 		for (let y = Math.floor(h / 2 - rOuter) - 3; y <= Math.ceil(h / 2 - rOuter) + 3; y++) {
 			const [r, , , a] = pixel(rgba, w, cx, y)
 			if (a > 56 && a < 254) edge.push([y, r, a])

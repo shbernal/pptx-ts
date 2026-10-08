@@ -11,6 +11,7 @@ import { JobError, MAX_TIMEOUT_MS, type PowerPointInfo, validateJob } from '../.
 import { type Executor, createRunner } from '../../scripts/powerpoint/runner.mjs'
 import { parsePowerPointVersion, parseRegValue } from '../../scripts/powerpoint/windows.mjs'
 import { WORKER_VERSION, createWorker, tokenMatches } from '../../scripts/powerpoint/worker.mjs'
+import { defined } from '../helpers.ts'
 
 const b64 = (text: string) => Buffer.from(text).toString('base64')
 const ENTRY = 'test/read/fixtures/authoring/author-x.ps1'
@@ -102,7 +103,7 @@ describe('runner', () => {
 			)
 		)
 		expect(Object.keys(result.files).sort()).toEqual(['changed.txt', 'out/deck.pptx'])
-		expect(Buffer.from(result.files['out/deck.pptx'], 'base64').toString()).toBe('new deck')
+		expect(Buffer.from(defined(result.files['out/deck.pptx']), 'base64').toString()).toBe('new deck')
 		expect(result.stdout).toMatch(/^pwsh -NoProfile -File .*author-x\.ps1 -OutPath out\/deck\.pptx$/)
 		expect(result.powerpoint).toEqual({ version: '16.0', build: '16.0.17928.20114' })
 		expect(hooks.clearResiliency).toHaveBeenCalledOnce()
