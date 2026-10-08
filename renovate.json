@@ -2,12 +2,15 @@
 	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
 	"extends": ["config:recommended", ":dependencyDashboard", ":semanticCommits", "group:monorepos", "group:recommended"],
 	"timezone": "UTC",
-	"schedule": ["before 6am on monday"],
 	"labels": ["dependencies"],
+	"minimumReleaseAge": "1 day",
+	"internalChecksFilter": "strict",
+	"prHourlyLimit": 0,
 	"osvVulnerabilityAlerts": true,
 	"vulnerabilityAlerts": {
-		"description": "Renovate already exempts security fixes from the schedule above — the built-in defaults for this object set `schedule: []` and `prCreation: \"immediate\"`, so they land as soon as they are found rather than waiting for Monday. Do not restate those here; the only additions are a label so they are sortable and `osvVulnerabilityAlerts` above, which sources advisories from osv.dev as well as GitHub's own feed.",
-		"labels": ["dependencies", "security"]
+		"description": "The only additions to Renovate's built-in security defaults. A label makes these PRs sortable, and `osvVulnerabilityAlerts` above sources advisories from osv.dev as well as GitHub's own feed. `minimumReleaseAge` overrides Renovate's default of none for security fixes: pnpm-workspace.yaml sets `minimumReleaseAgeStrict`, so a fix less than a day old would fail its lockfile update. Waiting the day opens a PR that installs, not one that is red for a reason CI cannot fix.",
+		"labels": ["dependencies", "security"],
+		"minimumReleaseAge": "1 day"
 	},
 	"lockFileMaintenance": {
 		"enabled": true,
@@ -29,9 +32,9 @@
 			"rangeStrategy": "widen"
 		},
 		{
-			"description": "Separate major updates into their own PRs; keep them off the weekly batch.",
-			"matchUpdateTypes": ["major"],
-			"schedule": ["before 6am on the first day of the month"]
+			"description": "Mirror `minimumReleaseAgeExclude` in pnpm-workspace.yaml. These are our own publishes, so the day's wait that lets someone else catch a compromised release buys nothing. Keep the two lists in step: a package excluded there but held here waits a day for no reason, and the reverse opens a PR whose install fails.",
+			"matchPackageNames": ["pptx-html", "@shbernal/ts-pptx", "charcheck", "ooxml-validate"],
+			"minimumReleaseAge": null
 		},
 		{
 			"description": "Group all @types/* devDependencies together.",
