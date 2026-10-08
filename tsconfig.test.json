@@ -5,10 +5,11 @@
 	"compilerOptions": {
 		"noEmit": true,
 		"types": ["node"],
+		// The few `.mjs` files under `test/` that must stay JavaScript (pages the browser lane
+		// loads unbundled, and probe builds a test reads back with `toString()`) are checked
+		// here at the same settings, through their JSDoc.
 		"allowJs": true,
-		// A `.ts` test may import a helper still written in `.js`; that file is checked by
-		// `tsconfig.test-js.json` at its own settings, not here.
-		"checkJs": false,
+		"checkJs": true,
 		"allowImportingTsExtensions": true,
 		"incremental": true,
 		"tsBuildInfoFile": ".tmp/tsconfig.test.tsbuildinfo",
@@ -20,8 +21,12 @@
 		"noPropertyAccessFromIndexSignature": false,
 		"noUncheckedIndexedAccess": false
 	},
-	"include": ["test/**/*.ts"],
-	// Typechecked by `docs/tsconfig.json`: it loads VitePress, whose declarations only compile
-	// under `skipLibCheck`, and this project keeps full lib checking.
-	"exclude": ["test/regression/www/mermaid-fence.test.ts"]
+	"include": ["test/**/*.ts", "test/**/*.mjs"],
+	"exclude": [
+		// Typechecked by `docs/tsconfig.json`: it loads VitePress, whose declarations only
+		// compile under `skipLibCheck`, and this project keeps full lib checking.
+		"test/regression/www/mermaid-fence.test.ts",
+		// Run directly with `node`, like `scripts/`, so `tsconfig.scripts.json` checks them.
+		"test/read/fixtures/authoring/**"
+	]
 }

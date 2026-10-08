@@ -262,19 +262,17 @@ Two mechanisms replace the guarantee isolation gave:
   file keep source order, which `captureDiagnostics()` and the warn-capturing schema fixtures
   rely on.
 
-### TypeScript and JavaScript tests
+### TypeScript tests
 
-The suite is moving from JavaScript to TypeScript, and the two typecheck at different settings
-while both exist. `typecheck:test` runs both projects:
+Tests are TypeScript. `typecheck:test` checks them with `tsconfig.test.json` at `src/`'s
+strictness, except `noPropertyAccessFromIndexSignature`, which is house style, and
+`noUncheckedIndexedAccess`. An unused binding fails the check, because in a test it is usually a
+stale assertion. Prefix one with `_` when it is deliberate.
 
-- `tsconfig.test.json` (`typecheck:test:ts`) covers `test/**/*.ts` at `src/`'s strictness,
-  except `noPropertyAccessFromIndexSignature`, which is house style, and
-  `noUncheckedIndexedAccess`, which waits until no JavaScript test is left. An unused binding
-  fails the check, because in a test it is usually a stale assertion. Prefix one with `_` when
-  it is deliberate.
-- `tsconfig.test-js.json` (`typecheck:test:js`) covers the remaining `.js` and `.mjs` files with
-  implicit `any`, unused bindings and unchecked index access allowed. A `.ts` test may import a
-  `.js` helper; the helper is checked here, not at the stricter settings.
+A few `.mjs` files under `test/` stay JavaScript because something other than a test runner
+loads them: the pages under `test/browser/harness/`, which the browser imports unbundled, and
+`test/scripts/comparison-source.fixtures.mjs`, whose functions a test reads back with
+`toString()`. The same project checks them through their JSDoc, at the same settings.
 
 Write a new test in TypeScript. Vitest runs `.ts` with no build step, and Playwright accepts a
 `.spec.ts` under every project's prefix.
