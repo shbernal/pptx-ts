@@ -14,10 +14,13 @@
 import { describe, test, expect } from 'vitest'
 import { alignByKey } from '../../../src/script/verify/align.ts'
 
-/** `[key, key]` pairs, with `null` where one side had nothing. */
-const keys = (pairs) => pairs.map(([before, after]) => [before?.k ?? null, after?.k ?? null])
+type Item = { k: string | null }
 
-const item = (k) => ({ k })
+/** `[key, key]` pairs, with `null` where one side had nothing. */
+const keys = (pairs: Array<[Item | null, Item | null]>) =>
+	pairs.map(([before, after]) => [before?.k ?? null, after?.k ?? null])
+
+const item = (k: string | null): Item => ({ k })
 
 describe('alignByKey', () => {
 	test('a key pairs its item wherever it moved to', () => {

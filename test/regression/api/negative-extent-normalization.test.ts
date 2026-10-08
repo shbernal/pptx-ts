@@ -9,14 +9,14 @@ import { PNG_1X1, assert, defineRegressionSuite, firstXmlBlock, slideXml, xmlBlo
 const IN = 914400
 
 /** Every `<a:ext>`/`<a:chExt>` in the part, as `{ cx, cy }` numbers. */
-function extents(xml) {
+function extents(xml: string) {
 	return (xml.match(/<a:(?:ch)?ext\b[^>]*\/>/g) || []).map((tag) => ({
 		cx: Number(/\bcx="(-?\d+)"/.exec(tag)?.[1]),
 		cy: Number(/\bcy="(-?\d+)"/.exec(tag)?.[1]),
 	}))
 }
 
-function assertNoNegativeExtents(xml) {
+function assertNoNegativeExtents(xml: string) {
 	const bad = extents(xml).filter((e) => e.cx < 0 || e.cy < 0)
 	assert(bad.length === 0, `expected no negative extents; got ${JSON.stringify(bad)}`)
 }

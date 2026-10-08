@@ -1,4 +1,4 @@
-import TsPptx, { InvalidOptionError, ShapeType } from '../../../dist/node.js'
+import TsPptx, { InvalidOptionError, ShapeType, type ChartOpts, type ShapeProps } from '../../../dist/node.js'
 import {
 	defineRegressionSuite,
 	build,
@@ -16,8 +16,10 @@ import {
 // cannot represent and asserts it refuses, plus the one case that is representable and was being
 // mangled: an angle past a full turn.
 
+type Author = (p: TsPptx) => unknown
+
 /** The `err.code` of whatever building this deck throws, or `null` if it built. */
-async function codeFrom(buildFn) {
+async function codeFrom(buildFn: Author) {
 	const err = await caught(() => build(buildFn))
 	if (err === null) return null
 	assert(err instanceof InvalidOptionError, 'expected an InvalidOptionError; got: ' + String(err))
@@ -25,7 +27,7 @@ async function codeFrom(buildFn) {
 }
 
 /** The first shape's `<a:xfrm>` opening tag on slide 1. */
-async function xfrmFor(buildFn) {
+async function xfrmFor(buildFn: Author) {
 	const { zip } = await build(buildFn)
 	const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 	const tag = /<a:xfrm[^>]*>/.exec(xml.slice(xml.indexOf('<p:sp>')))
@@ -36,7 +38,7 @@ async function xfrmFor(buildFn) {
 const BOX = { x: 1, y: 1, w: 4, h: 2 }
 
 /** A minimal `custGeom` triangle -- `<a:ahLst>` is only emitted for a freeform path. */
-function custGeomWith(extra) {
+function custGeomWith(extra: ShapeProps): ShapeProps {
 	return {
 		x: 1,
 		y: 1,
@@ -183,7 +185,7 @@ defineRegressionSuite('Numeric conversion guards', [
 		// option threw. Only `0` and an absent value still mean "not stated".
 		name: 'a NaN rotation, line width, margin or fill transparency is refused rather than dropped',
 		fn: async () => {
-			const cases = [
+			const cases: { label: string; code: string; buildFn: Author }[] = [
 				{
 					label: 'shape rotate',
 					code: 'coord/non-finite',
@@ -221,7 +223,7 @@ defineRegressionSuite('Numeric conversion guards', [
 		fn: async () => {
 			const png =
 				'image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
-			const cases = [
+			const cases: { label: string; code: string; buildFn: Author }[] = [
 				{
 					label: 'shape line transparency',
 					code: 'percent/non-finite',
@@ -260,7 +262,7 @@ defineRegressionSuite('Numeric conversion guards', [
 		name: 'a NaN chart rotation, border width or marker line size is refused rather than dropped',
 		fn: async () => {
 			const data = [{ name: 'R', labels: ['A', 'B'], values: [1, 2] }]
-			const options = {
+			const options: Record<string, ChartOpts> = {
 				titleRotate: { showTitle: true, title: 'T', titleRotate: NaN },
 				catAxisLabelRotate: { catAxisLabelRotate: NaN },
 				valAxisLabelRotate: { valAxisLabelRotate: NaN },
@@ -281,7 +283,7 @@ defineRegressionSuite('Numeric conversion guards', [
 		fn: async () => {
 			const xfrm = await xfrmFor((p) => p.addSlide().addShape('rect', { ...BOX, rotate: 0 }))
 			assert(!/\brot=/.test(xfrm), 'rotate: 0 emits no rot; got: ' + xfrm)
-			const paths = {
+			const paths: Record<string, Author> = {
 				shape: (p) => p.addSlide().addShape('rect', { ...BOX, line: { color: 'FF0000', width: 0 } }),
 				'line text box': (p) =>
 					p.addSlide().addText('', { ...BOX, h: 0, shape: 'line', line: { color: 'FF0000', width: 0 } }),
@@ -303,7 +305,7 @@ defineRegressionSuite('Numeric conversion guards', [
 		name: 'a NaN paragraph option on a run is refused rather than inherited from the shape',
 		fn: async () => {
 			// `lineSpacingMultiple` is a percentage, so its clamp names `percent/non-finite`.
-			const cases = [
+			const cases: Array<[string, number, string]> = [
 				['lineSpacing', 40, 'coord/non-finite'],
 				['lineSpacingMultiple', 1.5, 'percent/non-finite'],
 				['paraSpaceBefore', 10, 'coord/non-finite'],
@@ -334,8 +336,7 @@ defineRegressionSuite('Numeric conversion guards', [
 		// message named an option that appears in no API. Each caller now passes its own spelling.
 		name: 'a refused line width names the option the caller set',
 		fn: async () => {
-			/** @type {[string, (p: TsPptx) => unknown][]} */
-			const cases = [
+			const cases: [string, Author][] = [
 				['line: width', (p) => p.addSlide().addShape('rect', { ...BOX, line: { color: 'FF0000', width: NaN } })],
 				['outline.size', (p) => p.addSlide().addText('x', { ...BOX, outline: { color: 'FF0000', size: NaN } })],
 				[

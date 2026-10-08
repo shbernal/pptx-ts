@@ -1,4 +1,4 @@
-import { ChartType, ShapeType } from '../../../dist/node.js'
+import { ChartType, ShapeType, type Slide } from '../../../dist/node.js'
 import { vi } from 'vitest'
 import {
 	defineRegressionSuite,
@@ -256,8 +256,8 @@ defineRegressionSuite('Object identity [legacy bug-21]', [
 		fn: async () => {
 			const name = 'Q&A <"draft">'
 			const escaped = 'Q&amp;A &lt;&quot;draft&quot;&gt;'
-			/** @type {import('../../../dist/node.js').Slide | undefined} */
-			let filled
+			// Assigned inside the build callback, which flow analysis does not follow.
+			let filled = undefined as Slide | undefined
 			const { zip } = await build((p) => {
 				p.defineSlideMaster({
 					title: 'NAMED',

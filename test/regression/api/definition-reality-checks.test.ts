@@ -12,10 +12,10 @@ import { InvalidOptionError } from '../../../dist/node.js'
 // emitter falls back to a default glyph, so refusing the rel is recoverable and warns instead.
 
 /** Call `fn` with `console.log`/`console.error` captured; returns `{ error, noise }`. */
-function caughtQuietly(fn) {
+function caughtQuietly(fn: () => unknown) {
 	const origLog = console.log
 	const origError = console.error
-	const noise = []
+	const noise: string[] = []
 	console.log = (...args) => noise.push(args.map(String).join(' '))
 	console.error = (...args) => noise.push(args.map(String).join(' '))
 	try {
@@ -30,7 +30,7 @@ function caughtQuietly(fn) {
 }
 
 /** Assert `fn` throws an `InvalidOptionError` carrying `code`, and says nothing on the console. */
-function assertRejects(fn, code) {
+function assertRejects(fn: () => unknown, code: string) {
 	const { error, noise } = caughtQuietly(fn)
 	assert(error instanceof InvalidOptionError, `expected an InvalidOptionError; got: ${String(error)}`)
 	assertEqual(error.code, code, 'the code identifies the condition')

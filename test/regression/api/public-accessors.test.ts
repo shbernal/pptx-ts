@@ -143,8 +143,8 @@ defineRegressionSuite('Public accessors', [
 			// the first table's report while its continuations stayed in the deck. It appends now,
 			// and by identity: a later table lands on the earlier one's continuations rather than
 			// making its own, so the same slide is spilled onto twice and named once.
-			const rows = (n) => Array.from({ length: n }, (_, i) => [{ text: `r${i}c0` }, { text: `r${i}c1` }])
-			const opts = (y) => ({
+			const rows = (n: number) => Array.from({ length: n }, (_, i) => [{ text: `r${i}c0` }, { text: `r${i}c1` }])
+			const opts = (y: number) => ({
 				x: 0.5,
 				y,
 				w: 9,

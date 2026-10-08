@@ -23,7 +23,7 @@ import { readFileSync } from 'node:fs'
 const EPSILON = 1e-6
 
 /** Deep-compare, returning the JSON path of the first difference or null. */
-function firstDifference(actual, expected, path = '$') {
+function firstDifference(actual: unknown, expected: unknown, path = '$'): string | null {
 	if (typeof expected === 'number' && typeof actual === 'number') {
 		if (actual === expected) return null
 		if (Number.isFinite(actual) && Number.isFinite(expected) && Math.abs(actual - expected) <= EPSILON) return null
@@ -41,11 +41,13 @@ function firstDifference(actual, expected, path = '$') {
 	}
 	if (expected !== null && typeof expected === 'object') {
 		if (actual === null || typeof actual !== 'object') return `${path}: expected an object, got ${kind(actual)}`
+		const actualFields = actual as Record<string, unknown>
+		const expectedFields = expected as Record<string, unknown>
 		const keys = [...new Set([...Object.keys(expected), ...Object.keys(actual)])]
 		for (const key of keys) {
-			if (!(key in expected)) return `${path}.${key}: unexpected field (value ${JSON.stringify(actual[key])})`
-			if (!(key in actual)) return `${path}.${key}: missing field (expected ${JSON.stringify(expected[key])})`
-			const diff = firstDifference(actual[key], expected[key], `${path}.${key}`)
+			if (!(key in expected)) return `${path}.${key}: unexpected field (value ${JSON.stringify(actualFields[key])})`
+			if (!(key in actual)) return `${path}.${key}: missing field (expected ${JSON.stringify(expectedFields[key])})`
+			const diff = firstDifference(actualFields[key], expectedFields[key], `${path}.${key}`)
 			if (diff) return diff
 		}
 		return null
@@ -53,7 +55,7 @@ function firstDifference(actual, expected, path = '$') {
 	return actual === expected ? null : `${path}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`
 }
 
-function kind(value) {
+function kind(value: unknown) {
 	if (value === null) return 'null'
 	return Array.isArray(value) ? 'an array' : typeof value
 }

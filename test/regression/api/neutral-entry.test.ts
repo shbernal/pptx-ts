@@ -11,8 +11,9 @@ import { describe, test, expect } from 'vitest'
 import NeutralTsPptx, { UnsupportedFeatureError } from '../../../dist/index.js'
 import BrowserTsPptx from '../../../dist/browser.js'
 import NodeTsPptx from '../../../dist/node.js'
+import { caught, defined } from '../../helpers.ts'
 
-function deck(Ctor) {
+function deck<P extends Pick<NeutralTsPptx, 'addSlide'>>(Ctor: new () => P): P {
 	const pptx = new Ctor()
 	pptx.addSlide().addText('hello', { x: 1, y: 1, w: 4, h: 1 })
 	return pptx
@@ -20,7 +21,8 @@ function deck(Ctor) {
 
 describe('neutral entry: producing a deck', () => {
 	test('write() returns package bytes', async () => {
-		const bytes = await deck(NeutralTsPptx).write({ outputType: 'nodebuffer' })
+		// `write` is typed as every output type's union; `nodebuffer` is the Uint8Array arm.
+		const bytes = (await deck(NeutralTsPptx).write({ outputType: 'nodebuffer' })) as Uint8Array
 		expect(bytes.length).toBeGreaterThan(0)
 		// PPTX is a ZIP → starts with the local-file-header magic "PK\x03\x04".
 		expect(bytes[0]).toBe(0x50)
@@ -38,7 +40,7 @@ describe('neutral entry: what it refuses', () => {
 	test('writeFile() throws UnsupportedFeatureError with a runtime-capability code', async () => {
 		const pptx = deck(NeutralTsPptx)
 		await expect(pptx.writeFile({ fileName: 'never-written.pptx' })).rejects.toBeInstanceOf(UnsupportedFeatureError)
-		const err = await pptx.writeFile({ fileName: 'never-written.pptx' }).catch((e) => e)
+		const err = defined(await caught(() => pptx.writeFile({ fileName: 'never-written.pptx' })))
 		expect(err.code).toBe('runtime/file-output-unavailable')
 	})
 

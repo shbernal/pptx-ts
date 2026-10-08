@@ -4,7 +4,9 @@ import {
 	assert,
 	assertEqual,
 	captureDiagnostics,
+	defined,
 	setDiagnosticHandler,
+	type TsPptx,
 } from '../../helpers.ts'
 
 // The diagnostics seam: every library warning is a structured `{ code, message }` delivered to a
@@ -16,7 +18,7 @@ import {
 // console handler owns that).
 
 /** A tiny deck that trips exactly one known condition. */
-function badColumns(p) {
+function badColumns(p: TsPptx) {
 	// `columns` must be 1-16; 99 is rejected and the option ignored.
 	p.addSlide().addText('x', { x: 1, y: 1, w: 2, h: 1, columns: 99 })
 }
@@ -25,7 +27,7 @@ defineRegressionSuite('Diagnostics handler', [
 	{
 		name: 'an installed handler receives a structured diagnostic instead of a console line',
 		fn: async () => {
-			const seen = []
+			const seen: string[] = []
 			const originalConsoleWarn = console.warn
 			console.warn = (msg) => seen.push(String(msg))
 			let captured
@@ -41,7 +43,7 @@ defineRegressionSuite('Diagnostics handler', [
 			)
 			assertEqual(seen.length, 0, 'an installed handler must suppress the console fallback entirely')
 
-			const diagnostic = captured.diagnostics.find((d) => d.code === 'text/invalid-columns')
+			const diagnostic = defined(captured.diagnostics.find((d) => d.code === 'text/invalid-columns'))
 			assertEqual(typeof diagnostic.message, 'string', 'a diagnostic carries a message string')
 			assert(diagnostic.message.length > 0, 'the message is non-empty')
 			// The prefix belongs to the default console handler, not to the message. A message that
@@ -59,7 +61,7 @@ defineRegressionSuite('Diagnostics handler', [
 			setDiagnosticHandler(() => {})
 			setDiagnosticHandler(null)
 
-			const seen = []
+			const seen: string[] = []
 			const originalConsoleWarn = console.warn
 			console.warn = (msg) => seen.push(String(msg))
 			try {
@@ -86,8 +88,7 @@ defineRegressionSuite('Diagnostics handler', [
 			setDiagnosticHandler((d) => {
 				if (d.code === 'text/invalid-columns') throw new Escalated(d.code)
 			})
-			/** @type {unknown} */
-			let thrown = null
+			let thrown: unknown = null
 			try {
 				await build(badColumns)
 			} catch (err) {
@@ -141,11 +142,11 @@ defineRegressionSuite('Diagnostics handler', [
 					p.addSection({})
 				})
 			)
-			for (const expected of /** @type {const} */ ([
+			for (const expected of [
 				'text/invalid-columns',
 				'text/invalid-column-spacing',
 				'section/missing-title',
-			])) {
+			] as const) {
 				assert(codes.includes(expected), `expected ${expected}; got: ` + JSON.stringify(codes))
 			}
 			// Every code is `area/condition` — the shape consumers pattern-match on.

@@ -5,6 +5,7 @@ import {
 	captureDiagnostics,
 	assert,
 	assertEqual,
+	type TsPptx,
 } from '../../helpers.ts'
 import { resetDiagnosticState } from '../../../dist/node.js'
 
@@ -26,12 +27,12 @@ import { resetDiagnosticState } from '../../../dist/node.js'
 // property the shuffle exists to deny. This is the deterministic half of that proof.
 
 /** A deck that trips exactly one `warnOnce` condition (a table margin >= 1 reads as legacy points). */
-function legacyMargin(p) {
+function legacyMargin(p: TsPptx) {
 	p.addSlide().addTable([[{ text: 'x' }]], { x: 1, y: 1, w: 4, margin: 10 })
 }
 
 /** A deck that trips exactly one known condition (`columns` must be 1-16). */
-function badColumns(p) {
+function badColumns(p: TsPptx) {
 	p.addSlide().addText('x', { x: 1, y: 1, w: 2, h: 1, columns: 99 })
 }
 
@@ -49,7 +50,7 @@ defineRegressionSuite('Global state is reset between tests', [
 		fn: async () => {
 			// No handler installed here on purpose. If the neighbour's survived, building this
 			// deck throws its error rather than warning; the default handler warns instead.
-			const seen = []
+			const seen: string[] = []
 			const originalConsoleWarn = console.warn
 			console.warn = (msg) => seen.push(String(msg))
 			try {

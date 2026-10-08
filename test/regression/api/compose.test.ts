@@ -10,7 +10,7 @@
 // Imports from `dist/` because this is the public surface: the entry's `createPresentation` and
 // the `pptx-ts/families` subpath are what a consumer reaches for.
 import { describe, expect, test } from 'vitest'
-import TsPptx, { createPresentation } from '../../../dist/node.js'
+import TsPptx, { createPresentation, type Composed } from '../../../dist/node.js'
 import { charts, comments, tables } from '../../../dist/families.js'
 import { assert, assertEqual, caughtSync } from '../../helpers.ts'
 
@@ -18,7 +18,7 @@ const SERIES = [{ name: 'Rev', labels: ['Q1', 'Q2'], values: [1, 2] }]
 
 const decoder = new TextDecoder()
 /** Parts as `path -> text`, with the two timestamps a pair of builds can straddle blanked. */
-async function partsOf(pres) {
+async function partsOf(pres: Pick<TsPptx, 'toParts'>) {
 	const parts = await pres.toParts()
 	return new Map(
 		parts.map((part) => [
@@ -31,7 +31,7 @@ async function partsOf(pres) {
 }
 
 /** The slides both halves of the byte-for-byte case author, using only core-tier families. */
-function coreDeck(pres) {
+function coreDeck<P extends Composed<[]>>(pres: P): P {
 	const slide = pres.addSlide()
 	slide.addText('composed', { x: 1, y: 1, w: 4, h: 1 })
 	slide.addShape('rect', { x: 1, y: 2.5, w: 2, h: 1, fill: { color: '0088CC' } })
@@ -103,7 +103,7 @@ describe('createPresentation', () => {
 			'addOleObject',
 			'addModel3d',
 			'addSlideZoom',
-		])
+		] as const)
 			expect(typeof slide[method], `${method} on the full tier`).toBe('function')
 		// Not merely present: a method with no family behind it is a thrower, which is also a function.
 		expect(() => slide.addTable([[{ text: 'a' }]], { x: 1, y: 1, w: 2 })).not.toThrow()

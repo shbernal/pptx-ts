@@ -1,3 +1,4 @@
+import type { Coord } from '../../../dist/node.js'
 import { defineRegressionSuite, build, readEntry, assert, caught } from '../../helpers.ts'
 
 // Coordinates resolve through a single boundary (coordToEmu) with NO magnitude guessing:
@@ -6,7 +7,9 @@ import { defineRegressionSuite, build, readEntry, assert, caught } from '../../h
 // threshold. Slide is the default LAYOUT_16x9 → 10in wide (9144000 EMU), 5.625in tall (5143500).
 const IN = 914400 // EMU per inch
 
-async function offExtFor(opts) {
+type Box = { x: Coord; y: Coord; w: Coord; h: Coord }
+
+async function offExtFor(opts: Box) {
 	const { zip } = await build((p) => {
 		p.addSlide().addShape('rect', { x: opts.x, y: opts.y, w: opts.w, h: opts.h })
 	})
@@ -73,7 +76,7 @@ defineRegressionSuite('Coordinate units', [
 		fn: async () => {
 			const r = await offExtFor({ x: '27273042316900emu', y: '-27273042329600emu', w: 1, h: 1 })
 			assert(r.x === 27273042316900 && r.y === -27273042329600, JSON.stringify(r))
-			const outside = {
+			const outside: Record<string, Box> = {
 				'EMU past the maximum': { x: '27273042316901emu', y: 0, w: 1, h: 1 },
 				'EMU past the minimum': { x: 0, y: '-27273042329601emu', w: 1, h: 1 },
 				'an extent far past it': { x: 0, y: 0, w: '10000000000000000000000emu', h: 1 },

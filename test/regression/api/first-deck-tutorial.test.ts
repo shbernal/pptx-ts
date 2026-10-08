@@ -33,8 +33,7 @@ function programFromPage() {
 }
 
 let dir = ''
-/** @type {Buffer} */
-let deck
+let deck: Buffer
 
 beforeAll(() => {
 	dir = mkdtempSync(path.join(os.tmpdir(), 'first-deck-'))

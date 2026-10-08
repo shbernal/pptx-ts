@@ -23,15 +23,21 @@ import {
 	composeFamilies,
 	PRESENTATION_METHOD_FAMILIES,
 	SLIDE_METHOD_FAMILIES,
+	type ChildDescriptorKey,
+	type ConstructFamily,
+	type FamilyName,
+	type PresentationAuthors,
+	type SlideAuthors,
 } from '../../../src/families/shared.ts'
+import type { SlideMasterObject } from '../../../src/types/index.ts'
 // From `src/`, not `dist/`: `warn` here is the src-side module, and `test/helpers.ts`'s
 // `captureDiagnostics` installs its handler on the built one, which is a different singleton.
-import { setDiagnosticHandler } from '../../../src/diagnostics.ts'
+import { setDiagnosticHandler, type Diagnostic } from '../../../src/diagnostics.ts'
 import { assert, assertEqual } from '../../helpers.ts'
 
 const SERIES = [{ name: 'Rev', labels: ['Q1', 'Q2'], values: [1, 2] }]
 
-const composed = (families) => new PresentationCore(createNodeRuntime(), families)
+const composed = (families: readonly ConstructFamily[]) => new PresentationCore(createNodeRuntime(), families)
 const withoutCharts = ALL_CONSTRUCT_FAMILIES.filter((family) => family !== chartFamily)
 
 // Freeze the clock for the whole file, because two parts of these decks read it and only one of
@@ -55,24 +61,24 @@ afterAll(() => {
 // is byte-exact. Most of these parts are XML, but the embedded workbooks are compressed, and
 // utf-8 decoding folds distinct invalid sequences onto the same U+FFFD.
 const decoder = new TextDecoder('latin1')
-function decode(bytes) {
+function decode(bytes: Uint8Array) {
 	return decoder.decode(bytes)
 }
 
 /** Build a deck through a family list and return its parts as `path -> text`, in emission order. */
-async function partsOf(families, author) {
+async function partsOf(families: readonly ConstructFamily[], author: (pres: PresentationCore) => void) {
 	const pres = composed(families)
 	author(pres)
 	return new Map((await pres.toParts()).map((part) => [part.path, decode(part.data)]))
 }
 
-function assertSameParts(a, b, label) {
+function assertSameParts(a: Map<string, string>, b: Map<string, string>, label: string) {
 	assertEqual(JSON.stringify([...a.keys()]), JSON.stringify([...b.keys()]), `${label}: part paths or their order`)
 	for (const [path, text] of a) assert(b.get(path) === text, `${label}: ${path} differs`)
 }
 
 /** A deck that reaches several families at once, including one inside a slide master. */
-function richDeck(pres) {
+function richDeck(pres: PresentationCore) {
 	pres.defineSlideMaster({
 		title: 'MASTER',
 		objects: [
@@ -105,7 +111,7 @@ describe('construct families', () => {
 	})
 
 	test('dropping a family the deck never uses changes nothing', async () => {
-		const author = (pres) => pres.addSlide().addText('text only', { x: 1, y: 1, w: 4, h: 1 })
+		const author = (pres: PresentationCore) => pres.addSlide().addText('text only', { x: 1, y: 1, w: 4, h: 1 })
 		assertSameParts(
 			await partsOf(ALL_CONSTRUCT_FAMILIES, author),
 			await partsOf(withoutCharts, author),
@@ -141,7 +147,7 @@ describe('construct families', () => {
 	test('every slide method the seam names is supplied by the full list', () => {
 		const { authors } = composeFamilies(ALL_CONSTRUCT_FAMILIES)
 		const names = new Set(ALL_CONSTRUCT_FAMILIES.map((family) => family.name))
-		for (const [method, family] of Object.entries(SLIDE_METHOD_FAMILIES)) {
+		for (const [method, family] of Object.entries(SLIDE_METHOD_FAMILIES) as [keyof SlideAuthors, FamilyName][]) {
 			// Both directions: the seam attributes every method to a family that is in the list, and
 			// the list between them supplies every method the seam names. A method with no author is
 			// bound to a thrower, which looks like a function from the outside and fails every call.
@@ -151,7 +157,10 @@ describe('construct families', () => {
 		// Same for the presentation's own methods, minus the one that needs a DOM: `tableToSlides`
 		// comes from the table family's live-DOM half, which only the browser entry composes.
 		const { presentationAuthors } = composeFamilies(ALL_CONSTRUCT_FAMILIES)
-		for (const [method, family] of Object.entries(PRESENTATION_METHOD_FAMILIES)) {
+		for (const [method, family] of Object.entries(PRESENTATION_METHOD_FAMILIES) as [
+			keyof PresentationAuthors,
+			FamilyName,
+		][]) {
 			assert(names.has(family), `${method} is attributed to "${family}", which is not in the full list`)
 			if (method === 'tableToSlides') continue
 			assert(typeof presentationAuthors[method] === 'function', `${method} is not supplied by any family`)
@@ -163,12 +172,15 @@ describe('construct families', () => {
 		const names = new Set(ALL_CONSTRUCT_FAMILIES.map((family) => family.name))
 		// Both directions, as for the methods above: nothing claims a descriptor key the full list
 		// cannot author, and nothing authors one the seam cannot attribute to a family.
-		for (const [key, family] of Object.entries(CHILD_DESCRIPTOR_FAMILIES)) {
+		for (const [key, family] of Object.entries(CHILD_DESCRIPTOR_FAMILIES) as [ChildDescriptorKey, FamilyName][]) {
 			assert(names.has(family), `the '${key}' descriptor is attributed to "${family}", which is not in the full list`)
 			assert(typeof children[key] === 'function', `the '${key}' descriptor is not supplied by any family`)
 		}
 		for (const key of Object.keys(children))
-			assert(CHILD_DESCRIPTOR_FAMILIES[key] !== undefined, `the '${key}' descriptor is attributed to no family`)
+			assert(
+				CHILD_DESCRIPTOR_FAMILIES[key as ChildDescriptorKey] !== undefined,
+				`the '${key}' descriptor is attributed to no family`
+			)
 	})
 
 	// The condition the seam made reachable: a descriptor key is only rejected by the *types* when
@@ -176,8 +188,8 @@ describe('construct families', () => {
 	// presentation composed without charts type-checks, and used to leave the deck silently.
 	describe('a child descriptor whose family was not composed', () => {
 		/** Collect the src-side diagnostics `fn` raises. */
-		function diagnosticsOf(fn) {
-			const seen = []
+		function diagnosticsOf(fn: () => void) {
+			const seen: Diagnostic[] = []
 			setDiagnosticHandler((d) => seen.push(d))
 			try {
 				fn()
@@ -187,8 +199,7 @@ describe('construct families', () => {
 			return seen
 		}
 
-		/** @type {import('../../../src/types/index.ts').SlideMasterObject} */
-		const chartChild = { chart: { type: 'bar', data: SERIES, options: { x: 1, y: 1, w: 3, h: 2 } } }
+		const chartChild: SlideMasterObject = { chart: { type: 'bar', data: SERIES, options: { x: 1, y: 1, w: 3, h: 2 } } }
 
 		test('warns from a slide master, naming the family', () => {
 			const pres = composed(withoutCharts)
@@ -201,7 +212,7 @@ describe('construct families', () => {
 			assert(seen[0].message.includes('defineSlideMaster()'), `message names the call: ${seen[0].message}`)
 			// The descriptor the composed families *do* claim still landed. Read off the layout the
 			// master became, which is internal state a cast reaches rather than the public surface.
-			const [layout] = /** @type {any} */ (pres)._slideLayouts.slice(-1)
+			const [layout] = (pres as unknown as { _slideLayouts: { _slideObjects: unknown[] }[] })._slideLayouts.slice(-1)
 			assertEqual(layout._slideObjects.length, 1, 'only the rect was authored')
 		})
 

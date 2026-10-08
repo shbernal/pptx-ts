@@ -24,7 +24,7 @@ import { InvalidOptionError } from '../../../dist/node.js'
 // a clamp rather than a rejection.
 
 /** The `<p:sldSz .../>` element of a deck built under `layoutName`. */
-async function slideSize(defineFn, layoutName) {
+async function slideSize(defineFn: (pres: TsPptx) => void, layoutName: string) {
 	const { zip } = await build((pres) => {
 		defineFn(pres)
 		pres.layout = layoutName
@@ -45,8 +45,7 @@ defineRegressionSuite('Slide size bounds', [
 			// a warning describing the very input that could not survive. `docs/errors-and-warnings.md` says
 			// every failure this library raises is a `TsPptxError`.
 			for (const bad of [undefined, null, 'LAYOUT_WIDE', 42]) {
-				/** @type {unknown} */
-				let err = null
+				let err: unknown = null
 				try {
 					// @ts-expect-error none of these is a layout
 					new TsPptx().defineLayout(bad)

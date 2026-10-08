@@ -209,8 +209,7 @@ defineRegressionSuite('Deck argument guards', [
 				{ name: '', width: 10, height: 7 },
 			]) {
 				const pres = new TsPptx()
-				/** @type {unknown} */
-				let err = null
+				let err: unknown = null
 				try {
 					// @ts-expect-error a layout with no usable name
 					pres.defineLayout(layout)
@@ -222,7 +221,7 @@ defineRegressionSuite('Deck argument guards', [
 				// `LAYOUTS` is the private registry the phantom entry landed in; reading it is the
 				// only way to say "and nothing was registered", which is the half of this the throw
 				// does not state on its own.
-				const registry = /** @type {{ LAYOUTS: Record<string, unknown> }} */ (/** @type {unknown} */ (pres)).LAYOUTS
+				const registry = (pres as unknown as { LAYOUTS: Record<string, unknown> }).LAYOUTS
 				assert(
 					!Object.keys(registry).includes('undefined') && !Object.keys(registry).includes(''),
 					`no phantom layout may be registered; got ${JSON.stringify(Object.keys(registry))}`
@@ -252,8 +251,8 @@ defineRegressionSuite('Deck argument guards', [
 				{ name: 'NoWidth', height: 7 },
 				{ name: 'NoHeight', width: 10 },
 			]) {
-				/** @type {unknown} */
-				let err = null
+				// Assigned inside the async callback, which flow analysis does not follow.
+				let err = null as unknown
 				const { codes } = await captureDiagnostics(async () => {
 					try {
 						// @ts-expect-error a layout missing a dimension
@@ -290,8 +289,7 @@ defineRegressionSuite('Deck argument guards', [
 		fn: async () => {
 			// `title` is the key `addSlide({ masterTitle })` matches on, so a master without one
 			// could never be selected. Defining it anyway would fail later and further away.
-			/** @type {unknown} */
-			let err = null
+			let err: unknown = null
 			try {
 				// @ts-expect-error a master with no title
 				new TsPptx().defineSlideMaster({ background: { color: 'FF0000' } })
@@ -309,8 +307,7 @@ defineRegressionSuite('Deck argument guards', [
 			// The string form is the one shape whose bytes cannot be trusted on arrival; a
 			// Uint8Array either is or is not one. Undecodable input is refused here rather
 			// than being embedded as a font PowerPoint will not open.
-			/** @type {unknown} */
-			let err = null
+			let err: unknown = null
 			try {
 				await new TsPptx().embedFont({ data: 'not base64 at all!!', typeface: 'Silkscreen' })
 			} catch (ex) {

@@ -6,16 +6,30 @@
 
 import { describe, test } from 'vitest'
 import { FontMetricsRegistry } from '../../../dist/measure.js'
-import { TsPptx, assert, assertEqual, build, captureDiagnostics, caughtSync, readEntry } from '../../helpers.ts'
+import type { MeasureTextOptions } from '../../../dist/node.js'
+import {
+	TsPptx,
+	assert,
+	assertEqual,
+	build,
+	captureDiagnostics,
+	asError,
+	caughtSync,
+	readEntry,
+	type ThrownError,
+} from '../../helpers.ts'
 
 const BOX = { x: 1, y: 1, w: 4, h: 1 }
 
-/**
- * Build a deck and read slide 1 back with the diagnostics it raised, or the error the build threw.
- * @param {(pres: any) => void} author
- * @returns {Promise<{ xml?: string, rels?: string, codes?: string[], error?: any }>}
- */
-async function outcome(author) {
+interface Outcome {
+	xml?: string
+	rels?: string
+	codes?: string[]
+	error?: ThrownError
+}
+
+/** Build a deck and read slide 1 back with the diagnostics it raised, or the error the build threw. */
+async function outcome(author: (pres: TsPptx) => void): Promise<Outcome> {
 	try {
 		const { result, codes } = await captureDiagnostics(async () => {
 			const { zip } = await build(author)
@@ -26,22 +40,19 @@ async function outcome(author) {
 		})
 		return { ...result, codes }
 	} catch (error) {
-		return { error }
+		return { error: asError(error) }
 	}
 }
 
-/**
- * The code of the error `fn` throws, or `undefined` when it returns.
- * @param {() => unknown} fn
- */
-function thrownCode(fn) {
+/** The code of the error `fn` throws, or `undefined` when it returns. */
+function thrownCode(fn: () => unknown) {
 	return caughtSync(fn)?.code
 }
 
 describe('non-finite and out-of-range numbers on the write side', () => {
 	test('every clamped text measure clamps Infinity with a warning and refuses NaN by name', async () => {
-		/** @type {Array<[string, string, string, string]>} option, attribute at the bound, clamp code, NaN code */
-		const cases = [
+		// option, attribute at the bound, clamp code, NaN code
+		const cases: Array<[string, string, string, string]> = [
 			['fontSize', ' sz="400000"', 'font/size-out-of-range', 'coord/non-finite'],
 			['charSpacing', ' spc="400000"', 'text/char-spacing-out-of-range', 'coord/non-finite'],
 			['lineSpacing', '<a:spcPts val="158400"', 'text/line-spacing-out-of-range', 'coord/non-finite'],
@@ -61,7 +72,7 @@ describe('non-finite and out-of-range numbers on the write side', () => {
 	})
 
 	test('an OLE image size that is not an EMU size in range is refused, and a fraction is rounded', async () => {
-		const ole = (imgW, imgH) => (p) =>
+		const ole = (imgW: number, imgH: number) => (p: TsPptx) =>
 			p.addSlide().addOleObject({ data: 'UEsDBA==', progId: 'Excel.Sheet.12', imgW, imgH, ...BOX })
 		assertEqual((await outcome(ole(NaN, 100))).error?.code, 'ole/invalid-image-size', 'a NaN width')
 		assertEqual((await outcome(ole(100, -5))).error?.code, 'ole/invalid-image-size', 'a negative height')
@@ -70,20 +81,20 @@ describe('non-finite and out-of-range numbers on the write side', () => {
 	})
 
 	test('a zoom transitionDur is refused when NaN, clamped when out of range, and rounded', async () => {
-		/** @param {number} transitionDur */
-		const zoom = (transitionDur) => (p) => {
+		const zoom = (transitionDur: number) => (p: TsPptx) => {
 			const host = p.addSlide()
 			p.addSlide()
 			host.addSlideZoom({ target: 2, ...BOX, transitionDur })
 		}
 		assertEqual((await outcome(zoom(NaN))).error?.code, 'zoom/invalid-transition-duration', 'NaN')
-		for (const [given, written, warned] of [
+		const durations: Array<[number, string, boolean]> = [
 			[-1, '0', true],
 			[Infinity, '2147483647', true],
 			[1.5, '2', false],
 			[1000, '1000', false],
-		]) {
-			const result = await outcome(zoom(/** @type {number} */ (given)))
+		]
+		for (const [given, written, warned] of durations) {
+			const result = await outcome(zoom(given))
 			assert(result.xml?.includes(`transitionDur="${written}"`), `${given} is written as ${written}`)
 			assertEqual(result.codes?.includes('zoom/transition-duration-out-of-range'), warned, `${given} warns: ${warned}`)
 		}
@@ -105,7 +116,7 @@ describe('non-finite and out-of-range numbers on the write side', () => {
 	})
 
 	test('a media loopCount that plays nothing warns and plays once, and a real count is kept', async () => {
-		const media = (loopCount) => (p) =>
+		const media = (loopCount: number) => (p: TsPptx) =>
 			p.addSlide().addMedia({ type: 'audio', data: 'data:audio/mpeg;base64,SUQz', ...BOX, loopCount })
 		for (const loopCount of [NaN, 0, -1, Infinity]) {
 			const result = await outcome(media(loopCount))
@@ -120,13 +131,15 @@ describe('non-finite and out-of-range numbers on the write side', () => {
 	test('measureText refuses a box it cannot lay out, and the height checks refuse one too', () => {
 		const pres = new TsPptx()
 		const words = 'one two three four five six seven eight nine ten eleven twelve'
-		const measure = (opts) => pres.measureText(words, { fontFace: 'Arial', fontSize: 12, ...opts })
+		const measure = (opts: Omit<MeasureTextOptions, 'fontFace' | 'fontSize'> & Partial<MeasureTextOptions>) =>
+			pres.measureText(words, { fontFace: 'Arial', fontSize: 12, ...opts })
 		assertEqual(
 			thrownCode(() => measure({ wIn: NaN })),
 			'coord/non-finite',
 			'a NaN width'
 		)
 		assertEqual(
+			// @ts-expect-error a missing width is the refused input
 			thrownCode(() => measure({})),
 			'coord/non-finite',
 			'no width'

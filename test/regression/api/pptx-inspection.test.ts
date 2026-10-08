@@ -32,7 +32,7 @@ const PNG_1X1 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9
 /** Inches, generous next to the ~0.4in group-scale error this guards, tight next to PowerPoint's own EMU rounding (2 EMU ≈ 2.2e-6in). */
 const INCH_TOLERANCE = 1e-5
 
-function assertWithin(actual, expected, tolerance, msg) {
+function assertWithin(actual: number, expected: number, tolerance: number, msg: string) {
 	assert(
 		Math.abs(actual - expected) <= tolerance,
 		`${msg}: expected ${expected} ± ${tolerance}, got ${actual} (off by ${Math.abs(actual - expected)})`
@@ -49,7 +49,7 @@ function assertWithin(actual, expected, tolerance, msg) {
  * relationships and `p:sldIdLst`, the same route `ts-pptx/read` takes, so a bare zip
  * of slide XML with no `[Content_Types].xml` is not a package it will read.
  */
-async function packageWithSlides(spTrees, order = spTrees.map((_, i) => i + 1)) {
+async function packageWithSlides(spTrees: string[], order = spTrees.map((_, i) => i + 1)) {
 	const zip = new JSZip()
 	const slideParts = spTrees.map((_, i) => `/ppt/slides/slide${i + 1}.xml`)
 	zip.file(
@@ -91,7 +91,7 @@ async function packageWithSlides(spTrees, order = spTrees.map((_, i) => i + 1)) 
 }
 
 /** The single-slide case, which most of these fixtures want. */
-async function packageWithSpTree(spTreeXml) {
+async function packageWithSpTree(spTreeXml: string) {
 	return packageWithSlides([spTreeXml])
 }
 
@@ -106,7 +106,7 @@ const PRESENTATION_CT = 'application/vnd.openxmlformats-officedocument.presentat
 const SLIDE_CT = 'application/vnd.openxmlformats-officedocument.presentationml.slide+xml'
 
 /** `<p:sp>` with a name and an explicit transform, for hand-authored shape trees. */
-function spXml(id, name, { x = 0, y = 0, cx = 100, cy = 100 } = {}) {
+function spXml(id: number, name: string, { x = 0, y = 0, cx = 100, cy = 100 } = {}) {
 	return `<p:sp>
 		<p:nvSpPr><p:cNvPr id="${id}" name="${name}"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
 		<p:spPr><a:xfrm><a:off x="${x}" y="${y}"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm></p:spPr>
@@ -114,8 +114,8 @@ function spXml(id, name, { x = 0, y = 0, cx = 100, cy = 100 } = {}) {
 }
 
 /** Collect `console.warn` output while `fn` runs. */
-async function captureWarnings(fn) {
-	const warnings = []
+async function captureWarnings<R>(fn: () => R | Promise<R>) {
+	const warnings: string[] = []
 	setDiagnosticHandler((d) => warnings.push(d.message))
 	try {
 		return { result: await fn(), warnings }
@@ -475,7 +475,7 @@ defineRegressionSuite('PPTX inspection primitives', [
 		// rather than the deck.
 		name: 'inspect reports slides in presentation order, not part-name order',
 		fn: async () => {
-			const named = (name) => spXml(2, name, { x: 0, y: 0, cx: 100, cy: 100 })
+			const named = (name: string) => spXml(2, name, { x: 0, y: 0, cx: 100, cy: 100 })
 			// Parts 1/2/3 exist in that order; the deck shows them 3, 1, 2.
 			const buf = await packageWithSlides([named('first part'), named('second part'), named('third part')], [3, 1, 2])
 
@@ -545,8 +545,7 @@ defineRegressionSuite('PPTX inspection primitives', [
 			zip.file('ppt/slides/slide1.xml', `<?xml version="1.0"?><p:sld xmlns:p="${P_NS}"><p:cSld/></p:sld>`)
 			const buf = await zip.generateAsync({ type: 'uint8array' })
 
-			/** @type {unknown} */
-			let error = null
+			let error: unknown = null
 			try {
 				await inspectPptx(buf)
 			} catch (err) {

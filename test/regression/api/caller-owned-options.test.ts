@@ -1,4 +1,5 @@
-/** @import { MediaProps, ShadowProps } from '../../../dist/node.js' */
+import type JSZip from 'jszip'
+import type { Diagnostic, MediaProps, ShadowProps } from '../../../dist/node.js'
 import {
 	setDiagnosticHandler,
 	build,
@@ -8,6 +9,7 @@ import {
 	assertEqual,
 	assertIncludes,
 	assertNonVisualDrawingProperty,
+	type TsPptx,
 } from '../../helpers.ts'
 
 // The definers write their normalization back onto the options object they are handed -- assigned
@@ -34,8 +36,8 @@ import {
 // (each object gets its own identity). The last two are what breaks without the first.
 
 /** Build, capturing library diagnostics as `{ code, message }` pairs. */
-async function buildCapturingLogs(buildFn) {
-	const warnings = []
+async function buildCapturingLogs(buildFn: (pres: TsPptx) => unknown) {
+	const warnings: Diagnostic[] = []
 	setDiagnosticHandler((d) => warnings.push(d))
 	try {
 		const result = await build(buildFn)
@@ -46,7 +48,7 @@ async function buildCapturingLogs(buildFn) {
 }
 
 /** `<p:sp>` blocks on slide 1, in document order. */
-async function shapesOn(zip, part = 'ppt/slides/slide1.xml') {
+async function shapesOn(zip: JSZip, part = 'ppt/slides/slide1.xml') {
 	return (await readEntry(zip, part)).match(/<p:sp>[\s\S]*?<\/p:sp>/g) || []
 }
 
@@ -94,8 +96,7 @@ defineRegressionSuite('Caller-owned options', [
 		name: 'shape line normalization does not write back onto the caller',
 		fn: async () => {
 			const LINE = { color: '0088CC', width: 3 }
-			/** @type {ShadowProps} */
-			const SHADOW = { type: 'outer', blur: 6, transparency: 40, color: 'FF0000' }
+			const SHADOW: ShadowProps = { type: 'outer', blur: 6, transparency: 40, color: 'FF0000' }
 			const STYLE = { x: 1, y: 1, w: 2, h: 1, line: LINE, shadow: SHADOW }
 			const { zip } = await build((p) => {
 				p.addSlide().addShape('rect', STYLE)
@@ -131,7 +132,9 @@ defineRegressionSuite('Caller-owned options', [
 			const STYLE = { x: 0.5, y: 0.5, w: 6, colW: [3, 3] }
 			const { zip, warnings } = await buildCapturingLogs((p) => {
 				const s = p.addSlide()
+				// @ts-expect-error bare-string cells are taken at runtime; TableRow types only cell objects
 				s.addTable([['A1', 'B1']], STYLE)
+				// @ts-expect-error as above
 				s.addTable([['A2', 'B2']], { ...STYLE, y: 3 })
 			})
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
@@ -182,8 +185,7 @@ defineRegressionSuite('Caller-owned options', [
 		name: 'image and media options are left untouched',
 		fn: async () => {
 			const IMG = { data: PNG_DATA, x: 1, y: 1, w: 1, h: 1 }
-			/** @type {MediaProps} */
-			const VID = { type: 'video', data: 'video/mp4;base64,AAAA', x: 3, y: 1, w: 2, h: 1 }
+			const VID: MediaProps = { type: 'video', data: 'video/mp4;base64,AAAA', x: 3, y: 1, w: 2, h: 1 }
 			await build((p) => {
 				const s = p.addSlide()
 				s.addImage(IMG)

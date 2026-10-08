@@ -29,20 +29,18 @@ afterEach(() => {
 })
 
 /** Stub globalThis.fetch with a fixed response. `body` is a Buffer/Uint8Array; `ok` toggles the error branch. */
-function stubFetch({ ok = true, body = Buffer.alloc(0) } = {}) {
-	const calls = []
+function stubFetch({ ok = true, body = Buffer.alloc(0) }: { ok?: boolean; body?: Uint8Array } = {}) {
+	const calls: Array<URL | RequestInfo> = []
 	// Cast: the stub returns only the two members the code under test reads, not a full Response.
-	globalThis.fetch = /** @type {typeof fetch} */ (
-		async (url) => {
-			calls.push(url)
-			return {
-				ok,
-				async arrayBuffer() {
-					return body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength)
-				},
-			}
+	globalThis.fetch = (async (url: URL | RequestInfo) => {
+		calls.push(url)
+		return {
+			ok,
+			async arrayBuffer() {
+				return body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength)
+			},
 		}
-	)
+	}) as unknown as typeof fetch
 	return calls
 }
 
@@ -69,7 +67,7 @@ describe('node runtime: image loading over http', () => {
 		const calls = stubFetch({ ok: true, body: PNG_1x1 })
 		const pptx = new TsPptx()
 		pptx.addSlide().addImage({ path: 'https://example.com/pixel.png', x: 1, y: 1, w: 1, h: 1 })
-		const buf = /** @type {Uint8Array} */ (await pptx.toBytes())
+		const buf = await pptx.toBytes()
 		expect(calls).toEqual(['https://example.com/pixel.png'])
 
 		// The fetched image lands in the package as a media part.

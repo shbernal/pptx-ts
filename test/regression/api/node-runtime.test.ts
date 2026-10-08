@@ -7,12 +7,12 @@ import { join } from 'node:path'
 import { describe, test, expect, afterEach } from 'vitest'
 import TsPptx from '../../../dist/node.js'
 
-const written = []
+const written: string[] = []
 afterEach(() => {
 	for (const f of written.splice(0)) if (existsSync(f)) rmSync(f, { force: true })
 })
 
-function tmpName(name) {
+function tmpName(name: string) {
 	// Math.random is unavailable in some harnesses; a monotonically unique-enough name
 	// from the current test count is plenty for an isolated temp file.
 	const p = join(tmpdir(), `ts-pptx-node-runtime-${written.length}-${name}`)
