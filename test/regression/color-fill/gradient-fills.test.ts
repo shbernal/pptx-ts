@@ -1,3 +1,4 @@
+import type TsPptx from '../../../dist/node.js'
 import { ShapeType } from '../../../dist/node.js'
 import {
 	defineRegressionSuite,
@@ -8,14 +9,16 @@ import {
 	assertXmlOrder,
 	captureDiagnostics,
 	firstXmlBlock,
+	asError,
+	type ThrownError,
 } from '../../helpers.ts'
 
-async function expectBuildError(buildFn, expectedMessage) {
-	let err
+async function expectBuildError(buildFn: (pres: TsPptx) => unknown, expectedMessage: string) {
+	let err: ThrownError | undefined
 	try {
 		await build(buildFn)
 	} catch (e) {
-		err = e
+		err = asError(e)
 	}
 	assert(err, 'expected build to fail')
 	const message = String(err?.message || err)

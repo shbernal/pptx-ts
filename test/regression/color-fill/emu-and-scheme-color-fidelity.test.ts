@@ -6,12 +6,13 @@
 // vocabulary boundaries executable rather than inferred from type declarations: widening
 // `Margin`/`colW` to `Coord`, or extending `SchemeColor` towards the full
 // `ST_SchemeColorVal` set, should fail here and be recorded as a deliberate change.
+import type { Slide } from '../../../dist/node.js'
 import { defineRegressionSuite, assert, assertIncludes, slideXml, assertRejects } from '../../helpers.ts'
 
 const EMU_PER_INCH = 914400
 
 /** Build one slide on the probe layout and read its XML back. */
-function probeSlideXml(author) {
+function probeSlideXml(author: (slide: Slide) => unknown) {
 	return slideXml((pres) => {
 		pres.defineLayout({ name: 'EMU_PROBE', width: 10, height: 5.625 })
 		pres.layout = 'EMU_PROBE'
@@ -95,7 +96,7 @@ defineRegressionSuite('EMU-exact geometry and scheme-colour passthrough', [
 			// every EMU value, unconditionally. At 5 decimals the bound is 4.572 EMU and the
 			// round-trip fails for ~89% of values. The assertions below pin both the bound that
 			// drives the proof and the observed behaviour at each precision.
-			const worstShift = (digits) => {
+			const worstShift = (digits: number) => {
 				let worst = 0
 				// Prime step so the sample walks all residues rather than hitting round values.
 				for (let emu = 0; emu <= EMU_PER_INCH * 60; emu += 7919) {
@@ -132,6 +133,7 @@ defineRegressionSuite('EMU-exact geometry and scheme-colour passthrough', [
 			// object is defined, so the throw names the call that carries the bad value.
 			const emuMargin = ['91441emu', 0.1, 0.1, 0.1]
 			await assertRejects(
+				// @ts-expect-error an EMU string is not a Margin inset; the runtime guard is under test
 				() => probeSlideXml((slide) => slide.addText('inset', { x: 1, y: 1, w: 4, h: 1, margin: emuMargin })),
 				/finite number/,
 				'an EMU-string margin'

@@ -1,3 +1,5 @@
+import type TsPptx from '../../../dist/node.js'
+import type { FillOption } from '../../../dist/node.js'
 import { assert, assertEqual, build, defineRegressionSuite, readEntry, slideXml } from '../../helpers.ts'
 
 // A bare colour is the solid-fill shorthand: `fill: 'FF0000'` says exactly what
@@ -19,7 +21,7 @@ const BOX = { x: 1, y: 1, w: 2, h: 1 }
 const RED = 'FF0000'
 
 /** The `<a:srgbClr>` values inside `block`, in document order. */
-function colors(block) {
+function colors(block: string) {
 	return [...block.matchAll(/<a:srgbClr val="([0-9A-F]{6})"/g)].map((m) => m[1])
 }
 
@@ -30,7 +32,7 @@ function colors(block) {
  * @param part the package part to compare, e.g. `ppt/slides/slide1.xml`
  * @param buildFn takes the fill to use and returns a deck builder
  */
-async function agreesWithObjectForm(part, buildFn) {
+async function agreesWithObjectForm(part: string, buildFn: (fill: FillOption) => (pres: TsPptx) => unknown) {
 	const { zip: shortZip } = await build(buildFn(RED))
 	const { zip: longZip } = await build(buildFn({ color: RED }))
 	const short = await readEntry(shortZip, part)

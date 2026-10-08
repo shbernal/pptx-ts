@@ -1,4 +1,10 @@
-import { ShapeType } from '../../../dist/node.js'
+import {
+	ShapeType,
+	type ShapeProps,
+	type TableCellProps,
+	type TableProps,
+	type TextPropsOptions,
+} from '../../../dist/node.js'
 import { assert, assertEqual, captureDiagnostics, defineRegressionSuite, slideXml } from '../../helpers.ts'
 
 // An empty colour string had four readings depending on which path it fell down. `fill: ''`
@@ -18,8 +24,14 @@ import { assert, assertEqual, captureDiagnostics, defineRegressionSuite, slideXm
 
 const BASE = { x: 1, y: 1, w: 2, h: 1 }
 
+/** One built slide part and the diagnostic codes its build reported. */
+interface SlideResult {
+	xml: string
+	codes: string[]
+}
+
 /** The slide part for one shape, plus whatever the build reported. */
-async function shapeSlide(opts) {
+async function shapeSlide(opts: ShapeProps) {
 	const { result, codes } = await captureDiagnostics(() =>
 		slideXml((p) => {
 			p.addSlide().addShape(ShapeType.rect, { ...BASE, ...opts })
@@ -29,7 +41,7 @@ async function shapeSlide(opts) {
 }
 
 /** The slide part for one text box, plus whatever the build reported. */
-async function textSlide(opts) {
+async function textSlide(opts: TextPropsOptions) {
 	const { result, codes } = await captureDiagnostics(() =>
 		slideXml((p) => {
 			p.addSlide().addText('t', { ...BASE, ...opts })
@@ -39,7 +51,7 @@ async function textSlide(opts) {
 }
 
 /** The slide part for a one-cell table, plus whatever the build reported. */
-async function tableSlide(cellOpts, tableOpts) {
+async function tableSlide(cellOpts: TableCellProps, tableOpts?: TableProps) {
 	const { result, codes } = await captureDiagnostics(() =>
 		slideXml((p) => {
 			p.addSlide().addTable([[{ text: 'c', options: cellOpts }]], { ...BASE, ...tableOpts })
@@ -49,7 +61,7 @@ async function tableSlide(cellOpts, tableOpts) {
 }
 
 /** Assert that `empty` produced the same part as `omitted`, and said so on the way. */
-function assertSameAsOmitted(empty, omitted, label) {
+function assertSameAsOmitted(empty: SlideResult, omitted: SlideResult, label: string) {
 	assertEqual(empty.xml, omitted.xml, `${label}: an empty colour must emit what omitting the option emits`)
 	assert(
 		empty.codes.includes('color/empty-string'),

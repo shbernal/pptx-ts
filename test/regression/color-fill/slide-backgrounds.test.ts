@@ -1,3 +1,4 @@
+import type JSZip from 'jszip'
 import {
 	defineRegressionSuite,
 	build,
@@ -176,12 +177,12 @@ const PNG_B =
 	'image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP8z8DwHwAFAAH/Re1ZlAAAAABJRU5ErkJggg=='
 
 /** The attributes of every `Relationship` in a `.rels` part. */
-function relsOf(xml) {
+function relsOf(xml: string) {
 	return selfClosingTags(xml, 'Relationship').map((tag) => xmlAttributes(tag))
 }
 
 /** The `ppt/slideLayouts/slideLayoutN.xml` whose `p:cSld@name` is `title`. */
-async function layoutPartFor(zip, title) {
+async function layoutPartFor(zip: JSZip, title: string) {
 	for (const name of listEntries(zip).filter((entry) => /^ppt\/slideLayouts\/slideLayout\d+\.xml$/.test(entry))) {
 		if ((await readEntry(zip, name)).includes(`<p:cSld name="${title}"`)) return name
 	}
@@ -192,7 +193,7 @@ async function layoutPartFor(zip, title) {
  * The part's rel ids are unique, its background `r:embed` names an image rel, and that rel's part
  * holds `expected`'s bytes.
  */
-async function assertBackgroundResolves(zip, partName, expected) {
+async function assertBackgroundResolves(zip: JSZip, partName: string, expected: string) {
 	const relsName = partName.replace(/([^/]+)$/, '_rels/$1.rels')
 	const rels = relsOf(await readEntry(zip, relsName))
 	const ids = rels.map((rel) => rel.Id)

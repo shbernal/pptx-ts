@@ -32,7 +32,7 @@ const PNG =
 
 const BOX = { x: 1, y: 1, w: 2, h: 1 }
 
-function assertContainsExactly(xml, expected, label) {
+function assertContainsExactly(xml: string, expected: string, label: string) {
 	assert(xml.includes(expected), `expected ${label}:\n  ${expected}\nin:\n${xml}`)
 }
 
@@ -213,11 +213,12 @@ defineRegressionSuite('Fill and effect emitters the byte-identity corpus never r
 				{ position: 0, color: 'FF0000' },
 				{ position: 100, color: '0000FF' },
 			]
-			for (const [scaled, expected] of /** @type {[boolean | undefined, string][]} */ ([
+			const cases: [boolean | undefined, string][] = [
 				[undefined, '<a:lin ang="2700000"/>'],
 				[true, '<a:lin ang="2700000" scaled="1"/>'],
 				[false, '<a:lin ang="2700000" scaled="0"/>'],
-			])) {
+			]
+			for (const [scaled, expected] of cases) {
 				const xml = await slideXml((pres) => {
 					pres.addSlide().addShape('rect', {
 						...BOX,
