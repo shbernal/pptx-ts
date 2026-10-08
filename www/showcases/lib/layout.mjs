@@ -7,13 +7,13 @@
  */
 
 /** `LAYOUT_WIDE` in inches. */
-export const WIDE = { w: 13.333, h: 7.5 };
+export const WIDE = { w: 13.333, h: 7.5 }
 
 /** Horizontal margin used by every content slide in both decks. */
-export const MARGIN = 0.75;
+export const MARGIN = 0.75
 
 /** Width of the content column between the two margins. */
-export const CONTENT_W = WIDE.w - MARGIN * 2;
+export const CONTENT_W = WIDE.w - MARGIN * 2
 
 /**
  * Left edges and width for `count` equal columns spanning the content area.
@@ -26,10 +26,10 @@ export const CONTENT_W = WIDE.w - MARGIN * 2;
  * @returns {{ x: number[], w: number }} column left edges and the shared column width
  */
 export function columns(count, opts = {}) {
-	const { gap = 0.35, left = MARGIN, width = CONTENT_W } = opts;
-	const w = (width - gap * (count - 1)) / count;
-	const x = Array.from({ length: count }, (_, i) => left + i * (w + gap));
-	return { x, w };
+	const { gap = 0.35, left = MARGIN, width = CONTENT_W } = opts
+	const w = (width - gap * (count - 1)) / count
+	const x = Array.from({ length: count }, (_, i) => left + i * (w + gap))
+	return { x, w }
 }
 
 /**
@@ -38,12 +38,12 @@ export function columns(count, opts = {}) {
  * rather than left-aligned — e.g. the KPI band and the contents thumbnails.
  */
 export function centeredRow(count, w, gap) {
-	const total = count * w + (count - 1) * gap;
-	const left = (WIDE.w - total) / 2;
-	return Array.from({ length: count }, (_, i) => left + i * (w + gap));
+	const total = count * w + (count - 1) * gap
+	const left = (WIDE.w - total) / 2
+	return Array.from({ length: count }, (_, i) => left + i * (w + gap))
 }
 
 /** Format a number as a signed percentage string, e.g. `+12.4%`. */
 export function signedPct(value, digits = 1) {
-	return `${value >= 0 ? "+" : "−"}${Math.abs(value).toFixed(digits)}%`;
+	return `${value >= 0 ? '+' : '−'}${Math.abs(value).toFixed(digits)}%`
 }

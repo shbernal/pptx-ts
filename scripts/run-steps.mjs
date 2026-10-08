@@ -60,7 +60,7 @@ const GENERATORS = new Set([
  *   - `node scripts/run-steps.mjs <names…>`, i.e. a composite built on this runner.
  *
  * Everything else is a leaf and is handed to a shell as written. Note the
- * deliberate narrowness: `pnpm --dir demos/showcases run build` is NOT followed,
+ * deliberate narrowness: `pnpm --dir <workspace> run <name>` is NOT followed,
  * because it names a script in a different workspace that this package.json does
  * not define.
  * @param {string} name - a key in package.json `scripts`

@@ -77,10 +77,10 @@ a test suite.
 
 ## Demos
 
-- `demos/showcases` builds the two flagship decks from one command.
-- `demos/node` exercises Node.js ESM generation and stream output.
 - The [demos page](https://shbernal.github.io/pptx-ts/demos) builds the quarterly
-  review deck in a browser.
+  review deck in a browser. Its source, and the second showcase, are in `www/showcases`;
+  `pnpm showcases:build` builds both in Node.
+- `demos/node` exercises Node.js ESM generation and stream output.
 
 ## Scope
 

@@ -4,7 +4,7 @@ Decks that exist to be **diffed**, not looked at.
 
 `scripts/byte-identity.mjs` proves an emitter refactor changed no emitted byte by
 generating a corpus of decks and comparing every part against a frozen baseline. Its
-original corpus was the showcase decks (`demos/showcases/`), and AGENTS.md is explicit
+original corpus was the showcase decks (`www/showcases/`), and AGENTS.md is explicit
 about the limit that imposes:
 
 > The corpus is only what the harness's decks emit, so before trusting a PASS, confirm the
@@ -20,7 +20,7 @@ make them worse at the job they exist for.
 So the gate gets its own corpus. A gate deck is under no obligation to look like anything:
 it is a fixture matrix that happens to be shaped like a `.pptx`, because going through
 `addChart` end to end is the only way to exercise the emitters as they are actually called.
-It is never built by `pnpm demos:build`, never shipped, and never opened by a human except
+It is never built by `pnpm showcases:build`, never shipped, and never opened by a human except
 when a diff needs reading.
 
 ## Rules

@@ -1,9 +1,9 @@
 /**
- * Types for the one showcase that is exported to other workspace packages.
+ * Types for the showcase the site imports.
  *
  * The site's demos page (`www/demos/`) builds this deck in the browser, and the site is
- * typechecked, so the import needs declarations. Only the quarterly review is exported:
- * the Field Notes deck loads photographs from disk by path and cannot run outside Node.
+ * typechecked, so the import needs declarations. Only the quarterly review has them: the
+ * Field Notes deck loads photographs from disk by path and cannot run outside Node.
  *
  * Hand-written rather than generated — the deck is plain `.mjs` and the exported surface is
  * three values, so a build step to produce a handful of lines would cost more than it saves.

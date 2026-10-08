@@ -31,8 +31,9 @@ the hooks.
 - `dist/`: the built package. Tests import from it, not from `src/`. Do not hand-edit it unless
   the task asks to refresh release artifacts.
 - `docs/`: documentation content. See [Site changes](#site-changes).
-- `www/`: the site's theme and Vue components, including the demos page.
-- `demos/`: the showcase decks (`demos/showcases`) and the Node streaming demo (`demos/node`).
+- `www/`: the site's theme and Vue components, the demos page, its showcase decks
+  (`www/showcases`) and live examples (`www/live`).
+- `demos/`: the Node streaming demo (`demos/node`).
 - `scripts/`: build, gate, package and demo automation. `scripts/powerpoint/` is the PowerPoint
   job runner: the worker that runs COM jobs on Windows, and the client that `test:com` and
   `ppt:run` send jobs through.
@@ -113,7 +114,7 @@ hatch is acceptable.
 | `pnpm run build` | Build `dist/` for its own sake. Gates build it when they need it. |
 | `pnpm run test:browser` | The Playwright lane in Chromium. Run `pnpm exec playwright install chromium` once first. |
 | `pnpm run docs:dev` | Serve the site with hot reload. |
-| `pnpm demos:build` | Build the showcase decks. |
+| `pnpm showcases:build` | Build the showcase decks. |
 
 The [testing guide](testing.md) covers the single-purpose scripts, such as `coverage:probe`,
 `test:com`, `byte-identity:check` and the freeze commands.
@@ -232,8 +233,8 @@ The demos are showcases. No gate builds them, and the [testing guide](testing.md
 the published package instead.
 
 ```bash
-pnpm demos:build                        # both showcase decks
-pnpm demos:build quarterly-review       # one, by slug
+pnpm showcases:build                    # both showcase decks
+pnpm showcases:build quarterly-review   # one, by slug
 pnpm --dir demos/node run demo-stream   # streams a deck over HTTP
 ```
 

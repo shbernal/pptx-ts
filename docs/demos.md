@@ -15,7 +15,7 @@ aside: false
 
 The deck below is **built in this tab**. Nothing is uploaded, and no picture of a slide is
 stored anywhere. The page runs the same showcase module that
-`pnpm demos:build quarterly-review` runs, gets a `.pptx` back as bytes, and hands those bytes
+`pnpm showcases:build quarterly-review` runs, gets a `.pptx` back as bytes, and hands those bytes
 to [`pptx-html`](https://www.npmjs.com/package/pptx-html), which reads the package and paints
 each slide as SVG.
 
@@ -26,7 +26,7 @@ preview can only appear if the bytes are a deck a reader can open.
 
 ## What you are looking at
 
-- **The deck** is `demos/showcases/quarterly-review/` in this repository: eleven slides,
+- **The deck** is `www/showcases/quarterly-review/` in this repository: eleven slides,
   five slide masters, three charts with real embedded workbooks, a styled table, grouped
   KPI cards and speaker notes. Kestrel Analytics is fictional.
 - **The renderer** is a separate library. `pptx-html` reads a package into a slide model and
@@ -46,11 +46,11 @@ is not previewed here.
 ```bash
 git clone https://github.com/shbernal/pptx-ts
 cd pptx-ts && pnpm install
-pnpm demos:build                    # both decks
-pnpm demos:build quarterly-review   # just this one
+pnpm showcases:build                    # both decks
+pnpm showcases:build quarterly-review   # just this one
 ```
 
-Decks land in `demos/showcases/output/`. See
+Decks land in `.tmp/showcases/`. See
 [the demos README](https://github.com/shbernal/pptx-ts/blob/main/demos/README.md) for
 what else is in there.
 

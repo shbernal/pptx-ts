@@ -38,8 +38,8 @@ import { XmlSyntaxError, proveWhitespaceOnly } from './xml-equivalence.mjs'
 const OUT_ROOT = path.join(ROOT, '.tmp', 'byte-identity')
 const BASELINE = path.join(OUT_ROOT, 'baseline')
 const CURRENT = path.join(OUT_ROOT, 'current')
-// Written here rather than into `demos/showcases/output/`: the gate builds decks on every
-// run, and it has no business clobbering the artifacts `pnpm demos:build` leaves for a human.
+// Written here rather than into `.tmp/showcases/`: the gate builds decks on every run, and it
+// has no business clobbering the decks `pnpm showcases:build` leaves for a human.
 const DECKS = path.join(OUT_ROOT, 'decks')
 
 const USAGE = `Byte-identity gate for write-side refactors.
@@ -75,10 +75,10 @@ if (mode !== 'baseline' && mode !== 'check' && mode !== 'prove-whitespace') {
  *
  * The corpus has two halves, and they are different kinds of thing:
  *
- * - **Showcase decks** (`demos/showcases/`) are presentation decks that happen to drive the
- *   emitters end to end. They resolve their assets from their own URL, so — unlike the demo
- *   runner this replaced — no `process.chdir` is needed, and they import `pptx-ts` through
- *   the workspace link, which resolves to the `dist/` the build above just wrote.
+ * - **Showcase decks** (`www/showcases/`) are presentation decks that happen to drive the
+ *   emitters end to end. They resolve their assets from their own URL, so no
+ *   `process.chdir` is needed, and they import `pptx-ts` by the package's self-reference,
+ *   which resolves to the `dist/` the build above just wrote.
  * - **Gate decks** (`scripts/gate-decks/`) are fixture matrices shaped like a `.pptx`. They
  *   exist because the showcases only reach what a plausible deck would reach: three chart
  *   types out of nine chart emitters, which left most of `src/gen/chart/` with no evidence

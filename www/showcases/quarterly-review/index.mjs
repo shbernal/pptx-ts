@@ -5,7 +5,7 @@
  * a themed colour scheme, five slide masters, native gradients, grouped composite shapes,
  * charts (stacked column, doughnut, line), a hand-styled table, and speaker notes.
  *
- * Build it with `pnpm demos:build quarterly-review`.
+ * Build it with `pnpm showcases:build quarterly-review`.
  *
  * This module imports nothing from `node:` — no filesystem, no paths, and every asset it
  * needs is drawn rather than loaded. That is what lets the site's demos page (`www/demos/`)
@@ -719,7 +719,7 @@ function addClosing(pptx) {
  * Assemble the deck and hand back the presentation, having written nothing.
  *
  * Separate from {@link build} because the site's preview needs the *bytes* — it feeds them
- * to `pptx-html` — while `pnpm demos:build` needs a file. Composing and writing were one
+ * to `pptx-html` — while `pnpm showcases:build` needs a file. Composing and writing were one
  * function until the preview existed, and folding the write into the assembly is what
  * would have forced the deck to be described twice.
  */

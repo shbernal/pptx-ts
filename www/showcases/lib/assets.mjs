@@ -2,11 +2,11 @@
  * Asset and output paths for the showcase decks.
  *
  * Every path here is absolute, resolved from this file's own URL rather than from
- * `process.cwd()`. That is deliberate: `pnpm demos:build` runs the build from the
- * repository root, `pnpm --dir demos/showcases run build` runs it from this package,
- * and a reader poking at one deck will run `node quarterly-review/index.mjs` from a
- * third place. A relative `path:` would silently resolve against whichever of those
- * happened to be the cwd — `pptx-ts` hands the string straight to `fs.readFile`.
+ * `process.cwd()`. `pnpm showcases:build` runs from the repository root, the byte-identity
+ * gate and the browser lane import the decks from elsewhere, and a reader poking at one deck
+ * may run `node www/showcases/quarterly-review/index.mjs` from a third place. A relative
+ * `path:` would silently resolve against whichever of those happened to be the cwd:
+ * `pptx-ts` hands the string straight to `fs.readFile`.
  */
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
@@ -14,23 +14,23 @@ import { fileURLToPath } from 'node:url'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 
-/** `demos/showcases/` */
+/** `www/showcases/` */
 export const SHOWCASES_DIR = path.resolve(HERE, '..')
 
-/** `demos/common/` — the shared image and media library, used by every showcase. */
-export const COMMON_DIR = path.resolve(SHOWCASES_DIR, '..', 'common')
+/** `www/showcases/media/`: the photographs, video and model the decks load. */
+export const MEDIA_DIR = path.join(SHOWCASES_DIR, 'media')
 
-/** Where built decks land. Git-ignored; created on demand by the build. */
-export const OUTPUT_DIR = path.join(SHOWCASES_DIR, 'output')
+/** Where `pnpm showcases:build` writes the decks. Under `.tmp/`, which git ignores. */
+export const OUTPUT_DIR = path.resolve(SHOWCASES_DIR, '..', '..', '.tmp', 'showcases')
 
-/** Absolute path to a shared demo image, e.g. `image('chicago_bean_bohne.jpg')`. */
+/** Absolute path to a showcase image, e.g. `image('chicago_bean_bohne.jpg')`. */
 export function image(name) {
-	return path.join(COMMON_DIR, 'images', name)
+	return path.join(MEDIA_DIR, name)
 }
 
-/** Absolute path to a shared demo media file, e.g. `media('sample.mp4')`. */
+/** Absolute path to a showcase media file, e.g. `media('sample.mp4')`. */
 export function media(name) {
-	return path.join(COMMON_DIR, 'media', name)
+	return path.join(MEDIA_DIR, name)
 }
 
 const MIME_BY_EXT = {

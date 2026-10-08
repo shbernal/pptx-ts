@@ -275,7 +275,7 @@ jobs:
   # Two fixtures, started by Playwright itself, so this job stays one command:
   #
   #   - the site's demos page, which imports the SAME showcase module
-  #     `pnpm demos:build quarterly-review` runs — so the strong assertion is
+  #     `pnpm showcases:build quarterly-review` runs — so the strong assertion is
   #     available: the browser-built deck must be byte-identical to the Node-built
   #     one, part for part. See test/browser/cross-runtime-bytes.spec.ts.
   #   - a static server (scripts/browser-harness-server.mjs) serving the shipped

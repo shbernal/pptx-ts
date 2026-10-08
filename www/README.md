@@ -73,7 +73,7 @@ wrong is in a file the typechecker reads.
 
 Two copies of the library, on purpose:
 
-- The **workspace** build (`dist/`, via `ts-pptx-demos-showcases`) writes the deck.
+- The **workspace** build (`dist/`, which `pptx-ts` resolves to by self-reference) writes the deck.
 - The **published** `@shbernal/ts-pptx` (this package's scoped alias) that `pptx-html`
   depends on reads it back.
 

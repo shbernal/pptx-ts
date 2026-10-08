@@ -6,8 +6,8 @@
  * drift is silent: the gate would keep passing on a subset while a new deck's parts — quite
  * possibly the ones exercising the emitter being refactored — go undiffed.
  */
-import { showcase as fieldNotes } from "../field-notes/index.mjs";
-import { showcase as quarterlyReview } from "../quarterly-review/index.mjs";
+import { showcase as fieldNotes } from '../field-notes/index.mjs'
+import { showcase as quarterlyReview } from '../quarterly-review/index.mjs'
 
-/** Every showcase deck, in the order `pnpm demos:build` builds them. */
-export const SHOWCASES = [quarterlyReview, fieldNotes];
+/** Every showcase deck, in the order `pnpm showcases:build` builds them. */
+export const SHOWCASES = [quarterlyReview, fieldNotes]

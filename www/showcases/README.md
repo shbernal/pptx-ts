@@ -4,11 +4,11 @@ Two full decks, generated end to end by `pptx-ts`. No slide here was touched in
 PowerPoint.
 
 ```bash
-pnpm demos:build                    # both
-pnpm demos:build field-notes        # one, by slug
+pnpm showcases:build                    # both
+pnpm showcases:build field-notes        # one, by slug
 ```
 
-Output goes to `output/` (git-ignored).
+Output goes to `.tmp/showcases/` at the repository root (git-ignored).
 
 ## The decks
 

@@ -27,7 +27,6 @@ docs/public/llms*.txt
 docs/reference/api/
 docs/doc-index.md
 demos/node/output/
-demos/showcases/output/
 
 ### Editors
 .idea/

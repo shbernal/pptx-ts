@@ -6,7 +6,7 @@
  * rounded picture treatments, grouped annotation callouts, an embedded video, an embedded 3D
  * model, and hyperlinks.
  *
- * Build it with `pnpm demos:build field-notes`.
+ * Build it with `pnpm showcases:build field-notes`.
  *
  * Unlike the quarterly review, this deck is Node-only by nature: it loads photographs, a video
  * and a `.glb` from `demos/common` by path, so it cannot run in a browser without those assets

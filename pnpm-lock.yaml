@@ -203,9 +203,6 @@ importers:
       temml:
         specifier: ^0.13.5
         version: 0.13.5
-      ts-pptx-demos-showcases:
-        specifier: workspace:*
-        version: link:demos/showcases
       tsdown:
         specifier: ^0.23.0
         version: 0.23.0(@arethetypeswrong/core@0.18.5)(publint@0.3.24)(typescript@7.0.2)
@@ -230,12 +227,6 @@ importers:
       express:
         specifier: ^5.2.1
         version: 5.2.1(supports-color@7.2.0)
-      pptx-ts:
-        specifier: workspace:*
-        version: link:../..
-
-  demos/showcases:
-    dependencies:
       pptx-ts:
         specifier: workspace:*
         version: link:../..

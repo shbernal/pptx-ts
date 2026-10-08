@@ -33,24 +33,24 @@ With neither, `test:com` reports SKIP. Under `TSPPTX_COM_SMOKE=required` that is
 
 ## Workflow
 
-1. **Generate decks.** From the repo root, `pnpm demos:build` (it rebuilds `dist/` first
-   only if stale) writes both showcases to `demos/showcases/output/`:
+1. **Generate decks.** From the repo root, `pnpm showcases:build` (it rebuilds `dist/` first
+   only if stale) writes both showcases to `.tmp/showcases/`:
    `Kestrel_Q3_Business_Review.pptx` (charts, tables, groups, masters) and
    `Field_Notes_Four_Cities.pptx` (images, media, a 3D model, picture effects). Between
-   them they reach most of the emitter. `pnpm demos:build quarterly-review` builds one.
+   them they reach most of the emitter. `pnpm showcases:build quarterly-review` builds one.
 
    For a single construct, write a focused deck (step 3).
 
 2. **Open the decks in PowerPoint.**
    ```
-   pnpm run test:com --file demos/showcases/output/*.pptx
+   pnpm run test:com --file .tmp/showcases/*.pptx
    ```
    It prints `opened OK` or the `OPEN_ERR` code per deck (retrying a failed open once) and
    exits non-zero on any failure. With no arguments it runs the generated corpus, which adds
    read-back and pixel checks.
 
 3. **Bisect a failure.** If a showcase fails, narrow it with a minimal repro **written
-   inside `demos/showcases/`** (so the `pptx-ts` workspace dependency resolves)
+   inside the repository** (so `import 'pptx-ts'` resolves to this checkout's `dist/`)
    that adds just the suspect construct, and shrink it until a single `addX` call flips
    pass to fail, checking each step with `--file`.
 

@@ -8,7 +8,7 @@ import { buildDeckInBrowser } from './helpers.ts'
 /**
  * Cross-runtime byte identity — the assertion this lane exists for.
  *
- * The site's demos page builds the same showcase module as `pnpm demos:build
+ * The site's demos page builds the same showcase module as `pnpm showcases:build
  * quarterly-review`, and `src/zip.ts` pins `FIXED_MTIME`, so the deck a browser assembles
  * and the deck Node assembles should agree part for part. That is a far stronger claim
  * than the structural smoke test next door: it says the *whole* emission core — every

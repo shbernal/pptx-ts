@@ -6,26 +6,26 @@
  * spread is built on a photograph. That difference is the point of having two showcases —
  * the same library has to be able to produce both, and the techniques barely overlap.
  */
-import { WIDE } from "../lib/layout.mjs";
+import { WIDE } from '../lib/layout.mjs'
 
 export const BRAND = {
-	ink: "14100E",
-	charcoal: "241D19",
-	stone: "4A403A",
-	ash: "8C7F76",
-	sand: "D9CFC4",
-	bone: "F4EFE9",
-	white: "FFFFFF",
-	amber: "D98A2B",
-	rust: "A8452C",
-	sage: "6E8B6A",
-};
+	ink: '14100E',
+	charcoal: '241D19',
+	stone: '4A403A',
+	ash: '8C7F76',
+	sand: 'D9CFC4',
+	bone: 'F4EFE9',
+	white: 'FFFFFF',
+	amber: 'D98A2B',
+	rust: 'A8452C',
+	sage: '6E8B6A',
+}
 
 export const FONT = {
-	head: "Georgia",
-	body: "Segoe UI",
-	mono: "Consolas",
-};
+	head: 'Georgia',
+	body: 'Segoe UI',
+	mono: 'Consolas',
+}
 
 export const TYPE = {
 	display: 54,
@@ -35,14 +35,14 @@ export const TYPE = {
 	body: 13,
 	caption: 10,
 	quote: 24,
-};
+}
 
 export const MASTER = {
-	cover: "FIELD_COVER",
-	plate: "FIELD_PLATE",
-	editorial: "FIELD_EDITORIAL",
-	colophon: "FIELD_COLOPHON",
-};
+	cover: 'FIELD_COVER',
+	plate: 'FIELD_PLATE',
+	editorial: 'FIELD_EDITORIAL',
+	colophon: 'FIELD_COLOPHON',
+}
 
 /**
  * A dark-to-transparent scrim.
@@ -60,9 +60,9 @@ export function scrim({ x, y, w, h, angle = 0, color = BRAND.ink, from = 12, to 
 		w,
 		h,
 		fill: {
-			type: "gradient",
+			type: 'gradient',
 			gradient: {
-				kind: "linear",
+				kind: 'linear',
 				angle,
 				stops: [
 					{ position: 0, color, transparency: from },
@@ -71,12 +71,12 @@ export function scrim({ x, y, w, h, angle = 0, color = BRAND.ink, from = 12, to 
 				],
 			},
 		},
-		line: { type: "none" },
-	};
+		line: { type: 'none' },
+	}
 }
 
 export function applyDesign(pptx) {
-	pptx.layout = "LAYOUT_WIDE";
+	pptx.layout = 'LAYOUT_WIDE'
 
 	pptx.theme = {
 		headFontFace: FONT.head,
@@ -95,14 +95,14 @@ export function applyDesign(pptx) {
 			hlink: BRAND.amber,
 			folHlink: BRAND.ash,
 		},
-	};
+	}
 
 	// COVER — the photograph is added per-slide, so the master carries only the ink ground
 	// it sits on and the rule the wordmark aligns to.
 	pptx.defineSlideMaster({
 		title: MASTER.cover,
 		background: { color: BRAND.ink },
-	});
+	})
 
 	// PLATE — a full-bleed image slide. Ink ground, and a thin amber rule bottom-left that
 	// every plate's caption hangs from, so the captions line up across the deck.
@@ -110,7 +110,7 @@ export function applyDesign(pptx) {
 		title: MASTER.plate,
 		background: { color: BRAND.ink },
 		objects: [{ rect: { x: 0.85, y: 6.62, w: 0.75, h: 0.035, fill: { color: BRAND.amber } } }],
-	});
+	})
 
 	// EDITORIAL — text-forward pages on a warm dark ground, with a running foot.
 	pptx.defineSlideMaster({
@@ -119,14 +119,14 @@ export function applyDesign(pptx) {
 		objects: [
 			{
 				text: {
-					text: "FIELD NOTES  ·  FOUR CITIES AFTER DARK",
+					text: 'FIELD NOTES  ·  FOUR CITIES AFTER DARK',
 					options: {
 						x: 0.85,
 						y: 6.85,
 						w: 8,
 						h: 0.3,
 						margin: 0,
-						valign: "middle",
+						valign: 'middle',
 						fontFace: FONT.body,
 						fontSize: 8,
 						color: BRAND.stone,
@@ -140,22 +140,22 @@ export function applyDesign(pptx) {
 			y: 6.85,
 			w: 0.5,
 			h: 0.3,
-			align: "right",
-			valign: "middle",
+			align: 'right',
+			valign: 'middle',
 			fontFace: FONT.body,
 			fontSize: 9,
 			color: BRAND.ash,
 		},
-	});
+	})
 
 	// COLOPHON — a radial gradient, so the back cover reads as a different kind of page
 	// from the linear-gradient front. Same API, visibly different result.
 	pptx.defineSlideMaster({
 		title: MASTER.colophon,
 		background: {
-			type: "gradient",
+			type: 'gradient',
 			gradient: {
-				kind: "radial",
+				kind: 'radial',
 				center: { x: 32, y: 40 },
 				stops: [
 					{ position: 0, color: BRAND.stone },
@@ -164,12 +164,12 @@ export function applyDesign(pptx) {
 				],
 			},
 		},
-	});
+	})
 }
 
 /** The deck's wordmark, used on the cover and the colophon. */
 export function wordmark(slide, { x, y, color = BRAND.bone }) {
-	slide.addText("FIELD NOTES", {
+	slide.addText('FIELD NOTES', {
 		x,
 		y,
 		w: 5,
@@ -180,5 +180,5 @@ export function wordmark(slide, { x, y, color = BRAND.bone }) {
 		color,
 		bold: true,
 		charSpacing: 5,
-	});
+	})
 }

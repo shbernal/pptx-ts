@@ -5,7 +5,7 @@
  * be diffed — see `./README.md` for why they are not showcases, and why a gate deck may
  * only ever grow.
  *
- * Same one-list discipline as `demos/showcases/lib/showcases.mjs`: two hand-maintained
+ * Same one-list discipline as `www/showcases/lib/showcases.mjs`: two hand-maintained
  * lists drift, and the way they drift is silent — the gate keeps passing on a subset while
  * the emitter being refactored goes undiffed.
  */

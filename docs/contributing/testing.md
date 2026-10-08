@@ -1014,14 +1014,14 @@ Windows neither tool needs admin rights. `pdftotext` ships with Git for Windows,
 
 ### Manual visual checks
 
-1. Build a small deck with `pnpm demos:build`, or write one with `test:read:emit` or
+1. Build a small deck with `pnpm showcases:build`, or write one with `test:read:emit` or
    `test:read:emit:edits`.
 2. Open it in Microsoft PowerPoint.
 3. When the change affects cross-app compatibility, check the import in Keynote, LibreOffice
    Impress or Google Slides.
 4. For browser download behaviour, use the site's `/demos` page (`pnpm run docs:dev`).
 
-Showcase decks land in `demos/showcases/output/` and Node demo decks in `demos/node/output/`.
+Showcase decks land in `.tmp/showcases/` and Node demo decks in `demos/node/output/`.
 Git ignores both.
 
 ## Font oracles
@@ -1181,7 +1181,7 @@ once in Node, from one definition. Two copies would make a divergence in the fix
 divergence in the runtime.
 
 `cross-runtime-bytes.spec.ts` compares the deck the site's demos page builds with the one
-`pnpm demos:build quarterly-review` builds from the same showcase module. `src/zip.ts` pins
+`pnpm showcases:build quarterly-review` builds from the same showcase module. `src/zip.ts` pins
 `FIXED_MTIME`, so one diff shows that every serializer, the zip writer, part ordering and
 relationship numbering are runtime-invariant. A runtime-dependent code path anywhere in
 `src/gen/` surfaces as a named part.
@@ -1254,7 +1254,7 @@ Two gates touch showcase code without asserting on the decks:
   the deck the page builds has the right bytes. Nothing checks how the page looks or that its
   preview is a good likeness. The preview is drawn by `pptx-html` against the published
   `@shbernal/ts-pptx`, and this repository's gates make no claim about it.
-- The byte-identity harness builds every deck in `demos/showcases/lib/showcases.mjs`, then the
+- The byte-identity harness builds every deck in `www/showcases/lib/showcases.mjs`, then the
   gate decks in `scripts/gate-decks/index.mjs`, and diffs the parts they emit. A showcase that
   throws stops the harness.
 

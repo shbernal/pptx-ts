@@ -18,7 +18,7 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { ROOT } from './script-utils.mjs'
 
-const SHOWCASES_ENTRY = path.join(ROOT, 'demos', 'showcases', 'lib', 'showcases.mjs')
+const SHOWCASES_ENTRY = path.join(ROOT, 'www', 'showcases', 'lib', 'showcases.mjs')
 
 /**
  * Emitted values that legitimately differ between two identical runs.
@@ -55,10 +55,9 @@ export function normalize(text) {
 /**
  * The showcase registry, loaded by URL rather than by bare specifier.
  *
- * `demos/showcases` is a workspace package the root does not depend on, so a bare
- * import would not resolve from here. Loading it by file URL also keeps it out of
- * the typechecked module graph — the demo decks are plain untyped ESM that no
- * tsconfig includes.
+ * Loaded by file URL so it stays out of the typechecked module graph: the decks are plain
+ * untyped ESM that no tsconfig includes, and they import `dist/`, which the caller may
+ * have only just built.
  */
 export async function loadShowcases() {
 	const { SHOWCASES } = await import(pathToFileURL(SHOWCASES_ENTRY).href)

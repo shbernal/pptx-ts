@@ -90,7 +90,7 @@ export function failed<T extends HarnessOutcome | TableOutcome>(outcome: T): Ext
  * Drive the site's demos page through one deck build and hand back the downloaded bytes.
  *
  * This is the whole point of the browser lane: the page imports the *same* showcase
- * module `pnpm demos:build quarterly-review` runs, so what comes back here is the deck
+ * module `pnpm showcases:build quarterly-review` runs, so what comes back here is the deck
  * as a browser assembled it — through `src/runtime/browser.ts`'s `writeFile`, the
  * object-URL `<a download>` path that no Node test can reach.
  *

@@ -8,7 +8,7 @@ import { defineConfig, devices } from '@playwright/test'
  * questions:
  *
  *   - **demo** — drives the site's own demos page, which imports the *same* showcase module
- *     `pnpm demos:build quarterly-review` runs. This is the bundled story: a real
+ *     `pnpm showcases:build quarterly-review` runs. This is the bundled story: a real
  *     consumer, Vite resolving the `browser` export condition, Rollup tree-shaking it.
  *     It exercises `writeFile` (the object-URL `<a download>` path) and proves the
  *     emission core is runtime-invariant, but it never loads an asset — the deck draws

@@ -1,43 +1,7 @@
 # Demos
 
-Showcases for `pptx-ts`, for someone who has cloned this repository and wants a
-deck out of it. **None of this is a test.** No verification aggregate runs anything here,
-CI never builds a demo, and a broken demo fails no gate. The published package is covered
-by `pnpm run check:package`. See
-[docs/contributing/testing.md](../docs/contributing/testing.md#what-the-demos-verify) for why it works that way.
+`node/` streams a generated deck from an HTTP server. [README](node/README.md)
 
-If you only want to _see_ a deck, you do not need any of this: the
-[demos page](https://shbernal.github.io/pptx-ts/demos) builds one in your browser and shows
-you the slides.
-
-## Build the showcase decks
-
-```bash
-pnpm demos:build                    # both decks
-pnpm demos:build quarterly-review   # just one
-```
-
-Decks land in `demos/showcases/output/` (git-ignored). The build takes well under a second;
-it rebuilds `dist/` first only if it is stale.
-
-## What is here
-
-| Directory    | What it is                                                               |
-| ------------ | ------------------------------------------------------------------------ |
-| `showcases/` | The two flagship decks. Start here. [README](showcases/README.md)        |
-| `common/`    | The images and media the showcase decks use.                             |
-| `node/`      | Streaming a generated deck from an HTTP server. [README](node/README.md) |
-
-The two showcase decks are deliberately unalike. One is a corporate report built from
-charts, tables, and grouped shapes on a themed grid; the other is a photo essay built from
-full-bleed images, gradient scrims, and picture effects. Between them they exercise most of
-what the library can do, without either turning into a feature checklist. That is what the
-demos used to be, and it made them useless as showcases and unconvincing as tests.
-
-## Where the browser demo went
-
-There used to be a fourth directory here: a React + Vite + Bootstrap app that built the
-quarterly review in a tab and downloaded it. It is now a page of the site
-(`www/demos/`, mounted at `/demos`), which previews the slides instead of only handing you
-a file, and carries no second UI framework to do it. The browser lane still drives it.
-That page, not this directory, is the Playwright `demo` fixture.
+The showcase decks moved to `www/showcases/`, where the site's demos page builds them.
+To see one, open the [demos page](https://shbernal.github.io/pptx-ts/demos). To build both in
+Node, run `pnpm showcases:build`.

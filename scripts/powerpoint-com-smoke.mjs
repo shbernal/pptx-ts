@@ -95,7 +95,7 @@ const USAGE = `PowerPoint COM smoke: open generated decks in desktop PowerPoint,
   pnpm run test:com
   pnpm run test:com -- --keep
   pnpm run test:com -- --file path/to/deck.pptx
-  pnpm run test:com -- --file demos/showcases/output/*.pptx
+  pnpm run test:com -- --file .tmp/showcases/*.pptx
 
 Options:
   --keep             leave the generated decks on disk for inspection
