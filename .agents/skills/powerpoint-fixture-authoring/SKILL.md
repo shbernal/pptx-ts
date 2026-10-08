@@ -12,33 +12,41 @@ metadata:
 # PowerPoint fixture authoring
 
 Use this skill to create reference `.pptx` fixtures authored by desktop
-Microsoft PowerPoint on Windows. These fixtures are evidence for how PowerPoint
-writes OOXML; do not generate them with ts-pptx.
+Microsoft PowerPoint. These fixtures are evidence for how PowerPoint writes
+OOXML; do not generate them with ts-pptx.
+
+PowerPoint runs on Windows, but you need not. `pnpm ppt:run` sends a recipe to
+the PowerPoint worker when `TSPPTX_POWERPOINT_URL` is set (on Linux, the VM in
+`tools/powerpoint-vm/`, whose `.env` sets it; `pnpm ppt:health` confirms it
+answers) and otherwise runs it on this Windows machine's PowerPoint. Either way
+the files the recipe wrote land back in the working tree. With neither, stop and
+open the fixture issue AGENTS.md describes.
 
 ## Workflow
 
 1. Work from the repo root and inspect `git status --short`.
-2. Locate an existing fixture with `Get-ChildItem -Recurse -Filter '<name>.pptx'`
-   before replacing it. If the user asks to replace it, delete only that exact
+2. Locate an existing fixture under `test/read/fixtures/` before replacing it. If the user asks to replace it, delete only that exact
    path.
 3. Put curated fixtures in `test/read/fixtures/` unless the user specifies
    another target. Exploration decks that are not becoming fixtures do not
    belong in the working tree at all — keep them outside the repo.
-4. Author the deck with desktop PowerPoint COM. Write the script to a temp file
-   (e.g. `.tmp/author-<name>.ps1`) and run it through the **PowerShell (pwsh 7)
-   tool** with the call operator: `& '.tmp/author-<name>.ps1'`. PowerShell 7
-   drives PowerPoint COM fine here. Do **not** invoke
-   `powershell.exe -NoProfile -ExecutionPolicy Bypass ...`: the `-ExecutionPolicy
-   Bypass` flag trips the sandbox's "Security Weaken" classifier and the call is
-   denied. Plain `& '<script>.ps1'` runs under the session's existing policy and
-   needs no bypass.
+4. Author the deck with desktop PowerPoint COM. Write the recipe straight into
+   `test/read/fixtures/authoring/author-<name>.ps1` and run it:
 
-   Once the fixture is committed, **move the recipe to
-   `test/read/fixtures/authoring/`** and cite it from the fixture's provenance entry.
-   `.tmp/` is gitignored, so a recipe left there is lost on the next clean checkout —
-   and the fixture becomes unreproducible. See that directory's `README.md` for the
-   path-resolution convention (`$PSScriptRoot`-relative, never absolute) and the
-   formatter step for regenerated sidecars.
+   ```sh
+   pnpm ppt:run test/read/fixtures/authoring/author-<name>.ps1
+   pnpm ppt:run test/read/fixtures/authoring/author-<name>.ps1 -- -Param value   # recipe arguments
+   ```
+
+   The recipe is the fixture's provenance, so it lives there from the start and is
+   committed with the fixture. A recipe left in gitignored `.tmp/` is lost on the next
+   clean checkout, and the fixture becomes unreproducible. That directory's
+   `README.md` has the path-resolution convention (`$PSScriptRoot`-relative, never
+   absolute), what a job carries (`--with` for anything else), and the formatter
+   step for regenerated sidecars. On Windows without a worker, `ppt:run` runs the
+   recipe locally; calling it directly with `& '<recipe>.ps1'` in PowerShell 7 also
+   works. Do **not** invoke `powershell.exe -ExecutionPolicy Bypass ...`: the flag
+   trips the sandbox's "Security Weaken" classifier and the call is denied.
 5. Keep the fixture minimal and explicit:
    - set slide size deliberately;
    - name important shapes/groups with stable names;
@@ -57,17 +65,19 @@ writes OOXML; do not generate them with ts-pptx.
      dump script);
    - compute SHA-256.
 8. Update `test/read/fixtures/README.md` with provenance, hash, purpose, and
-   the desktop PowerPoint check date.
+   the desktop PowerPoint check date. `ppt:run` prints the provenance line with
+   the PowerPoint build, which `docProps/app.xml` does not record.
 9. Commit only the fixture and directly related documentation when asked to
    commit. Leave unrelated dirty state untouched.
 
 ## COM authoring pattern
 
-Use a temporary script or inline encoded command with this shape:
+A recipe has this shape:
 
 ```powershell
 $ErrorActionPreference = 'Stop'
-$out = 'C:\path\to\test\read\fixtures\example.pptx'
+$REPO = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')).Path
+$out  = Join-Path $REPO 'test\read\fixtures\example.pptx'
 # Snapshot pre-existing PIDs so the reap at the end only kills the server we
 # spawn — never a user's interactive PowerPoint with unsaved work.
 $preexistingIds = @(Get-Process POWERPNT -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Id)
@@ -195,8 +205,10 @@ block in `test/read/fixtures/authoring/author-deck.ps1` are the worked examples.
 
 ### Provisioning fonts / LibreOffice without elevation
 
-Both are installable with **no admin** when a fixture needs them — verified
-2026-06-21:
+The worker VM installs Aptos for GDI when it is provisioned
+(`tools/powerpoint-vm/oem/install-fonts.ps1`), so the guard passes there. On
+another Windows machine, both are installable with **no admin** when a fixture
+needs them. Verified 2026-06-21:
 
 - **Per-user font install (no elevation):** copy the `.ttf`s into
   `%LOCALAPPDATA%\Microsoft\Windows\Fonts` and register each under
@@ -221,22 +233,22 @@ bootstrap.
 
 ## Helpers
 
-Both scripts run through the PowerShell (pwsh 7) tool with the call operator —
-no `-ExecutionPolicy Bypass`.
+Both run through `pnpm ppt:run` like a recipe, with their parameters after `--`.
+The job carries the fixtures tree, so any committed fixture can be named.
 
 **Verify** — opens the deck through PowerPoint COM, reads package metadata,
 computes SHA-256, optionally lists group `a:xfrm` attributes, and reaps any
 automation-server process it spawned (reported as `reapedProcessIds`):
 
-```powershell
-& '.agents\skills\powerpoint-fixture-authoring\scripts\verify-powerpoint-fixture.ps1' -Path 'test\read\fixtures\<fixture>.pptx' -InspectGroups
+```sh
+pnpm ppt:run .agents/skills/powerpoint-fixture-authoring/scripts/verify-powerpoint-fixture.ps1 -- -Path test/read/fixtures/<fixture>.pptx -InspectGroups
 ```
 
 **Dump slide XML** — prints a slide's XML so you can confirm the exact OOXML
 construct PowerPoint emitted (indented by default; `-Raw` for the stored form):
 
-```powershell
-& '.agents\skills\powerpoint-fixture-authoring\scripts\dump-slide-xml.ps1' -Path 'test\read\fixtures\<fixture>.pptx' -Slide 1
+```sh
+pnpm ppt:run .agents/skills/powerpoint-fixture-authoring/scripts/dump-slide-xml.ps1 -- -Path test/read/fixtures/<fixture>.pptx -Slide 1
 ```
 
 If the helper output does not show the expected OOXML construct, fix the

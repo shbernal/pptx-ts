@@ -79,9 +79,11 @@ the triage rules.
   compare package XML, and add focused regression or schema fixtures.
 - Some behavior can only be judged against genuine PowerPoint output, such as a read
   accessor or a write path whose target is whatever PowerPoint authors. Where that fixture
-  does not exist yet, do not implement against synthetic or round-tripped XML. Open a GitHub
-  issue naming the construct the fixture has to contain, and stop until it is authored.
-  "Evidence and fixtures" in `docs/contributing/ooxml.md` has the procedure.
+  does not exist yet, do not implement against synthetic or round-tripped XML. Author it first
+  with `pnpm ppt:run` when a PowerPoint transport is available (the worker VM, or PowerPoint
+  on Windows). Without one, open a GitHub issue naming the construct the fixture has to
+  contain, and stop until it is authored. "Evidence and fixtures" in
+  `docs/contributing/ooxml.md` has the procedure.
 
 ### MCP tool selection
 
@@ -237,7 +239,8 @@ converter harnesses.
 - Adding or editing an autofit or CJK case makes the font-metrics sidecar stale. Regenerate
   it with `pnpm run font-metrics:build` on a machine with all six faces installed, then run
   `pnpm exec oxfmt --write "test/read/fixtures/*.json"`.
-- `pnpm run test:com` runs only on Windows with PowerPoint, and CI does not run it. It opens
+- `pnpm run test:com` runs on any OS with a PowerPoint transport: the worker in
+  `tools/powerpoint-vm/` on Linux, or PowerPoint on Windows. CI does not run it. It opens
   decks over COM to catch a package PowerPoint reports as corrupt. To learn whether
   PowerPoint paints a construct, compare exported PNGs, never properties read back over COM.
 - `pnpm run test:lo` renders decks through LibreOffice and runs in CI. Read its text through

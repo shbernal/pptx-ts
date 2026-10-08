@@ -49,7 +49,7 @@ Each cell comes from `package.json`, `lefthook.yml` or a workflow under `.github
 | `coverage:gate` | | | | | | `coverage` | after `test:coverage` and `test:browser`; otherwise leave it to CI |
 | `test:oracles` | | | | | | `font-oracles` | an autofit or CJK case, the fit model or the metrics sidecar changes |
 | `test:lo` | | | | | | `render-oracle` | SmartArt text, or a construct in `scripts/libreoffice-render-smoke.mjs` |
-| `test:com` | | | | | | none | markup PowerPoint could reject, drop or leave unpainted; needs Windows and PowerPoint |
+| `test:com` | | | | | | none | markup PowerPoint could reject, drop or leave unpainted; needs a PowerPoint transport |
 | `byte-identity:check` | | | | | | none | after each edit of a behaviour-preserving `src/gen/` refactor |
 | `schema:versions` | | | | | | none | after an `ooxml-validate` bump |
 
@@ -180,7 +180,7 @@ editing a job.
 | --- | --- | --- |
 | `FONT_ORACLES=required`, `FONT_ORACLES_GENUINE` | `test`, `font-oracles` | a face with no source fails the suite; see [Font oracles](#font-oracles) |
 | `TSPPTX_RENDER_ORACLE=required` | `render-oracle` | `test:lo` fails when LibreOffice or `pdftotext` is absent |
-| `TSPPTX_COM_SMOKE=required` | no job | `test:com` fails off Windows or without PowerPoint |
+| `TSPPTX_COM_SMOKE=required` | no job | `test:com` fails when neither the worker nor a local PowerPoint is available |
 | `CI` | every job | the read suites fail instead of skipping when the OOXML oracle cannot be fetched |
 
 ### The Windows leg
@@ -381,7 +381,8 @@ purpose notes. `fixtureNames` enumerates the directory, so the round-trip contra
 on the next run.
 
 A fixture authored here with desktop PowerPoint COM keeps its recipe in
-`test/read/fixtures/authoring/` (see that directory's README). Land the recipe there, not in the
+`test/read/fixtures/authoring/` (see that directory's README), and `pnpm ppt:run` runs the recipe
+through the same transports as `test:com`. Land the recipe there, not in the
 gitignored `.tmp/`, or the fixture cannot be reproduced from a clean checkout. The same
 directory holds the scripts that derive the committed `*.oracle.json` and `*.cases.json`
 sidecars. Each regenerates its sidecar byte for byte after an oxfmt pass, which is how you check
@@ -827,7 +828,7 @@ reject.
 ```bash
 pnpm run test:com                    # the generated decks
 pnpm run test:com --keep             # and keep the generated .pptx files
-pnpm run test:com --file deck.pptx   # the corruption-open check on an existing deck
+pnpm run test:com --file a.pptx b.pptx  # the corruption-open check on existing decks
 ```
 
 `test:com` drives desktop PowerPoint over COM through `cscript`. It catches what schema
@@ -843,8 +844,17 @@ back:
 | 3D model | the model resolves, and the exported slide shows it drawn, neither blank nor the magenta fallback |
 | preset geometry | an out-of-range adjustment guide paints the same as the in-range bound, and a third in-range value paints differently |
 
-The script skips off Windows or without a COM-registered PowerPoint, and
-`TSPPTX_COM_SMOKE=required` makes that skip a failure. No CI job runs it. The
+Each deck goes to PowerPoint as one job, through whichever transport is at hand:
+
+| Transport | When | Setup |
+| --- | --- | --- |
+| The PowerPoint worker | `TSPPTX_POWERPOINT_URL` is set, in the environment or in the VM's `.env` | On Linux, the Windows VM in `tools/powerpoint-vm/`; `pnpm ppt:health` checks it |
+| This machine's PowerPoint | no worker URL, on Windows with PowerPoint registered for COM | none |
+| none | neither | the run is a SKIP |
+
+`TSPPTX_POWERPOINT_TOKEN` carries the worker's bearer token and falls back to the same `.env`.
+A worker URL that is set but unreachable, or that refuses the token, fails the run rather than
+skipping it. `TSPPTX_COM_SMOKE=required` makes the skip a failure too. No CI job runs it. The
 `powerpoint-desktop-smoke` skill covers running it and bisecting a deck PowerPoint rejects.
 
 Run it after changing markup inside `mc:Choice`, actions, connectors, OLE objects, 3D models or
@@ -993,7 +1003,7 @@ the derived `autofit-calibration.json`. `autofit-cjk-wrap.pptx` is read directly
 | `node test/read/fixtures/authoring/gen-cases.mjs` | anywhere | the `autofit-*.cases.json` manifests |
 | `test/read/fixtures/authoring/author-all.ps1` | Windows with PowerPoint and LibreOffice | each of the four decks through `author-deck.ps1`, and a `.tmp/<deck>.lo.json` LibreOffice measure through `measure-lo.py` for the line-metrics, resize and edge decks |
 | `node test/read/fixtures/authoring/extract-autofit-calibration.mjs` | anywhere | `autofit-calibration.json`: PowerPoint's baked values read from the committed decks, merged with the LibreOffice measures found under `--lo-dir` (default `.tmp`) |
-| `test/read/fixtures/authoring/author-cjk-wrap.ps1` | Windows with PowerPoint | `autofit-cjk-wrap.pptx` and `autofit-cjk-wrap.oracle.json` |
+| `test/read/fixtures/authoring/author-cjk-wrap.ps1` | PowerPoint, through `pnpm ppt:run` or on Windows | `autofit-cjk-wrap.pptx` and `autofit-cjk-wrap.oracle.json` |
 
 - The decks are the source of truth, and `autofit-calibration.json` is derived from them.
 - `author-deck.ps1` stops before authoring when a requested font resolves to a substitute.
@@ -1014,7 +1024,9 @@ face from one of two sources:
 - The installed font. On Windows it reads the font registry under both `HKLM` and `HKCU`. That is
   the map GDI resolves family names through, and the only one that sees the per-user Aptos
   Microsoft 365 installs under `%LOCALAPPDATA%`. Elsewhere it runs `fc-match` and rejects a
-  substituted family, so Carlito cannot stand in for Calibri.
+  substituted family, so Carlito cannot stand in for Calibri, and a face whose style is not the
+  one asked for. Fontconfig lists some weights as families of their own (`Aptos Bold`), so a
+  bold face that `Aptos:style=bold` misses is looked up under that name.
 - `test/read/fixtures/autofit-font-metrics.json` otherwise. Per face, it records the raw `hmtx`
   advance of every code point the committed cases measure, and the code points the face lacks.
   A code point missing from it throws, naming the face and the character.
@@ -1028,7 +1040,7 @@ wherever one resolves, and fails on any difference.
 | --- | --- | --- |
 | `test` (ubuntu, both Node legs) | the sidecar, always | The solvers are still conservative against PowerPoint's baked values, on every push. |
 | `font-oracles` (windows-latest) | installed fonts | The recorded advances still match the fonts they came from, for Arial, Calibri, Tahoma and Malgun Gothic. |
-| A workstation with Microsoft 365 | installed fonts | The same check for Aptos and Aptos SemiBold, which no runner carries. `pnpm run test:oracles` reports which faces it verified. |
+| A workstation with Aptos installed | installed fonts | The same check for Aptos and Aptos SemiBold, which no runner carries. Microsoft 365 provides them on Windows, and Microsoft's Aptos download provides the same advances on Linux. `pnpm run test:oracles` reports which faces it verified. |
 
 `test:oracles` starts with `scripts/font-oracle-probe.mjs`, which prints the face-by-face
 resolution table, writes it to the job summary on CI, and fails when a declared family is absent.

@@ -33,13 +33,17 @@ the hooks.
 - `docs/`: documentation content. See [Site changes](#site-changes).
 - `www/`: the site's theme and Vue components, including the demos page.
 - `demos/`: the showcase decks (`demos/showcases`) and the Node streaming demo (`demos/node`).
-- `scripts/`: build, gate, package and demo automation.
+- `scripts/`: build, gate, package and demo automation. `scripts/powerpoint/` is the PowerPoint
+  job runner: the worker that runs COM jobs on Windows, and the client that `test:com` and
+  `ppt:run` send jobs through.
 - `skills/`: the `ts-pptx-upstream` skill, which ships in the package. Skills for working on this
   repository are under `.agents/skills/`.
 - `tools/api-docs/`: TypeDoc with a pinned TypeScript 6. The root compiler is TypeScript 7, which
   ships no JavaScript compiler API. TypeDoc needs that API, and so does
   `scripts/raw-xml-ratchet.mjs`, through the `typescript-6` alias in the root devDependencies.
   Keep both pins. `tools/api-docs/README.md` says when they can go.
+- `tools/powerpoint-vm/`: a Windows VM under Docker that runs the PowerPoint worker, so desktop
+  PowerPoint checks and fixture recipes run from Linux. Its README covers bring-up.
 
 Keep source changes in `src/` and tests in `test/`. Leave unrelated uncommitted changes in the
 working tree as you found them, and do not revert changes you did not make.

@@ -1,6 +1,6 @@
 ---
 name: powerpoint-gui-automation
-description: Use on Windows with desktop Microsoft PowerPoint installed when a feature has NO COM/VBA surface at all (e.g. Insert > Zoom - Slide/Section/Summary Zoom - has no Shapes.AddZoom) and must be authored by driving the real GUI, or when you need to visually observe how a file renders/behaves in the actual desktop app rather than infer it from OOXML. Escalation path from powerpoint-fixture-authoring, not a replacement for it - try COM (and its ExecuteMso fallback) first.
+description: Use in an interactive Windows session with desktop Microsoft PowerPoint (a Windows machine, or the worker VM's desktop over its web viewer or RDP) when a feature has NO COM/VBA surface at all (e.g. Insert > Zoom - Slide/Section/Summary Zoom - has no Shapes.AddZoom) and must be authored by driving the real GUI, or when you need to visually observe how a file renders/behaves in the actual desktop app rather than infer it from OOXML. Escalation path from powerpoint-fixture-authoring, not a replacement for it - try COM (and its ExecuteMso fallback) first.
 metadata:
   # For working *on* ts-pptx, not *with* it. `npx skills add shbernal/ts-pptx` walks
   # .claude/skills/ (a symlink to this tree) as well as the published skills/, and this flag
@@ -25,6 +25,13 @@ enum arguments won't marshal from PowerShell, e.g. `MergeShapes`). Only reach
 for full GUI automation when a feature genuinely has no COM/VBA surface -
 verify that first by checking the real `Shapes`/`Presentation` object model
 (e.g. the full `Add*` method list), not by assuming.
+
+## Where it runs
+
+This is a manual desktop task in a signed-in Windows session: a Windows machine with
+PowerPoint, or the worker VM's desktop, reached from Linux through its web viewer or RDP
+(`tools/powerpoint-vm/README.md`, "Connecting to the desktop"). The scripts below run in
+that session's PowerShell. `pnpm ppt:run` is for COM recipes, not for this.
 
 ## Prerequisites
 

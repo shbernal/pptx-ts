@@ -157,11 +157,17 @@ real Office XML, or a write path whose target is whatever PowerPoint authors for
 wiring, namespaces or inheritance. Hand-typed XML, synthetic XML and write-then-read round trips all
 agree with whatever the code already does, which is exactly the question being asked.
 
-So when that fixture does not exist, stop. Open a GitHub issue naming the exact construct the
-fixture has to contain, and leave the feature unimplemented until it lands. Then:
+So when that fixture does not exist, author it before anything else, provided a PowerPoint
+transport is at hand: the PowerPoint worker (on Linux, the VM in
+`tools/powerpoint-vm/`; `pnpm ppt:health` says whether it
+answers), or desktop PowerPoint on Windows. With neither, stop: open a GitHub issue naming the
+exact construct the fixture has to contain, and leave the feature unimplemented until it lands.
+Either way the order is:
 
-1. Author the fixture with the `powerpoint-fixture-authoring` skill, and verify it with
-   `.agents/skills/powerpoint-fixture-authoring/scripts/verify-powerpoint-fixture.ps1`.
+1. Author the fixture with the `powerpoint-fixture-authoring` skill. Its recipe goes in
+   `test/read/fixtures/authoring/` and runs with `pnpm ppt:run`. Verify the result with
+   `.agents/skills/powerpoint-fixture-authoring/scripts/verify-powerpoint-fixture.ps1`, which
+   runs the same way.
 2. Record provenance and SHA-256 in
    [test/read/fixtures/README.md](https://github.com/shbernal/ts-pptx/blob/main/test/read/fixtures/README.md).
 3. Wire the test to the fixture: through the read harness for a read accessor, or a

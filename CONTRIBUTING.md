@@ -36,6 +36,21 @@ AGENTS.md. The [testing guide](docs/contributing/testing.md) covers schema valid
 A change to the package boundary (exports, entry points, shipped artifacts) also needs
 `pnpm run check:package`.
 
+### PowerPoint
+
+`verify` never needs PowerPoint. Two tasks do: `pnpm run test:com`, which opens decks in desktop
+PowerPoint to catch a package it rejects, and `pnpm ppt:run`, which runs the recipe that authors a
+PowerPoint fixture. Both find PowerPoint the same way:
+
+- **Linux:** run the Windows VM in [`tools/powerpoint-vm/`](tools/powerpoint-vm/README.md). Signing
+  in to Office is the one manual step. Its `.env` points both commands at the worker inside, and
+  `pnpm ppt:health` checks it.
+- **Windows:** install desktop PowerPoint. With no worker URL set, both commands use it directly.
+- **macOS:** no supported path yet. PowerPoint for Mac has no COM, and the VM needs KVM.
+
+Without PowerPoint, `test:com` reports SKIP, and fixture-gated work goes through a GitHub issue,
+as AGENTS.md describes.
+
 ## Git hooks
 
 `pnpm install` installs the hooks through the `prepare` script (`scripts/install-hooks.mjs`). When

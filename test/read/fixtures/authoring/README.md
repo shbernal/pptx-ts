@@ -5,10 +5,10 @@ directory, plus the Node scripts that derive the committed `*.oracle.json`,
 `*.cases.json` and `autofit-calibration.json` sidecars from them.
 
 These are **recipes, not tests.** Nothing here runs in CI, but they do not all need the
-same machine: every `author-*.ps1` needs a licensed desktop PowerPoint and an interactive
-Windows session, and `measure-lo.py` needs a local LibreOffice, while the `.mjs` builders
-are plain cross-platform Node that a Linux contributor can run against the committed
-decks. Read
+same machine: every `author-*.ps1` needs a licensed desktop PowerPoint, which it reaches
+through the PowerPoint worker from any OS or directly on Windows, and `measure-lo.py` needs
+a local LibreOffice, while the `.mjs` builders are plain cross-platform Node that run
+against the committed decks anywhere. Read
 [`.agents/skills/powerpoint-fixture-authoring/SKILL.md`](../../../../.agents/skills/powerpoint-fixture-authoring/SKILL.md)
 before running any of them — it carries the COM ordering rules, the teardown/reap
 discipline, and the autofit bake-on-save contract that these scripts depend on.
@@ -19,19 +19,22 @@ checkout. Nothing in this directory is published to npm (`package.json` `files: 
 ## Running them
 
 All scripts resolve their own paths from `$PSScriptRoot` / `import.meta.url`, so they can
-be invoked from anywhere:
+be invoked from anywhere. `pnpm ppt:run` runs a recipe wherever PowerPoint is: on the
+worker when `TSPPTX_POWERPOINT_URL` is set (on Linux, the VM in
+[`tools/powerpoint-vm/`](../../../../tools/powerpoint-vm/README.md), whose `.env` sets it),
+otherwise on this Windows machine's PowerPoint. Either way it writes what the recipe
+produced back to this tree and `.tmp/`:
 
-```powershell
-& test\read\fixtures\authoring\author-read-stress.ps1        # re-authors ../read-stress.pptx
-node test/read/fixtures/authoring/build-oracles.mjs          # re-derives the oracle sidecars
-node test/read/fixtures/authoring/gen-cases.mjs --help       # the one here that takes flags
+```sh
+pnpm ppt:run test/read/fixtures/authoring/author-read-stress.ps1   # re-authors ../read-stress.pptx
+node test/read/fixtures/authoring/build-oracles.mjs                # re-derives the oracle sidecars
+node test/read/fixtures/authoring/gen-cases.mjs --help             # the one here that takes flags
 ```
 
-### From Linux or macOS
+On Windows, `& test\read\fixtures\authoring\author-read-stress.ps1` in PowerShell 7 does the
+same without the job round trip.
 
-`pnpm ppt:run` runs a recipe on the PowerPoint worker, usually the VM in
-[`tools/powerpoint-vm/`](../../../../tools/powerpoint-vm/README.md), and writes what it produced
-back to this tree and `.tmp/` as if it had run here on Windows:
+### Through the worker
 
 ```sh
 pnpm ppt:run test/read/fixtures/authoring/author-slide-background.ps1
