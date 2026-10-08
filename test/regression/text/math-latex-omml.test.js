@@ -23,7 +23,7 @@ function assertWellFormed(omml, label) {
 		// Touching the tree surfaces a parse error node if xmldom recovered instead of throwing.
 		if (doc.getElementsByTagName('parsererror').length > 0) threw = 'parsererror node'
 	} catch (e) {
-		threw = e.message
+		threw = e instanceof Error ? e.message : String(e)
 	}
 	expect(threw, `${label} should be well-formed XML`).toBeNull()
 	return doc

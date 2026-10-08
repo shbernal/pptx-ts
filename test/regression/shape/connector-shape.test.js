@@ -103,14 +103,11 @@ defineRegressionSuite('Connector shapes', [
 				'a mismatched adj length'
 			)
 
-			let threw2 = false
-			try {
-				await build((p) => p.addSlide().addConnector({ type: 'elbow', x1: 1, y1: 1, x2: 5, y2: 3, adj: Number.NaN }))
-			} catch (ex) {
-				threw2 = true
-				assert(/finite number/.test(ex.message), `expected a finite-number error; got: ${ex.message}`)
-			}
-			assert(threw2, 'NaN adj must throw')
+			await assertRejects(
+				() => build((p) => p.addSlide().addConnector({ type: 'elbow', x1: 1, y1: 1, x2: 5, y2: 3, adj: Number.NaN })),
+				/finite number/,
+				'a NaN adj'
+			)
 		},
 	},
 	{

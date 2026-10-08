@@ -9,7 +9,7 @@
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { throws, bytesEqual, assert, assertEqual, partBodies, assertUnchangedExcept } from '../helpers.js'
+import { throws, bytesEqual, assert, assertEqual, partBodies, assertUnchangedExcept, caughtSync } from '../helpers.js'
 import { validateBuf, validatorInstalled } from '../validator.js'
 import { fixturePath, openFixture } from './corpus.js'
 
@@ -70,12 +70,7 @@ describe('Shape fill editing', () => {
 			},
 		]
 		for (const refuse of refusals) {
-			let code = null
-			try {
-				refuse()
-			} catch (err) {
-				code = err.code
-			}
+			const code = caughtSync(refuse)?.code ?? null
 			assertEqual(code, 'color/invalid-scheme-token', 'the token is refused')
 		}
 		assert(bytesEqual(before, await presentation.save()), 'and nothing reached the part')
@@ -198,14 +193,7 @@ describe('Per-kind fill / line support', () => {
 		const frame = findByKind(mixed, 'graphicFrame')
 		const group = findByKind(mixed, 'group')
 		const picture = findByKind(await openFixture('image'), 'picture')
-		const codeOf = (/** @type {() => unknown} */ fn) => {
-			try {
-				fn()
-				return null
-			} catch (err) {
-				return err.code
-			}
-		}
+		const codeOf = (/** @type {() => unknown} */ fn) => caughtSync(fn)?.code ?? null
 		assertEqual(
 			codeOf(() => (frame.fillColor = '000000')),
 			'shape/fill-unsupported',

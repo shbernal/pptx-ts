@@ -1,4 +1,4 @@
-import { PNG_1X1, defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { PNG_1X1, defineRegressionSuite, build, readEntry, assert, assertRejects } from '../../helpers.js'
 
 defineRegressionSuite('Image shape clipping', [
 	{
@@ -180,29 +180,26 @@ defineRegressionSuite('Image shape clipping', [
 		// A NaN sweep used to coerce to a zero-length arc via `d || 0`. Fail loud instead.
 		name: 'addImage({ points: [...arcTo] }) rejects a non-finite arc angle',
 		fn: async () => {
-			/** @type {Error | null} */
-			let threw = null
-			try {
-				await build((p) => {
-					const s = p.addSlide()
-					s.addImage({
-						data: PNG_1X1,
-						x: 1,
-						y: 1,
-						w: 2,
-						h: 3,
-						points: [
-							{ x: 0, y: 0 },
-							{ curve: { type: 'arc', hR: 1.5, wR: 0.64, stAng: 0, swAng: Number.NaN } },
-							{ close: true },
-						],
-					})
-				})
-			} catch (err) {
-				threw = err
-			}
-			assert(threw !== null, 'expected a non-finite swAng to throw')
-			assert(/swAng must be a finite number/.test(threw.message), 'expected a targeted message; got: ' + threw.message)
+			await assertRejects(
+				() =>
+					build((p) => {
+						const s = p.addSlide()
+						s.addImage({
+							data: PNG_1X1,
+							x: 1,
+							y: 1,
+							w: 2,
+							h: 3,
+							points: [
+								{ x: 0, y: 0 },
+								{ curve: { type: 'arc', hR: 1.5, wR: 0.64, stAng: 0, swAng: Number.NaN } },
+								{ close: true },
+							],
+						})
+					}),
+				/swAng must be a finite number/,
+				'a non-finite swAng'
+			)
 		},
 	},
 	{

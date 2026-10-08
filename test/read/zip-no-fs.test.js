@@ -10,7 +10,7 @@
 // dist/zip.js is imported dynamically *after* the mock is registered.
 
 import { describe, test, vi, beforeEach, afterEach } from 'vitest'
-import { assert } from '../helpers.js'
+import { assert, caught } from '../helpers.js'
 
 describe('readFileAsBytes when node:fs is unavailable (browser build)', () => {
 	beforeEach(() => {
@@ -29,13 +29,7 @@ describe('readFileAsBytes when node:fs is unavailable (browser build)', () => {
 
 	test('a string path throws a Node-required error, not the opaque zip error', async () => {
 		const { readZip } = await import('../../dist/zip.js')
-		/** @type {Error | null} */
-		let error = null
-		try {
-			await readZip('/any/deck.pptx')
-		} catch (err) {
-			error = err
-		}
+		const error = await caught(() => readZip('/any/deck.pptx'))
 		assert(error, 'a string path throws when the filesystem is unavailable')
 		assert(
 			error.message.includes('filesystem access requires Node'),

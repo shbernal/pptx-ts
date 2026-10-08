@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert, caught } from '../../helpers.js'
 
 // Coordinates resolve through a single boundary (coordToEmu) with NO magnitude guessing:
 // a bare number is ALWAYS inches; other units use an explicit string suffix. This replaces the
@@ -84,12 +84,7 @@ defineRegressionSuite('Coordinate units', [
 				percent: { x: '1000000000000%', y: 0, w: 1, h: 1 },
 			}
 			for (const [label, opts] of Object.entries(outside)) {
-				let code = null
-				try {
-					await offExtFor(opts)
-				} catch (err) {
-					code = err?.code ?? null
-				}
+				const code = (await caught(() => offExtFor(opts)))?.code ?? null
 				assert(code === 'coord/out-of-range', `${label}: expected coord/out-of-range; got ${code}`)
 			}
 		},

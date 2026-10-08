@@ -9,6 +9,8 @@ import {
 	assert,
 	assertEqual,
 	defined,
+	caughtSync,
+	assertRejects,
 } from '../../helpers.js'
 
 // Group shapes: slide.addGroup() wraps child objects in a PowerPoint group (<p:grpSp>) with an
@@ -722,17 +724,7 @@ defineRegressionSuite('Group shapes', [
 					setDiagnosticHandler(null)
 				}
 			}
-			const rejects = async (fn, re, label) => {
-				/** @type {Error | null} */
-				let err = null
-				try {
-					await grouped(fn)
-				} catch (ex) {
-					err = ex
-				}
-				assert(err, `expected ${label} to throw`)
-				assert(re.test(err.message), `expected ${label} message to match ${re}; got: ${err.message}`)
-			}
+			const rejects = (fn, re, label) => assertRejects(() => grouped(fn), re, label)
 
 			await rejects(
 				(s) => {
@@ -987,13 +979,7 @@ defineRegressionSuite('Group shapes', [
 
 			// canGroup is not a second opinion: it is the same predicate groupObjects throws on.
 			for (const object of s.objects) {
-				/** @type {Error | null} */
-				let err = null
-				try {
-					s.groupObjects([object.objectName])
-				} catch (ex) {
-					err = ex
-				}
+				const err = caughtSync(() => s.groupObjects([object.objectName]))
 				assert(err, `expected groupObjects to refuse ${object.objectName}`)
 				assert(
 					/is not supported yet/.test(err.message),

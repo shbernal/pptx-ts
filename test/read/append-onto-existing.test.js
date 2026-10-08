@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, test } from 'vitest'
 import TsPptx, { ChartType } from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { bytesEqual, PNG_1X1, assert, assertEqual, assertIncludes, partBodies, defined } from '../helpers.js'
+import { bytesEqual, PNG_1X1, assert, assertEqual, assertIncludes, partBodies, defined, caught } from '../helpers.js'
 import { validateBuf, validatorInstalled } from '../validator.js'
 import { FIXTURES, fixturePath } from './corpus.js'
 import { resolveSingle } from './opc.js'
@@ -618,12 +618,7 @@ describe('Presentation.appendSlides', () => {
 		const before = await pres.save()
 		const slideCount = pres.slides.length
 
-		let code = null
-		try {
-			await pres.appendSlides(pptx, { layout: 'Blank' })
-		} catch (err) {
-			code = err.code
-		}
+		const code = (await caught(() => pres.appendSlides(pptx, { layout: 'Blank' })))?.code ?? null
 		assertEqual(code, 'slide/link-past-last-slide', 'a link past the source deck throws')
 		assertEqual(pres.slides.length, slideCount, 'no slide was added')
 		assert(bytesEqual(before, await pres.save()), 'and the deck is byte-identical')
@@ -646,12 +641,7 @@ describe('Presentation.appendSlides', () => {
 		const before = await pres.save()
 		const slideCount = pres.slides.length
 
-		let code = null
-		try {
-			await pres.appendSlides(firstOnly, { layout: 'Blank' })
-		} catch (err) {
-			code = err.code
-		}
+		const code = (await caught(() => pres.appendSlides(firstOnly, { layout: 'Blank' })))?.code ?? null
 		assertEqual(code, 'import/unresolved-slide-link', 'a link to a non-appended source slide throws')
 		assertEqual(pres.slides.length, slideCount, 'no slide was added')
 		assert(bytesEqual(before, await pres.save()), 'and the deck is byte-identical')

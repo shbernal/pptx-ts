@@ -57,14 +57,15 @@ async function build(name, options = {}) {
 		// The media pipeline wraps a loader failure in `media/load-failed` and chains the
 		// original as `cause`, so the adapter's own code is one level down. Both are
 		// reported: the outer says which stage failed, the inner says which loader.
-		const cause = err?.cause
+		const error = err instanceof Error ? err : new Error(String(err))
+		const cause = error.cause instanceof Error ? error.cause : undefined
 		return {
 			ok: false,
-			name: String(err?.name ?? ''),
-			code: String(err?.code ?? ''),
-			message: String(err?.message ?? err),
-			causeCode: String(cause?.code ?? ''),
-			causeMessage: String(cause?.message ?? ''),
+			name: error.name,
+			code: 'code' in error ? String(error.code) : '',
+			message: error.message,
+			causeCode: cause && 'code' in cause ? String(cause.code) : '',
+			causeMessage: cause?.message ?? '',
 			diagnostics,
 		}
 	} finally {

@@ -294,6 +294,9 @@ Prefer public API deck generation plus focused package and XML assertions:
   project typechecks with `strictNullChecks`, and both helpers fail as an assertion where a bare
   dereference would fail as a `TypeError`. A Playwright spec imports `defined` from
   `test/browser/helpers.mjs` instead, since `test/helpers.js` asserts through Vitest.
+- Assert a failure without a hand-rolled `try`/`catch`: a catch variable is `unknown`. Use
+  `assertRejects()` to match the message, `caught()` or `caughtSync()` to get the thrown
+  `Error` back (or `null`) and check its `code`, class or `cause`, or Vitest's `toThrow()`.
 - Use `assertContentTypeDefault()`, `assertContentTypeOverride()`, `assertXmlOrder()` and
   `assertNonVisualDrawingProperty()` when they match the behaviour under test.
 - Keep a raw XML substring or regex assertion local and narrow when a helper would hide the

@@ -18,7 +18,7 @@ import TsPptx from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
 import JSZip from 'jszip'
 import { firstTable } from './authored.js'
-import { assert, assertEqual, defined, readEntry } from '../helpers.js'
+import { assert, assertEqual, defined, readEntry, caughtSync } from '../helpers.js'
 
 /** Author a deck, load it for editing, and return the presentation plus its first table. */
 async function editable(build) {
@@ -45,12 +45,9 @@ async function reload(presentation) {
  * threw, which fails the comparison with a legible diff rather than a bare `false`.
  */
 function codeOfThrow(fn) {
-	try {
-		fn()
-	} catch (err) {
-		return err.code ?? `(threw without a code: ${err.message})`
-	}
-	return null
+	const err = caughtSync(fn)
+	if (err === null) return null
+	return err.code ?? `(threw without a code: ${err.message})`
 }
 
 /** Save the edited deck and return its slide part. */
@@ -734,12 +731,7 @@ describe('Table structural edits — merging', () => {
 		)
 
 		table.mergeCells(0, 0, 0, 1)
-		let message = ''
-		try {
-			table.unmergeCell(0, 1)
-		} catch (err) {
-			message = err.message
-		}
+		const message = caughtSync(() => table.unmergeCell(0, 1))?.message ?? ''
 		// The one place a message is asserted rather than a code: the point of this error is
 		// that it tells the caller which cell to address instead, so the coordinates are the
 		// contract, not incidental wording.

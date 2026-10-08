@@ -12,7 +12,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, test, expect } from 'vitest'
 import TsPptx, { setDiagnosticHandler } from '../../../dist/node.js'
-import { defined, expectDefined, partXml } from '../../helpers.js'
+import { defined, expectDefined, partXml, caughtSync } from '../../helpers.js'
 // The `ts-pptx/measure` entry publishes the calibrated constants the bake uses, so a test
 // can state "inflated by the height safety factor" instead of re-pinning its value here.
 import { HEIGHT_SAFETY_FACTOR } from '../../../dist/measure.js'
@@ -490,12 +490,8 @@ describe('measured fit: solver floor and edges', () => {
 	test('a zero-width measure box is refused rather than laid out', async () => {
 		// It came back unmeasurable with no reason given. A box with no width is the caller's to fix.
 		const pres = await pptxWithSilkscreen()
-		let code
-		try {
-			pres.measureText('alpha', { wIn: 0, fontSize: 12, fontFace: 'Silkscreen' })
-		} catch (err) {
-			code = err.code
-		}
+		const code =
+			caughtSync(() => pres.measureText('alpha', { wIn: 0, fontSize: 12, fontFace: 'Silkscreen' }))?.code ?? null
 		expect(code).toBe('coord/not-positive')
 	})
 })

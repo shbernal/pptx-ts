@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { getExcelColName } from '../../../src/gen/chart/data-refs.ts'
-import { build, readEntry, listEntries, expectDefined } from '../../helpers.js'
+import { build, readEntry, listEntries, expectDefined, caughtSync } from '../../helpers.js'
 
 // Worksheet column names are bijective base 26: A to Z, AA to ZZ, AAA to XFD. The conversion used
 // to handle two letters at most, so column 703 came out as `undefinedA`, and a chart with that many
@@ -21,12 +21,7 @@ describe('worksheet column names', () => {
 	})
 
 	test('a column past XFD, the last one a worksheet has, is refused', () => {
-		let code = null
-		try {
-			getExcelColName(16385)
-		} catch (err) {
-			code = err?.code ?? null
-		}
+		const code = caughtSync(() => getExcelColName(16385))?.code ?? null
 		expect(code).toBe('chart/too-many-columns')
 	})
 

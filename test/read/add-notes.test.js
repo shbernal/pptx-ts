@@ -16,7 +16,7 @@
 import { describe, test } from 'vitest'
 import TsPptx from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual, bytesEqual, defined } from '../helpers.js'
+import { assert, assertEqual, bytesEqual, defined, caughtSync } from '../helpers.js'
 import { validateBuf, validatorInstalled } from '../validator.js'
 import { openFixture } from './corpus.js'
 import { assertNoDanglingRels, resolveSingle } from './opc.js'
@@ -266,12 +266,7 @@ describe('Slide.addNotes on a loaded deck', () => {
 		masterRels.remove(defined([...masterRels].find((rel) => rel.type === THEME_REL)).id)
 		const before = await deck.save()
 
-		let code = null
-		try {
-			slide.addNotes('note')
-		} catch (err) {
-			code = err.code
-		}
+		const code = caughtSync(() => slide.addNotes('note'))?.code ?? null
 		assertEqual(code, 'package/part-missing', 'there is no theme to bind a notes master to')
 		assertEqual(slide.relationships.byType(NOTES_SLIDE_REL).length, 0, 'the slide has no notes relationship')
 		assert(bytesEqual(before, await deck.save()), 'and the deck is byte-identical')
@@ -282,12 +277,7 @@ describe('Slide.addNotes on a loaded deck', () => {
 		const partName = defined(deck.slides[0].notesSlide).part.partName
 		deck.opc.removePart(partName)
 
-		let code = null
-		try {
-			deck.slides[0].addNotes('replacement')
-		} catch (err) {
-			code = err.code
-		}
+		const code = caughtSync(() => deck.slides[0].addNotes('replacement'))?.code ?? null
 		assertEqual(code, 'package/part-missing', 'a dangling notes rel surfaces rather than being papered over')
 	})
 

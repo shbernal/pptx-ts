@@ -9,6 +9,7 @@ import {
 	assertEqual,
 	assertIncludes,
 	assertNotIncludes,
+	caught,
 } from '../../helpers.js'
 import { chartXml } from './chart-parts.js'
 
@@ -367,15 +368,11 @@ defineRegressionSuite('Chart definition', [
 							`${label}: and about the width`
 						)
 				}
-				/** @type {{ code?: unknown } | null} */
-				let thrown = null
-				try {
-					await build((p) => {
+				const thrown = await caught(() =>
+					build((p) => {
 						p.addSlide().addChart(SERIES, { ...BASE, type: ChartType.bar, ...place({ width: NaN }) })
 					})
-				} catch (err) {
-					thrown = err
-				}
+				)
 				assertEqual(thrown?.code, 'coord/non-finite', `${option}: a NaN width throws`)
 			}
 		},

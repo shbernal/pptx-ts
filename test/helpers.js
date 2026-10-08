@@ -291,7 +291,7 @@ async function assertRejects(fn, expected, label) {
 	try {
 		await fn()
 	} catch (err) {
-		error = /** @type {Error} */ (err)
+		error = asError(err)
 	}
 	assert(error, `expected ${label || 'the call'} to throw, and it did not`)
 	assert(
@@ -315,6 +315,50 @@ function throws(fn) {
 		return false
 	} catch {
 		return true
+	}
+}
+
+/**
+ * A thrown value narrowed to an `Error`, failing when something else was thrown. `code` is read
+ * off a `TsPptxError`; any other `Error` leaves it `undefined`.
+ *
+ * @param {unknown} err
+ * @returns {Error & { code?: string }}
+ */
+function asError(err) {
+	assert(err instanceof Error, `expected an Error to be thrown; got: ${String(err)}`)
+	return err
+}
+
+/**
+ * What `fn` threw, or `null` when it returned. For a test that classifies the failure (its
+ * `code`, its class, its `cause`) rather than matching the message, which is what
+ * {@link assertRejects} is for.
+ *
+ * @param {() => unknown} fn the call under test; may be async
+ * @returns {Promise<(Error & { code?: string }) | null>}
+ */
+async function caught(fn) {
+	try {
+		await fn()
+		return null
+	} catch (err) {
+		return asError(err)
+	}
+}
+
+/**
+ * {@link caught} for a synchronous call.
+ *
+ * @param {() => unknown} fn the call under test
+ * @returns {(Error & { code?: string }) | null}
+ */
+function caughtSync(fn) {
+	try {
+		fn()
+		return null
+	} catch (err) {
+		return asError(err)
 	}
 }
 
@@ -458,6 +502,9 @@ export {
 	assertNotIncludes,
 	bytesEqual,
 	throws,
+	asError,
+	caught,
+	caughtSync,
 	assertRejects,
 	xmlBlocks,
 	firstXmlBlock,

@@ -6,7 +6,7 @@
 // vocabulary boundaries executable rather than inferred from type declarations: widening
 // `Margin`/`colW` to `Coord`, or extending `SchemeColor` towards the full
 // `ST_SchemeColorVal` set, should fail here and be recorded as a deliberate change.
-import { defineRegressionSuite, assert, assertIncludes, slideXml } from '../../helpers.js'
+import { defineRegressionSuite, assert, assertIncludes, slideXml, assertRejects } from '../../helpers.js'
 
 const EMU_PER_INCH = 914400
 
@@ -131,15 +131,11 @@ defineRegressionSuite('EMU-exact geometry and scheme-colour passthrough', [
 			// It throws from `addText`, not from `toBytes`: the insets are resolved when the text
 			// object is defined, so the throw names the call that carries the bad value.
 			const emuMargin = /** @type {any} */ (['91441emu', 0.1, 0.1, 0.1])
-			/** @type {Error | null} */
-			let threw = null
-			try {
-				await probeSlideXml((slide) => slide.addText('inset', { x: 1, y: 1, w: 4, h: 1, margin: emuMargin }))
-			} catch (err) {
-				threw = err
-			}
-			assert(threw, 'expected an EMU-string margin to throw; it was accepted silently')
-			assertIncludes(String(threw.message), 'finite number', 'margin error message')
+			await assertRejects(
+				() => probeSlideXml((slide) => slide.addText('inset', { x: 1, y: 1, w: 4, h: 1, margin: emuMargin })),
+				/finite number/,
+				'an EMU-string margin'
+			)
 		},
 	},
 	{

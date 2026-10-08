@@ -1,4 +1,13 @@
-import { PNG_1X1, defineRegressionSuite, build, readEntry, assert, assertEqual } from '../../helpers.js'
+import {
+	PNG_1X1,
+	defineRegressionSuite,
+	build,
+	readEntry,
+	assert,
+	assertEqual,
+	caughtSync,
+	defined,
+} from '../../helpers.js'
 import { clipPath, EMU_PER_INCH } from '../../../dist/node.js'
 
 // `clipPath` resolves a named silhouette to the freeform `points` path `addImage` emits as a
@@ -114,14 +123,7 @@ defineRegressionSuite('Clip silhouettes (clipPath)', [
 		// `undefined`, an unknown kind returned nothing and an unknown flat side traced the right-flat path.
 		name: 'a shape clipPath does not name is refused with the values it takes',
 		fn: () => {
-			const refused = (shape) => {
-				try {
-					clipPath(/** @type {any} */ (shape), 4, 6)
-				} catch (err) {
-					return err
-				}
-				return undefined
-			}
+			const refused = (shape) => caughtSync(() => clipPath(/** @type {any} */ (shape), 4, 6))
 			for (const shape of [
 				{ kind: 'half-disc', flat: 'right', preset: 'bogus' },
 				{ kind: 'half-disc', flat: 'top' },
@@ -130,7 +132,7 @@ defineRegressionSuite('Clip silhouettes (clipPath)', [
 			]) {
 				assertEqual(refused(shape)?.code, 'clip/invalid-shape', JSON.stringify(shape))
 			}
-			const preset = refused({ kind: 'half-disc', flat: 'right', preset: 'bogus' })
+			const preset = defined(refused({ kind: 'half-disc', flat: 'right', preset: 'bogus' }))
 			assert(/deep, shallow/.test(preset.message), `the message names the presets: ${preset.message}`)
 		},
 	},

@@ -1,4 +1,4 @@
-import { defineRegressionSuite, assert, assertEqual, defined } from '../../helpers.js'
+import { defineRegressionSuite, assert, assertEqual, defined, caught } from '../../helpers.js'
 import TsPptx, {
 	TsPptxError,
 	InvalidOptionError,
@@ -19,16 +19,6 @@ import { TsPptxError as TsPptxErrorFromRead } from '../../../dist/read.js'
 // What is pinned here is the CONTRACT, not the wording. The class and the `code` are API; the
 // `message` is explicitly free to change in any release, so nothing below asserts on message text —
 // with one exception, noted where it appears, that pins a mechanism rather than a phrasing.
-
-/** Run `fn`, returning whatever it threw (or `null` if it did not throw). */
-async function caught(fn) {
-	try {
-		await fn()
-		return null
-	} catch (err) {
-		return err
-	}
-}
 
 defineRegressionSuite('Error taxonomy', [
 	{
@@ -101,7 +91,7 @@ defineRegressionSuite('Error taxonomy', [
 
 			// Wrapping must not discard what fflate reported — the taxonomy adds classification on
 			// top of the original failure rather than replacing it.
-			assert(err.cause !== undefined, 'the originating error is preserved as `cause`')
+			assert(err?.cause !== undefined, 'the originating error is preserved as `cause`')
 		},
 	},
 	{

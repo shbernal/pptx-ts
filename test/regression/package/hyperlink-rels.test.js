@@ -6,6 +6,7 @@ import {
 	assert,
 	assertEqual,
 	assertIncludes,
+	caught,
 } from '../../helpers.js'
 
 // `createHyperlinkRels` walks the text/table-cell tree and mints one slide relationship per
@@ -70,17 +71,12 @@ async function assertLinksResolve(zip, n, expected) {
 }
 
 /**
- * Build, returning the error it threw (or `undefined` if it completed). Registration declines to
+ * Build, returning the error it threw (or `null` if it completed). Registration declines to
  * mint a rel for a malformed hyperlink and says nothing; the throw from the emitter is the whole
  * report, so that is all there is to capture.
  */
-async function failedBuild(buildFn) {
-	try {
-		await build(buildFn)
-	} catch (err) {
-		return err
-	}
-	return undefined
+function failedBuild(buildFn) {
+	return caught(() => build(buildFn))
 }
 
 defineRegressionSuite('Hyperlink relationship registration', [

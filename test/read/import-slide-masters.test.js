@@ -24,6 +24,7 @@ import {
 	partBodies,
 	assertUnchangedExcept,
 	readEntry,
+	caughtSync,
 } from '../helpers.js'
 import { validateBuf, validatorInstalled } from '../validator.js'
 import { fixturePath, openFixture } from './corpus.js'
@@ -237,12 +238,7 @@ describe('Presentation.importSlideMasters', () => {
 		const mastersBefore = registeredMasters(target.opc).length
 		const before = await target.save()
 
-		let code = null
-		try {
-			target.importSlideMasters(source)
-		} catch (err) {
-			code = err.code
-		}
+		const code = caughtSync(() => target.importSlideMasters(source))?.code ?? null
 		assertEqual(code, 'package/part-missing', 'the missing layout refuses the graft')
 		assertEqual(registeredMasters(target.opc).length, mastersBefore, 'no master was registered')
 		assert(bytesEqual(before, await target.save()), 'and the deck is byte-identical')

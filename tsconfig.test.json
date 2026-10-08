@@ -17,14 +17,12 @@
 		//
 		// What stays relaxed is the strictness that only pays for annotated `.ts` sources:
 		// implicit `any` params/vars, index-signature property access, unused locals/params
-		// (tests routinely bind for clarity or destructure a subset), unchecked index access, and
-		// `unknown` catch variables (an assert-on-throw test controls what it throws).
+		// (tests routinely bind for clarity or destructure a subset), and unchecked index access.
 		"noImplicitAny": false,
 		"noPropertyAccessFromIndexSignature": false,
 		"noUnusedLocals": false,
 		"noUnusedParameters": false,
-		"noUncheckedIndexedAccess": false,
-		"useUnknownInCatchVariables": false
+		"noUncheckedIndexedAccess": false
 	},
 	"include": ["test/**/*.js", "test/**/*.mjs"],
 	// Typechecked by `docs/tsconfig.json`: it loads VitePress, whose declarations only compile

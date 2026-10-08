@@ -9,7 +9,7 @@ import {
 	pixelsToEmu,
 	pointsToEmu,
 } from '../../../dist/index.js'
-import { defineRegressionSuite, build, readEntry, assert, assertEqual } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert, assertEqual, assertRejects } from '../../helpers.js'
 
 const WIDE = STANDARD_LAYOUTS.LAYOUT_WIDE
 
@@ -114,21 +114,18 @@ defineRegressionSuite('Presentation layouts [legacy bug-22]', [
 		name: 'non-finite coordinates fail loud instead of emitting zero-size objects',
 		fn: async () => {
 			const layout = STANDARD_LAYOUTS.LAYOUT_16x9
-			/** @type {Error | null} */
-			let threw = null
-			try {
-				// Reproduces the footgun: reading `.width`/`.height` off a value that lacks them
-				// yields undefined -> NaN coordinate math.
-				const bogus = /** @type {never} */ (undefined)
-				await build((p) => {
-					p.layout = layout
-					p.addSlide().addText('collapses', { x: 0.5, y: 0.5, w: bogus - 1, h: 1 })
-				})
-			} catch (err) {
-				threw = err
-			}
-			assert(threw instanceof Error, 'expected a thrown Error for a NaN width')
-			assert(/finite number/.test(threw.message), `expected a descriptive message, got: ${threw && threw.message}`)
+			// Reproduces the footgun: reading `.width`/`.height` off a value that lacks them
+			// yields undefined -> NaN coordinate math.
+			const bogus = /** @type {never} */ (undefined)
+			await assertRejects(
+				() =>
+					build((p) => {
+						p.layout = layout
+						p.addSlide().addText('collapses', { x: 0.5, y: 0.5, w: bogus - 1, h: 1 })
+					}),
+				/finite number/,
+				'a NaN width'
+			)
 		},
 	},
 ])

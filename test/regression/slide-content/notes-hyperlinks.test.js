@@ -10,6 +10,7 @@ import {
 	assertEqual,
 	assertIncludes,
 	assertNotIncludes,
+	caughtSync,
 } from '../../helpers.js'
 
 /** A package's entry by name, from a written deck. */
@@ -19,12 +20,7 @@ async function entryOf(pres, name) {
 
 /** The `code` `fn` throws, or `null`. */
 function codeOf(fn) {
-	try {
-		fn()
-		return null
-	} catch (err) {
-		return err.code ?? null
-	}
+	return caughtSync(fn)?.code ?? null
 }
 
 const NOTES_XML = (n) => `ppt/notesSlides/notesSlide${n}.xml`

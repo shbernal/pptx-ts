@@ -15,7 +15,7 @@ import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { readZip } from '../../dist/zip.js'
 import { OpcPackage } from '../../dist/read.js'
-import { build, assert, assertEqual } from '../helpers.js'
+import { build, assert, assertEqual, caught, assertRejects } from '../helpers.js'
 
 // One real .pptx worth of bytes, shared across the input-shape cases so each
 // branch is proven to decode identical content to the same part set.
@@ -96,29 +96,21 @@ describe('readZip input matrix', () => {
 
 describe('readZip error branches report a specific message', () => {
 	test('corrupt bytes throw "Not a valid ZIP archive" with the decode cause attached', async () => {
-		/** @type {Error | null} */
-		let error = null
-		try {
-			await readZip(new Uint8Array([1, 2, 3, 4, 5]))
-		} catch (err) {
-			error = err
-		}
-		assert(error, 'corrupt bytes throw')
-		assert(error.message.includes('Not a valid ZIP archive'), `got: ${error.message}`)
+		const error = await assertRejects(
+			() => readZip(new Uint8Array([1, 2, 3, 4, 5])),
+			/Not a valid ZIP archive/,
+			'reading corrupt bytes'
+		)
 		assert('cause' in error && error.cause, 'the underlying decode error is attached as cause')
 	})
 
 	test('unsupported input type names the accepted shapes', async () => {
-		/** @type {Error | null} */
-		let error = null
-		try {
+		const error = await assertRejects(
 			// A bare number is none of the accepted input shapes (negative test — cast past ZipInput).
-			await readZip(/** @type {any} */ (42))
-		} catch (err) {
-			error = err
-		}
-		assert(error, 'unsupported type throws')
-		assert(error.message.includes('Unsupported zip input type'), `got: ${error.message}`)
+			() => readZip(/** @type {any} */ (42)),
+			/Unsupported zip input type/,
+			'reading a number'
+		)
 		assert(
 			!error.message.includes('Not a valid ZIP archive'),
 			'an unsupported type is not misreported as a corrupt archive'
@@ -127,18 +119,19 @@ describe('readZip error branches report a specific message', () => {
 
 	test('a missing filesystem path names the path and is not misreported as a corrupt archive', async () => {
 		const dir = mkdtempSync(join(tmpdir(), 'pptx-zip-input-'))
-		/** @type {Error | null} */
-		let error = null
 		try {
-			await readZip(join(dir, 'does-not-exist.pptx'))
-		} catch (err) {
-			error = err
+			const error = await assertRejects(
+				() => readZip(join(dir, 'does-not-exist.pptx')),
+				/does-not-exist\.pptx/,
+				'reading a missing path'
+			)
+			assert(
+				!error.message.includes('Not a valid ZIP archive'),
+				'a missing path is not misreported as a corrupt archive'
+			)
 		} finally {
 			rmSync(dir, { recursive: true, force: true })
 		}
-		assert(error, 'a missing path throws')
-		assert(error.message.includes('does-not-exist.pptx'), `error names the path; got: ${error.message}`)
-		assert(!error.message.includes('Not a valid ZIP archive'), 'a missing path is not misreported as a corrupt archive')
 	})
 })
 
@@ -168,13 +161,7 @@ describe('OpcPackage.load over the same input surface', () => {
 		const zip = new JSZip()
 		zip.file('hello.txt', 'not an OPC package')
 		const notOpc = await zip.generateAsync({ type: 'uint8array' })
-		/** @type {Error | null} */
-		let error = null
-		try {
-			await OpcPackage.load(notOpc)
-		} catch (err) {
-			error = err
-		}
+		const error = await caught(() => OpcPackage.load(notOpc))
 		assert(error, 'a non-OPC zip is rejected')
 		assertEqual(error.message, 'Not an OPC package: missing [Content_Types].xml', 'the loader names the missing part')
 	})

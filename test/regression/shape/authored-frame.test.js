@@ -1,4 +1,12 @@
-import { defineRegressionSuite, build, readEntry, assert, assertIncludes, captureDiagnostics } from '../../helpers.js'
+import {
+	defineRegressionSuite,
+	build,
+	readEntry,
+	assert,
+	assertIncludes,
+	captureDiagnostics,
+	caught,
+} from '../../helpers.js'
 
 // Every definer spelled its own default for an omitted `x`/`y`/`w`/`h`, and they disagreed on what
 // "omitted" meant. `w: 0, h: 0` gave media a 2in square, a chart half the slide and an image its
@@ -93,12 +101,8 @@ defineRegressionSuite('Authored frame defaults', [
 		name: 'a NaN extent is refused rather than replaced by the default',
 		fn: async () => {
 			for (const [api, define] of Object.entries(DEFINERS)) {
-				let code = null
-				try {
-					await build((p) => define(p.addSlide(), { x: 1, y: 1, w: Number.NaN, h: 1 }))
-				} catch (err) {
-					code = err?.code ?? null
-				}
+				const code =
+					(await caught(() => build((p) => define(p.addSlide(), { x: 1, y: 1, w: Number.NaN, h: 1 }))))?.code ?? null
 				assert(code === 'coord/non-finite', `${api}: expected coord/non-finite; got ${code}`)
 			}
 		},

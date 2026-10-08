@@ -7,6 +7,7 @@ import {
 	assertEqual,
 	assertIncludes,
 	captureDiagnostics,
+	caught,
 } from '../../helpers.js'
 
 // A converter that accepts garbage emits it: `Math.round(NaN * 100)` is `NaN` and
@@ -14,15 +15,6 @@ import {
 // that PowerPoint then reports as needing repair. Every case below hands a converter a value it
 // cannot represent and asserts it refuses, plus the one case that is representable and was being
 // mangled: an angle past a full turn.
-
-async function caught(fn) {
-	try {
-		await fn()
-		return null
-	} catch (err) {
-		return err
-	}
-}
 
 /** The `err.code` of whatever building this deck throws, or `null` if it built. */
 async function codeFrom(buildFn) {

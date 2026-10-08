@@ -10,6 +10,7 @@ import {
 	assertNotIncludes,
 	assertNonVisualDrawingProperty,
 	defined,
+	caught,
 } from '../../helpers.js'
 
 // The option-normalization half of `gen/define/text.ts` — the work `addTextDefinition` does before
@@ -95,14 +96,7 @@ defineRegressionSuite('Text definition', [
 		// caller reaches for, and it failed inside the definer with a `TypeError`.
 		name: 'a single run object where an array belongs is refused on addText and on a text descriptor',
 		fn: async () => {
-			const refused = async (buildFn) => {
-				try {
-					await build(buildFn)
-				} catch (err) {
-					return err
-				}
-				return undefined
-			}
+			const refused = (buildFn) => caught(() => build(buildFn))
 			const run = /** @type {any} */ ({ text: 'x' })
 			const box = { x: 1, y: 1, w: 2, h: 1 }
 			const viaAddText = await refused((p) => p.addSlide().addText(run, box))

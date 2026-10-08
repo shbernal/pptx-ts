@@ -82,7 +82,8 @@ async function build(scenario) {
 		pres.tableToSlides(TABLE_ID)
 		return { ok: true, base64: /** @type {string} */ (await pres.write({ outputType: 'base64' })) }
 	} catch (err) {
-		return { ok: false, code: String(err?.code ?? ''), message: String(err?.message ?? err) }
+		const error = err instanceof Error ? err : new Error(String(err))
+		return { ok: false, code: 'code' in error ? String(error.code) : '', message: error.message }
 	}
 }
 

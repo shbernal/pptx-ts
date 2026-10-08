@@ -12,7 +12,7 @@ import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import TsPptx from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { assertEqual, readEntry } from '../helpers.js'
+import { assertEqual, readEntry, caught } from '../helpers.js'
 
 /** A one-page deck at the given layout. */
 async function deck(layout = 'LAYOUT_16x9') {
@@ -35,12 +35,7 @@ async function sizelessDeck() {
 
 /** The `code` of whatever `fn` throws, or `null` if it returned. */
 async function codeOf(fn) {
-	try {
-		await fn()
-		return null
-	} catch (err) {
-		return err?.code ?? null
-	}
+	return (await caught(fn))?.code ?? null
 }
 
 describe('slide-size preconditions agree across every import entry point', () => {

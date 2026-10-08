@@ -16,6 +16,7 @@ import {
 	firstXmlBlock,
 	assertXmlOrder,
 	defined,
+	assertRejects,
 } from '../../helpers.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -149,23 +150,22 @@ defineRegressionSuite('Image (blip) fills', [
 				{ crop: { l: NaN }, why: 'NaN' },
 			]
 			for (const c of cases) {
-				let message = null
-				try {
-					await build((p) => {
-						const s = p.addSlide()
-						s.addShape(ShapeType.triangle, {
-							x: 1,
-							y: 1,
-							w: 3,
-							h: 2,
-							fill: { type: 'image', image: { data: PNG_1X1, crop: c.crop } },
-						})
-					})
-				} catch (err) {
-					message = err.message
-				}
-				assert(message, `expected fill crop ${c.why} (${JSON.stringify(c.crop)}) to throw`)
-				assertIncludes(message, 'image fill crop', `error names the fill, not addImage (${c.why})`)
+				// The message names the fill, not addImage.
+				await assertRejects(
+					() =>
+						build((p) => {
+							const s = p.addSlide()
+							s.addShape(ShapeType.triangle, {
+								x: 1,
+								y: 1,
+								w: 3,
+								h: 2,
+								fill: { type: 'image', image: { data: PNG_1X1, crop: c.crop } },
+							})
+						}),
+					/image fill crop/,
+					`fill crop ${c.why} (${JSON.stringify(c.crop)})`
+				)
 			}
 		},
 	},

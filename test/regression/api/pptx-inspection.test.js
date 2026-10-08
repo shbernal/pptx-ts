@@ -12,7 +12,15 @@ import {
 import { Presentation } from '../../../dist/read.js'
 import { readModelToIr } from '../../../dist/script.js'
 import JSZip from 'jszip'
-import { defineRegressionSuite, build, assert, assertEqual, defined, setDiagnosticHandler } from '../../helpers.js'
+import {
+	defineRegressionSuite,
+	build,
+	assert,
+	assertEqual,
+	defined,
+	setDiagnosticHandler,
+	caught,
+} from '../../helpers.js'
 import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -582,13 +590,7 @@ defineRegressionSuite('PPTX inspection primitives', [
 				const fromPath = await loadPptxPackage(filePath)
 				assert(listPptxParts(fromPath).includes('ppt/slides/slide1.xml'), 'path input loads the slide part')
 
-				/** @type {Error | null} */
-				let missingError = null
-				try {
-					await loadPptxPackage(join(dir, 'does-not-exist.pptx'))
-				} catch (err) {
-					missingError = err
-				}
+				const missingError = await caught(() => loadPptxPackage(join(dir, 'does-not-exist.pptx')))
 				assert(missingError, 'a missing path throws')
 				assert(
 					missingError.message.includes('does-not-exist.pptx'),

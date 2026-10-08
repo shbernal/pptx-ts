@@ -52,7 +52,8 @@ beforeAll(() => {
 	} catch (error) {
 		// The program's own stderr is the whole diagnosis (a renamed method, a type Node could not
 		// strip); the default message says only that the command failed.
-		throw new Error(`the program on ${PAGE} failed:\n${String(error.stderr)}`, { cause: error })
+		const stderr = error instanceof Error && 'stderr' in error ? error.stderr : error
+		throw new Error(`the program on ${PAGE} failed:\n${String(stderr)}`, { cause: error })
 	}
 	deck = readFileSync(path.join(dir, 'quarterly-summary.pptx'))
 })

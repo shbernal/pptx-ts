@@ -1,4 +1,12 @@
-import { assert, assertEqual, build, captureDiagnostics, defineRegressionSuite, slideXml } from '../../helpers.js'
+import {
+	assert,
+	assertEqual,
+	build,
+	captureDiagnostics,
+	defineRegressionSuite,
+	slideXml,
+	caught,
+} from '../../helpers.js'
 
 // The companion to `numeric-conversion-guards.test.js`: that file pins what the *converters*
 // refuse, this one pins what the *guards in front of them* let through. `src/` used three tests
@@ -35,12 +43,9 @@ defineRegressionSuite('Coercing numeric guards', [
 		// the default without a word. It now reaches the coordinate converter, which refuses it.
 		name: 'a NaN chart position is refused rather than silently defaulted',
 		fn: async () => {
-			let code = null
-			try {
-				await build((p) => p.addSlide().addChart(SERIES, { type: 'bar', x: NaN, y: 1, w: 4, h: 3 }))
-			} catch (err) {
-				code = err?.code ?? null
-			}
+			const code =
+				(await caught(() => build((p) => p.addSlide().addChart(SERIES, { type: 'bar', x: NaN, y: 1, w: 4, h: 3 }))))
+					?.code ?? null
 			assertEqual(code, 'coord/non-finite', 'a NaN chart x is reported')
 		},
 	},

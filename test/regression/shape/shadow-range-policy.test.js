@@ -1,4 +1,12 @@
-import { defineRegressionSuite, build, readEntry, assert, assertEqual, captureDiagnostics } from '../../helpers.js'
+import {
+	defineRegressionSuite,
+	build,
+	readEntry,
+	assert,
+	assertEqual,
+	captureDiagnostics,
+	caught,
+} from '../../helpers.js'
 
 // `shadow.transparency` and `shadow.angle` were the last two options outside the rule
 // `docs/contributing/development.md` states for an out-of-range number: clamp to the nearest bound and warn,
@@ -22,12 +30,7 @@ async function shadowXml(shadow) {
 }
 
 async function codeThrownBy(shadow) {
-	try {
-		await build((p) => p.addSlide().addShape('rect', { ...BOX, shadow }))
-	} catch (err) {
-		return err?.code ?? null
-	}
-	return null
+	return (await caught(() => build((p) => p.addSlide().addShape('rect', { ...BOX, shadow }))))?.code ?? null
 }
 
 defineRegressionSuite('Shadow out-of-range policy', [

@@ -116,12 +116,9 @@ describe('construct families', () => {
 	test('a method whose family was not composed names the family', () => {
 		const slide = composed(withoutCharts).addSlide()
 		expect(() => slide.addChart(SERIES, { type: 'bar', x: 1, y: 1, w: 4, h: 3 })).toThrow(/"chart"/)
-		try {
-			slide.addChart(SERIES, { type: 'bar', x: 1, y: 1, w: 4, h: 3 })
-		} catch (err) {
-			assertEqual(err.code, 'family/not-composed', 'error code')
-			assertEqual(err.name, 'UnsupportedFeatureError', 'error class')
-		}
+		expect(() => slide.addChart(SERIES, { type: 'bar', x: 1, y: 1, w: 4, h: 3 })).toThrow(
+			expect.objectContaining({ code: 'family/not-composed', name: 'UnsupportedFeatureError' })
+		)
 		// The families that *are* composed still answer, on the same slide.
 		assert(slide.addText('still here', { x: 1, y: 1, w: 2, h: 1 }) === slide, 'addText chains')
 	})
@@ -129,11 +126,9 @@ describe('construct families', () => {
 	test('a presentation method whose family was not composed names the family', () => {
 		const pres = composed(ALL_CONSTRUCT_FAMILIES.filter((family) => family !== measureFamily))
 		expect(() => pres.measureText('wide enough?', { wIn: 3, fontSize: 18 })).toThrow(/"measure"/)
-		try {
-			pres.tableLayout([[{ text: 'a' }]], { x: 1, y: 1, w: 4 })
-		} catch (err) {
-			assertEqual(err.code, 'family/not-composed', 'error code')
-		}
+		expect(() => pres.tableLayout([[{ text: 'a' }]], { x: 1, y: 1, w: 4 })).toThrow(
+			expect.objectContaining({ code: 'family/not-composed' })
+		)
 		// Measuring is a convenience over the `ts-pptx/measure` subpath, so a presentation without it
 		// still authors and still writes.
 		assertEqual(

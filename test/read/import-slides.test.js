@@ -22,7 +22,7 @@ import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import TsPptx from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual, bytesEqual, defined, readEntry } from '../helpers.js'
+import { assert, assertEqual, bytesEqual, defined, readEntry, caughtSync } from '../helpers.js'
 import { validateBuf, validatorInstalled } from '../validator.js'
 import { openFixture } from './corpus.js'
 import { assertNoDanglingRels } from './opc.js'
@@ -99,12 +99,7 @@ function depTargets(opc, partName) {
 
 /** Catch a synchronous throw and return its stable `code`, or null when nothing threw. */
 function catchCode(fn) {
-	try {
-		fn()
-		return null
-	} catch (err) {
-		return err.code ?? null
-	}
+	return caughtSync(fn)?.code ?? null
 }
 
 /** A two-page 4x3 deck: a source on a canvas the 16x9 destinations do not share. */

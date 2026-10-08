@@ -1,6 +1,6 @@
 import { DOMParser } from '@xmldom/xmldom'
 import { ChartType } from '../../../dist/node.js'
-import { defineRegressionSuite, build, assert, captureDiagnostics } from '../../helpers.js'
+import { defineRegressionSuite, build, assert, captureDiagnostics, asError } from '../../helpers.js'
 import { chartXml } from './chart-parts.js'
 
 // Every `<c:axId>` a plot group carries has to name an axis the plot area emits, and the category
@@ -121,10 +121,11 @@ defineRegressionSuite('Chart axis references resolve to emitted, crossing axes',
 						else p.addSlide().addChart(call.data, options)
 					})
 					xml = await chartXml(zip)
-				} catch (error) {
+				} catch (thrown) {
+					const error = asError(thrown)
 					// Two value axes where no subchart plots on the secondary pair is refused on purpose.
-					if (/secondary-axis-unused|Secondary axis must be used/.test(String(error?.code ?? error?.message))) continue
-					failures.push(`${name}: threw ${error?.message}`)
+					if (/secondary-axis-unused|Secondary axis must be used/.test(String(error.code ?? error.message))) continue
+					failures.push(`${name}: threw ${error.message}`)
 					continue
 				}
 				const problems = axisProblems(xml)

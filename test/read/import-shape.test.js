@@ -15,7 +15,7 @@ import { readFile } from 'node:fs/promises'
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { TsPptx, PNG_1X1, bytesEqual, throws, assert, assertEqual, defined, readEntry } from '../helpers.js'
+import { TsPptx, PNG_1X1, bytesEqual, throws, assert, assertEqual, defined, readEntry, caughtSync } from '../helpers.js'
 import { validateBuf, validatorInstalled } from '../validator.js'
 import { fixturePath, openFixture } from './corpus.js'
 import { assertNoDanglingRels } from './opc.js'
@@ -25,12 +25,7 @@ const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 
 /** The `code` of what `fn` throws, or `null` when it does not throw. */
 function codeOf(fn) {
-	try {
-		fn()
-		return null
-	} catch (err) {
-		return err.code
-	}
+	return caughtSync(fn)?.code ?? null
 }
 
 /** Count the package parts whose name matches `re`. */

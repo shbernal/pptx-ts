@@ -10,7 +10,7 @@ import { describe, test } from 'vitest'
 import { Presentation, setDiagnosticHandler } from '../../src/read.ts'
 import { CopyPlan } from '../../src/read/api/ops/part-copy.ts'
 import { copyBatch, planSlideImport } from '../../src/read/api/presentation-imports.ts'
-import { assertEqual } from '../helpers.js'
+import { assertEqual, caughtSync } from '../helpers.js'
 import { fixtureNames, readFixture } from './corpus.js'
 
 // Rescaling a fixture onto the destination's canvas warns, and warnings are not what this measures.
@@ -56,20 +56,16 @@ describe('an import plan lists exactly the parts the import adds', () => {
 					// the import it stands for must refuse the same way and add nothing.
 					/** @type {CopyPlan | null} */
 					let plan = null
-					let refused = null
-					try {
+					const refusal = caughtSync(() => {
 						plan = planSlideImport(dest, source, source.slides[index], options)
-					} catch (err) {
-						refused = err.code ?? String(err)
-					}
+					})
+					const refused = refusal && (refusal.code ?? String(refusal))
 					assertEqual(dest.opc.parts.size, partCount, `${name}: planning added no part`)
+					/** @type {string | null} */
 					let importRefused = null
 					const added = addedBy(dest, () => {
-						try {
-							dest.importSlide(source, index, options)
-						} catch (err) {
-							importRefused = err.code ?? String(err)
-						}
+						const err = caughtSync(() => dest.importSlide(source, index, options))
+						importRefused = err && (err.code ?? String(err))
 					})
 					assertEqual(importRefused, refused, `${at}: the import refuses exactly when its plan does`)
 					assertEqual(plan ? listed(plan) : '[]', JSON.stringify(added), at)
