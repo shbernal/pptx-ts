@@ -180,6 +180,7 @@ defineRegressionSuite('Image shape clipping', [
 		// A NaN sweep used to coerce to a zero-length arc via `d || 0`. Fail loud instead.
 		name: 'addImage({ points: [...arcTo] }) rejects a non-finite arc angle',
 		fn: async () => {
+			/** @type {Error | null} */
 			let threw = null
 			try {
 				await build((p) => {

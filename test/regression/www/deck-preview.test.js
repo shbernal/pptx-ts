@@ -1,5 +1,6 @@
 import { Window } from 'happy-dom'
 import { describe, expect, it } from 'vitest'
+import { defined } from '../../helpers.js'
 import { counted, slideList, splitDeck, summarizeNotes } from '../../../www/demos/deck-preview.ts'
 
 /**
@@ -141,8 +142,8 @@ describe('splitDeck', () => {
 		const doc = new Window().document
 		doc.body.innerHTML = first.markup
 
-		expect(doc.querySelector('[data-pxh-node="s1.sp2"]').getAttribute('transform')).toBe('translate(100 200)')
-		expect(doc.querySelector('[data-pxh-node="s1.sp4"]').getAttribute('transform')).toBe('translate(300 400)')
+		expect(defined(doc.querySelector('[data-pxh-node="s1.sp2"]')).getAttribute('transform')).toBe('translate(100 200)')
+		expect(defined(doc.querySelector('[data-pxh-node="s1.sp4"]')).getAttribute('transform')).toBe('translate(300 400)')
 	})
 
 	it('turns editing off and inlines pictures, and rewrites nothing else', () => {
@@ -152,8 +153,8 @@ describe('splitDeck', () => {
 
 		// The paragraph's own line height is the renderer's to state; 0.2.1 writes the
 		// unitless multiple PowerPoint means, and the page passes it through.
-		expect(doc.querySelector('p').getAttribute('style')).toBe('margin:0;line-height:1.2')
+		expect(defined(doc.querySelector('p')).getAttribute('style')).toBe('margin:0;line-height:1.2')
 		expect(doc.querySelector('[contenteditable]')).toBeNull()
-		expect(doc.querySelector('image').getAttribute('href')).toBe('data:image/png;base64,iVBORw0K')
+		expect(defined(doc.querySelector('image')).getAttribute('href')).toBe('data:image/png;base64,iVBORw0K')
 	})
 })

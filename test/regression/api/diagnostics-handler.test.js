@@ -86,6 +86,7 @@ defineRegressionSuite('Diagnostics handler', [
 			setDiagnosticHandler((d) => {
 				if (d.code === 'text/invalid-columns') throw new Escalated(d.code)
 			})
+			/** @type {unknown} */
 			let thrown = null
 			try {
 				await build(badColumns)

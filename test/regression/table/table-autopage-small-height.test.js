@@ -1,4 +1,12 @@
-import { setDiagnosticHandler, defineRegressionSuite, build, listEntries, readEntry, assert } from '../../helpers.js'
+import {
+	setDiagnosticHandler,
+	defineRegressionSuite,
+	build,
+	listEntries,
+	readEntry,
+	assert,
+	defined,
+} from '../../helpers.js'
 
 // Regression: an autoPage table whose height (`h`) is too small to fit even a single line of text
 // must NOT emit a degenerate output (an empty `rows:[]` overflow page that made the recursive
@@ -22,7 +30,7 @@ function slideCount(zip) {
 async function rowsPerSlide(zip) {
 	const names = listEntries(zip)
 		.filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n))
-		.sort((a, b) => Number(a.match(/\d+/)[0]) - Number(b.match(/\d+/)[0]))
+		.sort((a, b) => Number(defined(a.match(/\d+/))[0]) - Number(defined(b.match(/\d+/))[0]))
 	const counts = []
 	for (const name of names) counts.push(((await readEntry(zip, name)).match(/<a:tr[ />]/g) || []).length)
 	return counts

@@ -10,7 +10,7 @@
 // `lineColor`/`lineWidthPt`/`lineDash` — so the last case here is the round trip that proves the
 // two halves now meet.
 
-import { PNG_1X1, defineRegressionSuite, build, readEntry, assert, assertEqual } from '../../helpers.js'
+import { PNG_1X1, defineRegressionSuite, build, readEntry, assert, assertEqual, defined } from '../../helpers.js'
 import { Presentation } from '../../../dist/read.js'
 
 /** The `<a:ln …>` opening tag inside the slide's one `p:pic`, or `null`. */
@@ -38,7 +38,7 @@ defineRegressionSuite('Image border', [
 			assert(ln, 'the picture carries an a:ln; got: ' + xml.slice(0, 600))
 			// 2pt is 25400 EMU.
 			assert(ln.includes('w="25400"'), `the stated width reaches @w; got ${ln}`)
-			const pic = /<p:pic>[\s\S]*?<\/p:pic>/.exec(xml)[0]
+			const pic = defined(/<p:pic>[\s\S]*?<\/p:pic>/.exec(xml), 'a p:pic')[0]
 			assert(pic.includes('<a:srgbClr val="0088CC"/>'), 'the stated colour reaches the line fill')
 			assert(pic.includes('<a:prstDash val="dash"/>'), 'and so does the dash')
 		},

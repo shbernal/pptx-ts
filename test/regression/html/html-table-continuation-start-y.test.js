@@ -13,7 +13,7 @@
  */
 import { Window } from 'happy-dom'
 import { tableToSlides } from '../../../dist/html.js'
-import { assert, assertEqual, build, defineRegressionSuite, listEntries, readEntry } from '../../helpers.js'
+import { assert, assertEqual, build, defineRegressionSuite, listEntries, readEntry, defined } from '../../helpers.js'
 
 const EMU_PER_INCH = 914400
 
@@ -28,11 +28,11 @@ async function frameYs(opts) {
 	const win = new Window()
 	win.document.body.innerHTML = TALL_TABLE
 	const { zip } = await build((pptx) => {
-		tableToSlides(pptx, win.document.getElementById('t'), opts)
+		tableToSlides(pptx, defined(win.document.getElementById('t')), opts)
 	})
 	const names = listEntries(zip)
 		.filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n))
-		.sort((a, b) => Number(a.match(/\d+/)[0]) - Number(b.match(/\d+/)[0]))
+		.sort((a, b) => Number(defined(a.match(/\d+/))[0]) - Number(defined(b.match(/\d+/))[0]))
 	const ys = []
 	for (const name of names) {
 		// The table's own frame, not the first `<a:off>` on the slide -- a slide carries other

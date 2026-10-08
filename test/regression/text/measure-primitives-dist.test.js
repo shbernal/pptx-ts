@@ -17,6 +17,7 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, test, expect, beforeAll } from 'vitest'
+import { defined } from '../../helpers.js'
 import {
 	measureLayout,
 	measureHeightPt,
@@ -44,8 +45,8 @@ const para = (text, extra = {}) => ({ runs: [{ text, sizePt: 12 }], ...extra })
 
 describe('measureLayout: a newline inside a hand-built run', () => {
 	test('starts a new line without splitting the paragraph', () => {
-		const single = measureLayout([para('alpha beta')], 400, resolve, 100, 0)
-		const broken = measureLayout([para('alpha\nbeta')], 400, resolve, 100, 0)
+		const single = defined(measureLayout([para('alpha beta')], 400, resolve, 100, 0))
+		const broken = defined(measureLayout([para('alpha\nbeta')], 400, resolve, 100, 0))
 		// 400pt is wide enough that neither wraps, so the extra line is the newline's doing.
 		expect(single.lineCount).toBe(1)
 		expect(broken.lineCount).toBe(2)
@@ -55,27 +56,27 @@ describe('measureLayout: a newline inside a hand-built run', () => {
 	test('flushes the word in progress, so the text either side is not merged', () => {
 		// If the tokenizer did not flush at the newline, "alpha" and "beta" would fuse into
 		// one unbreakable token and the widest line would be the width of both together.
-		const broken = measureLayout([para('alpha\nbeta')], 400, resolve, 100, 0)
-		const fused = measureLayout([para('alphabeta')], 400, resolve, 100, 0)
+		const broken = defined(measureLayout([para('alpha\nbeta')], 400, resolve, 100, 0))
+		const fused = defined(measureLayout([para('alphabeta')], 400, resolve, 100, 0))
 		expect(broken.widestLineWidthPt).toBeLessThan(fused.widestLineWidthPt)
 	})
 
 	test('a newline resets the line width, so it does not carry into the next line', () => {
-		const trailing = measureLayout([para('alphabeta\nx')], 400, resolve, 100, 0)
-		const alone = measureLayout([para('x')], 400, resolve, 100, 0)
+		const trailing = defined(measureLayout([para('alphabeta\nx')], 400, resolve, 100, 0))
+		const alone = defined(measureLayout([para('x')], 400, resolve, 100, 0))
 		expect(trailing.widestLineWidthPt).toBeGreaterThan(alone.widestLineWidthPt)
 		// The second line is just "x": its width is the short one, so the widest line is line 1.
-		const firstOnly = measureLayout([para('alphabeta')], 400, resolve, 100, 0)
+		const firstOnly = defined(measureLayout([para('alphabeta')], 400, resolve, 100, 0))
 		expect(trailing.widestLineWidthPt).toBeCloseTo(firstOnly.widestLineWidthPt, 6)
 	})
 
 	test('counts consecutive newlines as blank lines', () => {
-		expect(measureLayout([para('a\n\n\nb')], 400, resolve, 100, 0).lineCount).toBe(4)
+		expect(defined(measureLayout([para('a\n\n\nb')], 400, resolve, 100, 0)).lineCount).toBe(4)
 	})
 
 	test('a run with no text at all measures as an empty line rather than throwing', () => {
 		// @ts-expect-error `FitRun.text` is required, but this entry is reachable from plain JS
-		const layout = measureLayout([{ runs: [{ sizePt: 12 }] }], 400, resolve, 100, 0)
+		const layout = defined(measureLayout([{ runs: [{ sizePt: 12 }] }], 400, resolve, 100, 0))
 		expect(layout.lineCount).toBe(1)
 		expect(layout.widestLineWidthPt).toBe(0)
 	})
@@ -83,25 +84,25 @@ describe('measureLayout: a newline inside a hand-built run', () => {
 
 describe('measureLayout: paragraph fields the deck path always fills', () => {
 	test('an omitted `lineSpacingPct` defaults to single spacing', () => {
-		const implicit = measureLayout([{ runs: [{ text: 'x', sizePt: 12 }] }], 400, resolve, 100, 0)
-		const explicit = measureLayout([para('x', { lineSpacingPct: 100 })], 400, resolve, 100, 0)
+		const implicit = defined(measureLayout([{ runs: [{ text: 'x', sizePt: 12 }] }], 400, resolve, 100, 0))
+		const explicit = defined(measureLayout([para('x', { lineSpacingPct: 100 })], 400, resolve, 100, 0))
 		expect(implicit.heightPt).toBeCloseTo(explicit.heightPt, 6)
 		expect(implicit.heightPt).toBeCloseTo(SINGLE_LINE_PITCH * 12, 6)
 	})
 
 	test('omitted `spaceBeforePts`/`spaceAfterPts` contribute nothing', () => {
-		const bare = measureLayout([{ runs: [{ text: 'x', sizePt: 12 }] }], 400, resolve, 100, 0)
-		const zeroed = measureLayout([para('x', { spaceBeforePts: 0, spaceAfterPts: 0 })], 400, resolve, 100, 0)
+		const bare = defined(measureLayout([{ runs: [{ text: 'x', sizePt: 12 }] }], 400, resolve, 100, 0))
+		const zeroed = defined(measureLayout([para('x', { spaceBeforePts: 0, spaceAfterPts: 0 })], 400, resolve, 100, 0))
 		expect(bare.heightPt).toBe(zeroed.heightPt)
 	})
 
 	test('an exact `lineSpacingPts` overrides the calibrated pitch outright', () => {
-		const layout = measureLayout([para('x', { lineSpacingPts: 30 })], 400, resolve, 100, 0)
+		const layout = defined(measureLayout([para('x', { lineSpacingPts: 30 })], 400, resolve, 100, 0))
 		expect(layout.heightPt).toBeCloseTo(30, 6)
 	})
 
 	test('a non-positive `lineSpacingPts` falls back to the pitch instead of collapsing', () => {
-		const layout = measureLayout([para('x', { lineSpacingPts: 0 })], 400, resolve, 100, 0)
+		const layout = defined(measureLayout([para('x', { lineSpacingPts: 0 })], 400, resolve, 100, 0))
 		expect(layout.heightPt).toBeCloseTo(SINGLE_LINE_PITCH * 12, 6)
 	})
 })
@@ -119,7 +120,9 @@ describe('measureLayout / measureHeightPt: unmeasurable and degenerate inputs', 
 
 	test('measureHeightPt is exactly measureLayout().heightPt', () => {
 		const paras = [para('alpha beta gamma')]
-		expect(measureHeightPt(paras, 60, resolve, 100, 0)).toBe(measureLayout(paras, 60, resolve, 100, 0).heightPt)
+		expect(measureHeightPt(paras, 60, resolve, 100, 0)).toBe(
+			defined(measureLayout(paras, 60, resolve, 100, 0)).heightPt
+		)
 	})
 })
 

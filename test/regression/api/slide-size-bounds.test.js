@@ -45,6 +45,7 @@ defineRegressionSuite('Slide size bounds', [
 			// a warning describing the very input that could not survive. `docs/errors-and-warnings.md` says
 			// every failure this library raises is a `TsPptxError`.
 			for (const bad of [undefined, null, 'LAYOUT_WIDE', 42]) {
+				/** @type {unknown} */
 				let err = null
 				try {
 					new TsPptx().defineLayout(/** @type {never} */ (bad))

@@ -1,6 +1,6 @@
 import TsPptx, { ChartType, ShapeType } from '../../../dist/node.js'
 import JSZip from 'jszip'
-import { defineRegressionSuite, assert } from '../../helpers.js'
+import { defineRegressionSuite, assert, readEntry } from '../../helpers.js'
 
 async function buildSlide1(pres) {
 	const buf = await pres.toBytes()
@@ -116,7 +116,7 @@ defineRegressionSuite('Hash-prefixed colors [legacy bug-07]', [
 
 			const buf = await pres.toBytes()
 			const zip = await JSZip.loadAsync(buf)
-			const xml = await zip.file('ppt/charts/chart1.xml').async('string')
+			const xml = await readEntry(zip, 'ppt/charts/chart1.xml')
 			assert(xml.indexOf('val="4472C4"') !== -1, 'expected the requested border colour; got:\n' + xml)
 			assert(xml.indexOf('val="F9F9F9"') === -1, 'expected no silent fallback to F9F9F9; got:\n' + xml)
 		},

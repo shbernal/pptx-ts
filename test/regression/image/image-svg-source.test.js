@@ -2,7 +2,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { PNG_1X1, defineRegressionSuite, build, readEntry, listEntries, assert } from '../../helpers.js'
+import { PNG_1X1, defineRegressionSuite, build, readEntry, listEntries, assert, defined } from '../../helpers.js'
 
 const SVG_MARKUP =
 	'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" data-marker="svg-source"><circle cx="12" cy="12" r="10"/></svg>'
@@ -46,7 +46,7 @@ defineRegressionSuite('Image svg source', [
 			})
 			const entry = pngEntry(zip)
 			assert(entry, 'expected a png preview part; got entries: ' + listEntries(zip).join(', '))
-			const b64 = await zip.file(entry).async('base64')
+			const b64 = await defined(zip.file(entry)).async('base64')
 			assert(b64.startsWith('iVBORw0KGgo'), 'expected valid PNG magic bytes; got: ' + b64.slice(0, 20))
 			assert(!b64.startsWith(IMG_BROKEN_PREFIX), 'expected placeholder PNG, not the broken-image icon')
 		},
@@ -69,7 +69,7 @@ defineRegressionSuite('Image svg source', [
 			const pngParts = listEntries(zip).filter((n) => n.startsWith('ppt/media/') && n.endsWith('.png'))
 			assert(pngParts.length > 0, 'expected png preview parts; got: ' + listEntries(zip).join(', '))
 			for (const part of pngParts) {
-				const b64 = await zip.file(part).async('base64')
+				const b64 = await defined(zip.file(part)).async('base64')
 				assert(
 					b64.startsWith('iVBORw0KGgo'),
 					`png fallback ${part} lacks PNG magic bytes (holds SVG?); got: ${b64.slice(0, 24)}`
@@ -100,11 +100,11 @@ defineRegressionSuite('Image svg source', [
 
 			// The picture must still point at the SVG's own rel, not at the hyperlink's.
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			const svgRid = /<asvg:svgBlip[^>]*r:embed="([^"]+)"/.exec(xml)[1]
-			const svgTarget = new RegExp(`Id="${svgRid}"[^>]*Target="([^"]+)"`).exec(rels)[1]
+			const svgRid = defined(/<asvg:svgBlip[^>]*r:embed="([^"]+)"/.exec(xml), 'an asvg:svgBlip')[1]
+			const svgTarget = defined(new RegExp(`Id="${svgRid}"[^>]*Target="([^"]+)"`).exec(rels), `a rel ${svgRid}`)[1]
 			assert(svgTarget.endsWith('.svg'), `svgBlip ${svgRid} must resolve to the svg part; got ${svgTarget}`)
 
-			const hlinkRid = /<a:hlinkClick[^>]*r:id="([^"]+)"/.exec(xml)[1]
+			const hlinkRid = defined(/<a:hlinkClick[^>]*r:id="([^"]+)"/.exec(xml), 'an a:hlinkClick')[1]
 			assert(hlinkRid !== svgRid, `the hyperlink took the svg's id (${hlinkRid})`)
 		},
 	},

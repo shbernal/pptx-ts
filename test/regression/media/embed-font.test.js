@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url'
 import JSZip from 'jszip'
 import { describe, test, beforeAll } from 'vitest'
 import TsPptx from '../../../dist/node.js'
-import { assert, assertEqual, assertRejects } from '../../helpers.js'
+import { assert, assertEqual, assertRejects, readEntry, defined } from '../../helpers.js'
 import { FIXTURES } from '../../read/corpus.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -41,13 +41,13 @@ describe('TsPptx.embedFont', () => {
 		assert(font1, 'font1.fntdata written')
 		assertEqual(font1.length, regular.length, 'whole face embedded (not subset)')
 
-		const ct = await zip.file('[Content_Types].xml').async('string')
+		const ct = await readEntry(zip, '[Content_Types].xml')
 		assert(/<Default Extension="fntdata" ContentType="application\/x-fontdata"\/>/.test(ct), 'fntdata Default')
 
-		const rels = await zip.file('ppt/_rels/presentation.xml.rels').async('string')
+		const rels = await readEntry(zip, 'ppt/_rels/presentation.xml.rels')
 		assert(/relationships\/font" Target="fonts\/font1\.fntdata"/.test(rels), 'font rel targets the part')
 
-		const pres = await zip.file('ppt/presentation.xml').async('string')
+		const pres = await readEntry(zip, 'ppt/presentation.xml')
 		assert(/embedTrueTypeFonts="1"/.test(pres), 'embedTrueTypeFonts on')
 		assert(/saveSubsetFonts="0"/.test(pres), 'saveSubsetFonts off (whole faces)')
 		assert(
@@ -68,7 +68,7 @@ describe('TsPptx.embedFont', () => {
 		assert(await zip.file('ppt/fonts/font1.fntdata'), 'first face part')
 		assert(await zip.file('ppt/fonts/font2.fntdata'), 'second face part')
 
-		const pres = await zip.file('ppt/presentation.xml').async('string')
+		const pres = await readEntry(zip, 'ppt/presentation.xml')
 		assertEqual((pres.match(/<p:embeddedFont>/g) || []).length, 1, 'one embeddedFont entry for the family')
 		assert(/<p:regular r:id="rId\d+"\/><p:bold r:id="rId\d+"\/>/.test(pres), 'regular then bold, in schema order')
 	})
@@ -79,7 +79,7 @@ describe('TsPptx.embedFont', () => {
 		await p.embedFont({ data: bold, typeface: 'Other Face' })
 		p.addSlide()
 		const zip = await zipOf(p)
-		const pres = await zip.file('ppt/presentation.xml').async('string')
+		const pres = await readEntry(zip, 'ppt/presentation.xml')
 		assertEqual((pres.match(/<p:embeddedFont>/g) || []).length, 2, 'two entries')
 	})
 
@@ -94,8 +94,8 @@ describe('TsPptx.embedFont', () => {
 		await p.embedFont({ data: Buffer.from(bold).toString('base64'), typeface: 'B64' })
 		p.addSlide()
 		const zip = await zipOf(p)
-		const f1 = await zip.file('ppt/fonts/font1.fntdata').async('uint8array')
-		const f2 = await zip.file('ppt/fonts/font2.fntdata').async('uint8array')
+		const f1 = await defined(zip.file('ppt/fonts/font1.fntdata')).async('uint8array')
+		const f2 = await defined(zip.file('ppt/fonts/font2.fntdata')).async('uint8array')
 		assertEqual(f1.length, regular.length, 'ArrayBuffer face length')
 		assertEqual(f2.length, bold.length, 'base64 face length')
 	})
@@ -108,7 +108,7 @@ describe('TsPptx.embedFont', () => {
 		const zip = await zipOf(p)
 		const names = Object.keys(zip.files).filter((n) => /fntdata/.test(n))
 		assertEqual(names.length, 1, 'still a single face part')
-		const f1 = await zip.file('ppt/fonts/font1.fntdata').async('uint8array')
+		const f1 = await defined(zip.file('ppt/fonts/font1.fntdata')).async('uint8array')
 		assertEqual(f1.length, regular.length, 'last call bytes win')
 	})
 
@@ -138,7 +138,7 @@ describe('TsPptx.embedFont', () => {
 		p.addSlide()
 		const zip = await zipOf(p)
 		assert(!Object.keys(zip.files).some((n) => /fntdata/.test(n)), 'no font parts')
-		const pres = await zip.file('ppt/presentation.xml').async('string')
+		const pres = await readEntry(zip, 'ppt/presentation.xml')
 		assert(!/embeddedFontLst/.test(pres), 'no embeddedFontLst')
 		assert(!/embedTrueTypeFonts/.test(pres), 'embedTrueTypeFonts not emitted')
 		assert(/saveSubsetFonts="1"/.test(pres), 'historical saveSubsetFonts="1" preserved')

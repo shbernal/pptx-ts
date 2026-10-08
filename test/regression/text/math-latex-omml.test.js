@@ -13,6 +13,7 @@ const M_NS = 'http://schemas.openxmlformats.org/officeDocument/2006/math'
 // Parse OMML by declaring the `m` prefix (the `math:` envelope supplies it at runtime);
 // @xmldom's onErrorStopParsing turns any well-formedness fault into a thrown error.
 function assertWellFormed(omml, label) {
+	/** @type {string | null} */
 	let threw = null
 	const doc = new DOMParser({ onError: onErrorStopParsing }).parseFromString(
 		`<root xmlns:m="${M_NS}">${omml}</root>`,

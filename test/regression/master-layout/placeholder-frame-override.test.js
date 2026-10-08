@@ -1,5 +1,5 @@
 import JSZip from 'jszip'
-import { defineRegressionSuite, build, readEntry, assert, assertEqual } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert, assertEqual, defined } from '../../helpers.js'
 import { readFixture } from '../../read/corpus.js'
 
 // What wins when an object names a placeholder AND states options of its own.
@@ -190,10 +190,10 @@ defineRegressionSuite('placeholder frame vs the object own coordinates', [
 		fn: async () => {
 			const zip = await JSZip.loadAsync(await readFixture('placeholder-override'))
 			const bodyPrOf = async (part) => {
-				const xml = await zip.file(part).async('string')
+				const xml = await readEntry(zip, part)
 				const sp = (xml.match(/<p:sp>[\s\S]*?<\/p:sp>/g) || []).find((block) => /<p:ph idx="1"/.test(block))
 				assert(sp, `${part} has no body placeholder`)
-				return /<a:bodyPr[^>]*\/?>/.exec(sp)[0]
+				return defined(/<a:bodyPr[^>]*\/?>/.exec(sp), `an a:bodyPr in ${part}`)[0]
 			}
 			assertEqual(
 				await bodyPrOf('ppt/slideLayouts/slideLayout2.xml'),

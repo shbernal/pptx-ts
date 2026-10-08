@@ -10,7 +10,7 @@
  */
 import { Window } from 'happy-dom'
 import { tableToSlides } from '../../../dist/html.js'
-import { assert, assertEqual, build, defineRegressionSuite, readEntry } from '../../helpers.js'
+import { assert, assertEqual, build, defineRegressionSuite, readEntry, defined } from '../../helpers.js'
 
 const EMU_PER_INCH = 914400
 const inches = (emu) => Math.round((emu / EMU_PER_INCH) * 1000) / 1000
@@ -20,7 +20,7 @@ async function frameOf(opts) {
 	const win = new Window()
 	win.document.body.innerHTML = '<table id="t"><tbody><tr><td>a</td><td>b</td></tr></tbody></table>'
 	const { zip, pres } = await build((pptx) => {
-		tableToSlides(pptx, win.document.getElementById('t'), opts)
+		tableToSlides(pptx, defined(win.document.getElementById('t')), opts)
 	})
 	const frame = /<p:graphicFrame>[\s\S]*?<\/p:graphicFrame>/.exec(await readEntry(zip, 'ppt/slides/slide1.xml'))
 	assert(frame, 'the slide has a table frame')

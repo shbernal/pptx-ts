@@ -10,7 +10,7 @@
 // come from `p:sldSz@type` (`screen4x3`, `screen16x9`, `screen16x10`), `Widescreen` is what it
 // calls 13.333in x 7.5in from the dimensions alone, and anything else is `Custom`.
 
-import { defineRegressionSuite, build, readEntry, assert, assertEqual } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert, assertEqual, defined } from '../../helpers.js'
 
 /** `docProps/app.xml` for a deck at `layout`, with `hidden` slide numbers hidden. */
 async function appXml(buildFn) {
@@ -72,7 +72,7 @@ defineRegressionSuite('app.xml extended properties', [
 					p.layout = 'Mine'
 					p.addSlide()
 				})
-				return /<p:sldSz [^>]*>/.exec(await readEntry(zip, 'ppt/presentation.xml'))[0]
+				return defined(/<p:sldSz [^>]*>/.exec(await readEntry(zip, 'ppt/presentation.xml')), 'a p:sldSz')[0]
 			}
 			assert((await sldSzOf(10, 5.625)).includes('type="screen16x9"'), 'a 16:9 on-screen defineLayout')
 			assert(!(await sldSzOf(11.7, 8.3)).includes('type='), 'an A4 defineLayout is custom, the default')

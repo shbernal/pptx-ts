@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert, defined } from '../../helpers.js'
 
 // Verification suite for several historical upstream table reports that this project already
 // emits correctly. These guard against regressing back into the reported symptoms:
@@ -15,7 +15,7 @@ const BORDER4 = [SOLID, SOLID, SOLID, SOLID]
 
 async function tableXml(zip) {
 	const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-	return /<a:tbl>[\s\S]*<\/a:tbl>/.exec(xml)[0]
+	return defined(/<a:tbl>[\s\S]*<\/a:tbl>/.exec(xml), 'an a:tbl in the slide')[0]
 }
 
 function cells(tblXml) {

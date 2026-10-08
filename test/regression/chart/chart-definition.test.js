@@ -367,6 +367,7 @@ defineRegressionSuite('Chart definition', [
 							`${label}: and about the width`
 						)
 				}
+				/** @type {{ code?: unknown } | null} */
 				let thrown = null
 				try {
 					await build((p) => {

@@ -10,7 +10,7 @@
  * bytes are asserted at the part, not the rel.
  */
 import JSZip from 'jszip'
-import { TsPptx, assert, assertEqual, build, defineRegressionSuite } from '../../helpers.js'
+import { TsPptx, assert, assertEqual, build, defineRegressionSuite, defined } from '../../helpers.js'
 
 /** Smaller than the play-button artwork (14,484 bytes), far larger than any 1x1 test PNG (69). */
 const POSTER_FLOOR = 5_000
@@ -21,7 +21,7 @@ const LINK = 'https://www.youtube.com/embed/Dph6ynRVyUc'
 async function pngParts(zip) {
 	const names = Object.keys(zip.files).filter((name) => /^ppt\/media\/.*\.png$/.test(name))
 	const parts = await Promise.all(
-		names.map(async (name) => ({ name, bytes: await zip.file(name).async('uint8array') }))
+		names.map(async (name) => ({ name, bytes: await defined(zip.file(name)).async('uint8array') }))
 	)
 	return parts.sort((a, b) => b.bytes.length - a.bytes.length)
 }

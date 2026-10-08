@@ -134,6 +134,7 @@ defineRegressionSuite('Combo subchart normalization', [
 	{
 		name: 'a subchart chartColorsOpacity is checked when the chart is added',
 		fn: async () => {
+			/** @type {unknown} */
 			let thrown = null
 			try {
 				new TsPptx().addSlide().addChart(

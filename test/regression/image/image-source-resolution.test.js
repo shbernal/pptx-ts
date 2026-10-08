@@ -20,6 +20,7 @@ import {
 	captureDiagnostics,
 	listEntries,
 	readEntry,
+	defined,
 } from '../../helpers.js'
 
 /** A few bytes standing in for a metafile. Nothing reads them as one; only the declared type matters. */
@@ -28,7 +29,7 @@ const METAFILE = 'AQAAAGwAAAAAAAAAAAAAAA=='
 /** The package's media parts, by name, with their bytes. */
 async function mediaParts(zip) {
 	const names = listEntries(zip).filter((name) => name.startsWith('ppt/media/'))
-	return Promise.all(names.map(async (name) => ({ name, bytes: await zip.file(name).async('uint8array') })))
+	return Promise.all(names.map(async (name) => ({ name, bytes: await defined(zip.file(name)).async('uint8array') })))
 }
 
 describe('dataUriMediaType', () => {

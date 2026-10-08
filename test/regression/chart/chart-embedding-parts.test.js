@@ -1,6 +1,15 @@
 import TsPptx, { ChartType } from '../../../dist/node.js'
 import JSZip from 'jszip'
-import { defineRegressionSuite, build, listEntries, assert, assertIncludes, assertNotIncludes } from '../../helpers.js'
+import {
+	defineRegressionSuite,
+	build,
+	listEntries,
+	assert,
+	assertIncludes,
+	assertNotIncludes,
+	expectDefined,
+	defined,
+} from '../../helpers.js'
 
 // 1x1 PNG (red pixel) for image-only deck case
 const PNG_DATA =
@@ -114,12 +123,10 @@ defineRegressionSuite('Chart embedding parts [legacy bug-17]', [
 					p.addSlide().addChart(data, { type, x: 1, y: 1, w: 6, h: 4 })
 				})
 				const xlsx = (await JSZip.loadAsync(buf)).file('ppt/embeddings/Microsoft_Excel_Worksheet1.xlsx')
-				assert(xlsx, `${what}: expected an embedded workbook`)
-				const sheet = await (
-					await JSZip.loadAsync(await xlsx.async('arraybuffer'))
-				)
-					.file('xl/worksheets/sheet1.xml')
-					.async('string')
+				expectDefined(xlsx, `${what}: expected an embedded workbook`)
+				const sheet = await defined(
+					(await JSZip.loadAsync(await xlsx.async('arraybuffer'))).file('xl/worksheets/sheet1.xml')
+				).async('string')
 				assertNotIncludes(sheet, 'Infinity', `${what}: no infinity reaches the workbook`)
 				assertNotIncludes(sheet, 'NaN', `${what}: nor a NaN`)
 				assertIncludes(sheet, '<v></v>', `${what}: the bad value leaves the same empty cell a gap does`)
@@ -135,12 +142,10 @@ defineRegressionSuite('Chart embedding parts [legacy bug-17]', [
 					h: 4,
 				})
 			})
-			const xlsx = (await JSZip.loadAsync(buf)).file('ppt/embeddings/Microsoft_Excel_Worksheet1.xlsx')
-			const sheet = await (
-				await JSZip.loadAsync(await xlsx.async('arraybuffer'))
-			)
-				.file('xl/worksheets/sheet1.xml')
-				.async('string')
+			const xlsx = defined((await JSZip.loadAsync(buf)).file('ppt/embeddings/Microsoft_Excel_Worksheet1.xlsx'))
+			const sheet = await defined(
+				(await JSZip.loadAsync(await xlsx.async('arraybuffer'))).file('xl/worksheets/sheet1.xml')
+			).async('string')
 			assertIncludes(sheet, '<c r="B3"><v></v></c>', 'a null value is an empty cell')
 		},
 	},
@@ -161,10 +166,12 @@ defineRegressionSuite('Chart embedding parts [legacy bug-17]', [
 				)
 			})
 			const xlsx = await JSZip.loadAsync(
-				await (await JSZip.loadAsync(buf)).file('ppt/embeddings/Microsoft_Excel_Worksheet1.xlsx').async('arraybuffer')
+				await defined((await JSZip.loadAsync(buf)).file('ppt/embeddings/Microsoft_Excel_Worksheet1.xlsx')).async(
+					'arraybuffer'
+				)
 			)
-			const table = await xlsx.file('xl/tables/table1.xml').async('string')
-			const sheet = await xlsx.file('xl/worksheets/sheet1.xml').async('string')
+			const table = await defined(xlsx.file('xl/tables/table1.xml')).async('string')
+			const sheet = await defined(xlsx.file('xl/worksheets/sheet1.xml')).async('string')
 			const tableRef = /<table[^>]*\bref="([^"]+)"/.exec(table)?.[1]
 			const sheetRef = /<dimension ref="([^"]+)"/.exec(sheet)?.[1]
 			assert(tableRef === sheetRef, `one workbook, one extent; table says ${tableRef}, sheet says ${sheetRef}`)
@@ -185,9 +192,11 @@ defineRegressionSuite('Chart embedding parts [legacy bug-17]', [
 				})
 			})
 			const xlsx = await JSZip.loadAsync(
-				await (await JSZip.loadAsync(buf)).file('ppt/embeddings/Microsoft_Excel_Worksheet1.xlsx').async('arraybuffer')
+				await defined((await JSZip.loadAsync(buf)).file('ppt/embeddings/Microsoft_Excel_Worksheet1.xlsx')).async(
+					'arraybuffer'
+				)
 			)
-			const table = await xlsx.file('xl/tables/table1.xml').async('string')
+			const table = await defined(xlsx.file('xl/tables/table1.xml')).async('string')
 			const columns = [...table.matchAll(/<tableColumn [^>]*\/>/g)].map((m) => m[0])
 			columns.forEach((col) => assert(col.includes('name='), '`name` is required on a tableColumn; got: ' + col))
 		},

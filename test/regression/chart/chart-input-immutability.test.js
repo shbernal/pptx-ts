@@ -9,13 +9,16 @@
  */
 import { ChartType } from '../../../dist/node.js'
 import { expect, vi } from 'vitest'
-import { defineRegressionSuite, build, readEntry, listEntries, assert, assertIncludes } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, listEntries, assert, assertIncludes, defined } from '../../helpers.js'
+
+/** @param {string} path */
+const chartNumber = (path) => Number(defined(path.match(/\d+/))[0])
 
 /** Every chart part in the package, in `chart{N}` order. */
 function chartPartPaths(zip) {
 	return listEntries(zip)
 		.filter((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))
-		.sort((a, b) => Number(a.match(/\d+/)[0]) - Number(b.match(/\d+/)[0]))
+		.sort((a, b) => chartNumber(a) - chartNumber(b))
 }
 
 async function firstChartPart(zip) {

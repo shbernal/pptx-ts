@@ -12,7 +12,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, test, expect } from 'vitest'
 import TsPptx, { setDiagnosticHandler } from '../../../dist/node.js'
-import { partXml } from '../../helpers.js'
+import { defined, expectDefined, partXml } from '../../helpers.js'
 // The `ts-pptx/measure` entry publishes the calibrated constants the bake uses, so a test
 // can state "inflated by the height safety factor" instead of re-pinning its value here.
 import { HEIGHT_SAFETY_FACTOR } from '../../../dist/measure.js'
@@ -110,7 +110,7 @@ describe("applyMeasuredFit: fit:'shrink' through dist export", () => {
 		slide.addText(OVERFLOW, { x: 1, y: 1, w: 3, h: 1, fontFace: 'Silkscreen', fontSize: 18, fit: 'shrink' })
 		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		const m = xml.match(/<a:normAutofit fontScale="(\d+)"/)
-		expect(m).not.toBeNull()
+		expectDefined(m)
 		const scale = Number(m[1])
 		expect(scale).toBeGreaterThanOrEqual(25000)
 		expect(scale).toBeLessThan(100000)
@@ -302,7 +302,7 @@ describe('measured fit: paragraph splitting', () => {
 		const flowed = await shrinkScale({}, 'alpha beta gamma delta epsilon zeta')
 		const broken = await shrinkScale({}, 'alpha\nbeta\ngamma\ndelta\nepsilon\nzeta')
 		expect(broken).not.toBeNull()
-		expect(broken).toBeLessThan(flowed)
+		expect(broken).toBeLessThan(defined(flowed))
 	})
 })
 
@@ -310,7 +310,7 @@ describe('measured fit: text-frame insets from `margin`', () => {
 	test('a larger `margin` shrinks the inner box, so the text shrinks further', async () => {
 		const none = await shrinkScale({ margin: 0 })
 		const roomy = await shrinkScale({ margin: 0.4 })
-		expect(none).not.toBeNull()
+		expectDefined(none)
 		expect(roomy).toBeLessThan(none)
 	})
 
@@ -435,7 +435,7 @@ describe('measured fit: line spacing', () => {
 	test('wider line spacing reaches the export bake', async () => {
 		const natural = await shrinkScale({})
 		const wide = await shrinkScale({ lineSpacingMultiple: 2 })
-		expect(wide).toBeLessThan(natural)
+		expect(wide).toBeLessThan(defined(natural))
 	})
 })
 
@@ -558,7 +558,7 @@ describe('tableLayout() through dist (Silkscreen metrics)', () => {
 		expect(res.heightExact).toBe(false)
 		expect(res.heightIn).toBeGreaterThan(0)
 		// The wrapping OVERFLOW cell drives its row taller than the short-text header row.
-		const rowH = (r) => res.cells.find((c) => c.row === r && c.col === 0).hIn
+		const rowH = (r) => defined(res.cells.find((c) => c.row === r && c.col === 0)).hIn
 		expect(rowH(1)).toBeGreaterThan(rowH(0))
 	})
 

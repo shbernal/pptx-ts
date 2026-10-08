@@ -9,6 +9,7 @@ import {
 	assertIncludes,
 	assertNotIncludes,
 	assertNonVisualDrawingProperty,
+	defined,
 } from '../../helpers.js'
 
 // The option-normalization half of `gen/define/text.ts` — the work `addTextDefinition` does before
@@ -152,7 +153,7 @@ defineRegressionSuite('Text definition', [
 			})
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 			const extents = (xml.match(/<a:ext cx="\d+" cy="(\d+)"\/>/g) || []).map((tag) =>
-				Number(/cy="(\d+)"/.exec(tag)[1])
+				Number(defined(/cy="(\d+)"/.exec(tag))[1])
 			)
 			// The first extent belongs to the slide's `p:grpSpPr`, not to a shape.
 			assertEqual(extents.slice(1).join(','), '274320,0,0', `expected 0.3in, 0, 0; got ${extents.join(',')}`)

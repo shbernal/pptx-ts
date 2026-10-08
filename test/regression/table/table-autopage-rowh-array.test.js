@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, listEntries, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, listEntries, assert, defined } from '../../helpers.js'
 
 // Regression: a `rowH` *array* is keyed by the ORIGINAL row
 // index. Auto-paging splits rows across slides (and can repeat the header row), so applying the
@@ -8,13 +8,13 @@ import { defineRegressionSuite, build, readEntry, listEntries, assert } from '..
 // row across pages, and overflow rows fall back to auto height where none was configured.
 
 function rowHeightsEmu(xml) {
-	return (xml.match(/<a:tr h="(\d+)"/g) || []).map((m) => Number(/h="(\d+)"/.exec(m)[1]))
+	return (xml.match(/<a:tr h="(\d+)"/g) || []).map((m) => Number(defined(/h="(\d+)"/.exec(m))[1]))
 }
 
 function slideXmls(zip) {
 	return listEntries(zip)
 		.filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n))
-		.sort((a, b) => Number(/slide(\d+)/.exec(a)[1]) - Number(/slide(\d+)/.exec(b)[1]))
+		.sort((a, b) => Number(defined(/slide(\d+)/.exec(a))[1]) - Number(defined(/slide(\d+)/.exec(b))[1]))
 }
 
 // A tall first row (2") then 39 short rows. EMU: 1" = 914400.

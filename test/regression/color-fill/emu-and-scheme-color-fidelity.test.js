@@ -131,6 +131,7 @@ defineRegressionSuite('EMU-exact geometry and scheme-colour passthrough', [
 			// It throws from `addText`, not from `toBytes`: the insets are resolved when the text
 			// object is defined, so the throw names the call that carries the bad value.
 			const emuMargin = /** @type {any} */ (['91441emu', 0.1, 0.1, 0.1])
+			/** @type {Error | null} */
 			let threw = null
 			try {
 				await probeSlideXml((slide) => slide.addText('inset', { x: 1, y: 1, w: 4, h: 1, margin: emuMargin }))

@@ -8,6 +8,7 @@
 // the height the export-time resize bake (solveResize) uses for the same input.
 import { readFileSync } from 'node:fs'
 import { describe, test, expect } from 'vitest'
+import { defined } from '../../helpers.js'
 import { measureText } from '../../../src/measure/fit.ts'
 import { buildFitParagraphs } from '../../../src/measure/paragraphs.ts'
 import {
@@ -54,7 +55,7 @@ describe('measureText core (synthetic metrics)', () => {
 		const m = measureText(reg, SENTENCE, opts)
 
 		// Reproduce what the export pass would do, independently.
-		const paras = buildFitParagraphs([{ text: SENTENCE }], { fontSize: 18, fontFace: 'Mono' })
+		const paras = defined(buildFitParagraphs([{ text: SENTENCE }], { fontSize: 18, fontFace: 'Mono' }))
 		const innerWidthPt = opts.wIn * 72
 		const outcome = solveResize(paras, { innerWidthPt, innerHeightPt: 9999 }, makeRegistryResolver(reg))
 		if (outcome.kind !== 'resize') throw new Error(`expected a resize outcome, got ${outcome.kind}`)
@@ -98,7 +99,7 @@ describe('measureText core (synthetic metrics)', () => {
 		expect(m.shrinkScaleFor(m.heightIn + 1)).toBe(100)
 
 		const tightIn = m.heightIn / 3
-		const paras = buildFitParagraphs([{ text: SENTENCE }], { fontSize: 18, fontFace: 'Mono' })
+		const paras = defined(buildFitParagraphs([{ text: SENTENCE }], { fontSize: 18, fontFace: 'Mono' }))
 		const outcome = solveShrink(paras, { innerWidthPt: 2 * 72, innerHeightPt: tightIn * 72 }, makeRegistryResolver(reg))
 		const expected = outcome.kind === 'shrink' ? outcome.result.fontScalePct : 100
 		expect(m.shrinkScaleFor(tightIn)).toBe(expected)
@@ -232,7 +233,7 @@ describe('FontMetrics.hasCodepoint (cmap coverage)', () => {
 	})
 
 	test.skipIf(!APTOS)('file-backed Aptos: covers A and ordinary hyphen, lacks U+2011 non-breaking hyphen', async () => {
-		const fm = await parseFontMetrics(new Uint8Array(readFileSync(APTOS)))
+		const fm = await parseFontMetrics(new Uint8Array(readFileSync(defined(APTOS))))
 		expect(fm.hasCodepoint(0x41)).toBe(true) // 'A' — present
 		expect(fm.hasCodepoint(0x2d)).toBe(true) // '-' ordinary hyphen-minus — present (contrast control)
 		expect(fm.hasCodepoint(0x2011)).toBe(false) // non-breaking hyphen — the canonical missing glyph

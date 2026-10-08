@@ -32,7 +32,7 @@ const relsPath = (n) => `ppt/slides/_rels/slide${n}.xml.rels`
 function slideNumbers(zip) {
 	return listEntries(zip)
 		.map((f) => /^ppt\/slides\/slide(\d+)\.xml$/.exec(f))
-		.filter(Boolean)
+		.filter((m) => m !== null)
 		.map((m) => Number(m[1]))
 		.sort((a, b) => a - b)
 }

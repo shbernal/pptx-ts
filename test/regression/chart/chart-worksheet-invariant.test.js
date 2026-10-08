@@ -1,7 +1,7 @@
 import { DOMParser } from '@xmldom/xmldom'
 import JSZip from 'jszip'
 import { ChartType } from '../../../dist/node.js'
-import { defineRegressionSuite, build, listEntries, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, listEntries, assert, expectDefined, defined } from '../../helpers.js'
 
 // Every formula a chart part carries names cells in its own embedded workbook, and the cache
 // beside it is a copy of what those cells hold. The workbook writer and the chart emitters work
@@ -37,11 +37,11 @@ function parseRef(f) {
 /** The embedded workbook as a cell lookup: `(col, row) => string`, blank for an absent cell. */
 async function readWorkbook(zip) {
 	const name = listEntries(zip).find((entry) => /^ppt\/embeddings\/.*\.xlsx$/.test(entry))
-	assert(name, 'expected an embedded workbook')
-	const xlsx = await JSZip.loadAsync(await zip.file(name).async('arraybuffer'))
-	const sst = parser.parseFromString(await xlsx.file('xl/sharedStrings.xml').async('string'), 'text/xml')
+	expectDefined(name, 'expected an embedded workbook')
+	const xlsx = await JSZip.loadAsync(await defined(zip.file(name)).async('arraybuffer'))
+	const sst = parser.parseFromString(await defined(xlsx.file('xl/sharedStrings.xml')).async('string'), 'text/xml')
 	const strings = Array.from(sst.getElementsByTagName('si')).map((si) => si.textContent ?? '')
-	const sheet = parser.parseFromString(await xlsx.file('xl/worksheets/sheet1.xml').async('string'), 'text/xml')
+	const sheet = parser.parseFromString(await defined(xlsx.file('xl/worksheets/sheet1.xml')).async('string'), 'text/xml')
 	const cells = new Map()
 	for (const c of Array.from(sheet.getElementsByTagName('c'))) {
 		const v = c.getElementsByTagName('v')[0]?.textContent ?? ''
@@ -183,10 +183,10 @@ async function problemsFor(addChart) {
 	const { zip } = await build((p) => addChart(p.addSlide()))
 	const read = await readWorkbook(zip)
 	const classic = listEntries(zip).find((name) => /^ppt\/charts\/chart\d+\.xml$/.test(name))
-	if (classic) return checkClassic(await zip.file(classic).async('string'), read)
+	if (classic) return checkClassic(await defined(zip.file(classic)).async('string'), read)
 	const chartEx = listEntries(zip).find((name) => /^ppt\/charts\/chartEx\d+\.xml$/.test(name))
-	assert(chartEx, 'expected a chart part')
-	return checkChartEx(await zip.file(chartEx).async('string'), read)
+	expectDefined(chartEx, 'expected a chart part')
+	return checkChartEx(await defined(zip.file(chartEx)).async('string'), read)
 }
 
 const FRAME = { x: 1, y: 1, w: 6, h: 4 }
@@ -498,9 +498,12 @@ defineRegressionSuite('Chart formulas resolve to their cache through the embedde
 			]) {
 				const { zip } = await build((p) => p.addSlide().addChart(data, { type, ...FRAME }))
 				const read = await readWorkbook(zip)
-				const name = listEntries(zip).find((entry) => /^ppt\/embeddings\/.*\.xlsx$/.test(entry))
-				const xlsx = await JSZip.loadAsync(await zip.file(name).async('arraybuffer'))
-				const table = parser.parseFromString(await xlsx.file('xl/tables/table1.xml').async('string'), 'text/xml')
+				const name = defined(listEntries(zip).find((entry) => /^ppt\/embeddings\/.*\.xlsx$/.test(entry)))
+				const xlsx = await JSZip.loadAsync(await defined(zip.file(name)).async('arraybuffer'))
+				const table = parser.parseFromString(
+					await defined(xlsx.file('xl/tables/table1.xml')).async('string'),
+					'text/xml'
+				)
 				for (const column of Array.from(table.getElementsByTagName('tableColumn'))) {
 					const col = Number(column.getAttribute('id'))
 					assert(
@@ -527,7 +530,7 @@ defineRegressionSuite('Chart formulas resolve to their cache through the embedde
 				)
 			)
 			const read = await readWorkbook(zip)
-			const xml = await zip.file('ppt/charts/chart1.xml').async('string')
+			const xml = await defined(zip.file('ppt/charts/chart1.xml')).async('string')
 			assert(checkClassic(xml, read).length === 0, 'the unperturbed chart is clean')
 			const moved = xml.replace('<c:f>Sheet1!$C$2:$C$4</c:f>', '<c:f>Sheet1!$B$2:$B$4</c:f>')
 			assert(moved !== xml, 'the perturbation applies')

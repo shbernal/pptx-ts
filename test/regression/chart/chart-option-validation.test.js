@@ -7,6 +7,7 @@ import {
 	assertIncludes,
 	assertNotIncludes,
 	captureDiagnostics,
+	defined,
 } from '../../helpers.js'
 import { chartXml } from './chart-parts.js'
 
@@ -108,6 +109,7 @@ defineRegressionSuite('Chart option validation', [
 		// axes and nothing in it, i.e. a chart-shaped hole the deck opens and shows empty.
 		name: 'a chart type outside the catalog is refused at addChart, not emitted as an empty plot',
 		fn: () => {
+			/** @type {unknown} */
 			let thrown = null
 			try {
 				// The cast is the point: `CHART_NAME` keeps TypeScript callers out, and this guard exists
@@ -118,7 +120,11 @@ defineRegressionSuite('Chart option validation', [
 			}
 			assert(thrown instanceof InvalidOptionError, `an unknown chart type throws InvalidOptionError (got ${thrown})`)
 			assertEqual(thrown.code, 'chart/unknown-type', 'the condition carries its own code')
-			assertEqual(thrown.detail.type, 'nonsense', 'the offending type is carried as structured detail')
+			assertEqual(
+				defined(thrown.detail, 'the error carries detail').type,
+				'nonsense',
+				'the offending type is carried as structured detail'
+			)
 		},
 	},
 	{
@@ -126,6 +132,7 @@ defineRegressionSuite('Chart option validation', [
 		fn: () => {
 			// The combo form routes each entry's `type` through the same emitters, so the guard has
 			// to see the `ChartMulti[]` entries too, not just the single-type `options.type`.
+			/** @type {unknown} */
 			let thrown = null
 			try {
 				new TsPptx().addSlide().addChart(
@@ -181,6 +188,7 @@ defineRegressionSuite('Chart option validation', [
 		// same option. Pinned from untyped JS, which is the only place it can now arrive.
 		name: 'a string legendFontSize is refused rather than coerced',
 		fn: async () => {
+			/** @type {unknown} */
 			let thrown = null
 			try {
 				await build((p) => {
@@ -502,6 +510,7 @@ defineRegressionSuite('Chart option validation', [
 				assertIncludes(xml, '<a:ln w="0"', `${label}: the width clamps to 0`)
 				assert(codes.includes('line/width-out-of-range'), `${label}: and says so; got ${JSON.stringify(codes)}`)
 			}
+			/** @type {unknown} */
 			let thrown = null
 			try {
 				const pres = new TsPptx()
@@ -677,6 +686,7 @@ defineRegressionSuite('Chart option validation', [
 				['firstSliceAng', /** @type {never} */ ('90')],
 				['lineDataSymbolSize', NaN],
 			]) {
+				/** @type {unknown} */
 				let thrown = null
 				try {
 					const pres = new TsPptx()

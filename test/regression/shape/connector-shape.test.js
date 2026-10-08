@@ -1,4 +1,12 @@
-import { assert, assertRejects, build, defineRegressionSuite, setDiagnosticHandler, slideXml } from '../../helpers.js'
+import {
+	assert,
+	assertRejects,
+	build,
+	defineRegressionSuite,
+	setDiagnosticHandler,
+	slideXml,
+	defined,
+} from '../../helpers.js'
 
 // Regression: slide.addConnector emits a PowerPoint connector (<p:cxnSp>) — not a plain line
 // shape — with the correct connector preset, a min-corner origin + flip flags derived from the
@@ -20,7 +28,7 @@ defineRegressionSuite('Connector shapes', [
 					endArrowType: 'triangle',
 				})
 			})
-			const cxn = (xml.match(/<p:cxnSp>[\s\S]*?<\/p:cxnSp>/g) || [])[0]
+			const cxn = defined((xml.match(/<p:cxnSp>[\s\S]*?<\/p:cxnSp>/g) || [])[0], 'a p:cxnSp')
 			assert(cxn, 'expected a <p:cxnSp> element')
 			assert(cxn.includes('<a:prstGeom prst="straightConnector1">'), 'expected straightConnector1 preset')
 			// origin = min corner (1in,1in = 914400 EMU); ext = |4-1|x|3-1| = 3in x 2in.
@@ -41,7 +49,7 @@ defineRegressionSuite('Connector shapes', [
 				s.addConnector({ type: 'elbow', x1: 5, y1: 3, x2: 2, y2: 1, dashType: 'dash' }) // end is left/above start
 				s.addConnector({ type: 'curved', x1: 1, y1: 1, x2: 3, y2: 4 })
 			})
-			const cxns = xml.match(/<p:cxnSp>[\s\S]*?<\/p:cxnSp>/g) || []
+			const cxns = defined(xml.match(/<p:cxnSp>[\s\S]*?<\/p:cxnSp>/g), 'the p:cxnSp elements')
 			assert(cxns.length === 2, `expected 2 connectors; got ${cxns.length}`)
 			assert(cxns[0].includes('<a:prstGeom prst="bentConnector3">'), 'elbow → bentConnector3')
 			assert(/<a:xfrm flipH="1" flipV="1">/.test(cxns[0]), 'reversed endpoints must set flipH and flipV')
@@ -56,7 +64,7 @@ defineRegressionSuite('Connector shapes', [
 			const xml = await slideXml((p) => {
 				p.addSlide().addConnector({ type: 'elbow', x1: 1, y1: 1, x2: 5, y2: 3, adj: 25 })
 			})
-			const cxn = (xml.match(/<p:cxnSp>[\s\S]*?<\/p:cxnSp>/g) || [])[0]
+			const cxn = defined((xml.match(/<p:cxnSp>[\s\S]*?<\/p:cxnSp>/g) || [])[0], 'a p:cxnSp')
 			assert(cxn.includes('<a:prstGeom prst="bentConnector3">'), 'one bend → bentConnector3')
 			// 25% → val 25000 on adj1 (the single bent-connector jog guide).
 			assert(cxn.includes('<a:avLst><a:gd name="adj1" fmla="val 25000"/></a:avLst>'), 'expected adj1=25000')
@@ -70,7 +78,7 @@ defineRegressionSuite('Connector shapes', [
 				s.addConnector({ type: 'elbow', x1: 1, y1: 1, x2: 5, y2: 3, bends: 2, adj: [30, 70] })
 				s.addConnector({ type: 'curved', x1: 1, y1: 4, x2: 5, y2: 6, bends: 3, adj: [10, 50, 90] })
 			})
-			const cxns = xml.match(/<p:cxnSp>[\s\S]*?<\/p:cxnSp>/g) || []
+			const cxns = defined(xml.match(/<p:cxnSp>[\s\S]*?<\/p:cxnSp>/g), 'the p:cxnSp elements')
 			assert(cxns[0].includes('<a:prstGeom prst="bentConnector4">'), 'bends:2 → bentConnector4')
 			assert(
 				cxns[0].includes('<a:avLst><a:gd name="adj1" fmla="val 30000"/><a:gd name="adj2" fmla="val 70000"/></a:avLst>'),
@@ -124,7 +132,7 @@ defineRegressionSuite('Connector shapes', [
 					endShapeIdx: 1,
 				})
 			})
-			const cxn = (xml.match(/<p:cxnSp>[\s\S]*?<\/p:cxnSp>/g) || [])[0]
+			const cxn = defined((xml.match(/<p:cxnSp>[\s\S]*?<\/p:cxnSp>/g) || [])[0], 'a p:cxnSp')
 			// stCxn must come before endCxn (schema order); ids are target index + 2.
 			assert(
 				cxn.includes('<p:cNvCxnSpPr><a:stCxn id="2" idx="3"/><a:endCxn id="3" idx="1"/></p:cNvCxnSpPr>'),
@@ -158,7 +166,7 @@ defineRegressionSuite('Connector shapes', [
 			} finally {
 				setDiagnosticHandler(null)
 			}
-			const cxn = (xml.match(/<p:cxnSp>[\s\S]*?<\/p:cxnSp>/g) || [])[0]
+			const cxn = defined((xml.match(/<p:cxnSp>[\s\S]*?<\/p:cxnSp>/g) || [])[0], 'a p:cxnSp')
 			assert(
 				cxn.includes('<p:cNvCxnSpPr><a:stCxn id="2" idx="0"/><a:endCxn id="3" idx="0"/></p:cNvCxnSpPr>'),
 				`expected both bindings to resolve; got: ${cxn}`
@@ -182,7 +190,7 @@ defineRegressionSuite('Connector shapes', [
 			} finally {
 				setDiagnosticHandler(null)
 			}
-			const cxn = (xml.match(/<p:cxnSp>[\s\S]*?<\/p:cxnSp>/g) || [])[0]
+			const cxn = defined((xml.match(/<p:cxnSp>[\s\S]*?<\/p:cxnSp>/g) || [])[0], 'a p:cxnSp')
 			assert(cxn.includes('<p:cNvCxnSpPr/>'), 'unresolved binding must emit an empty cNvCxnSpPr (no dangling id)')
 			assert(!cxn.includes('Cxn id='), 'unresolved binding must not emit stCxn/endCxn')
 			assert(

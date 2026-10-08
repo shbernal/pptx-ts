@@ -8,6 +8,7 @@ import {
 	contentTypeForExtension,
 	selfClosingTags,
 	xmlAttributes,
+	defined,
 } from '../../helpers.js'
 
 defineRegressionSuite('Slide backgrounds [legacy bug-12]', [
@@ -71,7 +72,7 @@ defineRegressionSuite('Slide backgrounds [legacy bug-12]', [
 			)
 
 			// The bytes came off disk, not from an inlined placeholder.
-			const bytes = await zip.file(part).async('uint8array')
+			const bytes = await defined(zip.file(part)).async('uint8array')
 			assert(bytes.length > 1000, `expected the jpg to be read from disk; got ${bytes.length} bytes`)
 			assertEqual(bytes[0], 0xff, 'first JPEG SOI byte')
 			assertEqual(bytes[1], 0xd8, 'second JPEG SOI byte')
@@ -204,6 +205,6 @@ async function assertBackgroundResolves(zip, partName, expected) {
 
 	const mediaPath = `ppt/${rel.Target.replace(/^\.\.\//, '')}`
 	assert(listEntries(zip).includes(mediaPath), `${rel.Target} is in the package`)
-	const bytes = await zip.file(mediaPath).async('base64')
+	const bytes = await defined(zip.file(mediaPath)).async('base64')
 	assertEqual(bytes, expected.split('base64,')[1], `${partName} background shows its own image`)
 }

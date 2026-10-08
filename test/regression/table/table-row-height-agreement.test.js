@@ -17,6 +17,7 @@
 import { describe, test, expect } from 'vitest'
 import JSZip from 'jszip'
 import TsPptx, { setDiagnosticHandler } from '../../../dist/node.js'
+import { readEntry } from '../../helpers.js'
 import { computeTableLayout } from '../../../src/measure/table-fit.ts'
 import { applyMeasuredFit } from '../../../src/measure/fit.ts'
 import { FontMetricsRegistry } from '../../../src/measure/font-metrics.ts'
@@ -42,7 +43,7 @@ async function writerRowHeightsIn(opts) {
 	const pres = new TsPptx()
 	pres.addSlide().addTable(ROWS(), opts)
 	const zip = await JSZip.loadAsync(await pres.write({ outputType: 'nodebuffer' }))
-	const xml = await zip.file('ppt/slides/slide1.xml').async('string')
+	const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 	return [...xml.matchAll(/<a:tr h="(-?\d+)"/g)].map((m) => Number(m[1]) / EMU_PER_INCH)
 }
 

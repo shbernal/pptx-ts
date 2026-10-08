@@ -12,7 +12,7 @@ import {
 import { Presentation } from '../../../dist/read.js'
 import { readModelToIr } from '../../../dist/script.js'
 import JSZip from 'jszip'
-import { defineRegressionSuite, build, assert, assertEqual, setDiagnosticHandler } from '../../helpers.js'
+import { defineRegressionSuite, build, assert, assertEqual, defined, setDiagnosticHandler } from '../../helpers.js'
 import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -125,7 +125,7 @@ defineRegressionSuite('PPTX inspection primitives', [
 			// converter assumed 4:3, so the two readers disagreed about the same bytes.
 			const zip = await JSZip.loadAsync(readFileSync(join(FIXTURES, 'empty.pptx')))
 			const declared = '<p:sldSz cx="12192000" cy="6858000"/>'
-			const xml = await zip.file('ppt/presentation.xml').async('string')
+			const xml = await defined(zip.file('ppt/presentation.xml')).async('string')
 			assert(xml.includes(declared), 'the fixture declares the slide size this removes')
 			zip.file('ppt/presentation.xml', xml.replace(declared, ''))
 			const bytes = await zip.generateAsync({ type: 'uint8array' })
@@ -215,22 +215,24 @@ defineRegressionSuite('PPTX inspection primitives', [
 			const inspection = await inspectPptx(buf)
 			const elements = new Map(inspection.slides[0].elements.map((element) => [element.name, element]))
 
-			const fixed = elements.get('fit:none')
+			const fixed = defined(elements.get('fit:none'))
 			assertEqual(fixed.autofit, 'none', 'no-autofit box reports none')
-			assert(Math.abs(fixed.bodyInsets.left - 0.1) < 1e-6, 'default left inset is 0.1in')
-			assert(Math.abs(fixed.bodyInsets.right - 0.1) < 1e-6, 'default right inset is 0.1in')
-			assert(Math.abs(fixed.bodyInsets.top - 0.05) < 1e-6, 'default top inset is 0.05in')
-			assert(Math.abs(fixed.bodyInsets.bottom - 0.05) < 1e-6, 'default bottom inset is 0.05in')
+			const fixedInsets = defined(fixed.bodyInsets, 'a text box has body insets')
+			assert(Math.abs(fixedInsets.left - 0.1) < 1e-6, 'default left inset is 0.1in')
+			assert(Math.abs(fixedInsets.right - 0.1) < 1e-6, 'default right inset is 0.1in')
+			assert(Math.abs(fixedInsets.top - 0.05) < 1e-6, 'default top inset is 0.05in')
+			assert(Math.abs(fixedInsets.bottom - 0.05) < 1e-6, 'default bottom inset is 0.05in')
 
-			assertEqual(elements.get('fit:shrink').autofit, 'normAutofit', 'shrink box reports normAutofit')
-			assertEqual(elements.get('fit:resize').autofit, 'spAutoFit', 'resize box reports spAutoFit')
+			assertEqual(defined(elements.get('fit:shrink')).autofit, 'normAutofit', 'shrink box reports normAutofit')
+			assertEqual(defined(elements.get('fit:resize')).autofit, 'spAutoFit', 'resize box reports spAutoFit')
 
-			const tight = elements.get('fit:margin0')
+			const tight = defined(elements.get('fit:margin0'))
 			assertEqual(tight.autofit, 'none', 'margin-only box still reports none')
-			assertEqual(tight.bodyInsets.left, 0, 'zero margin is preserved, not defaulted')
-			assertEqual(tight.bodyInsets.bottom, 0, 'zero margin is preserved, not defaulted')
+			const tightInsets = defined(tight.bodyInsets, 'a text box has body insets')
+			assertEqual(tightInsets.left, 0, 'zero margin is preserved, not defaulted')
+			assertEqual(tightInsets.bottom, 0, 'zero margin is preserved, not defaulted')
 
-			const image = elements.get('fit:image')
+			const image = defined(elements.get('fit:image'))
 			assertEqual(image.autofit, null, 'image without a text frame has no autofit')
 			assertEqual(image.bodyInsets, null, 'image without a text frame has no body insets')
 		},
@@ -278,10 +280,10 @@ defineRegressionSuite('PPTX inspection primitives', [
 			// Flat textRuns still carries the same enriched props.
 			assertEqual(runs.textRuns[0].fontFace, 'Arial', 'flat textRuns also carry fontFace')
 
-			assertEqual(elements.get('scaled').autofit, 'normAutofit', 'object shrink reports normAutofit')
-			assertEqual(elements.get('scaled').autofitFontScale, 62.5, 'baked fontScale read back as a percent')
-			assertEqual(elements.get('bare').autofit, 'normAutofit', 'bare shrink still reports normAutofit')
-			assertEqual(elements.get('bare').autofitFontScale, null, 'bare normAutofit bakes no scale → null')
+			assertEqual(defined(elements.get('scaled')).autofit, 'normAutofit', 'object shrink reports normAutofit')
+			assertEqual(defined(elements.get('scaled')).autofitFontScale, 62.5, 'baked fontScale read back as a percent')
+			assertEqual(defined(elements.get('bare')).autofit, 'normAutofit', 'bare shrink still reports normAutofit')
+			assertEqual(defined(elements.get('bare')).autofitFontScale, null, 'bare normAutofit bakes no scale → null')
 		},
 	},
 	{
@@ -342,7 +344,11 @@ defineRegressionSuite('PPTX inspection primitives', [
 			const byZ = new Map(grouped.elements.map((el) => [el.zIndex, el]))
 			const nested = groups.find((group) => group.parentZIndex !== null)
 			assert(nested, 'expected the fixture nested group to name its enclosing group')
-			assertEqual(byZ.get(nested.parentZIndex).kind, 'group', 'a parentZIndex resolves to a group element')
+			assertEqual(
+				defined(byZ.get(defined(nested.parentZIndex))).kind,
+				'group',
+				'a parentZIndex resolves to a group element'
+			)
 
 			for (const group of groups) {
 				assert(group.name, 'a group reports its cNvPr name')
@@ -494,7 +500,7 @@ defineRegressionSuite('PPTX inspection primitives', [
 			})
 
 			const [slide] = (await inspectPptx(buf)).slides
-			const element = slide.elements.find((el) => el.name === 'spaced')
+			const element = defined(slide.elements.find((el) => el.name === 'spaced'))
 			assertEqual(element.textRuns[0].text, 'Two ', 'the trailing space belongs to the run')
 			assertEqual(element.text, 'Two words', 'so the joined text keeps the word boundary')
 			assertEqual(slide.wordCount, 2, 'and the word count is the visible one')
@@ -516,7 +522,7 @@ defineRegressionSuite('PPTX inspection primitives', [
 			})
 
 			const [slide] = (await inspectPptx(buf)).slides
-			const element = slide.elements.find((el) => el.name === 'two-paragraphs')
+			const element = defined(slide.elements.find((el) => el.name === 'two-paragraphs'))
 			assertEqual(element.paragraphs.length, 2, 'breakLine ends the paragraph')
 			assertEqual(element.text, 'first second', 'the two paragraphs stay two words')
 			assertEqual(slide.wordCount, 2, 'and the word count counts both')
@@ -531,6 +537,7 @@ defineRegressionSuite('PPTX inspection primitives', [
 			zip.file('ppt/slides/slide1.xml', `<?xml version="1.0"?><p:sld xmlns:p="${P_NS}"><p:cSld/></p:sld>`)
 			const buf = await zip.generateAsync({ type: 'uint8array' })
 
+			/** @type {unknown} */
 			let error = null
 			try {
 				await inspectPptx(buf)
@@ -575,6 +582,7 @@ defineRegressionSuite('PPTX inspection primitives', [
 				const fromPath = await loadPptxPackage(filePath)
 				assert(listPptxParts(fromPath).includes('ppt/slides/slide1.xml'), 'path input loads the slide part')
 
+				/** @type {Error | null} */
 				let missingError = null
 				try {
 					await loadPptxPackage(join(dir, 'does-not-exist.pptx'))
@@ -663,7 +671,7 @@ defineRegressionSuite('PPTX inspection primitives', [
 			assertEqual(Buffer.from(bytes.subarray(1, 4)).toString('latin1'), 'PNG', 'png signature intact')
 
 			const xml = await readPptxTextPart(pptxPackage, 'ppt/slides/slide1.xml')
-			const xmlBytes = await readPptxBinaryPart(pptxPackage, 'ppt/slides/slide1.xml')
+			const xmlBytes = defined(await readPptxBinaryPart(pptxPackage, 'ppt/slides/slide1.xml'))
 			assertEqual(new TextDecoder('utf-8').decode(xmlBytes), xml, 'text and binary reads agree')
 			assertEqual(await readPptxBinaryPart(pptxPackage, 'ppt/does-not-exist.bin'), null, 'missing part is null')
 		},

@@ -1,4 +1,12 @@
-import { defineRegressionSuite, build, captureDiagnostics, readEntry, assert, assertEqual } from '../../helpers.js'
+import {
+	defineRegressionSuite,
+	build,
+	captureDiagnostics,
+	readEntry,
+	assert,
+	assertEqual,
+	defined,
+} from '../../helpers.js'
 
 // `colspan`/`rowspan` arrive from the calling program, and the merge-grid builder used to trust
 // them: `new Array(colspan - 1).fill(undefined)` at `colspan: 4294967295` is not a slow path but
@@ -16,7 +24,7 @@ import { defineRegressionSuite, build, captureDiagnostics, readEntry, assert, as
 
 async function tableXml(zip) {
 	const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-	return /<a:tbl>[\s\S]*<\/a:tbl>/.exec(xml)[0]
+	return defined(/<a:tbl>[\s\S]*<\/a:tbl>/.exec(xml), 'an a:tbl in the slide')[0]
 }
 
 /** Build a two-row table whose first cell carries `options`, returning the `<a:tbl>` and the codes. */

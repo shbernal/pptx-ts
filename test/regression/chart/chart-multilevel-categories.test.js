@@ -1,6 +1,14 @@
 import { ChartType } from '../../../dist/node.js'
 import JSZip from 'jszip'
-import { build, defineRegressionSuite, assert, assertEqual, assertIncludes } from '../../helpers.js'
+import {
+	build,
+	defineRegressionSuite,
+	assert,
+	assertEqual,
+	assertIncludes,
+	expectDefined,
+	defined,
+} from '../../helpers.js'
 import { chartXml } from './chart-parts.js'
 
 const LABELS = [
@@ -18,12 +26,12 @@ const DATA = [
 async function getWorkbookXml(buf) {
 	const pptxZip = await JSZip.loadAsync(buf)
 	const xlsxEntry = pptxZip.file('ppt/embeddings/Microsoft_Excel_Worksheet1.xlsx')
-	assert(xlsxEntry, 'embedded xlsx not found in pptx')
+	expectDefined(xlsxEntry, 'embedded xlsx not found in pptx')
 	const xlsxBuf = await xlsxEntry.async('arraybuffer')
 	const xlsxZip = await JSZip.loadAsync(xlsxBuf)
 
-	const sharedStringsXml = await xlsxZip.file('xl/sharedStrings.xml').async('string')
-	const sheetXml = await xlsxZip.file('xl/worksheets/sheet1.xml').async('string')
+	const sharedStringsXml = await defined(xlsxZip.file('xl/sharedStrings.xml')).async('string')
+	const sheetXml = await defined(xlsxZip.file('xl/worksheets/sheet1.xml')).async('string')
 	return { sharedStringsXml, sheetXml }
 }
 

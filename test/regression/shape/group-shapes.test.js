@@ -719,6 +719,7 @@ defineRegressionSuite('Group shapes', [
 				}
 			}
 			const rejects = async (fn, re, label) => {
+				/** @type {Error | null} */
 				let err = null
 				try {
 					await grouped(fn)
@@ -982,6 +983,7 @@ defineRegressionSuite('Group shapes', [
 
 			// canGroup is not a second opinion: it is the same predicate groupObjects throws on.
 			for (const object of s.objects) {
+				/** @type {Error | null} */
 				let err = null
 				try {
 					s.groupObjects([object.objectName])

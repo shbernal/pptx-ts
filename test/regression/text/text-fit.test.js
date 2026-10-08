@@ -4,6 +4,7 @@
 // conservative-against-PowerPoint assertions against real fonts live in
 // test/read/autofit-calibration-oracle.test.mjs (skipped when fonts are absent).
 import { describe, test, expect } from 'vitest'
+import { defined } from '../../helpers.js'
 import {
 	solveShrink,
 	solveResize,
@@ -123,7 +124,8 @@ describe('text-fit: solveShrink', () => {
 		expect(fontScalePct).toBeGreaterThanOrEqual(MIN_FONT_SCALE_PCT)
 		// Mirror the solver's safety-inflated fit criterion.
 		const fitsInflated = (scale) =>
-			measureHeightPt(paras, b.innerWidthPt, resolveMono, scale, 0, WIDTH_SAFETY_FACTOR) * HEIGHT_SAFETY_FACTOR <=
+			defined(measureHeightPt(paras, b.innerWidthPt, resolveMono, scale, 0, WIDTH_SAFETY_FACTOR)) *
+				HEIGHT_SAFETY_FACTOR <=
 			b.innerHeightPt
 		// The chosen scale fits (and a fortiori the pure height fits — conservative)…
 		expect(fitsInflated(fontScalePct)).toBe(true)
@@ -202,7 +204,7 @@ describe('text-fit: solveResize', () => {
 		const paras = [para('aaaaaaaaaa bbbbbbbbbb cccccccccc dddddddddd')]
 		const out = solveResize(paras, box(120, 30), resolveMono)
 		const trueHeight = measureHeightPt(paras, 120, resolveMono, 100, 0)
-		expect(resizeHeight(out)).toBeGreaterThanOrEqual(trueHeight)
+		expect(resizeHeight(out)).toBeGreaterThanOrEqual(defined(trueHeight))
 	})
 
 	test('wraps to more lines as width shrinks → taller needed height', () => {

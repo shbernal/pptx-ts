@@ -9,7 +9,7 @@ import { describe, test } from 'vitest'
 import { fitSrcRectPercents, getImageSizeFromBytes } from '../../../src/media/image-size.ts'
 import { Presentation } from '../../../dist/read.js'
 import { EMU_PER_INCH } from '../../../dist/node.js'
-import { assert, assertEqual, build, captureDiagnostics, slideXml } from '../../helpers.js'
+import { assert, assertEqual, build, captureDiagnostics, slideXml, defined } from '../../helpers.js'
 
 /**
  * A PNG header carrying an arbitrary intrinsic size. The size reader looks at the IHDR dimensions
@@ -139,7 +139,7 @@ describe('image geometry', () => {
 	test('Picture.setImage refuses a fit on a zero-extent picture, and leaves the picture as it was', async () => {
 		const { buf } = await build((p) => p.addSlide().addImage({ data: pngData(32, 32), x: 1, y: 1, w: 0, h: 0 }))
 		const deck = await Presentation.load(buf)
-		const picture = deck.slides[0].shapes.find((shape) => shape.shapeType === 'picture')
+		const picture = defined(deck.slides[0].shapes.find((shape) => shape.shapeType === 'picture'))
 		const embed = () => picture.element_.getElementsByTagNameNS('*', 'blip')[0]?.getAttribute('r:embed')
 		const before = embed()
 		let code

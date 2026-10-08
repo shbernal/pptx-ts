@@ -11,11 +11,12 @@ import { readFileSync } from 'node:fs'
 import { describe, test, expect } from 'vitest'
 import JSZip from 'jszip'
 import TsPptx from '../../../dist/node.js'
+import { readEntry } from '../../helpers.js'
 
 async function slide1Xml(pres) {
 	const buf = await pres.toBytes()
 	const zip = await JSZip.loadAsync(buf)
-	return zip.file('ppt/slides/slide1.xml').async('string')
+	return readEntry(zip, 'ppt/slides/slide1.xml')
 }
 
 const szValues = (xml) => [...xml.matchAll(/sz="(\d+)"/g)].map((m) => Number(m[1]))

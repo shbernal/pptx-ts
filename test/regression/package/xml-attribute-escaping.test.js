@@ -18,6 +18,7 @@ import JSZip from 'jszip'
 import { describe, test, expect, beforeAll } from 'vitest'
 import TsPptx from '../../../dist/node.js'
 import { FIXTURES } from '../../read/corpus.js'
+import { readEntry } from '../../helpers.js'
 
 /** A vertical tab: legal in a JavaScript string, forbidden in XML 1.0 in any spelling. */
 const VERTICAL_TAB = String.fromCharCode(11)
@@ -41,7 +42,7 @@ async function presentationXml(typeface) {
 	await pres.embedFont({ data: regular, typeface })
 	pres.addSlide().addText('hi', { x: 1, y: 1, w: 4, h: 1, fontFace: typeface })
 	const zip = await JSZip.loadAsync(await pres.toBytes())
-	return zip.file('ppt/presentation.xml').async('string')
+	return readEntry(zip, 'ppt/presentation.xml')
 }
 
 describe('embedded font typeface escaping', () => {

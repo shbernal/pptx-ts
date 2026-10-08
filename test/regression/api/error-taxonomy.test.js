@@ -1,4 +1,4 @@
-import { defineRegressionSuite, assert, assertEqual } from '../../helpers.js'
+import { defineRegressionSuite, assert, assertEqual, defined } from '../../helpers.js'
 import TsPptx, {
 	TsPptxError,
 	InvalidOptionError,
@@ -147,7 +147,7 @@ defineRegressionSuite('Error taxonomy', [
 			assertEqual(bare.detail, undefined, 'no detail key when a site gives none')
 
 			const detailed = new InvalidOptionError('coord/non-finite', 'x', { detail: { value: NaN } })
-			assert(Number.isNaN(detailed.detail.value), 'structured detail survives the constructor')
+			assert(Number.isNaN(defined(detailed.detail).value), 'structured detail survives the constructor')
 		},
 	},
 ])

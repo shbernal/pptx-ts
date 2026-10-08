@@ -7,6 +7,7 @@ import {
 	defineRegressionSuite,
 	readEntry,
 	slideXml,
+	defined,
 } from '../../helpers.js'
 
 // The byte-identity harness (`scripts/byte-identity.mjs`) is what gates a behavior-preserving
@@ -128,7 +129,7 @@ defineRegressionSuite('Fill and effect emitters the byte-identity corpus never r
 			// The round trip is the point: `Shape.fillNoFill` is the accessor that separates a
 			// transparent shape from an inheriting one, and before this fix the writer's own
 			// output was the one input it could not be demonstrated on.
-			const shape = (await Presentation.load(buf)).slides[0].shapes.find(isAutoShape)
+			const shape = defined((await Presentation.load(buf)).slides[0].shapes.find(isAutoShape))
 			assertEqual(shape.fillNoFill, true, 'a shape authored fill: none reads back as an explicit no-fill')
 			assertEqual(shape.fillColor, null, 'and carries no fill colour')
 		},

@@ -15,6 +15,7 @@ import {
 	assertNotIncludes,
 	firstXmlBlock,
 	assertXmlOrder,
+	defined,
 } from '../../helpers.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -23,7 +24,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 async function fixtureSlideXml(name, n = 1) {
 	const buf = await readFixture(name)
 	const zip = await JSZip.loadAsync(buf)
-	return zip.file(`ppt/slides/slide${n}.xml`).async('string')
+	return readEntry(zip, `ppt/slides/slide${n}.xml`)
 }
 
 /** Collapse inter-tag whitespace so an indented oracle and our compact output compare alike. */
@@ -439,7 +440,7 @@ defineRegressionSuite('Table cell image (blip) fills', [
 			const slides = (await listEntries(zip)).filter((e) => /^ppt\/slides\/slide\d+\.xml$/.test(e))
 			assert(slides.length > 1, `expected the table to auto-page; got ${slides.length} slide(s)`)
 			for (const slidePath of slides) {
-				const n = /slide(\d+)\.xml$/.exec(slidePath)[1]
+				const n = defined(/slide(\d+)\.xml$/.exec(slidePath))[1]
 				const xml = await readEntry(zip, slidePath)
 				const rels = await readEntry(zip, `ppt/slides/_rels/slide${n}.xml.rels`)
 				for (const [, rid] of xml.matchAll(/<a:blip r:embed="(rId\d+)"/g)) {

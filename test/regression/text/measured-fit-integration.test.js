@@ -13,7 +13,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, test, expect } from 'vitest'
 import TsPptx from '../../../dist/node.js'
-import { partXml } from '../../helpers.js'
+import { expectDefined, partXml } from '../../helpers.js'
 import { resolveGenuineFontFile } from '../../read/font-oracle.js'
 
 const SLIDE1 = 'ppt/slides/slide1.xml'
@@ -104,7 +104,7 @@ describe("measured fit: fit:'shrink' integration", () => {
 		slide.addText(OVERFLOW, { x: 1, y: 1, w: 3, h: 1, fontFace: FACE, fontSize: 18, fit: 'shrink' })
 		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		const m = xml.match(/<a:normAutofit fontScale="(\d+)"/)
-		expect(m).not.toBeNull()
+		expectDefined(m)
 		const scale = Number(m[1])
 		// On the 2.5% grid (×1000), between the 25% floor and below 100%.
 		expect(scale).toBeGreaterThanOrEqual(25000)
@@ -123,7 +123,7 @@ describe("measured fit: fit:'shrink' integration", () => {
 		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		expect(xml).toContain('wrap="none"') // it is genuinely a non-wrapping frame
 		const m = xml.match(/<a:normAutofit fontScale="(\d+)"/)
-		expect(m).not.toBeNull() // before the fix this was a bare <a:normAutofit/>
+		expectDefined(m) // before the fix this was a bare <a:normAutofit/>
 		const scale = Number(m[1])
 		expect(scale).toBeGreaterThanOrEqual(25000)
 		expect(scale).toBeLessThan(100000)

@@ -1,5 +1,5 @@
 import JSZip from 'jszip'
-import { defineRegressionSuite, build, readEntry, assert, assertEqual } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert, assertEqual, defined } from '../../helpers.js'
 import { readFixture } from '../../read/corpus.js'
 
 // Acceptance: `shadow` on a SHAPE's options is the shape's shadow, and `shadow` on a RUN's options
@@ -123,7 +123,7 @@ defineRegressionSuite('shadow: the shape and the glyphs are two effects', [
 		name: 'the PowerPoint-authored oracle keeps the two effects apart',
 		fn: async () => {
 			const zip = await JSZip.loadAsync(await readFixture('shadow-shape-vs-text'))
-			const xml = await zip.file('ppt/slides/slide1.xml').async('string')
+			const xml = await defined(zip.file('ppt/slides/slide1.xml')).async('string')
 			const sites = {}
 			for (const sp of xml.match(/<p:sp>[\s\S]*?<\/p:sp>/g) || []) {
 				const name = /name="([^"]+)"/.exec(sp)?.[1]

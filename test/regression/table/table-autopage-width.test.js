@@ -1,5 +1,5 @@
 import { SlideObjectType } from '../../../dist/node.js'
-import { defineRegressionSuite, build, readEntry, assert, assertEqual } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert, assertEqual, defined } from '../../helpers.js'
 // The pager's core is not exported from the package, and the last case here is about a guard
 // only a direct caller can reach. Every other case goes through the public `addTable`.
 import { getSlidesForTableRows } from '../../../src/gen/table/autopage.ts'
@@ -83,7 +83,7 @@ defineRegressionSuite('Table autoPage width arithmetic', [
 			})
 			const widths = lines
 				.filter((line) => line.startsWith('[0/4] colWidth='))
-				.map((line) => Number(/colWidth=([\d.]+)in/.exec(line)[1]))
+				.map((line) => Number(defined(/colWidth=([\d.]+)in/.exec(line))[1]))
 			// Row 0: the colspan-2 cell covers columns 0+1 (1+2=3in), then 3, 4, 5.
 			// Row 1: one cell per column, 1 through 5.
 			assertEqual(
