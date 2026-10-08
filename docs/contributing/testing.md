@@ -520,7 +520,7 @@ flowchart LR
 ```
 
 ```bash
-pnpm run test:coverage   # the Node suite, with its own floor
+pnpm run test:coverage   # the Node suite, held to the notches
 pnpm run test:browser    # the browser tests, which write raw V8 coverage
 pnpm run coverage:gate   # merge both, then check scripts/coverage-gates.json
 ```
@@ -529,10 +529,12 @@ The suites import `dist/`, so v8 instruments the bundled `dist/**` output and re
 `src/` through the sourcemaps tsdown emits. Instrumenting `src/**` would report almost nothing,
 because almost nothing under `src/` executes directly.
 
-The four thresholds in `vitest.config.ts` are the Node suite's floor. They sit below the
-measured numbers, so an accidental regression fails without the gate flaking. Raise them as
-coverage improves, and never lower one to make a build pass. In CI the floor fails the Node
-24.x leg of `test`, and the merged gate runs in the `coverage` job.
+`scripts/coverage-gates.json` holds the one set of thresholds. `scripts/coverage-gate.mjs`
+holds the merged report to them, and `vitest.config.ts` reads the same file as the Node suite's
+floor, so `test:coverage` fails early, without a browser, when the Node suite goes backwards.
+Raise them when `coverage:gate` prints that a ratchet is available, and never lower one to make
+a build pass. In CI the floor fails the Node 24.x leg of `test`, and the merged gate runs in the
+`coverage` job.
 
 ### Merged coverage
 
@@ -565,8 +567,8 @@ by at least one point, the point of slack. `scripts/coverage-gate.mjs` fails two
 A malformed input fails the gate before any number is compared. Each axis needs a finite
 threshold and a numeric `pct`, and `minimumSlack` must be finite.
 
-The rule holds against the merged report, not against `vitest.config.ts`. The Node report
-counts code no Node run can reach. Demanding slack there would leave two ways to comply,
+The rule holds against the merged report. The Node run is held to the notch alone, because its
+report counts code no Node run can reach. Demanding slack there would leave two ways to comply,
 lowering the notch or hiding the file again, and the rule exists to prevent both.
 
 ### Probing coverage while editing

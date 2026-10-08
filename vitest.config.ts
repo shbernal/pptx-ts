@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import os from 'node:os'
 import { configDefaults, coverageConfigDefaults, defineConfig } from 'vitest/config'
+import coverageGates from './scripts/coverage-gates.json' with { type: 'json' }
 
 // ---------------------------------------------------------------------------
 // Worker ceiling
@@ -87,9 +88,8 @@ const maxWorkers = resolveMaxWorkers()
 // back to `src/` via the sourcemaps tsdown emits. Instrumenting `src/**` instead
 // would report ~8% because almost nothing under `src/` is executed directly.
 //
-// Thresholds are pinned a notch below the current measured numbers so an
-// accidental coverage regression fails CI without the gate being flaky. Ratchet
-// them upward as coverage improves; never loosen them to make a red build pass.
+// The thresholds are the merged gate's notches, read from `scripts/coverage-gates.json` below,
+// so a ratchet is one edit and the two cannot drift apart again.
 //
 // `branches` trails the other three by design. The read model guards every
 // element lookup (`x ? … : null`) whether or not the schema lets `x` be absent,
@@ -212,38 +212,18 @@ export default defineConfig({
 			// rollup) and `json` writes coverage/coverage-final.json (raw per-line map)
 			// so agents and ratchet scripts can read coverage without scraping the HTML.
 			reporter: ['text-summary', 'text', 'html', 'json-summary', 'json'],
-			// These four are the *Node suite's* floor, and only that. They may not be
-			// lowered and they fail if this suite goes backwards — but the point-of-slack
-			// rule is no longer held against them, because it cannot honestly be: this
-			// report's denominator includes `src/runtime/browser.ts`, whose adapter needs
-			// `fetch`, `FileReader` and a canvas. That is not missing tests, it is a
-			// missing runtime, and no amount of Node testing can buy slack back here.
+			// The Node suite's floor is the merged gate's notch, read from the file
+			// scripts/coverage-gate.mjs checks. Two hand-ratcheted copies used to sit here and
+			// there, and both fell behind what the suite measures: by 2026-10 this file's branch
+			// floor sat 6.5 points under the Node figure, slack a regression could spend unseen.
 			//
-			// The doctrine moved to the report that has a collector for every line it
-			// counts: `scripts/coverage-gates.json`, checked by scripts/coverage-gate.mjs
-			// against the Node suite and browser lane merged (`pnpm run coverage:gate`).
-			// That is where a notch must clear its number by a full point, where ratchets
-			// happen, and where the rule now *fails a build* rather than living in a
-			// comment. See the header of scripts/coverage-gate.mjs for why prose was not
-			// enough.
-			thresholds: {
-				// Raised 91 -> 92 once the table auto-pager landed: measured 93.21.
-				statements: 92,
-				// Raised 80 -> 81 once the text and chart definers landed: measured 82.79.
-				// Ratchet upward only — if a change drops a number below its gate, that is a
-				// finding to explain, never a gate to lower.
-				branches: 81,
-				// Left at 97. Dropping the `dist/browser.js` exclusion put
-				// `src/runtime/browser.ts`'s 13 functions into this denominator with 1 of them
-				// reachable from Node, so the Node-only number fell 98.33 -> 97.35. It reads
-				// 97.77 now that the public accessors have tests
-				// (test/regression/api/public-accessors.test.ts), and 98.29 merged.
-				functions: 97,
-				// Raised 94 -> 95 once the zoom/background definers landed, measured 96.00 at
-				// the time; the same exclusion drop took it to 95.67, and it reads 95.74 now.
-				// 96.11 merged.
-				lines: 95,
-			},
+			// The Node run is held to the notch alone. The point-of-slack rule stays with the
+			// merged report, because this report's denominator includes `src/runtime/browser.ts`,
+			// whose adapter needs `fetch`, `FileReader` and a canvas; that is a missing runtime,
+			// not missing tests. The browser lane adds well under a point on every axis, so a
+			// merged run that clears notch plus slack implies a Node run that clears the notch:
+			// this floor fails early and locally, and never fails where the merged gate passes.
+			thresholds: coverageGates.thresholds,
 		},
 	},
 })

@@ -33,12 +33,12 @@
  *
  * ## Why this gates the merged report and not the Node one
  *
- * `vitest.config.ts` keeps its own thresholds and they are not touched here. They guard
- * the Node suite alone — the fast local loop, `pnpm run test:coverage`, no browser
- * required — and they are a regression floor: they may not be lowered, and they will
- * fail if the Node suite goes backwards.
+ * `vitest.config.ts` reads its thresholds from the same `scripts/coverage-gates.json`, so the
+ * Node suite alone (`pnpm run test:coverage`, no browser required) is held to the same notches
+ * and fails early when it goes backwards. It used to keep a copy of its own, ratcheted by hand,
+ * and that copy drifted.
  *
- * They are deliberately *not* where the point-of-slack rule applies, because the Node
+ * The Node run is deliberately *not* where the point-of-slack rule applies, because the Node
  * report's denominator includes code the Node lane structurally cannot execute. `fetch`,
  * `FileReader` and a canvas are not missing tests; they are missing a runtime. Demanding a
  * point of slack there would demand covering the adapter from Node, which is impossible,
