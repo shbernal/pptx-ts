@@ -10,7 +10,7 @@ import { build, readEntry, assert, assertEqual, defineRegressionSuite, setDiagno
 // columns and every `<a:tr>` must carry N `<a:tc>` -- so something has to decide, per row, how
 // many columns are already accounted for and how many blanks to append.
 //
-// `measureGridColumns` is that decision and is unit-tested directly in `html-table-grid.test.js`.
+// `measureGridColumns` is that decision and is unit-tested directly in `html-table-grid.test.ts`.
 // What had no coverage was the END of the pipe: whether its answer composes with the emitter's
 // own `gridSpan`/`vMerge` synthesis into a table that is rectangular, carries the right merges,
 // and does not gain or lose a cell of authored text. That gap is the reason the rowspan-occupancy
