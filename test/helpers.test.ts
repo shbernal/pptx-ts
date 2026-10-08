@@ -2,7 +2,7 @@
 // deck turns into confusing failures far from the cause. These cases pin the helper contracts
 // that other suites rely on.
 import { describe, expect, test } from 'vitest'
-import { assertIncludes, at, defined, expectDefined, slideXml } from './helpers.ts'
+import { assertIncludes, at, defined, expectDefined, slideXml, take } from './helpers.ts'
 
 const SILKSCREEN = 'test/read/fixtures/fonts/Silkscreen-Regular.ttf'
 
@@ -47,5 +47,11 @@ describe('test helpers', () => {
 		)
 		expect(() => at([], 0)).toThrow(/out of range/)
 		expect(() => at(['a'], 0.5)).toThrow(/out of range/)
+	})
+	test('take types the leading elements as present and fails on a shorter list', () => {
+		const [first, second, ...rest] = take(['a', 'b', 'c'], 2)
+		expect(first.length + second.length).toBe(2)
+		expect(rest).toEqual(['c'])
+		expect(() => take(['a'], 2, 'two slides')).toThrow(/two slides: expected at least 2 element\(s\), got 1/)
 	})
 })

@@ -241,6 +241,19 @@ function at<T>(list: ArrayLike<T>, index: number, message?: string): T {
 	return list[i] as T
 }
 
+/** `N` copies of `T`, as a tuple type. */
+type Repeat<T, N extends number, R extends T[] = []> = R['length'] extends N ? R : Repeat<T, N, [...R, T]>
+
+/**
+ * `list`, typed so its first `count` elements destructure as present, failing the test when it
+ * is shorter: `const [first, second] = take(presentation.slides, 2)`.
+ */
+function take<T, N extends number>(list: ArrayLike<T>, count: N, message?: string): [...Repeat<T, N>, ...T[]] {
+	if (list.length < count)
+		throw new Error(`${message ? message + ': ' : ''}expected at least ${count} element(s), got ${list.length}`)
+	return Array.from(list) as [...Repeat<T, N>, ...T[]]
+}
+
 function assertEqual(actual: unknown, expected: unknown, msg?: string): void {
 	if (actual !== expected)
 		throw new Error(
@@ -502,6 +515,7 @@ export {
 	expectDefined,
 	defined,
 	at,
+	take,
 	assertEqual,
 	assertIncludes,
 	assertNotIncludes,
