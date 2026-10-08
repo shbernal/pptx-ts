@@ -116,6 +116,32 @@ What this build cannot do is place a file for you. It has no filesystem and no p
 so `writeFile()` throws an `UnsupportedFeatureError` with the code `runtime/file-output-unavailable`,
 naming the two entries that can write a file.
 
+## Serving a deck over HTTP
+
+A server that builds a deck per request needs no file at all: `toBytes()` hands back the package,
+and the bytes are the response body. With Node's own `http` module:
+
+```ts
+import { createServer } from "node:http"
+import TsPptx from "pptx-ts"
+
+createServer(async (_request, response) => {
+  const pptx = new TsPptx()
+  pptx.addSlide().addText("Generated for this request", { x: 1, y: 1, w: 8, h: 1 })
+  const bytes = await pptx.toBytes()
+
+  response.writeHead(200, {
+    "Content-Type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "Content-Disposition": 'attachment; filename="deck.pptx"',
+    "Content-Length": bytes.byteLength,
+  })
+  response.end(bytes)
+}).listen(3000)
+```
+
+On Deno, Bun or an edge worker, return `new Response(await pptx.toBytes(), { headers })` with the
+same two headers.
+
 ## Math is Node-only
 
 `pptx-ts/math` loads its two optional dependencies through Node's `createRequire`, which keeps

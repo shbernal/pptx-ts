@@ -1021,7 +1021,7 @@ Windows neither tool needs admin rights. `pdftotext` ships with Git for Windows,
    Impress or Google Slides.
 4. For browser download behaviour, use the site's `/demos` page (`pnpm run docs:dev`).
 
-Showcase decks land in `.tmp/showcases/` and Node demo decks in `demos/node/output/`.
+Showcase decks land in `.tmp/showcases/`.
 Git ignores both.
 
 ## Font oracles

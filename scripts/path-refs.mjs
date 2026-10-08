@@ -62,7 +62,7 @@ import path from 'node:path'
 import { isMain, parseCli, repoRel, ROOT, runCli } from './script-utils.mjs'
 
 /** Trees worth scanning. Everything else is either generated or third-party. */
-const SCAN_ROOTS = ['docs', 'src', 'test', 'scripts', 'tools', 'demos', 'www', '.github']
+const SCAN_ROOTS = ['docs', 'src', 'test', 'scripts', 'tools', 'www', '.github']
 
 /** Files at the repo root that carry citations. `CHANGELOG.md` is excluded on purpose. */
 const ROOT_FILES = ['AGENTS.md', 'README.md', 'CONTRIBUTING.md', 'SECURITY.md']

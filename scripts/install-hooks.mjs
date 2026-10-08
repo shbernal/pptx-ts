@@ -77,7 +77,7 @@ function samePath(a, b) {
  * propagates lefthook's exit status, and a non-zero `prepare` fails the consumer's install.
  *
  * `INIT_CWD` is the directory the package manager was invoked from, and npm, pnpm and yarn
- * all set it. Developing here, that is the repo or something under it (`demos/*`); in a
+ * all set it. Developing here, that is the repo or something under it (`tools/*`); in a
  * consumer's install it is their project, nowhere near the temp clone this is running from —
  * measured, not assumed: ROOT was `…/npm-cache/_cacache/tmp/git-cloneXXXXXX`. Unset means no
  * package manager ran this, i.e. somebody invoked it by hand, which is a real install.

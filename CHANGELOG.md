@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Guide pages run their own examples.** A code sample marked `ts live` shows the slide it builds
+  under the code, built in the reader's browser, with a button that downloads the deck. The code on
+  the page is the code that runs, and the test suite runs every live sample against the Node build
+  and fails on a throw, a warning or a schema error. [Fills and
+  gradients](https://shbernal.github.io/pptx-ts/fills-and-gradients) is the first page with them.
+- **The demos page shows both showcase decks.** Field Notes, the photo essay with photographs, a
+  video and a 3D model, now builds in the browser beside the quarterly review.
+
 ### Changed
 
 - **The read model's lookups take the nullable ids its getters return.** `Slide.shapeById`,
@@ -27,6 +37,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   dependency on `github:shbernal/ts-pptx#master` should switch to `#main`, or better, to a pinned
   commit sha. GitHub redirects old `blob/master/` links, and the repository's own links now point
   at `main`.
+- **`demos/` is gone; demos live on the site.** The showcase decks moved to `www/showcases/`, and
+  `pnpm demos:build` is now `pnpm showcases:build`, writing to `.tmp/showcases/`. The Express
+  streaming demo became a dependency-free [Serving a deck over
+  HTTP](https://shbernal.github.io/pptx-ts/getting-started/runtime#serving-a-deck-over-http)
+  section. The images the test suite reads moved to `test/assets/`. None of this was in the
+  published package.
 
 - **Runtime strings name the project `pptx-ts`, not `ts-pptx`.** Console warnings are prefixed
   `pptx-ts: `, and the `InternalError` message calls it a bug in pptx-ts. A deck that sets no

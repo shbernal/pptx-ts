@@ -1,5 +1,4 @@
 packages:
-  - demos/node
   # Not a demo and not a build step: it holds TypeDoc and the TypeScript 6 that
   # TypeDoc still needs, because TypeScript 7 ships no JS compiler API for it to
   # use. See tools/api-docs/README.md for why this is a workspace member and not

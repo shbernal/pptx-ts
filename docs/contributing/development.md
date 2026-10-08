@@ -33,7 +33,6 @@ the hooks.
 - `docs/`: documentation content. See [Site changes](#site-changes).
 - `www/`: the site's theme and Vue components, the demos page, its showcase decks
   (`www/showcases`) and live examples (`www/live`).
-- `demos/`: the Node streaming demo (`demos/node`).
 - `scripts/`: build, gate, package and demo automation. `scripts/powerpoint/` is the PowerPoint
   job runner: the worker that runs COM jobs on Windows, and the client that `test:com` and
   `ppt:run` send jobs through.
@@ -229,19 +228,19 @@ lists the usual causes.
 
 ## Demo changes
 
-The demos are showcases. No gate builds them, and the [testing guide](testing.md) says what covers
-the published package instead.
+Demos live on the site. The two showcase decks in `www/showcases` are the demos page, and a guide
+page shows a smaller example as a [live fence](#live-examples). There is no clone-and-run demo
+directory: a demo that cannot run on the site belongs in a guide as a plain code sample. The
+[testing guide](testing.md) says what checks the showcases and what covers the published package.
 
 ```bash
-pnpm showcases:build                    # both showcase decks
+pnpm showcases:build                    # both showcase decks, into .tmp/showcases/
 pnpm showcases:build quarterly-review   # one, by slug
-pnpm --dir demos/node run demo-stream   # streams a deck over HTTP
+pnpm run docs:dev                       # the demos page and every live example
 ```
 
-The browser version of the quarterly review deck is the site's demos page, which
-`pnpm run docs:dev` serves.
-[demos/README.md](https://github.com/shbernal/pptx-ts/blob/main/demos/README.md) says what each
-demo is for.
+[www/showcases/README.md](https://github.com/shbernal/pptx-ts/blob/main/www/showcases/README.md)
+says what each deck is for.
 
 ## Site changes
 

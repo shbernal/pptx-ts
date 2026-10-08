@@ -77,10 +77,9 @@ a test suite.
 
 ## Demos
 
-- The [demos page](https://shbernal.github.io/pptx-ts/demos) builds the quarterly
-  review deck in a browser. Its source, and the second showcase, are in `www/showcases`;
-  `pnpm showcases:build` builds both in Node.
-- `demos/node` exercises Node.js ESM generation and stream output.
+- The [demos page](https://shbernal.github.io/pptx-ts/demos) builds the two showcase decks in a
+  browser. Their source is in `www/showcases`, and `pnpm showcases:build` builds both in Node.
+- Guide pages run their own examples: a `ts live` code fence shows the slide its code builds.
 
 ## Scope
 

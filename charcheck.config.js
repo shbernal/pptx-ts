@@ -61,7 +61,7 @@ export default {
 			// Prose only: fenced and inline code are exempt, because a dash inside a code
 			// sample is part of the sample and not something to reword.
 			//
-			// The include list is the published docs, the three root files, `demos/`, and
+			// The include list is the published docs, the three root files, `www/`, and
 			// `skills/`. The first three are what a contributor reads before anything else.
 			// `skills/` is in `package.json`'s `files`, so a consumer's agent reads
 			// `ts-pptx-upstream/SKILL.md` rather than anyone here. Each set was cleaned in one
@@ -73,15 +73,7 @@ export default {
 			scope: 'markdown',
 			fix: strategies.clauseSeparator,
 			message: MESSAGE,
-			include: [
-				'README.md',
-				'AGENTS.md',
-				'CONTRIBUTING.md',
-				'www/**/*.md',
-				'docs/**/*.md',
-				'demos/**/*.md',
-				'skills/**/*.md',
-			],
+			include: ['README.md', 'AGENTS.md', 'CONTRIBUTING.md', 'www/**/*.md', 'docs/**/*.md', 'skills/**/*.md'],
 		},
 		{
 			// The site's one Vue component: template text and allowlisted attributes. Its

@@ -26,7 +26,6 @@ docs/.vitepress/dist/
 docs/public/llms*.txt
 docs/reference/api/
 docs/doc-index.md
-demos/node/output/
 
 ### Editors
 .idea/

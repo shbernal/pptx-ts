@@ -92,7 +92,5 @@
 		"package-lock.json",
 		"pnpm-lock.yaml",
 		"**/*.min.js",
-		"demos/**/package-lock.json",
-		"demos/**/node_modules/",
 	],
 }

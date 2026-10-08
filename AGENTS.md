@@ -1,7 +1,8 @@
 ## Repository expectations
 
-- `docs/` is content, `www/` is the site's application code, and `demos/` holds
-  clone-and-run scripts. Do not put an application in `docs/` or a browser app in `demos/`.
+- `docs/` is content and `www/` is the site's application code, including the showcase decks
+  and live examples. A demo belongs on the site, as a live fence or a showcase, not as a script
+  to clone and run. Do not put an application in `docs/`.
   `docs/contributing/` is checked like the rest of `docs/` but never built into the site.
 
 ## Out of active scope
