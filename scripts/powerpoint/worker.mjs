@@ -105,7 +105,8 @@ export function createWorker({ runner, token, powerpointInfo, bodyLimit = BODY_L
 	if (!token) throw new Error('the worker needs a non-empty token')
 	/** @type {import('./job.mjs').PowerPointInfo | null | undefined} */
 	let lastInfo
-	return http.createServer(async (req, res) => {
+	/** @type {(req: http.IncomingMessage, res: http.ServerResponse) => Promise<void>} */
+	const handle = async (req, res) => {
 		try {
 			const auth = req.headers.authorization ?? ''
 			const given = auth.startsWith('Bearer ') ? auth.slice('Bearer '.length) : ''
@@ -156,7 +157,9 @@ export function createWorker({ runner, token, powerpointInfo, bodyLimit = BODY_L
 			if (!res.headersSent) send(res, 500, { error: error instanceof Error ? error.message : String(error) })
 			else res.destroy()
 		}
-	})
+	}
+	// handle() catches every error itself, so its promise is safe to drop.
+	return http.createServer((req, res) => void handle(req, res))
 }
 
 /**
