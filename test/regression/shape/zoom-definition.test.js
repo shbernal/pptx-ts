@@ -91,8 +91,8 @@ defineRegressionSuite('Zoom definition', [
 			const { zip, warnings } = await buildCapturingWarnings((p) => {
 				const host = p.addSlide()
 				p.addSlide()
-				host.addSlideZoom(/** @type {any} */ ({ x: 1, y: 1, w: 3, h: 1.7 }))
-				host.addSlideZoom(/** @type {any} */ ({ target: 0, x: 5, y: 1, w: 3, h: 1.7 }))
+				host.addSlideZoom({ x: 1, y: 1, w: 3, h: 1.7 })
+				host.addSlideZoom({ target: 0, x: 5, y: 1, w: 3, h: 1.7 })
 			})
 			assertEqual(warnings.length, 2, `expected one warning per dropped zoom; got: ${JSON.stringify(warnings)}`)
 			assertWarned(warnings, /addSlideZoom requires a `target` slide/, 'for a missing target')
@@ -106,7 +106,7 @@ defineRegressionSuite('Zoom definition', [
 		fn: async () => {
 			const { zip, warnings } = await buildCapturingWarnings((p) => {
 				const host = p.addSlide()
-				host.addSlideZoom(/** @type {any} */ ({ target: {}, x: 1, y: 1, w: 3, h: 1.7 }))
+				host.addSlideZoom({ target: {}, x: 1, y: 1, w: 3, h: 1.7 })
 			})
 			assertWarned(warnings, /addSlideZoom: could not resolve the target slide/, 'for a non-slide target')
 			assertNotIncludes(await readEntry(zip, 'ppt/slides/slide1.xml'), 'slidezoom', 'slide 1')
@@ -191,7 +191,7 @@ defineRegressionSuite('Zoom definition', [
 		fn: async () => {
 			const { zip, warnings } = await buildCapturingWarnings((p) => {
 				p.addSection({ title: 'Alpha' })
-				p.addSlide({ sectionTitle: 'Alpha' }).addSectionZoom(/** @type {any} */ ({ x: 1, y: 1, w: 3, h: 1.7 }))
+				p.addSlide({ sectionTitle: 'Alpha' }).addSectionZoom({ x: 1, y: 1, w: 3, h: 1.7 })
 			})
 			assertWarned(warnings, /addSectionZoom requires a `sectionTitle`/, 'for a missing title')
 			assertNotIncludes(await readEntry(zip, 'ppt/slides/slide1.xml'), 'sectionzoom', 'slide 1')

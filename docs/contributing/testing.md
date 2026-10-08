@@ -297,6 +297,11 @@ Prefer public API deck generation plus focused package and XML assertions:
 - Assert a failure without a hand-rolled `try`/`catch`: a catch variable is `unknown`. Use
   `assertRejects()` to match the message, `caught()` or `caughtSync()` to get the thrown
   `Error` back (or `null`) and check its `code`, class or `cause`, or Vitest's `toThrow()`.
+- Pass deliberately invalid input (a `NaN`, a missing required option, a string outside a
+  union) under `// @ts-expect-error <why the type rejects it>` on the call, not through a cast.
+  The directive fails the typecheck once the type starts accepting the value, which a cast never
+  does. Keep a cast for a stub or for reaching internal state, narrowed to the real type where
+  that is cheap.
 - Use `assertContentTypeDefault()`, `assertContentTypeOverride()`, `assertXmlOrder()` and
   `assertNonVisualDrawingProperty()` when they match the behaviour under test.
 - Keep a raw XML substring or regex assertion local and narrow when a helper would hide the

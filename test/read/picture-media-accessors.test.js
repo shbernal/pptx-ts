@@ -17,6 +17,7 @@ import { fileURLToPath } from 'node:url'
 import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
 import { Picture } from '../../dist/read.js'
+/** @import { ShapeHost } from '../../dist/read.js' */
 import { assert, assertEqual, defined } from '../helpers.js'
 import { openFixture } from './corpus.js'
 
@@ -42,7 +43,7 @@ function pictureFromXml(innerXml) {
 	const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 	const el = spTree.getElementsByTagNameNS(P_NS, 'pic')[0]
 	// Stand-in slide: none of the accessors under test reach through to it.
-	return new Picture(el, /** @type {any} */ ({}))
+	return new Picture(el, /** @type {ShapeHost} */ ({}))
 }
 
 describe('Picture media accessors (picture-media.pptx)', () => {

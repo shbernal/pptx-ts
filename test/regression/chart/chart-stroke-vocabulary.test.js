@@ -196,10 +196,10 @@ defineRegressionSuite('Chart stroke vocabulary', [
 			// typechecked on the chart bag itself and were read by nothing. A JS caller can still
 			// pass them; what this pins is that they reach no attribute.
 			const pres = new TsPptx()
-			// The cast is the assertion: without it this line no longer compiles, which is the half
-			// of the change TypeScript enforces. A JavaScript caller can still pass them.
-			const stray = /** @type {any} */ ({ ...BASE, type: ChartType.bar, color: 'FF0000', size: 9, style: 'dash' })
-			pres.addSlide().addChart(SERIES, stray)
+			// The directive is the assertion: this line no longer compiles, which is the half of the
+			// change TypeScript enforces. A JavaScript caller can still pass them.
+			// @ts-expect-error the gridline keys are not chart options
+			pres.addSlide().addChart(SERIES, { ...BASE, type: ChartType.bar, color: 'FF0000', size: 9, style: 'dash' })
 			// Nothing to assert beyond "this still builds" — the type-level half is the change, and
 			// a silent no-op is what it removes from the surface.
 			assertEqual(typeof pres.toBytes, 'function', 'the deck still builds with the stray keys present')

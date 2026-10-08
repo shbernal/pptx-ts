@@ -24,11 +24,11 @@ defineRegressionSuite('Text token guards', [
 					[
 						{
 							text: 'run',
-							options: /** @type {any} */ ({
+							options: {
 								strike: 'bogusStrike',
 								caps: 'bogusCaps',
 								underline: { style: 'bogusU' },
-							}),
+							},
 						},
 					],
 					{ x: 1, y: 1, w: 4, h: 1 }
@@ -63,7 +63,7 @@ defineRegressionSuite('Text token guards', [
 					w: 4,
 					h: 1,
 					tabStops: [
-						{ position: 1, alignment: /** @type {any} */ ('bogusAlign') },
+						{ position: 1, alignment: 'bogusAlign' },
 						{ position: 2, alignment: 'dec' },
 					],
 				})
@@ -83,7 +83,7 @@ defineRegressionSuite('Text token guards', [
 					y: 1,
 					w: 4,
 					h: 1,
-					bullet: { type: 'number', numberType: /** @type {any} */ ('bogusNum') },
+					bullet: { type: 'number', numberType: 'bogusNum' },
 				})
 			})
 			assert(xml.includes('<a:buAutoNum type="arabicPeriod" startAt="1"/>'), `it counts in arabicPeriod; got: ${xml}`)

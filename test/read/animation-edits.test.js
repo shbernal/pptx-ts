@@ -19,7 +19,8 @@ const SLIDE_CT = 'application/vnd.openxmlformats-officedocument.presentationml.s
 function slide(bodyXml) {
 	const xml = `<p:sld xmlns:p="${P_NS}"><p:cSld><p:spTree/></p:cSld>${bodyXml}</p:sld>`
 	const part = new Part('/ppt/slides/slide1.xml', SLIDE_CT, new TextEncoder().encode(xml))
-	return new Slide(/** @type {any} */ (null), part, 1, 0)
+	// @ts-expect-error a stand-in deck: the edits under test never reach the presentation
+	return new Slide(null, part, 1, 0)
 }
 
 /** An effect `<p:par>` (its `<p:cTn>` carries a presetID) targeting `spid`. */

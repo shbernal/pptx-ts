@@ -81,8 +81,8 @@ defineRegressionSuite('Comment definition', [
 		fn: async () => {
 			const { zip, warnings } = await buildCapturingWarnings((p) => {
 				const s = p.addSlide()
-				s.addComment(/** @type {any} */ (undefined))
-				s.addComment(/** @type {any} */ ({ text: 'no author at all' }))
+				s.addComment(undefined)
+				s.addComment({ text: 'no author at all' })
 				s.addComment({ author: '   ', text: 'whitespace author' })
 			})
 			assertEqual(
@@ -101,7 +101,7 @@ defineRegressionSuite('Comment definition', [
 		fn: async () => {
 			const { zip, warnings } = await buildCapturingWarnings((p) => {
 				const s = p.addSlide()
-				s.addComment(/** @type {any} */ ({ author: 'Ada Lovelace' }))
+				s.addComment({ author: 'Ada Lovelace' })
 				s.addComment({ author: 'Ada Lovelace', text: '' })
 			})
 			assertEqual(

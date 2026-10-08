@@ -18,6 +18,7 @@ import { ShapeType } from '../../dist/node.js'
 import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
 import { AutoShape } from '../../dist/read.js'
+/** @import { ShapeHost } from '../../dist/read.js' */
 import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.js'
 import { assert, assertEqual, defined, expectDefined } from '../helpers.js'
 
@@ -41,7 +42,7 @@ function sp(spPrInner) {
 	const xml = `<p:spTree xmlns:p="${P_NS}" xmlns:a="${A_NS}"><p:sp>${spPrInner}</p:sp></p:spTree>`
 	const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 	const el = spTree.getElementsByTagNameNS(P_NS, 'sp')[0]
-	return new AutoShape(el, /** @type {any} */ ({ themeContext: () => ctx() }))
+	return new AutoShape(el, /** @type {ShapeHost} */ ({ themeContext: () => ctx() }))
 }
 
 /**

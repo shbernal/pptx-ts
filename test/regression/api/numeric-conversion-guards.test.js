@@ -377,7 +377,8 @@ defineRegressionSuite('Numeric conversion guards', [
 		name: 'an unreadable line width still collapses to zero rather than throwing',
 		fn: async () => {
 			const pres = new TsPptx()
-			pres.addSlide().addShape('rect', { ...BOX, line: { color: 'FF0000', width: /** @type {any} */ ('wide') } })
+			// @ts-expect-error a line width is a number
+			pres.addSlide().addShape('rect', { ...BOX, line: { color: 'FF0000', width: 'wide' } })
 			const buf = await pres.toBytes()
 			assert(buf.byteLength > 0, 'the deck still builds')
 		},

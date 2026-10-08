@@ -112,9 +112,10 @@ defineRegressionSuite('Chart option validation', [
 			/** @type {unknown} */
 			let thrown = null
 			try {
-				// The cast is the point: `CHART_NAME` keeps TypeScript callers out, and this guard exists
-				// for the JavaScript ones it cannot reach.
-				new TsPptx().addSlide().addChart(SERIES, /** @type {never} */ ({ ...BASE, type: 'nonsense' }))
+				// The type error is the point: `CHART_NAME` keeps TypeScript callers out, and this guard
+				// exists for the JavaScript ones it cannot reach.
+				// @ts-expect-error `nonsense` is not a chart type
+				new TsPptx().addSlide().addChart(SERIES, { ...BASE, type: 'nonsense' })
 			} catch (err) {
 				thrown = err
 			}
@@ -132,16 +133,15 @@ defineRegressionSuite('Chart option validation', [
 		fn: () => {
 			// The combo form routes each entry's `type` through the same emitters, so the guard has
 			// to see the `ChartMulti[]` entries too, not just the single-type `options.type`.
+			const combo = [
+				{ type: ChartType.bar, data: SERIES },
+				{ type: 'nonsense', data: SERIES },
+			]
 			/** @type {unknown} */
 			let thrown = null
 			try {
-				new TsPptx().addSlide().addChart(
-					/** @type {never} */ ([
-						{ type: ChartType.bar, data: SERIES },
-						{ type: 'nonsense', data: SERIES },
-					]),
-					BASE
-				)
+				// @ts-expect-error `nonsense` is not a chart type
+				new TsPptx().addSlide().addChart(combo, BASE)
 			} catch (err) {
 				thrown = err
 			}
@@ -196,7 +196,7 @@ defineRegressionSuite('Chart option validation', [
 						...BASE,
 						type: ChartType.bar,
 						showLegend: true,
-						legendFontSize: /** @type {never} */ ('14'),
+						legendFontSize: '14',
 					})
 				})
 			} catch (err) {
@@ -683,7 +683,7 @@ defineRegressionSuite('Chart option validation', [
 			for (const [option, value] of [
 				['holeSize', NaN],
 				['barGapWidthPct', NaN],
-				['firstSliceAng', /** @type {never} */ ('90')],
+				['firstSliceAng', '90'],
 				['lineDataSymbolSize', NaN],
 			]) {
 				/** @type {unknown} */

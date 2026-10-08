@@ -106,8 +106,8 @@ describe('readZip error branches report a specific message', () => {
 
 	test('unsupported input type names the accepted shapes', async () => {
 		const error = await assertRejects(
-			// A bare number is none of the accepted input shapes (negative test — cast past ZipInput).
-			() => readZip(/** @type {any} */ (42)),
+			// @ts-expect-error a bare number is none of the accepted input shapes
+			() => readZip(42),
 			/Unsupported zip input type/,
 			'reading a number'
 		)

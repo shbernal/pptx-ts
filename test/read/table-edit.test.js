@@ -335,7 +335,7 @@ describe('structural and border edits refuse numbers the schema cannot hold', ()
 		cell.setBorder('top', { widthPt: 2, color: 'C00000' })
 		const before = await savedSlide(presentation)
 		assertEqual(
-			codeOfThrow(() => cell.setBorder('top', { widthPt: 1, dash: /** @type {any} */ ('bogusDash') })),
+			codeOfThrow(() => cell.setBorder('top', { widthPt: 1, dash: 'bogusDash' })),
 			'table/invalid-cell-border',
 			'an unknown dash'
 		)

@@ -181,7 +181,7 @@ defineRegressionSuite('Combo chart axes [legacy bug-06]', [
 					/bubble chart cannot be combined/,
 					'addChart'
 				)
-				assertEqual(/** @type {any} */ (error).code, 'chart/bubble-in-combo', 'the refusal carries its code')
+				assertEqual(error.code, 'chart/bubble-in-combo', 'the refusal carries its code')
 			}
 		},
 	},

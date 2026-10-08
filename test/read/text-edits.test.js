@@ -12,7 +12,7 @@
 import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
 import { Relationships, TextFrame } from '../../dist/read.js'
-import { assert, assertEqual, defined } from '../helpers.js'
+import { assert, assertEqual, caughtSync, defined } from '../helpers.js'
 import { authorRead } from './authored.js'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
@@ -73,14 +73,7 @@ describe('Run character-property setters', () => {
 		const r = run(
 			`<a:r><a:rPr u="sng"><a:solidFill><a:schemeClr val="accent1"/></a:solidFill></a:rPr><a:t>x</a:t></a:r>`
 		)
-		const codeOf = (/** @type {() => void} */ fn) => {
-			try {
-				fn()
-				return null
-			} catch (err) {
-				return /** @type {any} */ (err).code
-			}
-		}
+		const codeOf = (/** @type {() => void} */ fn) => caughtSync(fn)?.code ?? null
 		assertEqual(
 			codeOf(() => {
 				r.underline = 'wavy-nonsense'
@@ -217,7 +210,7 @@ describe('Paragraph getter edges', () => {
 			const xml =
 				`<p:txBody xmlns:p="${P_NS}" xmlns:a="${A_NS}" xmlns:r="${R_NS}"><a:bodyPr/>` +
 				`<a:p><a:pPr><a:buBlip><a:blip r:embed="${relId}"/></a:buBlip></a:pPr><a:r><a:t>x</a:t></a:r></a:p></p:txBody>`
-			const txBody = /** @type {any} */ (new DOMParser().parseFromString(xml, 'text/xml').documentElement)
+			const txBody = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 			const bullet = new TextFrame(txBody, bareText(stubPart(), rels)).paragraphs[0].bulletDetail
 			if (bullet?.kind !== 'picture') throw new Error(`expected a picture bullet, got ${JSON.stringify(bullet)}`)
 			return bullet.imagePartName

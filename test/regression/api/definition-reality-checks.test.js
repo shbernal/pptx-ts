@@ -47,9 +47,12 @@ defineRegressionSuite('Definition reality-checks', [
 		// as `string` -- which is exactly the caller a runtime check exists for.
 		name: 'addImage() rejects an unusable source instead of dropping the image',
 		fn: () => {
-			assertRejects(() => slide().addImage(/** @type {never} */ ({})), 'image/missing-source')
-			assertRejects(() => slide().addImage(/** @type {never} */ ({ path: 42 })), 'image/path-not-a-string')
-			assertRejects(() => slide().addImage(/** @type {never} */ ({ data: 42 })), 'image/data-not-a-string')
+			// @ts-expect-error an image with no source
+			assertRejects(() => slide().addImage({}), 'image/missing-source')
+			// @ts-expect-error `path` is typed as a string
+			assertRejects(() => slide().addImage({ path: 42 }), 'image/path-not-a-string')
+			// @ts-expect-error `data` is typed as a string
+			assertRejects(() => slide().addImage({ data: 42 }), 'image/data-not-a-string')
 			assertRejects(() => slide().addImage({ data: 'iVBORw0KGgoAAAA==' }), 'image/missing-base64-header')
 		},
 	},
@@ -59,9 +62,12 @@ defineRegressionSuite('Definition reality-checks', [
 		// same code, wherever in the array it sits.
 		name: 'addTable() rejects a row that is not an array of cells, at any index',
 		fn: () => {
-			assertRejects(() => slide().addTable(/** @type {never} */ (['a'])), 'table/rows-not-nested')
-			assertRejects(() => slide().addTable(/** @type {never} */ ([['a'], 'b'])), 'table/rows-not-nested')
-			assertRejects(() => slide().addTable(/** @type {never} */ ([['a'], ['b'], 'c'])), 'table/rows-not-nested')
+			// @ts-expect-error a row that is not an array of cells
+			assertRejects(() => slide().addTable(['a']), 'table/rows-not-nested')
+			// @ts-expect-error a row that is not an array of cells
+			assertRejects(() => slide().addTable([['a'], 'b']), 'table/rows-not-nested')
+			// @ts-expect-error a row that is not an array of cells
+			assertRejects(() => slide().addTable([['a'], ['b'], 'c']), 'table/rows-not-nested')
 		},
 	},
 	{
@@ -81,7 +87,8 @@ defineRegressionSuite('Definition reality-checks', [
 		name: 'addModel3d() rejects an unusable payload, camera, or scale instead of emitting NaN',
 		fn: () => {
 			const glb = 'Z2xURgIAAAA='
-			assertRejects(() => slide().addModel3d(/** @type {never} */ ({})), 'model3d/missing-source')
+			// @ts-expect-error a model with no source
+			assertRejects(() => slide().addModel3d({}), 'model3d/missing-source')
 			// Camera positions: every component of every vector is checked.
 			for (const bad of [Number.NaN, Number.POSITIVE_INFINITY]) {
 				assertRejects(

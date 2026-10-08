@@ -25,8 +25,8 @@ async function spanProblems(rows) {
 	let pages = 0
 	presentation.slides.forEach((slide, slideIdx) => {
 		for (const shape of slide.shapes) {
-			// Only a graphic frame carries `table`; the cast is for the other members of the union.
-			const table = /** @type {any} */ (shape).table
+			// Only a graphic frame carries `table`.
+			const table = 'table' in shape ? shape.table : null
 			if (!table) continue
 			pages++
 			const tableRows = table.rows

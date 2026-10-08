@@ -71,7 +71,8 @@ describe('zip output types', () => {
 
 	test('an unsupported output type throws rather than emitting garbage', async () => {
 		await assertRejects(
-			() => makePres().write({ outputType: /** @type {any} */ ('bogus') }),
+			// @ts-expect-error not an output type
+			() => makePres().write({ outputType: 'bogus' }),
 			/Unsupported zip output type/,
 			'an unknown outputType'
 		)

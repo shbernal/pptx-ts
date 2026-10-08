@@ -269,7 +269,7 @@ defineRegressionSuite('Schema value guards', [
 		fn: async () => {
 			const { result: xml, codes } = await captureDiagnostics(async () => {
 				const { zip } = await build((p) => {
-					p.addSlide().transition = /** @type {any} */ ({ type: 'bogus x="1', variant: { dir: 'u' } })
+					p.addSlide().transition = { type: 'bogus x="1', variant: { dir: 'u' } }
 				})
 				return readEntry(zip, SLIDE_XML)
 			})

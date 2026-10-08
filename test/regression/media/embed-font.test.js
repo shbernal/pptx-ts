@@ -114,10 +114,11 @@ describe('TsPptx.embedFont', () => {
 
 	test('validates input: missing typeface and missing source throw', async () => {
 		const p = new TsPptx()
-		// Intentionally invalid inputs (negative tests): cast past the compile-time
-		// types to prove the runtime validation still rejects them.
+		// Intentionally invalid inputs (negative tests): the runtime validation must still reject
+		// what the compile-time types already do.
 		await assertRejects(
-			() => p.embedFont(/** @type {any} */ ({ data: regular })),
+			// @ts-expect-error `typeface` is required
+			() => p.embedFont({ data: regular }),
 			/`typeface` is required/,
 			'embedFont without a typeface'
 		)
@@ -127,7 +128,8 @@ describe('TsPptx.embedFont', () => {
 			'embedFont without a source'
 		)
 		await assertRejects(
-			() => p.embedFont(/** @type {any} */ ({ data: regular, typeface: 'X', style: 'heavy' })),
+			// @ts-expect-error not a font style
+			() => p.embedFont({ data: regular, typeface: 'X', style: 'heavy' }),
 			/invalid style "heavy"/,
 			'embedFont with an unknown style slot'
 		)

@@ -230,7 +230,7 @@ defineRegressionSuite('Table cell a:tcPr constructs', [
 							[
 								{
 									text: 'X',
-									options: { cell3D: { preset: /** @type {any} */ ('rounded'), material: 'metal' } },
+									options: { cell3D: { preset: 'rounded', material: 'metal' } },
 								},
 							],
 						],
@@ -253,10 +253,7 @@ defineRegressionSuite('Table cell a:tcPr constructs', [
 		fn: async () => {
 			const { result, codes } = await captureDiagnostics(() =>
 				build((p) => {
-					p.addSlide().addTable(
-						[[{ text: 'X', options: { cell3D: { lightRig: /** @type {any} */ ({ rig: 'threePt' }) } } }]],
-						AT
-					)
+					p.addSlide().addTable([[{ text: 'X', options: { cell3D: { lightRig: { rig: 'threePt' } } } }]], AT)
 				})
 			)
 

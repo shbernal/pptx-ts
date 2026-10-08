@@ -45,12 +45,12 @@ describe('neutral entry: what it refuses', () => {
 	test('the live-DOM tableToSlides is browser-only', () => {
 		// It resolves `eleId` against the global `document`; the DOM-agnostic form is the free
 		// `tableToSlides` on `ts-pptx/html`. Also the cheapest proof the entry is not the browser one.
-		// Read through a record cast on the two entries that lack it — the declarations now say so,
-		// which is itself the fix, and a direct property access would not compile.
-		const member = (pptx) => /** @type {Record<string, unknown>} */ (pptx)['tableToSlides']
+		// The declarations of the two entries that lack it say so, which is itself the fix.
 		expect(typeof new BrowserTsPptx().tableToSlides).toBe('function')
-		expect(member(new NeutralTsPptx())).toBeUndefined()
-		expect(member(new NodeTsPptx())).toBeUndefined()
+		// @ts-expect-error the neutral entry declares no tableToSlides
+		expect(new NeutralTsPptx().tableToSlides).toBeUndefined()
+		// @ts-expect-error the Node entry declares no tableToSlides
+		expect(new NodeTsPptx().tableToSlides).toBeUndefined()
 	})
 })
 

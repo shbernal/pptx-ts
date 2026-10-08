@@ -32,7 +32,7 @@ afterEach(() => {
 function stubFetch({ ok = true, body = Buffer.alloc(0) } = {}) {
 	const calls = []
 	// Cast: the stub returns only the two members the code under test reads, not a full Response.
-	globalThis.fetch = /** @type {any} */ (
+	globalThis.fetch = /** @type {typeof fetch} */ (
 		async (url) => {
 			calls.push(url)
 			return {

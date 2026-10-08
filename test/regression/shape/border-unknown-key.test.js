@@ -35,7 +35,7 @@ defineRegressionSuite('Border unknown key', [
 			const border = { type: 'solid', color: 'FF0000', pt: 0.5 }
 			const { result, codes, diagnostics } = await captureDiagnostics(() =>
 				build((p) => {
-					p.addSlide().addTable(ROWS, { ...AT, border: /** @type {any} */ (border) })
+					p.addSlide().addTable(ROWS, { ...AT, border })
 				})
 			)
 
@@ -103,7 +103,7 @@ defineRegressionSuite('Border unknown key', [
 						w: 6,
 						h: 3,
 						type: ChartType.bar,
-						plotArea: /** @type {any} */ (plotArea),
+						plotArea,
 					})
 				})
 			)

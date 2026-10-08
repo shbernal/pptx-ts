@@ -1000,10 +1000,10 @@ defineRegressionSuite('Group shapes', [
 			assertEqual(before.length, 1, 'expected the earlier snapshot not to grow')
 			assertEqual(s.objects.length, 2, 'expected a fresh read to see the new object')
 
-			// `readonly` states this at compile time; the cast is what lets the test prove it at
-			// runtime too, since a readonly property is erased and a stray write would land.
-			const escaped = /** @type {{ objectName: string }} */ (before[0])
-			escaped.objectName = 'Renamed'
+			// `readonly` states this at compile time; the test proves it at runtime too, since a
+			// readonly property is erased and a stray write would land.
+			// @ts-expect-error a snapshot's objectName is readonly
+			before[0].objectName = 'Renamed'
 			assertEqual(s.objects[0].objectName, 'Box', 'expected the slide to ignore a write to the snapshot')
 		},
 	},

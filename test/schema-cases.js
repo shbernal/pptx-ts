@@ -4701,7 +4701,7 @@ export default [
 		// inserting produces and which no getter would notice.
 		name: 'a table edited through the read-path setters and structural edits stays valid',
 		fn: async () => {
-			const { Presentation } = await import('../dist/read.js')
+			const { Presentation, isGraphicFrame } = await import('../dist/read.js')
 			const authored = new TsPptx()
 			authored.addSlide().addTable(
 				[
@@ -4712,12 +4712,12 @@ export default [
 				{ x: 1, y: 1, w: 9, colW: [3, 3, 3] }
 			)
 			const pres = await Presentation.load(await authored.toBytes())
-			const frame = pres.slides[0].shapes.find((shape) => shape.shapeType === 'graphicFrame')
-			const table = /** @type {any} */ (frame).table
+			const frame = defined(pres.slides[0].shapes.find(isGraphicFrame))
+			const table = defined(frame.table)
 
 			// Fill first, then borders, then a diagonal — the order most likely to produce an
 			// out-of-order `a:tcPr` if any setter appended rather than inserting.
-			const cell = table.cell(0, 0)
+			const cell = defined(table.cell(0, 0))
 			cell.setFillColor('#FFEECC')
 			cell.setBorder('top', { widthPt: 2, color: 'C00000', dash: 'sysDot' })
 			cell.setBorder('left', { schemeColor: 'accent1', widthPt: 1 })
@@ -4727,8 +4727,8 @@ export default [
 			cell.setVerticalText('vert270')
 			cell.setHorzOverflow('overflow')
 			cell.setMarginsEmu({ left: 0, top: 12700 })
-			table.cell(0, 1).noFill()
-			table.cell(0, 2).setFillSchemeColor('accent2')
+			defined(table.cell(0, 1)).noFill()
+			defined(table.cell(0, 2)).setFillSchemeColor('accent2')
 
 			// Structural edits, including ones that cross the merge just made.
 			table.mergeCells(1, 0, 2, 1)
@@ -4754,7 +4754,7 @@ export default [
 			const target = await load('slide-transition')
 			const pNs = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 			const ids = source.slides[0].shapes.map((shape) =>
-				Number(/** @type {any} */ (shape).element_.getElementsByTagNameNS(pNs, 'cNvPr')[0].getAttribute('id'))
+				Number(shape.element_.getElementsByTagNameNS(pNs, 'cNvPr')[0].getAttribute('id'))
 			)
 			const slide = target.slides[0]
 			const options = /** @type {const} */ ({ carryAnimation: true, theme: 'copy' })
@@ -4780,7 +4780,8 @@ export default [
 			const first = pptx.addSlide({ masterTitle: 'GUARDED' })
 			first.addText('item', { x: 1, y: 1, w: 4, h: 1, bullet: { type: 'number', numberStartAt: -5 } })
 			first.transition = { type: 'split', variant: { orient: 'vert', dir: 'in', bogus: 'x' } }
-			pptx.addSlide().transition = /** @type {any} */ ({ type: 'bogus x="1' })
+			// @ts-expect-error a transition type outside the union, carrying markup
+			pptx.addSlide().transition = { type: 'bogus x="1' }
 			await expectNoSchemaErrors(Buffer.from(await pptx.toBytes()), 'caller-strings-guarded')
 		},
 	},
@@ -4822,7 +4823,7 @@ export default [
 
 			const pres = await Presentation.load(await pptx.toBytes())
 			tokens.SCHEME_COLOR_VALUES.forEach((token, i) => {
-				const shape = /** @type {any} */ (pres.slides[i + 1].shapes[0])
+				const shape = pres.slides[i + 1].shapes[0]
 				shape.fillSchemeColor = token
 				shape.lineSchemeColor = token
 			})

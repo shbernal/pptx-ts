@@ -123,14 +123,14 @@ defineRegressionSuite('EMU-exact geometry and scheme-colour passthrough', [
 			// `marginToEmu` -> `inch2Emu` throws on an unparseable string. Loud is correct, and a
 			// converter must divide to inches for margins; this pins that it stays loud.
 			//
-			// The cast is deliberate: `Margin` is `number | [number, number, number, number]`, so
-			// TypeScript already rejects this at compile time — the first line of defence. The
+			// `Margin` is `number | [number, number, number, number]`, so TypeScript already rejects
+			// this at compile time — the first line of defence. The
 			// runtime guard is what a JS caller (or a converter building options dynamically)
 			// actually hits, and that is what this test covers.
 			//
 			// It throws from `addText`, not from `toBytes`: the insets are resolved when the text
 			// object is defined, so the throw names the call that carries the bad value.
-			const emuMargin = /** @type {any} */ (['91441emu', 0.1, 0.1, 0.1])
+			const emuMargin = ['91441emu', 0.1, 0.1, 0.1]
 			await assertRejects(
 				() => probeSlideXml((slide) => slide.addText('inset', { x: 1, y: 1, w: 4, h: 1, margin: emuMargin })),
 				/finite number/,

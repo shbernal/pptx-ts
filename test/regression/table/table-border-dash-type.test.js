@@ -103,10 +103,7 @@ defineRegressionSuite('Table border dashType', [
 		fn: async () => {
 			const { result, codes, diagnostics } = await captureDiagnostics(() =>
 				build((p) => {
-					p.addSlide().addTable(
-						[[{ text: 'A', options: { border: { type: 'dash', dashType: /** @type {any} */ ('dotted') } } }]],
-						AT
-					)
+					p.addSlide().addTable([[{ text: 'A', options: { border: { type: 'dash', dashType: 'dotted' } } }]], AT)
 				})
 			)
 

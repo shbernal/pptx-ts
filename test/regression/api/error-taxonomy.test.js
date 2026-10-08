@@ -39,7 +39,8 @@ defineRegressionSuite('Error taxonomy', [
 		fn: async () => {
 			// `typeface` is required at the type level, so only an untyped caller reaches the runtime
 			// guard — which is exactly the caller the taxonomy exists for.
-			const err = await caught(() => new TsPptx().embedFont(/** @type {never} */ ({ data: 'AAAA' })))
+			// @ts-expect-error `typeface` is required
+			const err = await caught(() => new TsPptx().embedFont({ data: 'AAAA' }))
 
 			// A consumer catching broadly must still be able to catch this, and a consumer catching
 			// only ts-pptx failures must be able to say so in one `instanceof`.
@@ -64,7 +65,8 @@ defineRegressionSuite('Error taxonomy', [
 	{
 		name: 'an unsupported input type is an invalid option, not a package-read failure',
 		fn: async () => {
-			const err = await caught(() => readZip(/** @type {never} */ (42)))
+			// @ts-expect-error a bare number is none of the accepted input shapes
+			const err = await caught(() => readZip(42))
 
 			assert(err instanceof InvalidOptionError, 'expected an InvalidOptionError; got: ' + String(err))
 			assertEqual(err.code, 'zip/unsupported-input')

@@ -18,6 +18,7 @@ import {
 	assertIncludes,
 	build,
 	captureDiagnostics,
+	caughtSync,
 	listEntries,
 	readEntry,
 	defined,
@@ -194,12 +195,7 @@ describe('image sources through the definers', () => {
 					),
 			]
 			for (const attempt of attempts) {
-				try {
-					attempt()
-					refusals.push('none')
-				} catch (err) {
-					refusals.push(/** @type {any} */ (err).code)
-				}
+				refusals.push(caughtSync(attempt)?.code ?? 'none')
 			}
 			slide.addImage({ data: PNG_1X1, x: 5, y: 1, w: 1, h: 1 })
 		})

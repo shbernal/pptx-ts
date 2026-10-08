@@ -50,8 +50,8 @@ defineRegressionSuite('addChart signature', [
 		fn: async () => {
 			const p = new TsPptx()
 			await assertRejects(
-				// Negative test: `type` is intentionally omitted; cast past the required-`type` overload.
-				() => p.addSlide().addChart(DATA, /** @type {any} */ ({ x: 1, y: 1, w: 6, h: 3 })),
+				// @ts-expect-error `type` is intentionally omitted
+				() => p.addSlide().addChart(DATA, { x: 1, y: 1, w: 6, h: 3 }),
 				/type/,
 				'addChart without a type'
 			)

@@ -102,7 +102,7 @@ defineRegressionSuite('Chart definition', [
 					dataBorder,
 					layout,
 					serGridLine,
-					shadow: /** @type {any} */ (shadow),
+					shadow,
 				})
 			})
 			assertEqual(
@@ -175,7 +175,7 @@ defineRegressionSuite('Chart definition', [
 			assertNotIncludes(await barLabel('stacked', 'outEnd'), '<c:dLblPos', 'outEnd on stacked bars')
 			assertNotIncludes(await barLabel('percentStacked', 'outEnd'), '<c:dLblPos', 'nor on percent-stacked ones')
 			assertIncludes(await barLabel('stacked', 'inBase'), '<c:dLblPos val="inBase"/>', 'inBase on stacked bars')
-			assertNotIncludes(await barLabel('stacked', /** @type {any} */ ('b')), '<c:dLblPos', 'a line-only position')
+			assertNotIncludes(await barLabel('stacked', 'b'), '<c:dLblPos', 'a line-only position')
 		},
 	},
 	{
@@ -190,7 +190,7 @@ defineRegressionSuite('Chart definition', [
 				'a legal area grouping'
 			)
 			assertIncludes(
-				await chartFrom(SERIES, { ...BASE, type: ChartType.area, barGrouping: /** @type {any} */ ('clustered') }),
+				await chartFrom(SERIES, { ...BASE, type: ChartType.area, barGrouping: 'clustered' }),
 				'<c:grouping val="standard"/>',
 				'an illegal area grouping falls back to standard'
 			)
@@ -200,7 +200,7 @@ defineRegressionSuite('Chart definition', [
 				'a legal 3D bar grouping'
 			)
 			assertIncludes(
-				await chartFrom(SERIES, { ...BASE, type: ChartType.bar3d, barGrouping: /** @type {any} */ ('sideways') }),
+				await chartFrom(SERIES, { ...BASE, type: ChartType.bar3d, barGrouping: 'sideways' }),
 				'<c:grouping val="standard"/>',
 				'an illegal 3D bar grouping falls back to standard'
 			)
@@ -301,7 +301,7 @@ defineRegressionSuite('Chart definition', [
 			const plot = await chartFrom(SERIES, {
 				...BASE,
 				type: ChartType.bar,
-				plotArea: { border: /** @type {any} */ ({ width: 2 }) },
+				plotArea: { border: { width: 2 } },
 			})
 			assertIncludes(plot, '<a:ln w="25400" cap="flat">', 'the supplied plotArea border width, in EMU')
 			assertIncludes(plot, '<a:srgbClr val="363636"/>', 'the defaulted plotArea border color')
@@ -312,7 +312,7 @@ defineRegressionSuite('Chart definition', [
 			const colorOnly = await chartFrom(SERIES, {
 				...BASE,
 				type: ChartType.bar,
-				chartArea: { border: /** @type {any} */ ({ color: 'FF0000' }) },
+				chartArea: { border: { color: 'FF0000' } },
 			})
 			assertIncludes(
 				colorOnly,
@@ -323,7 +323,7 @@ defineRegressionSuite('Chart definition', [
 			const widthOnly = await chartFrom(SERIES, {
 				...BASE,
 				type: ChartType.bar,
-				chartArea: { border: /** @type {any} */ ({ width: 3 }) },
+				chartArea: { border: { width: 3 } },
 			})
 			assertIncludes(
 				widthOnly,
@@ -351,7 +351,7 @@ defineRegressionSuite('Chart definition', [
 					{ width: 2, color: 'red' },
 				]) {
 					const { zip, warnings } = await buildCapturingWarnings((p) => {
-						p.addSlide().addChart(SERIES, { ...BASE, type: ChartType.bar, ...place(/** @type {any} */ (border)) })
+						p.addSlide().addChart(SERIES, { ...BASE, type: ChartType.bar, ...place(border) })
 					})
 					const xml = await chartXml(zip)
 					const label = `${option} ${JSON.stringify(border)}`
@@ -409,7 +409,7 @@ defineRegressionSuite('Chart definition', [
 				p.addSlide().addChart(SERIES, {
 					...BASE,
 					type: ChartType.bar,
-					dataBorder: { color: /** @type {any} */ ('ZZZZZZ'), width: 2 },
+					dataBorder: { color: 'ZZZZZZ', width: 2 },
 				})
 			})
 			const notHex = await chartXml(zip)
@@ -424,7 +424,7 @@ defineRegressionSuite('Chart definition', [
 			const scheme = await chartFrom(SERIES, {
 				...BASE,
 				type: ChartType.bar,
-				dataBorder: { color: /** @type {any} */ ('accent2'), width: 2 },
+				dataBorder: { color: 'accent2', width: 2 },
 			})
 			assertIncludes(scheme, '<a:schemeClr val="accent2"/>', 'a scheme color name')
 		},
@@ -439,7 +439,7 @@ defineRegressionSuite('Chart definition', [
 				p.addSlide().addChart(SERIES, {
 					...BASE,
 					type: ChartType.waterfall,
-					subtotals: /** @type {any} */ ([1, -2, 1.5, 'x']),
+					subtotals: [1, -2, 1.5, 'x'],
 				})
 			})
 			assertEqual(
@@ -450,13 +450,13 @@ defineRegressionSuite('Chart definition', [
 			assertIncludes(await chartExXml(partial.zip), '<cx:subtotals>', 'a list with one survivor')
 
 			const none = await buildCapturingWarnings((p) => {
-				p.addSlide().addChart(SERIES, { ...BASE, type: ChartType.waterfall, subtotals: /** @type {any} */ ([-1]) })
+				p.addSlide().addChart(SERIES, { ...BASE, type: ChartType.waterfall, subtotals: [-1] })
 			})
 			assertNotIncludes(await chartExXml(none.zip), '<cx:subtotals>', 'a list with no survivors')
 
 			// Not an array at all: nothing to keep, nothing to warn about.
 			const notAList = await buildCapturingWarnings((p) => {
-				p.addSlide().addChart(SERIES, { ...BASE, type: ChartType.waterfall, subtotals: /** @type {any} */ (7) })
+				p.addSlide().addChart(SERIES, { ...BASE, type: ChartType.waterfall, subtotals: 7 })
 			})
 			assertNotIncludes(await chartExXml(notAList.zip), '<cx:subtotals>', 'a non-array subtotals')
 		},
@@ -495,8 +495,8 @@ defineRegressionSuite('Chart definition', [
 			const illegal = await chartFrom(SERIES, {
 				...BASE,
 				type: ChartType.bar3d,
-				bar3DShape: /** @type {any} */ ('sphere'),
-				displayBlanksAs: /** @type {any} */ ('hide'),
+				bar3DShape: 'sphere',
+				displayBlanksAs: 'hide',
 			})
 			assertIncludes(illegal, '<c:shape val="box"/>', 'an illegal ST_Shape falls back to box')
 			assertIncludes(illegal, '<c:dispBlanksAs val="gap"/>', 'an illegal ST_DispBlanksAs falls back to gap')
@@ -556,7 +556,7 @@ defineRegressionSuite('Chart definition', [
 		name: 'combo subchart overrides go through the same corrections as chart-level options',
 		fn: async () => {
 			const xml = await chartFrom(
-				/** @type {any} */ ([
+				[
 					{
 						type: ChartType.bar,
 						data: [{ name: 'Bars', labels: ['A', 'B'], values: [1, 2] }],
@@ -567,7 +567,7 @@ defineRegressionSuite('Chart definition', [
 						data: [{ name: 'Line', labels: ['A', 'B'], values: [3, 4] }],
 						options: { lineDataSymbol: 'sphere', lineDataSymbolLineSize: 4 },
 					},
-				]),
+				],
 				{ ...BASE }
 			)
 			assertNotIncludes(xml, 'sphere', 'no illegal enum value reaches the part')
@@ -584,15 +584,15 @@ defineRegressionSuite('Chart definition', [
 		name: 'combo entries missing data or options degrade instead of throwing',
 		fn: async () => {
 			const combo = await chartFrom(
-				/** @type {any} */ ([
+				[
 					{ type: ChartType.bar, data: [{ name: 'Bars', labels: ['A', 'B'], values: [1, 2] }], options: {} },
 					{ type: ChartType.line },
-				]),
+				],
 				{ ...BASE }
 			)
 			assertEqual((combo.match(/<c:ser>/g) || []).length, 1, 'only the entry that had data contributes a series')
 
-			const notAList = await chartFrom(/** @type {any} */ ({}), { ...BASE, type: ChartType.bar })
+			const notAList = await chartFrom({}, { ...BASE, type: ChartType.bar })
 			assertEqual((notAList.match(/<c:ser>/g) || []).length, 0, 'non-array data plots nothing')
 		},
 	},

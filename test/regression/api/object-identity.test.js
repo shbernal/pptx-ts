@@ -5,6 +5,7 @@ import {
 	build,
 	readEntry,
 	assert,
+	defined,
 	assertNotIncludes,
 	assertNonVisualDrawingProperty,
 	xmlAttributes,
@@ -255,7 +256,7 @@ defineRegressionSuite('Object identity [legacy bug-21]', [
 		fn: async () => {
 			const name = 'Q&A <"draft">'
 			const escaped = 'Q&amp;A &lt;&quot;draft&quot;&gt;'
-			/** @type {any} */
+			/** @type {import('../../../dist/node.js').Slide | undefined} */
 			let filled
 			const { zip } = await build((p) => {
 				p.defineSlideMaster({
@@ -263,8 +264,7 @@ defineRegressionSuite('Object identity [legacy bug-21]', [
 					objects: [{ placeholder: { options: { name, type: 'body', x: 1, y: 1, w: 6, h: 3 }, text: '' } }],
 				})
 				p.addSlide({ masterTitle: 'NAMED' })
-				filled = p.addSlide({ masterTitle: 'NAMED' })
-				filled.addText('hello', { placeholder: name })
+				filled = p.addSlide({ masterTitle: 'NAMED' }).addText('hello', { placeholder: name })
 			})
 
 			for (const part of ['ppt/slideLayouts/slideLayout2.xml', 'ppt/slides/slide1.xml', 'ppt/slides/slide2.xml']) {
@@ -272,10 +272,8 @@ defineRegressionSuite('Object identity [legacy bug-21]', [
 				assertNonVisualDrawingProperty(xml, { name: escaped }, part)
 				assert(!/&amp;(?:amp|lt|gt|quot|apos);/.test(xml), `${part} escapes a name a second time`)
 			}
-			assert(
-				filled.objects[0].objectName === name,
-				`objectName should read back as authored; got ${filled.objects[0].objectName}`
-			)
+			const objectName = defined(filled).objects[0].objectName
+			assert(objectName === name, `objectName should read back as authored; got ${objectName}`)
 		},
 	},
 	{

@@ -15,7 +15,7 @@ import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
 import { validateBuf, validatorInstalled } from '../validator.js'
 import { fixturePath, openFixture, readOracle } from './corpus.js'
-import { partBodies, assertUnchangedExcept, defined, readEntry } from '../helpers.js'
+import { partBodies, assertUnchangedExcept, asError, defined, readEntry } from '../helpers.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -129,7 +129,7 @@ describe('slide.transition (write/edit)', () => {
 				() => {
 					slide.transition = { type: 'fade', ...times }
 				},
-				(err) => /** @type {any} */ (err).code === 'transition/invalid-time',
+				(err) => asError(err).code === 'transition/invalid-time',
 				`refuses ${Object.entries(times).map(([k, v]) => `${k} ${v}`)}`
 			)
 		}
@@ -169,7 +169,7 @@ describe('slide.transition (write/edit)', () => {
 			() => {
 				slide.transition = { ...defined(slide.transition), sound: { ...sound, name: 'other.wav' } }
 			},
-			(err) => /** @type {any} */ (err).code === 'transition/sound-unsupported'
+			(err) => asError(err).code === 'transition/sound-unsupported'
 		)
 		assert.deepEqual(defined(slide.transition).sound, sound, 'a refused sound changes nothing')
 
@@ -521,8 +521,10 @@ describe('importShape carryAnimation', () => {
 	 */
 	function sequencesOf(slide) {
 		const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
-		const children = (/** @type {any} */ node, local = '') =>
-			[...node.childNodes].filter((child) => child.nodeType === 1 && (!local || child.localName === local))
+		const children = (/** @type {Element} */ node, local = '') =>
+			/** @type {Element[]} */ ([...node.childNodes].filter((child) => child.nodeType === 1)).filter(
+				(child) => !local || child.localName === local
+			)
 		return [...slide.part.dom.documentElement.getElementsByTagNameNS(P_NS, 'seq')].map((seq) => {
 			const [cTn] = children(seq, 'cTn')
 			const [list] = cTn ? children(cTn, 'childTnLst') : []

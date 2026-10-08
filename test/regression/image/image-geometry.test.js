@@ -9,7 +9,7 @@ import { describe, test } from 'vitest'
 import { fitSrcRectPercents, getImageSizeFromBytes } from '../../../src/media/image-size.ts'
 import { Presentation } from '../../../dist/read.js'
 import { EMU_PER_INCH } from '../../../dist/node.js'
-import { assert, assertEqual, build, captureDiagnostics, slideXml, defined } from '../../helpers.js'
+import { assert, assertEqual, build, captureDiagnostics, caughtSync, slideXml, defined } from '../../helpers.js'
 
 /**
  * A PNG header carrying an arbitrary intrinsic size. The size reader looks at the IHDR dimensions
@@ -122,7 +122,7 @@ describe('image geometry', () => {
 				title: 'M',
 				objects: [{ placeholder: { options: { name: 'body', type: 'body', x: 3, y: 1, w: 4, h: 2 }, text: '' } }],
 			})
-		const unset = /** @type {any} */ (null)
+		const unset = null
 		const tableXml = await slideXml((p) => {
 			withPlaceholder(p)
 			p.addSlide({ masterTitle: 'M' }).addTable([[{ text: 't' }]], { placeholder: 'body', x: unset })
@@ -142,12 +142,7 @@ describe('image geometry', () => {
 		const picture = defined(deck.slides[0].shapes.find((shape) => shape.shapeType === 'picture'))
 		const embed = () => picture.element_.getElementsByTagNameNS('*', 'blip')[0]?.getAttribute('r:embed')
 		const before = embed()
-		let code
-		try {
-			picture.setImage(pngBytes(16, 16), { contentType: 'image/png', fit: 'cover' })
-		} catch (err) {
-			code = /** @type {any} */ (err).code
-		}
+		const code = caughtSync(() => picture.setImage(pngBytes(16, 16), { contentType: 'image/png', fit: 'cover' }))?.code
 		assertEqual(code, 'image/fit-needs-extent', 'the refusal')
 		assertEqual(embed(), before, 'the picture still shows its own image')
 	})

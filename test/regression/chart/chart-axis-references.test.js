@@ -40,7 +40,7 @@ function axisProblems(xml) {
 	for (const plot of children.filter((n) => n.nodeName.endsWith('Chart'))) {
 		const refs = Array.from(plot.childNodes)
 			.filter((n) => n.nodeName === 'c:axId')
-			.map((n) => /** @type {any} */ (n).getAttribute('val'))
+			.map((n) => /** @type {import('@xmldom/xmldom').Element} */ (n).getAttribute('val'))
 		for (const ref of refs) {
 			if (!axes.has(ref)) problems.push(`${plot.nodeName} references axis ${ref}, which no axis carries`)
 		}

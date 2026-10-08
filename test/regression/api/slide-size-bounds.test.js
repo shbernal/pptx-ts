@@ -48,7 +48,8 @@ defineRegressionSuite('Slide size bounds', [
 				/** @type {unknown} */
 				let err = null
 				try {
-					new TsPptx().defineLayout(/** @type {never} */ (bad))
+					// @ts-expect-error none of these is a layout
+					new TsPptx().defineLayout(bad)
 				} catch (ex) {
 					err = ex
 				}

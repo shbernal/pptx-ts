@@ -16,6 +16,7 @@ import TsPptx, { ShapeType } from '../../dist/node.js'
 import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
 import { Presentation, AutoShape, GroupShape, Picture } from '../../dist/read.js'
+/** @import { ShapeHost } from '../../dist/read.js' */
 import { assert, assertEqual, defined } from '../helpers.js'
 import { openFixture } from './corpus.js'
 
@@ -36,7 +37,7 @@ function shapeFromXml(Kind, local, innerXml) {
 	if (!el) throw new Error(`no <p:${local}> in the supplied XML`)
 	// A stand-in slide whose theme maps nothing: a literal colour resolves to itself, a token to nothing.
 	const themeContext = () => ({ clrMap: new Map(), clrScheme: new Map(), fmtScheme: null })
-	return new Kind(el, /** @type {any} */ ({ themeContext }))
+	return new Kind(el, { themeContext })
 }
 
 /** A `p:pic` proxy whose blip carries the given recolour child XML. */
@@ -268,7 +269,7 @@ describe('GradientStop colorRef.resolved — the transform list survives the rea
 		// `bg2` is a MAP token: clrMap sends it to a clrScheme slot (`lt2` in a stock
 		// master), and only then does the scheme hold the literal.
 		const ctx = { clrMap: new Map([['bg2', 'lt2']]), clrScheme: new Map(clrScheme ?? []) }
-		return new AutoShape(el, /** @type {any} */ ({ themeContext: () => ctx }))
+		return new AutoShape(el, /** @type {ShapeHost} */ ({ themeContext: () => ctx }))
 	}
 
 	const MASTER_STOP =
@@ -412,7 +413,7 @@ describe('Shape line dash / explicit no-line reads (off-fixture)', () => {
 		const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 		const el = spTree.getElementsByTagNameNS(P_NS, 'sp')[0]
 		// Minimal slide fake: only themeContext is exercised by these unit reads.
-		return new AutoShape(el, /** @type {any} */ ({ themeContext: () => ({}) }))
+		return new AutoShape(el, /** @type {ShapeHost} */ ({ themeContext: () => ({}) }))
 	}
 
 	test('lineGradient reads a:ln/a:gradFill stops + linear angle', () => {

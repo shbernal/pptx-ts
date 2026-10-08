@@ -62,7 +62,8 @@ describe('output sizes beside the times', () => {
 	test('nothing to compare reads as nothing, not as zero', () => {
 		expect(bytesAgreement([100])).toBeNull()
 		expect(bytesAgreement([0, 100])).toBeNull()
-		expect(bytesAgreement([/** @type {any} */ (undefined), 100])).toBeNull()
+		// @ts-expect-error a run that recorded no size
+		expect(bytesAgreement([undefined, 100])).toBeNull()
 	})
 })
 
@@ -81,9 +82,9 @@ describe('the matched modes', () => {
 		expect(store.id).toBe('store')
 		expect(deflate.props.pptxgenjs).not.toEqual(store.props.pptxgenjs)
 		expect(deflate.props['ts-pptx']).not.toEqual(store.props['ts-pptx'])
-		expect(/** @type {any} */ (deflate.props.pptxgenjs).outputType).toBe(
-			/** @type {any} */ (store.props.pptxgenjs).outputType
-		)
+		/** @param {object} props */
+		const outputType = (props) => /** @type {{ outputType?: string }} */ (props).outputType
+		expect(outputType(deflate.props.pptxgenjs)).toBe(outputType(store.props.pptxgenjs))
 	})
 })
 

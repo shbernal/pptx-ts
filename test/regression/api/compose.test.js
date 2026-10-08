@@ -12,7 +12,7 @@
 import { describe, expect, test } from 'vitest'
 import TsPptx, { createPresentation } from '../../../dist/node.js'
 import { charts, comments, tables } from '../../../dist/families.js'
-import { assert, assertEqual } from '../../helpers.js'
+import { assert, assertEqual, caughtSync } from '../../helpers.js'
 
 const SERIES = [{ name: 'Rev', labels: ['Q1', 'Q2'], values: [1, 2] }]
 
@@ -54,16 +54,11 @@ describe('createPresentation', () => {
 		const slide = createPresentation({ use: [tables] }).addSlide()
 		// The one that was composed answers...
 		slide.addTable([[{ text: 'a' }, { text: 'b' }]], { x: 1, y: 1, w: 4 })
-		// ...and the one that was not names itself, with a code rather than a TypeError. The cast is
-		// half the point: the type has already refused this call, and a consumer who ignores it (or
-		// reaches the slide from JavaScript) is who the runtime message is for.
-		const untyped = /** @type {{ addChart: (...args: unknown[]) => unknown }} */ (/** @type {unknown} */ (slide))
-		let thrown
-		try {
-			untyped.addChart(SERIES, { type: 'bar', x: 1, y: 2, w: 4, h: 3 })
-		} catch (err) {
-			thrown = err
-		}
+		// ...and the one that was not names itself, with a code rather than a TypeError. The type
+		// error is half the point: the type has already refused this call, and a consumer who ignores
+		// it (or reaches the slide from JavaScript) is who the runtime message is for.
+		// @ts-expect-error a slide composed without charts has no addChart
+		const thrown = caughtSync(() => slide.addChart(SERIES, { type: 'bar', x: 1, y: 2, w: 4, h: 3 }))
 		assert(thrown, 'addChart must throw on a deck composed without charts')
 		assertEqual(thrown.code, 'family/not-composed', 'error code')
 		assert(/"chart"/.test(thrown.message), `the message must name the family; got: ${thrown.message}`)

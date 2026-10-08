@@ -97,7 +97,7 @@ defineRegressionSuite('Text definition', [
 		name: 'a single run object where an array belongs is refused on addText and on a text descriptor',
 		fn: async () => {
 			const refused = (buildFn) => caught(() => build(buildFn))
-			const run = /** @type {any} */ ({ text: 'x' })
+			const run = { text: 'x' }
 			const box = { x: 1, y: 1, w: 2, h: 1 }
 			const viaAddText = await refused((p) => p.addSlide().addText(run, box))
 			assertEqual(viaAddText?.code, 'text/invalid-text', 'addText')
@@ -234,7 +234,7 @@ defineRegressionSuite('Text definition', [
 				const s = p.addSlide()
 				s.addText([{ text: 'too few' }], { x: 1, y: 1, w: 4, h: 1, columns: 0 })
 				s.addText([{ text: 'too many' }], { x: 1, y: 2, w: 4, h: 1, columns: 17 })
-				s.addText([{ text: 'not a number' }], { x: 1, y: 3, w: 4, h: 1, columns: /** @type {any} */ ('three') })
+				s.addText([{ text: 'not a number' }], { x: 1, y: 3, w: 4, h: 1, columns: 'three' })
 			})
 			assertEqual(
 				warnings.filter((d) => d.code === 'text/invalid-columns').length,
@@ -282,7 +282,7 @@ defineRegressionSuite('Text definition', [
 				const s = p.addSlide()
 				s.addText('shorthand', { x: 1, y: 1, w: 4, h: 1, underline: true })
 				s.addText('explicit', { x: 1, y: 2, w: 4, h: 1, underline: { style: 'dbl' } })
-				s.addText('off', { x: 1, y: 3, w: 4, h: 1, underline: /** @type {any} */ (false) })
+				s.addText('off', { x: 1, y: 3, w: 4, h: 1, underline: false })
 			})
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 			const shapes = xml.match(/<p:sp>[\s\S]*?<\/p:sp>/g) || []

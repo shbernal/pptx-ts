@@ -56,7 +56,7 @@ defineRegressionSuite('Authored frame defaults', [
 				build((p) => {
 					const host = p.addSlide()
 					p.addSlide()
-					host.addSlideZoom(/** @type {any} */ ({ target: 2 }))
+					host.addSlideZoom({ target: 2 })
 				})
 			)
 			assert(codes.includes('frame/zero-extent'), `expected frame/zero-extent; got ${codes.join(', ')}`)
@@ -74,7 +74,7 @@ defineRegressionSuite('Authored frame defaults', [
 				build((p) => {
 					const host = p.addSlide()
 					p.addSlide()
-					host.addSlideZoom(/** @type {any} */ ({ target: 2, w: 0, h: 2 }))
+					host.addSlideZoom({ target: 2, w: 0, h: 2 })
 				})
 			)
 			const text = (messages ?? []).join(' | ')

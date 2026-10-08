@@ -9,7 +9,7 @@ import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual, bytesEqual, readEntry } from '../helpers.js'
+import { assert, assertEqual, bytesEqual, caughtSync, readEntry } from '../helpers.js'
 import { validateBuf, validatorInstalled } from '../validator.js'
 import { openFixture, readFixture } from './corpus.js'
 
@@ -155,13 +155,7 @@ describe('an embedded font face whose r:id names no relationship', () => {
 		const source = await danglingFaceSource()
 		const target = await openFixture('empty')
 		const before = await target.save()
-		/** @type {any} */
-		let thrown = null
-		try {
-			imports[name](target, source)
-		} catch (error) {
-			thrown = error
-		}
+		const thrown = caughtSync(() => imports[name](target, source))
 		assert(thrown, `${name} throws`)
 		assertEqual(thrown.code, 'package/part-missing', `${name} names the missing font part`)
 		assertEqual(thrown.name, 'PackageReadError', `${name} raises it as a package error`)

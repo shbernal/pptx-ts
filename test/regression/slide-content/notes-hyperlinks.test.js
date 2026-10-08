@@ -199,8 +199,9 @@ defineRegressionSuite('Speaker notes hyperlinks & rich runs', [
 				['https://a.example/', 'hyperlink/not-an-object'],
 			]) {
 				const slide = new TsPptx().addSlide()
-				const options = { hyperlink: /** @type {any} */ (hyperlink) }
+				const options = { hyperlink }
 				assertEqual(
+					// @ts-expect-error each hyperlink is one addText refuses
 					codeOf(() => slide.addNotes([{ text: 'x', options }])),
 					code,
 					JSON.stringify(hyperlink)

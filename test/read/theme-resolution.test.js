@@ -12,6 +12,7 @@
 import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
 import { TextFrame, AutoShape, resolveColorElement } from '../../dist/read.js'
+/** @import { Part, ShapeHost } from '../../dist/read.js' */
 import { assertEqual, defined } from '../helpers.js'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
@@ -38,14 +39,13 @@ function drawingEl(xml) {
 	)
 }
 
-const stubPart = () => ({ markDirty() {} })
+const stubPart = () => /** @type {Part} */ ({ markDirty() {} })
 
 /** The first run of a synthetic single-run TextFrame resolving against `flatten`. */
 function runWith(rPrInner, flatten) {
 	const xml = `<p:txBody xmlns:p="${P_NS}" xmlns:a="${A_NS}"><a:bodyPr/><a:p><a:r>${rPrInner}<a:t>x</a:t></a:r></a:p></p:txBody>`
 	const txBody = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
-	return new TextFrame(txBody, { part: /** @type {any} */ (stubPart()), ctx: flatten, rels: null, inherit: null })
-		.paragraphs[0].runs[0]
+	return new TextFrame(txBody, { part: stubPart(), ctx: flatten, rels: null, inherit: null }).paragraphs[0].runs[0]
 }
 
 /** An AutoShape over a hand-authored p:sp, resolving against `flatten`. */
@@ -53,7 +53,7 @@ function autoShape(spXml, flatten) {
 	const xml = `<p:spTree xmlns:p="${P_NS}" xmlns:a="${A_NS}">${spXml}</p:spTree>`
 	const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 	const el = spTree.getElementsByTagNameNS(P_NS, 'sp')[0]
-	return new AutoShape(el, /** @type {any} */ ({ themeContext: () => flatten }))
+	return new AutoShape(el, /** @type {ShapeHost} */ ({ themeContext: () => flatten }))
 }
 
 describe('resolveColor — colour models', () => {

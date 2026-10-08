@@ -23,6 +23,7 @@ import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import TsPptx from '../../dist/node.js'
 import { Presentation, TextFrame, AutoShape, resolveColorElement } from '../../dist/read.js'
+/** @import { Part, ShapeHost } from '../../dist/read.js' */
 import { assert, assertEqual, defined, expectDefined } from '../helpers.js'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
@@ -52,7 +53,7 @@ function txBodyEl(inner) {
 function placeholderFrame(inner, flatten = ctx()) {
 	const inherit = { ph: { type: 'body', idx: '0' }, fontRef: null }
 	// The read-side `resolved*` getters never touch `part`; a stand-in is enough.
-	return new TextFrame(txBodyEl(inner), { part: /** @type {any} */ ({}), ctx: flatten, rels: null, inherit })
+	return new TextFrame(txBodyEl(inner), { part: /** @type {Part} */ ({}), ctx: flatten, rels: null, inherit })
 }
 
 /** First run of the first paragraph. */
@@ -77,7 +78,7 @@ function autoShape(spXml, flatten = ctx()) {
 	const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 	const el = spTree.getElementsByTagNameNS(P_NS, 'sp')[0]
 	// Only `themeContext()` is exercised by the resolved-fill/line reads.
-	return new AutoShape(el, /** @type {any} */ ({ themeContext: () => flatten }))
+	return new AutoShape(el, /** @type {ShapeHost} */ ({ themeContext: () => flatten }))
 }
 
 describe('resolveInheritedRunColor — the two upper tiers', () => {
@@ -235,7 +236,7 @@ describe('inherited run size / face / bold / italic — the two upper tiers', ()
 		// `resolvedItalic` degrades to `null` like `resolvedBold`, rather than being an
 		// absent accessor — which is the whole defect issue #27 reported.
 		const frame = new TextFrame(txBodyEl(`<a:p><a:pPr><a:defRPr b="1" i="1"/></a:pPr><a:r><a:t>x</a:t></a:r></a:p>`), {
-			part: /** @type {any} */ ({}),
+			part: /** @type {Part} */ ({}),
 			ctx: ctx(),
 			rels: null,
 			inherit: null,

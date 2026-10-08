@@ -35,7 +35,8 @@ defineRegressionSuite('Deck argument guards', [
 		fn: async () => {
 			const { result, codes } = await captureDiagnostics(async () => {
 				const pres = new TsPptx()
-				pres.addSection(/** @type {never} */ (undefined))
+				// @ts-expect-error addSection requires its props
+				pres.addSection(undefined)
 				pres.addSlide()
 				return pres.toBytes()
 			})
@@ -124,7 +125,7 @@ defineRegressionSuite('Deck argument guards', [
 			assertEqual(JSON.stringify(codes), '[]', 'no diagnostics')
 			assert(result.plain.slides.length > 1 && result.mastered.slides.length > 1, 'both tables paged')
 			assert(
-				result.mastered.slides.every((s) => /** @type {any} */ (s)._slideLayout?._name === 'MASTER'),
+				result.mastered.slides.every((s) => s._slideLayout?._name === 'MASTER'),
 				'every continuation keeps the master'
 			)
 		},
@@ -172,7 +173,8 @@ defineRegressionSuite('Deck argument guards', [
 			for (const layout of usable) {
 				const { result, codes } = await captureDiagnostics(async () => {
 					const pres = new TsPptx()
-					pres.defineLayout(/** @type {never} */ (layout))
+					// @ts-expect-error a dimension given as a numeric string
+					pres.defineLayout(layout)
 					return pres
 				})
 				assertEqual(codes.length, 1, `one diagnostic for ${JSON.stringify(layout)}`)
@@ -187,7 +189,8 @@ defineRegressionSuite('Deck argument guards', [
 			// The arms used to be one `else if` cascade, so a definition with two problems was
 			// told about one of them. The two sides are independently wrong and both get said.
 			const { codes } = await captureDiagnostics(async () => {
-				new TsPptx().defineLayout(/** @type {never} */ ({ name: 'BothStrings', width: '10', height: '7.5' }))
+				// @ts-expect-error both dimensions given as strings
+				new TsPptx().defineLayout({ name: 'BothStrings', width: '10', height: '7.5' })
 			})
 			assertEqual(codes.length, 2, `both sides must be reported; got ${JSON.stringify(codes)}`)
 		},
@@ -206,7 +209,8 @@ defineRegressionSuite('Deck argument guards', [
 				/** @type {unknown} */
 				let err = null
 				try {
-					pres.defineLayout(/** @type {never} */ (layout))
+					// @ts-expect-error a layout with no usable name
+					pres.defineLayout(layout)
 				} catch (ex) {
 					err = ex
 				}
@@ -249,7 +253,8 @@ defineRegressionSuite('Deck argument guards', [
 				let err = null
 				const { codes } = await captureDiagnostics(async () => {
 					try {
-						new TsPptx().defineLayout(/** @type {never} */ (layout))
+						// @ts-expect-error a layout missing a dimension
+						new TsPptx().defineLayout(layout)
 					} catch (ex) {
 						err = ex
 					}
@@ -285,7 +290,8 @@ defineRegressionSuite('Deck argument guards', [
 			/** @type {unknown} */
 			let err = null
 			try {
-				new TsPptx().defineSlideMaster(/** @type {never} */ ({ background: { color: 'FF0000' } }))
+				// @ts-expect-error a master with no title
+				new TsPptx().defineSlideMaster({ background: { color: 'FF0000' } })
 			} catch (ex) {
 				err = ex
 			}

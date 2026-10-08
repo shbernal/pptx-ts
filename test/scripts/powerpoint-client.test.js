@@ -17,6 +17,7 @@ import {
 	writeReturnedFiles,
 } from '../../scripts/powerpoint/client.mjs'
 import { createRunner } from '../../scripts/powerpoint/runner.mjs'
+/** @import { JobResult } from '../../scripts/powerpoint/job.mjs' */
 import { createWorker } from '../../scripts/powerpoint/worker.mjs'
 import {
 	buildGeomVbs,
@@ -152,8 +153,17 @@ describe('file helpers', () => {
 	test('writeReturnedFiles refuses a path outside its directory', () => {
 		const into = fs.mkdtempSync(path.join(os.tmpdir(), 'powerpoint-client-write-'))
 		try {
-			const result = { files: { '../escape.txt': Buffer.from('x').toString('base64') } }
-			expect(() => writeReturnedFiles(/** @type {any} */ (result), { into })).toThrow("contains '..'")
+			/** @type {JobResult} */
+			const result = {
+				exitCode: 0,
+				timedOut: false,
+				stdout: '',
+				stderr: '',
+				files: { '../escape.txt': Buffer.from('x').toString('base64') },
+				powerpoint: null,
+				durationMs: 0,
+			}
+			expect(() => writeReturnedFiles(result, { into })).toThrow("contains '..'")
 		} finally {
 			fs.rmSync(into, { recursive: true, force: true })
 		}

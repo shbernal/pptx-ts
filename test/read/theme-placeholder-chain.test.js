@@ -11,12 +11,13 @@
 import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
 import { TextFrame } from '../../dist/read.js'
+/** @import { Part } from '../../dist/read.js' */
 import { assertEqual, defined } from '../helpers.js'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
 
-const stubPart = () => ({ markDirty() {} })
+const stubPart = () => /** @type {Part} */ ({ markDirty() {} })
 
 function parse(xml) {
 	return defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
@@ -56,7 +57,7 @@ function phRun(flatten, ph = { type: 'body', idx: '0' }) {
 		`<p:txBody xmlns:p="${P_NS}" xmlns:a="${A_NS}"><a:bodyPr/><a:p><a:r><a:t>x</a:t></a:r></a:p></p:txBody>`
 	)
 	return new TextFrame(txBody, {
-		part: /** @type {any} */ (stubPart()),
+		part: stubPart(),
 		ctx: flatten,
 		rels: null,
 		inherit: { ph, fontRef: null },
@@ -135,7 +136,7 @@ describe('inherited size + anchor through the chain', () => {
 		const txBody = parse(`<p:txBody xmlns:p="${P_NS}" xmlns:a="${A_NS}"><a:bodyPr/><a:p/></p:txBody>`)
 		const flatten = ctx({ layoutRoot: null, masterRoot })
 		const frame = new TextFrame(txBody, {
-			part: /** @type {any} */ (stubPart()),
+			part: stubPart(),
 			ctx: flatten,
 			rels: null,
 			inherit: { ph: { type: 'body', idx: '0' }, fontRef: null },

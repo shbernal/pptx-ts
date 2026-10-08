@@ -283,7 +283,7 @@ function bytesEqual(a, b) {
  * @param {() => unknown} fn the call under test; may be async
  * @param {RegExp} expected pattern the error message must match
  * @param {string} [label] what was being called, for the failure text
- * @returns {Promise<Error>} the error, for any further assertion
+ * @returns {Promise<Error & { code?: string }>} the error, for any further assertion
  */
 async function assertRejects(fn, expected, label) {
 	/** @type {Error | null} */

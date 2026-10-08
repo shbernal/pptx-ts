@@ -18,17 +18,21 @@ import { clipPath, EMU_PER_INCH } from '../../../dist/node.js'
 // on every box smaller than the slide, which is why the scaling is asserted directly.
 
 /**
+ * @typedef {{ x?: number, y?: number, moveTo?: boolean, close?: boolean,
+ *              curve?: { type: string, x1: number, y1: number, x2: number, y2: number } }} FlatPoint
+ */
+
+/**
  * The resolved path as plain records. `GeometryPoint` is a union whose arms carry different
  * keys, and these tests deliberately look across all of them (is this node a curve? where does
  * it sit?), so the union is flattened once here rather than narrowed at every read.
  * @param {Parameters<typeof clipPath>[0]} shape
  * @param {number} w
  * @param {number} h
- * @returns {{ x?: number, y?: number, moveTo?: boolean, close?: boolean,
- *            curve?: { type: string, x1: number, y1: number, x2: number, y2: number } }[]}
+ * @returns {FlatPoint[]}
  */
 function path(shape, w, h) {
-	return /** @type {any} */ (clipPath(shape, w, h))
+	return /** @type {FlatPoint[]} */ (clipPath(shape, w, h))
 }
 
 /** Every x (or y) appearing in the path, control points included. */
@@ -123,7 +127,7 @@ defineRegressionSuite('Clip silhouettes (clipPath)', [
 		// `undefined`, an unknown kind returned nothing and an unknown flat side traced the right-flat path.
 		name: 'a shape clipPath does not name is refused with the values it takes',
 		fn: () => {
-			const refused = (shape) => caughtSync(() => clipPath(/** @type {any} */ (shape), 4, 6))
+			const refused = (shape) => caughtSync(() => clipPath(shape, 4, 6))
 			for (const shape of [
 				{ kind: 'half-disc', flat: 'right', preset: 'bogus' },
 				{ kind: 'half-disc', flat: 'top' },

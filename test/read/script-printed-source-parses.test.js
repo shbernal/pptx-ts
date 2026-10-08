@@ -161,11 +161,11 @@ describe('a content type in the deck does not become code in the printed script'
 			'a valid type is kept'
 		)
 
-		delete (/** @type {any} */ (globalThis)[PAYLOAD_GLOBAL])
+		delete globalThis[PAYLOAD_GLOBAL]
 		const { code } = printScript(ir)
 		assertEqual(parseErrors(code).join('; '), '', 'the module parses')
 		const values = await evaluateBindings(code)
-		assertEqual(/** @type {any} */ (globalThis)[PAYLOAD_GLOBAL], undefined, 'the payload did not run')
+		assertEqual(globalThis[PAYLOAD_GLOBAL], undefined, 'the payload did not run')
 		assert(values.includes('data:application/octet-stream;base64,BYTES'), 'the binding is a data URI')
 	})
 
@@ -176,11 +176,11 @@ describe('a content type in the deck does not become code in the printed script'
 			assert(png, 'the fixture has a PNG asset')
 			png.contentType = PAYLOAD
 
-			delete (/** @type {any} */ (globalThis)[PAYLOAD_GLOBAL])
+			delete globalThis[PAYLOAD_GLOBAL]
 			const { code } = print(ir)
 			assertEqual(parseErrors(code).join('; '), '', `${print.name}: the module parses`)
 			const values = await evaluateBindings(code)
-			assertEqual(/** @type {any} */ (globalThis)[PAYLOAD_GLOBAL], undefined, `${print.name}: the payload did not run`)
+			assertEqual(globalThis[PAYLOAD_GLOBAL], undefined, `${print.name}: the payload did not run`)
 			assert(values.includes(`data:${PAYLOAD};base64,BYTES`), `${print.name}: the type is printed as text`)
 		}
 	})

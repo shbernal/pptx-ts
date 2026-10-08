@@ -6,7 +6,7 @@
 
 import { describe, test } from 'vitest'
 import { FontMetricsRegistry } from '../../../dist/measure.js'
-import { TsPptx, assert, assertEqual, build, captureDiagnostics, readEntry } from '../../helpers.js'
+import { TsPptx, assert, assertEqual, build, captureDiagnostics, caughtSync, readEntry } from '../../helpers.js'
 
 const BOX = { x: 1, y: 1, w: 4, h: 1 }
 
@@ -35,12 +35,7 @@ async function outcome(author) {
  * @param {() => unknown} fn
  */
 function thrownCode(fn) {
-	try {
-		fn()
-	} catch (err) {
-		return /** @type {any} */ (err).code
-	}
-	return undefined
+	return caughtSync(fn)?.code
 }
 
 describe('non-finite and out-of-range numbers on the write side', () => {
@@ -125,7 +120,7 @@ describe('non-finite and out-of-range numbers on the write side', () => {
 	test('measureText refuses a box it cannot lay out, and the height checks refuse one too', () => {
 		const pres = new TsPptx()
 		const words = 'one two three four five six seven eight nine ten eleven twelve'
-		const measure = (opts) => pres.measureText(words, /** @type {any} */ ({ fontFace: 'Arial', fontSize: 12, ...opts }))
+		const measure = (opts) => pres.measureText(words, { fontFace: 'Arial', fontSize: 12, ...opts })
 		assertEqual(
 			thrownCode(() => measure({ wIn: NaN })),
 			'coord/non-finite',
@@ -171,7 +166,8 @@ describe('non-finite and out-of-range numbers on the write side', () => {
 		const registry = new FontMetricsRegistry()
 		for (const face of ['', '   ']) {
 			assertEqual(
-				thrownCode(() => registry.set(face, /** @type {any} */ ({}))),
+				// @ts-expect-error stand-in metrics: the empty face is refused before they are read
+				thrownCode(() => registry.set(face, {})),
 				'font/missing-typeface',
 				`face ${JSON.stringify(face)}`
 			)

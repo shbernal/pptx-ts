@@ -62,7 +62,7 @@ defineRegressionSuite('Table cell horzOverflow', [
 		fn: async () => {
 			const { result, codes, diagnostics } = await captureDiagnostics(() =>
 				build((p) => {
-					p.addSlide().addTable([[{ text: 'A', options: { horzOverflow: /** @type {any} */ ('ellipsis') } }]], AT)
+					p.addSlide().addTable([[{ text: 'A', options: { horzOverflow: 'ellipsis' } }]], AT)
 				})
 			)
 

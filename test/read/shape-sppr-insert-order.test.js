@@ -20,6 +20,7 @@
 import { DOMParser, XMLSerializer } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
 import { AutoShape, GroupShape } from '../../dist/read.js'
+/** @import { ShapeHost } from '../../dist/read.js' */
 import { assert, defined } from '../helpers.js'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
@@ -46,7 +47,7 @@ function sp(body) {
 	// A host stub: the setters mark the owning part dirty on the way out, and nothing here
 	// has a part behind it.
 	const host = { themeContext: () => ctx(), part: { markDirty: () => {} } }
-	const shape = new AutoShape(el, /** @type {any} */ (host))
+	const shape = new AutoShape(el, /** @type {ShapeHost} */ (host))
 	return { shape, xml: () => new XMLSerializer().serializeToString(el) }
 }
 
@@ -88,7 +89,7 @@ function grpSp(body) {
 	const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 	const el = spTree.getElementsByTagNameNS(P_NS, 'grpSp')[0]
 	const host = { themeContext: () => ctx(), part: { markDirty: () => {} } }
-	const shape = new GroupShape(el, /** @type {any} */ (host))
+	const shape = new GroupShape(el, /** @type {ShapeHost} */ (host))
 	return { shape, xml: () => new XMLSerializer().serializeToString(el) }
 }
 

@@ -233,10 +233,10 @@ defineRegressionSuite('Table styling: built-in styles and the direct-formatting 
 		fn: async () => {
 			// The removal is the API contract now: a consumer still calling it must fail loudly at
 			// the call site rather than silently building a deck whose styling never paints.
-			// TypeScript already refuses the call — hence the cast, which is the point rather than a
-			// workaround — and this pins the runtime half for a plain-JS consumer.
-			const pres = /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (new TsPptx()))
-			assertEqual(typeof pres.defineTableStyle, 'undefined', 'no defineTableStyle method')
+			// TypeScript already refuses the call, which the directive pins, and this pins the runtime
+			// half for a plain-JS consumer.
+			// @ts-expect-error defineTableStyle is gone from the type too
+			assertEqual(typeof new TsPptx().defineTableStyle, 'undefined', 'no defineTableStyle method')
 		},
 	},
 	{

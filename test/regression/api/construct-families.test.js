@@ -221,9 +221,10 @@ describe('construct families', () => {
 
 		test('a key no family has ever claimed still reports the typo, not a family', () => {
 			const slide = composed(ALL_CONSTRUCT_FAMILIES).addSlide()
-			// The cast is the point: with no family claiming it, the types reject this key outright,
-			// which is exactly the protection a claimed-but-uncomposed key does not get.
-			const seen = diagnosticsOf(() => slide.addGroup([/** @type {any} */ ({ notAThing: { x: 1, y: 1 } })]))
+			// The type error is the point: with no family claiming it, the types reject this key
+			// outright, which is exactly the protection a claimed-but-uncomposed key does not get.
+			// @ts-expect-error no construct family claims `notAThing`
+			const seen = diagnosticsOf(() => slide.addGroup([{ notAThing: { x: 1, y: 1 } }]))
 			assertEqual(seen[0].code, 'group/unrecognized-child', 'code')
 			assert(seen[0].message.includes('notAThing'), `message names the key: ${seen[0].message}`)
 		})
