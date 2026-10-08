@@ -63,9 +63,13 @@ opts in. `docs/contributing/scope-and-policy.md` ("Out of active scope") has the
 `docs/contributing/testing.md` has the [gate matrix](docs/contributing/testing.md#gate-matrix)
 and the detail behind each rule below.
 
-- Run `pnpm run verify` on every iteration, and `pnpm run verify:full` before pushing or for a
-  release or package-boundary change. Gates rebuild a stale `dist/`, so never prefix
-  `pnpm run build &&`. Only `typecheck` proves type-correctness.
+- Run `pnpm run verify` on every iteration. Before pushing, or for a release or
+  package-boundary change, run `pnpm run verify:full` in place of the last `verify`: it runs the
+  suite once, with coverage, then the script round trip and the package gates. Gates rebuild a
+  stale `dist/`, so never prefix `pnpm run build &&`. Only `typecheck` proves type-correctness.
+- Run `pnpm run docs:build` only for a change to `docs/.vitepress/`, `www/` or a
+  `scripts/docs-*.mjs` generator. It takes about 2 GB, and `docs.yml` builds the site on every
+  push.
 - Add a cheap check to `check:core`. Add a check to an aggregate by naming its script, never
   by inlining its command.
 - Do not run `format`, `format:check`, `lint` or `lint:chars`; the `lefthook.yml` hooks own
@@ -75,15 +79,14 @@ and the detail behind each rule below.
   the top.
 - The suite runs with `isolate: false`: module-level state in a test helper is shared across
   files, so keep only caches there. Do not raise `maxConcurrency` to fix a slow run.
-- Run `pnpm run script:roundtrip:all` before pushing a change to `src/script/`. Run
-  `pnpm run script:census` after closing a reader gap or landing a fixture, and refresh
+- Run `pnpm run script:census` after closing a reader gap or landing a fixture, and refresh
   `docs/reference/pptx-to-script.md` in the same commit.
 - Ratchets (`raw-xml:check`, `bundle-size:check`, `bundle-tier:check`) also fail when a number
   drops. Find the change that moved it before re-freezing with the matching `:freeze` script,
   in the same commit.
-- Run `pnpm run test:coverage` once, right before each commit. In the loop use
-  `pnpm run coverage:probe <paths>`, and never delete a test because a probe reports a line
-  uncovered.
+- Do not run `pnpm run test:coverage` per commit; it roughly doubles the suite's cost locally, and
+  `verify:full` and CI collect coverage. In the loop use `pnpm run coverage:probe <paths>`, and
+  never delete a test because a probe reports a line uncovered.
 - Gate a behavior-preserving refactor of `src/gen/` on `byte-identity:baseline` then
   `byte-identity:check`, after confirming the touched part is in
   `.tmp/byte-identity/baseline/`. Any byte diff, whitespace included, is a stop.

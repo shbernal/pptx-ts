@@ -51,6 +51,19 @@ describe('run-steps expansion', () => {
 		expect(missing, 'in verify but never run by check:static').toEqual([])
 	})
 
+	test('the pre-push gate runs every check the per-change gate runs, the suite with coverage', () => {
+		// `verify:full` used to be `verify` plus more, so this held by construction. It now names
+		// `test:coverage` in place of `verify`'s `test`, so one push runs the suite once rather than
+		// twice, and a check added to `verify` alone would otherwise never reach it.
+		const fullCommands = new Set(expand('verify:full').map((s) => s.command))
+		expect([...fullCommands]).toContain('vitest run --coverage')
+		const missing = expand('verify')
+			.filter((s) => s.step !== 'test')
+			.filter((s) => !fullCommands.has(s.command))
+			.map((s) => s.step)
+		expect(missing, 'in verify but never run by verify:full').toEqual([])
+	})
+
 	test('an unknown script name is an error, not an empty plan', () => {
 		// The failure this rules out is the quiet one: returning `[]` would make a gate that runs
 		// nothing report success.

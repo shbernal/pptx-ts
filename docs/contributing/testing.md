@@ -35,10 +35,10 @@ Each cell comes from `package.json`, `lefthook.yml` or a workflow under `.github
 | `docs:api` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
 | `docs:check` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
 | `comparison:check` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
-| `test` | ✓ | ✓ | | | | `test` (Node 26.x) | every change, through `verify` |
-| `test:coverage` | | | | | | `test` (Node 24.x) | once before a commit; `coverage:probe` while editing |
-| `docs:build` | | ✓ | | | | `docs.yml` `build`, and `browser` | before pushing; site, navigation or generated-docs changes |
-| `script:roundtrip:all` | | ✓ | | | | `test` (Node 24.x) | before pushing a `src/script/` or `src/read/` change |
+| `test` | ✓ | | | | | `test` (Node 26.x) | every change, through `verify` |
+| `test:coverage` | | ✓ | | | | `test` (Node 24.x) | before pushing, through `verify:full`; `coverage:probe` while editing |
+| `docs:build` | | | | | | `docs.yml` `build`, and `browser` | a change to `docs/.vitepress/`, `www/` or a docs generator |
+| `script:roundtrip:all` | | ✓ | | | | `test` (Node 24.x) | before pushing, through `verify:full` |
 | `package:lint` | | ✓ | | | | `package` | before pushing; exports, entry points or shipped files change |
 | `test:package` | | ✓ | | | | `package` | before pushing; exports, entry points or shipped files change |
 | `bundle-size:check` | | ✓ | | | | `package` | before pushing; an import moves or a dependency arrives |
@@ -58,8 +58,8 @@ Reading the matrix:
 
 - `test` is `vitest run` over every `test/**/*.test.ts` file: the regression, read, schema,
   script and font-oracle suites. `test:unit`, `test:read` and `test:schema` run parts of it.
-- `test:coverage` is `test` plus the `vitest.config.ts` coverage thresholds. The Node 24.x leg
-  of the `test` job runs it in place of `test`.
+- `test:coverage` is `test` plus the `vitest.config.ts` coverage thresholds. `verify:full` and
+  the Node 24.x leg of the `test` job run it in place of `test`, so neither runs the suite twice.
 - The pre-commit cells run on staged files only. oxlint and oxfmt re-stage what they fix.
   charcheck reads the staged content and fixes nothing.
 - A commit-msg hook also runs `no-ai-attribution` from `shbernal/lefthook-rules`.
@@ -86,12 +86,18 @@ pnpm run check:package  # what CI's package job runs
 - Add a cheap check to `check:core`, not to an aggregate. `test/scripts/gate-parsers.test.ts`
   fails when a check reaches `verify` without reaching `check:static`, because CI runs the
   static checks only through `check:static`.
-- `verify:full` is `verify` plus `docs:build`, `script:roundtrip:all`, `package:lint`,
-  `test:package`, `bundle-size:check` and `bundle-tier:check`. Those build the production site,
-  run the read corpus through both printers, or pack and install the tarball, so they stay out
-  of the per-change loop.
-- `check:package` is the four package gates, which `verify:full` also runs.
-- `verify` takes under a minute on a workstation, and `verify:full` one to two minutes.
+- `verify:full` is `check:core`, `test:coverage`, `script:roundtrip:all` and `check:package`:
+  every `verify` step, with the suite collecting coverage, plus the gates that run the read
+  corpus through both printers or pack and install the tarball. Run it in place of the last
+  `verify` before a push. `test/scripts/gate-parsers.test.js` fails when a `verify` step is
+  missing from it.
+- `check:package` is the four package gates.
+- Neither aggregate builds the site. `docs:build` costs about 2 GB and two minutes on a
+  workstation, `docs:check` already validates the sources, and `docs.yml` builds the site on
+  every push, so run it only for the changes its row names.
+- `docs:api` records a digest of everything it reads and skips TypeDoc when that digest matches
+  the last successful run, so an iteration that touches no `src/` file does not pay for it.
+  `node scripts/docs-api.mjs --force` regenerates anyway.
 - Neither `verify` nor `verify:full` runs `lint`, `lint:chars` or `format:check`. The git hooks
   run those.
 
@@ -121,7 +127,7 @@ source or build config is newer than it.
 | pre-push | `lint`, `lint:chars`, `format:check`, `typecheck`, `typecheck:scripts` and `typecheck:site`, in parallel | the whole repository |
 
 No hook runs a test, `typecheck:test`, `docs:check` or `docs:build`. `verify` runs the first
-three and `verify:full` the last.
+three, and `docs.yml` builds the site.
 
 Pre-push repeats `lint:chars` over the whole repository because pre-commit sees one commit. The
 repeat catches prose that arrived through `--no-verify`, a merge or a rebase.
@@ -141,8 +147,8 @@ flowchart LR
     test -- "coverage-node" --> coverage
     browser -- "coverage-browser, with its dist/" --> coverage
   end
-  subgraph docs["docs.yml: pull requests, pushes to master"]
-    build["build<br/>docs:build"] --> deploy["deploy<br/>master only"]
+  subgraph docs["docs.yml: pull requests, pushes to main"]
+    build["build<br/>docs:build"] --> deploy["deploy<br/>main only"]
   end
   subgraph publish["publish.yml: release published, workflow_dispatch"]
     gate["gate<br/>runs ci.yml"] --> pub["publish<br/>build, npm publish"]

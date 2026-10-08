@@ -102,7 +102,7 @@ hatch is acceptable.
 | Command | What it is for |
 | --- | --- |
 | `pnpm run verify` | The per-change check: typechecks, source and docs checks, and every Vitest suite. |
-| `pnpm run verify:full` | Before pushing, and for a package or release change: `verify` plus the site build, the script round trip, and the package and size gates. |
+| `pnpm run verify:full` | Before pushing, and for a package or release change, in place of the last `verify`: the same checks with the suite collecting coverage, plus the script round trip and the package and size gates. |
 | `pnpm run check:static` | CI's static job: `lint`, `lint:chars` and `format:check`, then `check:core`. |
 | `pnpm run check:core` | The cheap checks that `verify` and `check:static` share. |
 | `pnpm run check:package` | A package boundary change: `package:lint`, `test:package` and both size gates. |

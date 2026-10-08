@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 
@@ -8,19 +9,75 @@ import { ROOT, parseCliOrExit, repoRel, runNodeBin } from './script-utils.mjs'
 
 // No flags, but `--help` still has to answer and `--bogus` still has to report itself in one
 // line -- and both have to happen BEFORE the generator writes anything.
-parseCliOrExit(process.argv.slice(2), {
+const { values: flags } = parseCliOrExit(process.argv.slice(2), {
 	usage: `Generate the TypeDoc markdown reference into docs/reference/api, and the site sidebar
-for it into docs/reference/api/sidebar.json.
+for it into docs/reference/api/sidebar.json. Skipped when no input changed since the last
+successful run.
 
   pnpm run docs:api
 
 Options:
+  --force      regenerate even when the inputs are unchanged
   -h, --help   show this message`,
-	options: {},
+	options: { force: { type: 'boolean', default: false } },
 })
 
 const root = ROOT
 const outDir = path.join(root, 'docs', 'reference', 'api')
+
+// TypeDoc compiles the whole public surface on the TypeScript 6 JS compiler, which makes this
+// the slowest step of `check:core` (about 13 s, against about 1 s for `typecheck` on
+// TypeScript 7), and `verify` runs it on every iteration, including the many that touch no
+// file it reads. So a run records a digest of everything it reads, and a later run with the same
+// digest stops here. The skip repeats a verdict rather than guessing one: the stamp is written
+// only after a run that passed `treatWarningsAsErrors`, and it lives inside `outDir`, which a
+// real run deletes first, so a failed or interrupted run leaves no stamp behind.
+const STAMP = path.join(outDir, '.inputs-sha256')
+const INPUT_FILES = [
+	'typedoc.docs.json',
+	'tsconfig.json',
+	'tsconfig.base.json',
+	// `exports` decides the module pages; the lockfile pins TypeDoc and its TypeScript.
+	'package.json',
+	'pnpm-lock.yaml',
+	'tools/api-docs/package.json',
+	'scripts/docs-api.mjs',
+	'scripts/docs-api-sidebar.mjs',
+	'scripts/docs-frontmatter.mjs',
+]
+
+/**
+ * SHA-256 over every file under `src/` and every entry in `INPUT_FILES`, path and content.
+ * @returns {string}
+ */
+function inputDigest() {
+	const hash = createHash('sha256')
+	/** @param {string} rel */
+	const add = (rel) => {
+		hash.update(`${rel}\0`)
+		hash.update(readFileSync(path.join(root, rel)))
+		hash.update('\0')
+	}
+	/** @param {string} dir */
+	const walk = (dir) => {
+		for (const entry of readdirSync(path.join(root, dir), { withFileTypes: true }).sort((a, b) =>
+			a.name < b.name ? -1 : a.name > b.name ? 1 : 0
+		)) {
+			const rel = `${dir}/${entry.name}`
+			if (entry.isDirectory()) walk(rel)
+			else if (entry.isFile()) add(rel)
+		}
+	}
+	walk('src')
+	for (const rel of INPUT_FILES) add(rel)
+	return hash.digest('hex')
+}
+
+const digest = inputDigest()
+if (!flags.force && existsSync(STAMP) && readFileSync(STAMP, 'utf8').trim() === digest) {
+	console.log('docs:api: up to date, no input changed since the last successful run (--force regenerates)')
+	process.exit(0)
+}
 
 /**
  * Every `.md` file under `dir`, recursively, sorted.
@@ -309,3 +366,5 @@ try {
 	}
 	process.exit(1)
 }
+
+writeFileSync(STAMP, `${digest}\n`, 'utf8')

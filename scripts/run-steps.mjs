@@ -2,18 +2,17 @@
 // Run a list of package.json scripts as one sequence, without a package-manager
 // process per step.
 //
-// Why this exists: the gates are composites, and spelling a composite as
-// `pnpm run a && pnpm run b && …` charges a full pnpm startup for every step.
-// Measured in this repo, that wrapper is ~0.7–1.3s regardless of the work it
-// wraps — it is pnpm's own CLI boot plus a second `node`, not dependency
-// resolution, so it does not shrink with the size of the job. `verify` expanded
-// to 13 such invocations: ~13s of an ~85s gate spent starting package managers.
+// Why this exists: the gates are composites, and a composite has to name its steps
+// rather than inline their commands, or each gate gets a second, drifting copy
+// (AGENTS.md). This runner keeps package.json as the single definition of what each
+// step *is*, and adds what `pnpm run a && pnpm run b` cannot: a repeat inside one
+// invocation is skipped (composites overlap on `ensure-dist` and the docs steps),
+// `--list` prints a gate's real contents, and a passing run prints its cost per step.
 //
-// The alternative — inlining each step's real command into the composite —
-// would create a second, drifting copy of every gate, which is precisely what
-// AGENTS.md warns against. So this runner keeps package.json as the single
-// definition of what each step *is* and only removes the layer that re-launches
-// a package manager to read it.
+// It was first written to remove pnpm's own start-up, measured at 0.7-1.3 s a step
+// under pnpm 11, whose CLI ran on Node. pnpm 12 ships a native binary, and
+// `pnpm run <script>` now costs about 0.05-0.1 s over bare `node` (pnpm 12.3.4,
+// 2026-10), so that saving is no longer a reason to keep this file.
 //
 // Usage:
 //   node scripts/run-steps.mjs <script-name>…     run each, in order, stop on failure
@@ -136,8 +135,8 @@ if (isMain(import.meta.url))
 		const started = process.hrtime.bigint()
 		/** @type {{step: string, ms: number}[]} */
 		const timings = []
-		// Composites overlap: `verify:full` is `verify` plus `docs:build`, and both
-		// reach `docs:api` (6.5s) and `ensure-dist`. Every step in these gates is a
+		// Composites overlap: most steps of `verify:full` start with `ensure-dist`, and
+		// `docs:build` reaches `docs:api` and `docs:check` again. Every step in these gates is a
 		// check or a regenerator whose second consecutive run cannot say anything the
 		// first did not, so an exact command repeat inside ONE invocation is skipped —
 		// UNLESS something has written into its inputs since. `GENERATORS` is which

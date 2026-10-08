@@ -11,10 +11,11 @@
 # already accounts for most of it, and forcing `verify-deps-before-run` on or off
 # moves the total by less than the run-to-run noise. So it is a flat per-process
 # tax that does not shrink with the two or three files a hook actually hands over.
-# Measured on this machine, point-in-time (pnpm 11.3.0, oxlint 1.77.0, 2026-08),
-# with `--version`, which does no work at all — oxlint ~0.67 s via `pnpm exec`
-# against ~0.11 s direct, oxfmt ~0.72 s against ~0.19 s. That is overhead, not
-# lint; end to end over two staged files the pair goes from ~2.0 s to ~0.9 s.
+# Measured with `--version`, which does no work at all. Under pnpm 11.3.0 (2026-08):
+# oxlint ~0.67 s via `pnpm exec` against ~0.11 s direct, oxfmt ~0.72 s against
+# ~0.19 s. pnpm 12 ships a native binary and shrank the gap (12.3.4, 2026-10):
+# oxlint ~0.40 s against ~0.12 s, oxfmt ~0.18 s against ~0.04 s. Smaller, but still
+# a tax on every commit for nothing, so the direct path stays.
 # `node <file>` rather than the `node_modules/.bin` shim because the shim is a
 # second process — a `.CMD` that re-execs node — worth another ~0.08 s. Each path
 # is the `bin` entry the tool's own package.json declares, the file those shims

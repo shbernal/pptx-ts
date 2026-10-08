@@ -88,7 +88,7 @@
 		"watch:dev": "tsdown --config tsdown.dev.config.ts --watch",
 		"ensure-dist": "node scripts/ensure-dist.mjs",
 		"verify": "node scripts/run-steps.mjs ensure-dist check:core test",
-		"verify:full": "node scripts/run-steps.mjs verify docs:build script:roundtrip:all package:lint test:package bundle-size:check bundle-tier:check",
+		"verify:full": "node scripts/run-steps.mjs ensure-dist check:core test:coverage script:roundtrip:all check:package",
 		"check:static": "node scripts/run-steps.mjs ensure-dist lint lint:chars format:check check:core",
 		"check:core": "node scripts/run-steps.mjs typecheck typecheck:scripts typecheck:test typecheck:site raw-xml:check ooxml-literals:check test-imports:check path-refs:check docs:check comparison:check",
 		"check:package": "node scripts/run-steps.mjs ensure-dist package:lint test:package bundle-size:check bundle-tier:check",

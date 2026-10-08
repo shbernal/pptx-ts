@@ -5,7 +5,7 @@
 // Runs in `docs:check` and again inside `docs:build`, so a broken link fails the docs build
 // rather than shipping a 404. `docs:check` is in `check:core`, so `verify` and `check:static`
 // both run it and the failure lands on the change that caused it rather than on the Pages
-// deploy. `docs:build` is in `verify:full` and `docs.yml`.
+// deploy. `docs.yml` runs `docs:build` on every push, and the browser job runs it as well.
 //
 // With `--dist`, checks the built output instead: every URL in the generated llms.txt files
 // must name a page VitePress actually emitted. That is a separate pass because it can only run
