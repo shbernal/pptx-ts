@@ -17,10 +17,10 @@ import SlideFrame from './SlideFrame.vue'
 const props = defineProps({ slug: { type: String, required: true } })
 const source = computed(() => showcaseSource(props.slug))
 
-// `preview` runs on mount; `download` runs on the button. Two states rather than one
+// `preview` runs once the viewer scrolls near the viewport; `download` runs on the button. Two states rather than one
 // because either can fail on its own, and a failed render must not be reported as a
 // failed build.
-const preview = ref({ status: 'rendering', deck: null, error: '' })
+const preview = ref({ status: 'waiting', deck: null, error: '' })
 const download = ref({ status: 'idle', error: '' })
 
 // VitePress pre-renders this page, so the markup below — including an enabled button —
@@ -111,16 +111,33 @@ watch(slide, async (number) => {
 	list.scrollTo({ left, behavior: 'smooth' })
 })
 
+// A page shows several decks, and a deck with photographs and a video in it should not be
+// fetched for a reader who never scrolls to it.
+const viewer = ref(null)
+let observer = null
+
 onMounted(() => {
 	ready.value = true
 	document.addEventListener('fullscreenchange', onFullscreenChange)
-	render()
+	observer = new IntersectionObserver(
+		(entries) => {
+			if (!entries.some((entry) => entry.isIntersecting)) return
+			observer?.disconnect()
+			observer = null
+			render()
+		},
+		{ rootMargin: '200px' }
+	)
+	observer.observe(viewer.value)
 })
-onBeforeUnmount(() => document.removeEventListener('fullscreenchange', onFullscreenChange))
+onBeforeUnmount(() => {
+	observer?.disconnect()
+	document.removeEventListener('fullscreenchange', onFullscreenChange)
+})
 </script>
 
 <template>
-	<section class="deck-viewer" :style="aspect">
+	<section ref="viewer" class="deck-viewer" :style="aspect" :data-showcase="source.slug" :aria-label="source.title">
 		<header class="deck-viewer__head">
 			<div class="deck-viewer__heading">
 				<p class="deck-viewer__eyebrow">
@@ -159,7 +176,7 @@ onBeforeUnmount(() => document.removeEventListener('fullscreenchange', onFullscr
 			>
 				<div class="deck-viewer__canvas">
 					<SlideFrame v-if="current" :key="current.number" :markup="current.markup" :styles="deck.styles" />
-					<div v-else-if="preview.status === 'rendering'" class="deck-viewer__placeholder">
+					<div v-else-if="preview.status !== 'failed'" class="deck-viewer__placeholder">
 						<span class="deck-viewer__spinner" aria-hidden="true" />
 						<span>Building the deck and rendering it…</span>
 					</div>

@@ -100,10 +100,15 @@ export function failed<T extends HarnessOutcome | TableOutcome>(outcome: T): Ext
  * `getByRole('alert')` would report a broken *preview* as a failed *build*. The two
  * failures have nothing to do with each other and must not be able to masquerade.
  */
-export async function buildDeckInBrowser(page: Page): Promise<{ bytes: Uint8Array; fileName: string }> {
+export async function buildDeckInBrowser(
+	page: Page,
+	slug = 'quarterly-review',
+): Promise<{ bytes: Uint8Array; fileName: string }> {
 	await page.goto('./demos')
 
-	const download = page.getByRole('group', { name: 'Download' })
+	// The page shows every showcase, each in its own viewer; this one is the deck asked for.
+	const viewer = page.locator(`section[data-showcase="${slug}"]`)
+	const download = viewer.getByRole('group', { name: 'Download' })
 	const button = download.getByRole('button', { name: /^Build / })
 	// The page ships pre-rendered, so this button is in the served HTML long before it does
 	// anything; it stays disabled until the component mounts. Waiting on *enabled* is

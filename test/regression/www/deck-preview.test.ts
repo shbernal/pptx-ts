@@ -180,6 +180,8 @@ describe('showcaseSource', () => {
 	})
 
 	it('names the known slugs when asked for one that is not registered', () => {
-		expect(() => showcaseSource('no-such-deck')).toThrow(/unknown showcase "no-such-deck"; known: quarterly-review/)
+		expect(() => showcaseSource('no-such-deck')).toThrow(
+			/unknown showcase "no-such-deck"; known: quarterly-review, field-notes/
+		)
 	})
 })

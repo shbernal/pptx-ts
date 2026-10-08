@@ -2,7 +2,7 @@
  * Types for a showcase the site imports.
  *
  * The site's demos page (`www/demos/`) builds this deck in the browser, and the site is
- * typechecked, so the import needs declarations. `field-notes/index.d.mts` is the same shape.
+ * typechecked, so the import needs declarations. `quarterly-review/index.d.mts` is the same shape.
  *
  * Hand-written rather than generated — the deck is plain `.mjs` and the exported surface is
  * three values, so a build step to produce a handful of lines would cost more than it saves.

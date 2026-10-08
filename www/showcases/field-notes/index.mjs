@@ -8,9 +8,9 @@
  *
  * Build it with `pnpm showcases:build field-notes`.
  *
- * Unlike the quarterly review, this deck is Node-only by nature: it loads photographs, a video
- * and a `.glb` from `demos/common` by path, so it cannot run in a browser without those assets
- * being served. That is the honest split between the two showcases, not an oversight.
+ * Unlike the quarterly review, this deck loads its photographs, video and `.glb` from
+ * `www/showcases/media/`. `lib/assets.mjs` hands them over as paths under Node and as URLs on
+ * the site, so the same module builds the deck in both.
  */
 import TsPptx, { ShapeType } from 'pptx-ts'
 import { image, imageDataUri, media } from '../lib/assets.mjs'
@@ -654,9 +654,8 @@ function addColophon(pptx) {
 /**
  * Assemble the deck and hand back the presentation, having written nothing.
  *
- * The counterpart of `quarterly-review`'s `compose()`, kept even though nothing previews
- * this deck yet: the two showcase modules present the same shape, and the reason only one
- * of them is on the site is about assets, not about how the module is written.
+ * The counterpart of `quarterly-review`'s `compose()`: the site's demos page previews the
+ * deck from it, and `build` writes it to a file.
  */
 export async function compose() {
 	const pptx = new TsPptx()

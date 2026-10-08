@@ -1152,8 +1152,9 @@ Each project matches its specs by filename prefix (`deck-*` and `cross-runtime-*
 `table-*`). None matches by exclusion, because an exclusion would also match every prefix added
 later. Adding a prefix is an edit to `playwright.config.ts`.
 
-The demo deck draws every asset it shows, so it never calls the adapter's loaders, and the
-harness covers them. The harness serves the repository with its real layout and loads
+The demos page reaches `loadMedia` only on the success path, through Field Notes' photographs,
+video and model. The harness covers the rest of the adapter: SVG rasterizing, fonts, and every
+failure arm. The harness serves the repository with its real layout and loads
 `dist/browser.js` through a plain `<script type="module">`, so the shipped file runs with no
 bundler in the path. A `node:*` import reaching the browser entry fails the page. An unbundled
 consumer needs `opentype.js` in an import map, as
@@ -1163,7 +1164,7 @@ documents.
 | Spec | Project | Claim |
 |---|---|---|
 | `deck-download.spec.ts` | demo | the object-URL download is a real OPC package: read back with **jszip**, an implementation independent of the `fflate` the library writes with |
-| `cross-runtime-bytes.spec.ts` | demo | the browser-built deck is **byte-identical** to the Node-built one, part for part |
+| `cross-runtime-bytes.spec.ts` | demo | each browser-built showcase is **byte-identical** to the Node-built one, part for part, media included |
 | `deck-live-examples.spec.mjs` | demo | every live example on a docs page paints the slide its code builds, its download is that deck, and a page without one loads none of the machinery |
 | `adapter-media.spec.ts` | runtime-adapter | `loadMedia` and `createSvgPngPreview`: a fetched raster image lands as the same bytes Node reads off disk *and* as the source file's; the `<canvas>` rasterizer emits a real PNG where Node stubs a placeholder; 404, undecodable-SVG and zero-dimension-SVG each fail with the right code |
 | `adapter-fonts.spec.ts` | runtime-adapter | `loadFontData`: a font fetched over HTTP bakes the same `fontScale` and embeds the same `/ppt/fonts/` bytes as one read off disk; a 404 rejects with `font/fetch-failed` |
@@ -1180,11 +1181,12 @@ The adapter specs build their decks from `test/browser/harness/decks.mjs`, once 
 once in Node, from one definition. Two copies would make a divergence in the fixture read as a
 divergence in the runtime.
 
-`cross-runtime-bytes.spec.ts` compares the deck the site's demos page builds with the one
-`pnpm showcases:build quarterly-review` builds from the same showcase module. `src/zip.ts` pins
-`FIXED_MTIME`, so one diff shows that every serializer, the zip writer, part ordering and
-relationship numbering are runtime-invariant. A runtime-dependent code path anywhere in
-`src/gen/` surfaces as a named part.
+`cross-runtime-bytes.spec.ts` compares each deck the site's demos page builds with the one
+`pnpm showcases:build` builds from the same showcase module. `src/zip.ts` pins `FIXED_MTIME`, so
+one diff shows that every serializer, the zip writer, part ordering and relationship numbering
+are runtime-invariant. A runtime-dependent code path anywhere in `src/gen/` surfaces as a named
+part. Field Notes adds `loadMedia`: Node returns raw base64 and the browser a `FileReader` data
+URI, and equal packages show the two decode to the same bytes.
 
 That diff goes through `scripts/pptx-parts.mjs`, with the same explode, normalizers and diff as
 the byte-identity harness. Keep one comparison. Two would drift silently, with one accepting a

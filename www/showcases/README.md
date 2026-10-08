@@ -25,17 +25,18 @@ identical deck in a browser.
 
 ### `field-notes/`: Four Cities After Dark
 
-Eight slides. The visual flagship: full-bleed photography, gradient scrims over images (the
+Nine slides. The visual flagship: full-bleed photography, gradient scrims over images (the
 standard editorial fix for putting white type on an unpredictable photo), a duotone picture
 effect, a three-up image grid, an embedded video with a poster frame, and a radial-gradient
 colophon carrying a real hyperlink relationship.
 
-Node-only by nature, since it loads photographs and a video from `demos/common` by path.
+It loads photographs, a video and a model from `media/`, as paths under Node and as URLs on the
+site, where the demos page builds it in the browser like the quarterly review.
 
 ## Layout
 
 ```
-lib/assets.mjs      absolute asset + output paths, and the one base64 helper addMedia needs
+lib/assets.mjs      media as a path (Node) or URL (site), and the one base64 helper addMedia needs
 lib/layout.mjs      slide geometry: the 16:9 box, margins, column arithmetic
 lib/showcases.mjs   the SHOWCASES registry — every deck, in build order
 <deck>/design.mjs   palette, type scale, theme, masters — no slide names a raw hex
