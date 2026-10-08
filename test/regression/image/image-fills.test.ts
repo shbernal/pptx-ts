@@ -140,7 +140,7 @@ defineRegressionSuite('Image (blip) fills', [
 	{
 		// The fill route reaches the same validation as `addImage`'s `crop`, so a degenerate
 		// srcRect — which renders as an empty shape rather than as an error — fails loudly here
-		// too. Mirrors the addImage cases in `image-crop-srcrect.test.js`.
+		// too. Mirrors the addImage cases in `image-crop-srcrect.test.ts`.
 		name: 'an invalid shape image fill crop throws rather than emitting a degenerate srcRect',
 		fn: async () => {
 			const cases = [
