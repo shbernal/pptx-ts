@@ -79,19 +79,33 @@ export function liveFences(markdown: string): LiveFence[] {
 }
 
 /**
+ * Whether a fence body makes its own first slide, as `const slide = pptx.addSlide()`.
+ *
+ * Many guide samples open that way, because it is how a reader's own code opens. Such a body
+ * is given no `slide`: one made for it would be an empty extra slide in front of its own, and
+ * a second `slide` binding would not compile.
+ */
+export function declaresSlide(code: string): boolean {
+	return /^\s*(?:const|let|var)\s+slide\b/m.test(code)
+}
+
+/**
  * The module a fence body becomes.
  *
  * The body runs inside an async function given `pptx`, a fresh presentation, and `slide`,
- * its first slide. That is the whole contract: no imports, and nothing else in scope. A
- * snippet may `await` and may add slides of its own. The caller owns the presentation, so
- * the site builds it from the browser runtime and the test from the Node one, and the
- * module itself depends on neither.
+ * its first slide, unless the body declares its own `slide` (see {@link declaresSlide}).
+ * That is the whole contract: no imports, and nothing else in scope. A snippet may `await`
+ * and may add slides of its own. The caller owns the presentation, so the site builds it from
+ * the browser runtime and the test from the Node one, and the module itself depends on
+ * neither. `ownsSlide` tells the caller whether to make the first slide.
  *
  * The parameters are `any` on purpose: the snippet is shown to readers as it runs, and
  * typing it would mean importing the library into a module that must not import it.
  */
 export function wrapSnippet(code: string): string {
+	const ownsSlide = declaresSlide(code)
+	const params = ownsSlide ? 'pptx: any' : 'pptx: any, slide: any'
 	// The body goes in verbatim, on its own lines, so a stack trace's line number minus one is
 	// the line in the fence.
-	return `export default async function (pptx: any, slide: any): Promise<void> {\n${code}}\n`
+	return `export const ownsSlide = ${ownsSlide}\nexport default async function (${params}): Promise<void> {\n${code}}\n`
 }

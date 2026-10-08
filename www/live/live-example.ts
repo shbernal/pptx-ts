@@ -12,7 +12,9 @@ import { type DeckPreview, previewDeck } from '../demos/deck-preview.ts'
 
 /** A compiled fence body, as `wrapSnippet` writes it. */
 export interface SnippetModule {
-	default(pptx: TsPptx, slide: ReturnType<TsPptx['addSlide']>): Promise<void>
+	/** True when the body makes its own first slide, so none is made for it. */
+	ownsSlide: boolean
+	default(pptx: TsPptx, slide?: ReturnType<TsPptx['addSlide']>): Promise<void>
 }
 
 /** What the page hands the component: the fence's module, imported on first call. */
@@ -22,7 +24,7 @@ export type SnippetLoader = () => Promise<SnippetModule>
 export async function runSnippet(load: SnippetLoader): Promise<TsPptx> {
 	const [{ default: Presentation }, snippet] = await Promise.all([import('pptx-ts'), load()])
 	const pptx = new Presentation()
-	await snippet.default(pptx, pptx.addSlide())
+	await snippet.default(pptx, snippet.ownsSlide ? undefined : pptx.addSlide())
 	return pptx
 }
 

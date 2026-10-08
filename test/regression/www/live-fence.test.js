@@ -3,7 +3,7 @@ import { createMarkdownRenderer } from 'vitepress'
 import { beforeAll, describe, expect, it } from 'vitest'
 import siteConfig from '../../../docs/.vitepress/config.mts'
 import { snippetHash } from '../../../www/live/fence.ts'
-import { LIVE_COMPONENT, liveFenceInfo, liveFences, wrapSnippet } from '../../../www/live/snippet.ts'
+import { declaresSlide, LIVE_COMPONENT, liveFenceInfo, liveFences, wrapSnippet } from '../../../www/live/snippet.ts'
 
 /**
  * `ts live` fences, through the site's own markdown configuration.
@@ -111,6 +111,23 @@ describe('liveFences', () => {
 
 describe('wrapSnippet', () => {
 	it('puts the body, verbatim, inside a function given pptx and slide', () => {
-		expect(wrapSnippet(BODY)).toBe(`export default async function (pptx: any, slide: any): Promise<void> {\n${BODY}}\n`)
+		expect(wrapSnippet(BODY)).toBe(
+			`export const ownsSlide = false\nexport default async function (pptx: any, slide: any): Promise<void> {\n${BODY}}\n`
+		)
+	})
+
+	it('gives a body that makes its own slide only pptx, and says so', () => {
+		const body = 'const slide = pptx.addSlide()\nslide.addText("hi", { x: 1, y: 1, w: 2, h: 1 })\n'
+
+		expect(declaresSlide(body)).toBe(true)
+		expect(wrapSnippet(body)).toBe(
+			`export const ownsSlide = true\nexport default async function (pptx: any): Promise<void> {\n${body}}\n`
+		)
+	})
+
+	it('does not mistake a use of slide, or another name, for a declaration', () => {
+		expect(declaresSlide(BODY)).toBe(false)
+		expect(declaresSlide('const slides = [pptx.addSlide()]\n')).toBe(false)
+		expect(declaresSlide('// const slide = pptx.addSlide()\n')).toBe(false)
 	})
 })

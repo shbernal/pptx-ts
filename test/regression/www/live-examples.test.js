@@ -55,7 +55,7 @@ describe('live examples', () => {
 			// raised while the package is written, not when the option is passed.
 			const { result: bytes, codes } = await captureDiagnostics(async () => {
 				const pptx = new TsPptx()
-				await snippet.default(pptx, pptx.addSlide())
+				await snippet.default(pptx, snippet.ownsSlide ? undefined : pptx.addSlide())
 				return await pptx.toBytes()
 			})
 

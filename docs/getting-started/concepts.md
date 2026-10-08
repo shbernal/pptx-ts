@@ -85,7 +85,7 @@ slide.addText(headline, { x: 1, y: 1, w: 6, h: 1, fontSize: 28 })
 A slide master holds what several slides share: a background, a logo, a footer. Define one with a
 name, then base slides on it by that name:
 
-```ts
+```ts live
 pptx.defineSlideMaster({
   title: "Branded",
   background: { color: "1F3A5F" },
