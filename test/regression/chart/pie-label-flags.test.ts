@@ -15,7 +15,7 @@ import { chartXml } from './chart-parts.ts'
 const BASE = { x: 1, y: 1, w: 6, h: 4 }
 
 /** Every `<c:show*>` flag in the plot-level `<c:dLbls>` (the one that is not inside a `<c:dLbl>`). */
-function plotLevelFlags(xml) {
+function plotLevelFlags(xml: string): Record<string, number> {
 	const withoutPerPoint = xml.replace(/<c:dLbl>[\s\S]*?<\/c:dLbl>/g, '')
 	return Object.fromEntries(
 		[...withoutPerPoint.matchAll(/<c:show(\w+) val="([01])"\/>/g)].map((m) => [m[1], Number(m[2])])

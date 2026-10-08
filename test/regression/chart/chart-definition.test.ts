@@ -1,4 +1,13 @@
-import { ChartType } from '../../../dist/node.js'
+import {
+	ChartType,
+	type BorderProps,
+	type CHART_NAME,
+	type ChartMulti,
+	type ChartOpts,
+	type OptsChartData,
+} from '../../../dist/node.js'
+import type TsPptx from '../../../dist/node.js'
+import type JSZip from 'jszip'
 import {
 	setDiagnosticHandler,
 	defineRegressionSuite,
@@ -45,23 +54,26 @@ import { chartXml } from './chart-parts.ts'
 //      `data`/`options` ARE reachable from untyped JS and are covered below.
 
 /** The chartEx part, for the chart types that emit one (waterfall, funnel, ...). */
-function chartExXml(zip) {
+function chartExXml(zip: JSZip): Promise<string> {
 	const path = listEntries(zip).find((p) => /^ppt\/charts\/chartEx\d+\.xml$/.test(p))
 	assert(path, 'expected a ppt/charts/chartExN.xml entry; got: ' + JSON.stringify(listEntries(zip)))
 	return readEntry(zip, path)
 }
 
 /** Build one chart and return its part. */
-async function chartFrom(data, options) {
+async function chartFrom(data: OptsChartData[], options: ChartOpts & { type: CHART_NAME }): Promise<string>
+async function chartFrom(data: ChartMulti[], options?: ChartOpts): Promise<string>
+async function chartFrom(data: OptsChartData[] | ChartMulti[], options?: ChartOpts): Promise<string> {
 	const { zip } = await build((p) => {
-		p.addSlide().addChart(data, options)
+		// The overloads above pair each data shape with its options, as `addChart`'s own do.
+		p.addSlide().addChart(data as OptsChartData[], options as ChartOpts & { type: CHART_NAME })
 	})
 	return chartXml(zip)
 }
 
 /** Build, capturing library warnings (`log.ts` routes every one through `console.warn`). */
-async function buildCapturingWarnings(buildFn) {
-	const warnings = []
+async function buildCapturingWarnings(buildFn: (pres: TsPptx) => unknown) {
+	const warnings: string[] = []
 	setDiagnosticHandler((d) => warnings.push(d.message))
 	try {
 		const result = await build(buildFn)
@@ -91,7 +103,7 @@ defineRegressionSuite('Chart definition', [
 			const dataBorder = { color: '00FF00' }
 			const layout = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 }
 			const serGridLine = { color: 'CCCCCC', size: 1 }
-			const shadow = { type: /** @type {const} */ ('outer'), angle: 45, opacity: 0.5, blur: 3 }
+			const shadow = { type: 'outer' as const, angle: 45, opacity: 0.5, blur: 3 }
 			const before = JSON.stringify({ plotArea, chartArea, dataBorder, layout, serGridLine, shadow })
 			await build((p) => {
 				p.addSlide().addChart(SERIES, {
@@ -167,8 +179,10 @@ defineRegressionSuite('Chart definition', [
 		// dropped on clustered bars and kept on stacked ones.
 		name: 'bar label positions are filtered by the bar grouping',
 		fn: async () => {
-			const barLabel = (barGrouping, dataLabelPosition) =>
-				chartFrom(SERIES, { ...BASE, type: ChartType.bar, showValue: true, barGrouping, dataLabelPosition })
+			const barLabel = (
+				barGrouping: NonNullable<ChartOpts['barGrouping']>,
+				dataLabelPosition: NonNullable<ChartOpts['dataLabelPosition']>
+			) => chartFrom(SERIES, { ...BASE, type: ChartType.bar, showValue: true, barGrouping, dataLabelPosition })
 
 			assertIncludes(await barLabel('clustered', 'inEnd'), '<c:dLblPos val="inEnd"/>', 'inEnd on clustered bars')
 			assertIncludes(await barLabel('clustered', 'outEnd'), '<c:dLblPos val="outEnd"/>', 'outEnd on clustered bars')
@@ -200,6 +214,7 @@ defineRegressionSuite('Chart definition', [
 				'a legal 3D bar grouping'
 			)
 			assertIncludes(
+				// @ts-expect-error 'sideways' is not an ST_Grouping member
 				await chartFrom(SERIES, { ...BASE, type: ChartType.bar3d, barGrouping: 'sideways' }),
 				'<c:grouping val="standard"/>',
 				'an illegal 3D bar grouping falls back to standard'
@@ -216,15 +231,18 @@ defineRegressionSuite('Chart definition', [
 			const hidden = await chartFrom(SERIES, {
 				...BASE,
 				type: ChartType.bar3d,
+				// oxlint-disable-next-line typescript/no-deprecated -- the flat `*AxisLineShow` toggles are what this case reads.
 				catAxisLineShow: false,
+				// oxlint-disable-next-line typescript/no-deprecated -- the flat `*AxisLineShow` toggles are what this case reads.
 				valAxisLineShow: false,
+				// oxlint-disable-next-line typescript/no-deprecated -- the flat `*AxisLineShow` toggles are what this case reads.
 				serAxisLineShow: false,
 			})
 			// The `<a:ln>` is emitted either way; what changes is its fill, so the marker is a
 			// `<a:noFill/>` where the gridline color would be. Scoped to each axis element, because
 			// the val axis also carries its major gridlines' own `<a:ln>` and both would match a
 			// whole-document search.
-			const axis = (xml, tag) => {
+			const axis = (xml: string, tag: string) => {
 				const block = (xml.match(new RegExp(`<c:${tag}>[\\s\\S]*?</c:${tag}>`)) || [])[0]
 				assert(block, `expected a <c:${tag}> in the chart part`)
 				return block
@@ -339,8 +357,7 @@ defineRegressionSuite('Chart definition', [
 		// with a warning on the chart area. One normalizer now gives each its own defaults and warns.
 		name: 'the plot area, chart area and data border answer a bad border the same way',
 		fn: async () => {
-			/** @type {[string, (border: any) => object, string, string][]} */
-			const borders = [
+			const borders: [string, (border: BorderProps) => ChartOpts, string, string][] = [
 				['plotArea.border', (border) => ({ plotArea: { border } }), 'w="12700"', '363636'],
 				['chartArea.border', (border) => ({ chartArea: { border } }), 'w="12700"', '363636'],
 				['dataBorder', (border) => ({ dataBorder: border }), 'w="9525"', '363636'],
@@ -351,6 +368,7 @@ defineRegressionSuite('Chart definition', [
 					{ width: 2, color: 'red' },
 				]) {
 					const { zip, warnings } = await buildCapturingWarnings((p) => {
+						// @ts-expect-error the first border's color is a number
 						p.addSlide().addChart(SERIES, { ...BASE, type: ChartType.bar, ...place(border) })
 					})
 					const xml = await chartXml(zip)
@@ -436,6 +454,7 @@ defineRegressionSuite('Chart definition', [
 		name: 'waterfall subtotals drop invalid indices, and an all-invalid list is omitted',
 		fn: async () => {
 			const partial = await buildCapturingWarnings((p) => {
+				// @ts-expect-error 'x' is not a category index
 				p.addSlide().addChart(SERIES, {
 					...BASE,
 					type: ChartType.waterfall,
@@ -456,6 +475,7 @@ defineRegressionSuite('Chart definition', [
 
 			// Not an array at all: nothing to keep, nothing to warn about.
 			const notAList = await buildCapturingWarnings((p) => {
+				// @ts-expect-error subtotals takes an array
 				p.addSlide().addChart(SERIES, { ...BASE, type: ChartType.waterfall, subtotals: 7 })
 			})
 			assertNotIncludes(await chartExXml(notAList.zip), '<cx:subtotals>', 'a non-array subtotals')
@@ -492,6 +512,7 @@ defineRegressionSuite('Chart definition', [
 			assertIncludes(legal, '<c:shape val="cylinder"/>', 'a legal ST_Shape')
 			assertIncludes(legal, '<c:dispBlanksAs val="zero"/>', 'a legal ST_DispBlanksAs')
 
+			// @ts-expect-error 'sphere' and 'hide' are not ST_Shape and ST_DispBlanksAs members
 			const illegal = await chartFrom(SERIES, {
 				...BASE,
 				type: ChartType.bar3d,
@@ -560,11 +581,13 @@ defineRegressionSuite('Chart definition', [
 					{
 						type: ChartType.bar,
 						data: [{ name: 'Bars', labels: ['A', 'B'], values: [1, 2] }],
+						// @ts-expect-error 'sphere' is not an ST_Shape member
 						options: { barGrouping: 'stacked', bar3DShape: 'sphere' },
 					},
 					{
 						type: ChartType.line,
 						data: [{ name: 'Line', labels: ['A', 'B'], values: [3, 4] }],
+						// @ts-expect-error 'sphere' is not an ST_MarkerStyle member
 						options: { lineDataSymbol: 'sphere', lineDataSymbolLineSize: 4 },
 					},
 				],
@@ -586,12 +609,14 @@ defineRegressionSuite('Chart definition', [
 			const combo = await chartFrom(
 				[
 					{ type: ChartType.bar, data: [{ name: 'Bars', labels: ['A', 'B'], values: [1, 2] }], options: {} },
+					// @ts-expect-error the entry carries no data or options
 					{ type: ChartType.line },
 				],
 				{ ...BASE }
 			)
 			assertEqual((combo.match(/<c:ser>/g) || []).length, 1, 'only the entry that had data contributes a series')
 
+			// @ts-expect-error data has to be an array
 			const notAList = await chartFrom({}, { ...BASE, type: ChartType.bar })
 			assertEqual((notAList.match(/<c:ser>/g) || []).length, 0, 'non-array data plots nothing')
 		},

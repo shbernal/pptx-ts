@@ -1,5 +1,5 @@
 import TsPptx, { ChartType } from '../../../dist/node.js'
-import { defineRegressionSuite, build, readEntry, assert, assertEqual, assertRejects } from '../../helpers.ts'
+import { defineRegressionSuite, build, readEntry, assert, assertEqual, assertRejects, defined } from '../../helpers.ts'
 
 defineRegressionSuite('Combo chart axes [legacy bug-06]', [
 	{
@@ -19,10 +19,10 @@ defineRegressionSuite('Combo chart axes [legacy bug-06]', [
 			})
 			const xml = await readEntry(zip, 'ppt/charts/chart1.xml')
 			const axIdRefs = xml.match(/<c:axId\s+val="(\d+)"\/>/g) || []
-			const distinctIds = new Set(axIdRefs.map((t) => t.match(/val="(\d+)"/)[1]))
+			const distinctIds = new Set(axIdRefs.map((t) => defined(t.match(/val="(\d+)"/))[1]))
 			const catAx = xml.match(/<c:catAx>/g) || []
 			const valAx = xml.match(/<c:valAx>/g) || []
-			const definedIds = new Set()
+			const definedIds = new Set<string>()
 			for (const m of xml.matchAll(/<c:(catAx|valAx)>\s*<c:axId\s+val="(\d+)"\/>/g)) {
 				definedIds.add(m[2])
 			}

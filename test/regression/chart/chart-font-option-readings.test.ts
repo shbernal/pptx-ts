@@ -1,4 +1,4 @@
-import { ChartType } from '../../../dist/node.js'
+import { ChartType, type CHART_NAME, type ChartOpts, type OptsChartData } from '../../../dist/node.js'
 import { assert, assertEqual, build, captureDiagnostics, defineRegressionSuite } from '../../helpers.ts'
 import { chartXml } from './chart-parts.ts'
 
@@ -21,14 +21,14 @@ const BASE = { x: 1, y: 1, w: 4, h: 3 }
  * Every `sz` on a run-properties tag inside a `<c:dLbls>` block, deduplicated. Both `<a:defRPr>`
  * and `<a:rPr>` are read: a scatter's rich label carries the same options on the run itself.
  */
-function labelFontSizes(xml) {
+function labelFontSizes(xml: string): string[] {
 	const blocks = [...xml.matchAll(/<c:dLbls>[\s\S]*?<\/c:dLbls>/g)].map((m) => m[0])
 	assert(blocks.length > 0, 'expected at least one <c:dLbls> block in the chart part')
 	return [...new Set(blocks.flatMap((b) => [...b.matchAll(/<a:(?:defRPr|rPr)[^>]*\ssz="(\d+)"/g)].map((m) => m[1])))]
 }
 
 /** Build a one-chart deck and hand back its label sizes plus whatever it warned about. */
-async function labelSizesFor(fixture, opts) {
+async function labelSizesFor(fixture: Fixture, opts: ChartOpts) {
 	const { result, codes } = await captureDiagnostics(() =>
 		build((p) => {
 			p.addSlide().addChart(fixture.data, { ...BASE, ...fixture.opts, ...opts })
@@ -43,7 +43,14 @@ const XY_DATA = [
 	{ name: 'A', values: [3, 4], sizes: [1, 2] },
 ]
 
-const FIXTURES = [
+/** One chart shape the label builders are reached through. */
+interface Fixture {
+	label: string
+	data: OptsChartData[]
+	opts: ChartOpts & { type: CHART_NAME }
+}
+
+const FIXTURES: Fixture[] = [
 	{ label: 'bar', data: CAT_DATA, opts: { type: ChartType.bar, showValue: true } },
 	{ label: 'pie', data: CAT_DATA, opts: { type: ChartType.pie, showValue: true } },
 	{ label: 'bubble', data: XY_DATA, opts: { type: ChartType.bubble, showValue: true } },
@@ -55,7 +62,7 @@ const FIXTURES = [
 ]
 
 /** The `<a:defRPr>` of the first `<c:dLbls>` block, whole. */
-function firstLabelDefRPr(xml) {
+function firstLabelDefRPr(xml: string): string {
 	const blocks = [...xml.matchAll(/<c:dLbls>[\s\S]*?<\/c:dLbls>/g)].map((m) => m[0]).join('')
 	const match = /<a:defRPr[^>]*>[\s\S]*?<\/a:defRPr>/.exec(blocks)
 	assert(match, 'expected an <a:defRPr> inside a <c:dLbls> block')
@@ -63,7 +70,7 @@ function firstLabelDefRPr(xml) {
 }
 
 /** Build a one-chart deck and hand back its first label `<a:defRPr>`. */
-async function labelDefRPrFor(fixture, opts) {
+async function labelDefRPrFor(fixture: Fixture, opts: ChartOpts): Promise<string> {
 	const { zip } = await build((p) => {
 		p.addSlide().addChart(fixture.data, { ...BASE, ...fixture.opts, ...opts })
 	})
@@ -139,7 +146,7 @@ defineRegressionSuite(
 // so it is diagnosed AND replaced, landing on the same default an absent option lands on.
 
 /** Build a chart carrying a title, an axis title and a data table, and report what it warned. */
-async function sweepChart(opts) {
+async function sweepChart(opts: ChartOpts) {
 	const { result, codes } = await captureDiagnostics(() =>
 		build((p) => {
 			p.addSlide().addChart(CAT_DATA, {
@@ -161,7 +168,7 @@ async function sweepChart(opts) {
  * Every `<a:defRPr>` inside the first element matching `tag`. A `<c:catAx>` holds two -- its
  * title's and its tick labels' -- and both read options this sweep touched, so both are checked.
  */
-function defRPrsIn(xml, tag) {
+function defRPrsIn(xml: string, tag: string): string[] {
 	const start = xml.indexOf(`<${tag}>`)
 	assert(start >= 0, `expected a <${tag}> in the chart part`)
 	const block = xml.slice(start, xml.indexOf(`</${tag}>`, start))

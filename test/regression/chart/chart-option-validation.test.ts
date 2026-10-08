@@ -1,5 +1,11 @@
-/** @import { CHART_NAME, ChartOpts, OptsChartData } from '../../../dist/node.js' */
-import TsPptx, { ChartType, InvalidOptionError } from '../../../dist/node.js'
+import TsPptx, {
+	ChartType,
+	InvalidOptionError,
+	type CHART_NAME,
+	type ChartErrorBarOptions,
+	type ChartOpts,
+	type OptsChartData,
+} from '../../../dist/node.js'
 import {
 	defineRegressionSuite,
 	build,
@@ -22,7 +28,7 @@ const SERIES = [{ name: 'S1', labels: ['A', 'B', 'C'], values: [1, 2, 3] }]
 const BASE = { x: 1, y: 1, w: 6, h: 3 }
 
 /** The error `fn` throws, or `null` when it returns. */
-function thrownBy(fn) {
+function thrownBy(fn: () => unknown): unknown {
 	try {
 		fn()
 	} catch (err) {
@@ -32,7 +38,7 @@ function thrownBy(fn) {
 }
 
 /** Build one chart and return its XML with the diagnostics it raised. */
-async function chartWith(data, options) {
+async function chartWith(data: OptsChartData[], options: ChartOpts & { type: CHART_NAME }) {
 	const {
 		result: xml,
 		codes,
@@ -115,8 +121,7 @@ defineRegressionSuite('Chart option validation', [
 		// axes and nothing in it, i.e. a chart-shaped hole the deck opens and shows empty.
 		name: 'a chart type outside the catalog is refused at addChart, not emitted as an empty plot',
 		fn: () => {
-			/** @type {unknown} */
-			let thrown = null
+			let thrown: unknown = null
 			try {
 				// The type error is the point: `CHART_NAME` keeps TypeScript callers out, and this guard
 				// exists for the JavaScript ones it cannot reach.
@@ -143,8 +148,7 @@ defineRegressionSuite('Chart option validation', [
 				{ type: ChartType.bar, data: SERIES },
 				{ type: 'nonsense', data: SERIES },
 			]
-			/** @type {unknown} */
-			let thrown = null
+			let thrown: unknown = null
 			try {
 				// @ts-expect-error `nonsense` is not a chart type
 				new TsPptx().addSlide().addChart(combo, BASE)
@@ -194,8 +198,7 @@ defineRegressionSuite('Chart option validation', [
 		// same option. Pinned from untyped JS, which is the only place it can now arrive.
 		name: 'a string legendFontSize is refused rather than coerced',
 		fn: async () => {
-			/** @type {unknown} */
-			let thrown = null
+			let thrown: unknown = null
 			try {
 				await build((p) => {
 					// @ts-expect-error a font size given as a string
@@ -506,8 +509,7 @@ defineRegressionSuite('Chart option validation', [
 		// 0, both without a word. The chart-level and per-series spellings share the stroke builder.
 		name: 'a negative lineSize clamps to 0 with a warning, and a NaN one throws',
 		fn: async () => {
-			/** @type {[string, object][]} */
-			const cases = [
+			const cases: [string, ChartOpts][] = [
 				['chart-level', { lineSize: -1 }],
 				['per-series', { seriesOptions: [{ lineSize: -1 }] }],
 			]
@@ -520,8 +522,7 @@ defineRegressionSuite('Chart option validation', [
 				assertIncludes(xml, '<a:ln w="0"', `${label}: the width clamps to 0`)
 				assert(codes.includes('line/width-out-of-range'), `${label}: and says so; got ${JSON.stringify(codes)}`)
 			}
-			/** @type {unknown} */
-			let thrown = null
+			let thrown: unknown = null
 			try {
 				const pres = new TsPptx()
 				pres.addSlide().addChart(SERIES, { ...BASE, type: ChartType.line, lineSize: NaN })
@@ -555,7 +556,7 @@ defineRegressionSuite('Chart option validation', [
 		name: 'a chartEx chart names the options it ignores',
 		fn: async () => {
 			const data = [{ name: 'W', labels: ['a', 'b'], values: [1, 2] }]
-			const messagesFor = async (type, options) =>
+			const messagesFor = async (type: CHART_NAME, options: ChartOpts) =>
 				(
 					await captureDiagnostics(() => build((p) => p.addSlide().addChart(data, { ...BASE, type, ...options })))
 				).diagnostics
@@ -597,8 +598,7 @@ defineRegressionSuite('Chart option validation', [
 		// `$C$2:$C$1`), and every series after the first on a chart that plots one.
 		name: 'series the chart cannot plot as given are reported',
 		fn: async () => {
-			/** @type {[string, CHART_NAME, OptsChartData[]][]} */
-			const cases = [
+			const cases: [string, CHART_NAME, OptsChartData[]][] = [
 				['more values than labels', ChartType.bar, [{ name: 'S', labels: ['a', 'b'], values: [1, 2, 3, 4] }]],
 				[
 					'more values than labels on a chartEx chart',
@@ -660,8 +660,7 @@ defineRegressionSuite('Chart option validation', [
 		// 0 became 50, while the same options inside a combo kept it.
 		name: 'a stacked bar keeps a stated gap width of 0, standalone and inside a combo',
 		fn: async () => {
-			/** @type {ChartOpts} */
-			const stacked = { barGrouping: 'stacked', barGapWidthPct: 0 }
+			const stacked: ChartOpts = { barGrouping: 'stacked', barGapWidthPct: 0 }
 			const standalone = await build((p) => {
 				p.addSlide().addChart(SERIES, { ...BASE, type: ChartType.bar, ...stacked })
 			})
@@ -698,8 +697,7 @@ defineRegressionSuite('Chart option validation', [
 				['firstSliceAng', '90'],
 				['lineDataSymbolSize', NaN],
 			]) {
-				/** @type {unknown} */
-				let thrown = null
+				let thrown: unknown = null
 				try {
 					const pres = new TsPptx()
 					pres.addSlide().addChart(SERIES, { ...BASE, type: ChartType.doughnut, [option]: value })
@@ -816,11 +814,17 @@ defineRegressionSuite('Chart option validation', [
 		fn: async () => {
 			const { xml, codes, messages } = await chartWith(SERIES, {
 				type: ChartType.bar,
+				// @ts-expect-error 'up' is not an ST_Orientation member
 				valAxisOrientation: 'up',
+				// @ts-expect-error 'x' is not an ST_CrossBetween member
 				valAxisCrossBetween: 'x',
+				// @ts-expect-error 'bogus' is not an ST_TickLblPos member
 				valAxisLabelPos: 'bogus',
+				// @ts-expect-error 'zillions' is not an ST_BuiltInUnit member
 				valAxisDisplayUnit: 'zillions',
+				// @ts-expect-error 'sideways' is not an ST_TickMark member
 				valAxisMajorTickMark: 'sideways',
+				// @ts-expect-error 'inside' is not an ST_TickMark member
 				catAxisMinorTickMark: 'inside',
 			})
 			for (const value of ['up', 'x', 'bogus', 'zillions', 'sideways', 'inside']) {
@@ -843,6 +847,7 @@ defineRegressionSuite('Chart option validation', [
 		fn: async () => {
 			const catAxes = [{ catAxisLabelPos: 'bogus' }]
 			const valAxes = [{ valAxisMajorUnit: -1, valAxisDisplayUnit: 'zillions' }]
+			// @ts-expect-error the entries carry values outside their enumerations
 			const { xml, messages } = await chartWith(SERIES, { type: ChartType.bar, catAxes, valAxes })
 			for (const path of [
 				'catAxes[0].catAxisLabelPos',
@@ -867,12 +872,14 @@ defineRegressionSuite('Chart option validation', [
 		name: 'an axis unit that is not a number above 0 warns and is left off',
 		fn: async () => {
 			for (const unit of [-5, 0, NaN, '5']) {
+				// @ts-expect-error '5' is a string, not a number
 				const { xml, codes } = await chartWith(SERIES, { type: ChartType.bar, valAxisMajorUnit: unit })
 				assertNotIncludes(xml, '<c:majorUnit', `${String(unit)} is not written`)
 				assert(codes.includes('chart/option-out-of-range'), `${String(unit)} warns; got ${JSON.stringify(codes)}`)
 			}
 			const { xml, codes } = await chartWith([{ name: 'S1', values: [1, 2, 3] }], {
 				type: ChartType.scatter,
+				// @ts-expect-error '2' is a string, not a number
 				catAxisMajorUnit: '2',
 			})
 			assertNotIncludes(xml, '<c:majorUnit val="2"/>', 'a string unit on the X axis is not written')
@@ -913,8 +920,7 @@ defineRegressionSuite('Chart option validation', [
 		// the caller had pinned. It has no nearest legal value, so it is refused.
 		name: 'an axis bound that is not a finite number throws, and 0 is written',
 		fn: async () => {
-			/** @type {[string, object][]} */
-			const cases = [
+			const cases: [string, ChartOpts][] = [
 				['valAxisMaxVal: NaN', { valAxisMaxVal: NaN }],
 				['catAxisMinVal: Infinity', { catAxisMinVal: Infinity }],
 				['valAxes[0].valAxisMinVal: NaN', { valAxes: [{ valAxisMinVal: NaN }], catAxes: [{}] }],
@@ -937,6 +943,7 @@ defineRegressionSuite('Chart option validation', [
 		name: 'an error bar enumeration outside its schema type warns and takes the default',
 		fn: async () => {
 			const errorBars = { valueType: 'bogus', direction: 'z', barType: 'up', value: 2 }
+			// @ts-expect-error each enumeration is outside its schema type
 			const { xml, codes } = await chartWith([{ ...SERIES[0], errorBars }], { type: ChartType.bar })
 			assertIncludes(
 				xml,
@@ -956,10 +963,10 @@ defineRegressionSuite('Chart option validation', [
 		// `NaN` one wrote `w="0"` while the series' own stroke threw for the same value.
 		name: 'an error bar value or width that is not a number throws, and a negative width clamps',
 		fn: async () => {
-			/** @type {[string, any, string][]} */
-			const cases = [
+			const cases: [string, ChartErrorBarOptions, string][] = [
 				['value', { value: NaN }, 'chart/option-non-finite'],
 				['width', { value: 1, width: NaN }, 'coord/non-finite'],
+				// oxlint-disable-next-line typescript/no-deprecated -- the deprecated `size` spelling has to throw on NaN too.
 				['size', { value: 1, size: NaN }, 'coord/non-finite'],
 			]
 			for (const [label, bar, code] of cases) {
@@ -1032,6 +1039,7 @@ defineRegressionSuite('Chart option validation', [
 	{
 		name: 'a stockStyle or dataLabelFormatScatter the chart does not know warns',
 		fn: async () => {
+			// @ts-expect-error 'bogus' is not a stock style
 			const stock = await chartWith([SERIES[0], SERIES[0], SERIES[0]], { type: ChartType.stock, stockStyle: 'bogus' })
 			assert(stock.codes.includes('chart/invalid-option-value'), `stockStyle warns; got ${JSON.stringify(stock.codes)}`)
 			assert(!stock.codes.includes('chart/stock-series-count'), 'and falls back to hlc, which takes three series')
@@ -1043,6 +1051,7 @@ defineRegressionSuite('Chart option validation', [
 					{ name: 'X', values: [1, 2, 3] },
 					{ name: 'Y', values: [4, 5, 6], labels: ['a', 'b', 'c'] },
 				],
+				// @ts-expect-error 'bogus' is not a scatter label format
 				{ type: ChartType.scatter, showLabel: true, dataLabelFormatScatter: 'bogus' }
 			)
 			assert(

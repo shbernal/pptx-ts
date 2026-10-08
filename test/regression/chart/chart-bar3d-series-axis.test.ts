@@ -8,7 +8,7 @@ import { chartXml } from './chart-parts.ts'
 // the shape of `CT_SerAx` that leaves it with no unit element to carry.
 
 /** The `<c:serAx>…</c:serAx>` block (the bar3d series axis). */
-function serAxBlock(xml) {
+function serAxBlock(xml: string): string {
 	const match = xml.match(/<c:serAx>[\s\S]*?<\/c:serAx>/)
 	assert(match, 'expected a <c:serAx> block in bar3d chart; got: ' + xml)
 	return match[0]
@@ -86,7 +86,7 @@ defineRegressionSuite('Chart bar3d series axis', [
 			// Regression: the value was previously only read as a truthiness test — a
 			// missing pair of parentheses (`a || b === c ? x : y`) made every set value
 			// emit val="low". Each explicit position must now round-trip verbatim.
-			for (const pos of /** @type {const} */ (['none', 'low', 'high', 'nextTo'])) {
+			for (const pos of ['none', 'low', 'high', 'nextTo'] as const) {
 				const { zip } = await build((p) => {
 					p.addSlide().addChart(DATA, {
 						type: ChartType.bar3d,

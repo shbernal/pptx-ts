@@ -8,20 +8,20 @@
  * were passed in.
  */
 import { ChartType } from '../../../dist/node.js'
+import type JSZip from 'jszip'
 import { expect, vi } from 'vitest'
 import { defineRegressionSuite, build, readEntry, listEntries, assert, assertIncludes, defined } from '../../helpers.ts'
 
-/** @param {string} path */
-const chartNumber = (path) => Number(defined(path.match(/\d+/))[0])
+const chartNumber = (path: string): number => Number(defined(path.match(/\d+/))[0])
 
 /** Every chart part in the package, in `chart{N}` order. */
-function chartPartPaths(zip) {
+function chartPartPaths(zip: JSZip): string[] {
 	return listEntries(zip)
 		.filter((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))
 		.sort((a, b) => chartNumber(a) - chartNumber(b))
 }
 
-async function firstChartPart(zip) {
+async function firstChartPart(zip: JSZip): Promise<string> {
 	const [path] = chartPartPaths(zip)
 	assert(path, 'no chart part found in package: ' + listEntries(zip).join(', '))
 	return readEntry(zip, path)

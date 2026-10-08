@@ -1,4 +1,12 @@
-import TsPptx, { ChartType, InvalidOptionError } from '../../../dist/node.js'
+import TsPptx, {
+	ChartType,
+	InvalidOptionError,
+	type CHART_NAME,
+	type ChartMulti,
+	type ChartOpts,
+	type DiagnosticCode,
+	type OptsChartData,
+} from '../../../dist/node.js'
 import {
 	defineRegressionSuite,
 	build,
@@ -23,15 +31,25 @@ const XY = [
 	{ name: 'Y', values: [4, 5, 6], labels: ['a', 'b', 'c'] },
 ]
 
+/** A chart part with the diagnostics its build raised. */
+interface ChartResult {
+	xml: string
+	codes: DiagnosticCode[]
+	messages: string[]
+}
+
 /** Build one chart and return its part with the diagnostics it raised. */
-async function chartWith(data, options = {}) {
+async function chartWith(data: OptsChartData[], options: ChartOpts & { type: CHART_NAME }): Promise<ChartResult>
+async function chartWith(data: ChartMulti[], options?: ChartOpts): Promise<ChartResult>
+async function chartWith(data: OptsChartData[] | ChartMulti[], options: ChartOpts = {}): Promise<ChartResult> {
 	const {
 		result: xml,
 		codes,
 		messages,
 	} = await captureDiagnostics(async () => {
 		const { zip } = await build((p) => {
-			p.addSlide().addChart(data, { ...BASE, ...options })
+			// The overloads above pair each data shape with its options, as `addChart`'s own do.
+			p.addSlide().addChart(data as OptsChartData[], { ...BASE, ...options } as ChartOpts & { type: CHART_NAME })
 		})
 		return chartXml(zip)
 	})
@@ -39,7 +57,7 @@ async function chartWith(data, options = {}) {
 }
 
 /** A bar and line combo, with `barOptions` on the bar subchart. */
-const barAndLine = (barOptions, chartOptions = {}) =>
+const barAndLine = (barOptions: ChartOpts, chartOptions: ChartOpts = {}) =>
 	chartWith(
 		[
 			{ type: ChartType.bar, data: BAR, options: barOptions },
@@ -49,20 +67,22 @@ const barAndLine = (barOptions, chartOptions = {}) =>
 	)
 
 /** The first match of `pattern` in `xml`, or `''`. */
-const first = (xml, pattern) => xml.match(pattern)?.[0] ?? ''
+const first = (xml: string, pattern: RegExp): string => xml.match(pattern)?.[0] ?? ''
 
 defineRegressionSuite('Combo subchart normalization', [
 	{
 		name: 'a subchart shadow is checked as a chart shadow is',
 		fn: async () => {
 			const shadow = { type: 'weird', angle: 9999 }
+			// @ts-expect-error 'weird' is not a shadow type
 			const combo = await barAndLine({ shadow })
+			// @ts-expect-error 'weird' is not a shadow type
 			const single = await chartWith(BAR, { type: ChartType.bar, shadow })
 			assertNotIncludes(combo.xml, 'weirdShdw', 'no element named after the unknown type')
 			const outer = first(single.xml, /<a:outerShdw[^>]*>/)
 			assert(outer.length > 0, 'the single chart draws an outer shadow')
 			assertIncludes(combo.xml, outer, 'the subchart draws the same shadow')
-			for (const code of /** @type {const} */ (['shadow/invalid-type', 'shadow/angle-out-of-range'])) {
+			for (const code of ['shadow/invalid-type', 'shadow/angle-out-of-range'] as const) {
 				assert(combo.codes.includes(code), `${code} is raised; got ${JSON.stringify(combo.codes)}`)
 			}
 			assertEqual(shadow.type, 'weird', "the caller's shadow is not rewritten")
@@ -87,6 +107,7 @@ defineRegressionSuite('Combo subchart normalization', [
 		name: 'a subchart radarStyle is checked, and its alias resolved',
 		fn: async () => {
 			const { xml, codes } = await chartWith([
+				// @ts-expect-error 'bogus' is not a radarStyle
 				{ type: ChartType.radar, data: BAR, options: { radarStyle: 'bogus' } },
 				{ type: ChartType.radar, data: LINE, options: { radarStyle: 'markers' } },
 			])
@@ -110,7 +131,7 @@ defineRegressionSuite('Combo subchart normalization', [
 				},
 			])
 			const single = await chartWith(XY, { type: ChartType.scatter, showLabel: true })
-			const count = (xml) => (xml.match(/<c:dLbl>/g) ?? []).length
+			const count = (xml: string) => (xml.match(/<c:dLbl>/g) ?? []).length
 			assert(count(single.xml) > 0, 'the single scatter draws labels')
 			assertEqual(count(combo.xml), count(single.xml), 'the scatter subchart draws as many')
 		},
@@ -134,8 +155,7 @@ defineRegressionSuite('Combo subchart normalization', [
 	{
 		name: 'a subchart chartColorsOpacity is checked when the chart is added',
 		fn: async () => {
-			/** @type {unknown} */
-			let thrown = null
+			let thrown: unknown = null
 			try {
 				new TsPptx().addSlide().addChart(
 					[
@@ -160,7 +180,9 @@ defineRegressionSuite('Combo subchart normalization', [
 		fn: async () => {
 			const chartLine = { width: 0, cap: 'bevel' }
 			const subLine = { width: 0, cap: 'bevel' }
+			// @ts-expect-error 'bevel' is not a LineCap
 			await chartWith(BAR, { type: ChartType.bar, barGrouping: 'stacked', barSeriesLine: chartLine })
+			// @ts-expect-error 'bevel' is not a LineCap
 			await barAndLine({ barGrouping: 'stacked', barSeriesLine: subLine })
 			assertEqual(JSON.stringify(chartLine), '{"width":0,"cap":"bevel"}', 'the chart-level object is untouched')
 			assertEqual(JSON.stringify(subLine), '{"width":0,"cap":"bevel"}', 'the subchart object is untouched')

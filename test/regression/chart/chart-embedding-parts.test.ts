@@ -1,5 +1,4 @@
-/** @import { CHART_NAME, OptsChartData } from '../../../dist/node.js' */
-import TsPptx, { ChartType } from '../../../dist/node.js'
+import TsPptx, { ChartType, type CHART_NAME, type OptsChartData } from '../../../dist/node.js'
 import JSZip from 'jszip'
 import {
 	defineRegressionSuite,
@@ -16,7 +15,7 @@ import {
 const PNG_DATA =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP8z8DwHwAFAAH/Re1ZlAAAAABJRU5ErkJggg=='
 
-function chartsOrEmbeddingsEntries(zip) {
+function chartsOrEmbeddingsEntries(zip: JSZip): string[] {
 	return listEntries(zip).filter(
 		(p) =>
 			p.startsWith('ppt/charts/') || p === 'ppt/charts' || p.startsWith('ppt/embeddings/') || p === 'ppt/embeddings'
@@ -92,8 +91,7 @@ defineRegressionSuite('Chart embedding parts [legacy bug-17]', [
 		name: 'no family writes a non-finite number into the embedded workbook',
 		fn: async () => {
 			const labels = ['a', 'b', 'c']
-			/** @type {[string, CHART_NAME, OptsChartData[]][]} */
-			const cases = [
+			const cases: [string, CHART_NAME, OptsChartData[]][] = [
 				['bar', ChartType.bar, [{ name: 'S1', labels, values: [1, Infinity, 3] }]],
 				['pie', ChartType.pie, [{ name: 'S1', labels, values: [1, -Infinity, 3] }]],
 				['line, NaN', ChartType.line, [{ name: 'S1', labels, values: [1, NaN, 3] }]],

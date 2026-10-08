@@ -1,11 +1,12 @@
 import TsPptx, { ChartType } from '../../../dist/node.js'
+import type JSZip from 'jszip'
 import { defineRegressionSuite, build, readEntry, listEntries, assert, assertRejects } from '../../helpers.ts'
 
 const DATA = [{ name: 'Sales', labels: ['Q1', 'Q2', 'Q3'], values: [10, 20, 30] }]
 
 // The chart-part filename uses a module-global counter that advances across builds in this file,
 // so locate the (single) chart part rather than assuming `chart1.xml`.
-function chartPart(zip) {
+function chartPart(zip: JSZip): Promise<string> {
 	const path = listEntries(zip).find((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))
 	assert(path, 'no chart part found in package: ' + listEntries(zip).join(', '))
 	return readEntry(zip, path)

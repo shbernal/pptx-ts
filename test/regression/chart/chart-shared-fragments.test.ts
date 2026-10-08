@@ -1,4 +1,4 @@
-import { ChartType } from '../../../dist/node.js'
+import { ChartType, type CHART_NAME, type ChartOpts, type OptsChartData } from '../../../dist/node.js'
 import {
 	defineRegressionSuite,
 	build,
@@ -31,7 +31,7 @@ const XY = [
 	{ name: 'Y', labels: ['a', 'b', 'c'], values: [4, 5, 6] },
 ]
 
-async function chartFor(type, data, opts = {}) {
+async function chartFor(type: CHART_NAME, data: OptsChartData[], opts: ChartOpts = {}): Promise<string> {
 	const { zip } = await build((p) => {
 		p.addSlide().addChart(data, { type, x: 1, y: 1, w: 6, h: 4, ...opts })
 	})
@@ -39,14 +39,14 @@ async function chartFor(type, data, opts = {}) {
 }
 
 /** The `<c:xVal>` or `<c:yVal>` block, whole. */
-function valBlock(xml, tag) {
+function valBlock(xml: string, tag: string): string {
 	const block = new RegExp(`<${tag}>[\\s\\S]*?</${tag}>`).exec(xml)
 	assert(block, `expected a <${tag}> block; got: ` + xml.slice(0, 400))
 	return block[0]
 }
 
 /** The first `<c:ser>`'s `<c:spPr>`, whole — the series' own fill/outline/shadow. */
-function serShapeProps(xml) {
+function serShapeProps(xml: string): string {
 	const block = /<c:ser>[\s\S]*?<c:spPr>[\s\S]*?<\/c:spPr>/.exec(xml)
 	assert(block, 'expected a <c:ser> with a <c:spPr>; got: ' + xml.slice(0, 400))
 	return block[0].slice(block[0].indexOf('<c:spPr>'))
@@ -186,7 +186,9 @@ defineRegressionSuite('Shared chart fragments', [
 		fn: async () => {
 			const ok = await chartFor(ChartType.line, [{ name: 'S', labels: ['a', 'b'], values: [1, 2] }], {
 				catLabelFormatCode: 'yyyy-mm',
+				// @ts-expect-error the type spells time units in lower case; the runtime folds case
 				catAxisBaseTimeUnit: 'Days',
+				// @ts-expect-error the type spells time units in lower case; the runtime folds case
 				catAxisMajorTimeUnit: 'MONTHS',
 				catAxisMinorTimeUnit: 'years',
 			})
@@ -198,6 +200,7 @@ defineRegressionSuite('Shared chart fragments', [
 				const bad = await chartFor(ChartType.line, [{ name: 'S', labels: ['a', 'b'], values: [1, 2] }], {
 					catLabelFormatCode: 'yyyy',
 					catAxisBaseTimeUnit: 'days',
+					// @ts-expect-error 'fortnights' is not an ST_TimeUnit member
 					catAxisMajorTimeUnit: 'fortnights',
 				})
 				assertIncludes(bad, '<c:baseTimeUnit val="days"/>', 'the valid sibling still emits')
@@ -252,6 +255,7 @@ defineRegressionSuite('Shared chart fragments', [
 		name: 'a pie caches a gap the same way every other family does',
 		fn: async () => {
 			const gap = await chartFor(ChartType.pie, [
+				// @ts-expect-error `values` is typed number[], so a null gap is outside it
 				{ name: 'Status', labels: ['Red', 'Amber', 'Green', 'Unknown'], values: [10, null, 38, 2] },
 			])
 			const val = valBlock(gap, 'c:val')
@@ -262,6 +266,7 @@ defineRegressionSuite('Shared chart fragments', [
 
 			// A doughnut shares the builder, so it inherits the same treatment.
 			const doughnut = await chartFor(ChartType.doughnut, [
+				// @ts-expect-error `values` is typed number[], so an undefined gap is outside it
 				{ name: 'Status', labels: ['a', 'b', 'c'], values: [1, undefined, 3] },
 			])
 			assertNotIncludes(valBlock(doughnut, 'c:val'), '<c:v></c:v>', 'and so does a doughnut')

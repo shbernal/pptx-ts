@@ -19,7 +19,7 @@ const XY = [
 const BASE = { x: 1, y: 1, w: 6, h: 3 }
 
 /** The `<a:srgbClr val>` of each `<c:ser>`'s own `<c:spPr>` fill, in series order. */
-function seriesFills(xml) {
+function seriesFills(xml: string): (string | undefined)[] {
 	return xml
 		.split('<c:ser>')
 		.slice(1)

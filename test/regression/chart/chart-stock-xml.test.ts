@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { build, readEntry, listEntries } from '../../helpers.ts'
+import type { ChartOpts, OptsChartData } from '../../../dist/node.js'
 
 // Stock (high-low-close) is a CLASSIC (c:) chart, not a chartEx layout. Confirmed against the four
 // stock charts PowerPoint authors (`Shapes.AddChart2(-1, {88|89|90|91}, …)`) and reads back as
@@ -15,7 +16,7 @@ import { build, readEntry, listEntries } from '../../helpers.ts'
 // here we pin the stock-specific structure.
 
 const LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
-const S = (name, values) => ({ name, labels: LABELS, values })
+const S = (name: string, values: number[]): OptsChartData => ({ name, labels: LABELS, values })
 const HIGH = S('High', [55, 57, 57, 58, 58])
 const LOW = S('Low', [11, 12, 13, 11, 35])
 const CLOSE = S('Close', [32, 35, 34, 35, 43])
@@ -29,7 +30,7 @@ const STYLE_DATA = {
 	vohlc: [VOL, OPEN, HIGH, LOW, CLOSE],
 }
 
-async function buildStock(stockStyle, extra = {}) {
+async function buildStock(stockStyle: keyof typeof STYLE_DATA, extra: ChartOpts = {}) {
 	return build((p) => {
 		p.addSlide().addChart(STYLE_DATA[stockStyle], { type: 'stock', stockStyle, x: 1, y: 1, w: 8, h: 4.5, ...extra })
 	})

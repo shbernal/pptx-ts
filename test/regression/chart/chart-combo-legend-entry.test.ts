@@ -1,4 +1,4 @@
-import { ChartType } from '../../../dist/node.js'
+import { ChartType, type CHART_NAME, type ChartMulti, type ChartOpts, type OptsChartData } from '../../../dist/node.js'
 import { assertEqual, build, defineRegressionSuite } from '../../helpers.ts'
 import { chartXml } from './chart-parts.ts'
 
@@ -15,11 +15,12 @@ import { chartXml } from './chart-parts.ts'
 // wrong entry.
 
 const labels = ['P', 'Q', 'R']
-const series = (...names) => names.map((name, i) => ({ name, labels, values: [1 + i, 2 + i, 3 + i] }))
+const series = (...names: string[]): OptsChartData[] =>
+	names.map((name, i) => ({ name, labels, values: [1 + i, 2 + i, 3 + i] }))
 const secondary = { secondaryValAxis: true, secondaryCatAxis: true }
 const axes = { valAxes: [{}, {}], catAxes: [{}, { catAxisHidden: true }] }
 const hidden = { showLegend: false }
-const scatter = (options) => ({
+const scatter = (options: ChartOpts): ChartMulti => ({
 	type: ChartType.scatter,
 	data: [
 		{ name: 'X', values: [1, 2, 3] },
@@ -29,7 +30,7 @@ const scatter = (options) => ({
 })
 
 /** The `c:legendEntry/c:idx` values the combo `types` writes, comma-joined. */
-async function legendEntries(types, secondaryAxes) {
+async function legendEntries(types: ChartMulti[], secondaryAxes: boolean): Promise<string> {
 	const { zip } = await build((p) => {
 		p.addSlide().addChart(types, { x: 1, y: 1, w: 8, h: 4, showLegend: true, ...(secondaryAxes ? axes : {}) })
 	})
@@ -71,9 +72,14 @@ defineRegressionSuite('Combo chart legend entries', [
 		// it writes says where the writer thinks that subchart's series sits.
 		name: 'across axis groups the rank is by chart type, and area outranks bar',
 		fn: async () => {
-			const one = (type, name, options) => ({ type, data: series(name), options })
+			const one = (type: CHART_NAME, name: string, options: ChartOpts): ChartMulti => ({
+				type,
+				data: series(name),
+				options,
+			})
 			/** `first` on the secondary axis group, `second` on the primary and hidden. */
-			const pair = (first, second) => legendEntries([one(first, 'A', secondary), one(second, 'B', hidden)], true)
+			const pair = (first: CHART_NAME, second: CHART_NAME) =>
+				legendEntries([one(first, 'A', secondary), one(second, 'B', hidden)], true)
 
 			assertEqual(await pair(ChartType.area, ChartType.bar), '1', 'area leads bar')
 			assertEqual(await pair(ChartType.bar, ChartType.area), '0', 'and still leads it from the other axis')
@@ -98,8 +104,13 @@ defineRegressionSuite('Combo chart legend entries', [
 		fn: async () => {
 			// Both orderings of this pair listed the subchart on the PRIMARY axis first, which is
 			// not a rank: it is the tiebreak. The same holds for two subcharts of one type.
-			const one = (type, name, options) => ({ type, data: series(name), options })
-			const pair = (first, second) => legendEntries([one(first, 'A', secondary), one(second, 'B', hidden)], true)
+			const one = (type: CHART_NAME, name: string, options: ChartOpts): ChartMulti => ({
+				type,
+				data: series(name),
+				options,
+			})
+			const pair = (first: CHART_NAME, second: CHART_NAME) =>
+				legendEntries([one(first, 'A', secondary), one(second, 'B', hidden)], true)
 
 			assertEqual(await pair(ChartType.line, ChartType.radar), '0', 'the primary radar is listed first')
 			assertEqual(await pair(ChartType.radar, ChartType.line), '0', 'and so is the primary line')

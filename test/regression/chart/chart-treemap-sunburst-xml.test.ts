@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { build, readEntry, listEntries } from '../../helpers.ts'
+import type { CHART_NAME, ChartOpts } from '../../../dist/node.js'
 import { chartExPath } from './chart-parts.ts'
 
 // Treemap + sunburst are the hierarchical chartEx (cx:) layouts. They ride the same subsystem
@@ -27,7 +28,7 @@ const DATA = [
 	},
 ]
 
-async function buildHier(type, extra = {}) {
+async function buildHier(type: CHART_NAME, extra: ChartOpts = {}) {
 	return build((p) => {
 		p.addSlide().addChart(DATA, { type, x: 1, y: 1, w: 8, h: 4.5, showValue: true, ...extra })
 	})
@@ -35,7 +36,7 @@ async function buildHier(type, extra = {}) {
 
 describe('treemap + sunburst (hierarchical chartEx) charts', () => {
 	test('emit a chartEx part with the mandatory style + color-style sidecars, no classic chart part', async () => {
-		for (const type of ['treemap', 'sunburst']) {
+		for (const type of ['treemap', 'sunburst'] as const) {
 			const { zip } = await buildHier(type)
 			const cxPath = chartExPath(zip)
 			expect(cxPath).toBe('ppt/charts/chartEx1.xml')
@@ -52,7 +53,7 @@ describe('treemap + sunburst (hierarchical chartEx) charts', () => {
 	})
 
 	test('slide Choice requires the base feature namespace cx1 (like waterfall, not funnel cx2)', async () => {
-		for (const type of ['treemap', 'sunburst']) {
+		for (const type of ['treemap', 'sunburst'] as const) {
 			const { zip } = await buildHier(type)
 			const slide = await readEntry(zip, 'ppt/slides/slide1.xml')
 			expect(slide).toContain(

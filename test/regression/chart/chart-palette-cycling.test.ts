@@ -1,4 +1,4 @@
-import { ChartType } from '../../../dist/node.js'
+import { ChartType, type OptsChartData } from '../../../dist/node.js'
 import { defineRegressionSuite, build, assert, assertEqual } from '../../helpers.ts'
 import { chartXml } from './chart-parts.ts'
 
@@ -14,7 +14,7 @@ import { chartXml } from './chart-parts.ts'
 const SERIES_COUNT = 12 // longer than either default palette
 
 /** One `{ name, labels, values }` row per series, all with the same two categories. */
-function seriesRows(count) {
+function seriesRows(count: number): OptsChartData[] {
 	return Array.from({ length: count }, (_unused, idx) => ({
 		name: `Series ${idx + 1}`,
 		labels: ['A', 'B'],
@@ -23,7 +23,7 @@ function seriesRows(count) {
 }
 
 /** The `<a:srgbClr val>` of each `<c:ser>`'s own `<c:spPr>` fill, in series order. */
-function seriesFills(xml) {
+function seriesFills(xml: string): (string | undefined)[] {
 	return xml
 		.split('<c:ser>')
 		.slice(1)
@@ -31,7 +31,7 @@ function seriesFills(xml) {
 }
 
 /** The `<a:srgbClr val>` of each `<c:dPt>` fill, in point order. */
-function pointFills(xml) {
+function pointFills(xml: string): string[] {
 	return [...xml.matchAll(/<c:dPt>.*?<a:solidFill><a:srgbClr val="([0-9A-Fa-f]{6})"\/>/gs)].map((m) => m[1])
 }
 

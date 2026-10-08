@@ -1,7 +1,6 @@
-/** @import { CHART_NAME, OptsChartData } from '../../../dist/node.js' */
-import { DOMParser } from '@xmldom/xmldom'
+import { DOMParser, type Element, type Node } from '@xmldom/xmldom'
 import JSZip from 'jszip'
-import { ChartType } from '../../../dist/node.js'
+import { ChartType, type CHART_NAME, type OptsChartData, type Slide } from '../../../dist/node.js'
 import { defineRegressionSuite, build, listEntries, assert, expectDefined, defined } from '../../helpers.ts'
 
 // Every formula a chart part carries names cells in its own embedded workbook, and the cache
@@ -16,19 +15,31 @@ import { defineRegressionSuite, build, listEntries, assert, expectDefined, defin
 const parser = new DOMParser()
 
 /** The children of `node` with the qualified name `name`. */
-const kids = (node, name) => Array.from(node.childNodes).filter((child) => child.nodeName === name)
-const kid = (node, name) => kids(node, name)[0]
+const kids = (node: Node, name: string): Element[] =>
+	Array.from(node.childNodes).filter((child): child is Element => child.nodeName === name)
+const kid = (node: Node, name: string): Element => kids(node, name)[0]
+
+/** A cell reader over the embedded workbook: `(col, row) => string`. */
+type ReadCell = (col: number, row: number) => string
+
+/** A range's column and row bounds, 1-based. */
+interface Ref {
+	c1: number
+	r1: number
+	c2: number
+	r2: number
+}
 
 /** 1-based column index for a column name. */
-function columnIndex(name) {
+function columnIndex(name: string): number {
 	let n = 0
 	for (const ch of name) n = n * 26 + (ch.charCodeAt(0) - 64)
 	return n
 }
 
 /** `Sheet1!$A$2:$C$4` or `Sheet1!$B$1` as column and row bounds. */
-function parseRef(f) {
-	const m = /^Sheet1!\$([A-Z]+)\$(\d+)(?::\$([A-Z]+)\$(\d+))?$/.exec(f)
+function parseRef(f: string | null): Ref {
+	const m = /^Sheet1!\$([A-Z]+)\$(\d+)(?::\$([A-Z]+)\$(\d+))?$/.exec(f ?? '')
 	assert(m, `unparseable reference ${JSON.stringify(f)}`)
 	const c1 = columnIndex(m[1])
 	const r1 = Number(m[2])
@@ -36,14 +47,14 @@ function parseRef(f) {
 }
 
 /** The embedded workbook as a cell lookup: `(col, row) => string`, blank for an absent cell. */
-async function readWorkbook(zip) {
+async function readWorkbook(zip: JSZip): Promise<ReadCell> {
 	const name = listEntries(zip).find((entry) => /^ppt\/embeddings\/.*\.xlsx$/.test(entry))
 	expectDefined(name, 'expected an embedded workbook')
 	const xlsx = await JSZip.loadAsync(await defined(zip.file(name)).async('arraybuffer'))
 	const sst = parser.parseFromString(await defined(xlsx.file('xl/sharedStrings.xml')).async('string'), 'text/xml')
 	const strings = Array.from(sst.getElementsByTagName('si')).map((si) => si.textContent ?? '')
 	const sheet = parser.parseFromString(await defined(xlsx.file('xl/worksheets/sheet1.xml')).async('string'), 'text/xml')
-	const cells = new Map()
+	const cells = new Map<string | null, string>()
 	for (const c of Array.from(sheet.getElementsByTagName('c'))) {
 		const v = c.getElementsByTagName('v')[0]?.textContent ?? ''
 		if (c.getAttribute('t') !== 's') {
@@ -53,7 +64,7 @@ async function readWorkbook(zip) {
 		const idx = Number(v)
 		cells.set(c.getAttribute('r'), idx < strings.length ? strings[idx] : `<shared string ${idx} of ${strings.length}>`)
 	}
-	return (col, row) => {
+	return (col: number, row: number) => {
 		let name = ''
 		for (let n = col; n > 0; n = Math.floor((n - 1) / 26)) name = String.fromCharCode(65 + ((n - 1) % 26)) + name
 		return cells.get(`${name}${row}`) ?? ''
@@ -61,22 +72,22 @@ async function readWorkbook(zip) {
 }
 
 /** Two values agree when they are the same number, or the same text. Blank and absent are one thing. */
-function same(cell, cached) {
+function same(cell: string, cached: string): boolean {
 	if (cell === cached) return true
 	if (cell === '' || cached === '') return false
 	return Number.isFinite(Number(cell)) && Number(cell) === Number(cached)
 }
 
 /** The cells a one-dimensional range spans, in order. */
-function rangeCells(ref) {
-	const cells = []
+function rangeCells(ref: Ref): [number, number][] {
+	const cells: [number, number][] = []
 	for (let r = ref.r1; r <= ref.r2; r++) for (let c = ref.c1; c <= ref.c2; c++) cells.push([c, r])
 	return cells
 }
 
 /** One level's points as a sparse array of `idx -> value`. */
-function points(lvl, ptName, valueOf) {
-	const out = []
+function points(lvl: Element, ptName: string, valueOf: (pt: Element) => string): string[] {
+	const out: string[] = []
 	for (const pt of kids(lvl, ptName)) out[Number(pt.getAttribute('idx'))] = valueOf(pt)
 	return out
 }
@@ -86,7 +97,15 @@ function points(lvl, ptName, valueOf) {
  * formula spans, so it has to equal the number of cells, and no point may sit at or past it: the
  * range has no cell for one.
  */
-function compareLevel(problems, where, f, cells, ptCount, pts, read) {
+function compareLevel(
+	problems: string[],
+	where: string,
+	f: string | null,
+	cells: [number, number][],
+	ptCount: number,
+	pts: (string | null)[],
+	read: ReadCell
+): void {
 	if (ptCount !== cells.length) problems.push(`${where}: ${f} spans ${cells.length} cells, the cache says ${ptCount}`)
 	if (pts.length > ptCount) problems.push(`${where}: ${f} caches point ${pts.length - 1} past ptCount ${ptCount}`)
 	cells.forEach(([c, r], idx) => {
@@ -98,7 +117,7 @@ function compareLevel(problems, where, f, cells, ptCount, pts, read) {
 }
 
 /** A classic `<c:strRef>` / `<c:numRef>`. */
-function checkRef(problems, node, read) {
+function checkRef(problems: string[], node: Element, read: ReadCell): void {
 	const f = kid(node, 'c:f').textContent
 	const ref = parseRef(f)
 	const cache = kid(node, 'c:strCache') ?? kid(node, 'c:numCache')
@@ -112,21 +131,30 @@ function checkRef(problems, node, read) {
  * Levels run leaf first, while the workbook puts the outermost level in the range's first column,
  * so level `i` is column `c2 - i`.
  */
-function checkLevels(problems, where, f, levels, ptCountOf, ptName, valueOf, read) {
+function checkLevels(
+	problems: string[],
+	where: string,
+	f: string | null,
+	levels: Element[],
+	ptCountOf: (lvl: Element) => number,
+	ptName: string,
+	valueOf: (pt: Element) => string,
+	read: ReadCell
+): void {
 	const ref = parseRef(f)
 	const columns = ref.c2 - ref.c1 + 1
 	if (columns !== levels.length) problems.push(`${where}: ${f} spans ${columns} columns for ${levels.length} levels`)
 	levels.forEach((lvl, i) => {
 		const col = ref.c2 - i
-		const cells = []
+		const cells: [number, number][] = []
 		for (let r = ref.r1; r <= ref.r2; r++) cells.push([col, r])
 		compareLevel(problems, `${where} level ${i}`, f, cells, ptCountOf(lvl), points(lvl, ptName, valueOf), read)
 	})
 }
 
 /** Every formula in a classic chart part, against the workbook. */
-function checkClassic(xml, read) {
-	const problems = []
+function checkClassic(xml: string, read: ReadCell): string[] {
+	const problems: string[] = []
 	const doc = parser.parseFromString(xml, 'text/xml')
 	for (const tag of ['c:strRef', 'c:numRef']) {
 		for (const node of Array.from(doc.getElementsByTagName(tag))) checkRef(problems, node, read)
@@ -154,8 +182,8 @@ function checkClassic(xml, read) {
 }
 
 /** Every formula in a chartEx part, against the workbook. */
-function checkChartEx(xml, read) {
-	const problems = []
+function checkChartEx(xml: string, read: ReadCell): string[] {
+	const problems: string[] = []
 	const doc = parser.parseFromString(xml, 'text/xml')
 	for (const tag of ['cx:strDim', 'cx:numDim']) {
 		for (const node of Array.from(doc.getElementsByTagName(tag))) {
@@ -180,7 +208,7 @@ function checkChartEx(xml, read) {
 }
 
 /** Build one chart and return every disagreement between its formulas and its workbook. */
-async function problemsFor(addChart) {
+async function problemsFor(addChart: (slide: Slide) => void): Promise<string[]> {
 	const { zip } = await build((p) => addChart(p.addSlide()))
 	const read = await readWorkbook(zip)
 	const classic = listEntries(zip).find((name) => /^ppt\/charts\/chart\d+\.xml$/.test(name))
@@ -200,11 +228,8 @@ const NESTED = [
 /** Three series over {@link NESTED}. */
 const NESTED_SERIES = ['A', 'B', 'C'].map((name, n) => ({ name, labels: NESTED, values: [1 + n, 2 + n, 3 + n, 4 + n] }))
 
-/**
- * `[name, addChart]`, every shape the matrix covers.
- * @type {[string, (slide: any) => void][]}
- */
-const MATRIX = [
+/** `[name, addChart]`, every shape the matrix covers. */
+const MATRIX: [string, (slide: Slide) => void][] = [
 	[
 		'bar',
 		(s) =>
@@ -481,7 +506,7 @@ defineRegressionSuite('Chart formulas resolve to their cache through the embedde
 		// `X-Values0` and `Y-Value 1`, and a bubble's X column `X-Values`, names no header cell held.
 		name: 'the table names each column by its header cell',
 		fn: async () => {
-			for (const [type, data] of /** @type {[CHART_NAME, OptsChartData[]][]} */ ([
+			for (const [type, data] of [
 				[
 					ChartType.scatter,
 					[
@@ -496,7 +521,7 @@ defineRegressionSuite('Chart formulas resolve to their cache through the embedde
 						{ name: 'Up', values: [5, 6, 7], sizes: [1, 2, 3] },
 					],
 				],
-			])) {
+			] satisfies [CHART_NAME, OptsChartData[]][]) {
 				const { zip } = await build((p) => p.addSlide().addChart(data, { type, ...FRAME }))
 				const read = await readWorkbook(zip)
 				const name = defined(listEntries(zip).find((entry) => /^ppt\/embeddings\/.*\.xlsx$/.test(entry)))

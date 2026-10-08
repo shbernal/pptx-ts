@@ -1,4 +1,6 @@
 import { ChartType } from '../../../dist/node.js'
+import type TsPptx from '../../../dist/node.js'
+import type JSZip from 'jszip'
 import { defineRegressionSuite, build, listEntries, assert, assertEqual } from '../../helpers.ts'
 
 // Chart part filenames must be a pure function of deck structure, not of process
@@ -8,16 +10,16 @@ import { defineRegressionSuite, build, listEntries, assert, assertEqual } from '
 // same input, different bytes. `exportPresentation` now assigns them from a
 // per-presentation counter at write time (`src/package/assemble.ts`, STEP 2).
 
-const chartParts = (zip) =>
+const chartParts = (zip: JSZip): string[] =>
 	listEntries(zip)
 		.filter((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))
 		.sort()
-const embeddingParts = (zip) =>
+const embeddingParts = (zip: JSZip): string[] =>
 	listEntries(zip)
 		.filter((f) => /^ppt\/embeddings\/Microsoft_Excel_Worksheet\d+\.xlsx$/.test(f))
 		.sort()
 
-const buildTwoChartDeck = (p) => {
+const buildTwoChartDeck = (p: TsPptx): void => {
 	const data1 = [{ name: 'S1', labels: ['A', 'B'], values: [1, 2] }]
 	const data2 = [{ name: 'S2', labels: ['A', 'B'], values: [3, 4] }]
 	p.addSlide().addChart(data1, { type: ChartType.bar, x: 1, y: 1, w: 4, h: 3 })
@@ -83,8 +85,8 @@ defineRegressionSuite('Chart part-name determinism', [
 	},
 ])
 
-async function reExport(pres) {
-	const JSZip = (await import('jszip')).default
-	const buf = /** @type {Uint8Array} */ (await pres.toBytes())
-	return JSZip.loadAsync(buf)
+async function reExport(pres: TsPptx): Promise<JSZip> {
+	const { default: Zip } = await import('jszip')
+	const buf = await pres.toBytes()
+	return Zip.loadAsync(buf)
 }

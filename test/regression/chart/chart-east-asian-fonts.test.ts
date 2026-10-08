@@ -10,7 +10,7 @@ import { chartXml } from './chart-parts.ts'
 // typeface onto all three (`<a:latin>/<a:ea>/<a:cs>`), which is what choosing a font in PowerPoint does.
 
 // Assert the latin/ea/cs trio is present for a given typeface.
-function assertFontTrio(xml, face, label) {
+function assertFontTrio(xml: string, face: string, label: string): void {
 	assertIncludes(xml, `<a:latin typeface="${face}"/>`, `${label}: latin`)
 	assertIncludes(xml, `<a:ea typeface="${face}"/>`, `${label}: ea`)
 	assertIncludes(xml, `<a:cs typeface="${face}"/>`, `${label}: cs`)

@@ -1,4 +1,10 @@
-import TsPptx, { ChartType, SchemeColor } from '../../../dist/node.js'
+import TsPptx, {
+	ChartType,
+	SchemeColor,
+	type CHART_NAME,
+	type ChartOpts,
+	type OptsChartData,
+} from '../../../dist/node.js'
 import { defineRegressionSuite, build, assertEqual, assertIncludes, assertNotIncludes, defined } from '../../helpers.ts'
 import { chartXml } from './chart-parts.ts'
 
@@ -17,7 +23,7 @@ const SERIES = [{ name: 'S1', labels: ['A', 'B', 'C'], values: [1, 2, 3] }]
 const BASE = { x: 1, y: 1, w: 6, h: 3 }
 
 /** The chart part for one options bag. */
-async function chartFor(options, data = SERIES) {
+async function chartFor(options: ChartOpts & { type: CHART_NAME }, data: OptsChartData[] = SERIES): Promise<string> {
 	const { zip } = await build((p) => {
 		p.addSlide().addChart(data, { ...BASE, ...options })
 	})
@@ -31,7 +37,7 @@ async function chartFor(options, data = SERIES) {
  * `CT_*Ax`, so it has to come out first -- otherwise every value-axis assertion reads the
  * gridline's stroke and passes on the default.
  */
-function axisLineBlock(xml, kind) {
+function axisLineBlock(xml: string, kind: string): string {
 	const axis = xml.match(new RegExp(`<c:${kind}Ax>[^]*?</c:${kind}Ax>`))
 	if (!axis) return ''
 	const own = axis[0].replace(/<c:majorGridlines>[^]*?<\/c:majorGridlines>/g, '')
@@ -69,6 +75,7 @@ defineRegressionSuite('Chart stroke vocabulary', [
 		name: "an axis line's type: 'none' is what *AxisLineShow: false used to say",
 		fn: async () => {
 			const nested = await chartFor({ type: ChartType.bar, catAxisLine: { type: 'none' } })
+			// oxlint-disable-next-line typescript/no-deprecated -- the flat `catAxisLineShow` is the spelling this case compares against.
 			const flat = await chartFor({ type: ChartType.bar, catAxisLineShow: false })
 			assertIncludes(axisLineBlock(nested, 'cat'), '<a:noFill/>', "type: 'none' paints no line")
 			assertEqual(axisLineBlock(nested, 'cat'), axisLineBlock(flat, 'cat'), 'the two spellings emit the same block')
@@ -80,7 +87,9 @@ defineRegressionSuite('Chart stroke vocabulary', [
 			const xml = await chartFor({
 				type: ChartType.bar,
 				catAxisLine: { width: 3, color: 'AABBCC' },
+				// oxlint-disable-next-line typescript/no-deprecated -- the superseded flat keys are what this case pits the nested stroke against.
 				catAxisLineSize: 1,
+				// oxlint-disable-next-line typescript/no-deprecated -- the superseded flat keys are what this case pits the nested stroke against.
 				catAxisLineColor: '000000',
 			})
 			const line = axisLineBlock(xml, 'cat')
@@ -94,6 +103,7 @@ defineRegressionSuite('Chart stroke vocabulary', [
 		fn: async () => {
 			// `show` and `style` fold independently. Letting the inferred `type: 'none'` swallow
 			// the dash would change the bytes of every deck that set both.
+			// oxlint-disable-next-line typescript/no-deprecated -- the flat `show`/`style` keys are what this case folds.
 			const xml = await chartFor({ type: ChartType.bar, catAxisLineShow: false, catAxisLineStyle: 'dot' })
 			const line = axisLineBlock(xml, 'cat')
 			assertIncludes(line, '<a:noFill/>', 'the line is hidden')
@@ -123,9 +133,10 @@ defineRegressionSuite('Chart stroke vocabulary', [
 			})
 			const legacy = await chartFor({
 				type: ChartType.bar,
+				// oxlint-disable-next-line typescript/no-deprecated -- the deprecated `size`/`style` spellings are what this case compares.
 				valGridLine: { size: 2, style: 'dash', color: 'CCCCCC', cap: 'round' },
 			})
-			const grid = (xml) => xml.match(/<c:majorGridlines>[^]*?<\/c:majorGridlines>/)[0]
+			const grid = (xml: string) => defined(xml.match(/<c:majorGridlines>[^]*?<\/c:majorGridlines>/))[0]
 			assertIncludes(grid(modern), 'w="25400"', 'width reaches a:ln@w')
 			assertEqual(grid(modern), grid(legacy), 'size/style emit exactly what width/dashType do')
 		},

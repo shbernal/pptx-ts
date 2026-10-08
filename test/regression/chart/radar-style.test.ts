@@ -1,15 +1,16 @@
-import { ChartType } from '../../../dist/node.js'
+import { ChartType, type ChartOpts } from '../../../dist/node.js'
+import type JSZip from 'jszip'
 import { defineRegressionSuite, build, readEntry, listEntries, assert, captureDiagnostics } from '../../helpers.ts'
 
 const DATA = [{ name: 'Region', labels: ['North', 'South', 'East'], values: [10, 20, 30] }]
 
-function chartPart(zip) {
+function chartPart(zip: JSZip): Promise<string> {
 	const path = listEntries(zip).find((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))
 	assert(path, 'no chart part found in package: ' + listEntries(zip).join(', '))
 	return readEntry(zip, path)
 }
 
-async function radarXml(radarStyle) {
+async function radarXml(radarStyle: NonNullable<ChartOpts['radarStyle']>): Promise<string> {
 	const { zip } = await build((p) => {
 		p.addSlide().addChart(DATA, { type: ChartType.radar, radarStyle, x: 1, y: 1, w: 6, h: 4 })
 	})
@@ -70,6 +71,7 @@ defineRegressionSuite('radarStyle values', [
 	{
 		name: 'an unknown radarStyle warns and falls back to standard',
 		fn: async () => {
+			// @ts-expect-error 'spider' is not a radarStyle spelling
 			const { result: xml, codes } = await captureDiagnostics(() => radarXml('spider'))
 			assert(!xml.includes('spider'), 'the bad value must not reach the part; got: ' + xml.slice(0, 300))
 			assert(

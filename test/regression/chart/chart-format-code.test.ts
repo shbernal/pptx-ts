@@ -16,7 +16,7 @@ import { chartXml } from './chart-parts.ts'
 // the `<c:dLbls><c:numFmt>` mask. The fix stamps the resolved value format onto every value numCache.
 
 // Pull the <c:formatCode> from the first value series cache (c:val for bar/line/pie, c:yVal for scatter).
-function valCacheFormatCode(xml, valTag) {
+function valCacheFormatCode(xml: string, valTag: string): string {
 	const valBlock = firstXmlBlock(xml, valTag)
 	const cacheMatch = valBlock.match(/<c:formatCode>([\s\S]*?)<\/c:formatCode>/)
 	assert(cacheMatch, `expected a <c:formatCode> inside <${valTag}>; got: ${valBlock}`)

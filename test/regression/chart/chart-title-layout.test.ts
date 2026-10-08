@@ -7,7 +7,7 @@ import { chartXml } from './chart-parts.ts'
 // axes are independent — supplying only one of x/y leaves the other on automatic
 // layout (only the provided axis gets an `edge` mode entry).
 
-function titleBlock(xml) {
+function titleBlock(xml: string): string {
 	const match = xml.match(/<c:title>[\s\S]*?<\/c:title>/)
 	assert(match, 'expected a <c:title> block; got: ' + xml)
 	return match[0]

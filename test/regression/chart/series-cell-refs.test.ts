@@ -17,12 +17,12 @@ const FIRST_LABELLED = [
 ]
 
 /** Every `<c:f>` formula in the part, in document order. */
-function formulas(xml) {
+function formulas(xml: string): string[] {
 	return [...xml.matchAll(/<c:f>([^<]*)<\/c:f>/g)].map((m) => m[1])
 }
 
 /** The `<c:ser>` blocks, in document order. */
-function seriesBlocks(xml) {
+function seriesBlocks(xml: string): string[] {
 	return [...xml.matchAll(/<c:ser>[\s\S]*?<\/c:ser>/g)].map((m) => m[0])
 }
 
@@ -30,7 +30,7 @@ function seriesBlocks(xml) {
  * Assert that every reference in the part addresses a real cell: a range never runs backwards,
  * and no column letter is missing.
  */
-function assertWellFormedRefs(xml, label) {
+function assertWellFormedRefs(xml: string, label: string): void {
 	for (const f of formulas(xml)) {
 		assert(/^Sheet1!\$[A-Z]+\$\d+(:\$[A-Z]+\$\d+)?$/.test(f), `${label}: malformed reference ${JSON.stringify(f)}`)
 		const range = f.match(/^Sheet1!\$([A-Z]+)\$(\d+):\$([A-Z]+)\$(\d+)$/)

@@ -1,6 +1,6 @@
-import { DOMParser } from '@xmldom/xmldom'
-import { ChartType } from '../../../dist/node.js'
-import { defineRegressionSuite, build, assert, captureDiagnostics, asError } from '../../helpers.ts'
+import { DOMParser, type Element, type Node } from '@xmldom/xmldom'
+import { ChartType, type CHART_NAME, type ChartMulti, type ChartOpts, type OptsChartData } from '../../../dist/node.js'
+import { defineRegressionSuite, build, assert, captureDiagnostics, asError, defined } from '../../helpers.ts'
 import { chartXml } from './chart-parts.ts'
 
 // Every `<c:axId>` a plot group carries has to name an axis the plot area emits, and the category
@@ -18,29 +18,29 @@ const AXIS_TAGS = ['c:catAx', 'c:valAx', 'c:dateAx', 'c:serAx']
 const LABELS = ['a', 'b', 'c']
 
 /** Every disagreement between the plot groups' axis references and the axes the part defines. */
-function axisProblems(xml) {
+function axisProblems(xml: string): string[] {
 	const doc = parser.parseFromString(xml, 'text/xml')
 	const plotArea = doc.getElementsByTagName('c:plotArea')[0]
 	const children = Array.from(plotArea.childNodes).filter((node) => node.nodeType === 1)
-	const child = (node, name) => Array.from(node.childNodes).find((c) => c.nodeName === name)
-	const val = (node, name) => child(node, name)?.getAttribute('val')
+	const child = (node: Node, name: string) => Array.from(node.childNodes).find((c): c is Element => c.nodeName === name)
+	const val = (node: Node, name: string) => child(node, name)?.getAttribute('val')
 
 	/** axis id -> { tag, crossAx } */
-	const axes = new Map()
+	const axes = new Map<string | null | undefined, { tag: string; crossAx: string | null | undefined }>()
 	for (const node of children.filter((n) => AXIS_TAGS.includes(n.nodeName))) {
 		const id = val(node, 'c:axId')
 		if (axes.has(id)) return [`axis id ${id} is defined twice`]
 		axes.set(id, { tag: node.nodeName, crossAx: val(node, 'c:crossAx') })
 	}
 
-	const problems = []
+	const problems: string[] = []
 	for (const [id, axis] of axes) {
 		if (!axes.has(axis.crossAx)) problems.push(`${axis.tag} ${id} crosses ${axis.crossAx}, which no axis carries`)
 	}
 	for (const plot of children.filter((n) => n.nodeName.endsWith('Chart'))) {
 		const refs = Array.from(plot.childNodes)
 			.filter((n) => n.nodeName === 'c:axId')
-			.map((n) => /** @type {import('@xmldom/xmldom').Element} */ (n).getAttribute('val'))
+			.map((n) => (n as Element).getAttribute('val'))
 		for (const ref of refs) {
 			if (!axes.has(ref)) problems.push(`${plot.nodeName} references axis ${ref}, which no axis carries`)
 		}
@@ -53,8 +53,22 @@ function axisProblems(xml) {
 	return problems
 }
 
+/** A single-type chart: its type and its series. */
+interface SingleCall {
+	types: CHART_NAME
+	data: OptsChartData[]
+}
+
+/** A combo chart: its subcharts. */
+interface ComboCall {
+	types: ChartMulti[]
+	data?: never
+}
+
 /** A single-type chart, or a bar + line combo whose line takes `lineOptions`. */
-function chartCall(type, lineOptions) {
+function chartCall(type: 'combo', lineOptions: ChartOpts): ComboCall
+function chartCall(type: CHART_NAME): SingleCall
+function chartCall(type: CHART_NAME | 'combo', lineOptions: ChartOpts = {}): SingleCall | ComboCall {
 	if (type !== 'combo') {
 		const data =
 			type === ChartType.scatter
@@ -82,13 +96,13 @@ const SINGLE_TYPES = [
 	ChartType.scatter,
 	ChartType.surface,
 ]
-const SECONDARY_FLAGS = [
+const SECONDARY_FLAGS: [string, ChartOpts][] = [
 	['no secondary axis', {}],
 	['secondaryValAxis', { secondaryValAxis: true }],
 	['secondaryCatAxis', { secondaryCatAxis: true }],
 	['both secondary axes', { secondaryValAxis: true, secondaryCatAxis: true }],
 ]
-const OVERRIDES = [
+const OVERRIDES: [string, ChartOpts][] = [
 	['no valAxes', {}],
 	['one valAxes entry', { valAxes: [{ valAxisTitle: 'V', showValAxisTitle: true }] }],
 	[
@@ -101,24 +115,32 @@ const OVERRIDES = [
 ]
 
 /** `[name, call, overrides]` for every shape the matrix covers. */
-const MATRIX = [
-	...SINGLE_TYPES.map((type) => [String(type), chartCall(type)]),
-	...SECONDARY_FLAGS.map(([flags, lineOptions]) => [`bar + line combo, ${flags}`, chartCall('combo', lineOptions)]),
-].flatMap(([name, call]) => OVERRIDES.map(([overrideName, overrides]) => [`${name}, ${overrideName}`, call, overrides]))
+const MATRIX: [string, SingleCall | ComboCall, ChartOpts][] = [
+	...SINGLE_TYPES.map((type): [string, SingleCall | ComboCall] => [String(type), chartCall(type)]),
+	...SECONDARY_FLAGS.map(([flags, lineOptions]): [string, SingleCall | ComboCall] => [
+		`bar + line combo, ${flags}`,
+		chartCall('combo', lineOptions),
+	]),
+].flatMap(([name, call]) =>
+	OVERRIDES.map(([overrideName, overrides]): [string, SingleCall | ComboCall, ChartOpts] => [
+		`${name}, ${overrideName}`,
+		call,
+		overrides,
+	])
+)
 
 defineRegressionSuite('Chart axis references resolve to emitted, crossing axes', [
 	{
 		name: 'every plot group references axes the plot area emits, in crossing pairs',
 		fn: async () => {
-			const failures = []
+			const failures: string[] = []
 			for (const [name, call, overrides] of MATRIX) {
 				const frame = { x: 1, y: 1, w: 6, h: 4, ...overrides }
-				const options = Array.isArray(call.types) ? frame : { ...frame, type: call.types }
-				let xml
+				let xml: string
 				try {
 					const { zip } = await build((p) => {
-						if (Array.isArray(call.types)) p.addSlide().addChart(call.types, options)
-						else p.addSlide().addChart(call.data, options)
+						if (Array.isArray(call.types)) p.addSlide().addChart(call.types, frame)
+						else p.addSlide().addChart(defined(call.data), { ...frame, type: call.types })
 					})
 					xml = await chartXml(zip)
 				} catch (thrown) {
@@ -139,7 +161,7 @@ defineRegressionSuite('Chart axis references resolve to emitted, crossing axes',
 		// moved onto its secondary axis; an override can still show it.
 		name: 'the secondary axis no subchart asked for is hidden unless an override shows it',
 		fn: async () => {
-			const secondaryCatDelete = async (overrides) => {
+			const secondaryCatDelete = async (overrides: ChartOpts) => {
 				const { zip } = await build((p) =>
 					p.addSlide().addChart(chartCall('combo', { secondaryValAxis: true }).types, {
 						x: 1,

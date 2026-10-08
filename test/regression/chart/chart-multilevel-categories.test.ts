@@ -1,5 +1,4 @@
-/** @import { CHART_NAME, ChartOpts } from '../../../dist/node.js' */
-import { ChartType } from '../../../dist/node.js'
+import { ChartType, type CHART_NAME, type ChartOpts } from '../../../dist/node.js'
 import JSZip from 'jszip'
 import {
 	build,
@@ -24,7 +23,7 @@ const DATA = [
 ]
 
 // Extract the embedded workbook XLSX from inside the PPTX and parse both XML files.
-async function getWorkbookXml(buf) {
+async function getWorkbookXml(buf: Uint8Array): Promise<{ sharedStringsXml: string; sheetXml: string }> {
 	const pptxZip = await JSZip.loadAsync(buf)
 	const xlsxEntry = pptxZip.file('ppt/embeddings/Microsoft_Excel_Worksheet1.xlsx')
 	expectDefined(xlsxEntry, 'embedded xlsx not found in pptx')
@@ -37,8 +36,8 @@ async function getWorkbookXml(buf) {
 }
 
 // Parse all <si> entries from sharedStrings.xml into a string array.
-function parseSharedStrings(xml) {
-	const entries = []
+function parseSharedStrings(xml: string): string[] {
+	const entries: string[] = []
 	for (const match of xml.matchAll(/<si><t[^>]*>([^<]*)<\/t><\/si>|<si><t\/><\/si>/g)) {
 		entries.push(match[1] ?? '')
 	}
@@ -46,7 +45,7 @@ function parseSharedStrings(xml) {
 }
 
 // Return the v-element value of a cell by address (e.g. "A2").
-function cellValue(sheetXml, addr) {
+function cellValue(sheetXml: string, addr: string): string | null {
 	const re = new RegExp(`<c r="${addr}"[^>]*>(?:<v>([^<]*)<\\/v>)?`, 'i')
 	const m = sheetXml.match(re)
 	assert(m, `cell ${addr} not found in sheet XML`)
@@ -54,7 +53,7 @@ function cellValue(sheetXml, addr) {
 }
 
 // Return the t-attribute of a cell (e.g. "s" for shared-string).
-function cellType(sheetXml, addr) {
+function cellType(sheetXml: string, addr: string): string | null {
 	const re = new RegExp(`<c r="${addr}"([^>]*)>`)
 	const m = sheetXml.match(re)
 	assert(m, `cell ${addr} not found in sheet XML`)
@@ -120,8 +119,7 @@ defineRegressionSuite('Multi-level category chart embedded workbook [upstream-pr
 		name: 'a single-column category reference over nested labels points at the leaf column',
 		fn: async () => {
 			const leafRef = '<c:f>Sheet1!$B$2:$B$10</c:f>'
-			/** @type {[string, ChartOpts & { type: CHART_NAME }, string][]} */
-			const cases = [
+			const cases: [string, ChartOpts & { type: CHART_NAME }, string][] = [
 				['a bar with a category format code', { type: ChartType.bar, catLabelFormatCode: '0' }, 'numRef'],
 				['a stock chart', { type: ChartType.stock }, 'strRef'],
 				['a surface chart', { type: ChartType.surface }, 'strRef'],

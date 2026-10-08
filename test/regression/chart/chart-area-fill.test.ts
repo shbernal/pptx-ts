@@ -1,4 +1,4 @@
-import { ChartType } from '../../../dist/node.js'
+import { ChartType, type ChartOpts, type GradientFillProps } from '../../../dist/node.js'
 import { defineRegressionSuite, build, captureDiagnostics, assert, assertEqual } from '../../helpers.ts'
 import { chartXml } from './chart-parts.ts'
 
@@ -26,10 +26,10 @@ import { chartXml } from './chart-parts.ts'
  * So the fill slot is exactly what lies between `<c:spPr>` and the first `<a:ln`, which also means
  * an inherited fill reads back as the empty string rather than needing an absence assertion.
  */
-function areaFills(xml) {
+function areaFills(xml: string): { plot: string; space: string } {
 	const split = xml.indexOf('</c:chart>')
 	assert(split > 0, 'expected a </c:chart> to separate the plot area from the chartSpace spPr')
-	const slot = (part) => {
+	const slot = (part: string): string => {
 		const open = part.indexOf('<c:spPr>')
 		assert(open >= 0, 'expected a <c:spPr> in ' + JSON.stringify(part.slice(0, 80)))
 		return part.slice(open + '<c:spPr>'.length, part.indexOf('<a:ln', open))
@@ -46,14 +46,14 @@ function areaFills(xml) {
 const SERIES = [{ name: 'S1', labels: ['A', 'B'], values: [1, 2] }]
 const BASE = { x: 1, y: 1, w: 6, h: 3, type: ChartType.bar }
 
-async function fillsFor(opts) {
+async function fillsFor(opts: ChartOpts): Promise<{ plot: string; space: string }> {
 	const { zip } = await build((p) => {
 		p.addSlide().addChart(SERIES, { ...BASE, ...opts })
 	})
 	return areaFills(await chartXml(zip))
 }
 
-const GRADIENT = {
+const GRADIENT: GradientFillProps = {
 	kind: 'linear',
 	angle: 90,
 	stops: [
@@ -68,14 +68,15 @@ defineRegressionSuite('Chart area and plot area fills', [
 		// by the time the emitter sees it, and that has to keep meaning transparent.
 		name: 'an unstated fill leaves both areas transparent',
 		fn: async () => {
-			for (const [label, opts] of [
+			const cases: [string, ChartOpts][] = [
 				['omitted entirely', {}],
 				['an empty fill object', { plotArea: { fill: {} }, chartArea: { fill: {} } }],
 				[
 					'transparency with no colour',
 					{ plotArea: { fill: { transparency: 50 } }, chartArea: { fill: { transparency: 50 } } },
 				],
-			]) {
+			]
+			for (const [label, opts] of cases) {
 				const { plot, space } = await fillsFor(opts)
 				assertEqual(plot, '<a:noFill/>', `plot area fill with ${label}`)
 				assertEqual(space, '<a:noFill/>', `chart area fill with ${label}`)
