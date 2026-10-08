@@ -122,6 +122,7 @@
 		"ppt:vm:down": "docker compose -f tools/powerpoint-vm/compose.yml down",
 		"ppt:vm:sync": "node scripts/powerpoint/vm-sync.mjs",
 		"ppt:health": "node scripts/powerpoint/health.mjs",
+		"ppt:run": "node scripts/powerpoint/run.mjs",
 		"typecheck": "tsc -p tsconfig.json --noEmit",
 		"typecheck:scripts": "tsc -p tsconfig.scripts.json --noEmit",
 		"typecheck:test": "tsc -p tsconfig.test.json --noEmit",

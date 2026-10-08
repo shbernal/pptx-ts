@@ -6,6 +6,11 @@ harness must round-trip genuine Microsoft Office output, including its quirks.
 
 ## Provenance
 
+A fixture authored or re-authored from 2026-10-08 on names the PowerPoint build in its
+provenance line, as in ``Authored 2026-10-08 (`authoring/author-x.ps1`, PowerPoint 16.0.20430.20146).``
+`pnpm ppt:run` prints that line when a recipe replaces a fixture. `docProps/app.xml` records
+only `16.0000`, so the build is otherwise lost. Older lines predate this and name no build.
+
 ### Vendored from `singerla/pptx-automizer` (MIT)
 
 These four files are vendored unmodified (bytes byte-identical to upstream) from

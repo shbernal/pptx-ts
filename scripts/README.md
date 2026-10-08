@@ -89,6 +89,7 @@ are in every aggregate the repo has.
 | `powerpoint/connection.mjs` | Library | The worker's URL and token, from the environment or `tools/powerpoint-vm/.env` | `powerpoint/client.mjs`, `powerpoint/health.mjs`, `powerpoint/vm-sync.mjs` |
 | `powerpoint/health.mjs` | Gate | Asks the worker for its health and prints the PowerPoint build it drives; fails when the worker is unreachable or sees no PowerPoint | manual (`ppt:health`) |
 | `powerpoint/job.mjs` | Library | The PowerPoint worker's job and result shapes, and the validation a job passes before anything touches the disk | `powerpoint/worker.mjs`; unit-tested |
+| `powerpoint/run.mjs` | Generator | Runs a fixture recipe on PowerPoint from any OS and writes what it produced back to `test/read/fixtures/` and `.tmp/` | manual (`ppt:run`) |
 | `powerpoint/runner.mjs` | Library | Runs PowerPoint jobs one at a time, each in a fresh workspace, and returns the files a job created or changed | `powerpoint/worker.mjs`; unit-tested |
 | `powerpoint/windows.mjs` | Library | The Windows side effects around a PowerPoint run: clear the Resiliency keys, force-quit PowerPoint, read its build | `powerpoint/runner.mjs`, `powerpoint-com-smoke.mjs` |
 | `powerpoint/vm-sync.mjs` | Generator | Stages the worker and its token in the PowerPoint VM's shared folder and restarts a running VM | manual (`ppt:vm:sync`, `ppt:vm:up`) |
