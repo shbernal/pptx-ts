@@ -14,7 +14,7 @@ import { makeXmlCommentAuthors, makeXmlComments, resolveCommentAuthors } from '.
 // defensive fallbacks that the public API cannot reach: `assemble.ts` always passes an array,
 // `SlideBuilder` always initializes `_comments`, and every comment in `_comments` has been seen by
 // `resolveCommentAuthors` by the time `makeXmlComments` runs. Reaching them takes the stub slides
-// below, which is exactly what this file is for. See test/regression/comment-definition.test.js for
+// below, which is exactly what this file is for. See test/regression/comment-definition.test.ts for
 // the definer's side, which does go through the public builder.
 
 const author = (over = {}) => ({ id: 0, name: 'Ada Lovelace', initials: 'AL', lastIdx: 1, clrIdx: 0, ...over })
