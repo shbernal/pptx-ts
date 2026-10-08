@@ -3,6 +3,7 @@ $ErrorActionPreference = 'Stop'
 $REPO    = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')).Path
 $FIX     = Join-Path $REPO 'test\read\fixtures'
 $SCRATCH = Join-Path $REPO '.tmp'
+New-Item -ItemType Directory -Force $SCRATCH | Out-Null   # absent in a fresh clone or a worker job
 $ASSETS  = Join-Path $PSScriptRoot 'assets'
 $out = Join-Path $FIX 'slide-transition.pptx'
 if (Test-Path $out) { Remove-Item $out -Force }

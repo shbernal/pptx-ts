@@ -30,6 +30,7 @@ $ErrorActionPreference = 'Stop'
 $REPO = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')).Path
 $FIX = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $SCRATCH = Join-Path $REPO '.tmp'
+New-Item -ItemType Directory -Force $SCRATCH | Out-Null   # absent in a fresh clone or a worker job
 
 $out = Join-Path $FIX 'slide-background.pptx'
 $tmp = Join-Path $FIX 'slide-background.base.pptx'

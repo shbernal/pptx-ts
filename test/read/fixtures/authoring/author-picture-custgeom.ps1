@@ -4,10 +4,11 @@ $ErrorActionPreference = 'Stop'
 $REPO    = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')).Path
 $FIX     = Join-Path $REPO 'test\read\fixtures'
 $SCRATCH = Join-Path $REPO '.tmp'
+New-Item -ItemType Directory -Force $SCRATCH | Out-Null   # absent in a fresh clone or a worker job
 $out = if ($OutPath) { $OutPath } else { Join-Path $FIX 'picture-custgeom.pptx' }
-# Brand-free raster drawn in code; run make-assets.ps1 first.
+# Brand-free raster drawn in code by make-assets.ps1.
 $png = Join-Path $SCRATCH 'media\photo.png'
-if (-not (Test-Path $png)) { throw "missing $png; run make-assets.ps1 first" }
+if (-not (Test-Path $png)) { & (Join-Path $PSScriptRoot 'make-assets.ps1') }
 
 $preexistingIds = @(Get-Process POWERPNT -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Id)
 $pp = $null

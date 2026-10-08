@@ -12,6 +12,7 @@ $ErrorActionPreference = 'Stop'
 $REPO    = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')).Path
 $FIX     = Join-Path $REPO 'test\read\fixtures'
 $SCRATCH = Join-Path $REPO '.tmp'
+New-Item -ItemType Directory -Force $SCRATCH | Out-Null   # absent in a fresh clone or a worker job
 $ASSETS  = Join-Path $PSScriptRoot 'assets'
 foreach ($k in 'DocumentRecovery','StartupItems') {
   $p = "HKCU:\Software\Microsoft\Office\16.0\PowerPoint\Resiliency\$k"
