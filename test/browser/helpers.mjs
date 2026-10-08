@@ -5,6 +5,22 @@ import { ROOT } from '../../scripts/script-utils.mjs'
 import { buildDeckBase64 } from './harness/decks.mjs'
 
 /**
+ * `value`, narrowed past `null` and `undefined`, failing the spec through Playwright's
+ * `expect` when it is absent. The Playwright counterpart of `defined` in `test/helpers.js`,
+ * which asserts through Vitest and so cannot be imported here.
+ *
+ * @template T
+ * @param {T} value
+ * @param {string} [message]
+ * @returns {NonNullable<T>}
+ */
+export function defined(value, message) {
+	expect(value, message).toBeDefined()
+	expect(value, message).not.toBeNull()
+	return /** @type {NonNullable<T>} */ (value)
+}
+
+/**
  * Drive the site's demos page through one deck build and hand back the downloaded bytes.
  *
  * This is the whole point of the browser lane: the page imports the *same* showcase

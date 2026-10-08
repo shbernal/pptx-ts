@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import JSZip from 'jszip'
-import { buildDeckInBrowser } from './helpers.mjs'
+import { buildDeckInBrowser, defined } from './helpers.mjs'
 
 /**
  * The browser can build a deck at all.
@@ -32,7 +32,7 @@ test('the demos page builds a downloadable .pptx package in the browser', async 
 	const slides = names.filter((name) => /^ppt\/slides\/slide\d+\.xml$/.test(name))
 	expect(slides).toHaveLength(11)
 
-	const presentation = await zip.file('ppt/presentation.xml').async('string')
+	const presentation = await defined(zip.file('ppt/presentation.xml')).async('string')
 	expect(presentation).toContain('<p:sldIdLst>')
 	expect(presentation).toContain('http://schemas.openxmlformats.org/presentationml/2006/main')
 })

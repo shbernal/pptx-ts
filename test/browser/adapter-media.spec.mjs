@@ -3,7 +3,7 @@ import path from 'node:path'
 import { diffParts, explodePackage, listParts } from '../../scripts/pptx-parts.mjs'
 import { ROOT } from '../../scripts/script-utils.mjs'
 import { expect, test } from './fixtures.mjs'
-import { buildDeckInHarness, buildDeckInNode, NODE_ASSETS, openHarness, packageBytes } from './helpers.mjs'
+import { buildDeckInHarness, buildDeckInNode, defined, NODE_ASSETS, openHarness, packageBytes } from './helpers.mjs'
 
 /**
  * `loadMedia` and `createSvgPngPreview` (src/runtime/browser.ts) in a real browser.
@@ -75,7 +75,10 @@ test('createSvgPngPreview: the browser rasterizes the PNG fallback Node can only
 	expect(diffs).toHaveLength(1)
 	expect(diffs[0]).toMatch(/^CHANGED {2}ppt\/media\/.*\.png$/)
 
-	const pngPart = mediaParts(browserDir).find((part) => part.endsWith('.png'))
+	const pngPart = defined(
+		mediaParts(browserDir).find((part) => part.endsWith('.png')),
+		'a PNG media part'
+	)
 	const browserPng = fs.readFileSync(path.join(browserDir, pngPart))
 	const nodePng = fs.readFileSync(path.join(nodeDir, pngPart))
 
@@ -85,7 +88,10 @@ test('createSvgPngPreview: the browser rasterizes the PNG fallback Node can only
 	expect(browserPng.byteLength).toBeGreaterThan(nodePng.byteLength * 4)
 
 	// And the SVG itself is untouched by either runtime.
-	const svgPart = mediaParts(browserDir).find((part) => part.endsWith('.svg'))
+	const svgPart = defined(
+		mediaParts(browserDir).find((part) => part.endsWith('.svg')),
+		'an SVG media part'
+	)
 	expect(fs.readFileSync(path.join(browserDir, svgPart)).equals(fs.readFileSync(NODE_ASSETS.svg))).toBe(true)
 })
 
