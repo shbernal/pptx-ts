@@ -96,8 +96,8 @@ const maxWorkers = resolveMaxWorkers()
 // so a standing share of the branch count is unreachable on any valid package —
 // see docs/contributing/testing.md "Deciding whether a red branch needs a test" for which of those
 // to leave alone and which are real input worth a test. Two files carry that
-// reasoning in full, per remaining arm: test/read/chrome-read-edges.test.js for
-// src/read/api/chrome.ts, and test/read/import-slide-preserve.test.js for
+// reasoning in full, per remaining arm: test/read/chrome-read-edges.test.ts for
+// src/read/api/chrome.ts, and test/read/import-slide-preserve.test.ts for
 // src/read/oxml/theme.ts.
 //
 // `src/gen/table/html-dom.ts` is the one module whose thin branch coverage in THIS lane is

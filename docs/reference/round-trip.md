@@ -33,7 +33,7 @@ This page states what `save()` writes for each part, which constructs survive wi
 - It does not cover the zip container. Compression and entry metadata can differ, so the file as a whole is not byte-identical.
 - [`part.originalBytes`](api/read/classes/Part.md#originalbytes) keeps the loaded bytes for the part's whole life. [`part.serialize()`](api/read/classes/Part.md#serialize) returns the current body, edits included. `save()`, slide copies and imports all read `serialize()`.
 - A typed setter marks its part dirty. An edit through `element_` or `part.dom` does not. Call `markDirty()` after such an edit, or `save()` writes the loaded bytes and the edit is lost.
-- `test/read/roundtrip.test.js` checks these rules on every deck in the read fixture corpus. The [testing guide](https://github.com/shbernal/pptx-ts/blob/main/docs/contributing/testing.md) describes that suite.
+- `test/read/roundtrip.test.ts` checks these rules on every deck in the read fixture corpus. The [testing guide](https://github.com/shbernal/pptx-ts/blob/main/docs/contributing/testing.md) describes that suite.
 
 `load()` rejects a package it cannot hold to these rules. A malformed `.rels` part throws the first time its relationships are read.
 

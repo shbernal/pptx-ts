@@ -111,7 +111,7 @@ Chinese and Japanese text breaks between any two characters. A tokenizer that tr
 - Hangul is left out on purpose. UAX #14 allows a break between Hangul syllables, but PowerPoint moves the run down whole, so the Hangul box takes three lines where the Han box takes two. Breaking per syllable would count too few lines, the direction that overflows. A Hangul run longer than a line still wraps, through the over-long word fallback in `countLines`.
 - The two Bopomofo blocks sit on either side of Hangul Compatibility Jamo, and they are in the break set. They are Chinese phonetic notation.
 - U+3000 IDEOGRAPHIC SPACE is whitespace, so it stays a space token.
-- Without kinsoku, the model's line count matches and its widest line is narrower, so the height stays on the safe side. `test/read/cjk-line-breaking-oracle.test.js` pins the gap and fails when kinsoku is implemented.
+- Without kinsoku, the model's line count matches and its widest line is narrower, so the height stays on the safe side. `test/read/cjk-line-breaking-oracle.test.ts` pins the gap and fails when kinsoku is implemented.
 
 ### Font fallback
 

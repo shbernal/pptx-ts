@@ -10,7 +10,7 @@
  * never hand-computes a tint/shade again.
  *
  * Colour-space model (verified against PowerPoint output — see
- * `test/read/color-transform.test.js`): the working colour is kept canonical as
+ * `test/read/color-transform.test.ts`): the working colour is kept canonical as
  * sRGB between transforms; each transform converts into the space its family
  * operates in, applies, and converts back to sRGB. Transforms apply in **document
  * order** (ECMA-376 §20.1.2.3).

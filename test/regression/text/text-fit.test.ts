@@ -2,7 +2,7 @@
 // solver (src/measure/text-fit.ts). Uses SYNTHETIC font metrics so the suite is fully
 // reproducible and needs no real font files — CI runs Node-only on Linux. The
 // conservative-against-PowerPoint assertions against real fonts live in
-// test/read/autofit-calibration-oracle.test.js (skipped when fonts are absent).
+// test/read/autofit-calibration-oracle.test.ts (skipped when fonts are absent).
 import { describe, test, expect } from 'vitest'
 import { defined } from '../../helpers.ts'
 import {

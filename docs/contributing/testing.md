@@ -343,7 +343,7 @@ relationship, element or attribute, or must keep a part absent.
 pnpm run test:read
 ```
 
-`test/read/roundtrip.test.js` runs its contracts against every `.pptx` in `test/read/fixtures/`,
+`test/read/roundtrip.test.ts` runs its contracts against every `.pptx` in `test/read/fixtures/`,
 enumerated by `fixtureNames` in `test/read/corpus.ts`, so a deck added there is round-tripped on
 the next run. The contracts are part-set stability, byte identity for untouched parts, lazy
 parsing, save idempotence, content-type and relationship resolution, the mutate-and-reserialize
@@ -367,28 +367,28 @@ code, so a bug in one cannot hide a bug in the other.
 
 | File | What it pins |
 | --- | --- |
-| `test/read/model.test.js` | Slide and shape navigation, text, `Slide.hidden`, groups, connectors and graphic frames, proxy identity, `Slide.text`, `Slide.notesText` |
-| `test/read/edit.test.js` | Run text and font setters, geometry setters, `Slide.hidden` edits, schema validity of edited packages |
-| `test/read/escape-hatch-dirty.test.js` (*authored*) | An `element_` edit without `markDirty()` saves the loaded bytes; each level's `markDirty()` reserializes exactly its owning part, charts, chrome, notes and diagrams included |
-| `test/read/table.test.js` | Table navigation, merge metadata, cell text edits, cell styling |
-| `test/read/shapes-edit.test.js` | `addTextBox` and `Shape.delete`, with untouched parts byte-identical |
-| `test/read/shape-fill-edit.test.js` | Fill and line setters, schema order, per-kind support and its error codes |
-| `test/read/picture-edit.test.js` | `addPicture` (media part, content type, relationship, format sniffing) and copy-on-write `setImage` |
-| `test/read/clone-slide.test.js` | `cloneSlide` wiring |
-| `test/read/import-slide.test.js` | `importSlide`: the copied layout, master, theme and media, a deck templated from its source, `at`, `rescale`, `importNotes` |
-| `test/read/import-slide-preserve.test.js` | `importSlide({ theme: 'preserve' })`: flattened colours and style references, background, baked placeholder values, `carryMasterGraphics` |
-| `test/read/import-shape.test.js` | `importShape` and `importShapes`, placeholder lifts and `rescale` |
-| `test/read/chart.test.js` | Chart part resolution and series reads; a read-only open stays byte-identical |
-| `test/read/append-onto-existing.test.js` | `appendSlides` onto an existing layout, with chrome byte-identical |
-| `test/read/template-masters.test.js` | `fromTemplate` stripping sample slides and normalizing a `.potx` |
-| `test/read/table-borders.test.js` (*authored*) | `Table.styleId` and `TableCell.borders` |
-| `test/read/chart-format.test.js` (*authored*) | Chart axes, legend, data labels and series appearance |
-| `test/read/run-props.test.js` (*authored*) | Run formatting, run hyperlinks, paragraph line spacing |
-| `test/read/chartex-read.test.js` (*authored*) | ChartEx reads |
-| `test/read/connector-read.test.js` (*authored*) | Connector endpoint binding |
-| `test/read/notes-read.test.js` (*authored*) | Speaker-notes text frames and their hyperlinks |
-| `test/read/shape-effect-reads.test.js` (*authored*) | Shadow, glow, reflection, soft edge, pattern fill and line-end reads, plus authored inner shadow and pattern fill |
-| `test/read/slide-read-edges.test.js` (*authored*) | Picture format sniffing, `Slide.background`, `TextFrame.autofit`, `Slide.slideNumberPlaceholder` |
+| `test/read/model.test.ts` | Slide and shape navigation, text, `Slide.hidden`, groups, connectors and graphic frames, proxy identity, `Slide.text`, `Slide.notesText` |
+| `test/read/edit.test.ts` | Run text and font setters, geometry setters, `Slide.hidden` edits, schema validity of edited packages |
+| `test/read/escape-hatch-dirty.test.ts` (*authored*) | An `element_` edit without `markDirty()` saves the loaded bytes; each level's `markDirty()` reserializes exactly its owning part, charts, chrome, notes and diagrams included |
+| `test/read/table.test.ts` | Table navigation, merge metadata, cell text edits, cell styling |
+| `test/read/shapes-edit.test.ts` | `addTextBox` and `Shape.delete`, with untouched parts byte-identical |
+| `test/read/shape-fill-edit.test.ts` | Fill and line setters, schema order, per-kind support and its error codes |
+| `test/read/picture-edit.test.ts` | `addPicture` (media part, content type, relationship, format sniffing) and copy-on-write `setImage` |
+| `test/read/clone-slide.test.ts` | `cloneSlide` wiring |
+| `test/read/import-slide.test.ts` | `importSlide`: the copied layout, master, theme and media, a deck templated from its source, `at`, `rescale`, `importNotes` |
+| `test/read/import-slide-preserve.test.ts` | `importSlide({ theme: 'preserve' })`: flattened colours and style references, background, baked placeholder values, `carryMasterGraphics` |
+| `test/read/import-shape.test.ts` | `importShape` and `importShapes`, placeholder lifts and `rescale` |
+| `test/read/chart.test.ts` | Chart part resolution and series reads; a read-only open stays byte-identical |
+| `test/read/append-onto-existing.test.ts` | `appendSlides` onto an existing layout, with chrome byte-identical |
+| `test/read/template-masters.test.ts` | `fromTemplate` stripping sample slides and normalizing a `.potx` |
+| `test/read/table-borders.test.ts` (*authored*) | `Table.styleId` and `TableCell.borders` |
+| `test/read/chart-format.test.ts` (*authored*) | Chart axes, legend, data labels and series appearance |
+| `test/read/run-props.test.ts` (*authored*) | Run formatting, run hyperlinks, paragraph line spacing |
+| `test/read/chartex-read.test.ts` (*authored*) | ChartEx reads |
+| `test/read/connector-read.test.ts` (*authored*) | Connector endpoint binding |
+| `test/read/notes-read.test.ts` (*authored*) | Speaker-notes text frames and their hyperlinks |
+| `test/read/shape-effect-reads.test.ts` (*authored*) | Shadow, glow, reflection, soft edge, pattern fill and line-end reads, plus authored inner shadow and pattern fill |
+| `test/read/slide-read-edges.test.ts` (*authored*) | Picture format sniffing, `Slide.background`, `TextFrame.autofit`, `Slide.slideNumberPlaceholder` |
 
 Schema validity does not prove PowerPoint opens a deck without a repair prompt. Two scripts
 write decks for a manual open, and neither asserts anything.
@@ -483,7 +483,7 @@ through `script:roundtrip:all`. Run that before pushing a change to `src/script/
 
 A clean run detects asymmetry, not loss in general. The guide's
 [What a clean run does not prove](../reference/pptx-to-script.md#what-a-clean-run-does-not-prove)
-states the limits. `test/read/script-roundtrip.test.js` and `test/read/script-standalone.test.js`
+states the limits. `test/read/script-roundtrip.test.ts` and `test/read/script-standalone.test.ts`
 hold what the round trip rests on and cannot establish itself: the diff fails when an IR is
 perturbed, a note excuses only its own field, the canonicaliser is an equivalence, and the
 standalone chrome matches `pptx-ts/read`'s own accessors rather than the converter's output.
@@ -568,7 +568,7 @@ lowering the notch or hiding the file again, and the rule exists to prevent both
 ### Probing coverage while editing
 
 ```bash
-pnpm run coverage:probe test/read/chart.test.js   # named files only, thresholds zeroed
+pnpm run coverage:probe test/read/chart.test.ts   # named files only, thresholds zeroed
 ```
 
 `coverage:probe` instruments the same `dist/` bundle over the files you name and writes to
@@ -609,7 +609,7 @@ The answers put a branch in one of three classes:
 | --- | --- | --- |
 | Schema-impossible | The child, attribute or root is `minOccurs="1"` (check with `ooxml_children` or `ooxml_attributes`), or the relationship is required for the package to resolve | Leave it red. Do not fence it with `v8 ignore`, which is for code the bundle cannot reach |
 | Unreachable by construction | The caller already established the condition, or no public entry supplies the input | Leave it red, and list it with its reason in the header of the test file that covers the module |
-| Schema-legal but unrepresented | A deck PowerPoint could write, or an in-scope entry, supplies the input and no test does | Cover it. Promote a real deck, or splice the variant into an authored deck as `test/read/slide-background-edges.test.js` does |
+| Schema-legal but unrepresented | A deck PowerPoint could write, or an in-scope entry, supplies the input and no test does | Cover it. Promote a real deck, or splice the variant into an authored deck as `test/read/slide-background-edges.test.ts` does |
 
 Three checks prevent a wrong classification:
 
@@ -621,7 +621,7 @@ Three checks prevent a wrong classification:
 - **Cover a documented debug option.** A `verbose` trace that throws on a documented option is
   a bug. Say in the test header that the case pins the trace, not the engine underneath.
 
-`test/read/chrome-read-edges.test.js` and `test/read/import-slide-preserve.test.js` are the
+`test/read/chrome-read-edges.test.ts` and `test/read/import-slide-preserve.test.ts` are the
 worked examples. Their headers list every remaining arm with the content model that rules it
 out.
 
@@ -745,7 +745,7 @@ How the schema suite runs:
 | --- | --- | --- |
 | Modelled markup | Reports schema and semantic errors (`Sch_*`, `Sem_*`), so a dangling `r:id` is caught here | `test:schema`, and the schema cases in `test:read` |
 | A file that is not a readable package | Reports a `PackageOpenError` row | the non-package case in `test/schema-cases.ts` |
-| Content inside `mc:Choice` | Validates only the `mc:Fallback` branch. The payloads of 3D models (`am3d:model3d`), zoom frames and OLE objects (`p:oleObj`) go unvalidated, including a deleted required attribute | a byte diff against a PowerPoint-authored fixture (`test/read/model3d-roundtrip.test.js`), and `test:com` |
+| Content inside `mc:Choice` | Validates only the `mc:Fallback` branch. The payloads of 3D models (`am3d:model3d`), zoom frames and OLE objects (`p:oleObj`) go unvalidated, including a deleted required attribute | a byte diff against a PowerPoint-authored fixture (`test/read/model3d-roundtrip.test.ts`), and `test:com` |
 | Version gating | An older schema set skips markup it does not model instead of rejecting it, so a clean run at a lower version does not mean that Office version opens the deck | the `Microsoft365` pin; decide `mc:Choice Requires=` against `[MS-PPTX]` and PowerPoint; `schema:versions` dates a divergence |
 | Markup PowerPoint writes that the SDK does not model | Reports it as errors, as in the chart `c:extLst` of `bar-chart-data-labels.pptx` and the chartEx `cx:axisId` divergence | the read round trip compares verdicts before and after; `test/schema-cases.ts` documents the tolerated `cx:axisId` errors |
 | Errors PowerPoint raises on open | Cannot see a package PowerPoint reports as corrupt (`0x80070570`) or opens with a shape dropped | `test:com`, and a manual open of `test:read:emit` output |
@@ -1033,8 +1033,8 @@ authored decks. The model and its constants are described in
 
 | Suite | Asserts |
 | --- | --- |
-| `test/read/autofit-calibration-oracle.test.js` | The computed shrink `fontScale` is at or below PowerPoint's, and the computed resize height is at or above both PowerPoint's and LibreOffice's. A last test fails when no case ran. |
-| `test/read/cjk-line-breaking-oracle.test.js` | The line count equals PowerPoint's for each East Asian case, and the height is at or above the height PowerPoint baked. |
+| `test/read/autofit-calibration-oracle.test.ts` | The computed shrink `fontScale` is at or below PowerPoint's, and the computed resize height is at or above both PowerPoint's and LibreOffice's. A last test fails when no case ran. |
+| `test/read/cjk-line-breaking-oracle.test.ts` | The line count equals PowerPoint's for each East Asian case, and the height is at or above the height PowerPoint baked. |
 
 ### Fixture decks
 
@@ -1090,7 +1090,7 @@ face from one of two sources:
   `test/read/fixtures/authoring/build-font-metrics.mjs` writes it and refuses to write a partial
   file.
 
-`test/read/font-metrics-sidecar.test.js` re-derives every sidecar entry from the installed font
+`test/read/font-metrics-sidecar.test.ts` re-derives every sidecar entry from the installed font
 wherever one resolves, and fails on any difference.
 
 | Lane | Source | What it establishes |

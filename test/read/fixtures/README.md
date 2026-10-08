@@ -148,7 +148,7 @@ by the `ts-pptx/read` harness. Two groups:
 PowerPoint writes when a slide is marked hidden, so the deck stays
 PowerPoint-authored apart from the one hidden-slide flag. Slide 1 omits `@show`
 entirely (the shown default). Used by the `Slide.hidden` getter test in
-`../model.test.js`.
+`../model.test.ts`.
 
 SHA-256 of the fixture bytes:
 
@@ -373,7 +373,7 @@ d0349b049dec32cce83e2f04967e94e4484801cb6a7a972db3d9bf5c33a69996  media/tiny.mp4
   `mixed.pptx` and exits non-zero if any authored string fails to resolve.
 
   It is the fixture behind `Diagram.nodes`, `DiagramPoint.drawnShape` and
-  `DiagramPoint.text` in `test/read/diagram.test.js`; the mapping those rest on is
+  `DiagramPoint.text` in `test/read/diagram.test.ts`; the mapping those rest on is
   documented for consumers in `docs/reference/read-object-model.md`, and the findings below are the
   measurement it came from.
 - `smartart-hyperlink.pptx` — one `cycle2` diagram whose first node's text carries a
@@ -434,7 +434,7 @@ d0349b049dec32cce83e2f04967e94e4484801cb6a7a972db3d9bf5c33a69996  media/tiny.mp4
   plus tables, a chart (`c:chart`), and SmartArt/diagram (`dgm:`) graphic
   frames. The read-model coverage deck for shape enumeration and
   group traversal. Slide 2 is also the SmartArt oracle for `Diagram`
-  (`test/read/diagram.test.js`): a PowerPoint-authored `hList1` whose data model
+  (`test/read/diagram.test.ts`): a PowerPoint-authored `hList1` whose data model
   holds 46 points, of which 11 are nodes carrying run-split text, the rest being
   the `doc` root, a `parTrans`/`sibTrans` pair per edge, and 12 generated `pres`
   points. Genuine Office output matters here more than usual, since nothing in
@@ -483,7 +483,7 @@ d0349b049dec32cce83e2f04967e94e4484801cb6a7a972db3d9bf5c33a69996  media/tiny.mp4
 - `rotation-flip.pptx` — a minimal deck with two ungrouped, stably-named
   rectangles that pin per-shape transform reads against genuine PowerPoint
   output (de-circularising the former write→read round-trip in
-  `style-accessors.test.js`): `rotated-45` carries `<a:xfrm rot="2700000">`
+  `style-accessors.test.ts`): `rotated-45` carries `<a:xfrm rot="2700000">`
   (2700000 / 60000 = 45°, no flip) and `flipped-h` carries `<a:xfrm flipH="1">`
   (no rotation). Read by the "Per-shape rotation / flip" suite.
 - `placeholder-inherit.pptx` — a minimal deck (one slide, a title + a body
@@ -496,7 +496,7 @@ d0349b049dec32cce83e2f04967e94e4484801cb6a7a972db3d9bf5c33a69996  media/tiny.mp4
   (2026-07-17). Read by the "placeholder text-property inheritance" suite. Both
   placeholders also carry **no own `a:xfrm`** (neither does their layout,
   `slideLayout12.xml` — both resolve all the way to `slideMaster1.xml`), which
-  `Shape.resolvedFrame` effective-geometry coverage reuses (2026-07-23) (`placeholder-effective-geometry.test.js`); the
+  `Shape.resolvedFrame` effective-geometry coverage reuses (2026-07-23) (`placeholder-effective-geometry.test.ts`); the
   oracle geometry there was read directly off the fixture's own master/layout
   XML, independent of the reader code under test.
 - `placeholder-footer-trio.pptx` — a minimal deck (one slide, title only) whose
@@ -509,14 +509,14 @@ d0349b049dec32cce83e2f04967e94e4484801cb6a7a972db3d9bf5c33a69996  media/tiny.mp4
   different `idx` on the layout (dt=10/ftr=11/sldNum=12) than the master
   (dt=2/ftr=3/sldNum=4), so this pins that a singleton placeholder resolves to
   its **same-type** source box and never borrows another member of the trio — the
-  read (`placeholder-footer-trio.test.js`) and the `theme: 'preserve'` geometry
-  bake (`import-slide-preserve.test.js`). Authored via PowerPoint COM on Windows
+  read (`placeholder-footer-trio.test.ts`) and the `theme: 'preserve'` geometry
+  bake (`import-slide-preserve.test.ts`). Authored via PowerPoint COM on Windows
   (2026-07-24); the oracle boxes were read directly off the fixture's own master
   XML, independent of the reader code under test.
 - `picture-media.pptx` — a minimal one-slide deck for the picture-media and
   accessibility accessors (`Picture.mediaKind` / `mediaPartName` / `crop`,
   `Shape.description` / `title` / `isDecorative`), read by
-  `picture-media-accessors.test.js`. Four named shapes: `SvgPic` is an inserted
+  `picture-media-accessors.test.ts`. Four named shapes: `SvgPic` is an inserted
   `.svg` that PowerPoint writes **svg-only** (`a:blip` with no `r:embed`, only the
   `asvg:svgBlip` extension — the exact shape *Insert → Icons* produces);
   `CroppedPic` is a raster PNG with a four-edge crop
@@ -529,9 +529,9 @@ d0349b049dec32cce83e2f04967e94e4484801cb6a7a972db3d9bf5c33a69996  media/tiny.mp4
   for its `null` result here. Authored via PowerPoint COM on Windows (2026-07-24);
   ground-truth values read directly off the fixture's slide XML. The
   raster-plus-SVG `both` and plain `raster` `mediaKind` cases live in
-  `style-accessors.test.js` against `image.pptx`.
+  `style-accessors.test.ts` against `image.pptx`.
 - `slide-background.pptx` — three slides, each with a background that belongs to the
-  **slide** rather than to its layout or master, read by `slide-background.test.js`. Slide
+  **slide** rather than to its layout or master, read by `slide-background.test.ts`. Slide
   1 is `p:bg/p:bgPr/a:blipFill` (Format Background → Picture or texture fill, applied to
   one slide); slide 2 is a slide-scoped `p:bg/p:bgRef idx="1001"` with
   `<a:schemeClr val="accent2"/>`, which the stock theme's first `a:bgFillStyleLst` entry
@@ -550,7 +550,7 @@ d0349b049dec32cce83e2f04967e94e4484801cb6a7a972db3d9bf5c33a69996  media/tiny.mp4
   `p:bgPr`. PowerPoint keeps the injected `p:bgRef` verbatim on the re-save, which is the
   evidence that it is a construct PowerPoint accepts at slide scope.
 - `default-text-style.pptx` — a minimal one-slide deck for the two lowest
-  run-resolution tiers, read by `default-text-style.test.js`. `PlainBox` is a plain
+  run-resolution tiers, read by `default-text-style.test.ts`. `PlainBox` is a plain
   text box (no placeholder, no `p:style`) whose sole run is bare
   (`<a:rPr lang="en-US"/>`), so its size/colour/face resolve entirely from the
   presentation's `p:defaultTextStyle` (lvl1 `sz="1800"`, `schemeClr tx1`, `+mn-lt`)
@@ -564,7 +564,7 @@ d0349b049dec32cce83e2f04967e94e4484801cb6a7a972db3d9bf5c33a69996  media/tiny.mp4
   `000000`, direct slot `lt1` window `FFFFFF`) read directly off the fixture.
 - `shape-line-style-override.pptx` — four rectangles sharing preset shape style 10, whose
   `p:style/a:lnRef idx="2"` names accent2 shaded to 15%, read by
-  `shape-line-style-override.test.js`. `StyleOnly` has no `spPr/a:ln`. The other three had one
+  `shape-line-style-override.test.ts`. `StyleOnly` has no `spPr/a:ln`. The other three had one
   outline property changed after the style was applied, and PowerPoint wrote only that property:
   `WeightOnly` is `<a:ln w="76200"/>`, `DashOnly` is `<a:ln><a:prstDash val="dash"/></a:ln>`,
   and `ColorOnly` is an `a:ln` holding only an `a:srgbClr` `FF0000` fill. Exported to PNG,
@@ -575,7 +575,7 @@ d0349b049dec32cce83e2f04967e94e4484801cb6a7a972db3d9bf5c33a69996  media/tiny.mp4
   an own `a:ln` rather than skipping it. Authored via PowerPoint COM on Windows (2026-09-14,
   `authoring/author-shape-line-style-override.ps1`).
 - `table-merge-encoding.pptx` — five slides with one table each, read by
-  `table-merge-encoding.test.js`, pinning the span attributes PowerPoint writes on the covered
+  `table-merge-encoding.test.ts`, pinning the span attributes PowerPoint writes on the covered
   cells of a merged region. Slide 1 (`merge-2x2`) is a 3x3 table with cells (1,1)-(2,2) merged:
   the origin is `rowSpan="2" gridSpan="2"`, the covered cell in the region's first row
   `rowSpan="2" hMerge="1"`, the one in its first column `gridSpan="2" vMerge="1"`, and the inner
@@ -588,7 +588,7 @@ d0349b049dec32cce83e2f04967e94e4484801cb6a7a972db3d9bf5c33a69996  media/tiny.mp4
   cell into the origin as its own paragraph, in row-major order, and leaves the covered cells
   empty. Authored via PowerPoint COM on Windows (2026-09-14,
   `authoring/author-table-merge-encoding.ps1`).
-- `table-text-inheritance.pptx` — one slide, read by `table-text-inheritance.test.js`, pinning
+- `table-text-inheritance.pptx` — one slide, read by `table-text-inheritance.test.ts`, pinning
   where the bare run of a table cell takes its size, face, colour, bold and italic. Every tier is
   given a value no other tier has: `p:defaultTextStyle` lvl1 is 28pt `C00000` Courier New, the
   master's `p:otherStyle` lvl1 is 14pt `0070C0` Georgia italic, and the theme's `dk1` is `7030A0`
@@ -604,7 +604,7 @@ d0349b049dec32cce83e2f04967e94e4484801cb6a7a972db3d9bf5c33a69996  media/tiny.mp4
   injected into the package PowerPoint saved, which PowerPoint then reopened and re-saved.
   Authored via PowerPoint COM on Windows (2026-09-14, `authoring/author-table-text-inheritance.ps1`).
 - `slide-jump-link.pptx` and `slide-jump-link-target-deleted.pptx` — one three-slide deck before
-  and after PowerPoint deletes its first slide, read by `remove-slide-powerpoint.test.js`. Slide 2
+  and after PowerPoint deletes its first slide, read by `remove-slide-powerpoint.test.ts`. Slide 2
   (`Referrer`) holds a run (`LinkedText`) and a rectangle (`LinkedShape`) whose click actions jump
   to slide 1, and a run (`ControlText`) that jumps to slide 3. The deck has two sections, `First`
   (slide 1) and `Rest` (slides 2 and 3), and a custom show `Tour` listing slides 1 and 2. Deleting
@@ -626,7 +626,7 @@ d0349b049dec32cce83e2f04967e94e4484801cb6a7a972db3d9bf5c33a69996  media/tiny.mp4
   `authoring/author-chart-legend-entry.ps1`), with each legend read off PNG exports taken before
   and after the deletion.
 - `modern-comments.pptx` — a minimal two-slide deck carrying PowerPoint's **modern
-  (2018) `p188` comment schema**, read by `modern-comments.test.js`
+  (2018) `p188` comment schema**, read by `modern-comments.test.ts`
   (`Presentation.modernCommentAuthors` / `commentSchema`, `Slide.modernComments`).
   Deck-wide `ppt/authors.xml` (`p188:authorLst`, ns
   `http://schemas.microsoft.com/office/powerpoint/2018/8/main`) holds two GUID-keyed
@@ -646,7 +646,7 @@ d0349b049dec32cce83e2f04967e94e4484801cb6a7a972db3d9bf5c33a69996  media/tiny.mp4
   `authors.xml` / modernComment XML.
 - `read-stress.pptx` — an **integration** fixture that combines, in one deck, the
   read-model resolution chains that individually live in narrower fixtures but rarely
-  co-occur; read by `read-stress.test.js`. It is a synthetic, brand-free stand-in for
+  co-occur; read by `read-stress.test.ts`. It is a synthetic, brand-free stand-in for
   a complex real-world deck (dual masters, styled tables, recoloured SVG icons,
   threaded modern comments) and guards that those chains keep working **together**.
   Two slides, each on its own master + theme (slide 1 → `slideMaster1` / *Office
@@ -666,12 +666,12 @@ d0349b049dec32cce83e2f04967e94e4484801cb6a7a972db3d9bf5c33a69996  media/tiny.mp4
   one with a two-reply thread across both authors. Slide 1 also has speaker notes.
   **Deliberately absent** (real PowerPoint COM cannot author these headless; each is
   covered off-fixture): `a:duotone`/`a:clrChange`/`a:alphaModFix` recolor
-  (`picture-recolor.test.js`), the raster+SVG `'both'` mediaKind (`style-accessors`
+  (`picture-recolor.test.ts`), the raster+SVG `'both'` mediaKind (`style-accessors`
   against `image.pptx`), and `hdphoto`/`.wdp` artistic-effect layers. Authored via
   desktop PowerPoint COM on Windows (2026-07-24; `authoring/author-read-stress.ps1`),
   opens clean with no repair.
 - `tags.pptx` — a minimal two-slide deck carrying PowerPoint's programmatic
-  **tags** (`p:custDataLst/p:tags` → `ppt/tags/tagN.xml`), read by `tags.test.js`
+  **tags** (`p:custDataLst/p:tags` → `ppt/tags/tagN.xml`), read by `tags.test.ts`
   (`Presentation.tags` / `Slide.tags`). **Deck-level** `ppt/tags/tag1.xml` holds
   `REVIEWER="Ada Lovelace"` + `STAGE="draft"` (referenced from `presentation.xml`);
   **slide 1** references `ppt/tags/tag2.xml` holding `REGION="EMEA"` +
@@ -713,7 +713,7 @@ d0349b049dec32cce83e2f04967e94e4484801cb6a7a972db3d9bf5c33a69996  media/tiny.mp4
   - `preset-rect` — `<a:prstGeom prst="rect">` (no `a:custGeom`); the negative
     control that must read `customGeometry === null`.
 - `picture-custgeom.pptx`: a one-slide deck of PowerPoint-authored pictures clipped to
-  freeforms, for `customGeometry` on a `p:pic`, read by `picture-custgeom.test.js`.
+  freeforms, for `customGeometry` on a `p:pic`, read by `picture-custgeom.test.ts`.
   Authored via desktop PowerPoint COM on Windows (2026-09-15;
   `authoring/author-picture-custgeom.ps1`) by selecting a picture, then a `BuildFreeform`
   shape, and running `CommandBars.ExecuteMso("ShapesIntersect")`. PowerPoint keeps the
@@ -1115,7 +1115,7 @@ rather than tall, so it is surfaced and not absorbed.
   the deck, because nothing in the package records where a line broke: the `lines`
   and `lineWidthsPt` columns come from `TextRange.Lines()` read over COM at
   authoring time. The `bakedHeightPt` column *is* in the package (`a:ext/@cy`), and
-  `test/read/cjk-line-breaking-oracle.test.js` re-derives it from the committed deck
+  `test/read/cjk-line-breaking-oracle.test.ts` re-derives it from the committed deck
   on every run, so a sidecar edited apart from its fixture stops matching it.
 - Case ids: `cjk__<han|kana|hangul|fullwidth_latin|halfwidth_kana|ext_b_astral>_…`
   plus `cjk__kinsoku_hanging_comma` and an all-Latin `latin__control`.
@@ -1145,7 +1145,7 @@ rather than tall, so it is surfaced and not absorbed.
   with when the genuine fonts are absent (schema `font-metrics@1`): per face, the raw
   `hmtx` advance in font design units of every code point the committed cases use, plus
   the code points that face's cmap lacks. Written by `authoring/build-font-metrics.mjs`
-  from the installed fonts; `../font-metrics-sidecar.test.js` re-derives it wherever a
+  from the installed fonts; `../font-metrics-sidecar.test.ts` re-derives it wherever a
   genuine font resolves, so it cannot drift away from what it was recorded from. It exists
   because Aptos ships with Microsoft 365 and 35 of the 47 asserted autofit cases use it:
   without it those cases skip everywhere except a workstation with Office.

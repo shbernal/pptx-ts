@@ -4263,7 +4263,7 @@ export default [
 		// So `expectNoSchemaErrors` here covers the fallback, the rel graph and the content types;
 		// the explicit assertions below are what actually pin the `am3d` body, and they are
 		// transcribed from `test/read/fixtures/model3d.pptx` — a deck PowerPoint itself authored via
-		// `Shapes.Add3DModel`. `test/read/model3d-roundtrip.test.js` diffs the whole subtree against
+		// `Shapes.Add3DModel`. `test/read/model3d-roundtrip.test.ts` diffs the whole subtree against
 		// that fixture; `pnpm run test:com` is what proves it renders.
 		name: 'model3d embedded 3D models (am3d graphicFrame + preview fallback)',
 		fn: async () => {
@@ -4348,7 +4348,7 @@ export default [
 		// character reference: XML 1.0 section 3.3.3 normalises the literal character to a space
 		// before any consumer sees it, so a layout title or objectName carrying a line break came
 		// back flattened. The write→read half of this lives in
-		// `test/read/attr-whitespace-roundtrip.test.js`; this case pins that the references are
+		// `test/read/attr-whitespace-roundtrip.test.ts`; this case pins that the references are
 		// schema-valid everywhere they now appear (they are ordinary character data to the parser,
 		// but the emitters that produce them span layout, slide, and presentation parts).
 		name: 'dn-xml-attr-whitespace: tab/CR/LF in attribute values emit as character references',

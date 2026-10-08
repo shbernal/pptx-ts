@@ -48,7 +48,7 @@ const WRITABLE_TYPES: ReadonlySet<string> = new Set(TRANSITION_TYPES)
  * *namespace*, and answering it by name would be relying on that disjointness holding for
  * every namespace Microsoft ever adds. The write path emits `p:${type}` unconditionally, so
  * the cost of being wrong is a modern effect silently rewritten as a base one with the same
- * name and no note — a conversion that reports itself as faithful. `script-ir.test.js`
+ * name and no note — a conversion that reports itself as faithful. `script-ir.test.ts`
  * authors a `p14:fade` to keep this branch honest, since no fixture can.
  */
 function isWritable(info: TransitionInfo): boolean {

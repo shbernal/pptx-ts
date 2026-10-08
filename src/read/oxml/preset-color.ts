@@ -18,7 +18,7 @@
  *
  * This is spec data, not observed behaviour: the values come from the enumeration's own
  * documentation, and the table is asserted complete against the schema's 190-value list in
- * `test/read/preset-color.test.js` — a name the reader cannot resolve is a hole in the table,
+ * `test/read/preset-color.test.ts` — a name the reader cannot resolve is a hole in the table,
  * and that test is what finds it.
  */
 

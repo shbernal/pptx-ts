@@ -166,7 +166,7 @@
 		//
 		// `ignoreVoidOperator` sanctions `void expr` as a deliberate discard, which is a
 		// spelling this tree already uses (`return void value.forEach(rename)` in
-		// `test/read/script-roundtrip.test.js`). Without it the rule would be reporting the
+		// `test/read/script-roundtrip.test.ts`). Without it the rule would be reporting the
 		// marker whose entire job is to say the discard was on purpose. It also redirects
 		// the autofix to that form instead of splitting the statement.
 		//

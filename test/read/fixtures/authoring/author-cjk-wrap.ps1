@@ -11,7 +11,7 @@ $ErrorActionPreference = 'Stop'
 #     where a line broke, so this column only exists because it is captured here.
 #   * bakedHeightPt - the shape height PowerPoint fitted, which IS in the package
 #     (a:ext/@cy) and is re-checked against the committed deck by
-#     test/read/cjk-line-breaking-oracle.test.js on every run.
+#     test/read/cjk-line-breaking-oracle.test.ts on every run.
 #
 # One font, Malgun Gothic: a Windows-standard plain .ttf that covers Han, Kana,
 # Hangul, the fullwidth forms and CJK punctuation in one face, so a single set of

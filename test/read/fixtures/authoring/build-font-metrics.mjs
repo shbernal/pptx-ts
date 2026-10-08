@@ -10,7 +10,7 @@
 // the committed cases actually use, per face, and nothing else. Two numbers per character,
 // not a font.
 //
-// It is derived data, and the repo treats it that way. `../../font-metrics-sidecar.test.js`
+// It is derived data, and the repo treats it that way. `../../font-metrics-sidecar.test.ts`
 // re-derives every entry from the installed font wherever one resolves and fails on any
 // drift, so this file cannot be hand-edited into agreement with a model that has moved.
 //
@@ -62,7 +62,7 @@ const doc = {
 		'Advance widths in font design units for exactly the code points the committed autofit ' +
 		'and CJK cases measure, read from the genuine installed faces by ' +
 		'test/read/fixtures/authoring/build-font-metrics.mjs. Regenerate rather than edit; ' +
-		'test/read/font-metrics-sidecar.test.js re-derives these from the installed fonts.',
+		'test/read/font-metrics-sidecar.test.ts re-derives these from the installed fonts.',
 	faces: entries,
 }
 

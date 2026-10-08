@@ -1,5 +1,5 @@
 // Font resolution for the two PowerPoint-authored measurement oracles
-// (`autofit-calibration-oracle.test.js`, `cjk-line-breaking-oracle.test.js`).
+// (`autofit-calibration-oracle.test.ts`, `cjk-line-breaking-oracle.test.ts`).
 //
 // Those oracles compare this repo's measured-fit model against what desktop PowerPoint
 // baked for the same box, which only means anything if the model measures with the same
@@ -22,7 +22,7 @@
 // hosted runner: no runner will ever have Aptos, which ships with Microsoft 365 and not
 // with Windows, and 35 of the 47 asserted autofit cases are Aptos.
 //
-// The sidecar is derived data and is treated as such: `font-metrics-sidecar.test.js`
+// The sidecar is derived data and is treated as such: `font-metrics-sidecar.test.ts`
 // re-derives it from the genuine fonts wherever they resolve and fails on any drift, so
 // a hand-edited or stale sidecar stops matching its source. `authoring/build-font-metrics.mjs`
 // writes it.
@@ -66,7 +66,7 @@ export const REQUIRED = process.env.FONT_ORACLES === 'required'
  * The point is reproducibility in both directions: it is how a workstation with all six
  * faces exercises the path every Linux runner takes, and how a CI failure that only
  * happens on the sidecar path can be reproduced on a machine that has the fonts. It does
- * NOT affect `resolveGenuineFontFile`, so `font-metrics-sidecar.test.js` still verifies
+ * NOT affect `resolveGenuineFontFile`, so `font-metrics-sidecar.test.ts` still verifies
  * the sidecar against the real files while this is set.
  */
 export const SIDECAR_ONLY = process.env.FONT_ORACLES_SIDECAR_ONLY === '1'

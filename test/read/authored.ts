@@ -5,8 +5,8 @@
 // already emits it), load the bytes back through the deep read model
 // (src/read/api/*), and assert the extracted model. This module is that
 // author→read step — factored out of the one-off IIFE that
-// style-accessors.test.js hand-rolls, plus the slide-walking locators that
-// chart.test.js / table.test.js each redefine.
+// style-accessors.test.ts hand-rolls, plus the slide-walking locators that
+// chart.test.ts / table.test.ts each redefine.
 //
 // It deliberately does NOT wrap the per-feature assertions: each batch asserts
 // its own getters against its own oracle. This is only the fixture-in-memory +

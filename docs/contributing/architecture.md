@@ -153,7 +153,7 @@ lists the chrome constructs neither side can reach.
   so an imprecise `defineLayout` throws.
 - `from-read/transition.ts` admits a transition only when its namespace is `p` and its name is in
   `TRANSITION_TYPES`. The modern effect names are disjoint from the base names today, so only the
-  namespace check stops a `p14:fade` printing as `<p:fade/>`. `test/read/script-ir.test.js` authors
+  namespace check stops a `p14:fade` printing as `<p:fade/>`. `test/read/script-ir.test.ts` authors
   that case.
 - The standalone printer emits no layout placeholders. `addPlaceholdersToSlideLayouts` in
   `src/gen/define/placeholder.ts` gives every slide an empty shape for each layout placeholder it

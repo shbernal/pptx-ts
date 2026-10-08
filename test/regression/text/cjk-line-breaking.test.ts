@@ -15,7 +15,7 @@
 // count, which is the direction that overflows.
 //
 // What PowerPoint actually does is pinned by the authored deck in
-// `test/read/cjk-line-breaking-oracle.test.js`; this file is the arithmetic. Synthetic
+// `test/read/cjk-line-breaking-oracle.test.ts`; this file is the arithmetic. Synthetic
 // monospace metrics keep it exact: at 18 pt every code point advances 9 raw pt,
 // ×WIDTH_SAFETY_FACTOR (1.03) = 9.27 pt laid out, so a 2-inch inner box (144 pt)
 // holds ⌊144 / 9.27⌋ = 15 characters per line.

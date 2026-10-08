@@ -191,7 +191,7 @@ DEFLATE pass.
 ## Evidence
 
 - `test/read/fixtures/model3d.pptx` is a deck PowerPoint authored with `Shapes.Add3DModel`, from
-  `test/read/fixtures/authoring/author-model3d.ps1`. `test/read/model3d-roundtrip.test.js` compares the
+  `test/read/fixtures/authoring/author-model3d.ps1`. `test/read/model3d-roundtrip.test.ts` compares the
   emitted `am3d:model3d` subtree with it byte for byte, apart from relationship ids and the frame extent. The
   same file pins the relationship graph, a byte-identical load and save, and `importSlide` carrying the model
   and both relationships.

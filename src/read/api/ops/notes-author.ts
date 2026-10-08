@@ -9,7 +9,7 @@
  * The part it builds is the generator's, not a second design: the fixed three-
  * placeholder frame comes from {@link makeXmlNotesSlideSkeleton}, and the body
  * paragraphs carry the same elements and attributes the write path emits for a plain
- * `pptx.addSlide().addNotes(text)`. `test/read/add-notes.test.js` asserts that
+ * `pptx.addSlide().addNotes(text)`. `test/read/add-notes.test.ts` asserts that
  * equivalence, so the two cannot drift apart unnoticed — the same guarantee
  * `src/ooxml/` gives the constants both halves share.
  *

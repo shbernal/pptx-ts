@@ -2,8 +2,8 @@
 /**
  * What the measurement oracles will measure with on this machine.
  *
- * The autofit and CJK oracles (`test/read/autofit-calibration-oracle.test.js`,
- * `test/read/cjk-line-breaking-oracle.test.js`) need the genuine faces PowerPoint used
+ * The autofit and CJK oracles (`test/read/autofit-calibration-oracle.test.ts`,
+ * `test/read/cjk-line-breaking-oracle.test.ts`) need the genuine faces PowerPoint used
  * when it baked their fixtures, and fall back to the committed metrics sidecar where a
  * machine does not have one. Both are legitimate, but they are not the same claim, and
  * the difference used to be invisible: the suites resolved whatever was there and
