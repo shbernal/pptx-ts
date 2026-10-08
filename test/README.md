@@ -40,7 +40,7 @@ helper had been re-derived in seven to twenty-six files, with the drift that alw
 
 | Module | What it holds |
 |---|---|
-| `test/helpers.js` | `build()`, `readEntry()`, the `assert*` family, the XML/content-type probes, `captureDiagnostics()`, `defineRegressionSuite()`, `bytesEqual`, `throws`, and `PNG_1X1` — the 1x1 transparent PNG that had six different names |
+| `test/helpers.js` | `build()`, `readEntry()`, the `assert*` family, `expectDefined()` and `defined()` (narrow past `null`/`undefined` with a test failure, not a `TypeError`; prefer them to `!` or a cast), the XML/content-type probes, `captureDiagnostics()`, `defineRegressionSuite()`, `bytesEqual`, `throws`, and `PNG_1X1` — the 1x1 transparent PNG that had six different names |
 | `test/validator.js` | the OOXML schema validator: `validatorAvailable()`, `validateBuf()`, a thin adapter over `ooxml-validate`, which does the batching |
 | `test/read/corpus.js` | the read fixture corpus — `FIXTURES`, `fixturePath()`, `readFixture()`, `openFixture()`, `SNAPSHOTS`, `SCRATCH`, `REPO`, the enumerated `fixtureNames` (with the floor that stops an empty corpus passing silently), and the memoized `irFor()` / uncached `freshIr()` |
 | `test/read/authored.js` | the write→read fidelity harness: `authorRead()`, the `first*` locators, `schemaErrors()` |
