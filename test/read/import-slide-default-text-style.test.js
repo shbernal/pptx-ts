@@ -11,7 +11,7 @@
 import { describe, test } from 'vitest'
 
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined } from '../helpers.js'
 import { openFixture } from './corpus.js'
 
 /** The first run of the shape named `name` on `slide`. */
@@ -56,11 +56,13 @@ describe("importSlide({ theme: 'preserve' }) keeps what runs took from the sourc
 		t.textContent = '1'
 		fld.appendChild(t)
 		run.parentNode.replaceChild(fld, run)
-		source.slides[0].shapes.find((s) => s.name === 'PlainBox').markDirty()
+		defined(source.slides[0].shapes.find((s) => s.name === 'PlainBox')).markDirty()
 
 		const imported = target.importSlide(source, 0, { theme: 'preserve' })
-		const slide = (await Presentation.load(await target.save())).slides.find((s) => s.partName === imported.partName)
-		const baked = slide.shapes.find((s) => s.name === 'PlainBox').element_.getElementsByTagName('a:fld')[0]
+		const slide = defined(
+			(await Presentation.load(await target.save())).slides.find((s) => s.partName === imported.partName)
+		)
+		const baked = defined(slide.shapes.find((s) => s.name === 'PlainBox')).element_.getElementsByTagName('a:fld')[0]
 		const order = [...baked.childNodes].filter((n) => n.nodeType === 1).map((n) => n.nodeName)
 		assertEqual(order.join(' '), 'a:rPr a:pPr a:t', 'CT_TextField order')
 		assertEqual(baked.getElementsByTagName('a:rPr')[0].getAttribute('sz'), '1800', 'the field was baked')

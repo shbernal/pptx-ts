@@ -14,7 +14,7 @@
 import { describe, test } from 'vitest'
 
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined } from '../helpers.js'
 import { openFixture } from './corpus.js'
 
 const TABLES = ['StyledTable', 'NoGridTable', 'NoStyleTable']
@@ -75,7 +75,7 @@ describe("importSlide({ theme: 'preserve' }) keeps what table cells took from th
 	test('a table naming a style the source does not define gets its size, and its weight left alone', async () => {
 		const target = await openFixture('default-text-style')
 		const source = await openFixture('table-text-inheritance')
-		const frame = source.slides[0].shapes.find((s) => s.name === 'NoGridTable')
+		const frame = defined(source.slides[0].shapes.find((s) => s.name === 'NoGridTable'))
 		frame.element_.getElementsByTagName('a:tableStyleId')[0].textContent = '{00000000-0000-0000-0000-000000000000}'
 		frame.markDirty()
 		const imported = target.importSlide(source, 0, { theme: 'preserve' })

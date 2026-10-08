@@ -15,7 +15,7 @@ import { readFile } from 'node:fs/promises'
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { TsPptx, PNG_1X1, bytesEqual, throws, assert, assertEqual } from '../helpers.js'
+import { TsPptx, PNG_1X1, bytesEqual, throws, assert, assertEqual, defined, readEntry } from '../helpers.js'
 import { validateBuf, validatorInstalled } from '../validator.js'
 import { fixturePath, openFixture } from './corpus.js'
 import { assertNoDanglingRels } from './opc.js'
@@ -112,7 +112,7 @@ function findShapeIndex(slide, pred) {
 /** layout-placeholder-bodypr.pptx with its body placeholder (idx 1) given its own explicit bodyPr anchor, so the inherited layout anchor ('ctr') must not overwrite it. Returns package bytes. */
 async function deckBodyPrOwnAnchor() {
 	const zip = await JSZip.loadAsync(await readFile(fixturePath('layout-placeholder-bodypr')))
-	const slide = (await zip.file('ppt/slides/slide1.xml').async('string')).replace(
+	const slide = (await readEntry(zip, 'ppt/slides/slide1.xml')).replace(
 		'<p:ph idx="1"/></p:nvPr></p:nvSpPr><p:spPr/><p:txBody><a:bodyPr/>',
 		'<p:ph idx="1"/></p:nvPr></p:nvSpPr><p:spPr/><p:txBody><a:bodyPr anchor="t"/>'
 	)
@@ -123,7 +123,7 @@ async function deckBodyPrOwnAnchor() {
 /** multi-theme.pptx with slide2's body placeholder (idx 1) txBody stripped of its (empty) a:lstStyle element entirely. Returns package bytes. */
 async function deckNoLstStyleElement() {
 	const zip = await JSZip.loadAsync(await readFile(fixturePath('multi-theme')))
-	const slide = (await zip.file('ppt/slides/slide2.xml').async('string')).replace(
+	const slide = (await readEntry(zip, 'ppt/slides/slide2.xml')).replace(
 		'<p:ph type="body" idx="1"/></p:nvPr></p:nvSpPr><p:spPr/><p:txBody><a:bodyPr/><a:lstStyle/><a:p>',
 		'<p:ph type="body" idx="1"/></p:nvPr></p:nvSpPr><p:spPr/><p:txBody><a:bodyPr/><a:p>'
 	)
@@ -134,7 +134,7 @@ async function deckNoLstStyleElement() {
 /** mixed.pptx with slide1's subTitle placeholder stripped of its `p:txBody` (`minOccurs="0"` on `p:CT_Shape`). Returns package bytes. */
 async function deckMixedPlaceholderNoTxBody() {
 	const zip = await JSZip.loadAsync(await readFile(fixturePath('mixed')))
-	const slide = (await zip.file('ppt/slides/slide1.xml').async('string')).replace(
+	const slide = (await readEntry(zip, 'ppt/slides/slide1.xml')).replace(
 		'<p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:endParaRPr lang="en-US" dirty="0"/></a:p></p:txBody>',
 		''
 	)
@@ -150,13 +150,13 @@ async function deckMixedPlaceholderNoTxBody() {
  */
 async function deckMixedInheritsNothing() {
 	const zip = await JSZip.loadAsync(await readFile(fixturePath('mixed')))
-	const master = (await zip.file('ppt/slideMasters/slideMaster1.xml').async('string')).replace(
+	const master = (await readEntry(zip, 'ppt/slideMasters/slideMaster1.xml')).replace(
 		/<p:txStyles>[\s\S]*<\/p:txStyles>/,
 		''
 	)
 	zip.file('ppt/slideMasters/slideMaster1.xml', master)
 
-	const layout = (await zip.file('ppt/slideLayouts/slideLayout1.xml').async('string')).replace(
+	const layout = (await readEntry(zip, 'ppt/slideLayouts/slideLayout1.xml')).replace(
 		'<p:txBody><a:bodyPr/><a:lstStyle><a:lvl1pPr><a:defRPr/></a:lvl1pPr></a:lstStyle>',
 		'<p:txBody><a:bodyPr/><a:lstStyle/>'
 	)
@@ -166,7 +166,7 @@ async function deckMixedInheritsNothing() {
 		'<p:sp><p:nvSpPr><p:cNvPr id="77" name="Picture Placeholder 7"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>' +
 		'<p:nvPr><p:ph type="pic" idx="7"/></p:nvPr></p:nvSpPr><p:spPr/>' +
 		'<p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:r><a:rPr lang="en-US"/><a:t>Picture</a:t></a:r></a:p></p:txBody></p:sp>'
-	const slide = (await zip.file('ppt/slides/slide1.xml').async('string')).replace('</p:spTree>', `${orphan}</p:spTree>`)
+	const slide = (await readEntry(zip, 'ppt/slides/slide1.xml')).replace('</p:spTree>', `${orphan}</p:spTree>`)
 	zip.file('ppt/slides/slide1.xml', slide)
 
 	return zip.generateAsync({ type: 'uint8array' })
@@ -180,7 +180,7 @@ async function deckMixedInheritsNothing() {
  */
 async function deckMixedSlideNoLayoutRel() {
 	const zip = await JSZip.loadAsync(await readFile(fixturePath('mixed')))
-	const rels = (await zip.file('ppt/slides/_rels/slide1.xml.rels').async('string')).replace(
+	const rels = (await readEntry(zip, 'ppt/slides/_rels/slide1.xml.rels')).replace(
 		/<Relationship[^>]*slideLayout[^>]*\/>/,
 		''
 	)
@@ -195,7 +195,7 @@ async function deckMixedSlideNoLayoutRel() {
  */
 async function deckMixedLayoutNoMasterRel() {
 	const zip = await JSZip.loadAsync(await readFile(fixturePath('mixed')))
-	const rels = (await zip.file('ppt/slideLayouts/_rels/slideLayout1.xml.rels').async('string')).replace(
+	const rels = (await readEntry(zip, 'ppt/slideLayouts/_rels/slideLayout1.xml.rels')).replace(
 		/<Relationship[^>]*slideMaster[^>]*\/>/,
 		''
 	)
@@ -234,7 +234,7 @@ describe('Presentation.importShape', () => {
 		assert(tableIndex >= 0, 'source slide has a table')
 		const srcFrame = source.slides[0].shapes[tableIndex]
 		assert(srcFrame.shapeType === 'graphicFrame', 'source shape at tableIndex is a graphic frame')
-		const srcTable = srcFrame.table
+		const srcTable = defined(srcFrame.table, 'the source graphic frame holds a table')
 		const srcRows = srcTable.rowCount
 		const srcFirstCell = srcTable.rows[0].cells[0].text
 
@@ -479,7 +479,11 @@ describe('Presentation.importShape (placeholder lift)', () => {
 	test('preserve bakes the placeholder-inherited vertical anchor before demotion', async () => {
 		const source = await openFixture('layout-placeholder-bodypr') // slide 0 shape 0: title, inherits anchor "b"
 		const target = await openFixture('layout-placeholder-bodypr')
-		assertEqual(source.slides[0].shapes[0].textFrame.resolvedAnchor, 'b', 'source title inherits a bottom anchor')
+		assertEqual(
+			defined(source.slides[0].shapes[0].textFrame).resolvedAnchor,
+			'b',
+			'source title inherits a bottom anchor'
+		)
 
 		const shape = target.importShape(target.slides[0], source.slides[0], 0, { theme: 'preserve' })
 		const bodyPr = shape.element_.getElementsByTagNameNS(A_NS, 'bodyPr')[0]
@@ -545,7 +549,7 @@ describe('Presentation.importShape({ rescale })', () => {
 		const target = await openFixture('mixed') // 4:3
 		const source = await openFixture('image') // 16:9
 		const idx = findShapeIndex(source.slides[0], (s) => s.shapeType === 'picture')
-		const src = source.slides[0].shapes[idx].absoluteFrame
+		const src = defined(source.slides[0].shapes[idx].absoluteFrame, 'the source picture has a frame')
 
 		const shape = target.importShape(target.slides[0], source.slides[0], idx, { rescale: 'fit' })
 		near(shape.left, Math.round(src.left * 0.75), 'left scaled by 0.75')
@@ -558,7 +562,7 @@ describe('Presentation.importShape({ rescale })', () => {
 		const target = await openFixture('mixed')
 		const source = await openFixture('image')
 		const idx = findShapeIndex(source.slides[0], (s) => s.shapeType === 'picture')
-		const src = source.slides[0].shapes[idx].absoluteFrame
+		const src = defined(source.slides[0].shapes[idx].absoluteFrame, 'the source picture has a frame')
 
 		const shape = target.importShape(target.slides[0], source.slides[0], idx, { rescale: 'stretch' })
 		near(shape.width, Math.round(src.width * 0.75), 'width scaled by sx (0.75)')
@@ -570,7 +574,7 @@ describe('Presentation.importShape({ rescale })', () => {
 		const target = await openFixture('mixed')
 		const source = await openFixture('image')
 		const idx = findShapeIndex(source.slides[0], (s) => s.shapeType === 'picture')
-		const src = source.slides[0].shapes[idx].absoluteFrame
+		const src = defined(source.slides[0].shapes[idx].absoluteFrame, 'the source picture has a frame')
 
 		const shape = target.importShape(target.slides[0], source.slides[0], idx, { rescale: true })
 		near(shape.width, Math.round(src.width * 0.75), 'rescale:true scales like fit')

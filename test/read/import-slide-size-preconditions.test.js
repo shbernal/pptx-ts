@@ -12,7 +12,7 @@ import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import TsPptx from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { assertEqual } from '../helpers.js'
+import { assertEqual, readEntry } from '../helpers.js'
 
 /** A one-page deck at the given layout. */
 async function deck(layout = 'LAYOUT_16x9') {
@@ -28,7 +28,7 @@ async function deck(layout = 'LAYOUT_16x9') {
  */
 async function sizelessDeck() {
 	const zip = await JSZip.loadAsync(await deck())
-	const xml = await zip.file('ppt/presentation.xml').async('string')
+	const xml = await readEntry(zip, 'ppt/presentation.xml')
 	zip.file('ppt/presentation.xml', xml.replace(/<p:sldSz[^>]*\/>/, ''))
 	return zip.generateAsync({ type: 'uint8array' })
 }

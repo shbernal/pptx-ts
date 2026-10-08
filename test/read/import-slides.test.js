@@ -22,7 +22,7 @@ import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import TsPptx from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual, bytesEqual } from '../helpers.js'
+import { assert, assertEqual, bytesEqual, defined, readEntry } from '../helpers.js'
 import { validateBuf, validatorInstalled } from '../validator.js'
 import { openFixture } from './corpus.js'
 import { assertNoDanglingRels } from './opc.js'
@@ -61,7 +61,7 @@ function tagTargets(opc, partName) {
  */
 async function sourceWithOwnedNotesPart() {
 	const source = await openFixture('notes-slide-image')
-	const notesPartName = source.slides[0].notesSlide.partName
+	const notesPartName = defined(source.slides[0].notesSlide).partName
 	source.opc.addPart(
 		'/ppt/tags/tag1.xml',
 		TAGS_CONTENT_TYPE,
@@ -432,9 +432,9 @@ describe('Presentation.importSlides', () => {
 		const zip = await JSZip.loadAsync(await target.save())
 		const fontParts = Object.keys(zip.files).filter((n) => /^ppt\/fonts\/font\d+\.fntdata$/.test(n))
 		assertEqual(fontParts.length, 2, `the source's two faces carried once each (got ${JSON.stringify(fontParts)})`)
-		const ct = await zip.file('[Content_Types].xml').async('string')
+		const ct = await readEntry(zip, '[Content_Types].xml')
 		assertEqual((ct.match(/x-fontdata/g) || []).length, 1, 'content type registered once (Default only)')
-		const pres = await zip.file('ppt/presentation.xml').async('string')
+		const pres = await readEntry(zip, 'ppt/presentation.xml')
 		assert(/<p:font typeface="Silkscreen"/.test(pres), `embeddedFontLst merged; got ${pres}`)
 		assertEqual((pres.match(/<p:embeddedFont>/g) || []).length, 1, 'one entry for the one typeface')
 		assertNoDanglingRels((await Presentation.load(await target.save())).opc)
@@ -446,7 +446,7 @@ describe('Presentation.importSlides', () => {
 		target.importSlides([{ source, sourceIndex: 0, outputIndex: 0 }])
 		const zip = await JSZip.loadAsync(await target.save())
 		assert(!Object.keys(zip.files).some((n) => /fntdata/.test(n)), 'no font parts without embedFonts')
-		const pres = await zip.file('ppt/presentation.xml').async('string')
+		const pres = await readEntry(zip, 'ppt/presentation.xml')
 		assert(!/embeddedFontLst/.test(pres), 'no embeddedFontLst without embedFonts')
 	})
 
@@ -493,7 +493,10 @@ describe('Presentation.importSlides', () => {
 		// Same bytes, same dependencies: the duplicate is a second page, not a
 		// second copy of the subgraph underneath it.
 		assert(
-			bytesEqual(reopened.opc.part(first.partName).serialize(), reopened.opc.part(second.partName).serialize()),
+			bytesEqual(
+				defined(reopened.opc.part(first.partName)).serialize(),
+				defined(reopened.opc.part(second.partName)).serialize()
+			),
 			'the two pages are byte-identical copies of the one source page'
 		)
 		assertEqual(
@@ -666,7 +669,7 @@ describe('Presentation.importSlides', () => {
 		assertEqual(JSON.stringify(notesMasters(reopened)), JSON.stringify([ownMaster]), 'the deck kept its own master')
 		assertEqual(masterParts(reopened), mastersBefore, 'and no second notesMaster part came across')
 		assertEqual(
-			notesMasterOf(reopened, reopened.slides[at].notesSlide.partName),
+			notesMasterOf(reopened, defined(reopened.slides[at].notesSlide).partName),
 			ownMaster,
 			'the carried notes bind to the destination master'
 		)
@@ -705,7 +708,7 @@ describe('Presentation.importSlides', () => {
 		// to reach that: the destination has none, so it would be copied.
 		const target = await openFixture('textbox')
 		const broken = await openFixture('notes-slide-image')
-		broken.opc.removePart(notesMasterOf(broken, broken.slides[0].notesSlide.partName))
+		broken.opc.removePart(notesMasterOf(broken, defined(broken.slides[0].notesSlide).partName))
 
 		const beforeBytes = await target.save()
 		assertEqual(
@@ -728,7 +731,7 @@ describe('Presentation.importSlides', () => {
 		// batch the copy would have completed.
 		const target = await openFixture('read-stress') // has a notesMaster
 		const broken = await openFixture('notes-slide-image')
-		broken.opc.removePart(notesMasterOf(broken, broken.slides[0].notesSlide.partName))
+		broken.opc.removePart(notesMasterOf(broken, defined(broken.slides[0].notesSlide).partName))
 		const at = target.slides.length
 
 		target.importSlides([{ source: broken, sourceIndex: 0, outputIndex: at, importNotes: true }])
@@ -749,7 +752,7 @@ describe('Presentation.importSlides', () => {
 		const target = await openFixture('textbox')
 		const first = await openFixture('notes-slide-image')
 		const second = await openFixture('notes-slide-image')
-		second.opc.removePart(notesMasterOf(second, second.slides[0].notesSlide.partName))
+		second.opc.removePart(notesMasterOf(second, defined(second.slides[0].notesSlide).partName))
 		assertEqual(notesMasters(target).length, 0, 'the destination starts without a notes master')
 
 		const [a, b] = target.importSlides([
@@ -761,7 +764,7 @@ describe('Presentation.importSlides', () => {
 		assertNoDanglingRels(reopened.opc)
 		const masters = notesMasters(reopened)
 		assertEqual(masters.length, 1, 'one notes master was installed')
-		const masterOf = (slide) => notesMasterOf(reopened, reopened.slides[slide.index].notesSlide.partName)
+		const masterOf = (slide) => notesMasterOf(reopened, defined(reopened.slides[slide.index].notesSlide).partName)
 		assertEqual(masterOf(a), masters[0], 'the first page binds to it')
 		assertEqual(masterOf(b), masters[0], 'and so does the second, whose own master was never read')
 	})

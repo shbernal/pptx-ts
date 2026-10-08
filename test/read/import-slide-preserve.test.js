@@ -69,7 +69,7 @@ import { readFile } from 'node:fs/promises'
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual, partXml } from '../helpers.js'
+import { assert, assertEqual, partXml, readEntry } from '../helpers.js'
 import { validateBuf, validatorInstalled } from '../validator.js'
 import { fixturePath, openFixture } from './corpus.js'
 import { resolveSingle } from './opc.js'
@@ -99,20 +99,20 @@ async function deckWithMasterPicture() {
 		'<p:blipFill><a:blip r:embed="rId999"/><a:stretch><a:fillRect/></a:stretch></p:blipFill>' +
 		'<p:spPr><a:xfrm><a:off x="100" y="100"/><a:ext cx="500" cy="500"/></a:xfrm>' +
 		'<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>'
-	const master = (await zip.file('ppt/slideMasters/slideMaster1.xml').async('string')).replace(
+	const master = (await readEntry(zip, 'ppt/slideMasters/slideMaster1.xml')).replace(
 		'</p:grpSpPr>',
 		`</p:grpSpPr>${pic}`
 	)
 	zip.file('ppt/slideMasters/slideMaster1.xml', master)
 
-	const rels = (await zip.file('ppt/slideMasters/_rels/slideMaster1.xml.rels').async('string')).replace(
+	const rels = (await readEntry(zip, 'ppt/slideMasters/_rels/slideMaster1.xml.rels')).replace(
 		'</Relationships>',
 		'<Relationship Id="rId999" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/carrytest.png"/></Relationships>'
 	)
 	zip.file('ppt/slideMasters/_rels/slideMaster1.xml.rels', rels)
 
 	zip.file('ppt/media/carrytest.png', PNG_1x1)
-	const ct = (await zip.file('[Content_Types].xml').async('string')).replace(
+	const ct = (await readEntry(zip, '[Content_Types].xml')).replace(
 		'</Types>',
 		'<Override PartName="/ppt/media/carrytest.png" ContentType="image/png"/></Types>'
 	)
@@ -128,7 +128,7 @@ async function deckWithMasterPicture() {
  */
 async function deckMixedNoLayoutCtrTitleXfrm() {
 	const zip = await JSZip.loadAsync(await readFile(fixturePath('mixed')))
-	const layout = (await zip.file('ppt/slideLayouts/slideLayout1.xml').async('string')).replace(
+	const layout = (await readEntry(zip, 'ppt/slideLayouts/slideLayout1.xml')).replace(
 		'<a:xfrm><a:off x="990600" y="1828800"/><a:ext cx="7772400" cy="1143000"/></a:xfrm>',
 		''
 	)
@@ -139,7 +139,7 @@ async function deckMixedNoLayoutCtrTitleXfrm() {
 /** mixed.pptx with an explicit `sz` on slide1's first ctrTitle run. Returns package bytes. */
 async function deckMixedWithExplicitTitleSize() {
 	const zip = await JSZip.loadAsync(await readFile(fixturePath('mixed')))
-	const slide = (await zip.file('ppt/slides/slide1.xml').async('string')).replace(
+	const slide = (await readEntry(zip, 'ppt/slides/slide1.xml')).replace(
 		'<a:rPr lang="fr-FR" dirty="0"/><a:t>Data </a:t>',
 		'<a:rPr lang="fr-FR" sz="4444" dirty="0"/><a:t>Data </a:t>'
 	)
@@ -150,7 +150,7 @@ async function deckMixedWithExplicitTitleSize() {
 /** empty.pptx with its master `p:bgRef` switched to an idx below 1000 (the regular `fillStyleLst`, not `bgFillStyleLst`). Returns package bytes. */
 async function deckEmptyBgRefFillStyleLst() {
 	const zip = await JSZip.loadAsync(await readFile(fixturePath('empty')))
-	const master = (await zip.file('ppt/slideMasters/slideMaster1.xml').async('string')).replace(
+	const master = (await readEntry(zip, 'ppt/slideMasters/slideMaster1.xml')).replace(
 		'<p:bgRef idx="1001">',
 		'<p:bgRef idx="1">'
 	)
@@ -161,7 +161,7 @@ async function deckEmptyBgRefFillStyleLst() {
 /** empty.pptx with its master `p:bgRef` idx zeroed out, so materializeBackground falls back to a:noFill. Returns package bytes. */
 async function deckEmptyBgRefIdxZero() {
 	const zip = await JSZip.loadAsync(await readFile(fixturePath('empty')))
-	const master = (await zip.file('ppt/slideMasters/slideMaster1.xml').async('string')).replace(
+	const master = (await readEntry(zip, 'ppt/slideMasters/slideMaster1.xml')).replace(
 		'<p:bgRef idx="1001">',
 		'<p:bgRef idx="0">'
 	)
@@ -177,7 +177,7 @@ async function deckEmptyBgRefIdxZero() {
  */
 async function deckMixedSlideNoLayoutRel() {
 	const zip = await JSZip.loadAsync(await readFile(fixturePath('mixed')))
-	const rels = (await zip.file('ppt/slides/_rels/slide1.xml.rels').async('string')).replace(
+	const rels = (await readEntry(zip, 'ppt/slides/_rels/slide1.xml.rels')).replace(
 		/<Relationship[^>]*slideLayout[^>]*\/>/,
 		''
 	)
@@ -204,10 +204,7 @@ async function deckMixedUnreadableColorScheme() {
 		.map((s) => `<a:${s}><a:scrgbClr r="0" g="0" b="0"/></a:${s}>`)
 		.join('')}</a:clrScheme>`
 	const zip = await JSZip.loadAsync(await readFile(fixturePath('mixed')))
-	const theme = (await zip.file('ppt/theme/theme1.xml').async('string')).replace(
-		/<a:clrScheme[\s\S]*?<\/a:clrScheme>/,
-		scheme
-	)
+	const theme = (await readEntry(zip, 'ppt/theme/theme1.xml')).replace(/<a:clrScheme[\s\S]*?<\/a:clrScheme>/, scheme)
 	zip.file('ppt/theme/theme1.xml', theme)
 	return zip.generateAsync({ type: 'uint8array' })
 }
@@ -219,7 +216,7 @@ async function deckMixedUnreadableColorScheme() {
  */
 async function deckEmptyBgRefIdx1000() {
 	const zip = await JSZip.loadAsync(await readFile(fixturePath('empty')))
-	const master = (await zip.file('ppt/slideMasters/slideMaster1.xml').async('string')).replace(
+	const master = (await readEntry(zip, 'ppt/slideMasters/slideMaster1.xml')).replace(
 		'<p:bgRef idx="1001">',
 		'<p:bgRef idx="1000">'
 	)
@@ -230,10 +227,7 @@ async function deckEmptyBgRefIdx1000() {
 /** mixed.pptx with every slide5 `a:lnRef` zeroed — the "no line from the style matrix" ref PowerPoint writes constantly. Returns package bytes. */
 async function deckMixedLnRefIdxZero() {
 	const zip = await JSZip.loadAsync(await readFile(fixturePath('mixed')))
-	const slide = (await zip.file('ppt/slides/slide5.xml').async('string')).replace(
-		/<a:lnRef idx="\d+"/g,
-		'<a:lnRef idx="0"'
-	)
+	const slide = (await readEntry(zip, 'ppt/slides/slide5.xml')).replace(/<a:lnRef idx="\d+"/g, '<a:lnRef idx="0"')
 	zip.file('ppt/slides/slide5.xml', slide)
 	return zip.generateAsync({ type: 'uint8array' })
 }
@@ -246,7 +240,7 @@ async function deckMixedLnRefIdxZero() {
  */
 async function deckMixedStyleRefOutOfRange() {
 	const zip = await JSZip.loadAsync(await readFile(fixturePath('mixed')))
-	const slide = (await zip.file('ppt/slides/slide5.xml').async('string'))
+	const slide = (await readEntry(zip, 'ppt/slides/slide5.xml'))
 		.replace(/<a:lnRef idx="\d+"/g, '<a:lnRef idx="9"')
 		.replace(/<a:effectRef idx="\d+"/g, '<a:effectRef idx="9"')
 	zip.file('ppt/slides/slide5.xml', slide)
@@ -261,7 +255,7 @@ async function deckMixedStyleRefOutOfRange() {
  */
 async function deckMixedStraySchemePhClr() {
 	const zip = await JSZip.loadAsync(await readFile(fixturePath('mixed')))
-	const slide = (await zip.file('ppt/slides/slide1.xml').async('string')).replace(
+	const slide = (await readEntry(zip, 'ppt/slides/slide1.xml')).replace(
 		'<p:spPr/>',
 		'<p:spPr><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></p:spPr>'
 	)
@@ -281,7 +275,7 @@ async function deckMixedStraySchemePhClr() {
  */
 async function deckMixedFillStyleFixedSchemeStop() {
 	const zip = await JSZip.loadAsync(await readFile(fixturePath('mixed')))
-	const theme = (await zip.file('ppt/theme/theme1.xml').async('string')).replace(
+	const theme = (await readEntry(zip, 'ppt/theme/theme1.xml')).replace(
 		'<a:fillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill>',
 		'<a:fillStyleLst><a:gradFill rotWithShape="1"><a:gsLst>' +
 			'<a:gs pos="0"><a:schemeClr val="phClr"/></a:gs>' +
@@ -290,7 +284,7 @@ async function deckMixedFillStyleFixedSchemeStop() {
 	)
 	zip.file('ppt/theme/theme1.xml', theme)
 
-	const slide = (await zip.file('ppt/slides/slide5.xml').async('string')).replace(
+	const slide = (await readEntry(zip, 'ppt/slides/slide5.xml')).replace(
 		'<a:off x="566555" y="2009998"/><a:ext cx="2160240" cy="1152128"/></a:xfrm>' +
 			'<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>' +
 			'<a:solidFill><a:schemeClr val="tx2"><a:lumMod val="20000"/><a:lumOff val="80000"/></a:schemeClr></a:solidFill>',
@@ -305,7 +299,7 @@ async function deckMixedFillStyleFixedSchemeStop() {
 /** mixed.pptx with slide1 given its own literal p:bg, so it is not the one inherited from the master. Returns package bytes. */
 async function deckMixedSlideOwnBackground() {
 	const zip = await JSZip.loadAsync(await readFile(fixturePath('mixed')))
-	const slide = (await zip.file('ppt/slides/slide1.xml').async('string')).replace(
+	const slide = (await readEntry(zip, 'ppt/slides/slide1.xml')).replace(
 		'<p:cSld><p:spTree>',
 		'<p:cSld><p:bg><p:bgPr><a:solidFill><a:srgbClr val="123456"/></a:solidFill></p:bgPr></p:bg><p:spTree>'
 	)
@@ -316,7 +310,7 @@ async function deckMixedSlideOwnBackground() {
 /** mixed.pptx with slideMaster1's p:bg stripped, so no slide/layout/master in the chain defines a background. Returns package bytes. */
 async function deckMixedNoBackgroundAnywhere() {
 	const zip = await JSZip.loadAsync(await readFile(fixturePath('mixed')))
-	const master = (await zip.file('ppt/slideMasters/slideMaster1.xml').async('string')).replace(
+	const master = (await readEntry(zip, 'ppt/slideMasters/slideMaster1.xml')).replace(
 		'<p:bg><p:bgPr><a:solidFill><a:schemeClr val="bg1"/></a:solidFill><a:effectLst/></p:bgPr></p:bg>',
 		''
 	)
@@ -327,7 +321,7 @@ async function deckMixedNoBackgroundAnywhere() {
 /** mixed.pptx with slide5's first p:style effectRef pointed at fmtScheme effectStyleLst entry 3 (effectLst + scene3d + sp3d), instead of the unresolved idx=0. Returns package bytes. */
 async function deckMixedEffectRefMaterialized() {
 	const zip = await JSZip.loadAsync(await readFile(fixturePath('mixed')))
-	const slide = (await zip.file('ppt/slides/slide5.xml').async('string')).replace(
+	const slide = (await readEntry(zip, 'ppt/slides/slide5.xml')).replace(
 		'<a:effectRef idx="0"><a:schemeClr val="accent1"/></a:effectRef>',
 		'<a:effectRef idx="3"><a:schemeClr val="accent1"/></a:effectRef>'
 	)
@@ -342,7 +336,7 @@ async function deckMixedEffectRefMaterialized() {
  */
 async function deckMixedPlaceholderNoTxBody() {
 	const zip = await JSZip.loadAsync(await readFile(fixturePath('mixed')))
-	const slide = (await zip.file('ppt/slides/slide1.xml').async('string')).replace(
+	const slide = (await readEntry(zip, 'ppt/slides/slide1.xml')).replace(
 		'<p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:endParaRPr lang="en-US" dirty="0"/></a:p></p:txBody>',
 		''
 	)
@@ -357,7 +351,7 @@ async function deckMixedPlaceholderNoTxBody() {
  */
 async function deckMixedLayoutPlaceholderNoTxBody() {
 	const zip = await JSZip.loadAsync(await readFile(fixturePath('mixed')))
-	const layout = (await zip.file('ppt/slideLayouts/slideLayout1.xml').async('string')).replace(
+	const layout = (await readEntry(zip, 'ppt/slideLayouts/slideLayout1.xml')).replace(
 		'<p:txBody><a:bodyPr/><a:lstStyle><a:lvl1pPr><a:defRPr/></a:lvl1pPr></a:lstStyle>' +
 			'<a:p><a:r><a:rPr lang="fr-FR"/><a:t>Cliquez pour modifier le style du titre du masque</a:t></a:r></a:p></p:txBody>',
 		''
@@ -369,7 +363,7 @@ async function deckMixedLayoutPlaceholderNoTxBody() {
 /** mixed.pptx with a second paragraph appended to slide1's ctrTitle, at the same (default) level as the first. Returns package bytes. */
 async function deckMixedTwoParagraphsSameLevel() {
 	const zip = await JSZip.loadAsync(await readFile(fixturePath('mixed')))
-	const slide = (await zip.file('ppt/slides/slide1.xml').async('string')).replace(
+	const slide = (await readEntry(zip, 'ppt/slides/slide1.xml')).replace(
 		'<a:endParaRPr lang="en-US" dirty="0"/></a:p>',
 		'<a:endParaRPr lang="en-US" dirty="0"/></a:p><a:p><a:r><a:rPr lang="fr-FR"/><a:t>Second line</a:t></a:r></a:p>'
 	)
@@ -386,7 +380,7 @@ async function deckMixedTwoParagraphsSameLevel() {
  */
 async function deckMixedSlideFixesRunProps() {
 	const zip = await JSZip.loadAsync(await readFile(fixturePath('mixed')))
-	const slide = (await zip.file('ppt/slides/slide1.xml').async('string'))
+	const slide = (await readEntry(zip, 'ppt/slides/slide1.xml'))
 		.replace(
 			'<p:txBody><a:bodyPr><a:normAutofit/></a:bodyPr><a:lstStyle/>',
 			'<p:txBody><a:bodyPr><a:normAutofit/></a:bodyPr><a:lstStyle><a:lvl1pPr><a:defRPr sz="1111"/></a:lvl1pPr></a:lstStyle>'
@@ -413,13 +407,13 @@ async function deckMixedSlideFixesRunProps() {
  */
 async function deckMixedInheritsNothing() {
 	const zip = await JSZip.loadAsync(await readFile(fixturePath('mixed')))
-	const master = (await zip.file('ppt/slideMasters/slideMaster1.xml').async('string')).replace(
+	const master = (await readEntry(zip, 'ppt/slideMasters/slideMaster1.xml')).replace(
 		/<p:txStyles>[\s\S]*<\/p:txStyles>/,
 		''
 	)
 	zip.file('ppt/slideMasters/slideMaster1.xml', master)
 
-	const layout = (await zip.file('ppt/slideLayouts/slideLayout1.xml').async('string')).replace(
+	const layout = (await readEntry(zip, 'ppt/slideLayouts/slideLayout1.xml')).replace(
 		'<p:txBody><a:bodyPr/><a:lstStyle><a:lvl1pPr><a:defRPr/></a:lvl1pPr></a:lstStyle>',
 		'<p:txBody><a:bodyPr/><a:lstStyle/>'
 	)
@@ -429,7 +423,7 @@ async function deckMixedInheritsNothing() {
 		'<p:sp><p:nvSpPr><p:cNvPr id="77" name="Picture Placeholder 7"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>' +
 		'<p:nvPr><p:ph type="pic" idx="7"/></p:nvPr></p:nvSpPr><p:spPr/>' +
 		'<p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:r><a:rPr lang="en-US"/><a:t>Picture</a:t></a:r></a:p></p:txBody></p:sp>'
-	const slide = (await zip.file('ppt/slides/slide1.xml').async('string')).replace('</p:spTree>', `${orphan}</p:spTree>`)
+	const slide = (await readEntry(zip, 'ppt/slides/slide1.xml')).replace('</p:spTree>', `${orphan}</p:spTree>`)
 	zip.file('ppt/slides/slide1.xml', slide)
 
 	return zip.generateAsync({ type: 'uint8array' })
@@ -442,7 +436,7 @@ async function deckMultiLevelBody() {
 		.map((lvl) => (lvl === 0 ? '' : `<a:pPr lvl="${lvl}"/>`))
 		.map((pPr, lvl) => `<a:p>${pPr}<a:r><a:rPr lang="en-US"/><a:t>L${lvl}</a:t></a:r></a:p>`)
 		.join('')
-	const slide = (await zip.file('ppt/slides/slide1.xml').async('string')).replace(
+	const slide = (await readEntry(zip, 'ppt/slides/slide1.xml')).replace(
 		'<a:p><a:r><a:rPr lang="en-US"/><a:t>Middle-anchored body</a:t></a:r></a:p>',
 		levels
 	)

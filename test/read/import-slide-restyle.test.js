@@ -18,7 +18,7 @@ import { readFile } from 'node:fs/promises'
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual, partXml } from '../helpers.js'
+import { assert, assertEqual, partXml, readEntry } from '../helpers.js'
 import { validateBuf, validatorInstalled } from '../validator.js'
 import { fixturePath, openFixture } from './corpus.js'
 import { resolveSingle } from './opc.js'
@@ -50,7 +50,7 @@ const DEST_ACCENT1 = 'AABBCC'
  */
 async function deckMixedRecoloredAccent1() {
 	const zip = await JSZip.loadAsync(await readFile(fixturePath('mixed')))
-	const theme = (await zip.file('ppt/theme/theme1.xml').async('string')).replaceAll(
+	const theme = (await readEntry(zip, 'ppt/theme/theme1.xml')).replaceAll(
 		`<a:accent1><a:srgbClr val="${SOURCE_ACCENT1}"/></a:accent1>`,
 		`<a:accent1><a:srgbClr val="${DEST_ACCENT1}"/></a:accent1>`
 	)
@@ -337,15 +337,12 @@ describe("Presentation.importSlide({ theme: 'restyle', remapLiterals: true })", 
 	 */
 	async function deckMixedCollidingSlotsAndTokens() {
 		const zip = await JSZip.loadAsync(await readFile(fixturePath('mixed')))
-		const master = (await zip.file('ppt/slideMasters/slideMaster1.xml').async('string')).replace(
+		const master = (await readEntry(zip, 'ppt/slideMasters/slideMaster1.xml')).replace(
 			'<p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2"',
 			'<p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="lt1"'
 		)
 		zip.file('ppt/slideMasters/slideMaster1.xml', master)
-		const slide = (await zip.file('ppt/slides/slide1.xml').async('string')).replace(
-			'</p:spTree>',
-			`${LITERAL_SHAPE}</p:spTree>`
-		)
+		const slide = (await readEntry(zip, 'ppt/slides/slide1.xml')).replace('</p:spTree>', `${LITERAL_SHAPE}</p:spTree>`)
 		zip.file('ppt/slides/slide1.xml', slide)
 		return zip.generateAsync({ type: 'uint8array' })
 	}
@@ -362,15 +359,9 @@ describe("Presentation.importSlide({ theme: 'restyle', remapLiterals: true })", 
 			.concat(['hlink', 'folHlink'])
 		const scheme = `<a:clrScheme name="Preset">${slots.map((s) => `<a:${s}><a:prstClr val="black"/></a:${s}>`).join('')}</a:clrScheme>`
 		const zip = await JSZip.loadAsync(await readFile(fixturePath('mixed')))
-		const theme = (await zip.file('ppt/theme/theme1.xml').async('string')).replace(
-			/<a:clrScheme[\s\S]*?<\/a:clrScheme>/,
-			scheme
-		)
+		const theme = (await readEntry(zip, 'ppt/theme/theme1.xml')).replace(/<a:clrScheme[\s\S]*?<\/a:clrScheme>/, scheme)
 		zip.file('ppt/theme/theme1.xml', theme)
-		const slide = (await zip.file('ppt/slides/slide1.xml').async('string')).replace(
-			'</p:spTree>',
-			`${LITERAL_SHAPE}</p:spTree>`
-		)
+		const slide = (await readEntry(zip, 'ppt/slides/slide1.xml')).replace('</p:spTree>', `${LITERAL_SHAPE}</p:spTree>`)
 		zip.file('ppt/slides/slide1.xml', slide)
 		return zip.generateAsync({ type: 'uint8array' })
 	}

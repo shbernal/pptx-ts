@@ -11,7 +11,7 @@ import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
 import TsPptx from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { throws, assert, assertEqual, partBodies, assertUnchangedExcept } from '../helpers.js'
+import { throws, assert, assertEqual, defined, expectDefined, partBodies, assertUnchangedExcept } from '../helpers.js'
 import { validateBuf, validatorInstalled } from '../validator.js'
 import { fixturePath, openFixture } from './corpus.js'
 import { assertNoDanglingRels, resolveSingle } from './opc.js'
@@ -100,6 +100,7 @@ describe('Presentation.importSlide', () => {
 
 		// The imported picture's image rel resolves to a media part that exists.
 		const pic = last.shapes.find((s) => s.shapeType === 'picture')
+		expectDefined(pic, 'the imported slide has a picture')
 		assert(pic.imagePartName && opc.part(pic.imagePartName), `imported media present (${pic.imagePartName})`)
 
 		// The imported master lists exactly the one copied layout.
@@ -370,10 +371,14 @@ describe('Presentation.importSlide from the deck this one was templated from', (
 	test('binds to the chrome the template already holds instead of copying it in again', async () => {
 		const { dest, source } = await selfTemplate('multi-theme')
 		const galleryBefore = dest.layouts().map((l) => l.partName)
-		const sourceLayout = source.slides[0].layout.partName
+		const sourceLayout = defined(source.slides[0].layout).partName
 
 		const imported = dest.importSlide(source, 0)
-		assertEqual(imported.layout.partName, sourceLayout, 'the imported slide binds to the template layout itself')
+		assertEqual(
+			defined(imported.layout).partName,
+			sourceLayout,
+			'the imported slide binds to the template layout itself'
+		)
 
 		const reopened = await Presentation.load(await dest.save())
 		assertEqual(
@@ -602,7 +607,7 @@ describe('Presentation.importSlide({ rescale })', () => {
 	test("'fit' rescales slide geometry uniformly and centers the slack", async () => {
 		const target = await openFixture('mixed') // 4:3
 		const source = await openFixture('image') // 16:9
-		const src = source.slides[0].shapes.find((s) => s.shapeType === 'picture').absoluteFrame
+		const src = defined(defined(source.slides[0].shapes.find((s) => s.shapeType === 'picture')).absoluteFrame)
 
 		target.importSlide(source, 0, { rescale: 'fit' })
 		const reopened = await Presentation.load(await target.save())
@@ -619,7 +624,7 @@ describe('Presentation.importSlide({ rescale })', () => {
 	test("'stretch' scales each axis independently (height unchanged when only width differs)", async () => {
 		const target = await openFixture('mixed')
 		const source = await openFixture('image')
-		const src = source.slides[0].shapes.find((s) => s.shapeType === 'picture').absoluteFrame
+		const src = defined(defined(source.slides[0].shapes.find((s) => s.shapeType === 'picture')).absoluteFrame)
 
 		target.importSlide(source, 0, { rescale: 'stretch' })
 		const reopened = await Presentation.load(await target.save())
@@ -633,7 +638,7 @@ describe('Presentation.importSlide({ rescale })', () => {
 	test('true is an alias for fit', async () => {
 		const target = await openFixture('mixed')
 		const source = await openFixture('image')
-		const src = source.slides[0].shapes.find((s) => s.shapeType === 'picture').absoluteFrame
+		const src = defined(defined(source.slides[0].shapes.find((s) => s.shapeType === 'picture')).absoluteFrame)
 
 		target.importSlide(source, 0, { rescale: true })
 		const reopened = await Presentation.load(await target.save())
@@ -743,7 +748,7 @@ describe('Presentation.importSlide({ importNotes })', () => {
 
 		const notesName = resolveSingle(reopened.opc, importedName, NOTES_SLIDE_REL)
 		assert(notesName && reopened.opc.part(notesName), 'imported slide resolves to a notesSlide part')
-		assert(partNotesText(bodies, notesName).includes(NOTES_TEXT), 'the notes body text round-trips')
+		assert(defined(partNotesText(bodies, notesName)).includes(NOTES_TEXT), 'the notes body text round-trips')
 
 		// notesSlide → slide back-rel points at the imported slide (not the source's).
 		assertEqual(

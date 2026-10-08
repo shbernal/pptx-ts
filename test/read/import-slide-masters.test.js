@@ -15,7 +15,16 @@ import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import TsPptx from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { throws, bytesEqual, assert, assertEqual, partBodies, assertUnchangedExcept } from '../helpers.js'
+import {
+	throws,
+	bytesEqual,
+	assert,
+	assertEqual,
+	defined,
+	partBodies,
+	assertUnchangedExcept,
+	readEntry,
+} from '../helpers.js'
 import { validateBuf, validatorInstalled } from '../validator.js'
 import { fixturePath, openFixture } from './corpus.js'
 import { assertNoDanglingRels, resolveSingle } from './opc.js'
@@ -284,18 +293,18 @@ describe('Presentation.importSlideMasters({ embedFonts })', () => {
 			.sort()
 		assertEqual(fontParts.length, 2, `both faces carried (got ${JSON.stringify(fontParts)})`)
 
-		const ct = await zip.file('[Content_Types].xml').async('string')
+		const ct = await readEntry(zip, '[Content_Types].xml')
 		assert(/<Default Extension="fntdata" ContentType="application\/x-fontdata"\/>/.test(ct), 'fntdata Default added')
 		assertEqual((ct.match(/x-fontdata/g) || []).length, 1, 'content type registered once (Default, no Override)')
 
-		const rels = await zip.file('ppt/_rels/presentation.xml.rels').async('string')
+		const rels = await readEntry(zip, 'ppt/_rels/presentation.xml.rels')
 		assertEqual(
 			[...rels.matchAll(/<Relationship[^>]*\/relationships\/font"[^>]*\/>/g)].length,
 			2,
 			'two font relationships on presentation.xml'
 		)
 
-		const pres = await zip.file('ppt/presentation.xml').async('string')
+		const pres = await readEntry(zip, 'ppt/presentation.xml')
 		const lst = pres.match(/<p:embeddedFontLst>[\s\S]*?<\/p:embeddedFontLst>/)?.[0]
 		assert(lst, 'embeddedFontLst present')
 		assert(
@@ -316,7 +325,7 @@ describe('Presentation.importSlideMasters({ embedFonts })', () => {
 	test('default (flag off) carries no fonts — the graft alone is unchanged', async () => {
 		const zip = await graft(undefined)
 		assert(!Object.keys(zip.files).some((n) => /fntdata/.test(n)), 'no font parts without embedFonts')
-		const pres = await zip.file('ppt/presentation.xml').async('string')
+		const pres = await readEntry(zip, 'ppt/presentation.xml')
 		assert(!/embeddedFontLst/.test(pres), 'no embeddedFontLst without embedFonts')
 	})
 
@@ -330,7 +339,7 @@ describe('Presentation.importSlideMasters({ embedFonts })', () => {
 		const fontParts = Object.keys(zip.files).filter((n) => /^ppt\/fonts\/font\d+\.fntdata$/.test(n))
 		assertEqual(fontParts.length, 2, 'each face copied exactly once across repeated grafts')
 
-		const pres = await zip.file('ppt/presentation.xml').async('string')
+		const pres = await readEntry(zip, 'ppt/presentation.xml')
 		assertEqual(
 			(pres.match(/<p:embeddedFont>/g) || []).length,
 			1,
@@ -439,13 +448,13 @@ describe('Presentation.importSlideMasters({ tableStyles })', () => {
 		const target = await openFixture('empty')
 		const source = await openFixture('table-styles')
 		target.importSlideMasters(source, { tableStyles: true })
-		const first = await tableStylesXmlOf(await target.save())
+		const first = defined(await tableStylesXmlOf(await target.save()), 'the carry wrote ppt/tableStyles.xml')
 		const marker = first.match(new RegExp(`<a:tblStyle[^>]*styleId="\\${ACCENT3}"[\\s\\S]*?</a:tblStyle>`))?.[0]
 		assert(marker, 'the carried Accent 3 style is a full definition, not an empty stub')
 
 		// Re-carrying must not append a second copy of an id already present.
 		target.importSlideMasters(source, { tableStyles: true })
-		const second = await tableStylesXmlOf(await target.save())
+		const second = defined(await tableStylesXmlOf(await target.save()), 'ppt/tableStyles.xml is still there')
 		assertEqual(
 			(second.match(new RegExp(`styleId="\\${ACCENT3}"`, 'g')) || []).length,
 			1,
