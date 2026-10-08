@@ -116,7 +116,9 @@ export default defineConfig({
 		// default `include` matches, so without this it would collect them and fail on
 		// `@playwright/test`'s fixtures. Excluded by directory rather than by filename so
 		// the two harnesses never race for a file on the strength of what it is called.
-		exclude: [...configDefaults.exclude, 'test/browser/**'],
+		// `.claude/**` holds agent worktrees, whole checkouts of other branches whose tests
+		// would run against this tree's `dist/` and fail on what that branch never built.
+		exclude: [...configDefaults.exclude, 'test/browser/**', '.claude/**'],
 		// Bound the pool by memory, not by core count — see the header above.
 		// `maxWorkers` is the whole knob: Vitest 4 has no `minWorkers` (it is not in
 		// `InlineConfig`, and setting it is a type error rather than a no-op), and
