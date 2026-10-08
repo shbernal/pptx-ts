@@ -7,7 +7,7 @@ import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.t
 // (3) it implies `hasHeader` (emits firstRow="1") unless `hasHeader` is set explicitly.
 
 // Split a table's serialized rows so each `<a:tr>…</a:tr>` can be inspected in isolation.
-function tableRows(xml) {
+function tableRows(xml: string) {
 	return [...xml.matchAll(/<a:tr[\s>][\s\S]*?<\/a:tr>/g)].map((m) => m[0])
 }
 

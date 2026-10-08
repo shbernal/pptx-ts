@@ -1,3 +1,5 @@
+import type JSZip from 'jszip'
+import type { TableCellProps } from '../../../dist/node.js'
 import {
 	defineRegressionSuite,
 	build,
@@ -22,13 +24,13 @@ import {
 // corrected once, before the grid is built, rather than at each of the five sites that read a
 // span.
 
-async function tableXml(zip) {
+async function tableXml(zip: JSZip) {
 	const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 	return defined(/<a:tbl>[\s\S]*<\/a:tbl>/.exec(xml), 'an a:tbl in the slide')[0]
 }
 
 /** Build a two-row table whose first cell carries `options`, returning the `<a:tbl>` and the codes. */
-async function tableWithCellOptions(options) {
+async function tableWithCellOptions(options: TableCellProps) {
 	const { result, codes } = await captureDiagnostics(() =>
 		build((p) => {
 			p.addSlide().addTable(

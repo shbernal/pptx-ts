@@ -1,3 +1,4 @@
+import type JSZip from 'jszip'
 import { defineRegressionSuite, build, readEntry, listEntries, assert, defined } from '../../helpers.ts'
 
 // Regression: a `rowH` *array* is keyed by the ORIGINAL row
@@ -7,11 +8,11 @@ import { defineRegressionSuite, build, readEntry, listEntries, assert, defined }
 // The auto-pager now carries each output row's resolved height so a configured height follows its
 // row across pages, and overflow rows fall back to auto height where none was configured.
 
-function rowHeightsEmu(xml) {
+function rowHeightsEmu(xml: string) {
 	return (xml.match(/<a:tr h="(\d+)"/g) || []).map((m) => Number(defined(/h="(\d+)"/.exec(m))[1]))
 }
 
-function slideXmls(zip) {
+function slideXmls(zip: JSZip) {
 	return listEntries(zip)
 		.filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n))
 		.sort((a, b) => Number(defined(/slide(\d+)/.exec(a))[1]) - Number(defined(/slide(\d+)/.exec(b))[1]))
@@ -21,7 +22,7 @@ function slideXmls(zip) {
 const TALL_EMU = 2 * 914400
 const SHORT_EMU = 0.3 * 914400
 
-function makeRows(n) {
+function makeRows(n: number) {
 	return Array.from({ length: n }, (_, i) => [
 		{ text: `row ${i} lorem ipsum dolor sit amet consectetur adipiscing elit` },
 	])

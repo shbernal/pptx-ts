@@ -26,7 +26,7 @@ const TEXT = 'alpha beta gamma delta epsilon zeta eta theta'
  * @param cellWeight - `autoPageCharWeight` on every cell, or `undefined` for none
  * @param tableWeight - `autoPageCharWeight` on the table, or `undefined` for none
  */
-async function pages(cellWeight, tableWeight) {
+async function pages(cellWeight: number | undefined, tableWeight: number | undefined) {
 	const rows = Array.from({ length: 14 }, () => [
 		{ text: TEXT, options: cellWeight === undefined ? {} : { autoPageCharWeight: cellWeight } },
 	])

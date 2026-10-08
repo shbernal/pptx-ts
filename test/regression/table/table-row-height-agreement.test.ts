@@ -16,18 +16,19 @@
 // Checking any one of them alone is what let this drift.
 import { describe, test, expect } from 'vitest'
 import JSZip from 'jszip'
-import TsPptx, { setDiagnosticHandler } from '../../../dist/node.js'
-import { readEntry } from '../../helpers.ts'
+import TsPptx, { setDiagnosticHandler, type TableProps, type TableRow } from '../../../dist/node.js'
+import { defined, readEntry } from '../../helpers.ts'
 import { computeTableLayout } from '../../../src/measure/table-fit.ts'
 import { applyMeasuredFit } from '../../../src/measure/fit.ts'
-import { FontMetricsRegistry } from '../../../src/measure/font-metrics.ts'
+import { FontMetricsRegistry, type FontMetrics } from '../../../src/measure/font-metrics.ts'
+import type { PresSlideInternal } from '../../../src/types/internal.ts'
 
 const EMU_PER_INCH = 914400
 // EMU, the unit the layout engine reads a `PresLayout` in: a 10 x 5.625in canvas.
 const LAYOUT = { name: 'test', width: 9144000, height: 5143500 }
 
 /** Monospace synthetic metrics, so the fit pass is reproducible without a font file. */
-const mono = () => ({
+const mono = (): FontMetrics => ({
 	unitsPerEm: 1000,
 	advanceWidthPt: (text, sizePt, charSpacingPt = 0) => [...text].length * (0.5 * sizePt + charSpacingPt),
 	hasCodepoint: () => true,
@@ -35,11 +36,13 @@ const mono = () => ({
 
 /** Enough text that a 2in-tall, 2in-wide cell cannot hold it at 18pt. */
 const LONG = 'word '.repeat(200)
-/** @returns {import('../../../src/types/index.js').TableRow[]} */
-const ROWS = () => [[{ text: LONG, options: { fontFace: 'Mono', fontSize: 18, fit: 'shrink' } }], [{ text: 'second' }]]
+const ROWS = (): TableRow[] => [
+	[{ text: LONG, options: { fontFace: 'Mono', fontSize: 18, fit: 'shrink' } }],
+	[{ text: 'second' }],
+]
 
 /** Per-row `<a:tr h>` in inches, straight out of the built package. 0 is an auto-height row. */
-async function writerRowHeightsIn(opts) {
+async function writerRowHeightsIn(opts: TableProps) {
 	const pres = new TsPptx()
 	pres.addSlide().addTable(ROWS(), opts)
 	const zip = await JSZip.loadAsync(await pres.write({ outputType: 'nodebuffer' }))
@@ -48,7 +51,7 @@ async function writerRowHeightsIn(opts) {
 }
 
 /** Per-row height (inches) and exactness, from the public prediction API's engine. */
-function layoutRows(opts) {
+function layoutRows(opts: TableProps) {
 	const res = computeTableLayout(ROWS(), opts, LAYOUT, new FontMetricsRegistry())
 	return [0, 1].map((row) => {
 		const cell = res.cells.find((c) => c.row === row && c.col === 0)
@@ -61,28 +64,30 @@ function layoutRows(opts) {
  * observable: a `fit:'shrink'` cell in an auto-height row is skipped (the row grows instead), so
  * a reduced font size means the pass resolved a real height for that row.
  */
-function fitShrankRow0(opts) {
+function fitShrankRow0(opts: TableProps) {
 	const pres = new TsPptx()
 	pres.addSlide().addTable(ROWS(), opts)
 	const registry = new FontMetricsRegistry()
 	registry.set('Mono', mono())
 	// The pass runs over the internal slide list, which `write()` reaches through `gen/prepare.ts`.
 	// Calling it directly is what lets synthetic metrics stand in for a font file.
-	const slides = /** @type {any} */ (pres)._slides
+	const slides = (pres as unknown as { _slides: PresSlideInternal[] })._slides
 	applyMeasuredFit(slides, registry)
-	return slides[0]._slideObjects[0].arrTabRows[0][0].options.fontSize < 18
+	const cell = defined(slides[0]._slideObjects[0].arrTabRows, 'the table rows')[0][0]
+	return defined(cell.options?.fontSize, 'the shrink cell font size') < 18
 }
 
 describe('rowH is read the same way by the writer, the layout API and the fit pass', () => {
 	// `heightIn` is what the three have to agree on. `exact` is the second claim `tableLayout()`
 	// makes, and it has to track the writer too: a row the file pins is exact, a row that grows to
 	// fit is an estimate.
-	const CASES = [
+	const CASES: { name: string; opts: TableProps; heights: number[] }[] = [
 		{ name: 'a zero entry does not pin — the row is sized from `h`', opts: { rowH: [0, 2] }, heights: [2, 2] },
 		{ name: 'a positive entry pins its own row', opts: { rowH: [1, 2] }, heights: [1, 2] },
 		{ name: 'a negative entry does not pin, and never reaches the file', opts: { rowH: [-1, 2] }, heights: [2, 2] },
 		{
 			name: 'a numeric string pins, as every reading but one already had it',
+			// @ts-expect-error a stringified entry is the untyped-JS input under test
 			opts: { rowH: ['1', 2] },
 			heights: [1, 2],
 		},
@@ -144,8 +149,8 @@ describe('a colW entry that is not a width is reported', () => {
 	const TWO_COL = () => [[{ text: 'a' }, { text: 'b' }]]
 
 	/** Codes reported while building a deck whose one table carries `colW`. */
-	async function codesForColW(colW) {
-		const codes = []
+	async function codesForColW(colW: NonNullable<TableProps['colW']>) {
+		const codes: string[] = []
 		setDiagnosticHandler((d) => codes.push(d.code))
 		try {
 			const pres = new TsPptx()
@@ -172,8 +177,8 @@ describe('a colW entry that is not a width is reported', () => {
 
 describe('rowH entries that are not heights are reported', () => {
 	/** Codes reported while building a deck whose one table carries `rowH`. */
-	async function codesForRowH(rowH) {
-		const codes = []
+	async function codesForRowH(rowH: NonNullable<TableProps['rowH']>) {
+		const codes: string[] = []
 		setDiagnosticHandler((d) => codes.push(d.code))
 		try {
 			const pres = new TsPptx()
@@ -193,12 +198,14 @@ describe('rowH entries that are not heights are reported', () => {
 			[-1, 2],
 			['x', 2],
 		])
+			// @ts-expect-error the 'x' entry is the non-numeric input under test
 			expect(await codesForRowH(rowH)).toContain('table/invalid-row-height')
 	})
 
 	test('a missing array slot is silent — that is how an auto-height row is spelled', async () => {
 		// The auto-pager builds per-slide `rowH` arrays with `undefined` holes for exactly this,
 		// so warning on them would make every paged table with an auto row noisy.
+		// @ts-expect-error the public rowH spells an auto row `null`; `undefined` is the pager's internal spelling
 		expect(await codesForRowH([undefined, 2])).not.toContain('table/invalid-row-height')
 	})
 })

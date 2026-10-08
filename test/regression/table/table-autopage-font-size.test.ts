@@ -8,13 +8,14 @@
  * rows with `fontSize: 24` on each cell paged as 12 slides of 3. Both emitted `sz="2400"`, so the
  * table-level form ran rows off the bottom of every page.
  */
+import type { TableCellProps, TableProps } from '../../../dist/node.js'
 import { assertEqual, build, defineRegressionSuite, listEntries, readEntry } from '../../helpers.ts'
 
 const POS = { x: 0.5, y: 0.5, w: 4 }
 const TEXT = 'alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu nu xi omicron pi rho sigma'
 
 /** The row count of each page's table, in slide order. */
-async function rowsPerPage(cellOptions, tableOptions) {
+async function rowsPerPage(cellOptions: TableCellProps, tableOptions: TableProps) {
 	const rows = Array.from({ length: 30 }, () => [{ text: TEXT, options: cellOptions }])
 	const { zip } = await build((p) => {
 		p.addSlide().addTable(rows, { ...POS, autoPage: true, ...tableOptions })

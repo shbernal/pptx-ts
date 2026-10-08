@@ -1,5 +1,5 @@
+import type { StrokeProps } from '../../../dist/node.js'
 import { defineRegressionSuite, build, readEntry, captureDiagnostics, assert, assertEqual } from '../../helpers.ts'
-/** @import { StrokeProps } from '../../../dist/node.js' */
 
 // `TableProps.outerBorder` -> the table's perimeter only.
 //
@@ -15,11 +15,10 @@ import { defineRegressionSuite, build, readEntry, captureDiagnostics, assert, as
 
 const AT = { x: 1, y: 1, w: 9 }
 
-/** @type {StrokeProps} */
-const SOLID = { type: 'solid', color: 'FF0000', width: 2 }
+const SOLID: StrokeProps = { type: 'solid', color: 'FF0000', width: 2 }
 
 /** Each `<a:tc>` in the part, in document (row-major) order. */
-function cells(xml) {
+function cells(xml: string): string[] {
 	return xml.match(/<a:tc[ >][\s\S]*?<\/a:tc>/g) || []
 }
 
@@ -27,8 +26,8 @@ function cells(xml) {
  * The four edges of one cell as `'solid'` / `'none'`, in the public TRBL order.
  * `genTableCellBorderXml` writes them in LRTB document order, which this undoes.
  */
-function edges(cellXml) {
-	const read = (name) => {
+function edges(cellXml: string) {
+	const read = (name: string) => {
 		const block = cellXml.match(new RegExp(`<a:${name}\\b[\\s\\S]*?</a:${name}>`))
 		if (!block) return 'absent'
 		return block[0].includes('<a:noFill/>') ? 'none' : 'solid'
@@ -204,7 +203,7 @@ defineRegressionSuite('Table outerBorder', [
 						{ ...AT, outerBorder: SOLID }
 					)
 				})
-				const second = /** @type {Uint8Array} */ (await built.pres.toBytes())
+				const second = await built.pres.toBytes()
 				return { first: await readEntry(built.zip, 'ppt/slides/slide1.xml'), second }
 			})
 

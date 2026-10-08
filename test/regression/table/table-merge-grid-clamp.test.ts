@@ -12,10 +12,11 @@
  *
  * Either one is a table PowerPoint offers to repair.
  */
+import type { TableRow } from '../../../dist/node.js'
 import { assert, assertEqual, captureDiagnostics, defineRegressionSuite, build, readEntry } from '../../helpers.ts'
 
 /** Each row's `<a:tc>` count, the `<a:gridCol>` count, and every span attribute with its position. */
-async function structure(rows) {
+async function structure(rows: TableRow[]) {
 	const { result, codes } = await captureDiagnostics(() =>
 		build((p) => p.addSlide().addTable(rows, { x: 0.5, y: 0.5, w: 6 }))
 	)
@@ -36,7 +37,10 @@ async function structure(rows) {
 }
 
 /** Every row carries one `<a:tc>` per grid column, and no span reaches past the table's edge. */
-function assertRectangular({ gridCols, rowCount, cellCounts, spans }, label) {
+function assertRectangular(
+	{ gridCols, rowCount, cellCounts, spans }: Awaited<ReturnType<typeof structure>>,
+	label: string
+) {
 	cellCounts.forEach((count, rIdx) =>
 		assertEqual(count, gridCols, `${label}: row ${rIdx} has one <a:tc> per <a:gridCol>`)
 	)
@@ -56,7 +60,7 @@ defineRegressionSuite('Table merge grid clamps spans to the table', [
 	{
 		name: 'a rowspan past the last row is written as far as the table goes',
 		fn: async () => {
-			const s = await structure([[{ text: 'A', options: { rowspan: 3 } }, 'B'], ['C']])
+			const s = await structure([[{ text: 'A', options: { rowspan: 3 } }, { text: 'B' }], [{ text: 'C' }]])
 			assertEqual(s.rowCount, 2, 'two rows')
 			assertRectangular(s, 'rowspan 3')
 			assert(
@@ -69,7 +73,7 @@ defineRegressionSuite('Table merge grid clamps spans to the table', [
 	{
 		name: 'a colspan past the last column is written as far as the grid goes',
 		fn: async () => {
-			const s = await structure([['A', 'B'], [{ text: 'D', options: { colspan: 3 } }]])
+			const s = await structure([[{ text: 'A' }, { text: 'B' }], [{ text: 'D', options: { colspan: 3 } }]])
 			assertEqual(s.gridCols, 2, 'two grid columns')
 			assertRectangular(s, 'colspan 3')
 			assert(
@@ -82,7 +86,11 @@ defineRegressionSuite('Table merge grid clamps spans to the table', [
 	{
 		name: 'a row wider than the grid drops its extra cells and says so; a short row is filled',
 		fn: async () => {
-			const s = await structure([['A', 'B'], ['C', 'D', 'E'], ['F']])
+			const s = await structure([
+				[{ text: 'A' }, { text: 'B' }],
+				[{ text: 'C' }, { text: 'D' }, { text: 'E' }],
+				[{ text: 'F' }],
+			])
 			assertRectangular(s, 'ragged rows')
 			assert(s.codes.includes('table/cell-past-grid'), `the dropped cell is reported; got ${JSON.stringify(s.codes)}`)
 		},
@@ -90,7 +98,11 @@ defineRegressionSuite('Table merge grid clamps spans to the table', [
 	{
 		name: 'a well-formed merged table reports nothing',
 		fn: async () => {
-			const s = await structure([[{ text: 'A', options: { colspan: 2, rowspan: 2 } }, 'C'], ['F'], ['G', 'H', 'I']])
+			const s = await structure([
+				[{ text: 'A', options: { colspan: 2, rowspan: 2 } }, { text: 'C' }],
+				[{ text: 'F' }],
+				[{ text: 'G' }, { text: 'H' }, { text: 'I' }],
+			])
 			assertRectangular(s, 'well-formed')
 			assertEqual(JSON.stringify(s.codes), '[]', 'no diagnostic')
 		},

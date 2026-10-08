@@ -1,4 +1,6 @@
-import { SlideObjectType } from '../../../dist/node.js'
+// The internal cell type carries the src enum, so the seed below uses src's `SlideObjectType`.
+import { SlideObjectType } from '../../../src/enums.ts'
+import type { TableCellInternal } from '../../../src/types/internal.ts'
 import { defineRegressionSuite, build, readEntry, assert, assertEqual, defined } from '../../helpers.ts'
 // The pager's core is not exported from the package, and the last case here is about a guard
 // only a direct caller can reach. Every other case goes through the public `addTable`.
@@ -8,9 +10,9 @@ import { getSlidesForTableRows } from '../../../src/gen/table/autopage.ts'
  * Run `fn` with `console.log` captured, returning the lines it emitted. Restoring in a
  * `finally` matters: a throwing build must not leave the rest of the suite stubbed.
  */
-async function captureLog(fn) {
+async function captureLog(fn: () => unknown) {
 	const orig = console.log
-	const lines = []
+	const lines: string[] = []
 	console.log = (...args) => lines.push(args.map((a) => (typeof a === 'string' ? a : String(a))).join(' '))
 	try {
 		await fn()
@@ -30,12 +32,12 @@ async function captureLog(fn) {
 
 const ONE_IN_EMU = 914400
 
-function gridColWidths(xml) {
+function gridColWidths(xml: string) {
 	return [...xml.matchAll(/<a:gridCol w="(\d+)"\/>/g)].map((m) => Number(m[1]))
 }
 
 /** Enough rows to make the pager page. */
-function bodyRows(n, cols) {
+function bodyRows(n: number, cols: number) {
 	return Array.from({ length: n }, (_, i) => Array.from({ length: cols }, (_, c) => ({ text: `r${i}c${c}` })))
 }
 
@@ -123,8 +125,7 @@ defineRegressionSuite('Table autoPage width arithmetic', [
 		// at which it can be stated.
 		name: 'the pager reads an empty colW as no width stated, rather than throwing',
 		fn: () => {
-			/** @type {import('../../../src/types/internal.js').TableCellInternal[][]} */
-			const rows = [
+			const rows: TableCellInternal[][] = [
 				[
 					{ _type: SlideObjectType.tablecell, text: 'a' },
 					{ _type: SlideObjectType.tablecell, text: 'b' },

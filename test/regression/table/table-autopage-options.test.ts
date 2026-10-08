@@ -1,5 +1,6 @@
+import type JSZip from 'jszip'
 import { defineRegressionSuite, build, readEntry, listEntries, assert, assertEqual } from '../../helpers.ts'
-/** @import { TableRow } from '../../../dist/node.js' */
+import type { Margin, TableProps, TableRow } from '../../../dist/node.js'
 
 // Exercises the option surface of the auto-paging engine (getSlidesForTableRows /
 // parseTextToLines in src/gen/table/autopage.ts) through the public `addTable({autoPage:true})`
@@ -11,18 +12,18 @@ import { defineRegressionSuite, build, readEntry, listEntries, assert, assertEqu
 // margin:0 / slideMargin:0 and fontSize:12 (~0.2 in per line) are used where the
 // assertion depends on deterministic row heights.
 
-function slideFiles(zip) {
+function slideFiles(zip: JSZip) {
 	return listEntries(zip)
 		.filter((f) => /^ppt\/slides\/slide\d+\.xml$/.test(f))
 		.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
 }
 
-function gridColCount(xml) {
+function gridColCount(xml: string) {
 	return (xml.match(/<a:gridCol\b/g) || []).length
 }
 
 // N two-column body rows with distinctive text.
-function bodyRows(n) {
+function bodyRows(n: number) {
 	return Array.from({ length: n }, (_, i) => [{ text: `Row ${i} A` }, { text: `Row ${i} B` }])
 }
 
@@ -31,9 +32,9 @@ function bodyRows(n) {
  * `finally` matters: a throwing build must not leave the rest of the suite stubbed.
  * (Same shape as the `console.warn` capture in connector-shape.test.ts.)
  */
-async function captureLog(fn) {
+async function captureLog(fn: () => unknown) {
 	const orig = console.log
-	const lines = []
+	const lines: string[] = []
 	// `String(a)` rather than JSON: the final dump logs whole TableRowSlide objects, and
 	// only the string lines are asserted on below.
 	console.log = (...args) => lines.push(args.map((a) => (typeof a === 'string' ? a : String(a))).join(' '))
@@ -46,7 +47,7 @@ async function captureLog(fn) {
 }
 
 /** First captured line matching `re`, or '' — keeps the assertions readable. */
-function lineMatching(lines, re) {
+function lineMatching(lines: string[], re: RegExp) {
 	return lines.find((l) => re.test(l)) || ''
 }
 
@@ -131,10 +132,9 @@ defineRegressionSuite('Table autoPage option surface', [
 	{
 		name: 'cell and table margins consume vertical space (fewer rows per page)',
 		fn: async () => {
-			async function pageCount(useMargins) {
+			async function pageCount(useMargins: boolean) {
 				const { zip } = await build((p) => {
-					/** @type {TableRow[]} */
-					const rows = Array.from({ length: 24 }, (_, i) => [
+					const rows: TableRow[] = Array.from({ length: 24 }, (_, i) => [
 						// One cell carries its own margin; the paginator takes the max of cell vs table margin.
 						{ text: `Row ${i} A`, options: useMargins ? { margin: [0.15, 0.05, 0.15, 0.05] } : {} },
 						{ text: `Row ${i} B` },
@@ -213,8 +213,7 @@ defineRegressionSuite('Table autoPage option surface', [
 	{
 		name: 'degenerate cell text (empty / numeric / whitespace) does not crash autoPage',
 		fn: async () => {
-			/** @type {TableRow[]} */
-			const rows = [
+			const rows: TableRow[] = [
 				// @ts-expect-error a numeric cell text is the degenerate input under test
 				[{ text: '' }, { text: 2024 }],
 				[{ text: '   ' }, { text: 'ok', options: { fontSize: 18 } }],
@@ -267,7 +266,7 @@ defineRegressionSuite('Table autoPage option surface', [
 			// the caller's escape hatch when a font runs taller than the built-in ratio. The
 			// assertion is a comparison against the same deck without the option, so it pins the
 			// option's *effect* and leaves the ratio itself free to move.
-			async function pageCount(extra) {
+			async function pageCount(extra: TableProps) {
 				const { zip } = await build((p) => {
 					p.addSlide().addTable(bodyRows(40), {
 						x: 0.5,
@@ -300,7 +299,7 @@ defineRegressionSuite('Table autoPage option surface', [
 			// than merely accepted.
 			// No `h`: with an explicit height the paging area is clamped to it and the margin
 			// would not show.
-			async function pageCount(margin) {
+			async function pageCount(margin: number) {
 				const { zip } = await build((p) => {
 					p.defineSlideMaster({ title: `AP_MARGIN_${margin}`, margin })
 					p.addSlide({ masterTitle: `AP_MARGIN_${margin}` }).addTable(bodyRows(60), {
@@ -327,7 +326,7 @@ defineRegressionSuite('Table autoPage option surface', [
 			// Precedence used to run master-first, so on a deck whose master declared a margin the
 			// per-table `slideMargin` was discarded with no diagnostic and the page count did not
 			// move. Two very different margins against one master is what makes that visible.
-			async function pageCount(slideMargin) {
+			async function pageCount(slideMargin: Margin) {
 				const { zip } = await build((p) => {
 					p.defineSlideMaster({ title: 'AP_OVERRIDE', margin: 0.25 })
 					p.addSlide({ masterTitle: 'AP_OVERRIDE' }).addTable(bodyRows(60), {

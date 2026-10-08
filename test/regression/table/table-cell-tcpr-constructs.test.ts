@@ -24,7 +24,7 @@ import {
 const AT = { x: 1, y: 1, w: 9 }
 
 /** The first `<a:tcPr>` block in the part, whether paired or self-closing. */
-function firstTcPr(xml) {
+function firstTcPr(xml: string) {
 	const match = xml.match(/<a:tcPr(?:\/>|[^>]*>[\s\S]*?<\/a:tcPr>)/)
 	assert(match, 'expected an a:tcPr in the part; got: ' + xml)
 	return match[0]
@@ -41,7 +41,7 @@ const TCPR_CHILDREN = ['lnL', 'lnR', 'lnT', 'lnB', 'lnTlToBr', 'lnBlToTr', 'cell
  * Paired children are collapsed to a self-closing stand-in first, which drops their
  * contents and leaves exactly the top level.
  */
-function childOrder(tcPr) {
+function childOrder(tcPr: string) {
 	let flat = tcPr
 	for (const name of TCPR_CHILDREN) {
 		flat = flat.replace(new RegExp(`<a:${name}\\b[^>]*>[\\s\\S]*?</a:${name}>`, 'g'), `<a:${name}/>`)
@@ -85,7 +85,7 @@ defineRegressionSuite('Table cell a:tcPr constructs', [
 			assert(tcPr.includes('<a:lnTlToBr w="25400"'), 'the ╲ diagonal carries its 2pt width; got: ' + tcPr)
 			assert(tcPr.includes('<a:lnBlToTr w="12700"'), 'the ╱ diagonal carries its 1pt width; got: ' + tcPr)
 			// The diagonals resolve dash and colour through the same path the edges do.
-			const blToTr = tcPr.match(/<a:lnBlToTr[\s\S]*?<\/a:lnBlToTr>/)[0]
+			const blToTr = defined(tcPr.match(/<a:lnBlToTr[\s\S]*?<\/a:lnBlToTr>/), 'an a:lnBlToTr')[0]
 			assert(blToTr.includes('val="0000C0"'), 'the ╱ diagonal keeps its colour; got: ' + blToTr)
 			assert(blToTr.includes('<a:prstDash val="sysDash"/>'), 'and its dash; got: ' + blToTr)
 		},

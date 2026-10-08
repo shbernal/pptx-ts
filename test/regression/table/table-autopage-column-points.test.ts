@@ -1,3 +1,4 @@
+import type JSZip from 'jszip'
 import { defineRegressionSuite, build, readEntry, listEntries, assert, assertEqual } from '../../helpers.ts'
 
 // The chars-per-line figure the auto-pager wraps on comes from the column's width in POINTS, and
@@ -18,7 +19,7 @@ import { defineRegressionSuite, build, readEntry, listEntries, assert, assertEqu
 // it: the text is emitted as one paragraph and PowerPoint re-wraps it at render time.
 
 /** Every `ppt/slides/slideN.xml`, in slide order. */
-function slideFiles(zip) {
+function slideFiles(zip: JSZip) {
 	return listEntries(zip)
 		.filter((f) => /^ppt\/slides\/slide\d+\.xml$/.test(f))
 		.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
@@ -28,7 +29,7 @@ function slideFiles(zip) {
  * A run of `n` characters as space-separated four-letter words, so the wrapper has break
  * opportunities to take.
  */
-function words(n) {
+function words(n: number) {
 	let out = ''
 	while (out.length < n) out += (out ? ' ' : '') + 'abcd'
 	return out.slice(0, n)
@@ -41,7 +42,7 @@ function words(n) {
  * `cell.options.fontSize` and falls back to the default, and the table-level option is not one of
  * the two the pager copies down.
  */
-async function rowsPerSlide(text, colWidth, fontSize, rows) {
+async function rowsPerSlide(text: string, colWidth: number, fontSize: number, rows: number) {
 	const { zip } = await build((p) => {
 		const data = Array.from({ length: rows }, () => [{ text, options: { fontSize } }])
 		p.addSlide().addTable(data, { x: 0.25, y: 0.25, colW: [colWidth], autoPage: true, margin: 0, slideMargin: 0 })

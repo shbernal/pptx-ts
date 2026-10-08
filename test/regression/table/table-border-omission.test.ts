@@ -1,6 +1,5 @@
 import { defineRegressionSuite, build, captureDiagnostics, readEntry, assert } from '../../helpers.ts'
-import { TableStyle } from '../../../dist/node.js'
-/** @import { StrokeProps } from '../../../dist/node.js' */
+import { TableStyle, type StrokeProps } from '../../../dist/node.js'
 
 const SLIDE_XML = 'ppt/slides/slide1.xml'
 
@@ -23,8 +22,7 @@ defineRegressionSuite('Table border tuple null sides [upstream-23]', [
 	{
 		name: 'null tuple sides stay absent while authored sides draw',
 		fn: async () => {
-			/** @type {StrokeProps} */
-			const solid = { type: 'solid', color: '4472C4', width: 1 }
+			const solid: StrokeProps = { type: 'solid', color: '4472C4', width: 1 }
 			const { zip } = await build((p) => {
 				p.addSlide().addTable([[{ text: 'sparse', options: { border: [solid, null, solid, null] } }]], {
 					x: 1,

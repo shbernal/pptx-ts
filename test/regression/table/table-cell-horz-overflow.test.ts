@@ -25,7 +25,7 @@ import {
 // PowerPoint reports as a corrupt file, not as a mis-set option.
 
 /** Every `<a:tcPr …>` opening tag in the part, in document order. */
-function tcPrTags(xml) {
+function tcPrTags(xml: string) {
 	return [...xml.matchAll(/<a:tcPr[^>]*>/g)].map((m) => m[0])
 }
 

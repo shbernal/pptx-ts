@@ -7,10 +7,11 @@
  * every cell paged onto 2, with 46 rows on the first. The measured-fit layout already tests the
  * span itself (`rowSpan === 1`), so the two disagreed.
  */
+import type { TableCellProps } from '../../../dist/node.js'
 import { assertEqual, build, defineRegressionSuite, listEntries } from '../../helpers.ts'
 
 /** How many slides 80 two-cell rows page onto, with `cellOptions` on every cell. */
-async function pages(cellOptions) {
+async function pages(cellOptions: TableCellProps) {
 	const rows = Array.from({ length: 80 }, (_unused, i) => [
 		{ text: `row ${i}`, options: cellOptions },
 		{ text: 'value', options: cellOptions },

@@ -1,3 +1,5 @@
+import type JSZip from 'jszip'
+import type { Margin, TableRow } from '../../../dist/node.js'
 import {
 	defineRegressionSuite,
 	build,
@@ -14,27 +16,27 @@ import {
 
 const SLIDE_XML = 'ppt/slides/slide1.xml'
 
-function slideNames(zip) {
+function slideNames(zip: JSZip) {
 	return listEntries(zip)
 		.filter((name) => /^ppt\/slides\/slide\d+\.xml$/.test(name))
 		.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
 }
 
-async function rowsPerSlide(zip) {
+async function rowsPerSlide(zip: JSZip) {
 	const counts = []
 	for (const name of slideNames(zip)) counts.push(((await readEntry(zip, name)).match(/<a:tr /g) || []).length)
 	return counts
 }
 
 /** The table's total grid width in EMU, summed off the emitted `<a:gridCol>`s. */
-function gridWidthEmu(xml) {
+function gridWidthEmu(xml: string) {
 	return [...xml.matchAll(/<a:gridCol w="(\d+)"\/>/g)].reduce((total, m) => total + Number(m[1]), 0)
 }
 
 /** Rows whose text is long enough to page, all identical so every page's budget is comparable. */
-function uniformRows(count) {
-	const rows = []
-	for (let idx = 1; idx <= count; idx++) rows.push([`R${idx}`, 'lorem ipsum dolor sit amet'])
+function uniformRows(count: number) {
+	const rows: TableRow[] = []
+	for (let idx = 1; idx <= count; idx++) rows.push([{ text: `R${idx}` }, { text: 'lorem ipsum dolor sit amet' }])
 	return rows
 }
 
@@ -46,7 +48,7 @@ defineRegressionSuite('Table geometry under asymmetric input', [
 		// already been found and fixed with a comment saying exactly this.
 		name: 'a wide LEFT slide margin does not shrink the table as though it were the right one',
 		fn: async () => {
-			const widthFor = async (margin) => {
+			const widthFor = async (margin: Margin) => {
 				const { zip } = await build((p) => {
 					p.defineLayout({ name: 'TEN', width: 10, height: 5.625 })
 					p.layout = 'TEN'
@@ -68,7 +70,7 @@ defineRegressionSuite('Table geometry under asymmetric input', [
 		// respected it depended on whether `autoPage` was on.
 		name: 'slideMargin steers an un-paged table too',
 		fn: async () => {
-			const widthFor = async (slideMargin) => {
+			const widthFor = async (slideMargin: Margin) => {
 				const { zip } = await build((p) => {
 					p.defineLayout({ name: 'TEN', width: 10, height: 5.625 })
 					p.layout = 'TEN'
@@ -90,11 +92,12 @@ defineRegressionSuite('Table geometry under asymmetric input', [
 		fn: async () => {
 			// An un-paged table with no `w` takes whole inches from its left edge (`x`, defaulting
 			// to 0.5) to the right margin, so its width is a direct reading of which margin won.
-			const widthFor = async (margin, slideMargin) => {
+			const widthFor = async (margin: Margin, slideMargin: Margin | undefined) => {
 				const { zip } = await build((p) => {
 					p.defineLayout({ name: 'TEN', width: 10, height: 5.625 })
 					p.layout = 'TEN'
 					p.defineSlideMaster({ title: 'M', margin })
+					// @ts-expect-error an explicit `slideMargin: undefined` is the plain-JS "states none" spelling under test
 					p.addSlide({ masterTitle: 'M' }).addTable([[{ text: 'a' }, { text: 'b' }]], { autoPage: false, slideMargin })
 				})
 				return gridWidthEmu(await readEntry(zip, SLIDE_XML)) / 914400
@@ -145,7 +148,7 @@ defineRegressionSuite('Table geometry under asymmetric input', [
 		// packed the same body rows the first page fits.
 		name: 'a repeated header row costs the page budget it occupies',
 		fn: async () => {
-			const paged = (repeat) =>
+			const paged = (repeat: boolean) =>
 				build((p) => {
 					p.defineLayout({ name: 'TEN', width: 10, height: 5.625 })
 					p.layout = 'TEN'

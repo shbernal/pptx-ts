@@ -13,13 +13,13 @@ import JSZip from 'jszip'
 import TsPptx from '../../../dist/node.js'
 import { readEntry } from '../../helpers.ts'
 
-async function slide1Xml(pres) {
+async function slide1Xml(pres: TsPptx) {
 	const buf = await pres.toBytes()
 	const zip = await JSZip.loadAsync(buf)
 	return readEntry(zip, 'ppt/slides/slide1.xml')
 }
 
-const szValues = (xml) => [...xml.matchAll(/sz="(\d+)"/g)].map((m) => Number(m[1]))
+const szValues = (xml: string) => [...xml.matchAll(/sz="(\d+)"/g)].map((m) => Number(m[1]))
 const LONG = 'This is a deliberately long cell sentence that overflows a short fixed-height table row.'
 
 /** A committed face, so the measured arm of this file has no machine-dependent input. */
@@ -77,7 +77,7 @@ describe('measured fit: TableCellProps.fit', () => {
 		// The shrink had no minimum, so a 1pt cell taken to the 25% scale floor was baked as 0.2pt.
 		// The emitter's clamp then caught it and warned "fontSize 0.2 is outside the valid range" --
 		// a value the caller never wrote and could do nothing about. Their 1pt was perfectly valid.
-		const warnings = []
+		const warnings: string[] = []
 		const originalWarn = console.warn
 		console.warn = (...args) => warnings.push(String(args[0]))
 		let sizes

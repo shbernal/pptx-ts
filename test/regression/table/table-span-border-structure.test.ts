@@ -1,5 +1,6 @@
+import type JSZip from 'jszip'
+import type { StrokeProps } from '../../../dist/node.js'
 import { defineRegressionSuite, build, readEntry, assert, defined } from '../../helpers.ts'
-/** @import { StrokeProps } from '../../../dist/node.js' */
 
 // Verification suite for several historical upstream table reports that this project already
 // emits correctly. These guard against regressing back into the reported symptoms:
@@ -11,21 +12,19 @@ import { defineRegressionSuite, build, readEntry, assert, defined } from '../../
 // declared spans, and (2) every cell — including span continuation (hMerge/vMerge) cells — carries
 // the full four-sided border when a uniform border is configured.
 
-/** @type {StrokeProps} */
-const SOLID = { type: 'solid', width: 1, color: 'FF0000' }
-/** @type {[StrokeProps, StrokeProps, StrokeProps, StrokeProps]} */
-const BORDER4 = [SOLID, SOLID, SOLID, SOLID]
+const SOLID: StrokeProps = { type: 'solid', width: 1, color: 'FF0000' }
+const BORDER4: [StrokeProps, StrokeProps, StrokeProps, StrokeProps] = [SOLID, SOLID, SOLID, SOLID]
 
-async function tableXml(zip) {
+async function tableXml(zip: JSZip) {
 	const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 	return defined(/<a:tbl>[\s\S]*<\/a:tbl>/.exec(xml), 'an a:tbl in the slide')[0]
 }
 
-function cells(tblXml) {
+function cells(tblXml: string) {
 	return tblXml.match(/<a:tc[ >][\s\S]*?<\/a:tc>/g) || []
 }
 
-function hasAllFourBorders(cellXml) {
+function hasAllFourBorders(cellXml: string) {
 	return ['lnL', 'lnR', 'lnT', 'lnB'].every((s) => new RegExp(`<a:${s} w="\\d+"`).test(cellXml))
 }
 

@@ -7,9 +7,9 @@ import { defineRegressionSuite, build, readEntry, assert, captureDiagnostics } f
 
 const ONE_IN_EMU = 914400
 
-const row = (...texts) => texts.map((text) => ({ text }))
+const row = (...texts: string[]) => texts.map((text) => ({ text }))
 
-function gridColWidths(xml) {
+function gridColWidths(xml: string) {
 	return [...xml.matchAll(/<a:gridCol w="(\d+)"\/>/g)].map((m) => Number(m[1]))
 }
 

@@ -8,7 +8,7 @@ import {
 	assertEqual,
 	expectDefined,
 } from '../../helpers.ts'
-import { TableStyle } from '../../../dist/node.js'
+import { TableStyle, type TableProps, type TableRow } from '../../../dist/node.js'
 
 // What a table style can and cannot do, and which tier of the styling stack actually paints.
 //
@@ -38,21 +38,21 @@ import { TableStyle } from '../../../dist/node.js'
 const AT = { x: 1, y: 1, w: 8 }
 
 /** The first cell's `<a:tcPr>` block. */
-function firstTcPr(xml) {
+function firstTcPr(xml: string) {
 	const match = xml.match(/<a:tcPr(?:\/>|[^>]*>[\s\S]*?<\/a:tcPr>)/)
 	assert(match, 'expected an a:tcPr; got: ' + xml)
 	return match[0]
 }
 
 /** The `<a:rPr>` of the first text run. */
-function firstRPr(xml) {
+function firstRPr(xml: string) {
 	const match = xml.match(/<a:rPr[^>]*(?:\/>|>[\s\S]*?<\/a:rPr>)/)
 	assert(match, 'expected an a:rPr; got: ' + xml)
 	return match[0]
 }
 
 /** Every cell's `<a:tcPr>` block, in document order. */
-function allTcPr(xml) {
+function allTcPr(xml: string): string[] {
 	const blocks = xml.match(/<a:tcPr(?:\/>|[^>]*>[\s\S]*?<\/a:tcPr>)/g) || []
 	assert(blocks.length, 'expected at least one a:tcPr; got: ' + xml)
 	return blocks
@@ -60,9 +60,8 @@ function allTcPr(xml) {
 
 /**
  * Build one table and return the slide part alongside `tableStyles.xml`.
- * @param {import('../../../dist/node.js').TableRow[]} [rows]
  */
-async function tableParts(tableOpts = {}, rows = [[{ text: 'H1' }]]) {
+async function tableParts(tableOpts: TableProps = {}, rows: TableRow[] = [[{ text: 'H1' }]]) {
 	const { zip } = await build((p) => {
 		p.addSlide().addTable(rows, { ...AT, hasHeader: true, ...tableOpts })
 	})
@@ -136,6 +135,7 @@ defineRegressionSuite('Table styling: built-in styles and the direct-formatting 
 	{
 		name: 'columns[i] fills its own column and leaves the others alone',
 		fn: async () => {
+			// @ts-expect-error `columns` has no slot type for "no definition"; the hole is the input under test
 			const { slide } = await tableParts({ hasHeader: false, columns: [undefined, { fill: 'EAF1F8' }] }, [
 				[{ text: 'A' }, { text: 'B' }],
 			])

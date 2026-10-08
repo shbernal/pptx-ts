@@ -14,19 +14,21 @@
  * cannot say which key moved.
  */
 import { expect } from 'vitest'
+import type { TableRow } from '../../../dist/node.js'
 import { assert, assertEqual, build, defineRegressionSuite, readEntry } from '../../helpers.ts'
 
 const POS = { x: 0.5, y: 0.5, w: 9 }
 
 /** Freeze a rows array and every cell and option bag inside it. */
-function deepFreezeRows(rows) {
+function deepFreezeRows(rows: TableRow[]): TableRow[] {
 	for (const row of rows)
 		for (const cell of row) {
 			if (cell.options) Object.freeze(cell.options)
 			Object.freeze(cell)
 		}
 	rows.forEach(Object.freeze)
-	return Object.freeze(rows)
+	Object.freeze(rows)
+	return rows
 }
 
 /** Twelve rows of one long-ish cell, enough to page under a short height. */

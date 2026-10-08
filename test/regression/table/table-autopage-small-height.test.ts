@@ -1,3 +1,5 @@
+import type JSZip from 'jszip'
+import type { TableProps } from '../../../dist/node.js'
 import {
 	setDiagnosticHandler,
 	defineRegressionSuite,
@@ -18,16 +20,16 @@ import {
 // usable `h` like 0.7" paginates normally regardless of `y`; only an `h` smaller than one line of
 // the base font is genuinely unusable.
 
-function rows(n) {
+function rows(n: number) {
 	return Array.from({ length: n }, (_, i) => [{ text: `Row ${i} col A` }, { text: `Row ${i} col B` }])
 }
 
-function slideCount(zip) {
+function slideCount(zip: JSZip) {
 	return listEntries(zip).filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n)).length
 }
 
 /** How many `<a:tr>` each slide carries, in slide order. */
-async function rowsPerSlide(zip) {
+async function rowsPerSlide(zip: JSZip) {
 	const names = listEntries(zip)
 		.filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n))
 		.sort((a, b) => Number(defined(a.match(/\d+/))[0]) - Number(defined(b.match(/\d+/))[0]))
@@ -37,7 +39,7 @@ async function rowsPerSlide(zip) {
 }
 
 /** A long table under the unusable-`h` fallback, so every page's height comes from it. */
-async function pagedRowCounts(opts) {
+async function pagedRowCounts(opts: TableProps) {
 	const many = Array.from({ length: 120 }, (_, i) => [{ text: `Row ${i} col A` }, { text: `Row ${i} col B` }])
 	const { zip } = await build((p) => {
 		p.addSlide().addTable(many, { x: 0.5, w: 9, h: 0.1, colW: [4.5, 4.5], autoPage: true, fontSize: 12, ...opts })
@@ -49,7 +51,7 @@ defineRegressionSuite('Table autoPage tiny-height guard', [
 	{
 		name: 'h smaller than one line of text does not crash and emits no empty page (warns instead)',
 		fn: async () => {
-			const warnings = []
+			const warnings: string[] = []
 			setDiagnosticHandler((d) => warnings.push(d.message))
 			let zip
 			try {
@@ -80,7 +82,7 @@ defineRegressionSuite('Table autoPage tiny-height guard', [
 	{
 		name: 'a usable explicit h still paginates normally (no warning)',
 		fn: async () => {
-			const warnings = []
+			const warnings: string[] = []
 			setDiagnosticHandler((d) => warnings.push(d.message))
 			let zip
 			try {
@@ -118,7 +120,7 @@ defineRegressionSuite('Table autoPage tiny-height guard', [
 			//
 			// Enough rows to overflow, so the guard is also exercised on a *subsequent* page,
 			// where the start-Y comes from the top margin rather than `y`.
-			const warnings = []
+			const warnings: string[] = []
 			setDiagnosticHandler((d) => warnings.push(d.message))
 			let zip
 			try {

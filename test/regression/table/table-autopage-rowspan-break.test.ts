@@ -10,18 +10,18 @@
  * Checked through the read model, which reports each cell's `rowSpan` against the rows its own
  * table actually has, so the assertion is about the emitted structure and not about the pager.
  */
-import TsPptx from '../../../dist/node.js'
+import TsPptx, { type TableRow } from '../../../dist/node.js'
 import { Presentation } from '../../../dist/read.js'
 import { assert, captureDiagnostics, defineRegressionSuite } from '../../helpers.ts'
 
 const WORDS = Array.from({ length: 40 }, (_unused, i) => `word${i}`).join(' ')
 
 /** Every page's table, read back, with each origin cell's rowSpan checked against the page. */
-async function spanProblems(rows) {
+async function spanProblems(rows: TableRow[]) {
 	const pres = new TsPptx()
 	pres.addSlide().addTable(rows, { x: 0.5, y: 0.5, colW: [1, 1], autoPage: true })
 	const presentation = await Presentation.load(await pres.toBytes())
-	const problems = []
+	const problems: string[] = []
 	let pages = 0
 	presentation.slides.forEach((slide, slideIdx) => {
 		for (const shape of slide.shapes) {
@@ -48,8 +48,13 @@ defineRegressionSuite('Auto-page break before a rowspan', [
 	{
 		name: 'a page never ends on a row whose rowspan reaches past it',
 		fn: async () => {
-			const plain = (n) => Array.from({ length: n }, (_unused, i) => [`p${i}`, 'v'])
-			const rows = [...plain(22), [{ text: WORDS, options: { rowspan: 2 } }, 'X'], ['Y'], ...plain(5)]
+			const plain = (n: number) => Array.from({ length: n }, (_unused, i) => [{ text: `p${i}` }, { text: 'v' }])
+			const rows = [
+				...plain(22),
+				[{ text: WORDS, options: { rowspan: 2 } }, { text: 'X' }],
+				[{ text: 'Y' }],
+				...plain(5),
+			]
 			const { problems, pages } = await spanProblems(rows)
 			assert(pages >= 2, `the table has to page to test a break; got ${pages} page(s)`)
 			assert(problems.length === 0, `\n  ${problems.join('\n  ')}`)
@@ -59,7 +64,13 @@ defineRegressionSuite('Auto-page break before a rowspan', [
 		name: 'a rowspan group taller than a page is kept whole and reported',
 		fn: async () => {
 			const tall = Array.from({ length: 12 }, () => WORDS).join(' ')
-			const rows = [['a', 'b'], [{ text: tall, options: { rowspan: 3 } }, 'X'], ['Y'], ['Z'], ['c', 'd']]
+			const rows = [
+				[{ text: 'a' }, { text: 'b' }],
+				[{ text: tall, options: { rowspan: 3 } }, { text: 'X' }],
+				[{ text: 'Y' }],
+				[{ text: 'Z' }],
+				[{ text: 'c' }, { text: 'd' }],
+			]
 			const { result, codes } = await captureDiagnostics(() => spanProblems(rows))
 			assert(result.problems.length === 0, `\n  ${result.problems.join('\n  ')}`)
 			assert(codes.includes('table/autopage-rowspan-too-tall'), `reported; got ${JSON.stringify(codes)}`)

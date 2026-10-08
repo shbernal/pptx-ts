@@ -1,6 +1,5 @@
 import { defineRegressionSuite, build, readEntry, assert, assertEqual } from '../../helpers.ts'
-import { TableStyle } from '../../../dist/node.js'
-/** @import { StrokeProps } from '../../../dist/node.js' */
+import { TableStyle, type StrokeProps } from '../../../dist/node.js'
 
 // The shape of every bug here: build the same literal into TWO objects and the second behaves
 // differently from the first, because the first build wrote into it. `addTableDefinition` takes
@@ -9,7 +8,7 @@ import { TableStyle } from '../../../dist/node.js'
 const SLIDE_XML = 'ppt/slides/slide1.xml'
 
 /** Each `<a:tbl>` on the slide, in document order. */
-function tables(xml) {
+function tables(xml: string) {
 	return [...xml.matchAll(/<a:tbl>[\s\S]*?<\/a:tbl>/g)].map((m) => m[0])
 }
 
@@ -65,8 +64,7 @@ defineRegressionSuite('Table literals the caller still owns', [
 		// reference, the filling propagated into cells that had already captured it.
 		name: 'a hole in a table-level border tuple is left alone, as it is on a cell',
 		fn: async () => {
-			/** @type {[StrokeProps, null, StrokeProps, null]} */
-			const sparse = [
+			const sparse: [StrokeProps, null, StrokeProps, null] = [
 				{ type: 'solid', color: '333333', width: 1 },
 				null,
 				{ type: 'solid', color: '333333', width: 1 },
@@ -103,8 +101,7 @@ defineRegressionSuite('Table literals the caller still owns', [
 	{
 		name: 'a border tuple literal reused across two tables is not completed in place',
 		fn: async () => {
-			/** @type {[StrokeProps, null, null, null]} */
-			const sparse = [{ type: 'solid' }, null, null, null]
+			const sparse: [StrokeProps, null, null, null] = [{ type: 'solid' }, null, null, null]
 			const before = JSON.stringify(sparse)
 			await build((p) => {
 				const s = p.addSlide()

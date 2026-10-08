@@ -17,7 +17,7 @@ import { TableStyle } from '../../../dist/node.js'
 const AT = { x: 1, y: 1, w: 9 }
 
 /** The `<a:tblPr>` block, paired or self-closing. */
-function tblPr(xml) {
+function tblPr(xml: string) {
 	const match = xml.match(/<a:tblPr(?:\/>|[^>]*>[\s\S]*?<\/a:tblPr>)/)
 	assert(match, 'expected an a:tblPr in the part; got: ' + xml)
 	return match[0]
@@ -31,7 +31,7 @@ function tblPr(xml) {
  * Narrowing to `a:tcPr` drops the runs, and stripping the `a:lnX` blocks drops the strokes,
  * so what is left is exactly the cell's own fill.
  */
-function cells(xml) {
+function cells(xml: string) {
 	return (xml.match(/<a:tcPr(?:\/>|[^>]*>[\s\S]*?<\/a:tcPr>)/g) || []).map((tcPr) =>
 		tcPr.replace(/<a:ln(?:L|R|T|B|TlToBr|BlToTr)\b[\s\S]*?<\/a:ln(?:L|R|T|B|TlToBr|BlToTr)>/g, '')
 	)

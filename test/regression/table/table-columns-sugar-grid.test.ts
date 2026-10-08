@@ -7,6 +7,7 @@
  * checked, so a string or negative colspan moved the cursor. The sugar now reads the placements the
  * emitter, the auto-pager and the measured fit read.
  */
+import type { TableCellProps, TableRow } from '../../../dist/node.js'
 import { assertEqual, captureDiagnostics, defineRegressionSuite, build, readEntry } from '../../helpers.ts'
 
 const RED = { fill: { color: 'FF0000' } }
@@ -14,7 +15,7 @@ const BLUE = { fill: { color: '0000FF' } }
 const GREEN = { fill: { color: '00FF00' } }
 
 /** Each written cell as `text:fill`, row by row, with merge cells as `(merge)`. */
-async function cellFills(rows, columns) {
+async function cellFills(rows: TableRow[], columns: TableCellProps[]) {
 	const { result, codes } = await captureDiagnostics(() =>
 		build((p) => p.addSlide().addTable(rows, { x: 0.5, y: 0.5, w: 6, columns }))
 	)
@@ -33,7 +34,10 @@ defineRegressionSuite('Table columns sugar follows the grid', [
 	{
 		name: 'a cell below a rowspan takes the definition of the column it sits in',
 		fn: async () => {
-			const { cells } = await cellFills([[{ text: 'A', options: { rowspan: 2 } }, 'B'], ['C']], [RED, BLUE])
+			const { cells } = await cellFills(
+				[[{ text: 'A', options: { rowspan: 2 } }, { text: 'B' }], [{ text: 'C' }]],
+				[RED, BLUE]
+			)
 			assertEqual(
 				JSON.stringify(cells),
 				JSON.stringify([
@@ -49,8 +53,8 @@ defineRegressionSuite('Table columns sugar follows the grid', [
 		fn: async () => {
 			const { cells } = await cellFills(
 				[
-					[{ text: 'A', options: { colspan: 2 } }, 'C'],
-					['D', 'E', 'F'],
+					[{ text: 'A', options: { colspan: 2 } }, { text: 'C' }],
+					[{ text: 'D' }, { text: 'E' }, { text: 'F' }],
 				],
 				[RED, BLUE, GREEN]
 			)
@@ -67,7 +71,7 @@ defineRegressionSuite('Table columns sugar follows the grid', [
 	{
 		name: 'a colspan that is not a span moves nothing, and is reported once',
 		fn: async () => {
-			const { cells, codes } = await cellFills([[{ text: 'A', options: { colspan: -2 } }, 'B']], [RED, BLUE])
+			const { cells, codes } = await cellFills([[{ text: 'A', options: { colspan: -2 } }, { text: 'B' }]], [RED, BLUE])
 			assertEqual(JSON.stringify(cells), JSON.stringify([['A:FF0000', 'B:0000FF']]), 'A and B keep their columns')
 			assertEqual(
 				codes.filter((code) => code === 'table/span-out-of-range').length,

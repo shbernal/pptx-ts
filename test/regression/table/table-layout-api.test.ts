@@ -6,13 +6,14 @@
 // conservative estimates flagged heightExact:false, exact when rowH/table h pins them.
 import { describe, test, expect } from 'vitest'
 import { computeTableLayout } from '../../../src/measure/table-fit.ts'
-import { FontMetricsRegistry } from '../../../src/measure/font-metrics.ts'
-import TsPptx from '../../../dist/node.js'
+import { FontMetricsRegistry, type FontMetrics } from '../../../src/measure/font-metrics.ts'
+import TsPptx, { type TableLayoutResult } from '../../../dist/node.js'
+import { defined } from '../../helpers.ts'
 
 // Monospace synthetic metrics: every code point advances `emPerChar` ems.
-const mono = (emPerChar = 0.5) => ({
+const mono = (emPerChar = 0.5): FontMetrics => ({
 	unitsPerEm: 1000,
-	advanceWidthPt(text, sizePt, charSpacingPt = 0) {
+	advanceWidthPt(text: string, sizePt: number, charSpacingPt = 0) {
 		const n = [...text].length
 		return n * emPerChar * sizePt + n * charSpacingPt
 	},
@@ -29,7 +30,8 @@ const regWith = (face = 'Mono') => {
 // is the direction the layout engine reads them in, so a 10 x 5.625in canvas is spelled in EMU.
 const LAYOUT = { name: 'test', width: 9144000, height: 5143500 }
 const emptyReg = new FontMetricsRegistry()
-const cellAt = (res, row, col) => res.cells.find((c) => c.row === row && c.col === col)
+const cellAt = (res: TableLayoutResult, row: number, col: number) =>
+	res.cells.find((c) => c.row === row && c.col === col)
 
 describe('computeTableLayout core — width geometry (exact)', () => {
 	test('even column distribution: x positions cumulative, widths sum to w', () => {
@@ -44,10 +46,10 @@ describe('computeTableLayout core — width geometry (exact)', () => {
 		expect(res.heightExact).toBe(true)
 		// Row 0: each column is 3in wide, x offset from table x=1.
 		expect(cellAt(res, 0, 0)).toMatchObject({ xIn: 1, wIn: 3, yIn: 1, hIn: 0.5, heightExact: true })
-		expect(cellAt(res, 0, 1).xIn).toBeCloseTo(4, 6)
-		expect(cellAt(res, 0, 2).xIn).toBeCloseTo(7, 6)
+		expect(cellAt(res, 0, 1)?.xIn).toBeCloseTo(4, 6)
+		expect(cellAt(res, 0, 2)?.xIn).toBeCloseTo(7, 6)
 		// Row 1 sits one row height down.
-		expect(cellAt(res, 1, 0).yIn).toBeCloseTo(1.5, 6)
+		expect(cellAt(res, 1, 0)?.yIn).toBeCloseTo(1.5, 6)
 	})
 
 	test('explicit colW array drives per-column x/width; scalar rowH is exact', () => {
@@ -98,7 +100,7 @@ describe('computeTableLayout core — auto-height estimation', () => {
 			LAYOUT,
 			regWith()
 		)
-		const c = cellAt(res, 0, 0)
+		const c = defined(cellAt(res, 0, 0))
 		expect(c.heightExact).toBe(false)
 		expect(res.heightExact).toBe(false)
 		// Wraps to multiple lines at 2in / 18pt mono → taller than a single line.
@@ -110,13 +112,13 @@ describe('computeTableLayout core — auto-height estimation', () => {
 		const rows = [[{ text: 'hello world' }]]
 		const res = computeTableLayout(rows, { x: 0, y: 0, w: 4, rowH: 0.75 }, LAYOUT, emptyReg)
 		expect(res.heightExact).toBe(true)
-		expect(cellAt(res, 0, 0).hIn).toBeCloseTo(0.75, 6)
+		expect(cellAt(res, 0, 0)?.hIn).toBeCloseTo(0.75, 6)
 	})
 
 	test('auto row with an unmeasurable font still yields a non-zero one-line floor', () => {
 		const rows = [[{ text: 'hello world' }]]
 		const res = computeTableLayout(rows, { x: 0, y: 0, w: 4 }, LAYOUT, emptyReg)
-		const c = cellAt(res, 0, 0)
+		const c = defined(cellAt(res, 0, 0))
 		expect(c.heightExact).toBe(false)
 		expect(c.hIn).toBeGreaterThan(0)
 	})

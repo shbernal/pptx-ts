@@ -1,3 +1,4 @@
+import type JSZip from 'jszip'
 import { defineRegressionSuite, build, readEntry, assert, assertEqual } from '../../helpers.ts'
 
 // What a cell inherits from its table, and the agreement between the two paths that resolve it.
@@ -11,7 +12,7 @@ import { defineRegressionSuite, build, readEntry, assert, assertEqual } from '..
 const SLIDE_XML = 'ppt/slides/slide1.xml'
 
 /** The first `<a:rPr>` of the first cell on slide 1. */
-async function firstRunProps(zip) {
+async function firstRunProps(zip: JSZip) {
 	const xml = await readEntry(zip, SLIDE_XML)
 	const rPr = /<a:rPr[^>]*>/.exec(xml)
 	assert(rPr, 'expected a text run on the slide; got: ' + xml)

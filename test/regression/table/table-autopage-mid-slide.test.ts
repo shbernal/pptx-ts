@@ -1,3 +1,4 @@
+import type JSZip from 'jszip'
 import { defineRegressionSuite, build, listEntries, readEntry, assert } from '../../helpers.ts'
 
 // Regression: an autoPage table that starts mid-slide with an
@@ -8,17 +9,17 @@ import { defineRegressionSuite, build, listEntries, readEntry, assert } from '..
 // of only h - y - margin ≈ 0.5" instead of the full 4". Later slides already clamped to `h`, so
 // they looked correct — making the first page the obvious outlier.
 
-function rows(n) {
+function rows(n: number) {
 	return Array.from({ length: n }, (_, i) => [{ text: `Row ${i} col A` }, { text: `Row ${i} col B` }])
 }
 
-function slideXmlNames(zip) {
+function slideXmlNames(zip: JSZip) {
 	return listEntries(zip)
 		.filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n))
 		.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
 }
 
-async function rowsPerSlide(zip) {
+async function rowsPerSlide(zip: JSZip) {
 	const counts = []
 	for (const name of slideXmlNames(zip)) {
 		const xml = await readEntry(zip, name)

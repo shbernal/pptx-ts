@@ -14,12 +14,13 @@
  * The word still overflows its column after this. Nothing here breaks inside a word, and
  * whether it should is a separate question this does not answer.
  */
+import type JSZip from 'jszip'
 import { assert, assertEqual, build, defineRegressionSuite, listEntries, readEntry } from '../../helpers.ts'
 
 const POS = { x: 0.5, y: 0.5, colW: [0.4], autoPage: true }
 
 /** Twelve single-word rows, all the same word. */
-async function paginate(word) {
+async function paginate(word: string) {
 	const rows = Array.from({ length: 12 }, () => [{ text: word }])
 	const { zip } = await build((p) => {
 		p.addSlide().addTable(rows, POS)
@@ -27,7 +28,7 @@ async function paginate(word) {
 	return zip
 }
 
-const slideCount = (zip) => listEntries(zip).filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n)).length
+const slideCount = (zip: JSZip) => listEntries(zip).filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n)).length
 
 defineRegressionSuite('Auto-page: a word wider than its column', [
 	{

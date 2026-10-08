@@ -1,3 +1,5 @@
+import type JSZip from 'jszip'
+import type { TableCellProps, TableRow } from '../../../dist/node.js'
 import { defineRegressionSuite, build, listEntries, readEntry, assert, assertEqual } from '../../helpers.ts'
 
 // Regression: upstream gitbrent/PptxGenJS#1200 — "tableToSlides autoPaging not working": a table
@@ -25,9 +27,9 @@ import { defineRegressionSuite, build, listEntries, readEntry, assert, assertEqu
 // browser (test/browser/table-autopage.spec.mjs) a confirmation rather than the evidence.
 
 /** Enough rows to fill several pages, all identical so every page's budget is comparable. */
-function uniformRows(count, margin) {
-	const options = { fontSize: 16, margin: [margin, margin, margin, margin] }
-	const rows = []
+function uniformRows(count: number, margin: number) {
+	const options: TableCellProps = { fontSize: 16, margin: [margin, margin, margin, margin] }
+	const rows: TableRow[] = []
 	for (let idx = 1; idx <= count; idx++) {
 		rows.push([
 			{ text: `R${idx}`, options },
@@ -40,13 +42,13 @@ function uniformRows(count, margin) {
 	return rows
 }
 
-function slideXmlNames(zip) {
+function slideXmlNames(zip: JSZip) {
 	return listEntries(zip)
 		.filter((name) => /^ppt\/slides\/slide\d+\.xml$/.test(name))
 		.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
 }
 
-async function rowsPerSlide(zip) {
+async function rowsPerSlide(zip: JSZip) {
 	const counts = []
 	for (const name of slideXmlNames(zip)) {
 		counts.push(((await readEntry(zip, name)).match(/<a:tr /g) || []).length)
@@ -55,7 +57,7 @@ async function rowsPerSlide(zip) {
 }
 
 /** Every cell's text, slide by slide, so nothing can be dropped or duplicated unnoticed. */
-async function cellTextPerSlide(zip) {
+async function cellTextPerSlide(zip: JSZip) {
 	const perSlide = []
 	for (const name of slideXmlNames(zip)) {
 		const xml = await readEntry(zip, name)
@@ -64,7 +66,7 @@ async function cellTextPerSlide(zip) {
 	return perSlide
 }
 
-const paged = (margin, rowCount = 60) =>
+const paged = (margin: number, rowCount = 60) =>
 	build((pptx) => {
 		pptx.defineLayout({ name: 'L1200', width: 10, height: 5.625 })
 		pptx.layout = 'L1200'

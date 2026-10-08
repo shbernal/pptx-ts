@@ -1,3 +1,4 @@
+import type { TableRow } from '../../../dist/node.js'
 import {
 	defineRegressionSuite,
 	build,
@@ -7,7 +8,6 @@ import {
 	assertEqual,
 	defined,
 } from '../../helpers.ts'
-/** @import { TableRow } from '../../../dist/node.js' */
 
 // `BorderProps.dashType` -> `a:prstDash/@val` on a table cell border and on a custom
 // table-style region.
@@ -21,7 +21,7 @@ import {
 // reports as a corrupt file rather than a mis-set option, so it is checked before emission.
 
 /** Every `ST_PresetLineDashVal` value, which is exactly what `dashType` accepts. */
-const ALL_DASHES = /** @type {const} */ ([
+const ALL_DASHES = [
 	'solid',
 	'dot',
 	'dash',
@@ -33,10 +33,10 @@ const ALL_DASHES = /** @type {const} */ ([
 	'sysDot',
 	'sysDashDot',
 	'sysDashDotDot',
-])
+] as const
 
 /** The `a:prstDash/@val` of every border in the part, in document order. */
-function dashValues(xml) {
+function dashValues(xml: string) {
 	return [...xml.matchAll(/<a:prstDash val="([^"]*)"\/>/g)].map((m) => m[1])
 }
 
@@ -50,8 +50,10 @@ defineRegressionSuite('Table border dashType', [
 				build((p) => {
 					// One single-sided cell per dash: `border` as a bare object broadcasts to all
 					// four sides, so each cell contributes four identical prstDash values.
-					/** @type {TableRow} */
-					const row = ALL_DASHES.map((dash) => ({ text: dash, options: { border: { type: 'solid', dashType: dash } } }))
+					const row: TableRow = ALL_DASHES.map((dash) => ({
+						text: dash,
+						options: { border: { type: 'solid', dashType: dash } },
+					}))
 					p.addSlide().addTable([row], AT)
 				})
 			)

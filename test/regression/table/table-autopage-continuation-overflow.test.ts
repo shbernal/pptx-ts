@@ -1,3 +1,5 @@
+import type JSZip from 'jszip'
+import type { TableRow } from '../../../dist/node.js'
 import { defineRegressionSuite, build, listEntries, readEntry, assert } from '../../helpers.ts'
 
 // Regression: autoPage created a continuation slide, but the
@@ -14,9 +16,8 @@ const header = [
 	{ text: 'Detail', options: { bold: true } },
 ]
 
-function rows(n) {
-	/** @type {Array<Array<{ text: string, options?: { bold: boolean } }>>} */
-	const r = [header]
+function rows(n: number) {
+	const r: TableRow[] = [header]
 	for (let i = 0; i < n; i++) {
 		r.push([
 			{ text: `Row ${i} name` },
@@ -26,13 +27,13 @@ function rows(n) {
 	return r
 }
 
-function slideXmlNames(zip) {
+function slideXmlNames(zip: JSZip) {
 	return listEntries(zip)
 		.filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n))
 		.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
 }
 
-async function rowsPerSlide(zip) {
+async function rowsPerSlide(zip: JSZip) {
 	const counts = []
 	for (const name of slideXmlNames(zip)) {
 		const xml = await readEntry(zip, name)

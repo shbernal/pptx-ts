@@ -1,3 +1,4 @@
+import type JSZip from 'jszip'
 import { defineRegressionSuite, build, readEntry, listEntries, assert } from '../../helpers.ts'
 
 // Regression: an autoPage table that overflows onto continuation slides should be able to
@@ -7,7 +8,7 @@ import { defineRegressionSuite, build, readEntry, listEntries, assert } from '..
 
 const TITLE = 'Quarterly Report'
 
-function deck(autoPagePlaceholder) {
+function deck(autoPagePlaceholder: boolean) {
 	return build((p) => {
 		p.defineSlideMaster({
 			title: 'TEST_MASTER_1136',
@@ -34,7 +35,7 @@ function deck(autoPagePlaceholder) {
 	})
 }
 
-function overflowSlideFiles(zip) {
+function overflowSlideFiles(zip: JSZip) {
 	return listEntries(zip)
 		.filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n))
 		.sort()
