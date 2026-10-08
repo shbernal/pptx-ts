@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import JSZip from 'jszip'
+import { mustMatch, zipPart } from './oracle-utils.mjs'
 
 // This script lives in test/read/fixtures/authoring/, so the fixtures dir is its parent.
 const FIX = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -12,17 +13,19 @@ const sha256 = createHash('sha256').update(bytes).digest('hex')
 const zip = await JSZip.loadAsync(bytes)
 
 const sha = (b) => createHash('sha256').update(b).digest('hex')
-const audioBytes = await zip.file('ppt/media/audio1.wav').async('nodebuffer')
+const audioBytes = await zipPart(zip, 'ppt/media/audio1.wav').async('nodebuffer')
 
 const slides = []
 for (let i = 1; i <= 3; i++) {
-	const xml = await zip.file(`ppt/slides/slide${i}.xml`).async('string')
+	const xml = await zipPart(zip, `ppt/slides/slide${i}.xml`).async('string')
 	const wrapped = xml.includes('<mc:AlternateContent')
-	const transitionXml = xml.match(
-		/<mc:AlternateContent[\s\S]*?<\/mc:AlternateContent>|<p:transition[\s\S]*?<\/p:transition>/
+	const transitionXml = mustMatch(
+		xml,
+		/<mc:AlternateContent[\s\S]*?<\/mc:AlternateContent>|<p:transition[\s\S]*?<\/p:transition>/,
+		`a transition on slide ${i}`
 	)[0]
 	const sndAcXml = (transitionXml.match(/<p:sndAc>[\s\S]*?<\/p:sndAc>/) || [null])[0]
-	const relsXml = await zip.file(`ppt/slides/_rels/slide${i}.xml.rels`).async('string')
+	const relsXml = await zipPart(zip, `ppt/slides/_rels/slide${i}.xml.rels`).async('string')
 	// audio rel for this slide (if any)
 	const relM = relsXml.match(/<Relationship Id="(rId\d+)" Type="([^"]*\/audio)" Target="([^"]*)"\/>/)
 	const audioRel = relM ? { id: relM[1], type: relM[2], target: relM[3] } : null

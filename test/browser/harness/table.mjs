@@ -29,6 +29,7 @@ function render(scenario) {
 	const markup = TABLE_HTML[scenario]
 	if (!markup) throw new Error(`unknown table fixture: ${scenario}`)
 	const host = document.getElementById('fixture')
+	if (!host) throw new Error('the harness page has no #fixture host')
 	host.innerHTML = markup
 	// Narrowed rather than left as the `HTMLElement | null` `getElementById` returns: the
 	// fixture below reads `.rows`, and the two guards that follow are what make the cast

@@ -5,7 +5,7 @@
 // Keep jszip as a devDep for this reason — do not "consolidate" onto src/zip.ts.
 import JSZip from 'jszip'
 import TsPptx, { setDiagnosticHandler } from '../dist/node.js'
-import { describe, test } from 'vitest'
+import { describe, expect, test } from 'vitest'
 
 /**
  * A 1x1 transparent PNG, in the bare `type;base64,…` spelling `addImage` takes.
@@ -209,6 +209,34 @@ function assert(cond, msg) {
 	if (!cond) throw new Error('assertion failed: ' + msg)
 }
 
+/**
+ * Narrow `value` past `null` and `undefined`, failing the test through Vitest's `expect` when
+ * it is absent, so the failure reads as an assertion rather than a later `TypeError`.
+ *
+ * @template T
+ * @param {T} value
+ * @param {string} [message]
+ * @returns {asserts value is NonNullable<T>}
+ */
+function expectDefined(value, message) {
+	expect(value, message).toBeDefined()
+	expect(value, message).not.toBeNull()
+}
+
+/**
+ * The expression form of {@link expectDefined}, for chained reads such as
+ * `defined(slide.shapes.find(...)).text`.
+ *
+ * @template T
+ * @param {T} value
+ * @param {string} [message]
+ * @returns {NonNullable<T>}
+ */
+function defined(value, message) {
+	expectDefined(value, message)
+	return value
+}
+
 function assertEqual(actual, expected, msg) {
 	if (actual !== expected)
 		throw new Error(
@@ -251,6 +279,7 @@ function bytesEqual(a, b) {
  * @returns {Promise<Error>} the error, for any further assertion
  */
 async function assertRejects(fn, expected, label) {
+	/** @type {Error | null} */
 	let error = null
 	try {
 		await fn()
@@ -415,6 +444,8 @@ export {
 	assertUnchangedExcept,
 	defineRegressionSuite,
 	assert,
+	expectDefined,
+	defined,
 	assertEqual,
 	assertIncludes,
 	assertNotIncludes,

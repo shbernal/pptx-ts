@@ -12,6 +12,7 @@
 // shows the render reads both. So the X cache has to carry the X axis format.
 import fs from 'node:fs'
 import JSZip from 'jszip'
+import { zipPart } from './oracle-utils.mjs'
 import TsPptx, { ChartType } from '../../../../dist/node.js'
 
 const outDir = new URL('../../../../.tmp/scatter-x-cache-format/', import.meta.url)
@@ -35,11 +36,15 @@ pres.addSlide().addChart(
 	}
 )
 const base = Buffer.from(await pres.toBytes())
-const chartPart = Object.keys((await JSZip.loadAsync(base)).files).find((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))
+const foundChartPart = Object.keys((await JSZip.loadAsync(base)).files).find((f) =>
+	/^ppt\/charts\/chart\d+\.xml$/.test(f)
+)
+if (!foundChartPart) throw new Error('the probe deck has no chart part')
+const chartPart = foundChartPart
 
 async function variant(name, edit) {
 	const zip = await JSZip.loadAsync(base)
-	const before = await zip.file(chartPart).async('string')
+	const before = await zipPart(zip, chartPart).async('string')
 	const after = edit(before)
 	if (edit && after === before) throw new Error(`${name}: the patch changed nothing`)
 	zip.file(chartPart, after)

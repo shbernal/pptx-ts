@@ -145,6 +145,8 @@ export async function buildTableInNode(scenario) {
 	const win = new Window()
 	win.document.body.innerHTML = TABLE_HTML[scenario]
 	const pres = new TsPptx()
-	tableToSlides(pres, win.document.getElementById(TABLE_ID))
+	const table = win.document.getElementById(TABLE_ID)
+	if (!table) throw new Error(`fixture "${scenario}" rendered no #${TABLE_ID}`)
+	tableToSlides(pres, table)
 	return /** @type {string} */ (await pres.write({ outputType: 'base64' }))
 }

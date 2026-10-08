@@ -96,9 +96,13 @@ if (fixtureNames.length < MIN_CORPUS) {
 // `dist/read.js` and `dist/script.js` are pulled in on first use rather than at import time.
 // Two dozen read tests want nothing from this module but `fixturePath`, and making them each
 // load the script converter to get it would trade one duplication for a slower one.
+/** @type {ReturnType<typeof importDeps> | null} */
 let deps = null
+function importDeps() {
+	return Promise.all([import('../../dist/read.js'), import('../../dist/script.js')])
+}
 function loadDeps() {
-	deps ??= Promise.all([import('../../dist/read.js'), import('../../dist/script.js')])
+	deps ??= importDeps()
 	return deps
 }
 

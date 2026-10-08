@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import { unzipSync, strFromU8 } from 'fflate'
+import { mustMatch } from './oracle-utils.mjs'
 
 // This script lives in test/read/fixtures/authoring/; the probe deck is scratch under <repo>/.tmp.
 const HERE = dirname(fileURLToPath(import.meta.url))
@@ -23,7 +24,7 @@ for (const m of relsXml.matchAll(/<Relationship\b[^>]*Id="([^"]+)"[^>]*Target="(
 	relMap[m[1]] = m[2]
 }
 const sldOrder = []
-const lst = presXml.match(/<p:sldIdLst>([\s\S]*?)<\/p:sldIdLst>/)
+const lst = mustMatch(presXml, /<p:sldIdLst>([\s\S]*?)<\/p:sldIdLst>/, 'p:sldIdLst')
 for (const m of lst[1].matchAll(/<p:sldId\b[^>]*r:id="([^"]+)"/g)) {
 	let tgt = relMap[m[1]]
 	if (!tgt.startsWith('ppt/')) tgt = 'ppt/' + tgt.replace(/^\/?/, '')
@@ -76,8 +77,10 @@ for (let i = 0; i < sldOrder.length; i++) {
 		continue
 	}
 
-	let choice = null,
-		fallback = null
+	/** @type {{ requires: string, decoded: ReturnType<typeof decodeTransition> | null } | null} */
+	let choice = null
+	/** @type {ReturnType<typeof decodeTransition> | null} */
+	let fallback = null
 	if (region.wrapped) {
 		const ch = region.xml.match(/<mc:Choice\b[^>]*Requires="([^"]+)"[\s\S]*?>([\s\S]*?)<\/mc:Choice>/)
 		const fb = region.xml.match(/<mc:Fallback>([\s\S]*?)<\/mc:Fallback>/)

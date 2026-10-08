@@ -225,6 +225,7 @@ export function buildTree(tokens) {
 	const roots = []
 	/** @type {ElementNode[]} */
 	const stack = []
+	/** @type {string | null} */
 	let decl = null
 
 	for (const token of tokens) {

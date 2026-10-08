@@ -64,6 +64,7 @@ export const test = base.extend(
 				if (!page.coverage) throw new Error('page.coverage is a Chromium API; this lane is Chromium-only by design')
 				await page.coverage.startJSCoverage({ resetOnNavigation: false })
 
+				/** @type {Awaited<ReturnType<NonNullable<typeof page.coverage>['stopJSCoverage']>> | null} */
 				let entries = null
 				const collector = {
 					async stop() {

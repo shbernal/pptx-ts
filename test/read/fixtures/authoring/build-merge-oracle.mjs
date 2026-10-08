@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import JSZip from 'jszip'
+import { mustMatch, zipPart } from './oracle-utils.mjs'
 
 // This script lives in test/read/fixtures/authoring/, so the fixtures dir is its parent.
 const FIX = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -33,11 +34,11 @@ function elementAt(s, startIdx, tag) {
 }
 
 async function slideModel(n) {
-	const xml = await zip.file(`ppt/slides/slide${n}.xml`).async('string')
+	const xml = await zipPart(zip, `ppt/slides/slide${n}.xml`).async('string')
 	const shapeIds = {}
 	for (const m of xml.matchAll(/<p:cNvPr id="(\d+)" name="([^"]*)"/g)) shapeIds[m[1]] = m[2]
-	const timingXml = xml.match(/<p:timing>[\s\S]*<\/p:timing>/)[0]
-	const bldLstXml = timingXml.match(/<p:bldLst>[\s\S]*<\/p:bldLst>/)[0]
+	const timingXml = mustMatch(xml, /<p:timing>[\s\S]*<\/p:timing>/, 'p:timing')[0]
+	const bldLstXml = mustMatch(timingXml, /<p:bldLst>[\s\S]*<\/p:bldLst>/, 'p:bldLst')[0]
 	const animationSpids = [...bldLstXml.matchAll(/<p:bldP spid="(\d+)"/g)].map((x) => Number(x[1]))
 	const effects = []
 	const re =

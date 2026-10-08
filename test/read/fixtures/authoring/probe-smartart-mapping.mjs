@@ -21,6 +21,7 @@ import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import JSZip from 'jszip'
+import { mustMatch, zipPart } from './oracle-utils.mjs'
 
 // This script lives in test/read/fixtures/authoring/, so the fixtures dir is its parent.
 const FIX = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -96,20 +97,23 @@ function normalize(path) {
 	return out.join('/')
 }
 
+/** @param {string} partName */
+const slideNumber = (partName) => Number(mustMatch(partName, /\d+/, `a number in ${partName}`)[0])
+
 /** Every diagram in the deck, as `{ slide, dataPart, drawingPart }`. */
 async function diagrams(zip) {
 	const found = []
 	const slideNames = Object.keys(zip.files)
 		.filter((name) => /^ppt\/slides\/slide\d+\.xml$/.test(name))
-		.sort((a, b) => Number(a.match(/\d+/)[0]) - Number(b.match(/\d+/)[0]))
+		.sort((a, b) => slideNumber(a) - slideNumber(b))
 	for (const slideName of slideNames) {
-		const xml = await zip.file(slideName).async('string')
+		const xml = await zipPart(zip, slideName).async('string')
 		const rels = await relationships(zip, slideName)
 		for (const relIds of elements(xml, 'dgm:relIds')) {
 			const dataPart = rels[attrOf(relIds, 'r:dm')]
-			const dataXml = await zip.file(dataPart).async('string')
+			const dataXml = await zipPart(zip, dataPart).async('string')
 			found.push({
-				slide: Number(slideName.match(/\d+/)[0]),
+				slide: slideNumber(slideName),
 				dataPart,
 				dataXml,
 				drawingPart: drawingPartOf(dataXml, rels),
@@ -179,7 +183,7 @@ for (const deck of decks) {
 		// a connector, or a picture frame. Distinct from one whose body is empty.
 		const shapes = new Map()
 		if (diagram.drawingPart) {
-			const drawingXml = await zip.file(diagram.drawingPart).async('string')
+			const drawingXml = await zipPart(zip, diagram.drawingPart).async('string')
 			for (const sp of elements(drawingXml, 'dsp:sp')) {
 				const body = sp.match(/<dsp:txBody>[\s\S]*?<\/dsp:txBody>/)
 				shapes.set(attrOf(sp, 'modelId'), body ? paragraphsOf(body[0]) : null)

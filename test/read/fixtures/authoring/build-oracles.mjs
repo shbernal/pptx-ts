@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import { unzipSync, strFromU8 } from 'fflate'
+import { mustMatch } from './oracle-utils.mjs'
 
 // This script lives in test/read/fixtures/authoring/, so the fixtures dir is its parent.
 const HERE = dirname(fileURLToPath(import.meta.url))
@@ -191,7 +192,7 @@ function buildAnimation(deck, noteHead) {
 	const f = load(`${FIX}/${deck}.pptx`)
 	const xml = f.txt('ppt/slides/slide1.xml')
 	const names = shapeNames(xml)
-	const timing = (xml.match(/<p:timing>[\s\S]*<\/p:timing>/) || [null])[0]
+	const timing = mustMatch(xml, /<p:timing>[\s\S]*<\/p:timing>/, `p:timing in ${deck}`)[0]
 	const bldLst = (xml.match(/<p:bldLst>[\s\S]*?<\/p:bldLst>/) || [null])[0]
 	const eff = effects(timing).map((e) => ({ ...e, shapeName: names[String(e.spid)] ?? null }))
 	const bldSpids = [...(bldLst ?? '').matchAll(/<p:bldP\b[^>]*spid="(\d+)"/g)].map((m) => Number(m[1]))

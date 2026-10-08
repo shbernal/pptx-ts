@@ -22,6 +22,7 @@ import { fileURLToPath } from 'node:url'
 import JSZip from 'jszip'
 import TsPptx from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
+import { defined } from '../helpers.js'
 import { validateBuf, validatorInstalled } from '../validator.js'
 
 // Re-exported rather than recomputed: `validator.js` owns the fact, and this module is where
@@ -71,7 +72,7 @@ export async function authorReadWithFixtureStyles(build) {
 		await readFile(path.join(path.dirname(fileURLToPath(import.meta.url)), 'fixtures', 'table-styles.pptx'))
 	)
 	const zip = await JSZip.loadAsync(authored)
-	zip.file('ppt/tableStyles.xml', await fixture.file('ppt/tableStyles.xml').async('string'))
+	zip.file('ppt/tableStyles.xml', await defined(fixture.file('ppt/tableStyles.xml')).async('string'))
 	const buf = await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' })
 
 	const presentation = await Presentation.load(buf)

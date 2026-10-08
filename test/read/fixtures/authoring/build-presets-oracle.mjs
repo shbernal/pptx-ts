@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import JSZip from 'jszip'
+import { mustMatch, zipPart } from './oracle-utils.mjs'
 
 // This script lives in test/read/fixtures/authoring/, so the fixtures dir is its parent.
 const FIX = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -11,10 +12,10 @@ const fixture = resolve(FIX, 'slide-animation-presets.pptx')
 const bytes = await readFile(fixture)
 const sha256 = createHash('sha256').update(bytes).digest('hex')
 const zip = await JSZip.loadAsync(bytes)
-const slideXml = await zip.file('ppt/slides/slide1.xml').async('string')
+const slideXml = await zipPart(zip, 'ppt/slides/slide1.xml').async('string')
 
 // --- verbatim full timing tree (same extraction the regression test uses) ---
-const timingXml = slideXml.match(/<p:timing>[\s\S]*<\/p:timing>/)[0]
+const timingXml = mustMatch(slideXml, /<p:timing>[\s\S]*<\/p:timing>/, 'p:timing')[0]
 
 // --- shapeIds: id -> name from each <p:cNvPr id=".." name=".."> on a top-level sp ---
 const shapeIds = {}
@@ -88,7 +89,7 @@ for (const m of timingXml.matchAll(cTnOpenRe)) {
 	}
 }
 
-const bldLstXml = timingXml.match(/<p:bldLst>[\s\S]*<\/p:bldLst>/)[0]
+const bldLstXml = mustMatch(timingXml, /<p:bldLst>[\s\S]*<\/p:bldLst>/, 'p:bldLst')[0]
 const animationSpids = [...bldLstXml.matchAll(/<p:bldP spid="(\d+)"/g)].map((x) => Number(x[1]))
 
 const oracle = {
