@@ -53,7 +53,11 @@ try {
 
   $pres.SaveAs($out)
   $pres.Saved = $true
-  $pres.Close()
+  # PowerPoint is still busy for a moment after saving a pasted equation, and Close fails
+  # with a bare "Failed" until it is done. A few seconds is enough.
+  for ($try = 1; ; $try++) {
+    try { $pres.Close(); break } catch { if ($try -ge 20) { throw }; Start-Sleep -Milliseconds 500 }
+  }
   $pp.Quit()
 
   $doc.Close(0)                       # wdDoNotSaveChanges
