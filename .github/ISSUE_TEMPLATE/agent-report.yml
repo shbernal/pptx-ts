@@ -6,7 +6,7 @@
 # nothing — and it asks for the two things the other forms have no slot for: which class
 # and code was thrown, and where any attached file came from.
 name: Agent-assisted report
-description: A defect found while using ts-pptx in another project — the form the library's own error messages link to.
+description: A defect found while using pptx-ts in another project — the form the library's own error messages link to.
 title: '<area>: <one specific symptom>'
 # Not `bug`: the kind dropdown below reaches feature requests and doc mismatches too, and
 # pre-labelling those `bug` makes the label mean "arrived somehow" instead of "is a defect".
@@ -18,7 +18,7 @@ body:
     attributes:
       value: |
         This form is aimed at an AI agent filing on a user's behalf, and at anyone who
-        arrived from a `Please report it:` line in a ts-pptx error message. It asks for
+        arrived from a `Please report it:` line in a pptx-ts error message. It asks for
         exactly what turns a report into a permanent regression test.
 
         **Do not attach a deck containing real data.** Presentations carry client names,
@@ -36,9 +36,9 @@ body:
         `npx skills add shbernal/pptx-ts --skill ts-pptx-upstream`
 
   - type: input
-    id: version-ts-pptx
+    id: version-pptx-ts
     attributes:
-      label: ts-pptx version
+      label: pptx-ts version
       description: 'Exact installed version: `node -p "require(''pptx-ts/package.json'').version"`'
       placeholder: 3.0.0
     validations:

@@ -6,7 +6,7 @@
  * That is the shape a server generating a deck per request actually needs — no temp file,
  * nothing to clean up afterwards.
  *
- * Express is here only to have a server; it is not a ts-pptx dependency.
+ * Express is here only to have a server; it is not a pptx-ts dependency.
  *
  * USAGE: pnpm --dir demos/node run demo-stream   → http://localhost:3000/
  */
@@ -39,7 +39,7 @@ try {
 	})
 
 	app.listen(3000, () => {
-		console.log(`ts-pptx ${pptx.version} — stream demo listening on http://localhost:3000/`)
+		console.log(`pptx-ts ${pptx.version} — stream demo listening on http://localhost:3000/`)
 		console.log('Visit it to download the generated deck. Ctrl-C to quit.')
 	})
 } catch (err) {

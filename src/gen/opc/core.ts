@@ -1,5 +1,5 @@
 /**
- * ts-pptx: `docProps/core.xml`
+ * pptx-ts: `docProps/core.xml`
  *
  * Emit the core-properties part (title/subject/creator/revision and the
  * created/modified timestamps).

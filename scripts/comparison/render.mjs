@@ -66,12 +66,12 @@ const WIDTH = 90
  * The two subjects, named rather than derived from the snapshot.
  *
  * The snapshot could carry a third and this file would still only render two, because the
- * prose is written about these two specifically: what ts-pptx gives up is ours to state,
+ * prose is written about these two specifically: what pptx-ts gives up is ours to state,
  * and the adoption sentence is about a gap with a direction. Generalising the tables to N
  * subjects while the prose stayed bilateral would be fake generality, and it would hide the
  * moment a third subject actually arrives behind a page that renders it half-right.
  */
-const OURS = 'ts-pptx'
+const OURS = 'pptx-ts'
 const UPSTREAM = 'pptxgenjs'
 const COLUMNS = [OURS, UPSTREAM]
 
@@ -236,11 +236,11 @@ function comparedRow(label, cells, format) {
 }
 
 /**
- * ts-pptx against pptxgenjs, as a percentage of pptxgenjs.
+ * pptx-ts against pptxgenjs, as a percentage of pptxgenjs.
  *
  * A percentage rather than a ratio because the question a reader brings is "how much more
  * or less than the one I already use", and because a ratio under 1 is the shape people
- * misread. The sign is the whole point: positive means ts-pptx costs more.
+ * misread. The sign is the whole point: positive means pptx-ts costs more.
  *
  * `null` where the arithmetic says nothing: a list, a version string, or a denominator of
  * zero. A near-zero difference is spelled out rather than rounded to `0%`, which would
@@ -335,7 +335,7 @@ function measuredOn(snapshot) {
 	const ours = snapshot.subjects[OURS]
 	const upstream = snapshot.subjects[UPSTREAM]
 	return (
-		`Measured on ${snapshot.generatedAt}: ts-pptx ${ours?.version ?? 'unknown'} built from this ` +
+		`Measured on ${snapshot.generatedAt}: pptx-ts ${ours?.version ?? 'unknown'} built from this ` +
 		`repository, against pptxgenjs ${upstream?.version ?? 'unknown'} installed from npm` +
 		(upstream?.published ? ` (published ${upstream.published}).` : '.')
 	)
@@ -355,12 +355,12 @@ function frontmatter(snapshot) {
 	return [
 		'---',
 		'doc-schema-version: 1',
-		'title: "ts-pptx vs PptxGenJS"',
-		`summary: "What ts-pptx ${ours} and pptxgenjs ${upstream} each emit, how many of their decks validate, what each costs to bundle and install, and how the two projects are run."`,
+		'title: "pptx-ts vs PptxGenJS"',
+		`summary: "What pptx-ts ${ours} and pptxgenjs ${upstream} each emit, how many of their decks validate, what each costs to bundle and install, and how the two projects are run."`,
 		'read_when:',
-		'  - Choosing between ts-pptx and pptxgenjs',
+		'  - Choosing between pptx-ts and pptxgenjs',
 		'  - Checking whether a construct is emitted by one library or by both',
-		'  - Weighing what ts-pptx gives up against what it adds',
+		'  - Weighing what pptx-ts gives up against what it adds',
 		'doc_type: "overview"',
 		'---',
 	]
@@ -374,12 +374,12 @@ function sectionIntro(snapshot) {
 	const ours = snapshot.subjects[OURS]
 	const upstream = snapshot.subjects[UPSTREAM]
 	return [
-		'# ts-pptx vs PptxGenJS',
+		'# pptx-ts vs PptxGenJS',
 		'',
 		...para(
-			`ts-pptx ${ours?.version ?? ''} and pptxgenjs ${upstream?.version ?? ''} were measured on ` +
+			`pptx-ts ${ours?.version ?? ''} and pptxgenjs ${upstream?.version ?? ''} were measured on ` +
 				`${snapshot.generatedAt} by building the same ${snapshot.coverage.length} deck intents with each ` +
-				'library and reading the bytes that came out. ts-pptx descends from pptxgenjs, detached at its ' +
+				'library and reading the bytes that came out. pptx-ts descends from pptxgenjs, detached at its ' +
 				'v4.0.1 ([lineage](getting-started/introduction.md#lineage)), so every difference below comes ' +
 				'from running both rather than from either one describing itself.'
 		),
@@ -426,7 +426,7 @@ function sectionBeforeYouChoose(snapshot) {
 		lines.push(
 			...bullet(
 				`**Adoption is not close.** pptxgenjs was downloaded ${num(upstreamNpm.downloadsLastMonth)} times in ` +
-					`the last month, against ${num(ourNpm.downloadsLastMonth)} for ts-pptx. That gap buys answers ` +
+					`the last month, against ${num(ourNpm.downloadsLastMonth)} for pptx-ts. That gap buys answers ` +
 					'that already exist, examples written by people other than the maintainer, and good odds that ' +
 					'a bug on a common path was hit by someone else first. If that outweighs the differences ' +
 					'below, use pptxgenjs.'
@@ -449,7 +449,7 @@ function sectionScorecard(snapshot) {
 		'## Scorecard',
 		'',
 		...table(
-			['', 'ts-pptx', 'pptxgenjs'],
+			['', 'pptx-ts', 'pptxgenjs'],
 			[
 				comparedRow(
 					'Intents emitted',
@@ -512,17 +512,17 @@ function sectionCoverageSummary(snapshot) {
 		'',
 		'<CoverageMatrix />',
 		'',
-		...para(`Of ${total} intents, ts-pptx emits ${counts[0]} and pptxgenjs emits ${counts[1]}.`),
+		...para(`Of ${total} intents, pptx-ts emits ${counts[0]} and pptxgenjs emits ${counts[1]}.`),
 		...para(both.length > 0 ? `Emitted by both: ${labels(both)}.` : 'No intent is emitted by both libraries.'),
 		...para(
 			oursOnly.length > 0
-				? `Emitted by ts-pptx only: ${labels(oursOnly)}.`
-				: 'No intent is emitted by ts-pptx and not by pptxgenjs.'
+				? `Emitted by pptx-ts only: ${labels(oursOnly)}.`
+				: 'No intent is emitted by pptx-ts and not by pptxgenjs.'
 		),
 		...para(
 			upstreamOnly.length > 0
 				? `Emitted by pptxgenjs only: ${labels(upstreamOnly)}.`
-				: 'No intent is emitted by pptxgenjs and not by ts-pptx.'
+				: 'No intent is emitted by pptxgenjs and not by pptx-ts.'
 		),
 		...para(
 			neither.length > 0
@@ -636,7 +636,7 @@ function modeDeltas(timing) {
 const times = (value) => (value < 10 ? value.toFixed(2) : value.toFixed(1)) + '×'
 
 /**
- * Every timing case as ts-pptx's median over pptxgenjs's, one column per mode.
+ * Every timing case as pptx-ts's median over pptxgenjs's, one column per mode.
  * @param {any} timing
  * @returns {string[]}
  */
@@ -672,7 +672,7 @@ function sectionTimingSummary(snapshot) {
 	if (flip)
 		lines.push(
 			...para(
-				'Compressed, which is what a file you intend to keep gets, ts-pptx is faster on every deck, by ' +
+				'Compressed, which is what a file you intend to keep gets, pptx-ts is faster on every deck, by ' +
 					`${Math.abs(flip.compressed).toFixed(0)}% on average. Stored, with compression turned off, it is ` +
 					`slower on every deck, by ${flip.stored.toFixed(0)}% on average: its XML generation and package ` +
 					'assembly cost more than pptxgenjs, and its compressor more than makes that back.'
@@ -680,8 +680,8 @@ function sectionTimingSummary(snapshot) {
 		)
 	lines.push(
 		...para(
-			'Each cell is the ts-pptx median divided by the pptxgenjs median for the same deck, so a figure ' +
-				'below 1× means ts-pptx took less time.'
+			'Each cell is the pptx-ts median divided by the pptxgenjs median for the same deck, so a figure ' +
+				'below 1× means pptx-ts took less time.'
 		),
 		...ratioTable(timing),
 		...para(
@@ -704,7 +704,7 @@ function sectionReadingDecks() {
 	return [
 		'## Reading decks',
 		'',
-		...para('pptxgenjs generates decks and does not read them. ts-pptx also reads:'),
+		...para('pptxgenjs generates decks and does not read them. pptx-ts also reads:'),
 		...bullet(
 			'[Inspection](reference/pptx-inspection.md) reports what a package contains without parsing it into ' + 'a model.'
 		),
@@ -727,7 +727,7 @@ function sectionReadingDecks() {
 function healthTable(snapshot) {
 	const rows = COLUMNS.map((subject) => healthOf(snapshot, subject))
 	return table(
-		['', 'ts-pptx', 'pptxgenjs'],
+		['', 'pptx-ts', 'pptxgenjs'],
 		[
 			comparedRow(
 				'Repository',
@@ -867,7 +867,7 @@ function methodFrontmatter(snapshot) {
 		'---',
 		'doc-schema-version: 1',
 		'title: "How the comparison was measured"',
-		`summary: "The corpus, the four outcomes and every full table behind the comparison of ts-pptx ${ours} with pptxgenjs ${upstream}: validation, installs, bundles, generation time and project health, and how each was taken."`,
+		`summary: "The corpus, the four outcomes and every full table behind the comparison of pptx-ts ${ours} with pptxgenjs ${upstream}: validation, installs, bundles, generation time and project health, and how each was taken."`,
 		'read_when:',
 		'  - Checking a number on the comparison page',
 		'  - Adding a probe or a program to the comparison corpus',
@@ -886,7 +886,7 @@ function sectionCorpus(snapshot) {
 		'# How the comparison was measured',
 		'',
 		...para(
-			'Every figure on [ts-pptx vs PptxGenJS](comparison.md) comes from `scripts/comparison/snapshot.json`, ' +
+			'Every figure on [pptx-ts vs PptxGenJS](comparison.md) comes from `scripts/comparison/snapshot.json`, ' +
 				'which is refreshed on release cadence, and nothing on either page is edited by hand. This page ' +
 				'is the method behind those figures and the full tables they summarise.'
 		),
@@ -917,10 +917,10 @@ function sectionCorpus(snapshot) {
 		...para(
 			'Two things a reader should price in. The corpus is ours, so it was chosen by an ' +
 				'interested party. It is kept honest in two specific ways: it carries a probe neither ' +
-				'library can satisfy, and the set of probes upstream emits and ts-pptx does not is ' +
+				'library can satisfy, and the set of probes upstream emits and pptx-ts does not is ' +
 				'reported below even when it is empty, so an empty set is a stated result rather than ' +
 				'something a reader has to infer from a gap. A pull request that adds a probe is ' +
-				'welcome, including one ts-pptx fails.'
+				'welcome, including one pptx-ts fails.'
 		),
 	]
 }
@@ -938,7 +938,7 @@ function sectionCoverage(snapshot) {
 	const lines = [
 		'## Construct coverage',
 		'',
-		...para(`Of ${total} probes, ts-pptx emitted ${counts[0]} and pptxgenjs emitted ${counts[1]}.`),
+		...para(`Of ${total} probes, pptx-ts emitted ${counts[0]} and pptxgenjs emitted ${counts[1]}.`),
 		...para(
 			'"Looked for" is the token the harness reads for, in the part named beside it. It is the OOXML ' +
 				'element in every case but one, where the intent is speaker notes and the token is the note ' +
@@ -955,7 +955,7 @@ function sectionCoverage(snapshot) {
 		lines.push(
 			`### ${groupLabel(group)}`,
 			'',
-			'| Intent | Looked for | Part | ts-pptx | pptxgenjs |',
+			'| Intent | Looked for | Part | pptx-ts | pptxgenjs |',
 			'|---|---|---|---|---|'
 		)
 		for (const row of rows) {
@@ -978,8 +978,8 @@ function sectionCoverage(snapshot) {
 		),
 		...para(
 			snapshot.upstreamAhead.length === 0
-				? 'No probe in this corpus is emitted by pptxgenjs and not by ts-pptx.'
-				: 'Emitted by pptxgenjs and not by ts-pptx: ' + snapshot.upstreamAhead.map(labelOf).join(', ') + '.'
+				? 'No probe in this corpus is emitted by pptxgenjs and not by pptx-ts.'
+				: 'Emitted by pptxgenjs and not by pptx-ts: ' + snapshot.upstreamAhead.map(labelOf).join(', ') + '.'
 		),
 		...para(
 			snapshot.sharedGaps.length === 0
@@ -1018,7 +1018,7 @@ function sectionValidity(snapshot) {
 				"project's own `test:schema` suite uses."
 		),
 		...table(
-			['', 'ts-pptx', 'pptxgenjs'],
+			['', 'pptx-ts', 'pptxgenjs'],
 			[
 				comparedRow(
 					'Decks validated',
@@ -1094,11 +1094,11 @@ function sectionHygiene(snapshot) {
 		'',
 		...para(
 			'What a consumer gets. Each library was installed on its own into an empty directory, ' +
-				'upstream from the registry and ts-pptx from a pack of this working tree, so nothing ' +
+				'upstream from the registry and pptx-ts from a pack of this working tree, so nothing ' +
 				'here is measured against a development checkout with its dependencies hoisted flat.'
 		),
 		...table(
-			['', 'ts-pptx', 'pptxgenjs', 'Difference'],
+			['', 'pptx-ts', 'pptxgenjs', 'Difference'],
 			[
 				deltaRow(
 					'Installed size, with dependencies',
@@ -1118,7 +1118,7 @@ function sectionHygiene(snapshot) {
 			]
 		),
 		...para(
-			'The last column is ts-pptx measured against pptxgenjs, so a positive number is ours ' +
+			'The last column is pptx-ts measured against pptxgenjs, so a positive number is ours ' +
 				'costing more and a negative one is ours costing less. It is a percentage of the ' +
 				'pptxgenjs figure rather than a difference in bytes, because two of its rows are in ' +
 				'mebibytes and the third is a count, and a reader comparing them needs a ' +
@@ -1131,7 +1131,7 @@ function sectionHygiene(snapshot) {
 	if (typeof ours?.install?.bytes === 'number' && ours.install.bytes > upstream?.install?.bytes)
 		lines.push(
 			...para(
-				'ts-pptx installs larger than pptxgenjs despite carrying fewer dependencies. The largest ' +
+				'pptx-ts installs larger than pptxgenjs despite carrying fewer dependencies. The largest ' +
 					'share of that weight is source maps: `dist/` ships a `.js.map` beside every module, and ' +
 					'each one embeds the original TypeScript. The unminified `.js` is the next largest share. ' +
 					'No consumer build keeps either, which is why the bundled figures below are much closer ' +
@@ -1141,7 +1141,7 @@ function sectionHygiene(snapshot) {
 
 	lines.push(
 		...table(
-			['', 'ts-pptx', 'pptxgenjs'],
+			['', 'pptx-ts', 'pptxgenjs'],
 			[
 				comparedRow(
 					'Runtime dependencies, direct',
@@ -1200,7 +1200,7 @@ function sectionBundles(snapshot) {
 		programs.length > 1 && growth.every((value) => typeof value === 'number')
 			? para(
 					`The column is nearly flat, and that is the result. From ${first.label.toLowerCase()} to ` +
-						`${last.label.toLowerCase()}, ts-pptx grows by ${kib(growth[0] ?? 0)} and pptxgenjs by ` +
+						`${last.label.toLowerCase()}, pptx-ts grows by ${kib(growth[0] ?? 0)} and pptxgenjs by ` +
 						`${kib(growth[1] ?? 0)}, which is about what the programs' own literals weigh. Neither ` +
 						'library splits along feature lines: importing either one costs almost everything it ' +
 						'will ever cost, and the deck written afterwards is close to free. So a hello world was ' +
@@ -1221,7 +1221,7 @@ function sectionBundles(snapshot) {
 		...programs.flatMap((program) => bullet(`**${program.label}.** ${program.what}`)),
 		'',
 		...table(
-			['Program', 'ts-pptx', 'pptxgenjs', 'Difference'],
+			['Program', 'pptx-ts', 'pptxgenjs', 'Difference'],
 			programs.map((program) =>
 				deltaRow(
 					program.label,
@@ -1233,7 +1233,7 @@ function sectionBundles(snapshot) {
 		...reading,
 		...para(
 			'Both columns construct the library the way every consumer of pptxgenjs constructs it, ' +
-				'with the class that carries everything. ts-pptx has a lower floor than that, reached by ' +
+				'with the class that carries everything. pptx-ts has a lower floor than that, reached by ' +
 				'composing a presentation from only the construct families a program uses, and ' +
 				'[smaller bundles](bundle-size.md) carries those figures. It is deliberately not a row here: ' +
 				'pptxgenjs has no counterpart to compose, so the cell beside it would be empty and the ' +
@@ -1283,7 +1283,7 @@ function timingTable(timing, modeId) {
 	/** @type {any[]} */
 	const cases = timing.cases ?? []
 	return table(
-		['Deck', 'ts-pptx', 'pptxgenjs', 'Difference'],
+		['Deck', 'pptx-ts', 'pptxgenjs', 'Difference'],
 		cases.map((row) => {
 			const measured = row.modes?.[modeId]
 			if (!measured || isUnavailable(measured)) return null
@@ -1325,7 +1325,7 @@ function sectionTiming(snapshot) {
 		),
 		...para(
 			'**A `.pptx` is a zip, so the compression setting is not a detail of this measurement, it ' +
-				'is the measurement.** The two libraries do not default to the same one. ts-pptx ' +
+				'is the measurement.** The two libraries do not default to the same one. pptx-ts ' +
 				'deflates unless told not to. pptxgenjs passes no compression option to JSZip on the ' +
 				'`outputType` path, and JSZip stores by default. Its own `compression` argument is ' +
 				'honoured on the stream and browser paths and ignored on the one in between, which is ' +
@@ -1355,9 +1355,9 @@ function sectionTiming(snapshot) {
 	if (flip)
 		lines.push(
 			...para(
-				'The two tables point in opposite directions, and that is the finding. Stored, ts-pptx is ' +
+				'The two tables point in opposite directions, and that is the finding. Stored, pptx-ts is ' +
 					`slower on every deck, by ${flip.stored.toFixed(0)}% on average, so our XML generation and ` +
-					"package assembly cost more than upstream's. Compressed, ts-pptx is faster on every deck, by " +
+					"package assembly cost more than upstream's. Compressed, pptx-ts is faster on every deck, by " +
 					`${Math.abs(flip.compressed).toFixed(0)}% on average, because fflate deflates faster than ` +
 					'JSZip does and the compressor dominates the total. A consumer writing a file they intend ' +
 					'to keep gets the first table. A consumer who has turned compression off gets the second, ' +
@@ -1444,7 +1444,7 @@ function sectionHealth(snapshot) {
 			'Line counts come from the same walk on both sides: every code file under `src/`, raw ' +
 				'lines with comments and blanks included, and test lines are spec files plus anything ' +
 				'under a test directory, counted once each. No normalisation makes two libraries ' +
-				'formatted to different rules comparable, and a large part of the ts-pptx figure is the ' +
+				'formatted to different rules comparable, and a large part of the pptx-ts figure is the ' +
 				'documentation comments the bundled sizes above shed. Read it as an order of magnitude ' +
 				'for how much there is to maintain, and as nothing at all about whether it is good.'
 		),
@@ -1462,7 +1462,7 @@ function sectionHealth(snapshot) {
 				'The empty pptxgenjs test row is what this walk can see, and it is not the same claim ' +
 					'as untested. That repository documents a manual, demo-driven process instead, which ' +
 					'nothing measured here can weigh. The row is about an automated suite, and the ' +
-					'coverage figure beside it exists for ts-pptx only because there is a suite to ' +
+					'coverage figure beside it exists for pptx-ts only because there is a suite to ' +
 					'instrument.'
 			)
 		)
@@ -1471,7 +1471,7 @@ function sectionHealth(snapshot) {
 	if (ourNpm?.names?.length > 1 && ourNpm.downloadsByName)
 		lines.push(
 			...para(
-				'ts-pptx is published under two names carrying the same bytes, ' +
+				'pptx-ts is published under two names carrying the same bytes, ' +
 					ourNpm.names.map(code).join(' and ') +
 					'. The download figure is their sum (' +
 					Object.entries(ourNpm.downloadsByName)
@@ -1641,7 +1641,7 @@ function sectionCallDifferences(snapshot) {
 			'Each row is a run of lines that differs between the two arms of an intent or a program printed ' +
 				'further down, with every place it appears. Everything else in those arms is the same code.'
 		),
-		'| ts-pptx | pptxgenjs | Where |',
+		'| pptx-ts | pptxgenjs | Where |',
 		'|---|---|---|',
 		...differences.map((row) => `| ${cell(row.ours)} | ${cell(row.upstream)} | ${row.where.join(', ')} |`),
 		''
@@ -1662,7 +1662,7 @@ function sectionAroundTheCalls() {
 				'CommonJS, `const { default: TsPptx } = require("pptx-ts")`: the package is an ES module, so ' +
 				'`require()` returns its namespace and the class is on `.default`.'
 		),
-		...bullet('**Node.js 24 or later.** ts-pptx declares `>=24`; pptxgenjs runs on older releases.'),
+		...bullet('**Node.js 24 or later.** pptx-ts declares `>=24`; pptxgenjs runs on older releases.'),
 		...bullet(
 			'**One build.** Node, bundlers and browsers all load the same ES module through the package ' +
 				'exports, so there is no separate CommonJS or browser file to choose. See ' +
@@ -1827,11 +1827,11 @@ export function renderSyntaxPage(snapshot) {
 		'---',
 		'doc-schema-version: 1',
 		'title: "Porting from PptxGenJS"',
-		`summary: "Moving a deck script from pptxgenjs ${upstream?.version ?? ''} to ts-pptx ${ours?.version ?? ''}: the calls that change, what changes around them, and every intent in the comparison corpus as code in both libraries."`,
+		`summary: "Moving a deck script from pptxgenjs ${upstream?.version ?? ''} to pptx-ts ${ours?.version ?? ''}: the calls that change, what changes around them, and every intent in the comparison corpus as code in both libraries."`,
 		'read_when:',
-		'  - Porting a deck script from pptxgenjs to ts-pptx',
+		'  - Porting a deck script from pptxgenjs to pptx-ts',
 		'  - Reading a comparison row and wanting the calls behind it',
-		'  - Looking for the ts-pptx call that emits a particular construct',
+		'  - Looking for the pptx-ts call that emits a particular construct',
 		'  - Reading a bundle size and wanting the program that was measured',
 		'doc_type: "guide"',
 		'---',
@@ -1841,13 +1841,13 @@ export function renderSyntaxPage(snapshot) {
 		'# Porting from PptxGenJS',
 		'',
 		...para(
-			'ts-pptx descends from pptxgenjs, so much of a pptxgenjs script carries across as it is: of the ' +
+			'pptx-ts descends from pptxgenjs, so much of a pptxgenjs script carries across as it is: of the ' +
 				`${both.length} intents both libraries build in the comparison corpus, ${identical.length} are ` +
 				'called with identical code. This page is the rest: the calls that change, what changes around ' +
 				'them, and then every intent and program in the corpus as code in both libraries.'
 		),
 		...para(
-			`Measured on ${snapshot.generatedAt}: ts-pptx ${ours?.version ?? ''} built from this ` +
+			`Measured on ${snapshot.generatedAt}: pptx-ts ${ours?.version ?? ''} built from this ` +
 				`repository, against pptxgenjs ${upstream?.version ?? ''} installed from npm.`
 		),
 		...sectionCallDifferences(snapshot),
@@ -1912,7 +1912,7 @@ export function renderSyntaxPage(snapshot) {
 		...para(
 			'The corpus is `scripts/comparison/probes.mjs`, one object per intent, and both arms of a ' +
 				'probe are ordinary code. A pull request that adds an intent is welcome, including one ' +
-				'ts-pptx fails. The harness reports the four outcomes it reads, and the comparison page ' +
+				'pptx-ts fails. The harness reports the four outcomes it reads, and the comparison page ' +
 				'prints an intent upstream emits and we do not rather than dropping it.'
 		),
 		...para(
@@ -1949,21 +1949,21 @@ export function renderReadmeRegion(snapshot) {
 		'## How this compares with PptxGenJS',
 		'',
 		...para(
-			'ts-pptx is an independent derivative of ' +
+			'pptx-ts is an independent derivative of ' +
 				'[PptxGenJS](https://github.com/gitbrent/PptxGenJS), detached at its v4.0.1. Both were ' +
 				`measured on ${snapshot.generatedAt} by building the same ${total} deck intents with each ` +
 				'library and reading the bytes that came out.'
 		),
 		...bullet(
-			`**Construct coverage:** ts-pptx emitted ${counts[0]} of ${total}, pptxgenjs ${counts[1]} of ${total}. ` +
-				'Nothing in the corpus is emitted by pptxgenjs and not by ts-pptx.'
+			`**Construct coverage:** pptx-ts emitted ${counts[0]} of ${total}, pptxgenjs ${counts[1]} of ${total}. ` +
+				'Nothing in the corpus is emitted by pptxgenjs and not by pptx-ts.'
 		),
 	]
 	if (ourValidity && upstreamValidity)
 		lines.push(
 			...bullet(
 				`**Schema validity:** of the decks each library built, ${ourValidity.cleanDecks} of ` +
-					`${ourValidity.decks} ts-pptx decks and ${upstreamValidity.cleanDecks} of ${upstreamValidity.decks} ` +
+					`${ourValidity.decks} pptx-ts decks and ${upstreamValidity.cleanDecks} of ${upstreamValidity.decks} ` +
 					'pptxgenjs decks validate with no error against the Open XML SDK.'
 			)
 		)
@@ -1971,14 +1971,14 @@ export function renderReadmeRegion(snapshot) {
 		lines.push(
 			...bullet(
 				`**Adoption:** pptxgenjs is downloaded ${num(upstreamHealth.npm.downloadsLastMonth)} times a month, ` +
-					`against ${num(ourHealth?.npm?.downloadsLastMonth ?? 0)} for ts-pptx. If a large installed base ` +
+					`against ${num(ourHealth?.npm?.downloadsLastMonth ?? 0)} for pptx-ts. If a large installed base ` +
 					'matters to you more than the differences above, use pptxgenjs.'
 			)
 		)
 	if (ourHealth?.lastDefaultBranchCommit && upstreamHealth?.lastDefaultBranchCommit)
 		lines.push(
 			...bullet(
-				`**Activity:** last commit on the default branch, ${ourHealth.lastDefaultBranchCommit} for ts-pptx ` +
+				`**Activity:** last commit on the default branch, ${ourHealth.lastDefaultBranchCommit} for pptx-ts ` +
 					`and ${upstreamHealth.lastDefaultBranchCommit} for pptxgenjs. Last npm publish, ` +
 					`${ourHealth.npm?.lastPublish} and ${upstreamHealth.npm?.lastPublish}.`
 			)

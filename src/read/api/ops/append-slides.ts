@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the body of {@link Presentation.appendSlides}
+ * pptx-ts: the body of {@link Presentation.appendSlides}
  *
  * The hybrid "generate onto an existing deck" path: a slide producer authors slides, they are
  * spliced into this package under fresh partnames, and every dependency each one carries —

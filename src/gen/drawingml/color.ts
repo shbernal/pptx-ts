@@ -1,5 +1,5 @@
 /**
- * ts-pptx: DrawingML color elements
+ * pptx-ts: DrawingML color elements
  *
  * Emit the bare `<a:srgbClr>` / `<a:schemeClr>` color element that every other
  * color context builds on (solid fills, gradient stops, effect alphas, line

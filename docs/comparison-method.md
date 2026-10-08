@@ -1,7 +1,7 @@
 ---
 doc-schema-version: 1
 title: "How the comparison was measured"
-summary: "The corpus, the four outcomes and every full table behind the comparison of ts-pptx 3.7.0 with pptxgenjs 4.0.1: validation, installs, bundles, generation time and project health, and how each was taken."
+summary: "The corpus, the four outcomes and every full table behind the comparison of pptx-ts 3.7.0 with pptxgenjs 4.0.1: validation, installs, bundles, generation time and project health, and how each was taken."
 read_when:
   - Checking a number on the comparison page
   - Adding a probe or a program to the comparison corpus
@@ -15,12 +15,12 @@ doc_type: "reference"
 
 # How the comparison was measured
 
-Every figure on [ts-pptx vs PptxGenJS](comparison.md) comes from
+Every figure on [pptx-ts vs PptxGenJS](comparison.md) comes from
 `scripts/comparison/snapshot.json`, which is refreshed on release cadence, and nothing on
 either page is edited by hand. This page is the method behind those figures and the full
 tables they summarise.
 
-Measured on 2026-09-21: ts-pptx 3.7.0 built from this repository, against pptxgenjs 4.0.1
+Measured on 2026-09-21: pptx-ts 3.7.0 built from this repository, against pptxgenjs 4.0.1
 installed from npm (published 2025-06-26).
 
 ## The corpus
@@ -47,14 +47,14 @@ reasons are printed under the table they belong to.
 
 Two things a reader should price in. The corpus is ours, so it was chosen by an interested
 party. It is kept honest in two specific ways: it carries a probe neither library can
-satisfy, and the set of probes upstream emits and ts-pptx does not is reported below even
+satisfy, and the set of probes upstream emits and pptx-ts does not is reported below even
 when it is empty, so an empty set is a stated result rather than something a reader has to
-infer from a gap. A pull request that adds a probe is welcome, including one ts-pptx
+infer from a gap. A pull request that adds a probe is welcome, including one pptx-ts
 fails.
 
 ## Construct coverage
 
-Of 22 probes, ts-pptx emitted 21 and pptxgenjs emitted 10.
+Of 22 probes, pptx-ts emitted 21 and pptxgenjs emitted 10.
 
 "Looked for" is the token the harness reads for, in the part named beside it. It is the
 OOXML element in every case but one, where the intent is speaker notes and the token is
@@ -63,7 +63,7 @@ behind every row.
 
 ### Shared baseline
 
-| Intent | Looked for | Part | ts-pptx | pptxgenjs |
+| Intent | Looked for | Part | pptx-ts | pptxgenjs |
 |---|---|---|---|---|
 | Text run | `<a:t>` | `ppt/slides/slide1.xml` | emitted | emitted |
 | Table | `<a:tbl>` | `ppt/slides/slide1.xml` | emitted | emitted |
@@ -78,14 +78,14 @@ behind every row.
 
 ### Motion
 
-| Intent | Looked for | Part | ts-pptx | pptxgenjs |
+| Intent | Looked for | Part | pptx-ts | pptxgenjs |
 |---|---|---|---|---|
 | Slide transition | `<p:transition` | `ppt/slides/slide1.xml` | emitted | no API |
 | Build animation on a shape | `<p:timing>` | `ppt/slides/slide1.xml` | emitted | no API |
 
 ### Embedding
 
-| Intent | Looked for | Part | ts-pptx | pptxgenjs |
+| Intent | Looked for | Part | pptx-ts | pptxgenjs |
 |---|---|---|---|---|
 | Embedded OLE object | `<p:oleObj` | `ppt/slides/slide1.xml` | emitted | no API |
 | 3D model | `am3d:model3d` | `ppt/slides/slide1.xml` | emitted | no API |
@@ -93,19 +93,19 @@ behind every row.
 
 ### Shapes
 
-| Intent | Looked for | Part | ts-pptx | pptxgenjs |
+| Intent | Looked for | Part | pptx-ts | pptxgenjs |
 |---|---|---|---|---|
 | Connector between shapes | `<p:cxnSp>` | `ppt/slides/slide1.xml` | emitted | no API |
 
 ### Text
 
-| Intent | Looked for | Part | ts-pptx | pptxgenjs |
+| Intent | Looked for | Part | pptx-ts | pptxgenjs |
 |---|---|---|---|---|
 | Inline equation | `<a14:m` | `ppt/slides/slide1.xml` | emitted | no API |
 
 ### Fills
 
-| Intent | Looked for | Part | ts-pptx | pptxgenjs |
+| Intent | Looked for | Part | pptx-ts | pptxgenjs |
 |---|---|---|---|---|
 | Gradient shape fill | `<a:gradFill` | `ppt/slides/slide1.xml` | emitted | no API |
 
@@ -114,25 +114,25 @@ behind every row.
 
 ### Tables
 
-| Intent | Looked for | Part | ts-pptx | pptxgenjs |
+| Intent | Looked for | Part | pptx-ts | pptxgenjs |
 |---|---|---|---|---|
 | 3D bevel on a table cell | `<a:cell3D` | `ppt/slides/slide1.xml` | emitted | no API |
 
 ### Charts
 
-| Intent | Looked for | Part | ts-pptx | pptxgenjs |
+| Intent | Looked for | Part | pptx-ts | pptxgenjs |
 |---|---|---|---|---|
 | Funnel chart (chartEx) | `<cx:chart>` | `ppt/charts/chartEx1.xml` | emitted | no API |
 
 ### Navigation
 
-| Intent | Looked for | Part | ts-pptx | pptxgenjs |
+| Intent | Looked for | Part | pptx-ts | pptxgenjs |
 |---|---|---|---|---|
 | Slide Zoom tile | `pslz:sldZm` | `ppt/slides/slide2.xml` | emitted | no API |
 
 ### Diagrams
 
-| Intent | Looked for | Part | ts-pptx | pptxgenjs |
+| Intent | Looked for | Part | pptx-ts | pptxgenjs |
 |---|---|---|---|---|
 | SmartArt diagram (write side) | `<dgm:relIds` | `ppt/slides/slide1.xml` | no API | no API |
 
@@ -141,7 +141,7 @@ produce would prove that the corpus was chosen, not that the libraries differ, s
 the probes are ones both libraries are expected to pass. A failure there fails the
 measurement run instead of becoming a row on this page.
 
-No probe in this corpus is emitted by pptxgenjs and not by ts-pptx.
+No probe in this corpus is emitted by pptxgenjs and not by pptx-ts.
 
 Emitted by neither library: SmartArt diagram (write side).
 
@@ -155,7 +155,7 @@ Every deck the corpus built was passed through the Open XML SDK validator (3.5.1
 `Microsoft365` conformance target: the same oracle, and the same target, that this
 project's own `test:schema` suite uses.
 
-|  | ts-pptx | pptxgenjs |
+|  | pptx-ts | pptxgenjs |
 |---|---|---|
 | Decks validated | 21 | 10 |
 | Decks with no error | 21 | 0 |
@@ -194,28 +194,28 @@ own cannot tell them apart.
 ## Package hygiene
 
 What a consumer gets. Each library was installed on its own into an empty directory,
-upstream from the registry and ts-pptx from a pack of this working tree, so nothing here
+upstream from the registry and pptx-ts from a pack of this working tree, so nothing here
 is measured against a development checkout with its dependencies hoisted flat.
 
-|  | ts-pptx | pptxgenjs | Difference |
+|  | pptx-ts | pptxgenjs | Difference |
 |---|---|---|---|
 | Installed size, with dependencies | 10.7 MiB | 6.7 MiB | +61% |
 | Installed size, the package alone | 6.1 MiB | 2.5 MiB | +145% |
 | Runtime dependencies, transitive | 3 | 18 | -83% |
 
-The last column is ts-pptx measured against pptxgenjs, so a positive number is ours
+The last column is pptx-ts measured against pptxgenjs, so a positive number is ours
 costing more and a negative one is ours costing less. It is a percentage of the pptxgenjs
 figure rather than a difference in bytes, because two of its rows are in mebibytes and the
 third is a count, and a reader comparing them needs a number that does not change meaning
 between rows.
 
-ts-pptx installs larger than pptxgenjs despite carrying fewer dependencies. The largest
+pptx-ts installs larger than pptxgenjs despite carrying fewer dependencies. The largest
 share of that weight is source maps: `dist/` ships a `.js.map` beside every module, and
 each one embeds the original TypeScript. The unminified `.js` is the next largest share.
 No consumer build keeps either, which is why the bundled figures below are much closer
 together than the installed ones.
 
-|  | ts-pptx | pptxgenjs |
+|  | pptx-ts | pptxgenjs |
 |---|---|---|
 | Runtime dependencies, direct | `@xmldom/xmldom`, `fflate`, `opentype.js` | `@types/node`, `https`, `image-size`, `jszip` |
 | Entry points | `.`, `./inspect`, `./measure`, `./read`, `./script`, `./math`, `./zip`, `./html`, `./families`, `./node`, `./browser` | `.` |
@@ -240,7 +240,7 @@ are on [porting from PptxGenJS](comparison-syntax.md).
   sections, background, text, hyperlink, notes, a preset shape, an image, a table and a
   chart.
 
-| Program | ts-pptx | pptxgenjs | Difference |
+| Program | pptx-ts | pptxgenjs | Difference |
 |---|---|---|---|
 | Hello world | 104.1 KiB | 123.2 KiB | -16% |
 | Text deck | 104.4 KiB | 123.6 KiB | -16% |
@@ -248,7 +248,7 @@ are on [porting from PptxGenJS](comparison-syntax.md).
 | Chart deck | 104.3 KiB | 123.5 KiB | -16% |
 | Full deck | 104.6 KiB | 123.8 KiB | -15% |
 
-The column is nearly flat, and that is the result. From hello world to full deck, ts-pptx
+The column is nearly flat, and that is the result. From hello world to full deck, pptx-ts
 grows by 0.5 KiB and pptxgenjs by 0.5 KiB, which is about what the programs' own literals
 weigh. Neither library splits along feature lines: importing either one costs almost
 everything it will ever cost, and the deck written afterwards is close to free. So a hello
@@ -256,7 +256,7 @@ world was never a flattering measurement of either library, and a consumer weigh
 size is choosing between two roughly fixed costs rather than between two slopes.
 
 Both columns construct the library the way every consumer of pptxgenjs constructs it, with
-the class that carries everything. ts-pptx has a lower floor than that, reached by
+the class that carries everything. pptx-ts has a lower floor than that, reached by
 composing a presentation from only the construct families a program uses, and [smaller
 bundles](bundle-size.md) carries those figures. It is deliberately not a row here:
 pptxgenjs has no counterpart to compose, so the cell beside it would be empty and the
@@ -287,7 +287,7 @@ program up there is three slides and a clock has almost nothing to see in it. Th
 behind every row are on [porting from PptxGenJS](comparison-syntax.md).
 
 **A `.pptx` is a zip, so the compression setting is not a detail of this measurement, it
-is the measurement.** The two libraries do not default to the same one. ts-pptx deflates
+is the measurement.** The two libraries do not default to the same one. pptx-ts deflates
 unless told not to. pptxgenjs passes no compression option to JSZip on the `outputType`
 path, and JSZip stores by default. Its own `compression` argument is honoured on the
 stream and browser paths and ignored on the one in between, which is the path `writeFile`
@@ -300,7 +300,7 @@ are matched pairs.
 Both libraries asked for a compressed deck, which is what a consumer writing a file they
 intend to keep gets. This is the table that matters.
 
-| Deck | ts-pptx | pptxgenjs | Difference |
+| Deck | pptx-ts | pptxgenjs | Difference |
 |---|---|---|---|
 | Hello world | 4.4 ms | 6.9 ms | -36% |
 | Text deck | 5.9 ms | 8.0 ms | -26% |
@@ -316,7 +316,7 @@ intend to keep gets. This is the table that matters.
 Both libraries asked not to compress. The zip drops out of the measurement, leaving each
 library's own work: building the XML and assembling the package.
 
-| Deck | ts-pptx | pptxgenjs | Difference |
+| Deck | pptx-ts | pptxgenjs | Difference |
 |---|---|---|---|
 | Hello world | 1.3 ms | 0.9 ms | +47% |
 | Text deck | 1.7 ms | 1.2 ms | +38% |
@@ -327,9 +327,9 @@ library's own work: building the XML and assembling the package.
 | 200 slides | 185 ms | 133 ms | +39% |
 | 500 slides | 486 ms | 378 ms | +29% |
 
-The two tables point in opposite directions, and that is the finding. Stored, ts-pptx is
+The two tables point in opposite directions, and that is the finding. Stored, pptx-ts is
 slower on every deck, by 46% on average, so our XML generation and package assembly cost
-more than upstream's. Compressed, ts-pptx is faster on every deck, by 21% on average,
+more than upstream's. Compressed, pptx-ts is faster on every deck, by 21% on average,
 because fflate deflates faster than JSZip does and the compressor dominates the total. A
 consumer writing a file they intend to keep gets the first table. A consumer who has
 turned compression off gets the second, and should know that is where we are behind.
@@ -360,16 +360,16 @@ branch does not support.
 Line counts come from the same walk on both sides: every code file under `src/`, raw lines
 with comments and blanks included, and test lines are spec files plus anything under a
 test directory, counted once each. No normalisation makes two libraries formatted to
-different rules comparable, and a large part of the ts-pptx figure is the documentation
+different rules comparable, and a large part of the pptx-ts figure is the documentation
 comments the bundled sizes above shed. Read it as an order of magnitude for how much there
 is to maintain, and as nothing at all about whether it is good.
 
 The empty pptxgenjs test row is what this walk can see, and it is not the same claim as
 untested. That repository documents a manual, demo-driven process instead, which nothing
 measured here can weigh. The row is about an automated suite, and the coverage figure
-beside it exists for ts-pptx only because there is a suite to instrument.
+beside it exists for pptx-ts only because there is a suite to instrument.
 
-ts-pptx is published under two names carrying the same bytes, `pptx-ts` and
+pptx-ts is published under two names carrying the same bytes, `pptx-ts` and
 `@shbernal/ts-pptx`. The download figure is their sum (`pptx-ts` 365, `@shbernal/ts-pptx`
 1,415), because either name alone understates the total, and the canonical name alone
 happens to understate it by most.

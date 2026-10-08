@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the construct families every presentation carries
+ * pptx-ts: the construct families every presentation carries
  *
  * The core tier. A composed presentation gets these whether it asks for them or not, so
  * `createPresentation()` with no families still authors text, shapes, images, groups and speaker

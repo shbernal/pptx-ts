@@ -179,7 +179,7 @@ const CASES = [
 async function compose() {
 	const pptx = new TsPptx()
 	pptx.layout = 'LAYOUT_WIDE'
-	pptx.author = 'ts-pptx byte-identity gate'
+	pptx.author = 'pptx-ts byte-identity gate'
 	pptx.title = 'HTML table conversion matrix'
 	// The paged case names this master, which is the only way `tableToSlides`'s own
 	// `masterTitle` reaches the slides it creates.

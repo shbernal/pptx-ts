@@ -1,5 +1,5 @@
 /**
- * ts-pptx: DrawingML table-cell 3-D bevel
+ * pptx-ts: DrawingML table-cell 3-D bevel
  *
  * Emit the `<a:cell3D>` child of a table cell's `<a:tcPr>`. `CT_Cell3D` is a **required**
  * `a:bevel` plus an optional `a:lightRig`, which is why an empty `cell3D: {}` still produces

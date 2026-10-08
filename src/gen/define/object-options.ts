@@ -1,5 +1,5 @@
 /**
- * ts-pptx: what an OLE object, a 3D model, a zoom and a media object record about themselves
+ * pptx-ts: what an OLE object, a 3D model, a zoom and a media object record about themselves
  *
  * Each of these definers built the same options literal for its slide record, the frame, the
  * Selection Pane name, the alt text and the lock flags, with only the name's label and the frame's

@@ -1,5 +1,5 @@
 /**
- * ts-pptx: preview/cover image registration.
+ * pptx-ts: preview/cover image registration.
  *
  * Several objects are drawn from a cached raster the library cannot render itself — a Zoom tile's
  * thumbnail of its target slide, an OLE object's picture of the embedded document, a 3D model's

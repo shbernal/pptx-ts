@@ -1,4 +1,4 @@
-// The wrap model + solvers through the public `ts-pptx/measure` subpath (dist/measure.js).
+// The wrap model + solvers through the public `pptx-ts/measure` subpath (dist/measure.js).
 //
 // `measureLayout` / `measureHeightPt` / `solveShrink` / `solveResize` are published so a
 // consumer can lay out its own geometry from `FitParagraph[]` it builds itself

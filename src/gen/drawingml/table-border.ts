@@ -1,5 +1,5 @@
 /**
- * ts-pptx: DrawingML table-cell borders
+ * pptx-ts: DrawingML table-cell borders
  *
  * Emit the `<a:lnL>/<a:lnR>/<a:lnT>/<a:lnB>` border children of a table cell's
  * `<a:tcPr>`, in the LRTB document order PowerPoint requires, plus the two

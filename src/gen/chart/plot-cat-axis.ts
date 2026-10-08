@@ -1,5 +1,5 @@
 /**
- * ts-pptx: Category-Axis Plot Assembly
+ * pptx-ts: Category-Axis Plot Assembly
  *
  * Emits the `<c:areaChart>` / `<c:barChart>` / `<c:bar3DChart>` / `<c:lineChart>` /
  * `<c:radarChart>` plot elements. These five chart types share one builder because they

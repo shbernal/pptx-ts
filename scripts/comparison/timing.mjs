@@ -13,7 +13,7 @@
  * compression setting is not a detail of the benchmark, it *is* the benchmark, and the two
  * libraries do not default to the same one:
  *
- *   - ts-pptx deflates at level 6 unless told not to.
+ *   - pptx-ts deflates at level 6 unless told not to.
  *   - pptxgenjs passes no compression option to JSZip on the `outputType` path, and JSZip's
  *     own default is STORE. Its `compression` argument is honoured on the STREAM path and
  *     the browser blob path, and silently ignored on the one in between — which is the one
@@ -92,7 +92,7 @@ export const MODES = [
 		id: 'deflate',
 		label: 'Compressed',
 		props: {
-			'ts-pptx': { outputType: 'nodebuffer' },
+			'pptx-ts': { outputType: 'nodebuffer' },
 			pptxgenjs: { outputType: 'STREAM', compression: true },
 		},
 	},
@@ -100,7 +100,7 @@ export const MODES = [
 		id: 'store',
 		label: 'Stored',
 		props: {
-			'ts-pptx': { outputType: 'nodebuffer', compression: false },
+			'pptx-ts': { outputType: 'nodebuffer', compression: false },
 			pptxgenjs: { outputType: 'STREAM', compression: false },
 		},
 	},

@@ -15,7 +15,7 @@ pnpm --dir demos/node run demo-stream
 
 Then visit `http://localhost:3000/` to download the generated deck. Ctrl-C to stop.
 
-Express is here only to have a server to attach the response to; it is not a ts-pptx
+Express is here only to have a server to attach the response to; it is not a pptx-ts
 dependency.
 
 ## Notes

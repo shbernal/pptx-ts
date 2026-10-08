@@ -68,7 +68,7 @@ describe('relativeImportsOf', () => {
 describe('closureOf', () => {
 	const dirs: string[] = []
 	const emit = (files: Record<string, string>) => {
-		const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ts-pptx-closure-'))
+		const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pptx-ts-closure-'))
 		dirs.push(dir)
 		for (const [name, text] of Object.entries(files)) {
 			fs.mkdirSync(path.join(dir, path.dirname(name)), { recursive: true })
@@ -119,7 +119,7 @@ describe('closureOf', () => {
 describe('shippedBytes', () => {
 	const dirs: string[] = []
 	const emit = (text: string) => {
-		const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ts-pptx-shipped-'))
+		const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pptx-ts-shipped-'))
 		dirs.push(dir)
 		fs.writeFileSync(path.join(dir, 'chunk.js'), text)
 		return dir

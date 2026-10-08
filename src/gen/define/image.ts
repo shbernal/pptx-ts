@@ -1,5 +1,5 @@
 /**
- * ts-pptx: Image Definition
+ * pptx-ts: Image Definition
  *
  * `addImageDefinition` resolves an `addImage()` source, allocates its drawing rel(s) (SVG needs
  * a second for the PNG fallback), registers the media bytes through `registerImageMediaRel` and

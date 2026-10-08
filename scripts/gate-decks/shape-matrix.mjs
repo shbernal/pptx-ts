@@ -153,7 +153,7 @@ function chartex(pptx) {
 async function compose() {
 	const pptx = new TsPptx()
 	pptx.layout = 'LAYOUT_WIDE'
-	pptx.author = 'ts-pptx byte-identity gate'
+	pptx.author = 'pptx-ts byte-identity gate'
 	pptx.title = 'Slide-object construct matrix'
 
 	// Both sections up front: `addSlide({ sectionTitle })` only files a slide into a section

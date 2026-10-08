@@ -1,5 +1,5 @@
 /**
- * ts-pptx: `ppt/_rels/presentation.xml.rels`
+ * pptx-ts: `ppt/_rels/presentation.xml.rels`
  *
  * Emit the presentation relationships (slideMaster, slides, notesMaster/
  * presProps/viewProps/theme/tableStyles, optional commentAuthors, embedded-font

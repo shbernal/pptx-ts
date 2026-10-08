@@ -1,9 +1,9 @@
 ---
 doc-schema-version: 1
 title: "Introduction"
-summary: "What ts-pptx does, when it fits, what you can put in a deck with it, and the limits to know before you start."
+summary: "What pptx-ts does, when it fits, what you can put in a deck with it, and the limits to know before you start."
 read_when:
-  - Deciding whether ts-pptx fits a problem
+  - Deciding whether pptx-ts fits a problem
   - Finding which guide covers a kind of slide content
   - Checking what the library does not do
 doc_type: "overview"
@@ -11,7 +11,7 @@ doc_type: "overview"
 
 # Introduction
 
-A `.pptx` file is a zip of XML parts. ts-pptx writes that zip: you describe slides in
+A `.pptx` file is a zip of XML parts. pptx-ts writes that zip: you describe slides in
 TypeScript, and the library produces the package. PowerPoint does not run and no Office licence
 is involved, so it works on a build server, in a serverless function or in a browser tab.
 
@@ -71,9 +71,9 @@ file itself is valid.
 
 ## Lineage
 
-ts-pptx descends from [PptxGenJS](https://github.com/gitbrent/PptxGenJS), detached at its v4.0.1
+pptx-ts descends from [PptxGenJS](https://github.com/gitbrent/PptxGenJS), detached at its v4.0.1
 in June 2025, and is not a drop-in continuation of that release line.
-[ts-pptx vs PptxGenJS](../comparison.md) measures what each library emits by building the same
+[pptx-ts vs PptxGenJS](../comparison.md) measures what each library emits by building the same
 decks with both.
 
 ## Limits to know up front

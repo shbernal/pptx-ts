@@ -1,5 +1,5 @@
 /**
- * ts-pptx: Zoom (Slide / Section / Summary) slide-object serialization
+ * pptx-ts: Zoom (Slide / Section / Summary) slide-object serialization
  *
  * Emits a `zoom` slide object as an `<mc:AlternateContent>`. The `mc:Choice` carries the real
  * `<p:graphicFrame>` in the 2016 zoom namespaces, read by PowerPoint 2016+; the `mc:Fallback`

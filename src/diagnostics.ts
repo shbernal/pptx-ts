@@ -40,7 +40,7 @@ export interface Diagnostic {
 export type DiagnosticHandler = (diagnostic: Diagnostic) => void
 
 /** Prefix stamped on every warning so consumers can attribute console noise to this library. */
-const WARN_PREFIX = 'ts-pptx'
+const WARN_PREFIX = 'pptx-ts'
 
 /** The default handler: one `console.warn` line per diagnostic, prefixed. */
 const consoleHandler: DiagnosticHandler = (diagnostic) => {
@@ -78,7 +78,7 @@ export function setDiagnosticHandler(next: DiagnosticHandler | null): void {
 /**
  * Emit a library diagnostic.
  * @param code - the stable condition identifier ({@link DiagnosticCode})
- * @param message - explanation, without a `ts-pptx:` prefix (the default handler adds one)
+ * @param message - explanation, without a `pptx-ts:` prefix (the default handler adds one)
  * @param detail - optional structured context
  */
 export function warn(code: DiagnosticCode, message: string, detail?: Readonly<Record<string, unknown>>): void {

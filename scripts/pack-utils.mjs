@@ -31,7 +31,7 @@ import { ROOT, run } from './script-utils.mjs'
 export async function withPackedTarball(label, fn) {
 	const tmpRoot = process.env.TSPPTX_PACKAGE_TMPDIR || os.tmpdir()
 	await fs.mkdir(tmpRoot, { recursive: true })
-	const tmp = await fs.mkdtemp(path.join(tmpRoot, `.ts-pptx-${label}-`))
+	const tmp = await fs.mkdtemp(path.join(tmpRoot, `.pptx-ts-${label}-`))
 	try {
 		return await fn(await packPackage(path.join(tmp, 'pack')), tmp)
 	} finally {

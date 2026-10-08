@@ -99,7 +99,7 @@ slide.addConnector({ type: "curved", x1: 1, y1: 4, x2: 5, y2: 6, adj: [10, 50, 9
 
 ## Place the endpoints
 
-You give the two endpoints and ts-pptx derives the box PowerPoint stores. The box starts at the smaller `x` and the smaller `y` of the two points. When the end point is left of the start point the connector is flipped horizontally, and when it is above the start point it is flipped vertically. Any pair of points, in any direction, draws correctly.
+You give the two endpoints and pptx-ts derives the box PowerPoint stores. The box starts at the smaller `x` and the smaller `y` of the two points. When the end point is left of the start point the connector is flipped horizontally, and when it is above the start point it is flipped vertically. Any pair of points, in any direction, draws correctly.
 
 <svg role="img" aria-label="Two straight connectors and the boxes derived from them. Left: the end point is right of and below the start point, so the box origin is the start point and nothing is flipped. Right: the end point is left of and above the start point, so the box origin is the end point and the connector is flipped both horizontally and vertically." viewBox="0 0 520 190" width="100%" style="max-width: 520px" fill="none" stroke="currentColor" font-size="12">
   <rect x="40" y="40" width="180" height="90" stroke-dasharray="4 3" opacity="0.6"/>
@@ -223,7 +223,7 @@ Throws happen inside the `addConnector()` call, as `InvalidOptionError`. The row
 - A connector has at most three adjustable bends.
 - Arrowhead size cannot be set.
 - A binding reaches objects on the same slide only.
-- ts-pptx checks neither the target's kind nor whether the site index exists on it.
+- pptx-ts checks neither the target's kind nor whether the site index exists on it.
 - A site index without its shape name is ignored.
 - `addGroup()` has no connector child. [`groupObjects()`](groups.md#group-objects-already-on-a-slide) can group a connector that is already on the slide.
 

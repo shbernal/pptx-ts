@@ -258,7 +258,7 @@ async function bundleForNode(fixtureDir) {
 async function writeFixtureManifest(fixtureDir, manager) {
 	await fs.mkdir(fixtureDir, { recursive: true })
 	const manifest = {
-		name: 'ts-pptx-package-smoke-' + manager,
+		name: 'pptx-ts-package-smoke-' + manager,
 		private: true,
 		type: 'module',
 		// The fixture lives in the OS temp dir, outside this repo, so without a pin `pnpm` is

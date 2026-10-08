@@ -1,5 +1,5 @@
 /**
- * ts-pptx: DrawingML image sizing & cropping
+ * pptx-ts: DrawingML image sizing & cropping
  *
  * Build the `<a:srcRect>` (+ `<a:stretch>`) blipFill children for the image
  * sizing modes (`cover` / `contain` / `crop` / `stretch`), for the implicit

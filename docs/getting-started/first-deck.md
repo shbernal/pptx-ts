@@ -3,7 +3,7 @@ doc-schema-version: 1
 title: "Your first deck"
 summary: "A tutorial that builds a four-slide quarterly summary from an array: a title slide, bullet points with speaker notes, a table and a chart, then saves the file."
 read_when:
-  - Building a first deck with ts-pptx
+  - Building a first deck with pptx-ts
   - Looking for a complete program to copy and run
   - Getting a deck out as a file or as bytes
 doc_type: "guide"

@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the one place a media relationship is registered on a slide, layout or master.
+ * pptx-ts: the one place a media relationship is registered on a slide, layout or master.
  *
  * Every definer that embeds bytes pushes a media rel — images, image fills, previews, picture
  * bullets, backgrounds, audio and video, OLE payloads, 3D models, and the transition sound the

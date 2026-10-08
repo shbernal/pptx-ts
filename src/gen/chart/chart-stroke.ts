@@ -1,5 +1,5 @@
 /**
- * ts-pptx: folding a chart's older stroke spellings onto {@link StrokeProps}.
+ * pptx-ts: folding a chart's older stroke spellings onto {@link StrokeProps}.
  *
  * A stroke is one concept, and the chart option bag used to spell it three ways that the rest
  * of the library did not: `size` for the width, `style` for the dash, and a separate

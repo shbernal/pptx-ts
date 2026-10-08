@@ -16,7 +16,7 @@ body:
         Thanks for filing. Before you start:
 
         - Confirm the problem still happens on the **latest release**.
-        - ts-pptx is **ESM, Node-first**. CommonJS and IIFE/global browser bundles are not supported and reports about them will be closed.
+        - pptx-ts is **ESM, Node-first**. CommonJS and IIFE/global browser bundles are not supported and reports about them will be closed.
         - If this is a security problem, **stop** — do not file it publicly. See [SECURITY.md](https://github.com/shbernal/pptx-ts/blob/main/SECURITY.md).
         - If a downstream consumer prompted this, describe the need **anonymously**: no consumer name, deck or client names, or file paths from its tree.
 
@@ -75,9 +75,9 @@ body:
       required: false
 
   - type: input
-    id: version-ts-pptx
+    id: version-pptx-ts
     attributes:
-      label: ts-pptx version
+      label: pptx-ts version
       placeholder: 2.0.0
     validations:
       required: true

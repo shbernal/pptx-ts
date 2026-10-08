@@ -1,4 +1,4 @@
-// The standalone printer — `ts-pptx/script`'s Tier A write half, and the round trip over it.
+// The standalone printer — `pptx-ts/script`'s Tier A write half, and the round trip over it.
 //
 // The template-anchored tier gets a deck's whole design back byte for byte because it never
 // tries to reproduce it. This one has to, so its failure modes are different in kind and the
@@ -11,7 +11,7 @@
 //  2. **Direct IR expectations** cover what the round trip structurally cannot. Both IRs come
 //     from the same mapper, so a mapper that never reads the theme's colour scheme produces an
 //     output that also lacks it, and the diff is clean. Those checks read the fixture through
-//     `ts-pptx/read` and compare the IR against *that*, never against the converter — the same
+//     `pptx-ts/read` and compare the IR against *that*, never against the converter — the same
 //     rule the chart-arity bug earned.
 //  3. **Two manufactured decks**, because the fixture corpus contains neither a slide-owned
 //     background nor an extended chart, so the mutations that delete each survived against every
@@ -123,7 +123,7 @@ describe('standalone printer — corpus invariants', () => {
 	})
 
 	test('the emitted import specifier is this package’s published name', async () => {
-		// The directory is `ts-pptx`, the package is not; that shipped wrong once in the other
+		// The directory is `pptx-ts`, the package is not; that shipped wrong once in the other
 		// tier. Pinned to the manifest rather than to a literal anyone can re-guess.
 		const manifest = JSON.parse(await readFile(path.join(REPO, 'package.json'), 'utf8'))
 		const { code } = printStandaloneScript(await irFor('empty.pptx'))
@@ -150,7 +150,7 @@ describe('standalone printer — the chrome IR, read against the deck rather tha
 	// The round trip cannot judge any of this: both IRs come from the same mapper, so a mapper
 	// that dropped the whole theme would produce an output that also lacks it and compare clean
 	// (measured — three mutations survive there and are covered here instead). Expectations
-	// therefore come from `ts-pptx/read`'s own accessors.
+	// therefore come from `pptx-ts/read`'s own accessors.
 	test('the theme IR carries the deck’s colour scheme and font faces', async () => {
 		const presentation = await Presentation.load(await readFixture('theme-colors.pptx'))
 		const theme = at(presentation.masters(), 0).theme
@@ -511,5 +511,5 @@ describe('standalone printer — printed text', () => {
 // pin a single deck, `--dir` to point it at a corpus of real decks outside the repo,
 // `--verbose` for per-difference detail, `--json`, and a per-deck table instead of one
 // joined failure string. The cases above are what it *cannot* do — they read the IR against
-// `ts-pptx/read`'s own accessors rather than against the converter, which is the half of
+// `pptx-ts/read`'s own accessors rather than against the converter, which is the half of
 // this tier the round trip is structurally blind to (see the module header).

@@ -71,20 +71,20 @@ describe('aliasReadme', () => {
 	const canonicalName = 'pptx-ts'
 
 	test('puts the banner under the title, not above it', () => {
-		const readme = ['# ts-pptx', '', '![badge](x)', '', 'Body.'].join('\n')
+		const readme = ['# pptx-ts', '', '![badge](x)', '', 'Body.'].join('\n')
 		const lines = aliasReadme(readme, { canonicalName }).split('\n')
-		expect(lines[0]).toBe('# ts-pptx')
+		expect(lines[0]).toBe('# pptx-ts')
 		expect(lines.find((line) => line.startsWith('>'))).toContain('is an alias')
 	})
 
 	test('names both packages', () => {
-		const out = aliasReadme('# ts-pptx\n\nBody.\n', { canonicalName })
+		const out = aliasReadme('# pptx-ts\n\nBody.\n', { canonicalName })
 		expect(out).toContain(`\`${ALIAS_NAME}\``)
 		expect(out).toContain(`https://www.npmjs.com/package/${canonicalName}`)
 	})
 
 	test('keeps the whole canonical body', () => {
-		const readme = '# ts-pptx\n\n## Install\n\n```bash\npnpm add pptx-ts\n```\n'
+		const readme = '# pptx-ts\n\n## Install\n\n```bash\npnpm add pptx-ts\n```\n'
 		expect(aliasReadme(readme, { canonicalName })).toContain('```bash\npnpm add pptx-ts\n```')
 	})
 
@@ -99,7 +99,7 @@ describe('aliasReadme', () => {
 	// The first `# ` wins, not the last: a `# ` further down (inside a fenced block, say)
 	// must not pull the banner into the middle of the document.
 	test('uses the first title', () => {
-		const readme = ['# ts-pptx', '', 'Body.', '', '# Appendix'].join('\n')
+		const readme = ['# pptx-ts', '', 'Body.', '', '# Appendix'].join('\n')
 		const lines = aliasReadme(readme, { canonicalName }).split('\n')
 		expect(lines.findIndex((line) => line.startsWith('>'))).toBe(2)
 	})

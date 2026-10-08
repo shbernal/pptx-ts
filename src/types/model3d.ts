@@ -1,5 +1,5 @@
 /**
- * ts-pptx: 3D model types (PowerPoint's Insert ▸ 3D Models — `slide.addModel3d()`).
+ * pptx-ts: 3D model types (PowerPoint's Insert ▸ 3D Models — `slide.addModel3d()`).
  *
  * A 3D model is a glTF binary (`.glb`) embedded in the package and drawn live by PowerPoint
  * 2019+. It is emitted as a `<p:graphicFrame>` in the 2017 `am3d` namespace, wrapped in
@@ -8,11 +8,11 @@
  * PREVIEW IMAGE: PowerPoint 2019+ draws the live model on screen, in a slide exported as a
  * picture, in a PDF export and in print. Everything else — PowerPoint 2016 and earlier, and
  * applications with no 3D renderer, such as LibreOffice — draws the preview picture in the
- * `mc:Fallback` branch. ts-pptx is Node-first and cannot rasterize a 3D scene, so it emits a
+ * `mc:Fallback` branch. pptx-ts is Node-first and cannot rasterize a 3D scene, so it emits a
  * neutral gray **placeholder** when `preview` is omitted. Supply one for any deck meant to read
  * correctly outside PowerPoint. This is the same bargain `addOleObject()`'s `cover` makes.
  *
- * CAMERA: PowerPoint derives its camera from the model's bounding box; ts-pptx does not parse
+ * CAMERA: PowerPoint derives its camera from the model's bounding box; pptx-ts does not parse
  * glTF, so it emits a fixed default framed for a model roughly 2 units across. See
  * {@link Model3dCameraProps} and `docs/3d-models.md` for the formula and when to override.
  */
@@ -86,7 +86,7 @@ interface Model3dBaseProps extends PositionProps, ObjectNameProps {
 	 */
 	preview?: { path?: string; data?: string }
 	/**
-	 * Camera override. Omitted, ts-pptx emits the camera PowerPoint wrote for a 2×2×2 cube.
+	 * Camera override. Omitted, pptx-ts emits the camera PowerPoint wrote for a 2×2×2 cube.
 	 * @see {@link Model3dCameraProps} for the framing formula and when this matters.
 	 */
 	camera?: Model3dCameraProps
@@ -96,7 +96,7 @@ interface Model3dBaseProps extends PositionProps, ObjectNameProps {
 	 *
 	 * This is the single override most models need. PowerPoint sets it to `1 / maxExtent`, where
 	 * `maxExtent` is the model's largest bounding-box dimension in model units, which normalizes
-	 * every model to 1 metre across. ts-pptx does not parse the `.glb`, so it cannot measure that
+	 * every model to 1 metre across. pptx-ts does not parse the `.glb`, so it cannot measure that
 	 * — it defaults to `0.5`, correct for a model 2 units across. A model 100 units across left at
 	 * the default is a 50-metre object with the camera 2.26 metres from its centre, i.e. the
 	 * viewer is inside it.

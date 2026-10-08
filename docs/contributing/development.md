@@ -311,7 +311,7 @@ section covers adding a throw or warning site.
 - Report a warning through `warn` or `warnOnce` from `src/diagnostics.ts`. Use `warnOnce`
   for a condition that can repeat across a deck, and keep the offending value in its message
   so that a different value still reports.
-- Write a warning message without a `ts-pptx:` prefix, because the default handler adds one.
+- Write a warning message without a `pptx-ts:` prefix, because the default handler adds one.
   Write an error message without an `ERROR:` prefix, because the class name labels it.
 - Do not report a condition with `console.log`, `console.warn` or `console.error`. A console
   line cannot be captured, silenced or branched on, and oxlint rejects it under

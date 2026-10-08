@@ -1,5 +1,5 @@
 /**
- * ts-pptx: slide-layout part
+ * pptx-ts: slide-layout part
  *
  * Emit a slide layout (`ppt/slideLayouts/slideLayoutN.xml`) from a layout object.
  */

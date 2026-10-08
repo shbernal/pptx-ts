@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the bullet elements, `a:buChar` and `a:buAutoNum`
+ * pptx-ts: the bullet elements, `a:buChar` and `a:buAutoNum`
  *
  * Two emitters write bullets: the slide text runs (`text-run.ts`) and the slide master's text
  * styles (`gen/slide/master.ts`). They built both elements themselves and disagreed. The slide path

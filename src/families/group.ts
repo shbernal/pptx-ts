@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the group construct family
+ * pptx-ts: the group construct family
  *
  * Both ways to make a `<p:grpSp>`: from child descriptors (`addGroup`) and from objects already on
  * the slide (`groupObjects`). The group *renderer* is not here -- it recurses back into the shape

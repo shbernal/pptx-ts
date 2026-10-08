@@ -1,5 +1,5 @@
 /**
- * ts-pptx: Text Definition
+ * pptx-ts: Text Definition
  *
  * `addTextDefinition` cleans shape / run options (color, bullets, placeholder inheritance, body
  * properties, columns, align / valign), registers hyperlink + picture-bullet + image-fill rels,

@@ -1,5 +1,5 @@
 /**
- * ts-pptx: Chart Series-Data ↔ Worksheet-Cell Mapping
+ * pptx-ts: Chart Series-Data ↔ Worksheet-Cell Mapping
  *
  * The tiny pure helpers that both chart package parts share: the empty-array-safe
  * accessors over the normalized (internal) chart-series arrays, and the builders that

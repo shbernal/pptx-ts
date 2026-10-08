@@ -1,4 +1,4 @@
-# A Windows VM with desktop PowerPoint for the ts-pptx worker. See README.md.
+# A Windows VM with desktop PowerPoint for the pptx-ts worker. See README.md.
 #
 # Every published port binds to 127.0.0.1 only. The worker on 8765 executes whatever script it
 # is sent, so it must never be reachable from another machine.

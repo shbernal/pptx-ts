@@ -1,5 +1,5 @@
 /**
- * ts-pptx: shared `Relationship` writers.
+ * pptx-ts: shared `Relationship` writers.
  *
  * A `.rels` part is mostly one-off entries, written where the part that needs
  * them is built. This module holds the ones **more than one part** writes, so

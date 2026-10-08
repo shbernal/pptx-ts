@@ -286,7 +286,7 @@ function carryMasterGraphics(
 /**
  * The partname of the layout this deck's slides should attach to in `preserve` mode: the
  * first layout of the first slide master. Throws when the deck has no master/layout to attach
- * to (a deck ts-pptx always provides).
+ * to (a deck pptx-ts always provides).
  * @param {Presentation} dest - the destination deck
  * @return {string} partname of the destination layout
  */

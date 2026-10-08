@@ -1,5 +1,5 @@
 /**
- * ts-pptx: pairing two lists of the same things for comparison.
+ * pptx-ts: pairing two lists of the same things for comparison.
  *
  * The round trip compares a deck against the deck its script produced, and both the slide
  * calls and the chrome masters have to be paired up before anything can be diffed. Position

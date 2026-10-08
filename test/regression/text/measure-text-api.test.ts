@@ -1,7 +1,7 @@
 // Layout-time public measurement API (docs/text-fit.md). Three layers:
 //  A) the core measureText(registry, …) + shared buildFitParagraphs against src,
 //     with SYNTHETIC metrics so the suite is reproducible and needs no font files;
-//  B) the same through the built `ts-pptx/measure` subpath (P1 re-exports);
+//  B) the same through the built `pptx-ts/measure` subpath (P1 re-exports);
 //  C) the pptx.measureText()/overflowsBox() instance methods through dist (the
 //     heuristic path, so no real font is required).
 // The KEY correctness assertion is the no-drift test: measureText's height equals
@@ -194,7 +194,7 @@ describe('measureText core (synthetic metrics)', () => {
 	})
 })
 
-describe('ts-pptx/measure subpath (P1 re-exports, built)', () => {
+describe('pptx-ts/measure subpath (P1 re-exports, built)', () => {
 	test('re-exports resolve and measureText works through dist with a synthetic registry', async () => {
 		const mod = await import('../../../dist/measure.js')
 		for (const name of [

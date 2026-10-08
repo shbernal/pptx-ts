@@ -1,5 +1,5 @@
 /**
- * ts-pptx: 3D model (`am3d:model3d`) slide-object serialization
+ * pptx-ts: 3D model (`am3d:model3d`) slide-object serialization
  *
  * Emits a `model3d` slide object as an `<mc:AlternateContent>`. The `mc:Choice` carries the real
  * `<p:graphicFrame>` in the 2017 `am3d` namespace, rendered live by PowerPoint 2019+; the
@@ -32,7 +32,7 @@ const AM3D_NS = 'http://schemas.microsoft.com/office/drawing/2017/model3d'
 const RATIO_DEN = 1000000
 /**
  * `am3d:raster@rName`/`@rVer` — the renderer that produced the cached preview. PowerPoint stamps
- * its own renderer here; ts-pptx did not rasterize anything, but the attributes are what PowerPoint
+ * its own renderer here; pptx-ts did not rasterize anything, but the attributes are what PowerPoint
  * writes and the element is where the preview blip lives, so they are reproduced verbatim.
  */
 const RASTER = { rName: 'Office3DRenderer', rVer: '16.0.8326' }

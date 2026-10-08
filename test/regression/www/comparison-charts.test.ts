@@ -33,7 +33,7 @@ const read = (relative: string): unknown => JSON.parse(readFileSync(new URL(rela
 const snapshot = read('../../../scripts/comparison/snapshot.json') as Snapshot
 const labels = read('../../../scripts/comparison/groups.json') as Record<string, string>
 const data = shapeComparison(snapshot, labels)
-const SUBJECTS = ['ts-pptx', 'pptxgenjs'] as const
+const SUBJECTS = ['pptx-ts', 'pptxgenjs'] as const
 
 describe('coverage matrix', () => {
 	it('keeps every intent, in snapshot order, under the labels the tables use', () => {
@@ -53,14 +53,14 @@ describe('coverage matrix', () => {
 	it('titles a group it has no label for, and marks an outcome it does not know as unmeasured', () => {
 		const [group] = take(
 			coverageGroups(
-				[{ id: 'probe', label: 'Probe', group: 'widgets', results: { 'ts-pptx': 'emitted', pptxgenjs: 'sideways' } }],
+				[{ id: 'probe', label: 'Probe', group: 'widgets', results: { 'pptx-ts': 'emitted', pptxgenjs: 'sideways' } }],
 				{}
 			),
 			1
 		)
 		expect(group.label).toBe('Widgets')
 		expect(at(group.rows, 0).outcomes.pptxgenjs).toBeNull()
-		expect(group.emitted['ts-pptx']).toBe(1)
+		expect(group.emitted['pptx-ts']).toBe(1)
 	})
 })
 
@@ -71,10 +71,10 @@ describe('validity bars', () => {
 	})
 
 	it('leaves out an empty segment and names what the bar holds', () => {
-		const bar: ValidityBar = { subject: 'ts-pptx', clean: 21, withErrors: 0, notBuilt: 1, total: 22 }
+		const bar: ValidityBar = { subject: 'pptx-ts', clean: 21, withErrors: 0, notBuilt: 1, total: 22 }
 		expect(validitySegments(bar).map((segment) => segment.key)).toEqual(['clean', 'none'])
 		expect(validitySummary(bar)).toBe(
-			'ts-pptx: 21 decks with no schema error, 0 with errors, and 1 of 22 intents with no deck'
+			'pptx-ts: 21 decks with no schema error, 0 with errors, and 1 of 22 intents with no deck'
 		)
 	})
 })

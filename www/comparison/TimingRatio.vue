@@ -19,8 +19,8 @@ const span = (row) => {
 			<div class="cmp-ratio__row cmp-ratio__row--axis" aria-hidden="true">
 				<span />
 				<div class="cmp-ratio__scale">
-					<span class="cmp-ratio__direction cmp-ratio__direction--faster">← ts-pptx faster</span>
-					<span class="cmp-ratio__direction cmp-ratio__direction--slower">ts-pptx slower →</span>
+					<span class="cmp-ratio__direction cmp-ratio__direction--faster">← pptx-ts faster</span>
+					<span class="cmp-ratio__direction cmp-ratio__direction--slower">pptx-ts slower →</span>
 					<span v-for="tick in data.ticks" :key="tick" class="cmp-ratio__tick" :style="{ left: at(tick) }">
 						{{ formatTick(tick) }}
 					</span>

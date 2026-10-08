@@ -318,7 +318,7 @@ export async function measureHygiene({ workDir, upstreamRoot, subjects, reuse = 
 	const selfRoot = await installSelf(workDir, reuse)
 	/** @type {Record<string, {prefix: string, root: string}>} */
 	const installs = {
-		'ts-pptx': { prefix: path.join(workDir, 'self'), root: selfRoot },
+		'pptx-ts': { prefix: path.join(workDir, 'self'), root: selfRoot },
 		pptxgenjs: { prefix: path.join(workDir, 'upstream'), root: upstreamRoot },
 	}
 

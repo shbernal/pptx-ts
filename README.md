@@ -1,4 +1,4 @@
-# ts-pptx
+# pptx-ts
 
 [![npm](https://img.shields.io/npm/v/pptx-ts)](https://www.npmjs.com/package/pptx-ts)
 [![weekly downloads](https://img.shields.io/npm/dw/pptx-ts.svg?label=npm%20downloads&logo=npm)](https://www.npmjs.com/package/pptx-ts)
@@ -8,7 +8,7 @@
 
 **Write a program, get a PowerPoint file.**
 
-A `.pptx` is a zip full of XML. ts-pptx writes that zip for you, so you describe
+A `.pptx` is a zip full of XML. pptx-ts writes that zip for you, so you describe
 slides in TypeScript and a `.pptx` comes out the other end. PowerPoint never runs, no
 Office licence is involved, and nothing has to be installed on the machine doing the
 writing. The file opens cleanly in desktop PowerPoint, and Keynote, LibreOffice Impress
@@ -36,7 +36,7 @@ import TsPptx from "pptx-ts"
 const pptx = new TsPptx()
 const slide = pptx.addSlide()
 
-slide.addText("Hello from ts-pptx", {
+slide.addText("Hello from pptx-ts", {
   x: 1,
   y: 1,
   w: 8,
@@ -68,13 +68,13 @@ Two features worth knowing about by name:
 - **[An HTML table becomes slides](docs/html-tables.md).** Point `tableToSlides` at a
   `<table>` you already have and it comes out as a PowerPoint table, paged across
   slides. Works in a browser and under Node.
-- **[Text that has to fit](docs/text-fit.md).** ts-pptx can measure the text
+- **[Text that has to fit](docs/text-fit.md).** pptx-ts can measure the text
   against the real font and shrink or grow the box before it writes the file, instead
   of leaving you to guess at font sizes.
 
 ## Reading decks, not only writing them
 
-Writing is half of it. ts-pptx also opens a `.pptx` you already have, which is
+Writing is half of it. pptx-ts also opens a `.pptx` you already have, which is
 unusual: the library it descends from generates decks and does not read them.
 
 - **[Look inside one](docs/reference/pptx-inspection.md)** and get slide count, size,
@@ -105,19 +105,19 @@ loads the one ESM build.
 
 ## How this compares with PptxGenJS
 
-ts-pptx is an independent derivative of
+pptx-ts is an independent derivative of
 [PptxGenJS](https://github.com/gitbrent/PptxGenJS), detached at its v4.0.1. Both were
 measured on 2026-09-21 by building the same 22 deck intents with each library and reading
 the bytes that came out.
 
-- **Construct coverage:** ts-pptx emitted 21 of 22, pptxgenjs 10 of 22. Nothing in the
-  corpus is emitted by pptxgenjs and not by ts-pptx.
-- **Schema validity:** of the decks each library built, 21 of 21 ts-pptx decks and 0 of 10
+- **Construct coverage:** pptx-ts emitted 21 of 22, pptxgenjs 10 of 22. Nothing in the
+  corpus is emitted by pptxgenjs and not by pptx-ts.
+- **Schema validity:** of the decks each library built, 21 of 21 pptx-ts decks and 0 of 10
   pptxgenjs decks validate with no error against the Open XML SDK.
 - **Adoption:** pptxgenjs is downloaded 10,539,687 times a month, against 1,780 for
-  ts-pptx. If a large installed base matters to you more than the differences above, use
+  pptx-ts. If a large installed base matters to you more than the differences above, use
   pptxgenjs.
-- **Activity:** last commit on the default branch, 2026-09-15 for ts-pptx and 2025-06-26
+- **Activity:** last commit on the default branch, 2026-09-15 for pptx-ts and 2025-06-26
   for pptxgenjs. Last npm publish, 2026-08-29 and 2025-06-26.
 
 Where the two libraries part company is on the [comparison page](docs/comparison.md), and

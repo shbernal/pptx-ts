@@ -1,5 +1,5 @@
 /**
- * ts-pptx: DrawingML native equations (OMML)
+ * pptx-ts: DrawingML native equations (OMML)
  *
  * Wrap raw OMML markup into the `<a14:m>` marker PowerPoint uses for editable
  * equations — as a standalone display paragraph (`genXmlMathParagraph`) or as an

@@ -15,7 +15,7 @@ afterEach(() => {
 function tmpName(name: string) {
 	// Math.random is unavailable in some harnesses; a monotonically unique-enough name
 	// from the current test count is plenty for an isolated temp file.
-	const p = join(tmpdir(), `ts-pptx-node-runtime-${written.length}-${name}`)
+	const p = join(tmpdir(), `pptx-ts-node-runtime-${written.length}-${name}`)
 	written.push(p)
 	return p
 }

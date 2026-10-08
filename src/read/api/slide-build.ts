@@ -1,5 +1,5 @@
 /**
- * ts-pptx: building the DOM for a shape added through the read model.
+ * pptx-ts: building the DOM for a shape added through the read model.
  *
  * Write-side element construction, living in `read/` because that is where the caller is:
  * `Slide.addTextBox` and `Slide.addPicture` mint a `p:sp`/`p:pic` and splice it into a loaded

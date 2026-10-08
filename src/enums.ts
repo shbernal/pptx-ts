@@ -1,5 +1,5 @@
 /**
- * ts-pptx Enums
+ * pptx-ts Enums
  * NOTE: `enum` wont work for objects, so use `Object.freeze`
  */
 
@@ -312,7 +312,7 @@ const EXTRA_SHAPE_PRESETS = [
 export type CONNECTOR_PRESET_NAME = (typeof EXTRA_SHAPE_PRESETS)[number]
 
 /**
- * Every shape geometry name ts-pptx can serialize without corrupting the
+ * Every shape geometry name pptx-ts can serialize without corrupting the
  * package: the OOXML preset geometries (`ST_ShapeType` — `ShapeType` values
  * plus the unexposed connectors above) and `custGeom` (freeform paths, emitted
  * as `<a:custGeom>` rather than `<a:prstGeom>`). Used to reject bogus presets

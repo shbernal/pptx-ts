@@ -3,7 +3,7 @@
 	"private": true,
 	"version": "1.0.0",
 	"type": "module",
-	"description": "Flagship showcase decks built with ts-pptx",
+	"description": "Flagship showcase decks built with pptx-ts",
 	"exports": {
 		"./quarterly-review": {
 			"types": "./quarterly-review/index.d.ts",

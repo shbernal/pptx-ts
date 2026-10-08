@@ -1,5 +1,5 @@
 /**
- * ts-pptx: Shape Definition
+ * pptx-ts: Shape Definition
  *
  * `addShapeDefinition` normalizes an `addShape()` preset (mapping friendly aliases, rejecting
  * presets PowerPoint can't parse), applies line defaults, registers hyperlink + image-fill rels,

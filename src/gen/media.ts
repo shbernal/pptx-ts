@@ -1,5 +1,5 @@
 /**
- * ts-pptx: Media Methods
+ * pptx-ts: Media Methods
  */
 
 import { IMG_BROKEN } from '../media/placeholders.js'

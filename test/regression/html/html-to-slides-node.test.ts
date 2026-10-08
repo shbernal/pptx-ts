@@ -14,7 +14,7 @@ import {
 	at,
 } from '../../helpers.ts'
 
-// Acceptance: the `ts-pptx/html` subpath converts an HTML table to slides outside a browser.
+// Acceptance: the `pptx-ts/html` subpath converts an HTML table to slides outside a browser.
 // This is the case the whole portability effort exists for, and it is the one the pure-helper
 // unit tests cannot reach: only a real DOM proves that `ownerDocument`/`defaultView` resolution,
 // the scoped selectors, the degraded width basis, and the cell-style reads compose into a

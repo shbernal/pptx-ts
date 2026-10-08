@@ -1,5 +1,5 @@
 /**
- * ts-pptx: a table's cell grid.
+ * pptx-ts: a table's cell grid.
  *
  * Rows arrive lopsided -- `row1: [A, B, C]`, `row2: [D]` when the first two columns are held by
  * a rowspan from above -- so a cell's position in its row array is not its column. Four places

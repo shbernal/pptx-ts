@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the presentation core
+ * pptx-ts: the presentation core
  *
  * Home of {@link PresentationCore}, the class every entry point subclasses with a runtime
  * adapter (`index.ts`, `node.ts`, `browser.ts`). See the class doc below for the layout of
@@ -169,7 +169,7 @@ export default class PresentationCore {
 	}
 
 	/**
-	 * ts-pptx Library Version
+	 * pptx-ts Library Version
 	 */
 	private readonly _version: string = VERSION
 	public get version(): string {
@@ -390,12 +390,12 @@ export default class PresentationCore {
 		}
 
 		// Core
-		this._author = 'ts-pptx'
-		this._company = 'ts-pptx'
+		this._author = 'pptx-ts'
+		this._company = 'pptx-ts'
 		this._revision = '1' // Note: Must be a whole number
-		this._subject = 'ts-pptx Presentation'
-		this._title = 'ts-pptx Presentation'
-		// ts-pptx props
+		this._subject = 'pptx-ts Presentation'
+		this._title = 'pptx-ts Presentation'
+		// pptx-ts props
 		const defLayout = this.#requireDefaultLayout()
 		this._presLayout = {
 			name: defLayout.name,
@@ -469,7 +469,7 @@ export default class PresentationCore {
 	private readonly getSections = (): SectionInternalProps[] => this._sections
 
 	/**
-	 * Enables the `Slide` class to set ts-pptx [Presentation] master/layout slidenumbers
+	 * Enables the `Slide` class to set pptx-ts [Presentation] master/layout slidenumbers
 	 * @param {SlideNumberProps} slideNum - slide number config
 	 */
 	private readonly setSlideNumber = (slideNum: SlideNumberProps): void => {

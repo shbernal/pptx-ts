@@ -1,4 +1,4 @@
-// The template-anchored printer — `ts-pptx/script`'s write half.
+// The template-anchored printer — `pptx-ts/script`'s write half.
 //
 // The organising fact of this file: **printing a script that typechecks proves almost
 // nothing about it**. Every defect found while building this printer — a chart type passed
@@ -107,7 +107,7 @@ describe('script printer — corpus invariants', () => {
 	})
 
 	test('the emitted import specifier is this package’s published name', async () => {
-		// This shipped wrong once: the directory is `ts-pptx`, the package is not. The script
+		// This shipped wrong once: the directory is `pptx-ts`, the package is not. The script
 		// printed, typechecked, and then failed at `import` — so the name is pinned to the
 		// manifest rather than to a literal anyone can re-guess.
 		const manifest = JSON.parse(await readFile(path.join(REPO, 'package.json'), 'utf8'))

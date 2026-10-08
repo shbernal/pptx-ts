@@ -1,4 +1,4 @@
-// The deck IR — `ts-pptx/script`'s read half.
+// The deck IR — `pptx-ts/script`'s read half.
 //
 // Two kinds of assertion live here, and the split matters.
 //
@@ -179,7 +179,7 @@ describe('deck IR — geometry', () => {
 
 	test('a path viewport that differs from the shape box is scaled, not passed through', async () => {
 		// The corpus cannot exercise this on its own: every fixture path — and every path
-		// ts-pptx itself writes — sets `a:path/@w` to the shape width, so the scale factor is
+		// pptx-ts itself writes — sets `a:path/@w` to the shape width, so the scale factor is
 		// 1 and a version that skipped scaling entirely would still pass. Halving the
 		// viewport through the documented raw hatch produces the case that tells them apart.
 		const deck = await Presentation.load(await readFixture('custgeom.pptx'))

@@ -1,5 +1,5 @@
 /**
- * ts-pptx: option-bag normalization helpers — one spelling of absent.
+ * pptx-ts: option-bag normalization helpers — one spelling of absent.
  *
  * `exactOptionalPropertyTypes` draws a line this library needs drawn: a `foo?: T` declaration says
  * the key is either *missing* or holds a `T`, and a key present with an `undefined` in it is a

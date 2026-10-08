@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the diagnostic surface, as every entry point republishes it
+ * pptx-ts: the diagnostic surface, as every entry point republishes it
  *
  * Every warning the library reports without throwing. The `code` is API; the message is not —
  * the same contract `entry-errors.ts` states for the other half of the `codes.ts` vocabulary.

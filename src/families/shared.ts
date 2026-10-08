@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the construct-family seam
+ * pptx-ts: the construct-family seam
  *
  * A construct family is one value: everything the library knows about charts, or tables, or
  * speaker notes, reachable through a single name. What that value carries is what the write path

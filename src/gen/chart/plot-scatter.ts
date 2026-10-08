@@ -1,5 +1,5 @@
 /**
- * ts-pptx: Scatter Plot Assembly
+ * pptx-ts: Scatter Plot Assembly
  *
  * Emits the `<c:scatterChart>` plot element. Scatter is the one family whose first data
  * row supplies X *values* rather than categories, so each `<c:ser>` carries an

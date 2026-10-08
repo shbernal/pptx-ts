@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the one rule three copy traversals follow.
+ * pptx-ts: the one rule three copy traversals follow.
  *
  * Copying a page into another deck means walking its part graph, and two places walk it:
  * `rebuildRels`, the loop under every copy (and, run as a `CopyPlan`, under the dry run that has

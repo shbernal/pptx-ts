@@ -139,7 +139,7 @@ rise.
 
 Do not start implementing without at least one evidence path from this checkout:
 
-- a minimal ts-pptx reproduction;
+- a minimal pptx-ts reproduction;
 - generated `.pptx` output;
 - an extracted package XML path and the observed problem;
 - a `pnpm run test:schema` result, or a planned fixture;

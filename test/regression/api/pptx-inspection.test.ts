@@ -48,7 +48,7 @@ function assertWithin(actual: number, expected: number, tolerance: number, msg: 
  * (see helpers.ts).
  *
  * Every part here is load-bearing: inspect reaches the slides through the package
- * relationships and `p:sldIdLst`, the same route `ts-pptx/read` takes, so a bare zip
+ * relationships and `p:sldIdLst`, the same route `pptx-ts/read` takes, so a bare zip
  * of slide XML with no `[Content_Types].xml` is not a package it will read.
  */
 async function packageWithSlides(spTrees: string[], order = spTrees.map((_, i) => i + 1)) {
@@ -539,7 +539,7 @@ defineRegressionSuite('PPTX inspection primitives', [
 		},
 	},
 	{
-		// inspect and `ts-pptx/read` share one package model, so they agree on what a
+		// inspect and `pptx-ts/read` share one package model, so they agree on what a
 		// package is. A zip holding slide XML but no `[Content_Types].xml` is not one.
 		name: 'a zip that is not an OPC package is rejected',
 		fn: async () => {

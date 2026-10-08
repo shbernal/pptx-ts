@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the text construct family
+ * pptx-ts: the text construct family
  *
  * Text boxes, and the shape-with-text descriptors a slide master or a group is written with. The
  * cheapest family and the one every tier carries, but it is a family like any other: a list with an

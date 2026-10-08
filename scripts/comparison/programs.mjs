@@ -31,7 +31,7 @@ import { functionBody, literal, renderSource } from './source.mjs'
 
 /** A 1x1 transparent PNG, small enough that the image path is measured and not the payload. */
 const PNG_1PX_B64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
-/** ts-pptx takes a whole `data:` URL. */
+/** pptx-ts takes a whole `data:` URL. */
 const PNG_1PX_URL = 'data:image/png;base64,' + PNG_1PX_B64
 /** pptxgenjs takes the MIME and payload without the `data:` scheme, as its own docs show. */
 const PNG_1PX_BARE = 'image/png;base64,' + PNG_1PX_B64
@@ -82,7 +82,7 @@ export { resetProgramData }
  * @type {Record<string, {import: string, construct: string}>}
  */
 export const FRAME = {
-	'ts-pptx': { import: "import TsPptx from 'pptx-ts'", construct: 'const pres = new TsPptx()' },
+	'pptx-ts': { import: "import TsPptx from 'pptx-ts'", construct: 'const pres = new TsPptx()' },
 	pptxgenjs: { import: "import PptxGenJS from 'pptxgenjs'", construct: 'const pres = new PptxGenJS()' },
 }
 
@@ -105,7 +105,7 @@ export const PROGRAMS = [
 		label: 'Hello world',
 		what: 'One slide with one text box.',
 		build: {
-			'ts-pptx': (pres) => {
+			'pptx-ts': (pres) => {
 				pres.addSlide().addText('hello', { x: 1, y: 1, w: 4, h: 1 })
 			},
 			pptxgenjs: (pres) => {
@@ -118,7 +118,7 @@ export const PROGRAMS = [
 		label: 'Text deck',
 		what: 'A defined master, two sections, formatted and bulleted text, a hyperlink, a slide background and speaker notes.',
 		build: {
-			'ts-pptx': (pres) => {
+			'pptx-ts': (pres) => {
 				pres.defineSlideMaster({
 					title: 'NARRATIVE',
 					objects: [{ placeholder: { options: { name: 'title', type: 'title', x: 0.6, y: 0.5, w: 8.8, h: 1 } } }],
@@ -192,8 +192,8 @@ export const PROGRAMS = [
 		what: 'A titled slide and a bordered table with a header row, fixed column widths and per-cell options.',
 		build: {
 			// Border thickness is the one call in this program the two libraries spell differently:
-			// ts-pptx renamed `pt` to `width`, and warns rather than silently ignoring the old key.
-			'ts-pptx': (pres) => {
+			// pptx-ts renamed `pt` to `width`, and warns rather than silently ignoring the old key.
+			'pptx-ts': (pres) => {
 				const slide = pres.addSlide()
 				slide.addText('Revenue by region', { x: 0.6, y: 0.5, w: 8.8, h: 0.8, fontSize: 24, bold: true })
 				slide.addTable(REGION_ROWS, {
@@ -230,9 +230,9 @@ export const PROGRAMS = [
 		label: 'Chart deck',
 		what: 'Three charts on three slides: a column chart with value labels, a two-series line chart, and a pie chart with percentages.',
 		build: {
-			// The signatures diverged at the detach: ts-pptx puts `type` in the options object,
+			// The signatures diverged at the detach: pptx-ts puts `type` in the options object,
 			// upstream takes it as the first argument. Same three charts either way.
-			'ts-pptx': (pres) => {
+			'pptx-ts': (pres) => {
 				pres.addSlide().addChart(BAR_DATA, {
 					type: 'bar',
 					barDir: 'col',
@@ -300,7 +300,7 @@ export const PROGRAMS = [
 		label: 'Full deck',
 		what: 'Every construct the shared baseline covers, in one deck: master, sections, background, text, hyperlink, notes, a preset shape, an image, a table and a chart.',
 		build: {
-			'ts-pptx': (pres) => {
+			'pptx-ts': (pres) => {
 				pres.defineSlideMaster({
 					title: 'REVIEW',
 					objects: [{ placeholder: { options: { name: 'title', type: 'title', x: 0.6, y: 0.5, w: 8.8, h: 1 } } }],

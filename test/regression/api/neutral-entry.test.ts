@@ -46,7 +46,7 @@ describe('neutral entry: what it refuses', () => {
 
 	test('the live-DOM tableToSlides is browser-only', () => {
 		// It resolves `eleId` against the global `document`; the DOM-agnostic form is the free
-		// `tableToSlides` on `ts-pptx/html`. Also the cheapest proof the entry is not the browser one.
+		// `tableToSlides` on `pptx-ts/html`. Also the cheapest proof the entry is not the browser one.
 		// The declarations of the two entries that lack it say so, which is itself the fix.
 		expect(typeof new BrowserTsPptx().tableToSlides).toBe('function')
 		// @ts-expect-error the neutral entry declares no tableToSlides

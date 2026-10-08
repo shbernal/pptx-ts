@@ -1,9 +1,9 @@
 ---
 name: ts-pptx-upstream
-description: Report a ts-pptx (pptx-ts) bug, gap, or wrong output to its GitHub tracker from a project that depends on it. Use when ts-pptx throws an InternalError or an error whose message points at the issue tracker, when it cannot read a .pptx that opens cleanly in PowerPoint, when it writes a deck PowerPoint repairs or renders wrong, when a construct does not survive a round trip, when its types block correct code, or whenever you are about to write a workaround for ts-pptx behaving incorrectly. Filing the bug is the fix; the workaround is the stopgap.
+description: Report a pptx-ts bug, gap, or wrong output to its GitHub tracker from a project that depends on it. Use when pptx-ts throws an InternalError or an error whose message points at the issue tracker, when it cannot read a .pptx that opens cleanly in PowerPoint, when it writes a deck PowerPoint repairs or renders wrong, when a construct does not survive a round trip, when its types block correct code, or whenever you are about to write a workaround for pptx-ts behaving incorrectly. Filing the bug is the fix; the workaround is the stopgap.
 ---
 
-# Reporting a ts-pptx problem upstream
+# Reporting a pptx-ts problem upstream
 
 You are in a project that *uses* `pptx-ts`, not the project that builds it.
 This skill is how a defect you hit here becomes a permanent regression test there.
@@ -17,14 +17,14 @@ builds its own deck.** Everything below is in service of that.
 
 ## 1. Decide whether it is actually ours
 
-Every failure ts-pptx raises is a `TsPptxError` in one of five classes, and the class
+Every failure pptx-ts raises is a `TsPptxError` in one of five classes, and the class
 already answers *whose problem is this*. Catch it and read `err.name` and `err.code`.
 `code` is a stable `area/condition` string and is API; the message is not, so never
 branch on its wording.
 
 | class                     | whose bug        | report it?                                                          |
 | ------------------------- | ---------------- | ------------------------------------------------------------------- |
-| `InternalError`           | **ts-pptx**      | Always. The library says so itself in the message.                   |
+| `InternalError`           | **pptx-ts**      | Always. The library says so itself in the message.                   |
 | `PackageReadError`        | usually the file | Only if the file opens **cleanly in PowerPoint**. Then it's our gap. |
 | `MediaError`              | usually the asset| Only if the image/font/AV loads fine elsewhere.                      |
 | `UnsupportedFeatureError` | nobody's, yet    | If PowerPoint can express it, this is a feature request worth filing.|
@@ -32,7 +32,7 @@ branch on its wording.
 
 **The supported bar is "the output opens cleanly in Microsoft PowerPoint."** That is
 the project's own stated standard, and it is the test to apply in both directions: a
-file PowerPoint opens but ts-pptx rejects is our gap, and a file ts-pptx writes that
+file PowerPoint opens but pptx-ts rejects is our gap, and a file pptx-ts writes that
 PowerPoint repairs is our bug.
 
 Not every defect throws. These are ours too, and are worth reporting:
@@ -42,7 +42,7 @@ Not every defect throws. These are ours too, and are worth reporting:
 - A **round trip that loses a construct**: read a deck, write it back, something is
   gone or changed. If the loss surfaced as a conversion fidelity note, the note has
   already classified it for you. See below.
-- The **read side cannot see what the write side authors**: ts-pptx emits the property
+- The **read side cannot see what the write side authors**: pptx-ts emits the property
   but has no accessor to read it back. This is the strongest case a gap can make, and
   it has its own form (see step 5).
 - A `Diagnostic` that fires when it should not, does not fire when it should, or
@@ -79,13 +79,13 @@ before spending effort on a reproduction:
   *rendered* page (real `offsetWidth` after layout, the resolved cascade). Converting
   an HTML `<table>` is *not* in this category.
 - Third-party office-suite interop quirks that appear only after the file has been
-  round-tripped through another application, when the package ts-pptx wrote is itself
+  round-tripped through another application, when the package pptx-ts wrote is itself
   valid OOXML.
 
 Issues and pull requests in those two areas are still welcome; just say so in the
 report so nobody triages it as a regression.
 
-Also: ts-pptx is **ESM, Node-first**. Reports about `require()`, a CJS build, or an
+Also: pptx-ts is **ESM, Node-first**. Reports about `require()`, a CJS build, or an
 IIFE/global browser bundle will be closed. Those are deliberately not supported.
 
 ## 2. Collect the facts
@@ -203,7 +203,7 @@ Three forms; pick by what you are reporting:
 If none fits, file a blank issue rather than bending one of them. Blank issues are
 enabled deliberately.
 
-`gh` defaults to the *current* repository, which here is the consumer's, not ts-pptx's.
+`gh` defaults to the *current* repository, which here is the consumer's, not pptx-ts's.
 Always pass `--repo shbernal/pptx-ts` explicitly, or you will file the bug into the wrong
 tracker.
 
@@ -211,7 +211,7 @@ tracker.
 gh issue create --repo shbernal/pptx-ts \
   --title "<InternalError|reads|writes|round-trip|types>: <one specific symptom>" \
   --label agent-reported \
-  --body-file <a path your repo ignores>/ts-pptx-report.md
+  --body-file <a path your repo ignores>/pptx-ts-report.md
 ```
 
 Write the body somewhere the consumer's own `.gitignore` already covers: its scratch or
@@ -222,7 +222,7 @@ The web form (`agent-report.yml`) is what the error message links to; `gh` does 
 issue forms, so mirror its sections in the body file so both routes land the same shape:
 
 ````markdown
-### ts-pptx version
+### pptx-ts version
 <x.y.z>
 
 ### Node.js version

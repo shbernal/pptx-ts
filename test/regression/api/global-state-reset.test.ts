@@ -59,7 +59,7 @@ defineRegressionSuite('Global state is reset between tests', [
 				console.warn = originalConsoleWarn
 			}
 			assert(
-				seen.some((line) => line.startsWith('ts-pptx: ')),
+				seen.some((line) => line.startsWith('pptx-ts: ')),
 				`expected the default console handler's prefixed line; got: ${JSON.stringify(seen)}`
 			)
 		},

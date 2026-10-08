@@ -36,7 +36,7 @@
  *
  * Three things, all of them cases where a quiet pass would be worse than a loud stop:
  *
- *   - **ts-pptx builds a deck and the construct is not in it.** A regression in our own
+ *   - **pptx-ts builds a deck and the construct is not in it.** A regression in our own
  *     output must fail here rather than become a comparison row that says we do not
  *     support tables. This is wider than the shared baseline on purpose: the baseline is
  *     where it matters most, but there is no probe where we would rather find out from
@@ -90,7 +90,7 @@ Options:
  * Where each library's shipped bundle lives, for the `no-api` verification grep.
  *
  * Both are the *published* artifact rather than the source tree: what a consumer can reach
- * is what the claim is about, and ts-pptx's `dist/` is many chunks while upstream's is one
+ * is what the claim is about, and pptx-ts's `dist/` is many chunks while upstream's is one
  * file per module format.
  * @param {string} upstreamRoot
  * @returns {Record<string, string[]>}
@@ -98,7 +98,7 @@ Options:
 function shippedBundles(upstreamRoot) {
 	const dist = path.join(ROOT, 'dist')
 	return {
-		'ts-pptx': fs
+		'pptx-ts': fs
 			.readdirSync(dist)
 			.filter((name) => name.endsWith('.js'))
 			.map((name) => path.join(dist, name)),
@@ -166,7 +166,7 @@ async function loadSubjects(upstreamRoot) {
 	const TsPptx = tsPptx.default
 	const PptxGenJS = upstream.default
 	return {
-		'ts-pptx': () => new TsPptx(),
+		'pptx-ts': () => new TsPptx(),
 		pptxgenjs: () => new PptxGenJS(),
 	}
 }
@@ -273,9 +273,9 @@ export async function measure({ workDir = DEFAULT_WORK_DIR, reuseInstalls = fals
 			if (message) notes[subject] = message
 			if (deck) (decks[probe.id] ??= {})[subject] = path.relative(ROOT, deck)
 
-			if (subject === 'ts-pptx' && (outcome === 'absent' || outcome === 'error'))
+			if (subject === 'pptx-ts' && (outcome === 'absent' || outcome === 'error'))
 				failures.push(
-					`${probe.id}: ts-pptx built a deck and ${outcome === 'error' ? 'threw' : 'emitted no'} ` +
+					`${probe.id}: pptx-ts built a deck and ${outcome === 'error' ? 'threw' : 'emitted no'} ` +
 						`${probe.construct}${message ? ' -- ' + message : ''}`
 				)
 
@@ -321,14 +321,14 @@ export async function measure({ workDir = DEFAULT_WORK_DIR, reuseInstalls = fals
 	const snapshot = {
 		generatedAt: new Date().toISOString().slice(0, 10),
 		subjects: {
-			'ts-pptx': { version: readVersion(), source: 'workspace dist/' },
+			'pptx-ts': { version: readVersion(), source: 'workspace dist/' },
 			pptxgenjs: { version: upstream.version, published: upstream.published, source: 'npm' },
 		},
 		coverage,
 		// Recorded rather than left to be read off the table, because the whole point of these
 		// two lists is that they are checked for emptiness. A page that never prints them cannot
 		// be distinguished from one whose corpus was picked so they would come out empty.
-		upstreamAhead: coverage.filter((row) => emitted(row, 'pptxgenjs') && !emitted(row, 'ts-pptx')).map((r) => r.id),
+		upstreamAhead: coverage.filter((row) => emitted(row, 'pptxgenjs') && !emitted(row, 'pptx-ts')).map((r) => r.id),
 		sharedGaps: coverage.filter((row) => !SUBJECTS.some((s) => emitted(row, s))).map((r) => r.id),
 		...(only
 			? {}

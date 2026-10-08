@@ -20,7 +20,7 @@
 //     genuine write-API-authored `p:graphicFrame` is moved into a layout part in the zip —
 //     which is what PowerPoint does when you paste a table onto a layout.
 //
-// Expectations come from `ts-pptx/read`'s own accessors wherever they can, never from the
+// Expectations come from `pptx-ts/read`'s own accessors wherever they can, never from the
 // converter: both sides of a round trip run through one mapper, so a mapper that read a
 // layout's geometry wrong would produce an output that is wrong the same way and compare
 // clean. The round trip is here for the other half of the claim — that what the IR describes

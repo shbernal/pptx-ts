@@ -1,5 +1,5 @@
 /**
- * ts-pptx: chartEx (`cx:`) Chart Assembly
+ * pptx-ts: chartEx (`cx:`) Chart Assembly
  *
  * Builds a chartEx chart part `ppt/charts/chartEx{N}.xml` — the `<cx:chartSpace>` for the
  * Office-2016 chart family (currently `waterfall`, `funnel`, `treemap`, `sunburst`, `histogram`,

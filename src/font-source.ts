@@ -1,5 +1,5 @@
 /**
- * ts-pptx: getting font bytes out of whatever the caller handed over.
+ * pptx-ts: getting font bytes out of whatever the caller handed over.
  *
  * `registerFontMetrics` and `embedFont` are two public methods on one class, forty lines apart,
  * and each resolved its source itself. They agreed on `Uint8Array` and `ArrayBuffer` and

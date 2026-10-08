@@ -1,5 +1,5 @@
 /**
- * ts-pptx: text / placeholder slide-object serialization
+ * pptx-ts: text / placeholder slide-object serialization
  *
  * Emits a `text` or `placeholder` slide object as a `<p:sp>`: body insets from the caller's
  * margin, the shape geometry (preset or custom), fill, outline and shadow, then the text body.

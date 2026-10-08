@@ -68,7 +68,7 @@ const SKIP_DIRS = new Set(['node_modules', '.git', '.tmp', 'dist', 'coverage'])
  */
 async function fetchJson(url) {
 	/** @type {Record<string, string>} */
-	const headers = { accept: 'application/json', 'user-agent': 'ts-pptx-comparison' }
+	const headers = { accept: 'application/json', 'user-agent': 'pptx-ts-comparison' }
 	const token = process.env.GITHUB_TOKEN
 	if (token && url.startsWith('https://api.github.com/')) headers.authorization = 'Bearer ' + token
 	try {
@@ -410,7 +410,7 @@ export async function measureHealth({ workDir, upstreamManifest, reuse = false }
 	const upstreamSlug = githubSlug(upstreamManifest)
 
 	return {
-		'ts-pptx': {
+		'pptx-ts': {
 			...(await githubHealth(githubSlug(ownManifest))),
 			npm: await npmHealth([ownManifest.name, ALIAS_NAME]),
 			source: sourceHealth(ROOT, ownCoverage),

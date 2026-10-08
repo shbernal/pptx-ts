@@ -32,7 +32,7 @@ body:
     attributes:
       label: Does the write API author this?
       description: |
-        A property ts-pptx *writes* but cannot *read* is a round-trip hole in its own model, which is the strongest case a gap can make. Please check before answering.
+        A property pptx-ts *writes* but cannot *read* is a round-trip hole in its own model, which is the strongest case a gap can make. Please check before answering.
       options:
         - Yes — the write API authors it, but nothing reads it back
         - No — neither side models it today
@@ -68,9 +68,9 @@ body:
       required: true
 
   - type: input
-    id: version-ts-pptx
+    id: version-pptx-ts
     attributes:
-      label: ts-pptx version
+      label: pptx-ts version
       placeholder: 2.0.0
     validations:
       required: true

@@ -198,7 +198,7 @@ export default defineConfig({
 			//
 			// `html-dom.ts` (the `tableToSlides` conversion) used to be excluded by these
 			// same globs too, on the grounds that only the browser entry imported it. That
-			// is no longer true: the `ts-pptx/html` entry imports it too, so tsdown emits
+			// is no longer true: the `pptx-ts/html` entry imports it too, so tsdown emits
 			// it as its own shared `dist/html-dom-*.js` chunk — also not excluded. The
 			// Node suite executes it against a real DOM
 			// (test/regression/html/html-to-slides-node.test.ts), so it is covered code now,

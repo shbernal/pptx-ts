@@ -1,5 +1,5 @@
 /**
- * ts-pptx: `_rels/.rels`
+ * pptx-ts: `_rels/.rels`
  *
  * Emit the package root relationships (app/core/presentation, plus custom-props
  * when present).

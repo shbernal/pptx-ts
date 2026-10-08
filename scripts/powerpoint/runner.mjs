@@ -100,7 +100,7 @@ function hash(content) {
  * @returns {Promise<import('./job.mjs').JobResult>}
  */
 export async function runOne(job, { executor, hooks, tmpRoot }) {
-	const workspace = await fs.mkdtemp(path.join(tmpRoot, 'ts-pptx-powerpoint-job-'))
+	const workspace = await fs.mkdtemp(path.join(tmpRoot, 'pptx-ts-powerpoint-job-'))
 	try {
 		/** @type {Map<string, string>} */
 		const before = new Map()

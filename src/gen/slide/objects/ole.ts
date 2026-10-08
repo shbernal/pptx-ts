@@ -1,5 +1,5 @@
 /**
- * ts-pptx: OLE-object slide-object serialization
+ * pptx-ts: OLE-object slide-object serialization
  */
 
 import { genXmlObjectLock, GRAPHIC_FRAME_LOCK_ATTRS } from '../../drawingml/locks.js'

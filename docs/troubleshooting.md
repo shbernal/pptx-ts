@@ -68,7 +68,7 @@ Open an issue at <https://github.com/shbernal/pptx-ts/issues> when no fix above 
 An `InternalError` means an invariant of the library did not hold. Its message ends with the link to file it:
 
 ```text
-This is a bug in ts-pptx, not in your deck or your code. Please report it:
+This is a bug in pptx-ts, not in your deck or your code. Please report it:
 https://github.com/shbernal/pptx-ts/issues/new?template=agent-report.yml
 ```
 

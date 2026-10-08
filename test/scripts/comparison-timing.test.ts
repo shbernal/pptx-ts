@@ -82,7 +82,7 @@ describe('the matched modes', () => {
 		expect(deflate.id).toBe('deflate')
 		expect(store.id).toBe('store')
 		expect(deflate.props.pptxgenjs).not.toEqual(store.props.pptxgenjs)
-		expect(deflate.props['ts-pptx']).not.toEqual(store.props['ts-pptx'])
+		expect(deflate.props['pptx-ts']).not.toEqual(store.props['pptx-ts'])
 		const outputType = (props: object) => (props as { outputType?: string }).outputType
 		expect(outputType(defined(deflate.props.pptxgenjs))).toBe(outputType(defined(store.props.pptxgenjs)))
 	})
@@ -104,7 +104,7 @@ describe('the scale corpus', () => {
 	// This is what keeps them the same deck: identical line for line, except for the one
 	// call whose signature the two libraries genuinely spell differently.
 	test('the two arms differ only in the addChart call', () => {
-		const ours = scaleSource('ts-pptx').split('\n')
+		const ours = scaleSource('pptx-ts').split('\n')
 		const upstream = scaleSource('pptxgenjs').split('\n')
 		expect(ours.length).toBe(upstream.length)
 		const differing = ours.map((line, index) => [line, upstream[index]]).filter(([a, b]) => a !== b)
@@ -137,7 +137,7 @@ describe('the scale corpus', () => {
 				return slide
 			},
 		}
-		defined(scaleWorkload(3).build['ts-pptx'])(pres)
+		defined(scaleWorkload(3).build['pptx-ts'])(pres)
 		expect(built.length).toBe(3)
 	})
 })

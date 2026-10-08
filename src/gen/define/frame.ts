@@ -1,5 +1,5 @@
 /**
- * ts-pptx: an authored object's frame
+ * pptx-ts: an authored object's frame
  *
  * Every definer used to spell its own default for an omitted `x`/`y`/`w`/`h`, and they disagreed
  * on what "omitted" meant. A shape tested `x || (x === 0 ? 0 : 1)`, media `|| 2`, an image `|| 1`

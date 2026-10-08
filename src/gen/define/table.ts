@@ -1,5 +1,5 @@
 /**
- * ts-pptx: Table Definition
+ * pptx-ts: Table Definition
  *
  * `addTableDefinition` applies the `headerRow` / `columns` sugar, normalizes rows into
  * fully-resolved `TableCellInternal`s (incl. 4-side borders), computes width, and — when `autoPage` is

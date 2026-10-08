@@ -242,7 +242,7 @@ export interface ImageBaseProps extends PositionProps, ObjectNameProps {
 	}
 	/**
 	 * Raw SVG markup to embed as the image source
-	 * - convenience for `data: 'data:image/svg+xml;base64,...'`; ts-pptx encodes it for you
+	 * - convenience for `data: 'data:image/svg+xml;base64,...'`; pptx-ts encodes it for you
 	 * - ignored when `data` or `path` is also provided
 	 * @example '<svg viewBox="0 0 24 24">...</svg>'
 	 */

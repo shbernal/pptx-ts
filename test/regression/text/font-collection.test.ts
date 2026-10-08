@@ -1,4 +1,4 @@
-// Font collections (`.ttc`/`.otc`) through the public `ts-pptx/measure` surface.
+// Font collections (`.ttc`/`.otc`) through the public `pptx-ts/measure` surface.
 //
 // A collection is one file holding several fonts over shared tables, and it is how most
 // of the East Asian faces ship on Windows (MS Gothic, Yu Gothic, SimSun, Microsoft YaHei)

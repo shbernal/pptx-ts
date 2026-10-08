@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the comments contribution to a written package
+ * pptx-ts: the comments contribution to a written package
  *
  * The deck-wide author registry (`ppt/commentAuthors.xml`) plus one comment part per slide that
  * has comments. A deck with no comments writes neither, so the registry is resolved once here and

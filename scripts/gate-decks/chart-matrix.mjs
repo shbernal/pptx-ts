@@ -542,7 +542,7 @@ const CASES = [
 async function compose() {
 	const pptx = new TsPptx()
 	pptx.layout = 'LAYOUT_WIDE'
-	pptx.author = 'ts-pptx byte-identity gate'
+	pptx.author = 'pptx-ts byte-identity gate'
 	pptx.title = 'Chart emitter matrix'
 
 	for (const kase of CASES) {

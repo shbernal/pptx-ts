@@ -1,4 +1,4 @@
-// The round-trip *oracle* for `ts-pptx/script` — the diff, the note table and the
+// The round-trip *oracle* for `pptx-ts/script` — the diff, the note table and the
 // canonicaliser that the round trip is built out of.
 //
 // The round trip itself is source deck → IR₁ → script → run it → output deck → IR₂, then

@@ -406,7 +406,7 @@ const UNREAD_TEXT = {
 		subject: 'this shape',
 		call: 'addText',
 		equationLoss:
-			'the shape is emitted without it - even though TextProps.math (and the ts-pptx/math subpath) could author one',
+			'the shape is emitted without it - even though TextProps.math (and the pptx-ts/math subpath) could author one',
 	},
 	cell: {
 		field: 'table.cell.field',

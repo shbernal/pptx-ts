@@ -3,7 +3,7 @@ doc-schema-version: 1
 title: "Deck to script"
 summary: "Turn an existing .pptx into a TypeScript module that rebuilds it through the write API, choose between the template-anchored and standalone outputs, and read the fidelity notes that list what the conversion lost."
 read_when:
-  - Converting an existing deck into editable ts-pptx source
+  - Converting an existing deck into editable pptx-ts source
   - Choosing between the template-anchored and standalone outputs
   - Reading the fidelity notes a conversion returns
   - Checking whether a construct survives conversion

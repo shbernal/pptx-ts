@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the table construct family
+ * pptx-ts: the table construct family
  *
  * Tables and their auto-paging, from rows a caller already holds. Reproducing a rendered HTML
  * `<table>` belongs to this family too, but only where there is a DOM to read it from, so it is

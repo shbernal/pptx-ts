@@ -1,5 +1,5 @@
 /**
- * ts-pptx: SlideBuilder — write-side implementation of the public `Slide` interface
+ * pptx-ts: SlideBuilder — write-side implementation of the public `Slide` interface
  *
  * What a slide is, and nothing about what can go on one. Every `add*` method comes from the
  * construct family that owns it, bound onto the instance from the list the presentation was

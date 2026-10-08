@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the chart construct family
+ * pptx-ts: the chart construct family
  *
  * The expensive one: `addChart` reaches every plot module, axis and sidecar builder under
  * `gen/chart/`, which is what a program that never draws a chart is paying for when a slide method

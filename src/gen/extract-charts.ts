@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the chart half of a slide extraction
+ * pptx-ts: the chart half of a slide extraction
  *
  * Apart from `gen/extract-slides.ts` for one reason: it names the chart emitters, and extraction
  * is reachable from every program that can build a deck. A module of its own is what lets the

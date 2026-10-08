@@ -1,6 +1,6 @@
 ---
 name: powerpoint-fixture-authoring
-description: Use when creating, replacing, verifying, or documenting real Microsoft PowerPoint-authored .pptx fixtures in this ts-pptx repository, especially for read-model or OOXML bugs that need desktop PowerPoint output rather than ts-pptx-generated packages.
+description: Use when creating, replacing, verifying, or documenting real Microsoft PowerPoint-authored .pptx fixtures in this pptx-ts repository, especially for read-model or OOXML bugs that need desktop PowerPoint output rather than pptx-ts-generated packages.
 metadata:
   internal: true
 ---
@@ -8,7 +8,7 @@ metadata:
 # PowerPoint fixture authoring
 
 Reference fixtures are evidence for how PowerPoint writes OOXML, so never generate them with
-ts-pptx. `pnpm ppt:run` sends a recipe to the worker when `TSPPTX_POWERPOINT_URL` is set (the
+pptx-ts. `pnpm ppt:run` sends a recipe to the worker when `TSPPTX_POWERPOINT_URL` is set (the
 VM in `tools/powerpoint-vm/`; `pnpm ppt:health` confirms it answers) and otherwise runs it on
 this Windows machine's PowerPoint. With neither, stop and open the fixture issue AGENTS.md
 describes.

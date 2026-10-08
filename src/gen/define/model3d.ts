@@ -1,5 +1,5 @@
 /**
- * ts-pptx: 3D model Definition (`addModel3d()` — PowerPoint's Insert ▸ 3D Models).
+ * pptx-ts: 3D model Definition (`addModel3d()` — PowerPoint's Insert ▸ 3D Models).
  *
  * Registers the `.glb` payload as an embedded media part plus a preview-picture image rel, and
  * pushes a `SlideObject{ _type: model3d, model3d }` for `gen/slide/objects/model3d.ts` to emit as

@@ -1,5 +1,5 @@
 /**
- * ts-pptx: XML element builder (write-side substrate)
+ * pptx-ts: XML element builder (write-side substrate)
  *
  * The write path historically concatenated template strings and called
  * `encodeXmlEntities` by hand at every interpolation — the source of escaping,

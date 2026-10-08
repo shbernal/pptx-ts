@@ -1,5 +1,5 @@
 /**
- * ts-pptx: chartEx (cx:) Style + Color Parts
+ * pptx-ts: chartEx (cx:) Style + Color Parts
  *
  * Every chartEx chart part (`chartEx{N}.xml`) MUST be accompanied by a chart-style part
  * (`style{N}.xml`, `cs:chartStyle`) and a chart-color-style part (`colors{N}.xml`,

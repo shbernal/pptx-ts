@@ -1,5 +1,5 @@
 /**
- * ts-pptx: slide-master parts
+ * pptx-ts: slide-master parts
  *
  * The slide master (`slideMaster1.xml`) and its `.rels`, plus the master text
  * styles (`<p:txStyles>`): per-level default values mirroring the built-in

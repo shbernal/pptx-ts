@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the error taxonomy, as every entry point republishes it
+ * pptx-ts: the error taxonomy, as every entry point republishes it
  *
  * Every failure the library throws. The classes and their `code` are API; the message is not.
  *

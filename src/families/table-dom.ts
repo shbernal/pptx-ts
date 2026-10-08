@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the table family's live-DOM half
+ * pptx-ts: the table family's live-DOM half
  *
  * `tableToSlides` reproduces a rendered HTML `<table>` as a PowerPoint table, resolving the element
  * id against the global `document`. It is the table family's, but it is composed separately because

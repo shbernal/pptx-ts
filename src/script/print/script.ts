@@ -87,7 +87,7 @@ export function printScript(ir: DeckIr, options: PrintScriptOptions = {}): Print
 	const lines: string[] = [
 		header(
 			[
-				'Generated from a .pptx by ts-pptx/script.',
+				'Generated from a .pptx by pptx-ts/script.',
 				'',
 				'Template-anchored: the source deck is reused as the template, so its slide masters,',
 				'layouts, theme and document properties are the originals, byte for byte. Only the',

@@ -1,9 +1,9 @@
 ---
 doc-schema-version: 1
 title: "Errors and warnings"
-summary: "How ts-pptx reports a problem: a thrown error with a stable code when it cannot produce the deck you asked for, a diagnostic when it can. The error classes, what to branch on, routing and escalating warnings, and which failures to report."
+summary: "How pptx-ts reports a problem: a thrown error with a stable code when it cannot produce the deck you asked for, a diagnostic when it can. The error classes, what to branch on, routing and escalating warnings, and which failures to report."
 read_when:
-  - Catching and classifying an error from ts-pptx
+  - Catching and classifying an error from pptx-ts
   - Silencing, redirecting or escalating library warnings
   - Deciding whether a failure is worth reporting upstream
 doc_type: "reference"
@@ -11,7 +11,7 @@ doc_type: "reference"
 
 # Errors and warnings
 
-When ts-pptx meets input it cannot use as given, it either warns or throws. What decides it is whether the deck can still come out as the one you asked for.
+When pptx-ts meets input it cannot use as given, it either warns or throws. What decides it is whether the deck can still come out as the one you asked for.
 
 ```mermaid
 flowchart TD
@@ -34,7 +34,7 @@ Errors and warnings share one vocabulary, `TsPptxCode`. A code names a condition
 
 ## Errors
 
-Every failure ts-pptx raises is a `TsPptxError`, thrown as one of five subclasses. Each one is also an `Error`, so a `catch` that only knows `Error` keeps working.
+Every failure pptx-ts raises is a `TsPptxError`, thrown as one of five subclasses. Each one is also an `Error`, so a `catch` that only knows `Error` keeps working.
 
 ```ts
 class TsPptxError extends Error {
@@ -79,7 +79,7 @@ try {
 }
 ```
 
-`buildDeck` stands for your own code. The class says who fixes the problem. An `InvalidOptionError` needs a change in the calling code, a `PackageReadError` a different input file, a `MediaError` a working resource, and an `InternalError` a fix in ts-pptx.
+`buildDeck` stands for your own code. The class says who fixes the problem. An `InvalidOptionError` needs a change in the calling code, a `PackageReadError` a different input file, a `MediaError` a working resource, and an `InternalError` a fix in pptx-ts.
 
 ### `InternalError` asks to be reported
 
@@ -88,7 +88,7 @@ try {
 ```text
 makeXmlSlideRel: no slide at index 3
 
-This is a bug in ts-pptx, not in your deck or your code. Please report it:
+This is a bug in pptx-ts, not in your deck or your code. Please report it:
 https://github.com/shbernal/pptx-ts/issues/new?template=agent-report.yml
 ```
 
@@ -146,10 +146,10 @@ interface Diagnostic {
 
 ### Routing warnings
 
-By default each diagnostic is one `console.warn` line with a `ts-pptx:` prefix:
+By default each diagnostic is one `console.warn` line with a `pptx-ts:` prefix:
 
 ```text
-ts-pptx: text `columns` must be a number 1-16 (ignoring value)
+pptx-ts: text `columns` must be a number 1-16 (ignoring value)
 ```
 
 `setDiagnosticHandler` replaces that default:

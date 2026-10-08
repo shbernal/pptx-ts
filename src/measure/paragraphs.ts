@@ -1,5 +1,5 @@
 /**
- * ts-pptx: turning a slide text object into the simulator's inputs
+ * pptx-ts: turning a slide text object into the simulator's inputs
  *
  * The lower half of the measured-fit pass: normalize a text object's runs into `FitParagraph`s,
  * resolve its body insets and box, and work out how a height change is shared between `off.y` and

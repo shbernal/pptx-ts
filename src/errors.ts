@@ -1,7 +1,7 @@
 /**
  * The library's error taxonomy.
  *
- * Every failure ts-pptx raises is a {@link TsPptxError} carrying a stable {@link ErrorCode}, so a
+ * Every failure pptx-ts raises is a {@link TsPptxError} carrying a stable {@link ErrorCode}, so a
  * consumer can tell *"you passed a bad coordinate"* from *"this font file is corrupt"* from
  * *"these bytes are not a package"* without matching on message substrings. The classes are a
  * deliberately flat, coarse bucket — five of them — and the code carries the specificity. Do not
@@ -19,7 +19,7 @@
  * | {@link UnsupportedFeatureError} | a well-formed request this build/runtime/shape cannot express | the caller's expectations, or the environment |
  * | {@link PackageReadError} | the input bytes are not a readable package | the input file |
  * | {@link MediaError} | a referenced image/font/AV resource would not load or decode | the resource |
- * | {@link InternalError} | an invariant of the library itself did not hold | ts-pptx (file a bug) |
+ * | {@link InternalError} | an invariant of the library itself did not hold | pptx-ts (file a bug) |
  *
  * **Which of these is worth reporting upstream.** `InternalError` always is, and says so at
  * runtime. The middle three are worth reporting when the environment disagrees with us:
@@ -51,7 +51,7 @@ export interface TsPptxErrorOptions extends ErrorOptions {
 }
 
 /**
- * Base class for every error ts-pptx throws.
+ * Base class for every error pptx-ts throws.
  *
  * Catch this to catch anything from the library; narrow with `instanceof` on a subclass, or branch
  * on {@link TsPptxError.code}, to react to something specific. It is never thrown directly — every
@@ -149,14 +149,14 @@ export class MediaError extends TsPptxError {
  * of it says the report is worth making.
  */
 const REPORT_NOTICE =
-	'This is a bug in ts-pptx, not in your deck or your code. Please report it:\n' +
+	'This is a bug in pptx-ts, not in your deck or your code. Please report it:\n' +
 	'https://github.com/shbernal/pptx-ts/issues/new?template=agent-report.yml'
 
 /**
  * An invariant the library maintains itself did not hold.
  *
  * No consumer input should be able to produce one, which is the whole reason it is a separate
- * class: seeing it means the bug is in ts-pptx, and the useful response is to file it rather than
+ * class: seeing it means the bug is in pptx-ts, and the useful response is to file it rather than
  * to keep adjusting the input.
  *
  * It is the one class in the taxonomy that extends its own message, appending `REPORT_NOTICE`

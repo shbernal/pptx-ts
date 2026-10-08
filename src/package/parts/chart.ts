@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the chart contribution to a written package
+ * pptx-ts: the chart contribution to a written package
  *
  * The expensive one. A chart rel pulls in its `chart.xml`, the embedded workbook PowerPoint opens
  * when the user edits the data, the chart part's own rels, and — for a chartEx chart — the

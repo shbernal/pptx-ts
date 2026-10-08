@@ -1,5 +1,5 @@
 {
-  "name": "ts-pptx",
+  "name": "pptx-ts",
   "description": "Build, read and edit PowerPoint .pptx files from TypeScript, with no PowerPoint installed.",
   "repoOnly": ["contributing"],
   "navigation": [
@@ -55,7 +55,7 @@
       ]
     },
     {
-      "group": "ts-pptx vs PptxGenJS",
+      "group": "pptx-ts vs PptxGenJS",
       "pages": ["comparison", "comparison-syntax", "comparison-method"]
     },
     {

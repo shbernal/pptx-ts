@@ -1,5 +1,5 @@
 @echo off
-rem Provisions the ts-pptx PowerPoint worker VM. dockur copies this folder to C:\OEM and runs
+rem Provisions the pptx-ts PowerPoint worker VM. dockur copies this folder to C:\OEM and runs
 rem this file once, elevated, in the user's session at the first logon after Windows Setup.
 rem Its output goes to C:\OEM\install.log (LOG=Y in compose.yml).
 rem

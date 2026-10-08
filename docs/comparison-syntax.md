@@ -1,11 +1,11 @@
 ---
 doc-schema-version: 1
 title: "Porting from PptxGenJS"
-summary: "Moving a deck script from pptxgenjs 4.0.1 to ts-pptx 3.7.0: the calls that change, what changes around them, and every intent in the comparison corpus as code in both libraries."
+summary: "Moving a deck script from pptxgenjs 4.0.1 to pptx-ts 3.7.0: the calls that change, what changes around them, and every intent in the comparison corpus as code in both libraries."
 read_when:
-  - Porting a deck script from pptxgenjs to ts-pptx
+  - Porting a deck script from pptxgenjs to pptx-ts
   - Reading a comparison row and wanting the calls behind it
-  - Looking for the ts-pptx call that emits a particular construct
+  - Looking for the pptx-ts call that emits a particular construct
   - Reading a bundle size and wanting the program that was measured
 doc_type: "guide"
 ---
@@ -16,12 +16,12 @@ doc_type: "guide"
 
 # Porting from PptxGenJS
 
-ts-pptx descends from pptxgenjs, so much of a pptxgenjs script carries across as it is: of
+pptx-ts descends from pptxgenjs, so much of a pptxgenjs script carries across as it is: of
 the 10 intents both libraries build in the comparison corpus, 7 are called with identical
 code. This page is the rest: the calls that change, what changes around them, and then
 every intent and program in the corpus as code in both libraries.
 
-Measured on 2026-09-21: ts-pptx 3.7.0 built from this repository, against pptxgenjs 4.0.1
+Measured on 2026-09-21: pptx-ts 3.7.0 built from this repository, against pptxgenjs 4.0.1
 installed from npm.
 
 ## The calls that change
@@ -30,7 +30,7 @@ Each row is a run of lines that differs between the two arms of an intent or a p
 printed further down, with every place it appears. Everything else in those arms is the
 same code.
 
-| ts-pptx | pptxgenjs | Where |
+| pptx-ts | pptxgenjs | Where |
 |---|---|---|
 | `const PNG_1PX_URL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAA…'` | `const PNG_1PX_BARE = 'image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcS…'` | Raster image, Full deck |
 | `pres.addSlide().addImage({ data: PNG_1PX_URL, x: 1, y: 1, w: 2, h: 2 })` | `pres.addSlide().addImage({ data: PNG_1PX_BARE, x: 1, y: 1, w: 2, h: 2 })` | Raster image |
@@ -54,7 +54,7 @@ same code.
   "pptxgenjs"`. From CommonJS, `const { default: TsPptx } = require("pptx-ts")`: the
   package is an ES module, so `require()` returns its namespace and the class is on
   `.default`.
-- **Node.js 24 or later.** ts-pptx declares `>=24`; pptxgenjs runs on older releases.
+- **Node.js 24 or later.** pptx-ts declares `>=24`; pptxgenjs runs on older releases.
 - **One build.** Node, bundlers and browsers all load the same ES module through the
   package exports, so there is no separate CommonJS or browser file to choose. See [where
   it runs](getting-started/runtime.md).
@@ -105,7 +105,7 @@ the harness read for both of them.
 
 ### Text run
 
-`<a:t>` in `ppt/slides/slide1.xml`. ts-pptx: emitted. pptxgenjs: emitted.
+`<a:t>` in `ppt/slides/slide1.xml`. pptx-ts: emitted. pptxgenjs: emitted.
 
 Both libraries, called identically:
 
@@ -115,7 +115,7 @@ pres.addSlide().addText('probe', { x: 1, y: 1, w: 4, h: 1 })
 
 ### Table
 
-`<a:tbl>` in `ppt/slides/slide1.xml`. ts-pptx: emitted. pptxgenjs: emitted.
+`<a:tbl>` in `ppt/slides/slide1.xml`. pptx-ts: emitted. pptxgenjs: emitted.
 
 Both libraries, called identically:
 
@@ -131,9 +131,9 @@ pres.addSlide().addTable(
 
 ### Raster image
 
-`<p:pic>` in `ppt/slides/slide1.xml`. ts-pptx: emitted. pptxgenjs: emitted.
+`<p:pic>` in `ppt/slides/slide1.xml`. pptx-ts: emitted. pptxgenjs: emitted.
 
-**ts-pptx**
+**pptx-ts**
 
 ```js
 const PNG_1PX_URL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAA…'
@@ -151,9 +151,9 @@ pres.addSlide().addImage({ data: PNG_1PX_BARE, x: 1, y: 1, w: 2, h: 2 })
 
 ### Bar chart
 
-`<c:barChart>` in `ppt/charts/chart1.xml`. ts-pptx: emitted. pptxgenjs: emitted.
+`<c:barChart>` in `ppt/charts/chart1.xml`. pptx-ts: emitted. pptxgenjs: emitted.
 
-**ts-pptx**
+**pptx-ts**
 
 ```js
 const BAR_DATA = [{ name: 'Revenue', labels: ['Q1', 'Q2', 'Q3'], values: [12, 19, 7] }]
@@ -171,7 +171,7 @@ pres.addSlide().addChart('bar', BAR_DATA, { x: 1, y: 1, w: 6, h: 4 })
 
 ### External hyperlink
 
-`<a:hlinkClick` in `ppt/slides/slide1.xml`. ts-pptx: emitted. pptxgenjs: emitted.
+`<a:hlinkClick` in `ppt/slides/slide1.xml`. pptx-ts: emitted. pptxgenjs: emitted.
 
 Both libraries, called identically:
 
@@ -181,9 +181,9 @@ pres.addSlide().addText('docs', { x: 1, y: 1, w: 4, h: 1, hyperlink: { url: 'htt
 
 ### User-defined slide master
 
-`<p:ph` in `ppt/slides/slide1.xml`. ts-pptx: emitted. pptxgenjs: emitted.
+`<p:ph` in `ppt/slides/slide1.xml`. pptx-ts: emitted. pptxgenjs: emitted.
 
-**ts-pptx**
+**pptx-ts**
 
 ```js
 pres.defineSlideMaster({
@@ -205,7 +205,7 @@ pres.addSlide({ masterName: 'PROBE_MASTER' }).addText('probe', { placeholder: 't
 
 ### Sections
 
-`<p14:sectionLst` in `ppt/presentation.xml`. ts-pptx: emitted. pptxgenjs: emitted.
+`<p14:sectionLst` in `ppt/presentation.xml`. pptx-ts: emitted. pptxgenjs: emitted.
 
 Both libraries, called identically:
 
@@ -216,7 +216,7 @@ pres.addSlide({ sectionTitle: 'Findings' }).addText('probe', { x: 1, y: 1, w: 4,
 
 ### Speaker notes
 
-`probe note` in `ppt/notesSlides/notesSlide1.xml`. ts-pptx: emitted. pptxgenjs: emitted.
+`probe note` in `ppt/notesSlides/notesSlide1.xml`. pptx-ts: emitted. pptxgenjs: emitted.
 
 Both libraries, called identically:
 
@@ -226,7 +226,7 @@ pres.addSlide().addNotes('probe note')
 
 ### Preset-geometry shape
 
-`<a:prstGeom` in `ppt/slides/slide1.xml`. ts-pptx: emitted. pptxgenjs: emitted.
+`<a:prstGeom` in `ppt/slides/slide1.xml`. pptx-ts: emitted. pptxgenjs: emitted.
 
 Both libraries, called identically:
 
@@ -236,7 +236,7 @@ pres.addSlide().addShape('roundRect', { x: 1, y: 1, w: 3, h: 2, fill: { color: '
 
 ### Slide background colour
 
-`<p:bg>` in `ppt/slides/slide1.xml`. ts-pptx: emitted. pptxgenjs: emitted.
+`<p:bg>` in `ppt/slides/slide1.xml`. pptx-ts: emitted. pptxgenjs: emitted.
 
 Both libraries, called identically:
 
@@ -250,9 +250,9 @@ slide.addText('probe', { x: 1, y: 1, w: 4, h: 1 })
 
 ### Slide transition
 
-`<p:transition` in `ppt/slides/slide1.xml`. ts-pptx: emitted. pptxgenjs: no API.
+`<p:transition` in `ppt/slides/slide1.xml`. pptx-ts: emitted. pptxgenjs: no API.
 
-**ts-pptx**
+**pptx-ts**
 
 ```js
 const slide = pres.addSlide()
@@ -262,9 +262,9 @@ slide.addText('probe', { x: 1, y: 1, w: 4, h: 1 })
 
 ### Build animation on a shape
 
-`<p:timing>` in `ppt/slides/slide1.xml`. ts-pptx: emitted. pptxgenjs: no API.
+`<p:timing>` in `ppt/slides/slide1.xml`. pptx-ts: emitted. pptxgenjs: no API.
 
-**ts-pptx**
+**pptx-ts**
 
 ```js
 const slide = pres.addSlide()
@@ -276,9 +276,9 @@ slide.addAnimation({ preset: 'fadeIn', objectName: 'Headline' })
 
 ### Embedded OLE object
 
-`<p:oleObj` in `ppt/slides/slide1.xml`. ts-pptx: emitted. pptxgenjs: no API.
+`<p:oleObj` in `ppt/slides/slide1.xml`. pptx-ts: emitted. pptxgenjs: no API.
 
-**ts-pptx**
+**pptx-ts**
 
 ```js
 const OLE_BLOB_B64 = 'dHMtcHB0eCBjb21wYXJpc29uIHByb2JlIHBheWxvYWQ='
@@ -288,9 +288,9 @@ pres.addSlide().addOleObject({ data: OLE_BLOB_B64, extn: 'bin', x: 1, y: 1, w: 4
 
 ### 3D model
 
-`am3d:model3d` in `ppt/slides/slide1.xml`. ts-pptx: emitted. pptxgenjs: no API.
+`am3d:model3d` in `ppt/slides/slide1.xml`. pptx-ts: emitted. pptxgenjs: no API.
 
-**ts-pptx**
+**pptx-ts**
 
 ```js
 const CUBE_GLB = 'demos/common/media/cube.glb'
@@ -300,9 +300,9 @@ pres.addSlide().addModel3d({ path: CUBE_GLB, meterPerModelUnit: 0.5, x: 1, y: 1,
 
 ### Embedded font face
 
-`<p:embeddedFontLst>` in `ppt/presentation.xml`. ts-pptx: emitted. pptxgenjs: no API.
+`<p:embeddedFontLst>` in `ppt/presentation.xml`. pptx-ts: emitted. pptxgenjs: no API.
 
-**ts-pptx**
+**pptx-ts**
 
 ```js
 const SILKSCREEN_TTF = 'test/read/fixtures/fonts/Silkscreen-Regular.ttf'
@@ -315,9 +315,9 @@ pres.addSlide().addText('probe', { x: 1, y: 1, w: 4, h: 1, fontFace: 'Silkscreen
 
 ### Connector between shapes
 
-`<p:cxnSp>` in `ppt/slides/slide1.xml`. ts-pptx: emitted. pptxgenjs: no API.
+`<p:cxnSp>` in `ppt/slides/slide1.xml`. pptx-ts: emitted. pptxgenjs: no API.
 
-**ts-pptx**
+**pptx-ts**
 
 ```js
 const slide = pres.addSlide()
@@ -330,9 +330,9 @@ slide.addConnector({ type: 'elbow', x1: 2.5, y1: 1.5, x2: 5, y2: 1.5, startShape
 
 ### Inline equation
 
-`<a14:m` in `ppt/slides/slide1.xml`. ts-pptx: emitted. pptxgenjs: no API.
+`<a14:m` in `ppt/slides/slide1.xml`. pptx-ts: emitted. pptxgenjs: no API.
 
-**ts-pptx**
+**pptx-ts**
 
 ```js
 const OMML_INLINE = '<m:oMath><m:r><m:t>n-1</m:t></m:r></m:oMath>'
@@ -349,9 +349,9 @@ pres.addSlide().addText([{ text: 'for all ' }, { math: OMML_INLINE, inline: true
 
 ### Gradient shape fill
 
-`<a:gradFill` in `ppt/slides/slide1.xml`. ts-pptx: emitted. pptxgenjs: no API.
+`<a:gradFill` in `ppt/slides/slide1.xml`. pptx-ts: emitted. pptxgenjs: no API.
 
-**ts-pptx**
+**pptx-ts**
 
 ```js
 pres.addSlide().addShape('rect', {
@@ -379,9 +379,9 @@ theme XML, which no API parameterises.
 
 ### 3D bevel on a table cell
 
-`<a:cell3D` in `ppt/slides/slide1.xml`. ts-pptx: emitted. pptxgenjs: no API.
+`<a:cell3D` in `ppt/slides/slide1.xml`. pptx-ts: emitted. pptxgenjs: no API.
 
-**ts-pptx**
+**pptx-ts**
 
 ```js
 pres
@@ -397,9 +397,9 @@ pres
 
 ### Funnel chart (chartEx)
 
-`<cx:chart>` in `ppt/charts/chartEx1.xml`. ts-pptx: emitted. pptxgenjs: no API.
+`<cx:chart>` in `ppt/charts/chartEx1.xml`. pptx-ts: emitted. pptxgenjs: no API.
 
-**ts-pptx**
+**pptx-ts**
 
 ```js
 pres.addSlide().addChart([{ name: 'Stage', labels: ['Lead', 'Trial', 'Won'], values: [120, 48, 17] }], {
@@ -415,9 +415,9 @@ pres.addSlide().addChart([{ name: 'Stage', labels: ['Lead', 'Trial', 'Won'], val
 
 ### Slide Zoom tile
 
-`pslz:sldZm` in `ppt/slides/slide2.xml`. ts-pptx: emitted. pptxgenjs: no API.
+`pslz:sldZm` in `ppt/slides/slide2.xml`. pptx-ts: emitted. pptxgenjs: no API.
 
-**ts-pptx**
+**pptx-ts**
 
 ```js
 pres.addSlide().addText('target', { x: 1, y: 1, w: 4, h: 1 })
@@ -428,7 +428,7 @@ pres.addSlide().addSlideZoom({ target: 1, x: 1, y: 1, w: 3, h: 1.7 })
 
 ### SmartArt diagram (write side)
 
-`<dgm:relIds` in `ppt/slides/slide1.xml`. ts-pptx: no API. pptxgenjs: no API.
+`<dgm:relIds` in `ppt/slides/slide1.xml`. pptx-ts: no API. pptxgenjs: no API.
 
 Neither library has an API for this intent, so neither has a block.
 
@@ -477,7 +477,7 @@ pres.addSlide().addText('hello', { x: 1, y: 1, w: 4, h: 1 })
 A defined master, two sections, formatted and bulleted text, a hyperlink, a slide
 background and speaker notes.
 
-**ts-pptx**
+**pptx-ts**
 
 ```js
 pres.defineSlideMaster({
@@ -554,7 +554,7 @@ next.addNotes('The link is the internal report, not the public summary.')
 A titled slide and a bordered table with a header row, fixed column widths and per-cell
 options.
 
-**ts-pptx**
+**pptx-ts**
 
 ```js
 const REGION_ROWS = [[{ text: 'Region' }, { text: 'Revenue' }, { text: 'Growth' }], [{ text: 'North America' }, { text: '24.9' }, { text: '14.2%' }], [{ text: 'EMEA' }, { text: '12.6' }, { text: '16.8%' }], [{ text: 'APAC' }, { text: '6.8' }, { text: '9.4%' }]]
@@ -599,7 +599,7 @@ slide.addTable(REGION_ROWS, {
 Three charts on three slides: a column chart with value labels, a two-series line chart,
 and a pie chart with percentages.
 
-**ts-pptx**
+**pptx-ts**
 
 ```js
 const BAR_DATA = [{ name: 'Revenue', labels: ['Q1', 'Q2', 'Q3', 'Q4'], values: [12, 19, 7, 24] }]
@@ -679,7 +679,7 @@ pres.addSlide().addChart('pie', PIE_DATA, {
 Every construct the shared baseline covers, in one deck: master, sections, background,
 text, hyperlink, notes, a preset shape, an image, a table and a chart.
 
-**ts-pptx**
+**pptx-ts**
 
 ```js
 const PNG_1PX_URL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAA…'
@@ -772,7 +772,7 @@ corpus is not hunting for the slowest construct, it is making the per-slide cost
 
 `slides` below is that count. Everything else is the same code at every size.
 
-**ts-pptx**
+**pptx-ts**
 
 ```js
 const rows = [
@@ -830,7 +830,7 @@ for (let index = 0; index < slides; index++) {
 
 The corpus is `scripts/comparison/probes.mjs`, one object per intent, and both arms of a
 probe are ordinary code. A pull request that adds an intent is welcome, including one
-ts-pptx fails. The harness reports the four outcomes it reads, and the comparison page
+pptx-ts fails. The harness reports the four outcomes it reads, and the comparison page
 prints an intent upstream emits and we do not rather than dropping it.
 
 The bundle corpus is `scripts/comparison/programs.mjs`, one object per program, on one

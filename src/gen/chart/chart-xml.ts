@@ -1,5 +1,5 @@
 /**
- * ts-pptx: Chart DrawingML Assembly
+ * pptx-ts: Chart DrawingML Assembly
  *
  * Builds a chart's `ppt/charts/chartN.xml` -- the `<c:chartSpace>` DrawingML that
  * PowerPoint renders. `makeXmlCharts` assembles the top-level envelope (header, plot
@@ -629,7 +629,7 @@ export function makeXmlCharts(rel: SlideRelChart): string {
 }
 
 /**
- * Stable ts-pptx vendor GUID identifying the chart-metadata extension on `c:chartSpace/c:extLst`.
+ * Stable pptx-ts vendor GUID identifying the chart-metadata extension on `c:chartSpace/c:extLst`.
  * Custom data rides under this URI in a foreign namespace so PowerPoint preserves it (the extLst
  * mechanism) instead of stripping/repairing it as it would an unrecognised sibling element.
  */

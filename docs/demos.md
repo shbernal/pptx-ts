@@ -3,7 +3,7 @@ doc-schema-version: 1
 title: "Demos"
 summary: "The quarterly-review showcase deck, built in your browser and previewed in the page."
 read_when:
-  - Seeing what a deck built with ts-pptx looks like before installing it
+  - Seeing what a deck built with pptx-ts looks like before installing it
   - Running the showcase decks from a clone of the repository
 doc_type: "guide"
 # The slides are the page. Dropping the right-hand table of contents gives them the width
@@ -45,7 +45,7 @@ is not previewed here.
 
 ```bash
 git clone https://github.com/shbernal/pptx-ts
-cd ts-pptx && pnpm install
+cd pptx-ts && pnpm install
 pnpm demos:build                    # both decks
 pnpm demos:build quarterly-review   # just this one
 ```

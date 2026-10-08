@@ -451,7 +451,7 @@ export type MediaErrorCode =
 
 /**
  * Conditions carried by `InternalError`: an invariant the library maintains itself did not hold.
- * Reaching one is a bug in ts-pptx, not something a consumer can fix by changing their input —
+ * Reaching one is a bug in pptx-ts, not something a consumer can fix by changing their input —
  * which is exactly why it is worth being able to tell apart from the four classes above.
  */
 export type InternalErrorCode =

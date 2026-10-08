@@ -10,13 +10,13 @@ import { parsePackOutput } from '../../scripts/pack-utils.mjs'
 
 describe('parsePackOutput', () => {
 	test('reads an object payload printed after progress lines', () => {
-		const output = ['Progress: resolved 12, reused 12', '{"filename":"ts-pptx-1.0.0.tgz"}'].join('\n')
-		expect(parsePackOutput(output)).toEqual({ filename: 'ts-pptx-1.0.0.tgz' })
+		const output = ['Progress: resolved 12, reused 12', '{"filename":"pptx-ts-1.0.0.tgz"}'].join('\n')
+		expect(parsePackOutput(output)).toEqual({ filename: 'pptx-ts-1.0.0.tgz' })
 	})
 
 	test('reads an array payload', () => {
-		const output = ['packing…', '[{"filename":"ts-pptx-1.0.0.tgz"}]'].join('\n')
-		expect(parsePackOutput(output)).toEqual([{ filename: 'ts-pptx-1.0.0.tgz' }])
+		const output = ['packing…', '[{"filename":"pptx-ts-1.0.0.tgz"}]'].join('\n')
+		expect(parsePackOutput(output)).toEqual([{ filename: 'pptx-ts-1.0.0.tgz' }])
 	})
 
 	test('reads a payload that is the entire output', () => {

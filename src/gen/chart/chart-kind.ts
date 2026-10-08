@@ -1,5 +1,5 @@
 /**
- * ts-pptx: chart-kind predicates
+ * pptx-ts: chart-kind predicates
  *
  * The classification questions the chart emitters ask about a chart's `_type`, in one place.
  * There is nothing clever here — each is the comparison the call sites were already writing —

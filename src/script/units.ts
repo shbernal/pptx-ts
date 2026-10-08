@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the script converter's unit conversions, on the seam between its two halves.
+ * pptx-ts: the script converter's unit conversions, on the seam between its two halves.
  *
  * `docs/contributing/architecture.md` states the seam: "`from-read/` knows OOXML and the read model,
  * `print/` knows only strings, and neither can see the other." Both halves nonetheless have

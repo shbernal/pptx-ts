@@ -1,7 +1,7 @@
 /**
  * Showcase deck: "Kestrel Analytics — Q3 FY26 Business Review".
  *
- * The corporate flagship. It leans on the parts of ts-pptx a report deck actually needs:
+ * The corporate flagship. It leans on the parts of pptx-ts a report deck actually needs:
  * a themed colour scheme, five slide masters, native gradients, grouped composite shapes,
  * charts (stacked column, doughnut, line), a hand-styled table, and speaker notes.
  *

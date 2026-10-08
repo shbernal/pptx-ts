@@ -1,6 +1,6 @@
 {
 	"$schema": "https://json.schemastore.org/tsconfig",
-	"display": "ts-pptx scripts and root build configs",
+	"display": "pptx-ts scripts and root build configs",
 	"extends": "./tsconfig.base.json",
 	"compilerOptions": {
 		"noEmit": true,

@@ -1,4 +1,4 @@
-// Cross-package slide-master graft tests for `ts-pptx/read`.
+// Cross-package slide-master graft tests for `pptx-ts/read`.
 //
 // Contract under test: Presentation.importSlideMasters(source) copies master(s)
 // from a *different* open package together with their WHOLE layout family (not
@@ -573,7 +573,7 @@ describe('Presentation.importSlideMasters({ primary })', () => {
 describe('generate → read slide-master graft bridge', () => {
 	async function generatedDeckBytes() {
 		// LAYOUT_WIDE (12192000×6858000 EMU) matches the `image` fixture so the
-		// equal-size guard passes (ts-pptx's default is the narrower LAYOUT_16x9).
+		// equal-size guard passes (pptx-ts's default is the narrower LAYOUT_16x9).
 		const pres = new TsPptx()
 		pres.layout = 'LAYOUT_WIDE'
 		pres.addSlide().addText('interior one', { x: 1, y: 1, w: 6, h: 1 })

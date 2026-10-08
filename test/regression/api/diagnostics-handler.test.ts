@@ -14,7 +14,7 @@ import {
 //
 // What is pinned here is the CONTRACT, not the wording. A diagnostic's `code` is API — a consumer
 // may branch on it — while its `message` is explicitly free to change, so the assertions below
-// check codes and check that the message carries no `ts-pptx:` prefix of its own (the default
+// check codes and check that the message carries no `pptx-ts:` prefix of its own (the default
 // console handler owns that).
 
 /** A tiny deck that trips exactly one known condition. */
@@ -49,7 +49,7 @@ defineRegressionSuite('Diagnostics handler', [
 			// The prefix belongs to the default console handler, not to the message. A message that
 			// carried its own would double up the moment the default handler printed it.
 			assert(
-				!diagnostic.message.startsWith('ts-pptx:'),
+				!diagnostic.message.startsWith('pptx-ts:'),
 				'the message must not carry the console prefix; got: ' + diagnostic.message
 			)
 		},
@@ -72,7 +72,7 @@ defineRegressionSuite('Diagnostics handler', [
 
 			assert(seen.length > 0, 'expected the console default to emit after the handler was removed')
 			assert(
-				seen.every((line) => line.startsWith('ts-pptx: ')),
+				seen.every((line) => line.startsWith('pptx-ts: ')),
 				'the default handler stamps the library prefix; got: ' + JSON.stringify(seen)
 			)
 			assert(
@@ -158,7 +158,7 @@ defineRegressionSuite('Diagnostics handler', [
 	{
 		name: 'every published subpath can install the handler, and they are the same one',
 		fn: async () => {
-			// A consumer of `ts-pptx/read` alone gets warnings from the read path -- a chart point
+			// A consumer of `pptx-ts/read` alone gets warnings from the read path -- a chart point
 			// cache out of range, a picture whose relationship does not resolve -- and until the
 			// diagnostic surface was republished the way the error taxonomy already was, there was
 			// no supported way to intercept them: the handler was exported only by the three
@@ -171,11 +171,11 @@ defineRegressionSuite('Diagnostics handler', [
 			const base = await import('../../../dist/node.js')
 			for (const entry of ['read', 'measure', 'script', 'inspect', 'html', 'math', 'zip']) {
 				const mod = await import(`../../../dist/${entry}.js`)
-				assertEqual(typeof mod.setDiagnosticHandler, 'function', `ts-pptx/${entry} must publish setDiagnosticHandler`)
-				assertEqual(typeof mod.resetDiagnosticState, 'function', `ts-pptx/${entry} must publish resetDiagnosticState`)
+				assertEqual(typeof mod.setDiagnosticHandler, 'function', `pptx-ts/${entry} must publish setDiagnosticHandler`)
+				assertEqual(typeof mod.resetDiagnosticState, 'function', `pptx-ts/${entry} must publish resetDiagnosticState`)
 				assert(
 					mod.setDiagnosticHandler === base.setDiagnosticHandler,
-					`ts-pptx/${entry} must publish the SAME handler installer as the main entry`
+					`pptx-ts/${entry} must publish the SAME handler installer as the main entry`
 				)
 			}
 		},

@@ -1,5 +1,5 @@
 /**
- * ts-pptx: finding the layout placeholder a slide object names
+ * pptx-ts: finding the layout placeholder a slide object names
  *
  * A slide object that names a placeholder (`addText('x', { placeholder: 'body' })`) takes options
  * from the layout's placeholder when it is defined, and its frame and `<p:ph>` from it when it is

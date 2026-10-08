@@ -1,5 +1,5 @@
 /**
- * ts-pptx: Placeholder Definition
+ * pptx-ts: Placeholder Definition
  *
  * `addPlaceholdersToSlideLayouts` seeds a slide with any layout placeholders it has not already
  * populated, so every inherited placeholder is present as an (empty) text object.

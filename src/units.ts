@@ -63,7 +63,7 @@ export type Emu = number & { readonly __unit: 'emu' }
 const IMPLAUSIBLE_INCHES = 1000
 
 /** Default pixel density for the `"<n>px"` coordinate unit: CSS reference pixels, also the
- *  density ts-pptx assumes when reading an image header's pixel dimensions. */
+ *  density pptx-ts assumes when reading an image header's pixel dimensions. */
 export const DEFAULT_PX_PER_INCH = 96
 
 /**
@@ -78,11 +78,11 @@ export const MIN_COORDINATE_EMU = -27273042329600
 export type StandardLayoutName = 'LAYOUT_4x3' | 'LAYOUT_16x9' | 'LAYOUT_16x10' | 'LAYOUT_WIDE'
 
 export interface StandardLayout {
-	/** ts-pptx layout key used with `pptx.layout`. */
+	/** pptx-ts layout key used with `pptx.layout`. */
 	readonly layout: StandardLayoutName
 	/** PresentationML slide-size preset name, or `custom` for PowerPoint widescreen. */
 	readonly name: string
-	/** Slide width in inches — inches is ts-pptx's default coordinate unit, so this is the value to use for `addText`/`addShape` math. */
+	/** Slide width in inches — inches is pptx-ts's default coordinate unit, so this is the value to use for `addText`/`addShape` math. */
 	readonly widthIn: number
 	/** Slide height in inches. */
 	readonly heightIn: number

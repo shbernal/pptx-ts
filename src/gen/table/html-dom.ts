@@ -1,5 +1,5 @@
 /**
- * ts-pptx: HTML-table → slides (browser DOM path)
+ * pptx-ts: HTML-table → slides (browser DOM path)
  *
  * The tableToSlides() flow: reproduce an HTML table as a PowerPoint table across as many
  * slides as needed. The DOM-independent parts are factored into pure helpers
@@ -643,7 +643,7 @@ function collectTableRows(table: Element): Array<{ row: Element; part: TablePart
 
 /**
  * Reproduces an HTML table as a PowerPoint table - including column widths, style, etc. - creates 1 or more slides as needed
- * @param {TableToSlidesHost} pptx - ts-pptx instance
+ * @param {TableToSlidesHost} pptx - pptx-ts instance
  * @param {TableToSlidesElement | string} target - the table element, or the HTMLElementID of the table
  * @param {TableToSlidesProps} options - array of options (e.g.: tabsize)
  */

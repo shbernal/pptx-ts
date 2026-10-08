@@ -106,9 +106,9 @@ export type PptxGraphicKind = 'table' | 'chart' | 'chartEx' | 'diagram' | 'other
  * Vertical-autofit mode of a text frame, read from the `a:bodyPr` child element:
  * - `'none'`: no autofit (`a:noAutofit`, or no autofit child at all). The box has a
  *   fixed height the text must fit inside — a genuine overflow candidate.
- * - `'normAutofit'`: shrink text to fit (`a:normAutofit`, ts-pptx `fit: 'shrink'`).
+ * - `'normAutofit'`: shrink text to fit (`a:normAutofit`, pptx-ts `fit: 'shrink'`).
  *   Text is downscaled rather than overflowing.
- * - `'spAutoFit'`: resize shape to fit text (`a:spAutoFit`, ts-pptx `fit: 'resize'`).
+ * - `'spAutoFit'`: resize shape to fit text (`a:spAutoFit`, pptx-ts `fit: 'resize'`).
  *   The authored height is an output, not a constraint, so the box cannot overflow.
  */
 export type PptxAutofitMode = 'none' | 'normAutofit' | 'spAutoFit'

@@ -1,5 +1,5 @@
 /**
- * ts-pptx: DrawingML object-lock serialization
+ * pptx-ts: DrawingML object-lock serialization
  *
  * Emit the `a:spLocks` / `a:picLocks` / `a:graphicFrameLocks` / group-shape lock
  * elements. Each locking element type supports a different set of flags; the

@@ -63,18 +63,18 @@ export const SCALE_SIZES = [50, 200, 500]
  *
  * Two literal arms rather than one taking the subject as a parameter, for the reason the
  * other two corpora have two: the page prints these bodies, and a body that branches on
- * which library is running would put `subject === 'ts-pptx'` in front of a reader as though
+ * which library is running would put `subject === 'pptx-ts'` in front of a reader as though
  * it were a call they should make. The cost of writing the deck twice is that the two can
  * drift; `test/scripts/comparison-timing.test.ts` is what stops them, by holding the two
  * bodies against each other and allowing exactly the line that is allowed to differ.
  *
- * That line is `addChart`, which took a divergent signature at the detach: ts-pptx puts
+ * That line is `addChart`, which took a divergent signature at the detach: pptx-ts puts
  * `type` in the options object where upstream takes it as the first argument. Every other
  * call is spelled the same on both sides.
  * @type {Record<string, (slides: number) => (pres: any) => void>}
  */
 export const SCALE_ARMS = {
-	'ts-pptx': (slides) => (pres) => {
+	'pptx-ts': (slides) => (pres) => {
 		const rows = [
 			[{ text: 'Region' }, { text: 'Revenue' }, { text: 'Growth' }],
 			[{ text: 'North America' }, { text: '24.9' }, { text: '14.2%' }],

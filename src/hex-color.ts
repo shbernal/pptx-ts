@@ -1,5 +1,5 @@
 /**
- * ts-pptx: hex colour text, in the one spelling both halves use.
+ * pptx-ts: hex colour text, in the one spelling both halves use.
  *
  * A caller may write a colour with or without a leading `#`, and the library accepts both
  * everywhere — which means every site that validates or parses one strips it first. Those

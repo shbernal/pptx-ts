@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the pre-serialization pass
+ * pptx-ts: the pre-serialization pass
  *
  * Everything that must happen to authored slide state *before* any XML is built. Two callers
  * reach serialization and both need it:

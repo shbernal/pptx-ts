@@ -1,4 +1,4 @@
-// Author-on-template tests for `ts-pptx/read` (dn-import-template-masters).
+// Author-on-template tests for `pptx-ts/read` (dn-import-template-masters).
 //
 // Contract under test: Presentation.fromTemplate(input) opens a PowerPoint
 // template (.pptx or .potx) as an empty deck shell — its slide masters, layouts,

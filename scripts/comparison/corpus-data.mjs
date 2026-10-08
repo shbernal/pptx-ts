@@ -5,7 +5,7 @@
  * a chart series, a table's rows, a data URL. That is deliberate, because the page prints
  * those declarations beside the code that used them. It is also a hazard, because a library
  * may edit what it is given. pptxgenjs does: `addChart` wraps a series' `labels` in an array
- * and stamps a `_dataIndex` on it, in place, on the caller's own object. ts-pptx leaves the
+ * and stamps a `_dataIndex` on it, in place, on the caller's own object. pptx-ts leaves the
  * argument alone.
  *
  * Two things go wrong when nothing guards against that, and both were live before this

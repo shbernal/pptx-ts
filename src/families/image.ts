@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the image construct family
+ * pptx-ts: the image construct family
  *
  * Raster and SVG pictures, and the `image` descriptor a slide master or a group is written with.
  */

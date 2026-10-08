@@ -1,7 +1,7 @@
 ---
 doc-schema-version: 1
 title: "Architecture"
-summary: "How ts-pptx is structured and where major responsibilities live."
+summary: "How pptx-ts is structured and where major responsibilities live."
 read_when:
   - Changing module boundaries
   - Explaining architecture or ownership decisions
@@ -12,7 +12,7 @@ doc_type: "architecture"
 
 # Architecture
 
-ts-pptx turns a presentation object model into an OOXML `.pptx` package. Consumers import the
+pptx-ts turns a presentation object model into an OOXML `.pptx` package. Consumers import the
 package exports and nothing else. How the XML gets built stays on this side of that line.
 
 ## Layers

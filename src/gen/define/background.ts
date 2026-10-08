@@ -1,5 +1,5 @@
 /**
- * ts-pptx: Background Definition
+ * pptx-ts: Background Definition
  *
  * Registers an `addBackground()` image as a slide media rel (color backgrounds carry no rel);
  * the `<p:bg>` XML is emitted later at slide / layout serialize time.

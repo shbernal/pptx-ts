@@ -1,5 +1,5 @@
 /**
- * ts-pptx: Shared Chart Fragment Builders
+ * pptx-ts: Shared Chart Fragment Builders
  *
  * The leaf builders every chart region reuses -- titles, gridlines, series data points,
  * error bars, number caches, leader lines, borders. Each is a pure string builder with

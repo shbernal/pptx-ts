@@ -1,9 +1,9 @@
 ---
 doc-schema-version: 1
 title: "Installation"
-summary: "What ts-pptx needs, how to install it, the optional math dependencies, and how to import it from ESM, CommonJS or a page with no build step."
+summary: "What pptx-ts needs, how to install it, the optional math dependencies, and how to import it from ESM, CommonJS or a page with no build step."
 read_when:
-  - Adding ts-pptx to a project
+  - Adding pptx-ts to a project
   - Importing it from CommonJS or from a page with no build step
   - Choosing between the pptx-ts and @shbernal/ts-pptx package names
 doc_type: "guide"
@@ -11,7 +11,7 @@ doc_type: "guide"
 
 # Installation
 
-Add ts-pptx to a project, then import it from an ES module, from CommonJS, or from a page with no
+Add pptx-ts to a project, then import it from an ES module, from CommonJS, or from a page with no
 build step.
 
 ## Requirements

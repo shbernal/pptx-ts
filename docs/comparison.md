@@ -1,11 +1,11 @@
 ---
 doc-schema-version: 1
-title: "ts-pptx vs PptxGenJS"
-summary: "What ts-pptx 3.7.0 and pptxgenjs 4.0.1 each emit, how many of their decks validate, what each costs to bundle and install, and how the two projects are run."
+title: "pptx-ts vs PptxGenJS"
+summary: "What pptx-ts 3.7.0 and pptxgenjs 4.0.1 each emit, how many of their decks validate, what each costs to bundle and install, and how the two projects are run."
 read_when:
-  - Choosing between ts-pptx and pptxgenjs
+  - Choosing between pptx-ts and pptxgenjs
   - Checking whether a construct is emitted by one library or by both
-  - Weighing what ts-pptx gives up against what it adds
+  - Weighing what pptx-ts gives up against what it adds
 doc_type: "overview"
 ---
 
@@ -13,10 +13,10 @@ doc_type: "overview"
      Regenerate with `pnpm run comparison:render`.
      Source: `scripts/comparison/snapshot.json`, written by `scripts/comparison/measure.mjs`. -->
 
-# ts-pptx vs PptxGenJS
+# pptx-ts vs PptxGenJS
 
-ts-pptx 3.7.0 and pptxgenjs 4.0.1 were measured on 2026-09-21 by building the same 22 deck
-intents with each library and reading the bytes that came out. ts-pptx descends from
+pptx-ts 3.7.0 and pptxgenjs 4.0.1 were measured on 2026-09-21 by building the same 22 deck
+intents with each library and reading the bytes that came out. pptx-ts descends from
 pptxgenjs, detached at its v4.0.1 ([lineage](getting-started/introduction.md#lineage)), so
 every difference below comes from running both rather than from either one describing
 itself.
@@ -35,13 +35,13 @@ itself.
 - **No SmartArt on the write side, in either library.** It is not a difference between
   them, but it is a real gap in both.
 - **Adoption is not close.** pptxgenjs was downloaded 10,539,687 times in the last month,
-  against 1,780 for ts-pptx. That gap buys answers that already exist, examples written by
+  against 1,780 for pptx-ts. That gap buys answers that already exist, examples written by
   people other than the maintainer, and good odds that a bug on a common path was hit by
   someone else first. If that outweighs the differences below, use pptxgenjs.
 
 ## Scorecard
 
-|  | ts-pptx | pptxgenjs |
+|  | pptx-ts | pptxgenjs |
 |---|---|---|
 | Intents emitted | 21 of 22 | 10 of 22 |
 | Decks with no schema error | 21 of 21 | 0 of 10 |
@@ -57,17 +57,17 @@ bundle figure, and the programs behind them.
 
 <CoverageMatrix />
 
-Of 22 intents, ts-pptx emits 21 and pptxgenjs emits 10.
+Of 22 intents, pptx-ts emits 21 and pptxgenjs emits 10.
 
 Emitted by both: Text run, Table, Raster image, Bar chart, External hyperlink,
 User-defined slide master, Sections, Speaker notes, Preset-geometry shape and Slide
 background colour.
 
-Emitted by ts-pptx only: Slide transition, Build animation on a shape, Embedded OLE
+Emitted by pptx-ts only: Slide transition, Build animation on a shape, Embedded OLE
 object, 3D model, Embedded font face, Connector between shapes, Inline equation, Gradient
 shape fill, 3D bevel on a table cell, Funnel chart (chartEx) and Slide Zoom tile.
 
-No intent is emitted by pptxgenjs and not by ts-pptx.
+No intent is emitted by pptxgenjs and not by pptx-ts.
 
 Emitted by neither: SmartArt diagram (write side).
 
@@ -81,7 +81,7 @@ each intent is read for, the part it is read from, and the notes on individual r
 
 <ValidityBars />
 
-ts-pptx built 21 of the 22 decks, and all 21 validated cleanly. It had no API, and so no
+pptx-ts built 21 of the 22 decks, and all 21 validated cleanly. It had no API, and so no
 deck, for the remaining one.
 
 pptxgenjs built 10 of the 22 decks, and none validated cleanly (12 errors in all). It had
@@ -96,13 +96,13 @@ measured](comparison-method.md#schema-validity) lists each distinct error.
 
 <TimingRatio />
 
-Compressed, which is what a file you intend to keep gets, ts-pptx is faster on every deck,
+Compressed, which is what a file you intend to keep gets, pptx-ts is faster on every deck,
 by 21% on average. Stored, with compression turned off, it is slower on every deck, by 46%
 on average: its XML generation and package assembly cost more than pptxgenjs, and its
 compressor more than makes that back.
 
-Each cell is the ts-pptx median divided by the pptxgenjs median for the same deck, so a
-figure below 1× means ts-pptx took less time.
+Each cell is the pptx-ts median divided by the pptxgenjs median for the same deck, so a
+figure below 1× means pptx-ts took less time.
 
 | Deck | Compressed | Stored |
 |---|---|---|
@@ -121,7 +121,7 @@ measured](comparison-method.md#generation-time).
 
 ## Reading decks
 
-pptxgenjs generates decks and does not read them. ts-pptx also reads:
+pptxgenjs generates decks and does not read them. pptx-ts also reads:
 
 - [Inspection](reference/pptx-inspection.md) reports what a package contains without
   parsing it into a model.
@@ -135,7 +135,7 @@ pptxgenjs generates decks and does not read them. ts-pptx also reads:
 How the two projects are run, kept apart from everything above because stars and downloads
 measure history as much as merit.
 
-|  | ts-pptx | pptxgenjs |
+|  | pptx-ts | pptxgenjs |
 |---|---|---|
 | Repository | [shbernal/pptx-ts](https://github.com/shbernal/pptx-ts) | [gitbrent/PptxGenJS](https://github.com/gitbrent/PptxGenJS) |
 | Default branch | `master` | `master` |

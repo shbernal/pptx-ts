@@ -1,5 +1,5 @@
 /**
- * ts-pptx: Comment Definition
+ * pptx-ts: Comment Definition
  *
  * Validates `addComment()` author / text / position and stashes a review comment on the slide
  * (`_comments`); the `<p:cm>` XML is emitted later by `gen/slide/comments.ts`.

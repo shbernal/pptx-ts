@@ -1,5 +1,5 @@
 /**
- * ts-pptx: `docProps/app.xml`
+ * pptx-ts: `docProps/app.xml`
  *
  * Emit the extended-properties part (application, slide/notes counts, heading
  * pairs, titles of parts, company).

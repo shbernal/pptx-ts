@@ -1,5 +1,5 @@
 @echo off
-rem Starts the ts-pptx PowerPoint worker. The logon task install.bat registers runs this.
+rem Starts the pptx-ts PowerPoint worker. The logon task install.bat registers runs this.
 rem
 rem Each start mirrors the worker from the shared folder `pnpm ppt:vm:sync` writes, so the
 rem host's copy is the only one anyone edits. When the share is not up yet, the last copy

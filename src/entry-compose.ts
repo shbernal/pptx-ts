@@ -1,5 +1,5 @@
 /**
- * ts-pptx: composing a presentation from the construct families it actually needs
+ * pptx-ts: composing a presentation from the construct families it actually needs
  *
  * The body behind each entry's `createPresentation`, and the types that describe what comes back.
  * It lives beside `entry-surface.ts` for the same reason that does: `index.ts`, `node.ts` and

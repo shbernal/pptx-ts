@@ -566,7 +566,7 @@ async function main() {
 	console.log('LibreOffice: ' + soffice)
 	console.log('pdftotext:   ' + pdftotext)
 
-	const workDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ts-pptx-lo-smoke-'))
+	const workDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-ts-lo-smoke-'))
 	const profileDir = path.join(workDir, 'profile')
 	const fixture = await fs.readFile(FIXTURE)
 

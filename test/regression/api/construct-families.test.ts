@@ -135,7 +135,7 @@ describe('construct families', () => {
 		expect(() => pres.tableLayout([[{ text: 'a' }]], { x: 1, y: 1, w: 4 })).toThrow(
 			expect.objectContaining({ code: 'family/not-composed' })
 		)
-		// Measuring is a convenience over the `ts-pptx/measure` subpath, so a presentation without it
+		// Measuring is a convenience over the `pptx-ts/measure` subpath, so a presentation without it
 		// still authors and still writes.
 		assertEqual(
 			typeof composed(ALL_CONSTRUCT_FAMILIES).measureText('x', { wIn: 3, fontSize: 18 }).heightIn,

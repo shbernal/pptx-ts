@@ -1,5 +1,5 @@
 /**
- * ts-pptx: `ppt/presentation.xml` + presProps/viewProps
+ * pptx-ts: `ppt/presentation.xml` + presProps/viewProps
  *
  * Emit the presentation part (masters/notes/slide id lists, sizes, embedded-font
  * list, default text styles, sections) and the small presProps/viewProps parts.

@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the part-contributor seam
+ * pptx-ts: the part-contributor seam
  *
  * What a construct family adds to a written package: the parts it puts in the zip, and the
  * `[Content_Types].xml` entries those parts need in order to resolve. The packager

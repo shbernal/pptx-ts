@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the comments construct family
+ * pptx-ts: the comments construct family
  *
  * Legacy PowerPoint review comments: the marker on the slide, the per-slide comment part, and the
  * deck-wide author list.

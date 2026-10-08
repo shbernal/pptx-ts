@@ -9,7 +9,7 @@
  */
 
 /** The two libraries, in the column order every comparison table uses. */
-export const SUBJECTS = ['ts-pptx', 'pptxgenjs'] as const
+export const SUBJECTS = ['pptx-ts', 'pptxgenjs'] as const
 export type Subject = (typeof SUBJECTS)[number]
 
 /** The four outcomes a probe can have, in the order the legend lists them. */
@@ -88,11 +88,11 @@ export function coverageGroups(
 				id: row.group,
 				label: labels[row.group] ?? row.group.charAt(0).toUpperCase() + row.group.slice(1),
 				rows: [],
-				emitted: { 'ts-pptx': 0, pptxgenjs: 0 },
+				emitted: { 'pptx-ts': 0, pptxgenjs: 0 },
 			}
 			groups.push(group)
 		}
-		const outcomes = { 'ts-pptx': asOutcome(row.results['ts-pptx']), pptxgenjs: asOutcome(row.results['pptxgenjs']) }
+		const outcomes = { 'pptx-ts': asOutcome(row.results['pptx-ts']), pptxgenjs: asOutcome(row.results['pptxgenjs']) }
 		group.rows.push({ id: row.id, label: row.label, outcomes })
 		for (const subject of SUBJECTS) if (outcomes[subject] === 'emitted') group.emitted[subject] += 1
 	}
@@ -163,14 +163,14 @@ export function validitySummary(bar: ValidityBar): string {
 export interface RatioRow {
 	id: string
 	label: string
-	/** ts-pptx's median over pptxgenjs's, both asked to compress. */
+	/** pptx-ts's median over pptxgenjs's, both asked to compress. */
 	compressed: number
 	/** The same, both asked to store. */
 	stored: number
 }
 
 function ratioOf(measured: ModeMeasure | undefined): number | null {
-	const ours = measured?.['ts-pptx']?.median
+	const ours = measured?.['pptx-ts']?.median
 	const theirs = measured?.['pptxgenjs']?.median
 	return typeof ours === 'number' && typeof theirs === 'number' && theirs > 0 ? ours / theirs : null
 }
@@ -243,7 +243,7 @@ export function formatTick(value: number): string {
 
 /** The sentence a timing row stands for. */
 export function ratioSummary(row: RatioRow): string {
-	return `${row.label}: ts-pptx takes ${formatRatio(row.compressed)} pptxgenjs's time compressed, ${formatRatio(row.stored)} stored`
+	return `${row.label}: pptx-ts takes ${formatRatio(row.compressed)} pptxgenjs's time compressed, ${formatRatio(row.stored)} stored`
 }
 
 export interface ComparisonData {

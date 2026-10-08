@@ -12,7 +12,7 @@ doc_type: "reference"
 
 # Object names and alt text
 
-Every object ts-pptx places on a slide has a name and alt text. They are written to the `name` and `descr` attributes of the object's `p:cNvPr` element. PowerPoint shows the name in the Selection Pane and the alt text under Edit Alt Text.
+Every object pptx-ts places on a slide has a name and alt text. They are written to the `name` and `descr` attributes of the object's `p:cNvPr` element. PowerPoint shows the name in the Selection Pane and the alt text under Edit Alt Text.
 
 Set them with the `objectName` and `altText` options. Zooms take `objectName` only.
 
@@ -68,7 +68,7 @@ An object without `objectName` gets its kind's label and a number. Numbers start
 
 ## Name validation
 
-ts-pptx stores `objectName` as you wrote it and XML-encodes it once, when the deck is written. A name you supply can raise these warnings. None of them throws.
+pptx-ts stores `objectName` as you wrote it and XML-encodes it once, when the deck is written. A name you supply can raise these warnings. None of them throws.
 
 - `object-name/empty`: the name is only whitespace. An empty string is not checked: `objectName: ""` gets the default name.
 - `object-name/control-characters`: the name holds a control character, U+FFFE or U+FFFF. The file carries the name with those characters removed, while `slide.objects` keeps them.

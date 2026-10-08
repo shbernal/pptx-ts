@@ -1,5 +1,5 @@
 /**
- * ts-pptx: Presentation import entry points
+ * pptx-ts: Presentation import entry points
  *
  * The four ways a `Presentation` takes content out of another open package: one page
  * ({@link importSlide}), a batch of pages ({@link importSlides}), a master with its layout

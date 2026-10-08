@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the shape construct family
+ * pptx-ts: the shape construct family
  *
  * Preset geometry (`addShape`) and the four shape descriptors a slide master or a group is written
  * with. A shape is authored as a text object carrying a preset geometry, so the family has no

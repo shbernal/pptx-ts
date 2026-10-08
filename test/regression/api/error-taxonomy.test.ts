@@ -43,7 +43,7 @@ defineRegressionSuite('Error taxonomy', [
 			const err = await caught(() => new TsPptx().embedFont({ data: 'AAAA' }))
 
 			// A consumer catching broadly must still be able to catch this, and a consumer catching
-			// only ts-pptx failures must be able to say so in one `instanceof`.
+			// only pptx-ts failures must be able to say so in one `instanceof`.
 			assert(err instanceof Error, 'every library error remains an Error')
 			assert(err instanceof TsPptxError, 'every library error is a TsPptxError')
 			assert(err instanceof InvalidOptionError, 'a missing required option is an invalid option')
@@ -76,11 +76,11 @@ defineRegressionSuite('Error taxonomy', [
 		name: 'the classes are identical across every entry point',
 		fn: async () => {
 			// Re-exported from ten entries, but resolved from one shared module — otherwise an
-			// `instanceof` in a consumer that imports `ts-pptx/read` would silently fail against an
-			// error thrown through `ts-pptx`.
-			assert(TsPptxErrorFromZip === TsPptxError, 'ts-pptx/zip exports the same TsPptxError')
-			assert(TsPptxErrorFromRead === TsPptxError, 'ts-pptx/read exports the same TsPptxError')
-			assert(PackageReadErrorFromZip === PackageReadError, 'ts-pptx/zip exports the same PackageReadError')
+			// `instanceof` in a consumer that imports `pptx-ts/read` would silently fail against an
+			// error thrown through `pptx-ts`.
+			assert(TsPptxErrorFromZip === TsPptxError, 'pptx-ts/zip exports the same TsPptxError')
+			assert(TsPptxErrorFromRead === TsPptxError, 'pptx-ts/read exports the same TsPptxError')
+			assert(PackageReadErrorFromZip === PackageReadError, 'pptx-ts/zip exports the same PackageReadError')
 
 			const err = await caught(() => readZip(new Uint8Array([1, 2, 3, 4])))
 			assert(err instanceof PackageReadErrorFromZip, 'the thrown error matches the subpath-imported class')

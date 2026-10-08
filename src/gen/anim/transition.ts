@@ -1,5 +1,5 @@
 /**
- * ts-pptx: slide-show transitions
+ * pptx-ts: slide-show transitions
  *
  * Build the `<p:transition>` tree (positioned in CT_Slide between `p:clrMapOvr`
  * and `p:timing`): the transition-type element, its optional sound action, and

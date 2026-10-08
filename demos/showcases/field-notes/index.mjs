@@ -557,7 +557,7 @@ function addDimension(pptx) {
 				options: { fontFace: FONT.head, fontSize: 16, color: BRAND.bone, breakLine: true },
 			},
 			{
-				text: 'PowerPoint frames a model from its bounding box. ts-pptx never opens the .glb, so it ships a fixed default and lets you place the camera — this one orbits to a corner.',
+				text: 'PowerPoint frames a model from its bounding box. pptx-ts never opens the .glb, so it ships a fixed default and lets you place the camera — this one orbits to a corner.',
 				options: { fontSize: 11, color: BRAND.sand, breakLine: true },
 			},
 			{ text: '\n', options: { fontSize: 8, breakLine: true } },
@@ -610,7 +610,7 @@ function addColophon(pptx) {
 				options: { color: BRAND.amber, fontSize: 10, bold: true, charSpacing: 1.6, breakLine: true },
 			},
 			{
-				text: 'Shared demo assets from the ts-pptx repository, reproduced here under their original licences.',
+				text: 'Shared demo assets from the pptx-ts repository, reproduced here under their original licences.',
 				options: { color: BRAND.sand, fontSize: 11 },
 			},
 		],
@@ -634,12 +634,12 @@ function addColophon(pptx) {
 		[
 			{ text: 'Built with ', options: { color: BRAND.ash, fontSize: 12 } },
 			{
-				text: 'ts-pptx',
+				text: 'pptx-ts',
 				options: {
 					color: BRAND.amber,
 					fontSize: 12,
 					bold: true,
-					hyperlink: { url: 'https://github.com/shbernal/pptx-ts', tooltip: 'ts-pptx on GitHub' },
+					hyperlink: { url: 'https://github.com/shbernal/pptx-ts', tooltip: 'pptx-ts on GitHub' },
 				},
 			},
 			{ text: '  ·  regenerate this deck with  ', options: { color: BRAND.ash, fontSize: 12 } },

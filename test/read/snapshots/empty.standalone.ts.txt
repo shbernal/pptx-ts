@@ -1,5 +1,5 @@
 /*
- * Generated from a .pptx by ts-pptx/script.
+ * Generated from a .pptx by pptx-ts/script.
  *
  * Standalone: this script needs nothing but pptx-ts.
  * The deck's theme, layouts and slide content are all re-authored through the public write

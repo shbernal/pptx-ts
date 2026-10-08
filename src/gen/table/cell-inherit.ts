@@ -1,5 +1,5 @@
 /**
- * ts-pptx: what a table cell inherits from its table.
+ * pptx-ts: what a table cell inherits from its table.
  *
  * A cell that states nothing takes the table's value, and two paths resolve that: the emitter,
  * building the bag it hands to the text-body writer, and the measured-fit pass, building the

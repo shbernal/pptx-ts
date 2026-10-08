@@ -1,5 +1,5 @@
 /**
- * ts-pptx: connector slide-object serialization
+ * pptx-ts: connector slide-object serialization
  *
  * Emits a `connector` slide object as a `<p:cxnSp>`. The start/end shape bindings resolve a
  * caller-supplied `objectName` to the target's slide-wide `<p:cNvPr>` id; an unresolved name

@@ -70,7 +70,7 @@ export function printStandaloneScript(ir: DeckIr, options: PrintStandaloneScript
 	const lines: string[] = [
 		header(
 			[
-				'Generated from a .pptx by ts-pptx/script.',
+				'Generated from a .pptx by pptx-ts/script.',
 				'',
 				`Standalone: this script needs nothing but ${packageName}${
 					needsReadFile ? ` and ${assets.printed.size} media file(s) in ${assetDir}` : ''

@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the zoom construct family
+ * pptx-ts: the zoom construct family
  *
  * Slide, Section and Summary Zoom (PowerPoint's Insert > Zoom) -- clickable tiles that zoom to a
  * slide or to the start of a section. The two section forms resolve their targets against the live

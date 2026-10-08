@@ -1,7 +1,7 @@
 ---
 doc-schema-version: 1
 title: "Scope and design policy"
-summary: "What ts-pptx leaves out on purpose, what stays in a consumer, the two areas outside active development, and the rule for escape hatches."
+summary: "What pptx-ts leaves out on purpose, what stays in a consumer, the two areas outside active development, and the rule for escape hatches."
 read_when:
   - Deciding whether a feature or a report fits this project
   - Triaging a report about browser layout or another office suite

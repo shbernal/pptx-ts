@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the speaker-notes construct family
+ * pptx-ts: the speaker-notes construct family
  *
  * `addNotes` and the notes-slide parts it puts in the package. Cheap, and a deck without speaker
  * notes is a poor default, so every tier carries it -- which is a reason to compose it, not a

@@ -33,7 +33,7 @@ import { renderSource } from './source.mjs'
 
 /** A 1x1 transparent PNG. Inline, so an image probe reads nothing off disk. */
 const PNG_1PX_B64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
-/** ts-pptx takes a whole `data:` URL. */
+/** pptx-ts takes a whole `data:` URL. */
 const PNG_1PX_URL = 'data:image/png;base64,' + PNG_1PX_B64
 /** pptxgenjs takes the MIME and payload without the `data:` scheme, as its own docs show. */
 const PNG_1PX_BARE = 'image/png;base64,' + PNG_1PX_B64
@@ -107,7 +107,7 @@ export const PROBES = [
 		construct: '<a:t>',
 		part: SLIDE1,
 		build: {
-			'ts-pptx': (pres) => {
+			'pptx-ts': (pres) => {
 				pres.addSlide().addText('probe', { x: 1, y: 1, w: 4, h: 1 })
 			},
 			pptxgenjs: (pres) => {
@@ -122,7 +122,7 @@ export const PROBES = [
 		construct: '<a:tbl>',
 		part: SLIDE1,
 		build: {
-			'ts-pptx': (pres) => {
+			'pptx-ts': (pres) => {
 				pres.addSlide().addTable(
 					[
 						[{ text: 'Region' }, { text: 'Units' }],
@@ -149,7 +149,7 @@ export const PROBES = [
 		construct: '<p:pic>',
 		part: SLIDE1,
 		build: {
-			'ts-pptx': (pres) => {
+			'pptx-ts': (pres) => {
 				pres.addSlide().addImage({ data: PNG_1PX_URL, x: 1, y: 1, w: 2, h: 2 })
 			},
 			pptxgenjs: (pres) => {
@@ -164,9 +164,9 @@ export const PROBES = [
 		construct: '<c:barChart>',
 		part: 'ppt/charts/chart1.xml',
 		build: {
-			// The signatures diverged: ts-pptx puts `type` in the options object, upstream takes
+			// The signatures diverged: pptx-ts puts `type` in the options object, upstream takes
 			// it as the first argument. Same intent, each library called the way it asks to be.
-			'ts-pptx': (pres) => {
+			'pptx-ts': (pres) => {
 				pres.addSlide().addChart(BAR_DATA, { type: 'bar', x: 1, y: 1, w: 6, h: 4 })
 			},
 			pptxgenjs: (pres) => {
@@ -181,7 +181,7 @@ export const PROBES = [
 		construct: '<a:hlinkClick',
 		part: SLIDE1,
 		build: {
-			'ts-pptx': (pres) => {
+			'pptx-ts': (pres) => {
 				pres.addSlide().addText('docs', { x: 1, y: 1, w: 4, h: 1, hyperlink: { url: 'https://example.com/' } })
 			},
 			pptxgenjs: (pres) => {
@@ -199,7 +199,7 @@ export const PROBES = [
 		construct: '<p:ph',
 		part: SLIDE1,
 		build: {
-			'ts-pptx': (pres) => {
+			'pptx-ts': (pres) => {
 				pres.defineSlideMaster({
 					title: 'PROBE_MASTER',
 					objects: [{ placeholder: { options: { name: 'title', type: 'title', x: 1, y: 1, w: 8, h: 1 } } }],
@@ -222,7 +222,7 @@ export const PROBES = [
 		construct: '<p14:sectionLst',
 		part: PRESENTATION,
 		build: {
-			'ts-pptx': (pres) => {
+			'pptx-ts': (pres) => {
 				pres.addSection({ title: 'Findings' })
 				pres.addSlide({ sectionTitle: 'Findings' }).addText('probe', { x: 1, y: 1, w: 4, h: 1 })
 			},
@@ -241,7 +241,7 @@ export const PROBES = [
 		construct: 'probe note',
 		part: 'ppt/notesSlides/notesSlide1.xml',
 		build: {
-			'ts-pptx': (pres) => {
+			'pptx-ts': (pres) => {
 				pres.addSlide().addNotes('probe note')
 			},
 			pptxgenjs: (pres) => {
@@ -256,7 +256,7 @@ export const PROBES = [
 		construct: '<a:prstGeom',
 		part: SLIDE1,
 		build: {
-			'ts-pptx': (pres) => {
+			'pptx-ts': (pres) => {
 				pres.addSlide().addShape('roundRect', { x: 1, y: 1, w: 3, h: 2, fill: { color: '4472C4' } })
 			},
 			pptxgenjs: (pres) => {
@@ -271,7 +271,7 @@ export const PROBES = [
 		construct: '<p:bg>',
 		part: SLIDE1,
 		build: {
-			'ts-pptx': (pres) => {
+			'pptx-ts': (pres) => {
 				const slide = pres.addSlide()
 				slide.background = { color: 'F2F2F2' }
 				slide.addText('probe', { x: 1, y: 1, w: 4, h: 1 })
@@ -292,7 +292,7 @@ export const PROBES = [
 		construct: '<p:transition',
 		part: SLIDE1,
 		build: {
-			'ts-pptx': (pres) => {
+			'pptx-ts': (pres) => {
 				const slide = pres.addSlide()
 				slide.transition = { type: 'push', speed: 'slow', variant: { dir: 'd' } }
 				slide.addText('probe', { x: 1, y: 1, w: 4, h: 1 })
@@ -307,7 +307,7 @@ export const PROBES = [
 		construct: '<p:timing>',
 		part: SLIDE1,
 		build: {
-			'ts-pptx': (pres) => {
+			'pptx-ts': (pres) => {
 				const slide = pres.addSlide()
 				slide.addText('probe', { x: 1, y: 1, w: 4, h: 1, objectName: 'Headline' })
 				slide.addAnimation({ preset: 'fadeIn', objectName: 'Headline' })
@@ -324,7 +324,7 @@ export const PROBES = [
 		construct: '<p:oleObj',
 		part: SLIDE1,
 		build: {
-			'ts-pptx': (pres) => {
+			'pptx-ts': (pres) => {
 				pres.addSlide().addOleObject({ data: OLE_BLOB_B64, extn: 'bin', x: 1, y: 1, w: 4, h: 3 })
 			},
 			pptxgenjs: null,
@@ -337,7 +337,7 @@ export const PROBES = [
 		construct: 'am3d:model3d',
 		part: SLIDE1,
 		build: {
-			'ts-pptx': (pres) => {
+			'pptx-ts': (pres) => {
 				pres.addSlide().addModel3d({ path: CUBE_GLB, meterPerModelUnit: 0.5, x: 1, y: 1, w: 4, h: 3 })
 			},
 			pptxgenjs: null,
@@ -350,7 +350,7 @@ export const PROBES = [
 		construct: '<p:embeddedFontLst>',
 		part: PRESENTATION,
 		build: {
-			'ts-pptx': async (pres) => {
+			'pptx-ts': async (pres) => {
 				await pres.embedFont({ path: SILKSCREEN_TTF, typeface: 'Silkscreen' })
 				pres.addSlide().addText('probe', { x: 1, y: 1, w: 4, h: 1, fontFace: 'Silkscreen' })
 			},
@@ -366,7 +366,7 @@ export const PROBES = [
 		construct: '<p:cxnSp>',
 		part: SLIDE1,
 		build: {
-			'ts-pptx': (pres) => {
+			'pptx-ts': (pres) => {
 				const slide = pres.addSlide()
 				slide.addText('A', { objectName: 'BoxA', x: 1, y: 1, w: 1.5, h: 1 })
 				slide.addText('B', { objectName: 'BoxB', x: 5, y: 1, w: 1.5, h: 1 })
@@ -382,7 +382,7 @@ export const PROBES = [
 		construct: '<a14:m',
 		part: SLIDE1,
 		build: {
-			'ts-pptx': (pres) => {
+			'pptx-ts': (pres) => {
 				pres.addSlide().addText([{ text: 'for all ' }, { math: OMML_INLINE, inline: true }, { text: ' terms' }], {
 					x: 1,
 					y: 1,
@@ -400,7 +400,7 @@ export const PROBES = [
 		construct: '<a:gradFill',
 		part: SLIDE1,
 		build: {
-			'ts-pptx': (pres) => {
+			'pptx-ts': (pres) => {
 				pres.addSlide().addShape('rect', {
 					x: 1,
 					y: 1,
@@ -433,7 +433,7 @@ export const PROBES = [
 		construct: '<a:cell3D',
 		part: SLIDE1,
 		build: {
-			'ts-pptx': (pres) => {
+			'pptx-ts': (pres) => {
 				pres
 					.addSlide()
 					.addTable([[{ text: 'raised', options: { cell3D: { bevel: 'circle', width: 6, height: 6 } } }]], {
@@ -454,7 +454,7 @@ export const PROBES = [
 		construct: '<cx:chart>',
 		part: 'ppt/charts/chartEx1.xml',
 		build: {
-			'ts-pptx': (pres) => {
+			'pptx-ts': (pres) => {
 				pres.addSlide().addChart([{ name: 'Stage', labels: ['Lead', 'Trial', 'Won'], values: [120, 48, 17] }], {
 					type: 'funnel',
 					x: 1,
@@ -473,7 +473,7 @@ export const PROBES = [
 		construct: 'pslz:sldZm',
 		part: 'ppt/slides/slide2.xml',
 		build: {
-			'ts-pptx': (pres) => {
+			'pptx-ts': (pres) => {
 				pres.addSlide().addText('target', { x: 1, y: 1, w: 4, h: 1 })
 				pres.addSlide().addSlideZoom({ target: 1, x: 1, y: 1, w: 3, h: 1.7 })
 			},
@@ -486,17 +486,17 @@ export const PROBES = [
 		id: 'smartart',
 		label: 'SmartArt diagram (write side)',
 		group: 'diagrams',
-		// ts-pptx reads diagrams (`src/read/api/diagram.ts`) and writes none; upstream does
+		// pptx-ts reads diagrams (`src/read/api/diagram.ts`) and writes none; upstream does
 		// neither. So this row is a shared gap rather than a difference, which is the kind of
 		// fact a comparison that only printed its own wins would leave out.
 		construct: '<dgm:relIds',
 		part: SLIDE1,
-		build: { 'ts-pptx': null, pptxgenjs: null },
+		build: { 'pptx-ts': null, pptxgenjs: null },
 	},
 ]
 
 /** Every library the corpus measures, in the order the table shows them. */
-export const SUBJECTS = ['ts-pptx', 'pptxgenjs']
+export const SUBJECTS = ['pptx-ts', 'pptxgenjs']
 
 /**
  * One arm of a probe as printable source, or `null` where that library has no API.

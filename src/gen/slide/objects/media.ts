@@ -1,5 +1,5 @@
 /**
- * ts-pptx: media (audio / video / online video) slide-object serialization
+ * pptx-ts: media (audio / video / online video) slide-object serialization
  *
  * Emits a `media` slide object as a `<p:pic>` carrying the required preview image. The online
  * and embedded forms differ in exactly two tokens — the EG_Media choice element and whether the

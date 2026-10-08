@@ -1,5 +1,5 @@
 /**
- * ts-pptx: authored slides as injectable descriptors
+ * pptx-ts: authored slides as injectable descriptors
  *
  * The serialization pass behind `Presentation.extractSlides()`: it runs the same
  * pre-serialization work a write does (`./prepare`), serializes each slide body, and resolves

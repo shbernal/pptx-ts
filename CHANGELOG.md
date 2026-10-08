@@ -28,6 +28,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   commit sha. GitHub redirects old `blob/master/` links, and the repository's own links now point
   at `main`.
 
+- **Runtime strings name the project `pptx-ts`, not `ts-pptx`.** Console warnings are prefixed
+  `pptx-ts: `, and the `InternalError` message calls it a bug in pptx-ts. A deck that sets no
+  document properties is written with author and company `pptx-ts` and title and subject
+  `pptx-ts Presentation`. A generated script's header reads `Generated from a .pptx by
+  pptx-ts/script.` Code that matched a warning line on `ts-pptx: `, or detected this library's
+  decks by their default author, should match `pptx-ts` instead; a `setDiagnosticHandler` handler
+  receives the message without the prefix and is unaffected.
+
 ## [4.0.1] - 2026-09-21
 
 ### Fixed
@@ -214,7 +222,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reports `group/unrecognized-child`, which is the typo it always was.
 
 - **A measured comparison with pptxgenjs, and a gate that keeps it honest.**
-  `docs/comparison.md` states what ts-pptx and upstream pptxgenjs each emit, what
+  `docs/comparison.md` states what pptx-ts and upstream pptxgenjs each emit, what
   validates against the OOXML schema, what each costs to install, and how the two
   projects are run. Nothing on the page is asserted from reading source: a corpus of
   22 deck intents is built twice, once through each library's own idiom, and the
@@ -222,7 +230,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   that is a claim rather than a reading, so it is checked against the other library's
   shipped bundle and a hit fails the run unless the corpus carries a written reason.
   The corpus deliberately carries a probe neither library satisfies, and reports the
-  set of constructs upstream emits and ts-pptx does not even when that set is empty.
+  set of constructs upstream emits and pptx-ts does not even when that set is empty.
 
   A second page carries the code. `docs/comparison-syntax.md` prints both arms of every
   intent, lifted from the build functions the harness ran and recorded in the snapshot
@@ -241,7 +249,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`Presentation.appProperties` reads `docProps/app.xml`.** The write API has had a
   `pptx.company` setter since the beginning and the read model could not see the part it
-  writes to, so `ts-pptx/script` had to declare `company` unreadable and a converter could
+  writes to, so `pptx-ts/script` had to declare `company` unreadable and a converter could
   carry the other four `docProps` and never that one. The new accessor reports four fields
   -- `application`, `appVersion`, `company` and `titlesOfParts` -- and `readExtendedProperties`
   plus the `ExtendedProperties` type are published alongside the core/custom pair.
@@ -254,7 +262,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the counts that partition it and is not read; a caller who wants the slide titles alone
   pairs the two itself.
 
-  `ts-pptx/script` carries `company` again as a result: `DeckPropsIr` has the field back, a
+  `pptx-ts/script` carries `company` again as a result: `DeckPropsIr` has the field back, a
   standalone script emits `pptx.company = …` when the source states one, and the
   `deck.docProps` note no longer claims a property is lost that now round-trips. Five of the
   thirteen document properties survive a standalone conversion, against four before.
@@ -289,9 +297,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The library's warnings — a chart point cache out of range, a picture whose relationship
   does not resolve, a table span the auto-pager refuses — are reported through a handler a
   consumer installs, but that handler was published only by the three authoring entries
-  (`.`, and the node/browser conditions of it). A consumer of `ts-pptx/read`,
-  `ts-pptx/measure`, `ts-pptx/script`, `ts-pptx/inspect`, `ts-pptx/html`, `ts-pptx/math` or
-  `ts-pptx/zip` got `console.warn` output from those paths with no supported way to
+  (`.`, and the node/browser conditions of it). A consumer of `pptx-ts/read`,
+  `pptx-ts/measure`, `pptx-ts/script`, `pptx-ts/inspect`, `pptx-ts/html`, `pptx-ts/math` or
+  `pptx-ts/zip` got `console.warn` output from those paths with no supported way to
   intercept it.
 
   Importing the handler from `.` did happen to work — bundling puts the diagnostics module
@@ -320,10 +328,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ancestry walk, so they cannot disagree. A missing group transform outranks a degenerate
   one wherever the two meet in one chain, since composing needs every group's mapping.
 
-  `ts-pptx/inspect` was the caller that needed the distinction, and it re-derived it by
+  `pptx-ts/inspect` was the caller that needed the distinction, and it re-derived it by
   walking the same ancestry a second time over the raw DOM. It now reads the getter,
   which drops its last three DOM helpers and its only `element_` escape hatch — the
-  surface is now the pure projection over `ts-pptx/read` its own header claims. No
+  surface is now the pure projection over `pptx-ts/read` its own header claims. No
   diagnostic message or dropped element changes.
 
 - **`importSlides` takes `embedFonts` and `rescale`, so the batch path is no longer the
@@ -379,7 +387,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `image/crop-inset-out-of-range` / `image/crop-insets-exceed-extent` as it does on
   `addImage`.
 
-  Thanks to [@flyisland](https://github.com/flyisland) ([#28](https://github.com/shbernal/ts-pptx/issues/28), [#29](https://github.com/shbernal/ts-pptx/pull/29)).
+  Thanks to [@flyisland](https://github.com/flyisland) ([#28](https://github.com/shbernal/pptx-ts/issues/28), [#29](https://github.com/shbernal/pptx-ts/pull/29)).
 
 - **`Slide` declares `addSlideZoom`, `addSectionZoom` and `addSummaryZoom`.** `SlideBuilder`
   has implemented all three since zooms shipped, `ZoomBaseProps` and its three option types
@@ -756,7 +764,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   README to <https://shbernal.github.io/ts-pptx/>, which is somewhere a reader has not
   already been.
 
-- **`ts-pptx/script` emits `pptx-ts` as the import specifier.** A generated script's
+- **`pptx-ts/script` emits `pptx-ts` as the import specifier.** A generated script's
   `import TsPptx from '...'` line names the package it is meant to be run against, so it
   follows the name above. Scripts generated before this still run: the specifier they carry
   is the alias, and it resolves to the same package. Pass `packageName` to `printScript` or
@@ -1080,7 +1088,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   hand: it omits `image` alone, which is the rule it was really stating — a stroke cannot be
   a picture fill.
 
-  One place still surfaces them, unchanged from before: `ts-pptx/measure`'s
+  One place still surfaces them, unchanged from before: `pptx-ts/measure`'s
   `buildFitParagraphs` takes the internal option shape, so that entry's `.d.ts` names
   `ObjectOptionsInternal`. That is now visible in the type's name instead of inlined.
 
@@ -2653,7 +2661,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   had drifted from what its own generator produces, so the sidecar could not be regenerated
   without an unrelated diff.
 
-- **A slide's own picture or theme background is no longer dropped.** `ts-pptx/script` had
+- **A slide's own picture or theme background is no longer dropped.** `pptx-ts/script` had
   two background mappers and only one of them could carry a picture. The layout/master arm
   handled `solid`, `image` and `themeRef`; the slide arm handled `solid` and `none` and
   recorded everything else as
@@ -3687,7 +3695,7 @@ part.
 ### Added
 
 - **A gradient stop reads every colour model the reader resolves, and reports a preset
-  name** (`ts-pptx/read`). `readGradientStops` hunted for `a:srgbClr` and `a:schemeClr` by
+  name** (`pptx-ts/read`). `readGradientStops` hunted for `a:srgbClr` and `a:schemeClr` by
   tag name, so a stop written as `a:prstClr`, `a:sysClr` or `a:hslClr` came back blank in
   every field — `color`, `schemeColor`, `effectiveHex` all `null` — even though
   `resolveColorElement` resolves five of the six models everywhere else, and even though
@@ -3711,7 +3719,7 @@ part.
   gradient below two stops, so a deck whose gradient used any of these models silently lost
   it; those stops now convert.
 
-- **`GradientStop.resolvedColor` and `CellBorder.resolvedColor`** (`ts-pptx/read`). A
+- **`GradientStop.resolvedColor` and `CellBorder.resolvedColor`** (`pptx-ts/read`). A
   `ResolvedColor` keeps three things: the base `hex`, the raw `transforms` list, and the
   `effectiveHex` after applying them. Two other places read a colour through the same
   resolver and kept only the last two, so the transform list was computed and then dropped
@@ -3738,7 +3746,7 @@ part.
   rather than a structurally identical inline literal, so the three places that hand one
   around name the same type.
 
-- **`Run.resolvedItalic`** (`ts-pptx/read`). `Run` resolved four character properties
+- **`Run.resolvedItalic`** (`pptx-ts/read`). `Run` resolved four character properties
   through the placeholder / list-style / master chain — colour, size, face and `@b` — and
   not `@i`, so a run inside a placeholder that inherits `i="1"` from the master's
   `p:txStyles` reported `italic: null` with no way to answer what it actually renders as.
@@ -3758,7 +3766,7 @@ part.
   the schema does not allow reports `null` (unknown) rather than a confident `false`.
 
 - **`a:prstClr` and `a:hslClr` resolve, so five of the six DrawingML colour models now
-  report a colour** (`ts-pptx/read`). `resolveColor` handled `a:srgbClr`, `a:sysClr` and
+  report a colour** (`pptx-ts/read`). `resolveColor` handled `a:srgbClr`, `a:sysClr` and
   `a:schemeClr`; a colour written in any of the other three read as `null` everywhere in
   the read model — fills, lines, gradients, effects, table styles, slide backgrounds and
   the `theme: 'preserve'` flatten path alike. `a:prstClr` is the one that mattered, because
@@ -3773,7 +3781,7 @@ part.
   because the read model reports the raw reference separately from the resolved one
   everywhere else, and the write API has no preset-name option for a round trip to reach.
 
-  **`presetColorHex` is exported from `ts-pptx/read`**, so a caller holding a raw preset
+  **`presetColorHex` is exported from `pptx-ts/read`**, so a caller holding a raw preset
   name — `GradientStop.presetColor`, `RecolorColor.presetColor` — can make it literal the
   same way the reader does.
 
@@ -3929,7 +3937,7 @@ part.
 - **The bundle-size budget watches every published entry point, not just the browser
   one.** `bundle-size:check` always measured an entry's whole transitive closure, shared
   chunks included — that part was never the gap. The gap was that only `browser.js` had a
-  number, so a dependency landing in a chunk `ts-pptx/read` pulls in cost every consumer of
+  number, so a dependency landing in a chunk `pptx-ts/read` pulls in cost every consumer of
   that subpath and tripped nothing until it also reached the browser entry. All ten entries
   `package.json` publishes are budgeted now, which between them reach every `.js` file the
   build emits. Keying on entries rather than on chunks is what keeps it stable: an entry
@@ -3939,7 +3947,7 @@ part.
   under to re-freeze" nag could not be satisfied on an entry small enough that `--freeze`'s
   rounding to a whole kB exceeded the slack threshold.
 
-- **`Reflection.distPt` is now `Reflection.offsetPt`** (`ts-pptx/read`). Sibling accessors
+- **`Reflection.distPt` is now `Reflection.offsetPt`** (`pptx-ts/read`). Sibling accessors
   on one class spelled the same `@dist` attribute two ways: `Shape.shadow` and
   `Shape.innerShadow` reported `offsetPt`, `Shape.reflection` reported `distPt`. The three
   now agree. Migration is a rename at the call site — `reflection.distPt` →
@@ -3947,7 +3955,7 @@ part.
   are unchanged. `offsetPt` won over `distPt` because the read API is meant to read well,
   not to mirror OOXML attribute spelling.
 
-- **`NotesPlaceholder` now extends `Placeholder`** (`ts-pptx/read`). It was a copy of it:
+- **`NotesPlaceholder` now extends `Placeholder`** (`pptx-ts/read`). It was a copy of it:
   the same twelve identity, geometry and escape-hatch members, read off the same `p:sp`,
   down to `p:ph` being located the same way — plus a flattened `text` convenience and a
   `textFrame` that threads the notesMaster inheritance context onto the body frame. Those
@@ -3966,7 +3974,7 @@ that every renderer without a layout engine paints from, not just the data model
 reads. The diagram data model gains its tree (`Diagram.nodes`, `Diagram.point()`) and a link
 from a node to the shape drawn for it. `importSlide` stops copying chrome the destination
 already holds, which takes a duplicate layout and master off every import between decks
-templated from one file, and with it off the carried slides `ts-pptx/script` emits. And two
+templated from one file, and with it off the carried slides `pptx-ts/script` emits. And two
 read surfaces stop losing graphic frames: `inspectPptx` reports them instead of skipping
 them, and a SmartArt slide is copied rather than transcribed into a script with a hole in it.
 
@@ -4022,7 +4030,7 @@ them, and a SmartArt slide is copied rather than transcribed into a script with 
   subgraph and copied every part of it under a fresh partname, with no notion of what the
   destination arrived with. For the deck templated from its own source (`fromTemplate` keeps
   a package's chrome byte-identical and strips only its slides, which is exactly what
-  `ts-pptx/script`'s template-anchored tier emits) every one of those parts was already there
+  `pptx-ts/script`'s template-anchored tier emits) every one of those parts was already there
   under its own partname, so each imported slide grew the deck a duplicate layout and master:
   one extra entry in PowerPoint's layout picker per slide, and a later
   `appendSlides({ layout: <name> })` that threw `layout/ambiguous-name` because two layouts
@@ -4042,7 +4050,7 @@ them, and a SmartArt slide is copied rather than transcribed into a script with 
   part counts after such an import sees the smaller numbers.
 
 - **A converted script's carried slide no longer costs a layout, and batches bind by name
-  again.** `ts-pptx/script`'s template-anchored tier copies a slide the write API cannot
+  again.** `pptx-ts/script`'s template-anchored tier copies a slide the write API cannot
   author (`slide.carried`) with `importSlide`, out of the very file it templated the deck
   from. That import used to duplicate the slide's layout and master, and because the duplicate
   repeated a layout *name*, it demoted every `appendSlides` binding in the emitted script from
@@ -4064,7 +4072,7 @@ them, and a SmartArt slide is copied rather than transcribed into a script with 
   the slide's `text` and `wordCount`; a chart contributes none, matching `Slide.text`, which
   treats data labels as chart data rather than slide body text. The *structure* is still not
   flattened: `textRuns` and `paragraphs` stay empty, and cells, series, and nodes are reached
-  through `ts-pptx/read`.
+  through `pptx-ts/read`.
 
   **Migration.** `PptxSlideElementKind` gains `'graphicFrame'`, so an exhaustive `switch` over
   it must handle the new member; `PptxSlideElement` gains `graphicKind`, `null` on every other
@@ -4076,7 +4084,7 @@ them, and a SmartArt slide is copied rather than transcribed into a script with 
 ### Fixed
 
 - **A slide holding SmartArt is no longer emitted as a script with a hole in it.**
-  `ts-pptx/script` decides per slide whether the emitted script can describe it or whether the
+  `pptx-ts/script` decides per slide whether the emitted script can describe it or whether the
   printer must copy the source slide verbatim, and that test named extended charts and nothing
   else. But three graphic-frame payloads produce no call, not one: an extended chart, a
   SmartArt diagram, and a frame the reader does not decode at all (an OLE object, ink, a 3-D
@@ -4368,7 +4376,7 @@ project-site changes.
 ### Fixed
 
 - **A chartEx chart appended onto a loaded deck arrived empty.** `Presentation.extractSlides()`
-  — the bridge `ts-pptx/read`'s `appendSlides` serializes generated slides through — built every
+  — the bridge `pptx-ts/read`'s `appendSlides` serializes generated slides through — built every
   chart with the classic `<c:chartSpace>` builder, which has no arm for the Office-2016 family
   (`waterfall`, `funnel`, `treemap`, `sunburst`, `histogram`, `pareto`, `boxWhisker`,
   `regionMap`). A waterfall came out as a 2.6 kB chart part with axes and no plot element at
@@ -4720,7 +4728,7 @@ project-site changes.
   Registering a plain `.ttf` under any `face` name is unchanged: only a collection is
   name-selected.
 
-  `ts-pptx/measure` gains `listFontFaces(bytes)` (every font in a file, with its `name`
+  `pptx-ts/measure` gains `listFontFaces(bytes)` (every font in a file, with its `name`
   table identity; a plain `.ttf` is a one-entry list) and `isFontCollection(bytes)`.
 
   Grounding: the unwrap rests on the claim that a member's table records carry offsets
@@ -5174,7 +5182,7 @@ project-site changes.
   under the new `text/paragraph-margin-out-of-range` and `text/paragraph-indent-out-of-range`
   diagnostic codes, since PowerPoint reports an out-of-range value as needing repair.
 
-- **`ts-pptx/script` carries a paragraph's own margins, and `text.indent` is retired.** It was
+- **`pptx-ts/script` carries a paragraph's own margins, and `text.indent` is retired.** It was
   5/44 on the corpus and the largest note left on `a:pPr` once the bullet one closed; the
   standalone tier's note count falls from 713 to 705 and the template-anchored tier's from 419
   to 411. The mapper emits the read margin as a number, and `'inherit'` where the paragraph
@@ -5195,7 +5203,7 @@ project-site changes.
   so it got back the very `a:buNone` the first run asked to leave out, appended **after** that
   run's `<a:r>`, where a `pPr` is not allowed. No deck the byte-identity corpus authors moves.
 
-- **`ts-pptx/script` carries inherited bullets instead of declaring them lost.** A paragraph
+- **`pptx-ts/script` carries inherited bullets instead of declaring them lost.** A paragraph
   read as having no bullet child of its own now maps to `bullet: 'inherit'` rather than to an
   absent option, and `text.bullet.inherited` is retired — it was the **largest** fidelity note
   on the corpus at 34/44 fixtures, along with `layout.text.bullet.inherited` at 5/44. Across
@@ -5206,7 +5214,7 @@ project-site changes.
   construct, which is worth noting because the note filed it as `unread`. Consumers diffing
   printed scripts will see `bullet: 'inherit'` appear on most paragraphs.
 
-- **`ts-pptx/script`'s standalone tier rebuilds a layout's decoration instead of dropping
+- **`pptx-ts/script`'s standalone tier rebuilds a layout's decoration instead of dropping
   it.** A source layout became a `defineSlideMaster` call carrying a title and a
   background, and nothing else: the bands, rules, wordmarks, triangles and quote marks
   that make a deck recognisable as somebody's template were declared lost as
@@ -5240,7 +5248,7 @@ project-site changes.
   shared master, so a master's shape tree has no write-side counterpart to receive them.
 
   Fidelity notes recorded against a layout shape are namespaced under a new
-  `LAYOUT_NOTE_PREFIX` (`layout.`), exported from `ts-pptx/script`, because the shared
+  `LAYOUT_NOTE_PREFIX` (`layout.`), exported from `pptx-ts/script`, because the shared
   mapper speaks the slide vocabulary: `layout.line.width` is `line.width` seen from the
   chrome. The prefix is load-bearing twice over — the template-anchored tier suppresses
   every note under it (it rebuilds no layout, so none of them describes its output), and
@@ -5293,7 +5301,7 @@ project-site changes.
   paint child, keep the `<a:ln>`. On a table cell and a slide background, where *omitting*
   the option already meant inherit, `'inherit'` is simply the explicit spelling of that.
 
-- **Any commit is installable straight from GitHub: `npm i github:shbernal/ts-pptx#<sha>`.**
+- **Any commit is installable straight from GitHub: `npm i github:shbernal/pptx-ts#<sha>`.**
   It looked like this already worked, and it never did. `dist/` is gitignored and `prepare`
   only installed git hooks, so a git-URL install packed a tarball in which every `exports`
   entry named a file that had never been built — the install succeeded and the first import
@@ -5338,7 +5346,7 @@ project-site changes.
   a layout's, or a master's `p:spTree` — so the back-reference names what it actually
   is. `ShapeHost` is the small contract all three classes satisfy (`part`, `partName`,
   `opc`, `relationships`, `themeContext()`, `shapeByIdDeep()`) and is exported from
-  `ts-pptx/read`. Migration: `shape.slide` → `shape.host`; where you genuinely need the
+  `pptx-ts/read`. Migration: `shape.slide` → `shape.host`; where you genuinely need the
   `Slide`, narrow with `shape.host instanceof Slide`. `Slide` gains an `opc` getter
   (`=== presentation.opc`) and `SlideMaster`/`SlideLayout` gain public `opc` and
   `relationships` getters, all to satisfy that contract. Nothing else about a shape
@@ -5481,7 +5489,7 @@ project-site changes.
   version. The skill's load-bearing instruction is the one about the deck: presentations carry
   client names, unreleased strategy and pricing, and the tracker is public, so it spends most of
   its length on reducing a failure to a script that builds its own deck — and passes
-  `--repo shbernal/ts-pptx` on every `gh` call, since `gh` in a consumer repo would otherwise file
+  `--repo shbernal/pptx-ts` on every `gh` call, since `gh` in a consumer repo would otherwise file
   our bug into theirs. A third issue form, `agent-report.yml`, is where the error message's URL
   lands; its attachment dropdown deliberately has no option for a file containing real data, and
   "what should have happened" asks for the reason — an ECMA-376 clause, PowerPoint's own behaviour,
@@ -5658,7 +5666,7 @@ project-site changes.
     library has no 3D renderer, so omitting it embeds a gray placeholder and emits a
     `model3d/preview-missing` warning. Same bargain as `addOleObject()`'s `cover`.
   - **Set `meterPerModelUnit`.** The `am3d` scene is measured in metres. PowerPoint reads the
-    model's bounding box and normalizes its largest dimension to 1 metre; ts-pptx does not
+    model's bounding box and normalizes its largest dimension to 1 metre; pptx-ts does not
     parse glTF, so it emits `0.5` (correct for a model 2 units across) and leaves the rest to
     you. Left at the default, a model 240 units across becomes a 120-metre object with the
     camera inside it. Set it to `1 / <largest bounding-box dimension>`.
@@ -5666,7 +5674,7 @@ project-site changes.
   `camera` overrides the viewpoint (`pos`/`lookAt`/`up` in metres, `fov` in degrees); the
   defaults are the ones PowerPoint wrote for a 2×2×2 cube. Out-of-range and non-finite values
   throw rather than being coerced. Linked (non-embedded) models, animation scenes, and a typed
-  read accessor are out of scope for now — a model read through `ts-pptx/read` surfaces as an
+  read accessor are out of scope for now — a model read through `pptx-ts/read` surfaces as an
   inert `graphicFrame` and survives load → save and `importSlide` byte-intact.
 
 - **Browser support is now proven in CI, not assumed.** A Playwright lane
@@ -6064,7 +6072,7 @@ project-site changes.
 
 ### Added
 
-- **Table editing on `ts-pptx/read`.** The read proxies were read-plus-text-edit only:
+- **Table editing on `pptx-ts/read`.** The read proxies were read-plus-text-edit only:
   `TableCell.text` was the sole setter, and every other change needed the `element_`
   escape hatch plus a manual `markDirty()`.
 
@@ -6213,7 +6221,7 @@ project-site changes.
   `a:tcPr/@horzOverflow`. `'clip'` (PowerPoint's default) cuts the glyph at the cell
   edge; `'overflow'` lets it draw past. It matters for oversized display type, wide
   CJK/emoji glyphs, and icon fonts in a narrow column. Read back via the new
-  `TableCell.horzOverflow` accessor on `ts-pptx/read`, and carried through
+  `TableCell.horzOverflow` accessor on `pptx-ts/read`, and carried through
   `pptx-to-script`.
 
   **It is not a text-wrap switch, despite where it sits.** That distinction is the
@@ -6276,11 +6284,11 @@ project-site changes.
 
 ## [1.0.0] - 2026-07-29
 
-Initial public release of ts-pptx — an ESM-first, TypeScript-first library for
+Initial public release of pptx-ts — an ESM-first, TypeScript-first library for
 generating PowerPoint `.pptx` files from Node.js and modern JavaScript
 toolchains.
 
-ts-pptx descends from [gitbrent/PptxGenJS](https://github.com/gitbrent/PptxGenJS)
+pptx-ts descends from [gitbrent/PptxGenJS](https://github.com/gitbrent/PptxGenJS)
 (MIT) and has been developed independently since; see the README for lineage and
 the [project target](docs/project-target.md) for scope. It ships its own API and
 makes no backwards-compatibility guarantee with the original project.
@@ -6419,7 +6427,7 @@ makes no backwards-compatibility guarantee with the original project.
   build where it was `undefined` at runtime. Each condition now carries its own
   `types`, so what the compiler shows matches what the runtime has.
 
-- **`ts-pptx/inspect` is now a projection over `ts-pptx/read`, and
+- **`pptx-ts/inspect` is now a projection over `pptx-ts/read`, and
   `fast-xml-parser` is no longer a dependency.** The library shipped *two*
   independent readers of a `.pptx` over two different XML parsers: the deep,
   navigable `read` model on `@xmldom/xmldom`, and the flat `inspect` snapshot on
@@ -6463,7 +6471,7 @@ makes no backwards-compatibility guarantee with the original project.
     it to `Presentation.fromPackage()` without re-reading the bytes.
   - **The input must be a real OPC package.** A zip holding slide XML but no
     `[Content_Types].xml` used to inspect fine; it now throws a `PackageReadError`
-    (`package/not-an-opc-package`), the same bar `ts-pptx/read` applies.
+    (`package/not-an-opc-package`), the same bar `pptx-ts/read` applies.
 
   A run highlight authored as a theme token now resolves to a literal hex against
   the slide's theme instead of reading `null`.
@@ -6812,7 +6820,7 @@ makes no backwards-compatibility guarantee with the original project.
 
 - **A deck IR (`@shbernal/ts-pptx/script`), the read half of turning an existing
   `.pptx` back into source.** `readModelToIr(presentation)` walks a deck read
-  through `ts-pptx/read` and returns a serializable description of the write-API
+  through `pptx-ts/read` and returns a serializable description of the write-API
   calls that would rebuild it — `{ slideSize, props, slides, assets, fidelity }`,
   where each slide holds `{ method, args }` calls whose `args` are literal
   write-API option objects. Geometry is carried as exact `"<n>emu"` strings
@@ -6820,7 +6828,7 @@ makes no backwards-compatibility guarantee with the original project.
   that are not (`colW`, `rowH`, `margin`) — the proven minimum for an EMU-exact
   round-trip.
 
-  It is a new subsystem rather than part of `ts-pptx/read` because it needs both
+  It is a new subsystem rather than part of `pptx-ts/read` because it needs both
   the read model and the write option types, and because the read subpath is
   documented as isomorphic (bytes in, bytes out); a converter whose output is
   source text would break that guarantee for its consumers.
@@ -6937,7 +6945,7 @@ makes no backwards-compatibility guarantee with the original project.
   `pnpm run read:census` and the IR unit tests, whose expectations come from
   `src/types/*.ts` rather than from the converter.
 
-- **`ts-pptx/script` now transcribes a slide's show transition, in both tiers.**
+- **`pptx-ts/script` now transcribes a slide's show transition, in both tiers.**
   A `SlideIr` gained a `transition` field and the printers emit it as
   `slideN.transition = { … }` — a property assignment rather than a call, which
   is how the write API models it. Speed bucket, exact `p14:dur` duration,
@@ -7089,7 +7097,7 @@ makes no backwards-compatibility guarantee with the original project.
   `<Default Extension="wav" ContentType="audio/x-wav"/>` — what PowerPoint itself
   authors. `audio/x-wav` is not an exotic input: it is exactly the content type
   PowerPoint writes for an embedded transition sound, so it arrives on every deck
-  read back in and handed to `ts-pptx/script`.
+  read back in and handed to `pptx-ts/script`.
 
 - **A tab, carriage return or line feed inside an XML attribute value was emitted
   literally, so it read back as a space** (`dn-xml-attr-whitespace`). XML 1.0
@@ -7336,15 +7344,15 @@ makes no backwards-compatibility guarantee with the original project.
   where the image is `/ppt/media/image1.jpeg`. Affects `Slide.background`,
   `SlideMaster.background`, and `SlideLayout.background`.
 
-[4.0.1]: https://github.com/shbernal/ts-pptx/releases/tag/v4.0.1
-[4.0.0]: https://github.com/shbernal/ts-pptx/releases/tag/v4.0.0
-[3.7.0]: https://github.com/shbernal/ts-pptx/releases/tag/v3.7.0
-[3.6.0]: https://github.com/shbernal/ts-pptx/releases/tag/v3.6.0
-[3.5.0]: https://github.com/shbernal/ts-pptx/releases/tag/v3.5.0
-[3.4.0]: https://github.com/shbernal/ts-pptx/releases/tag/v3.4.0
-[3.3.0]: https://github.com/shbernal/ts-pptx/releases/tag/v3.3.0
-[3.2.0]: https://github.com/shbernal/ts-pptx/releases/tag/v3.2.0
-[3.1.0]: https://github.com/shbernal/ts-pptx/releases/tag/v3.1.0
-[3.0.0]: https://github.com/shbernal/ts-pptx/releases/tag/v3.0.0
-[2.0.0]: https://github.com/shbernal/ts-pptx/releases/tag/v2.0.0
-[1.0.0]: https://github.com/shbernal/ts-pptx/releases/tag/v1.0.0
+[4.0.1]: https://github.com/shbernal/pptx-ts/releases/tag/v4.0.1
+[4.0.0]: https://github.com/shbernal/pptx-ts/releases/tag/v4.0.0
+[3.7.0]: https://github.com/shbernal/pptx-ts/releases/tag/v3.7.0
+[3.6.0]: https://github.com/shbernal/pptx-ts/releases/tag/v3.6.0
+[3.5.0]: https://github.com/shbernal/pptx-ts/releases/tag/v3.5.0
+[3.4.0]: https://github.com/shbernal/pptx-ts/releases/tag/v3.4.0
+[3.3.0]: https://github.com/shbernal/pptx-ts/releases/tag/v3.3.0
+[3.2.0]: https://github.com/shbernal/pptx-ts/releases/tag/v3.2.0
+[3.1.0]: https://github.com/shbernal/pptx-ts/releases/tag/v3.1.0
+[3.0.0]: https://github.com/shbernal/pptx-ts/releases/tag/v3.0.0
+[2.0.0]: https://github.com/shbernal/pptx-ts/releases/tag/v2.0.0
+[1.0.0]: https://github.com/shbernal/pptx-ts/releases/tag/v1.0.0

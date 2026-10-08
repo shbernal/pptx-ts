@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the connector construct family
+ * pptx-ts: the connector construct family
  *
  * Lines drawn between two points, emitted as `<p:cxnSp>`.
  */

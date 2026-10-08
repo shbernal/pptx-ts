@@ -1,5 +1,5 @@
 /**
- * ts-pptx: named clip silhouettes for images
+ * pptx-ts: named clip silhouettes for images
  *
  * A `ClipShape` is declarative data — a named silhouette plus its options — and {@link clipPath}
  * resolves it to the freeform `points` path `addImage` emits as the `<a:custGeom>` clip mask on

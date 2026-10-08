@@ -11,7 +11,7 @@ doc_type: "reference"
 
 # Where it runs
 
-ts-pptx ships one ESM build. Node, bundlers, browsers and `require()` all load that build, and no
+pptx-ts ships one ESM build. Node, bundlers, browsers and `require()` all load that build, and no
 office application is involved anywhere.
 
 ## Runtimes

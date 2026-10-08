@@ -455,7 +455,7 @@ async function main() {
 			? `Driving PowerPoint through the worker at ${transport.url}.`
 			: "Driving this machine's PowerPoint."
 	)
-	const keepDir = KEEP ? mkdtempSync(path.join(os.tmpdir(), 'ts-pptx-com-smoke-')) : null
+	const keepDir = KEEP ? mkdtempSync(path.join(os.tmpdir(), 'pptx-ts-com-smoke-')) : null
 
 	/**
 	 * One deck to drive: how to build its VBS, and how to read the result back.

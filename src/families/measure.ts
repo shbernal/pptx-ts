@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the measurement construct family
+ * pptx-ts: the measurement construct family
  *
  * The three presentation methods that measure without authoring anything: `measureText`,
  * `overflowsBox` and `tableLayout`. They measure through `measure/fit.ts` and

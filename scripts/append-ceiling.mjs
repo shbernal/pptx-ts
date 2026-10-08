@@ -11,7 +11,7 @@
  * (which measures the hand-authoring, not the append), each probe:
  *   1. authors one construct through the public write API,
  *   2. appends it onto a real PowerPoint-authored template via `fromTemplate` + `appendSlides`,
- *   3. saves, re-reads the output through `ts-pptx/read`,
+ *   3. saves, re-reads the output through `pptx-ts/read`,
  *   4. compares what comes back to what went in.
  *
  * Anything that fails to survive is a cost of the append path alone: no IR and no printer

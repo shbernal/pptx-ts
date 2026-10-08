@@ -1,5 +1,5 @@
 /**
- * ts-pptx: `ppt/tableStyles.xml`
+ * pptx-ts: `ppt/tableStyles.xml`
  *
  * Emit the table-styles part. The part carries only the default style id: it defines no
  * styles of its own, because PowerPoint never reads one out of it.

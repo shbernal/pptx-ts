@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the animations construct family
+ * pptx-ts: the animations construct family
  *
  * Preset build animations (`addAnimation`). Authoring one is only a push onto the slide's list --
  * what the family is really worth is the timing tree that list turns into, and that is still

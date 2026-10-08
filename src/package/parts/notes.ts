@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the speaker-notes contribution to a written package
+ * pptx-ts: the speaker-notes contribution to a written package
  *
  * A notes slide per slide (empty ones included, so every slide's `.rels` numbering is the same
  * whether or not it has notes) plus the single notes master the whole deck shares.

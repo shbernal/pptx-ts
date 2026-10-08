@@ -20,7 +20,7 @@ import TsPptx, {
 	type TextPropsOptions,
 } from '../../../dist/node.js'
 import { defined, expectDefined, partXml, caughtSync, at, take } from '../../helpers.ts'
-// The `ts-pptx/measure` entry publishes the calibrated constants the bake uses, so a test
+// The `pptx-ts/measure` entry publishes the calibrated constants the bake uses, so a test
 // can state "inflated by the height safety factor" instead of re-pinning its value here.
 import { HEIGHT_SAFETY_FACTOR } from '../../../dist/measure.js'
 

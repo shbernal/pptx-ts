@@ -1,5 +1,5 @@
 /**
- * ts-pptx: slide-size preconditions for the import surface
+ * pptx-ts: slide-size preconditions for the import surface
  *
  * Every import entry point starts by asking whether the two decks agree on canvas size, and
  * the five that asked wrote out the same comparison, the same `unknown`-printing formatter

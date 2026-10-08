@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the OLE construct family
+ * pptx-ts: the OLE construct family
  *
  * Embedded OLE objects (PowerPoint's Insert > Object > Create from File): the payload's bytes ship
  * inside the `.pptx`, so a double-click opens the source document in place.

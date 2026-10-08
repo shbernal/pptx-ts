@@ -1,5 +1,5 @@
 /**
- * ts-pptx: slide object serialization
+ * pptx-ts: slide object serialization
  *
  * The per-shape `<p:spTree>` builder: `slideObjectToXml` walks a slide/layout's objects
  * (recursing into groups, allocating `<p:cNvPr>` ids as it goes) and looks each one up in the

@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the extent an image is drawn at
+ * pptx-ts: the extent an image is drawn at
  *
  * An image's frame is not always the box it is drawn in. An omitted `w` or `h` is backfilled from
  * the image's natural size, and a `sizing` box replaces the frame outright. The image renderer emits

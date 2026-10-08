@@ -129,7 +129,7 @@
 }
 
 /* After `.cmp-mark` and `.cmp-swatch`, so a mark inside a library's column takes its colour. */
-.cmp-subject--ts-pptx {
+.cmp-subject--pptx-ts {
 	--cmp-color: var(--cmp-ours);
 }
 

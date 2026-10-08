@@ -76,7 +76,7 @@ inchesToEmu(wide.widthIn) // 12192000, the same as wide.widthEmu
 
 Every object is placed by `x`, `y`, `w` and `h`, in any of the units listed in
 [Core concepts](../getting-started/concepts.md#positions-and-sizes). A negative
-`w` or `h` measures the box the other way, left of `x` or above `y`. ts-pptx
+`w` or `h` measures the box the other way, left of `x` or above `y`. pptx-ts
 writes that box with a positive size and a flip, because PowerPoint refuses to
 open a file that stores a negative size.
 

@@ -1,6 +1,6 @@
 {
 	"$schema": "https://json.schemastore.org/tsconfig",
-	"display": "ts-pptx tests",
+	"display": "pptx-ts tests",
 	"extends": "./tsconfig.base.json",
 	"compilerOptions": {
 		"noEmit": true,

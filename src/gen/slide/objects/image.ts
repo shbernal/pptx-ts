@@ -1,5 +1,5 @@
 /**
- * ts-pptx: image slide-object serialization
+ * pptx-ts: image slide-object serialization
  *
  * Emits an `image` slide object as a `<p:pic>`: the blip and its image effects (transparency,
  * duotone, colour change, grayscale, bi-level), the crop or `sizing` source rectangle, the

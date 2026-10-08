@@ -1,5 +1,5 @@
 /**
- * ts-pptx: DrawingML value clamps
+ * pptx-ts: DrawingML value clamps
  *
  * Clamp font/character/line spacing values into their ST_* schema ranges and convert to the
  * units the attributes expect — hundredths of a point for most of them, thousandths of a

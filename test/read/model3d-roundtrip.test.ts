@@ -1,4 +1,4 @@
-// 3D-model (`am3d:model3d`) survival tests for `ts-pptx/read`.
+// 3D-model (`am3d:model3d`) survival tests for `pptx-ts/read`.
 //
 // A 3D model reads back as an inert `p:graphicFrame` — there is no typed accessor, by design.
 // What must NOT happen is a silent drop: the `am3d:model3d` subtree lives inside an
@@ -156,7 +156,7 @@ describe('3D model: PowerPoint-authored fixture', () => {
 	})
 })
 
-describe('3D model: ts-pptx-authored', () => {
+describe('3D model: pptx-ts-authored', () => {
 	async function authored(options = {}) {
 		const pptx = new TsPptx()
 		pptx.layout = 'LAYOUT_WIDE'

@@ -1,14 +1,14 @@
 ---
 layout: home
 doc-schema-version: 1
-title: "ts-pptx"
-summary: "Start here for the purpose, setup, and main workflows in ts-pptx."
+title: "pptx-ts"
+summary: "Start here for the purpose, setup, and main workflows in pptx-ts."
 read_when:
   - Getting oriented in this project
   - Updating the main project overview
 doc_type: "overview"
 hero:
-  name: "ts-pptx"
+  name: "pptx-ts"
   text: "PowerPoint decks from TypeScript"
   tagline: "Write .pptx packages that open cleanly in PowerPoint, read them back, and turn one into the script that would rebuild it."
   actions:
@@ -56,5 +56,5 @@ dependencies and the package's other name.
 - [Your first deck](getting-started/first-deck.md): a small deck built from data, start to
   finish.
 - [Demos](demos.md): a deck built in your browser and previewed in the page.
-- [ts-pptx vs PptxGenJS](comparison.md): what each library emits, measured by building the same
+- [pptx-ts vs PptxGenJS](comparison.md): what each library emits, measured by building the same
   decks with both.

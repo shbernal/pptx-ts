@@ -1,5 +1,5 @@
 /**
- * ts-pptx: slide build animations
+ * pptx-ts: slide build animations
  *
  * Resolve preset build animations to their target shape ids and assemble the
  * `mainSeq` / `bldLst` trees that PowerPoint reads for click-triggered entrance,

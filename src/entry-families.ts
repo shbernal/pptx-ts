@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the construct families the three main entries are composed with
+ * pptx-ts: the construct families the three main entries are composed with
  *
  * The full authoring surface, as a list: `index.ts`, `node.ts` and `browser.ts` each compose every
  * family, so `TsPptx` authors everything it ever has; the browser entry adds the table family's

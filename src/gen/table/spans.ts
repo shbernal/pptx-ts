@@ -1,5 +1,5 @@
 /**
- * ts-pptx: table `colspan`/`rowspan` range checking.
+ * pptx-ts: table `colspan`/`rowspan` range checking.
  *
  * The spans decide two allocations, on two different paths, and both used to trust the caller:
  * the merge grid's `new Array(colspan - 1)` in `gen/slide/objects/table.ts`, and the auto-pager's

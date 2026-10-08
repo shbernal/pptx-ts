@@ -1,5 +1,5 @@
 /**
- * ts-pptx: `ppt/theme/theme1.xml`
+ * pptx-ts: `ppt/theme/theme1.xml`
  *
  * Emit the Office theme: the `<a:clrScheme>` (with any caller color overrides
  * over the default Office scheme) plus the fixed font/format schemes.

@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for your interest in ts-pptx. The README describes what the package does for the people who
+Thanks for your interest in pptx-ts. The README describes what the package does for the people who
 install it. This file covers how the repository is built, tested and contributed to.
 
 ## Start here
@@ -107,7 +107,7 @@ forms, from `.github/ISSUE_TEMPLATE/`:
   that produces the offending `.pptx`.
 - **API gap**: a missing accessor, or a property the write side authors that the read
   side cannot see.
-- **Agent-assisted report**: a defect an agent found while using ts-pptx in another project.
+- **Agent-assisted report**: a defect an agent found while using pptx-ts in another project.
   The library's own error messages link to this form, and it asks which error class and code
   was thrown.
 
@@ -130,11 +130,11 @@ handling, or post-processing that patches generated XML after the fact. Before m
 into this project:
 
 1. Prove the need with a minimal, consumer-agnostic reproduction.
-2. Reduce the behavior to a minimal ts-pptx fixture.
-3. Add a ts-pptx regression or schema test.
+2. Reduce the behavior to a minimal pptx-ts fixture.
+3. Add a pptx-ts regression or schema test.
 4. Pack or link the project into the downstream consumer to verify.
 5. Run the consumer's build, render, lint or eval path against the linked project.
-6. Keep only generic code in ts-pptx, and keep project policy downstream.
+6. Keep only generic code in pptx-ts, and keep project policy downstream.
 
 Report such a gap as a GitHub issue, and describe it anonymously. Issues are public, and the
 consumer is not. State the missing PPTX behavior and how any consumer would reproduce it. Never

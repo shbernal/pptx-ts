@@ -78,7 +78,7 @@ async function build(scenario) {
 	try {
 		render(scenario)
 		const pres = new TsPptx()
-		// The instance method, not the `ts-pptx/html` free function: this is the call a
+		// The instance method, not the `pptx-ts/html` free function: this is the call a
 		// browser consumer makes, and it is the one that resolves the table id off the
 		// ambient `document`.
 		pres.tableToSlides(TABLE_ID)

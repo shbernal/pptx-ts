@@ -1,5 +1,5 @@
 /**
- * ts-pptx: shared generator helpers.
+ * pptx-ts: shared generator helpers.
  *
  * The small cross-cutting pieces the OOXML writers all need and that belong to
  * no single part:

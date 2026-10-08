@@ -1,5 +1,5 @@
 /**
- * ts-pptx: units at the read model's boundary — validated on the way in, converted on the way out.
+ * pptx-ts: units at the read model's boundary — validated on the way in, converted on the way out.
  *
  * Every read-side setter that takes a measurement has to answer the same two questions before
  * the value reaches an attribute: is it finite, and (for an extent) is it positive. `NaN` or

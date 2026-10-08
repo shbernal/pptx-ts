@@ -8,7 +8,7 @@ import { PNG_1X1, assert, build, at } from '../../helpers.ts'
 // used to recognise the placeholder by the word in it, so a real file whose name merely contained
 // the word was skipped too, and the image it named never reached the deck.
 
-const dir = mkdtempSync(join(tmpdir(), 'ts-pptx-media-path-'))
+const dir = mkdtempSync(join(tmpdir(), 'pptx-ts-media-path-'))
 afterAll(() => rmSync(dir, { recursive: true, force: true }))
 
 describe('a media path that mentions the inline placeholder', () => {

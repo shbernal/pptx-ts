@@ -1,5 +1,5 @@
 /**
- * ts-pptx: table slide-object serialization
+ * pptx-ts: table slide-object serialization
  *
  * Emits a `table` slide object as a `<p:graphicFrame>` wrapping `<a:tbl>`: the merge grid
  * (`_hmerge`/`_vmerge` dummy cells for col/rowspan), the column widths, and per-cell borders,

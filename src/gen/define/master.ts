@@ -1,5 +1,5 @@
 /**
- * ts-pptx: Slide-Master Definition
+ * pptx-ts: Slide-Master Definition
  *
  * `createSlideMaster` walks a `SlideMasterProps` definition onto a layout target: shared
  * chart / image / shape / text children via `addChildDefinition`, plus master-specific text

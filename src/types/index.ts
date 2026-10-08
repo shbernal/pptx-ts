@@ -1,5 +1,5 @@
 /**
- * ts-pptx Interfaces — re-export barrel
+ * pptx-ts Interfaces — re-export barrel
  *
  * The public typed contract lives in `src/types/`, split by domain. This module re-exports
  * all of it so that `types/index.js` is the single import site for consumers and for the

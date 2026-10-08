@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the media construct family
+ * pptx-ts: the media construct family
  *
  * Embedded and online audio/video. The default video poster already loads with the media rather
  * than with the library; this is the rest of it.

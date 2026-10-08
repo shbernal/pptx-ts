@@ -1,5 +1,5 @@
 /**
- * ts-pptx: chart slide-object serialization
+ * pptx-ts: chart slide-object serialization
  *
  * Emits a `chart` slide object as the `<p:graphicFrame>` that references the chart part.
  * Classic charts emit that frame bare; chartEx charts wrap it in `<mc:AlternateContent>` with a

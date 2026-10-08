@@ -1,5 +1,5 @@
 /**
- * ts-pptx: Chart Embedded-Workbook Generation
+ * pptx-ts: Chart Embedded-Workbook Generation
  *
  * Builds the embedded `.xlsx` workbook that backs a chart's cached data — the data
  * source PowerPoint opens when a user edits the chart. `createExcelWorksheet` writes

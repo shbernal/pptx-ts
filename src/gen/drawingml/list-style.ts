@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the `<a:lvlNpPr>` list-style level and the theme-font `<a:defRPr>` inside it.
+ * pptx-ts: the `<a:lvlNpPr>` list-style level and the theme-font `<a:defRPr>` inside it.
  *
  * A deck states its text defaults in four places — the presentation's `p:defaultTextStyle`, the
  * notesMaster's `p:notesStyle`, and the slide master's built-in and configured `p:txStyles` —

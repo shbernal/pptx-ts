@@ -388,7 +388,7 @@ defineRegressionSuite('Transition sounds (write)', [
 	},
 	{
 		// `audio/x-wav` is the spelling PowerPoint itself authors for a transition sound, so it
-		// is what arrives on any deck read back in — including from `ts-pptx/script`, which
+		// is what arrives on any deck read back in — including from `pptx-ts/script`, which
 		// hands the source package's own content type straight back as a data URI. The media
 		// filename is derived from the mime subtype, and taking it verbatim produced
 		// `audio-1-1.x-wav`: a Default-declared file type that exists nowhere else.

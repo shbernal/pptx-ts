@@ -1,5 +1,5 @@
 /**
- * ts-pptx: turning a caller's string into something that can sit inside XML.
+ * pptx-ts: turning a caller's string into something that can sit inside XML.
  *
  * Three escapers with three notions of what is dangerous used to live here-and-there — one under
  * `gen/`, one under `read/oxml/`, and a fourth-of-a-job local one in `embedded-fonts.ts` — and the

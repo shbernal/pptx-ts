@@ -114,8 +114,8 @@ const WRITER_DEFAULTS: Record<string, string> = {
 	chartColors: 'the write path assigns a series palette; the source’s came from the theme',
 	dataLabelFormatCode: 'a data label with no explicit number format takes the write path’s default',
 	showLeaderLines: 'leader lines are on by default in the write path',
-	// The five docProps the write path seeds in its constructor ('ts-pptx',
-	// 'ts-pptx Presentation', '1'). A source deck that declared none of a given property gets
+	// The five docProps the write path seeds in its constructor ('pptx-ts',
+	// 'pptx-ts Presentation', '1'). A source deck that declared none of a given property gets
 	// the library's, and there is no way to unset one — assigning `''` writes an empty element
 	// rather than removing it. Unlike the entries above, this is a *write*-side candidate, not
 	// a read-side one: the fix is a way to author a deck with a property genuinely absent.

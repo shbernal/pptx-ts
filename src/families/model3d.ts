@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the 3D-model construct family
+ * pptx-ts: the 3D-model construct family
  *
  * Embedded `.glb` models (PowerPoint's Insert > 3D Models), with the preview picture every other
  * consumer draws instead.

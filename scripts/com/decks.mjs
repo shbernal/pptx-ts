@@ -73,7 +73,7 @@ export async function generateNavDeck() {
 		})
 	})
 
-	const outFile = path.join(os.tmpdir(), `ts-pptx-com-smoke-nav-${process.pid}.pptx`)
+	const outFile = path.join(os.tmpdir(), `pptx-ts-com-smoke-nav-${process.pid}.pptx`)
 	await pptx.writeFile({ fileName: outFile })
 	return outFile
 }
@@ -130,7 +130,7 @@ export async function generateGeomDeck() {
 		startShapeIdx: GEOM_START_IDX,
 	})
 
-	const outFile = path.join(os.tmpdir(), `ts-pptx-com-smoke-geom-${process.pid}.pptx`)
+	const outFile = path.join(os.tmpdir(), `pptx-ts-com-smoke-geom-${process.pid}.pptx`)
 	await pptx.writeFile({ fileName: outFile })
 	return outFile
 }
@@ -150,7 +150,7 @@ export async function generateOleDeck() {
 	// Generic OLE-server blob: `.../oleObject` rel + a `.bin` part.
 	s.addOleObject({ data: 'AAECAwQFBgc=', objectName: 'OleBlob', x: 4.5, y: 1.5, w: 2, h: 2 })
 
-	const outFile = path.join(os.tmpdir(), `ts-pptx-com-smoke-ole-${process.pid}.pptx`)
+	const outFile = path.join(os.tmpdir(), `pptx-ts-com-smoke-ole-${process.pid}.pptx`)
 	await pptx.writeFile({ fileName: outFile })
 	return outFile
 }
@@ -171,7 +171,7 @@ export async function generateModel3dDeck() {
 		...MODEL3D_FRAME_IN,
 	})
 
-	const outFile = path.join(os.tmpdir(), `ts-pptx-com-smoke-model3d-${process.pid}.pptx`)
+	const outFile = path.join(os.tmpdir(), `pptx-ts-com-smoke-model3d-${process.pid}.pptx`)
 	await pptx.writeFile({ fileName: outFile })
 	return outFile
 }
@@ -201,7 +201,7 @@ export async function generatePresetGeomDeck() {
 		})
 	}
 
-	const outFile = path.join(os.tmpdir(), `ts-pptx-com-smoke-prstgeom-${process.pid}.pptx`)
+	const outFile = path.join(os.tmpdir(), `pptx-ts-com-smoke-prstgeom-${process.pid}.pptx`)
 	await pptx.writeFile({ fileName: outFile })
 	return outFile
 }

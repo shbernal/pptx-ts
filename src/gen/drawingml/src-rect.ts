@@ -1,5 +1,5 @@
 /**
- * ts-pptx: the explicit `<a:srcRect>` source crop
+ * pptx-ts: the explicit `<a:srcRect>` source crop
  *
  * A leaf module on purpose. A picture object (`addImage`) and a native picture fill
  * (`fill: { type: 'image' }`) crop a source image the same way, but they live on opposite

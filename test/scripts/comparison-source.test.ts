@@ -111,7 +111,7 @@ describe('the corpus itself', () => {
 	// mean the same thing every run. The shared baseline is where it is expected to happen.
 	test('the arms that agree are the ones the page counts', () => {
 		const agree = PROBES.filter(
-			(probe) => probe.build['ts-pptx'] && probeSource(probe, 'ts-pptx') === probeSource(probe, 'pptxgenjs')
+			(probe) => probe.build['pptx-ts'] && probeSource(probe, 'pptx-ts') === probeSource(probe, 'pptxgenjs')
 		).map((probe) => probe.id)
 		expect(agree).not.toContain('bar-chart')
 		expect(agree).not.toContain('image')
@@ -141,7 +141,7 @@ describe('the bundle corpus', () => {
 
 	test('a compiled program carries the frame, the constants and the body', () => {
 		const program = defined(PROGRAMS.find((entry) => entry.id === 'full-deck'))
-		const module = programModule(program, 'ts-pptx')
+		const module = programModule(program, 'pptx-ts')
 		expect(module.startsWith("import TsPptx from 'pptx-ts'\n")).toBe(true)
 		expect(module).toContain('const pres = new TsPptx()')
 		expect(module.trimEnd().endsWith("console.log(await pres.write({ outputType: 'arraybuffer' }))")).toBe(true)
@@ -149,9 +149,9 @@ describe('the bundle corpus', () => {
 
 	test('the compiled program keeps a data URL the page elides', () => {
 		const program = defined(PROGRAMS.find((entry) => entry.id === 'full-deck'))
-		expect(programSource(program, 'ts-pptx')).toContain('…')
-		expect(programModule(program, 'ts-pptx')).not.toContain('…')
-		expect(programModule(program, 'ts-pptx')).toContain('R9awAAAABJRU5ErkJggg==')
+		expect(programSource(program, 'pptx-ts')).toContain('…')
+		expect(programModule(program, 'pptx-ts')).not.toContain('…')
+		expect(programModule(program, 'pptx-ts')).toContain('R9awAAAABJRU5ErkJggg==')
 	})
 
 	// The page prints the frame with the program cut out of it. Built from the same two

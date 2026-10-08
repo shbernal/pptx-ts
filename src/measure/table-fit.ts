@@ -1,5 +1,5 @@
 /**
- * ts-pptx: measuring a table's row heights and cell fits
+ * pptx-ts: measuring a table's row heights and cell fits
  *
  * A table is measured cell by cell against its resolved grid: each cell inherits the table's text
  * options where it sets none, gets its own margins resolved to EMU insets, and is laid out inside

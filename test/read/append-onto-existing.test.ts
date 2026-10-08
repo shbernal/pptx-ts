@@ -1,4 +1,4 @@
-// Append-onto-existing tests for `ts-pptx/read` (dn-append-onto-existing-deck).
+// Append-onto-existing tests for `pptx-ts/read` (dn-append-onto-existing-deck).
 //
 // Contract under test: Presentation.appendSlides(source, { layout }) authors
 // slides on a generator (TsPptx), serializes them via source.extractSlides(),

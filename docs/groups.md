@@ -103,7 +103,7 @@ slide.addGroup(
 slide.addGroup([{ rect: { x: 1, y: 1, w: 2, h: 1 } }], { x: 0.5, y: 0.5, w: 3, h: 2 })
 ```
 
-- A partial frame such as `{ x: 5 }` reads like a move, and a group frame cannot move its children, so ts-pptx falls back to the bounding box rather than draw the frame away from its content.
+- A partial frame such as `{ x: 5 }` reads like a move, and a group frame cannot move its children, so pptx-ts falls back to the bounding box rather than draw the frame away from its content.
 - The bounding box uses the size each child is drawn at. A text box with no `w` counts at its default width, and an image with a `sizing` box counts at that box.
 - A negative `w` or `h` on an explicit frame becomes a positive size plus a flip. See [Positions and sizes](reference/layout-units.md#positions-and-sizes).
 
