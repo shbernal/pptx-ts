@@ -24,7 +24,7 @@ const PNG_1X1_DATA_URI = `data:${PNG_1X1}`
 
 async function build(buildFn) {
 	const pres = new TsPptx()
-	buildFn(pres)
+	await buildFn(pres)
 	const buf = await pres.toBytes()
 	const zip = await JSZip.loadAsync(buf)
 	return { pres, zip, buf }
