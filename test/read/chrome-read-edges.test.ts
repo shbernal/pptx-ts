@@ -49,8 +49,6 @@
 // each patched package is run past the schema validator, which is what separates
 // these from the four groups above: the input is legal, so the contract is real.
 
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
@@ -58,9 +56,7 @@ import { assert, assertEqual, readEntry } from '../helpers.ts'
 import { authorRead, schemaErrors, validatorInstalled } from './authored.ts'
 import { openFixture } from './corpus.ts'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
-async function open(name, ext = 'pptx') {
+async function open(name: string, ext = 'pptx') {
 	return openFixture(`${name}.${ext}`)
 }
 
@@ -71,7 +67,7 @@ async function open(name, ext = 'pptx') {
  * validating is the point here, since the claim under test is that the shape is
  * legal input rather than a hand-broken package.
  */
-async function patchedMaster(mutate) {
+async function patchedMaster(mutate: (xml: string) => string) {
 	const { buf } = await authorRead((pres) => {
 		pres.addSlide()
 	})

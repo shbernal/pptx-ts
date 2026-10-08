@@ -7,19 +7,16 @@
 // helpers, validated against the basic and rich animation oracles.
 
 import { readFile } from 'node:fs/promises'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import assert from 'node:assert/strict'
+import type { Element } from '@xmldom/xmldom'
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
-import { Presentation } from '../../dist/read.js'
+import { Presentation, type AnyShape, type Slide } from '../../dist/read.js'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture, readOracle } from './corpus.ts'
 import { partBodies, assertUnchangedExcept, asError, defined, readEntry } from '../helpers.ts'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
-async function slidePartXml(pptxBytes, slideNumber) {
+async function slidePartXml(pptxBytes: Uint8Array, slideNumber: number) {
 	const zip = await JSZip.loadAsync(pptxBytes)
 	return readEntry(zip, `ppt/slides/slide${slideNumber}.xml`)
 }
@@ -146,7 +143,7 @@ describe('slide.transition (write/edit)', () => {
 			slide.transition = current
 		}
 		const saved = await pres.save()
-		const spd = async (bytes, n) =>
+		const spd = async (bytes: Uint8Array, n: number) =>
 			((await slidePartXml(bytes, n)).match(/<p:transition[^>]*>/)?.[0] ?? '').match(/spd="\w+"/)?.[0] ?? null
 		for (let n = 1; n <= pres.slides.length; n++)
 			assert.equal(await spd(saved, n), await spd(original, n), `slide ${n} spd`)
@@ -303,7 +300,9 @@ describe('slide-animation-presets (read fixture)', () => {
 	test('every preset template appears verbatim in the slide', async () => {
 		const oracle = await readOracle('slide-animation-presets')
 		const xml = await slidePartXml(await readFile(fixturePath('slide-animation-presets')), 1)
-		for (const [name, t] of Object.entries(oracle.presetTemplates)) {
+		const templates: Record<string, { effectParXml: string; behaviorsXml: string; bldPXml: string }> =
+			oracle.presetTemplates
+		for (const [name, t] of Object.entries(templates)) {
 			assert.ok(xml.includes(t.effectParXml), `${name} effect node present verbatim`)
 			assert.ok(xml.includes(t.behaviorsXml), `${name} behaviors present verbatim`)
 			assert.ok(xml.includes(t.bldPXml), `${name} bldP present`)
@@ -405,7 +404,7 @@ describe('import-animation-merge (read fixture)', () => {
 // and appended after any existing build, and no reference dangles.
 describe('importShape carryAnimation', () => {
 	/** Every animation spid on a slide resolves to a real shape id (no dangling reference). */
-	function assertNoDanglingSpids(xml) {
+	function assertNoDanglingSpids(xml: string) {
 		const shapeIds = new Set([...xml.matchAll(/<p:cNvPr id="(\d+)"/g)].map((m) => Number(m[1])))
 		for (const m of xml.matchAll(/<p:(?:spTgt|bldP) spid="(\d+)"/g)) {
 			assert.ok(shapeIds.has(Number(m[1])), `spid ${m[1]} targets a real shape`)
@@ -446,13 +445,13 @@ describe('importShape carryAnimation', () => {
 	})
 
 	/** A shape's `p:cNvPr/@id`. */
-	function shapeId(shape) {
+	function shapeId(shape: AnyShape) {
 		const pNs = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 		return Number(shape.element_.getElementsByTagNameNS(pNs, 'cNvPr')[0].getAttribute('id'))
 	}
 
 	/** How many effect targets in a slide's XML name `spid`. */
-	function effectCount(xml, spid) {
+	function effectCount(xml: string, spid: number) {
 		return [...xml.matchAll(new RegExp(`<p:spTgt spid="${spid}"/>`, 'g'))].length
 	}
 
@@ -517,15 +516,14 @@ describe('importShape carryAnimation', () => {
 	/**
 	 * Each `p:seq` on a slide, in document order: its `p:cTn/@nodeType`, and the XML of each group
 	 * in its child list.
-	 * @param {any} slide
 	 */
-	function sequencesOf(slide) {
+	function sequencesOf(slide: Slide) {
 		const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
-		const children = (/** @type {Element} */ node, local = '') =>
-			/** @type {Element[]} */ ([...node.childNodes].filter((child) => child.nodeType === 1)).filter(
+		const children = (node: Element, local = '') =>
+			([...node.childNodes].filter((child) => child.nodeType === 1) as Element[]).filter(
 				(child) => !local || child.localName === local
 			)
-		return [...slide.part.dom.documentElement.getElementsByTagNameNS(P_NS, 'seq')].map((seq) => {
+		return [...defined(slide.part.dom.documentElement).getElementsByTagNameNS(P_NS, 'seq')].map((seq) => {
 			const [cTn] = children(seq, 'cTn')
 			const [list] = cTn ? children(cTn, 'childTnLst') : []
 			return { nodeType: cTn?.getAttribute('nodeType') ?? null, groups: list ? children(list).map(String) : [] }

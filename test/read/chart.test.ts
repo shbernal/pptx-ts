@@ -8,11 +8,11 @@
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { bytesEqual, assert, assertEqual, partBodies } from '../helpers.ts'
+import { bytesEqual, assert, assertEqual, defined, partBodies } from '../helpers.ts'
 import { fixturePath, openFixture } from './corpus.ts'
 
 /** The first chart on any slide of the fixture. */
-function firstChart(presentation) {
+function firstChart(presentation: Presentation) {
 	for (const slide of presentation.slides) {
 		for (const shape of slide.shapes) {
 			if (shape.shapeType === 'graphicFrame' && shape.chart) return shape.chart
@@ -32,7 +32,7 @@ describe('Chart read model', () => {
 	})
 
 	test('reads series names, indices, and cached values', async () => {
-		const chart = firstChart(await openFixture('mixed'))
+		const chart = defined(firstChart(await openFixture('mixed')))
 		const series = chart.series
 		assertEqual(series.length, 2, 'two series')
 		assertEqual(series[0].name, 'Costs', 'first series name')
@@ -50,7 +50,7 @@ describe('Chart read model', () => {
 	})
 
 	test('reads category labels from the first series cache', async () => {
-		const chart = firstChart(await openFixture('mixed'))
+		const chart = defined(firstChart(await openFixture('mixed')))
 		const categories = chart.categories
 		assertEqual(categories.length, 16, '16 categories')
 		assertEqual(categories[0], '3200', 'first category as written')
@@ -58,7 +58,7 @@ describe('Chart read model', () => {
 	})
 
 	test('element_ escape hatches expose the underlying chartSpace and c:ser elements', async () => {
-		const chart = firstChart(await openFixture('mixed'))
+		const chart = defined(firstChart(await openFixture('mixed')))
 		const space = chart.element_
 		assert(space, 'chart.element_ returns the chartSpace document element')
 		assertEqual(space.localName, 'chartSpace', 'element_ is the c:chartSpace root')
@@ -79,7 +79,7 @@ describe('Chart read model', () => {
 	test('reading a chart dirties nothing — save stays byte-identical', async () => {
 		const input = await readFile(fixturePath('mixed'))
 		const presentation = await Presentation.load(input)
-		const chart = firstChart(presentation)
+		const chart = defined(firstChart(presentation))
 		// Touch every read accessor.
 		void [chart.chartType, chart.title, chart.categories, chart.series.map((s) => [s.name, s.index, s.values])]
 

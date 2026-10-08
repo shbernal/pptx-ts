@@ -31,18 +31,14 @@
 // of the attribute written via the `element_` hatch; the `true` default is asserted
 // against every fixture slide.
 
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, test } from 'vitest'
-import { Presentation } from '../../dist/read.js'
+import { Presentation, type SlideLayout, type SlideMaster } from '../../dist/read.js'
 import { assert, assertEqual, defined } from '../helpers.ts'
 import { authorRead, schemaErrors, validatorInstalled } from './authored.ts'
 import { openFixture } from './corpus.ts'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
 /** The shapes of `host` that are not placeholders — a template's decorative furniture. */
-function decorative(host) {
+function decorative(host: SlideMaster | SlideLayout) {
 	return host.shapes.filter((shape) => shape.placeholder === null)
 }
 
@@ -132,13 +128,13 @@ describe('SlideLayout.shapes — PowerPoint-authored layout furniture', () => {
 		assertEqual(decorative(title).length, 1, 'one of them is a non-placeholder group')
 
 		const group = decorative(title)[0]
-		assertEqual(group.shapeType, 'group', 'the decoration is a p:grpSp')
+		assert(group.shapeType === 'group', `the decoration is a p:grpSp; got ${group.shapeType}`)
 		assertEqual(group.name, 'Group 2', 'the group name')
 		assertEqual(group.shapes.length, 5, 'the group nests five children')
 
 		// A child's own box is in the group's child coordinate space; absoluteFrame maps
 		// it out through the group chain, exactly as it does for a slide-level group.
-		const rule = group.shapes.find((shape) => shape.name === 'Rectangle 11')
+		const rule = defined(group.shapes.find((shape) => shape.name === 'Rectangle 11'))
 		assertEqual(rule.left, 199, 'the child box is in child-space units, not EMU')
 		assertEqual(
 			JSON.stringify(rule.absoluteFrame),

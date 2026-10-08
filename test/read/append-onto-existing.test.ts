@@ -10,16 +10,13 @@
 
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, test } from 'vitest'
 import TsPptx, { ChartType } from '../../dist/node.js'
-import { Presentation } from '../../dist/read.js'
+import { Presentation, type OpcPackage } from '../../dist/read.js'
 import { bytesEqual, PNG_1X1, assert, assertEqual, assertIncludes, partBodies, defined, caught } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { FIXTURES, fixturePath } from './corpus.ts'
 import { resolveSingle } from './opc.ts'
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const SLIDE_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide'
 const SLIDE_LAYOUT_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout'
@@ -37,7 +34,7 @@ const VIDEO_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relatio
 const MS_MEDIA_REL = 'http://schemas.microsoft.com/office/2007/relationships/media'
 const HYPERLINK_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink'
 
-async function rejects(fn) {
+async function rejects(fn: () => unknown) {
 	try {
 		await fn()
 		return false
@@ -47,20 +44,20 @@ async function rejects(fn) {
 }
 
 /** Resolve the absolute target a single `rId` points at, or `null`. */
-function resolveRid(opc, partName, rId) {
+function resolveRid(opc: OpcPackage, partName: string, rId: string) {
 	const rels = opc.relationshipsFor(partName)
 	const match = [...rels].find((rel) => rel.id === rId)
 	return match ? rels.resolveTarget(match.id) : null
 }
 
 /** The rel `type` of a single `rId` on a part, or `null`. */
-function typeOfRid(opc, partName, rId) {
+function typeOfRid(opc: OpcPackage, partName: string, rId: string) {
 	const rels = opc.relationshipsFor(partName)
 	const match = [...rels].find((rel) => rel.id === rId)
 	return match ? match.type : null
 }
 
-async function mediaFixture(name) {
+async function mediaFixture(name: string) {
 	const buf = await readFile(path.join(FIXTURES, 'media', name))
 	return buf.toString('base64')
 }
@@ -282,7 +279,7 @@ describe('Presentation.appendSlides', () => {
 			assertEqual(typeOfRid(reopened.opc, slide.partName, blipRid), IMAGE_REL, 'blip r:embed → image preview rel')
 
 			// The ECMA and MS rels share one media Target; the preview is a distinct image part.
-			const mediaTarget = resolveRid(reopened.opc, slide.partName, fileRid)
+			const mediaTarget = defined(resolveRid(reopened.opc, slide.partName, fileRid))
 			assertEqual(
 				resolveRid(reopened.opc, slide.partName, embedRid),
 				mediaTarget,

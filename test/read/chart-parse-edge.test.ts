@@ -18,13 +18,13 @@ const NS =
 	'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"'
 
 /** Wrap chart-space inner XML in a `Part` and hand it to a read-model `Chart`. */
-function chart(inner) {
+function chart(inner: string) {
 	const xml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n<c:chartSpace ${NS}>${inner}</c:chartSpace>`
 	return new Chart(new Part('/ppt/charts/chart1.xml', CHART_CONTENT_TYPE, new TextEncoder().encode(xml)))
 }
 
 /** A `c:pt` cache point; pass `null` for a point with no `c:v` child. */
-function pt(idx, v) {
+function pt(idx: number, v: string | null) {
 	return v === null ? `<c:pt idx="${idx}"/>` : `<c:pt idx="${idx}"><c:v>${v}</c:v></c:pt>`
 }
 
@@ -97,7 +97,7 @@ describe('Chart read model — title edges', () => {
 
 describe('ChartSeries read model — name / index / caches', () => {
 	/** A one-group chart whose single `c:ser` is `serInner`; returns that series. */
-	function series(serInner) {
+	function series(serInner: string) {
 		return chart(`<c:chart><c:plotArea><c:barChart><c:ser>${serInner}</c:ser></c:barChart></c:plotArea></c:chart>`)
 			.series[0]
 	}
@@ -164,7 +164,7 @@ describe('ChartSeries read model — name / index / caches', () => {
 
 describe('ChartSeries read model — whether a fill is there', () => {
 	/** A one-group chart whose single `c:ser` carries `spPrInner` as its `c:spPr`; returns that series. */
-	function seriesWithSpPr(spPrInner) {
+	function seriesWithSpPr(spPrInner: string) {
 		return chart(
 			`<c:chart><c:plotArea><c:barChart><c:ser><c:idx val="0"/>` +
 				`<c:spPr>${spPrInner}</c:spPr>` +

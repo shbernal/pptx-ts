@@ -8,7 +8,6 @@
 
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import JSZip from 'jszip'
 import { describe, test, beforeAll } from 'vitest'
 import TsPptx from '../../dist/node.js'
@@ -17,11 +16,10 @@ import { assert, assertEqual, readEntry } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { FIXTURES, fixturePath } from './corpus.ts'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const fontsDir = path.join(FIXTURES, 'fonts')
 
-let regular
-let bold
+let regular: Uint8Array
+let bold: Uint8Array
 
 beforeAll(async () => {
 	regular = new Uint8Array(await readFile(path.join(fontsDir, 'Silkscreen-Regular.ttf')))
@@ -43,7 +41,7 @@ async function fontGenerator() {
 	return pptx
 }
 
-async function zipOf(pptxBytes) {
+async function zipOf(pptxBytes: Uint8Array) {
 	return JSZip.loadAsync(pptxBytes)
 }
 

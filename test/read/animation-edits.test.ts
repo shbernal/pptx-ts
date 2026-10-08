@@ -16,7 +16,7 @@ const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const SLIDE_CT = 'application/vnd.openxmlformats-officedocument.presentationml.slide+xml'
 
 /** A synthetic read-model Slide over a hand-authored `p:sld` body (shape tree is empty). */
-function slide(bodyXml) {
+function slide(bodyXml: string) {
 	const xml = `<p:sld xmlns:p="${P_NS}"><p:cSld><p:spTree/></p:cSld>${bodyXml}</p:sld>`
 	const part = new Part('/ppt/slides/slide1.xml', SLIDE_CT, new TextEncoder().encode(xml))
 	// @ts-expect-error a stand-in deck: the edits under test never reach the presentation
@@ -24,16 +24,17 @@ function slide(bodyXml) {
 }
 
 /** An effect `<p:par>` (its `<p:cTn>` carries a presetID) targeting `spid`. */
-const effectPar = (spid, id) =>
+const effectPar = (spid: number | string, id: number) =>
 	`<p:par><p:cTn id="${id}" presetID="1"><p:childTnLst>` +
 	`<p:set><p:cBhvr><p:tgtEl><p:spTgt spid="${spid}"/></p:tgtEl></p:cBhvr></p:set>` +
 	`</p:childTnLst></p:cTn></p:par>`
 
 /** A wrapper `<p:par>` (no presetID) around `inner`. */
-const wrapPar = (id, inner) => `<p:par><p:cTn id="${id}"><p:childTnLst>${inner}</p:childTnLst></p:cTn></p:par>`
+const wrapPar = (id: number, inner: string) =>
+	`<p:par><p:cTn id="${id}"><p:childTnLst>${inner}</p:childTnLst></p:cTn></p:par>`
 
 /** A `p:timing` whose mainSeq child list holds `clickGroups`, with an optional `p:bldLst`. */
-function timing(clickGroups, bldLst = '') {
+function timing(clickGroups: string, bldLst = '') {
 	return (
 		`<p:timing><p:tnLst><p:par><p:cTn id="1" nodeType="tmRoot"><p:childTnLst>` +
 		`<p:seq><p:cTn id="2" nodeType="mainSeq"><p:childTnLst>${clickGroups}</p:childTnLst></p:cTn></p:seq>` +

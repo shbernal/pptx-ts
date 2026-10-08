@@ -17,11 +17,12 @@
 // reads `null` on an authored deck (asserted null here, documented, not faked).
 
 import { describe, test } from 'vitest'
+import type { Presentation } from '../../dist/read.js'
 import { authorRead, schemaErrors, validatorInstalled } from './authored.ts'
-import { assert, assertEqual } from '../helpers.ts'
+import { assert, assertEqual, defined } from '../helpers.ts'
 
 /** The first slide of `presentation`. */
-function firstSlide(presentation) {
+function firstSlide(presentation: Presentation) {
 	const slide = presentation.slides[0]
 	assert(slide, 'the authored slide is read back')
 	return slide
@@ -66,7 +67,7 @@ describe('Theme / SlideMaster / SlideLayout — write→read fidelity', () => {
 
 	test('the theme font scheme reads the major/minor faces (T2.2)', async () => {
 		const { presentation } = await authorBrandedDeck()
-		const fontScheme = firstSlide(presentation).theme.fontScheme
+		const fontScheme = defined(firstSlide(presentation).theme).fontScheme
 		assert(fontScheme, 'the theme declares a font scheme')
 
 		assertEqual(fontScheme.name, 'Office', 'the font-scheme name round-trips')
@@ -101,7 +102,7 @@ describe('Theme / SlideMaster / SlideLayout — write→read fidelity', () => {
 
 	test('master and layout placeholders carry their own geometry (T2.2)', async () => {
 		const { presentation } = await authorBrandedDeck()
-		const master = firstSlide(presentation).master
+		const master = defined(firstSlide(presentation).master)
 
 		// The master's slide-number placeholder carries explicit EMU geometry —
 		// authored on the master, so it round-trips (unlike a notes placeholder's null).
@@ -123,22 +124,22 @@ describe('Theme / SlideMaster / SlideLayout — write→read fidelity', () => {
 
 	test('a layout exposes its name, its (import-only) type, and its own background (T2.2)', async () => {
 		const { presentation } = await authorBrandedDeck()
-		const master = firstSlide(presentation).master
+		const master = defined(firstSlide(presentation).master)
 
-		const branded = master.layouts.find((l) => l.name === 'BRANDED')
+		const branded = defined(master.layouts.find((l) => l.name === 'BRANDED'))
 		// @type is import-only — the writer authors none, so it reads null (not faked).
 		assertEqual(branded.type, null, 'the writer authors no layout @type (import-only surface)')
 		assertEqual(branded.master?.name, master.name, 'the layout resolves back to its master')
 
 		const bg = branded.background
-		assertEqual(bg?.type, 'solid', 'the BRANDED layout authors a solid background')
+		assert(bg?.type === 'solid', `the BRANDED layout authors a solid background; got ${bg?.type}`)
 		assertEqual(bg?.source, 'layout', 'the background is sourced from the layout itself')
 		assertEqual(bg?.colorRef?.resolved?.effectiveHex, 'F1F2F3', 'the background colour round-trips')
 
 		// The default layout authors a theme-indexed background instead.
-		const def = master.layouts.find((l) => l.name === 'DEFAULT')
+		const def = defined(master.layouts.find((l) => l.name === 'DEFAULT'))
 		const defBg = def.background
-		assertEqual(defBg?.type, 'themeRef', 'the DEFAULT layout authors a theme-indexed background')
+		assert(defBg?.type === 'themeRef', `the DEFAULT layout authors a theme-indexed background; got ${defBg?.type}`)
 		assertEqual(defBg?.idx, 1001, 'the bgRef index round-trips')
 		assertEqual(defBg?.colorRef?.resolved?.hex, 'FFFFFF', 'bg1 resolves through the colour map + scheme to white')
 	})

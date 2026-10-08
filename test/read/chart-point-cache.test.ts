@@ -20,15 +20,19 @@
 // is not decoded — and cannot warn — until something asks it for its points.
 
 import JSZip from 'jszip'
-import { ChartType } from '../../dist/node.js'
-import { Presentation } from '../../dist/read.js'
+import { ChartType, type CHART_NAME } from '../../dist/node.js'
+import { Presentation, isGraphicFrame } from '../../dist/read.js'
 import { describe, test } from 'vitest'
 import { authorRead } from './authored.ts'
-import { assert, assertEqual, captureDiagnostics } from '../helpers.ts'
+import { assert, assertEqual, captureDiagnostics, defined } from '../helpers.ts'
 import { readFixture } from './corpus.ts'
 
 /** Author a chart, rewrite its chart part with `edit`, load the result back and hand it to `read`. */
-async function authorEditRead(chartType, edit, read) {
+async function authorEditRead<T>(
+	chartType: CHART_NAME,
+	edit: (xml: string) => string,
+	read: (presentation: Presentation) => T
+): Promise<T> {
 	const { buf } = await authorRead((pres) => {
 		pres.addSlide().addChart([{ name: 'Revenue', labels: ['Q1', 'Q2', 'Q3', 'Q4'], values: [10, 20, 30, 40] }], {
 			type: chartType,
@@ -46,19 +50,21 @@ async function authorEditRead(chartType, edit, read) {
 }
 
 /** The first classic chart on any slide. */
-function firstChartOf(presentation) {
-	for (const slide of presentation.slides) for (const shape of slide.shapes) if (shape.chart) return shape.chart
+function firstChartOf(presentation: Presentation) {
+	for (const slide of presentation.slides)
+		for (const shape of slide.shapes) if (isGraphicFrame(shape) && shape.chart) return shape.chart
 	return null
 }
 
 /** The first chartEx chart on any slide. */
-function firstChartExOf(presentation) {
-	for (const slide of presentation.slides) for (const shape of slide.shapes) if (shape.chartEx) return shape.chartEx
+function firstChartExOf(presentation: Presentation) {
+	for (const slide of presentation.slides)
+		for (const shape of slide.shapes) if (isGraphicFrame(shape) && shape.chartEx) return shape.chartEx
 	return null
 }
 
 /** Replace the last occurrence of `find` in `xml` with `replacement`. */
-function replaceLast(xml, find, replacement) {
+function replaceLast(xml: string, find: string, replacement: string) {
 	const at = xml.lastIndexOf(find)
 	assert(at !== -1, `expected the authored chart part to contain ${find}`)
 	return xml.slice(0, at) + replacement + xml.slice(at + find.length)
@@ -87,7 +93,7 @@ describe('Chart point caches are sized by the points that are there', () => {
 			authorEditRead(
 				ChartType.bar,
 				(xml) => replaceLast(xml, '<c:pt idx="3">', '<c:pt idx="900000000">'),
-				(presentation) => firstChartOf(presentation).series[0].values.length
+				(presentation) => defined(firstChartOf(presentation)).series[0].values.length
 			)
 		)
 		// A worksheet has 1,048,576 rows, so a point at index 900,000,000 cannot describe data
@@ -103,7 +109,7 @@ describe('Chart point caches are sized by the points that are there', () => {
 			authorEditRead(
 				ChartType.bar,
 				(xml) => replaceLast(xml, '<c:pt idx="3">', '<c:pt idx="3.5">'),
-				(presentation) => firstChartOf(presentation).series[0].values
+				(presentation) => defined(firstChartOf(presentation)).series[0].values
 			)
 		)
 		assertEqual(JSON.stringify(last.result), JSON.stringify([10, 20, 30]), 'the fractional last point is dropped')
@@ -113,7 +119,7 @@ describe('Chart point caches are sized by the points that are there', () => {
 			authorEditRead(
 				ChartType.bar,
 				(xml) => replaceLast(xml, '<c:pt idx="0">', '<c:pt idx="0.5">'),
-				(presentation) => firstChartOf(presentation).series[0].values
+				(presentation) => defined(firstChartOf(presentation)).series[0].values
 			)
 		)
 		assertEqual(
@@ -146,7 +152,7 @@ describe('Chart point caches are sized by the points that are there', () => {
 			authorEditRead(
 				ChartType.bar,
 				(xml) => xml,
-				(presentation) => firstChartOf(presentation).series[0].values.length
+				(presentation) => defined(firstChartOf(presentation)).series[0].values.length
 			)
 		)
 		assertEqual(result, 4, 'the untouched cache reads its four points')

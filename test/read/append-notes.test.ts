@@ -13,7 +13,7 @@ import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import TsPptx from '../../dist/node.js'
-import { Presentation } from '../../dist/read.js'
+import { Presentation, type OpcPackage } from '../../dist/read.js'
 import { assert, assertEqual, defined, readEntry } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath } from './corpus.ts'
@@ -23,7 +23,7 @@ const NOTES_MASTER_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/
 const SLIDE_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide'
 
 /** Author `build` onto a template shell, append, save, and hand back the bytes + re-read deck. */
-async function appendOnto(fixture, build) {
+async function appendOnto(fixture: string, build: (pptx: TsPptx) => void) {
 	const bytes = await readFile(fixturePath(fixture))
 	const deck = await Presentation.fromTemplate(bytes)
 	const size = defined(deck.slideSize, `${fixture} declares a slide size`)
@@ -36,7 +36,7 @@ async function appendOnto(fixture, build) {
 	return { out, reread: await Presentation.load(out) }
 }
 
-function relsOf(opc, partName) {
+function relsOf(opc: OpcPackage, partName: string) {
 	return [...opc.relationshipsFor(partName)]
 }
 

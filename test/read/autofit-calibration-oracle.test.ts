@@ -14,20 +14,36 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, test, expect } from 'vitest'
-import { solveShrink, solveResize } from '../../src/measure/text-fit.ts'
+import { solveShrink, solveResize, type FitParagraph, type MetricsResolver } from '../../src/measure/text-fit.ts'
 import { FontMetricsRegistry } from '../../src/measure/font-metrics.ts'
 import { oracleMetrics, resolutionTally } from './font-oracle.ts'
 import { FIXTURES } from './corpus.ts'
 
 const EMU_PER_PT = 12700
 
-/**
- * Register every face a case's runs name, and report whether all of them resolved.
- *
- * @param {import('../../src/measure/font-metrics.ts').FontMetricsRegistry} registry
- * @param {{ paragraphs: Array<{ runs: Array<{ font: string, bold?: boolean, italic?: boolean }> }> }} c
- */
-async function registerCaseFaces(registry, c) {
+/** One run of an `autofit-*.cases.json` case, as the authoring script recorded it. */
+interface OracleRun {
+	text: string
+	sizePt: number
+	font: string
+	bold?: boolean
+	italic?: boolean
+	charSpacingPts?: number
+}
+
+/** One case of `autofit-shrink.cases.json` or `autofit-resize.cases.json`. */
+interface OracleCase {
+	paragraphs: Array<{
+		runs: OracleRun[]
+		lineSpacingPct?: number
+		lineSpacingPts?: number
+		spaceBeforePts?: number
+		spaceAfterPts?: number
+	}>
+}
+
+/** Register every face a case's runs name, and report whether all of them resolved. */
+async function registerCaseFaces(registry: FontMetricsRegistry, c: OracleCase) {
 	for (const para of c.paragraphs) {
 		for (const run of para.runs) {
 			const face = { family: run.font, bold: !!run.bold, italic: !!run.italic }
@@ -52,7 +68,7 @@ for (const deck of calibration.decks) {
 }
 
 /** Build the FitParagraph[] a case describes (shared by the shrink/resize oracles). */
-function paragraphsOf(c) {
+function paragraphsOf(c: OracleCase): FitParagraph[] {
 	return c.paragraphs.map((p) => ({
 		runs: p.runs.map((r) => ({
 			text: r.text,
@@ -62,10 +78,11 @@ function paragraphsOf(c) {
 			fontFace: r.font,
 			charSpacingPt: r.charSpacingPts ?? undefined,
 		})),
-		lineSpacingPct: p.lineSpacingPct,
+		// A case omits a key it does not set; the solver reads an absent key as its default.
+		...(p.lineSpacingPct !== undefined && { lineSpacingPct: p.lineSpacingPct }),
 		lineSpacingPts: p.lineSpacingPts,
-		spaceBeforePts: p.spaceBeforePts,
-		spaceAfterPts: p.spaceAfterPts,
+		...(p.spaceBeforePts !== undefined && { spaceBeforePts: p.spaceBeforePts }),
+		...(p.spaceAfterPts !== undefined && { spaceAfterPts: p.spaceAfterPts }),
 	}))
 }
 
@@ -81,7 +98,7 @@ describe('autofit calibration oracle: shrink solver is conservative vs PowerPoin
 
 		test(c.id, async (ctx) => {
 			const registry = new FontMetricsRegistry()
-			const resolve = (run) => registry.get(run.fontFace, !!run.bold, !!run.italic)
+			const resolve: MetricsResolver = (run) => registry.get(run.fontFace, !!run.bold, !!run.italic)
 
 			if (!(await registerCaseFaces(registry, c))) {
 				ctx.skip('a face this case uses resolved neither an installed font nor a sidecar entry')
@@ -113,7 +130,7 @@ describe('autofit calibration oracle: resize solver is conservative vs PowerPoin
 
 		test(c.id, async (ctx) => {
 			const registry = new FontMetricsRegistry()
-			const resolve = (run) => registry.get(run.fontFace, !!run.bold, !!run.italic)
+			const resolve: MetricsResolver = (run) => registry.get(run.fontFace, !!run.bold, !!run.italic)
 
 			if (!(await registerCaseFaces(registry, c))) {
 				ctx.skip('a face this case uses resolved neither an installed font nor a sidecar entry')

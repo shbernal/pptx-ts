@@ -9,8 +9,7 @@
 
 import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
-import { AutoShape } from '../../dist/read.js'
-/** @import { ShapeHost } from '../../dist/read.js' */
+import { AutoShape, type ShapeHost } from '../../dist/read.js'
 import { assert, assertEqual, defined } from '../helpers.ts'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
@@ -19,20 +18,20 @@ const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
 const XFRM = '<a:xfrm><a:off x="100" y="200"/><a:ext cx="300" cy="400"/></a:xfrm>'
 
 /** A `p:sp` carrying `spPrInner`, wrapped in `wrap` (a function nesting it in groups). */
-function shapeIn(spPrInner, wrap = (inner) => inner) {
+function shapeIn(spPrInner: string, wrap = (inner: string) => inner) {
 	const sp = `<p:sp><p:nvSpPr><p:cNvPr id="2" name="child"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr>${spPrInner}</p:spPr></p:sp>`
 	const xml = `<p:spTree xmlns:p="${P_NS}" xmlns:a="${A_NS}">${wrap(sp)}</p:spTree>`
 	const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 	const el = spTree.getElementsByTagNameNS(P_NS, 'sp')[0]
-	return new AutoShape(el, /** @type {ShapeHost} */ ({}))
+	return new AutoShape(el, {} as ShapeHost)
 }
 
 /** Nest `inner` in a `p:grpSp` whose `p:grpSpPr` holds `grpSpPrInner`. */
-const group = (grpSpPrInner) => (inner) =>
+const group = (grpSpPrInner: string) => (inner: string) =>
 	`<p:grpSp><p:nvGrpSpPr><p:cNvPr id="9" name="g"/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr>${grpSpPrInner}</p:grpSpPr>${inner}</p:grpSp>`
 
 /** A group transform mapping a `chExt` of `cx`×`cy` onto a 1000×1000 slide box. */
-const groupXfrm = (cx, cy) =>
+const groupXfrm = (cx: number, cy: number) =>
 	`<a:xfrm><a:off x="0" y="0"/><a:ext cx="1000" cy="1000"/><a:chOff x="0" y="0"/><a:chExt cx="${cx}" cy="${cy}"/></a:xfrm>`
 
 describe('Shape.absoluteFrameFailure', () => {

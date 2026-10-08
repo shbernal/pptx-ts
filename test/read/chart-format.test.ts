@@ -6,13 +6,13 @@
 // the write API, reading it back through the deep model, and asserting the
 // extracted values match what was written. The writer's bytes are the fixture.
 
-import { ChartType } from '../../dist/node.js'
+import { ChartType, type TsPptx } from '../../dist/node.js'
 import { describe, test } from 'vitest'
 import { authorRead, firstChart, schemaErrors, validatorInstalled } from './authored.ts'
 import { assert, assertEqual, defined } from '../helpers.ts'
 
 /** A bar chart carrying axis / legend / data-label / series-colour formatting. */
-function formattedBar(pres) {
+function formattedBar(pres: TsPptx) {
 	const data = [
 		{ name: 'Costs', labels: ['A', 'B', 'C'], values: [10, 20, 30] },
 		{ name: 'Revenue', labels: ['A', 'B', 'C'], values: [40, 50, 60] },
@@ -31,7 +31,7 @@ function formattedBar(pres) {
 		showValAxisTitle: true,
 		valAxisTitle: 'Revenue',
 		valAxisLabelFormatCode: '0.0%',
-		valGridLine: { style: 'solid', size: 1, color: '888888' },
+		valGridLine: { dashType: 'solid', width: 1, color: '888888' },
 		// Category axis
 		showCatAxisTitle: true,
 		catAxisTitle: 'Quarter',
@@ -46,7 +46,7 @@ function formattedBar(pres) {
 }
 
 /** A line chart whose series carry an explicit stroke (width / dash / colour). */
-function formattedLine(pres) {
+function formattedLine(pres: TsPptx) {
 	const data = [{ name: 'Trend', labels: ['A', 'B', 'C'], values: [1, 2, 3] }]
 	pres.addSlide().addChart(data, {
 		type: ChartType.line,

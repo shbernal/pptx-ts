@@ -13,9 +13,10 @@
 // generator's frame (`makeXmlNotesSlideSkeleton`) precisely so the two cannot drift, and
 // the equivalence test below is what keeps that true.
 
+import type { Element } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
-import TsPptx from '../../dist/node.js'
-import { Presentation } from '../../dist/read.js'
+import TsPptx, { type Slide } from '../../dist/node.js'
+import { Presentation, type OpcPackage } from '../../dist/read.js'
 import { assert, assertEqual, bytesEqual, defined, caughtSync } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { openFixture } from './corpus.ts'
@@ -35,7 +36,7 @@ const SLIDE_MASTER_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/
 // slide whether or not `addNotes` was called, so it always takes the reuse branch.
 
 /** A one-slide generator deck, loaded through the read model. */
-async function authoredDeck(build) {
+async function authoredDeck(build?: (slide: Slide) => unknown) {
 	const pptx = new TsPptx()
 	const slide = pptx.addSlide()
 	slide.addText('body', { x: 1, y: 1, w: 4, h: 1 })
@@ -44,27 +45,30 @@ async function authoredDeck(build) {
 }
 
 /** notesMaster partnames registered in presentation.xml's p:notesMasterIdLst. */
-function registeredNotesMasters(opc) {
+function registeredNotesMasters(opc: OpcPackage) {
 	const rootRels = opc.relationshipsFor('/')
-	const officeDoc = [...rootRels].find((rel) => rel.type === OFFICE_DOCUMENT_REL)
-	const presName = rootRels.resolveTarget(officeDoc.id)
-	const root = opc.part(presName).dom.documentElement
+	const officeDoc = defined([...rootRels].find((rel) => rel.type === OFFICE_DOCUMENT_REL))
+	const presName = defined(rootRels.resolveTarget(officeDoc.id))
+	const root = defined(defined(opc.part(presName)).dom.documentElement)
 	const rels = opc.relationshipsFor(presName)
-	const out = []
+	const out: string[] = []
 	for (let n = root.firstChild; n; n = n.nextSibling) {
 		if (n.nodeType !== 1 || n.localName !== 'notesMasterIdLst') continue
 		for (let e = n.firstChild; e; e = e.nextSibling) {
 			if (e.nodeType !== 1 || e.localName !== 'notesMasterId') continue
-			const relId = e.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id')
-			out.push(rels.resolveTarget(relId))
+			const relId = (e as Element).getAttributeNS(
+				'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+				'id'
+			)
+			out.push(defined(rels.resolveTarget(defined(relId))))
 		}
 	}
 	return out
 }
 
 /** The body placeholder's `p:txBody` XML of a slide's notes part. */
-function notesBodyXml(pres, slideIndex) {
-	const xml = new TextDecoder().decode(pres.slides[slideIndex].notesSlide.part.serialize())
+function notesBodyXml(pres: Presentation, slideIndex: number) {
+	const xml = new TextDecoder().decode(defined(pres.slides[slideIndex].notesSlide).part.serialize())
 	// The three placeholders in document order are sldImg (no txBody), body, sldNum.
 	const bodies = xml.match(/<p:txBody>[\s\S]*?<\/p:txBody>/g)
 	return bodies ? bodies[0] : null
@@ -112,7 +116,7 @@ describe('Slide.addNotes on a loaded deck', () => {
 		read.slides[0].addNotes('line one\nline two')
 		const reopened = await Presentation.load(await read.save())
 
-		const collapseEmptyTags = (xml) => xml.replace(/<([a-z0-9:]+)([^>]*?)><\/\1>/gi, '<$1$2/>')
+		const collapseEmptyTags = (xml: string | null) => defined(xml).replace(/<([a-z0-9:]+)([^>]*?)><\/\1>/gi, '<$1$2/>')
 		assertEqual(
 			collapseEmptyTags(notesBodyXml(reopened, 0)),
 			collapseEmptyTags(notesBodyXml(written, 0)),

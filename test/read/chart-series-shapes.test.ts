@@ -8,14 +8,14 @@
 
 import { describe, expect, test } from 'vitest'
 import JSZip from 'jszip'
-import { ChartType } from '../../dist/node.js'
+import { ChartType, type CHART_NAME, type ChartOpts, type OptsChartData } from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
 import { assert, assertEqual, captureDiagnostics, readEntry } from '../helpers.ts'
 import { authorRead } from './authored.ts'
 import { openFixture, readFixture } from './corpus.ts'
 
 /** The chart in the graphic frame named `name`, on any slide. */
-function chartNamed(presentation, name) {
+function chartNamed(presentation: Presentation, name: string) {
 	for (const slide of presentation.slides) {
 		for (const shape of slide.shapes) {
 			if (shape.shapeType === 'graphicFrame' && shape.name === name && shape.chart) return shape.chart
@@ -25,7 +25,7 @@ function chartNamed(presentation, name) {
 }
 
 /** The first chart of a one-chart deck written with `addChart(data, options)`. */
-async function writtenChart(data, options) {
+async function writtenChart(data: OptsChartData[], options: ChartOpts & { type: CHART_NAME }) {
 	const { presentation } = await authorRead((pres) => {
 		pres.addSlide().addChart(data, { x: 1, y: 1, w: 6, h: 4, ...options })
 	})
@@ -36,7 +36,7 @@ async function writtenChart(data, options) {
 }
 
 /** The `chart/point-*` codes reading `read()` raised. */
-async function pointWarnings(read) {
+async function pointWarnings<R>(read: () => Promise<R>) {
 	const { result, codes } = await captureDiagnostics(read)
 	return { result, codes: codes.filter((code) => code.startsWith('chart/point-')) }
 }
@@ -66,7 +66,7 @@ describe('Scatter and bubble series read their X, Y and size caches', () => {
 		// Neither is PowerPoint output. `c:xVal` takes every data-source form `c:cat` does, so both
 		// are the fixture's string cache respelled.
 		const buf = await readFixture('chart-series-shapes')
-		const labelsAfter = async (respell) => {
+		const labelsAfter = async (respell: (points: string) => string) => {
 			const zip = await JSZip.loadAsync(buf)
 			const part = 'ppt/charts/chart5.xml'
 			const xml = await readEntry(zip, part)
@@ -75,7 +75,7 @@ describe('Scatter and bubble series read their X, Y and size caches', () => {
 			assert(cache.test(xml), 'slide 5 caches its X labels as a string reference')
 			zip.file(
 				part,
-				xml.replace(cache, (_match, points) => `<c:xVal>${respell(points)}</c:xVal>`)
+				xml.replace(cache, (_match, points: string) => `<c:xVal>${respell(points)}</c:xVal>`)
 			)
 			const presentation = await Presentation.load(await zip.generateAsync({ type: 'uint8array' }))
 			const [series] = chartNamed(presentation, 'scatter-text-x-chart').series

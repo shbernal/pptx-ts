@@ -17,6 +17,7 @@
 
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
+import type { Part } from '../../dist/read.js'
 import { assert, assertEqual, readEntry } from '../helpers.ts'
 import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.ts'
 
@@ -46,7 +47,7 @@ async function authorWhitespaceDeck() {
 }
 
 /** The first element named `tag` anywhere in `part`, or null. */
-function firstElement(part, tag) {
+function firstElement(part: Part, tag: string) {
 	return part.dom.getElementsByTagName(tag)[0] ?? null
 }
 
