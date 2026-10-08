@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs'
 // `node scripts/gen-inspect-snapshot.mjs` and read the diff.
 //
 // Its job is to make a change to the inspect surface visible. The suite beside it
-// (pptx-inspection.test.js) asserts the handful of behaviours that were once bugs
+// (pptx-inspection.test.ts) asserts the handful of behaviours that were once bugs
 // and explains why each matters; this one covers the other several hundred fields
 // nobody would write an assertion for, which is exactly where an "equivalent"
 // reimplementation quietly stops being equivalent.
@@ -18,7 +18,7 @@ import { readFileSync } from 'node:fs'
  * is the finest unit PowerPoint itself authors — so a difference this small cannot
  * come from reading a different number out of the file, only from rounding one
  * differently on the way out. Wide enough to permit that, ~1000x tighter than the
- * geometry tolerance the assertions in pptx-inspection.test.js use.
+ * geometry tolerance the assertions in pptx-inspection.test.ts use.
  */
 const EPSILON = 1e-6
 

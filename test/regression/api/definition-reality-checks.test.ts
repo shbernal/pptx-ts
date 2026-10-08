@@ -8,7 +8,7 @@ import { InvalidOptionError } from '../../../dist/node.js'
 //
 // What decides which: `addImage()` with an unusable source has no image to place, and
 // `addTable()` given a row that is not an array has no cells to lay out, so both reject. The
-// picture-bullet check is the counter-example and lives in text-definition.test.js: the run
+// picture-bullet check is the counter-example and lives in text-definition.test.ts: the run
 // emitter falls back to a default glyph, so refusing the rel is recoverable and warns instead.
 
 /** Call `fn` with `console.log`/`console.error` captured; returns `{ error, noise }`. */

@@ -25,7 +25,7 @@ import {
 // options object to every plain string cell as that cell's options, so the cell emitters wrote onto
 // the caller's literal too.
 //
-// `addText` was fixed first and is covered by `test/regression/text/text-definition.test.js`; this
+// `addText` was fixed first and is covered by `test/regression/text/text-definition.test.ts`; this
 // file is the same contract for the two entry points that still had it, plus the two that never
 // did (`addImage`, `addMedia`) so a regression in either is caught here rather than in the field.
 //
@@ -89,7 +89,7 @@ defineRegressionSuite('Caller-owned options', [
 		// `shadow` used to be the exception: the normalizer wrote into the caller's object -- angle
 		// rounded, `_alpha` derived, a leading `#` stripped -- and the definer shared it rather than
 		// copying. It is pure now, so a shadow literal comes back exactly as written and each shape
-		// built from it gets its own normalized copy. `shape/shared-shadow.test.js` pins that the
+		// built from it gets its own normalized copy. `shape/shared-shadow.test.ts` pins that the
 		// shared literal still emits the SAME `<a:effectLst>` on every shape.
 		name: 'shape line normalization does not write back onto the caller',
 		fn: async () => {

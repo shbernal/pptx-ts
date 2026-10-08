@@ -8,7 +8,7 @@ import {
 	caught,
 } from '../../helpers.ts'
 
-// The companion to `numeric-conversion-guards.test.js`: that file pins what the *converters*
+// The companion to `numeric-conversion-guards.test.ts`: that file pins what the *converters*
 // refuse, this one pins what the *guards in front of them* let through. `src/` used three tests
 // for "is this a usable number" and they disagreed. The global `isNaN` and `isFinite` coerce
 // their argument, so `Number('') === 0` makes `isNaN('')` false and an empty string reads as a

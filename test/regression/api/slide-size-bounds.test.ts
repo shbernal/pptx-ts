@@ -19,7 +19,7 @@ import { InvalidOptionError } from '../../../dist/node.js'
 // are the evidence.
 //
 // The policy being applied is `docs/contributing/development.md`'s ("Warn or throw?"): a finite out-of-range number clamps and
-// warns; a value that is not a number at all throws. `deck-argument-guards.test.js` pins the
+// warns; a value that is not a number at all throws. `deck-argument-guards.test.ts` pins the
 // other half of the contract — a numeric string is advice, not an error — so the bound had to be
 // a clamp rather than a rejection.
 
