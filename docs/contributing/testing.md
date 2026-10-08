@@ -56,7 +56,7 @@ Each cell comes from `package.json`, `lefthook.yml` or a workflow under `.github
 
 Reading the matrix:
 
-- `test` is `vitest run` over every `test/**/*.test.js` file: the regression, read, schema,
+- `test` is `vitest run` over every `test/**/*.test.ts` and `test/**/*.test.js` file: the regression, read, schema,
   script and font-oracle suites. `test:unit`, `test:read` and `test:schema` run parts of it.
 - `test:coverage` is `test` plus the `vitest.config.ts` coverage thresholds. The Node 24.x leg
   of the `test` job runs it in place of `test`.

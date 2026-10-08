@@ -55,7 +55,7 @@ function roundTrip(name: string) {
 // Reading `fixtureNames` makes promotion the only step there is.
 //
 // One case per fixture rather than one loop over all of them, for the reason
-// script-ir.test.js gives: a loop stops at the first offender, so a change that breaks
+// script-ir.test.ts gives: a loop stops at the first offender, so a change that breaks
 // half the corpus reports the same single failure as one that breaks a single deck.
 describe('OPC round-trip — corpus invariants', () => {
 	test.for(fixtureNames)('%s: load → save keeps the same part-name set', async (name) => {

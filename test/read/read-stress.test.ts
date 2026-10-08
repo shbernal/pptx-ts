@@ -12,7 +12,7 @@
 //
 // Deliberately out of this fixture (real PowerPoint COM cannot author them
 // head­less; each is covered off-fixture): duotone/clrChange/alphaModFix recolor
-// (picture-recolor.test.js), the 'both' raster+SVG mediaKind (style-accessors),
+// (picture-recolor.test.ts), the 'both' raster+SVG mediaKind (style-accessors),
 // and hdphoto/.wdp artistic-effect layers.
 
 import { describe, test } from 'vitest'

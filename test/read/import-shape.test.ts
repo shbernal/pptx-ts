@@ -674,7 +674,7 @@ describe('Presentation.importShape({ rescale })', () => {
 	// The two flatten passes `importShape` runs that `importSlide` does not — anchor and
 	// list-style bake, both there to make a demoted placeholder self-contained — have to
 	// cope with the same degenerate placeholders the shared passes do. Their sources are
-	// spliced the same way (see import-slide-preserve.test.js) and validated below.
+	// spliced the same way (see import-slide-preserve.test.ts) and validated below.
 	test('lifting a placeholder with no text body bakes nothing and still demotes it', async () => {
 		// `p:txBody` is minOccurs="0" on p:CT_Shape. With no text body there is no
 		// `a:bodyPr` to write an anchor onto and no `a:lstStyle` to merge into, so both

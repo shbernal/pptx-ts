@@ -109,7 +109,7 @@ const irCache = new Map<string, Promise<DeckIr>>()
 /**
  * The deck IR for a fixture, converted once per test file and shared thereafter.
  *
- * Loading and converting the whole corpus costs ~590 ms, and the four `script-*.test.js`
+ * Loading and converting the whole corpus costs ~590 ms, and the four `script-*.test.ts`
  * files did it eighteen times between them — the conversion is ~96 % of what each of those
  * loops spends, since printing over an IR already in hand takes a few tens of ms for the whole corpus.
  *

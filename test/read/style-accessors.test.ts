@@ -310,7 +310,7 @@ describe('GradientStop colorRef.resolved — the transform list survives the rea
 		// though `resolveColorElement` resolves five of the six everywhere else. No
 		// fixture in the read corpus carries one, and the write API has no option that
 		// emits one, so the evidence here is the schema plus the preset table
-		// (`preset-color.test.js`), not a PowerPoint-authored deck.
+		// (`preset-color.test.ts`), not a PowerPoint-authored deck.
 		const shape = spGrad(
 			'<p:spPr><a:gradFill><a:gsLst>' +
 				'<a:gs pos="0"><a:prstClr val="cornflowerBlue"><a:lumMod val="75000"/></a:prstClr></a:gs>' +

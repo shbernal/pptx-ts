@@ -1,6 +1,6 @@
 // A `preserve` import and the source master's p:otherStyle, which a table cell's text takes its size
 // and italic from, and the source theme, which its colour resolves against (see
-// table-text-inheritance.test.js).
+// table-text-inheritance.test.ts).
 //
 // table-text-inheritance.pptx's p:otherStyle lvl1 is 14pt and italic and its dk1 is 7030A0;
 // default-text-style.pptx's p:otherStyle lvl1 is 18pt and upright. Pasting the one slide into the

@@ -1,6 +1,6 @@
 // Unit tests for src/read/api/chart.ts driven by synthetic `c:chartSpace` XML.
 //
-// The fixture-based suite (chart.test.js) exercises the happy path against
+// The fixture-based suite (chart.test.ts) exercises the happy path against
 // mixed.pptx. This file feeds hand-authored chart parts straight into the read
 // model via the exported `Part` + `Chart` classes, covering the edge branches a
 // single real deck rarely contains all at once: empty plot areas, missing /

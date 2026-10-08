@@ -281,7 +281,7 @@ describe('standalone printer — the emitted script runs, with no template in re
 describe('standalone printer — cases the fixture corpus does not contain', () => {
 	// Both of these had a deliberate defect planted in the printer that survived every
 	// fixture, because no fixture exercises the construct. Authored here rather than deferred:
-	// the write path is the fixture, the same technique `chartex-read.test.js` uses.
+	// the write path is the fixture, the same technique `chartex-read.test.ts` uses.
 	test('a slide-owned background survives, and is reported when it is deleted', async () => {
 		const bytes = await authored((pptx) => {
 			const slide = pptx.addSlide()

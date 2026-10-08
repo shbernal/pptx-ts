@@ -14,7 +14,7 @@
 //     authored by this repo, so nothing here can agree with the converter by construction.
 //  2. **Write-API-authored layouts** for the two arms the corpus has neither of: an image and
 //     a chart on a layout. `defineSlideMaster({ objects })` is the fixture, the same technique
-//     `script-standalone.test.js` uses for a slide-owned background.
+//     `script-standalone.test.ts` uses for a slide-owned background.
 //  3. **A relocated table**, for the one shape kind that has no `SlideMasterObject` variant at
 //     all. The write API cannot author it (that is the point) and no fixture carries one, so a
 //     genuine write-API-authored `p:graphicFrame` is moved into a layout part in the zip —

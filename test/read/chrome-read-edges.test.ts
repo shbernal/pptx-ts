@@ -1,6 +1,6 @@
 // Fixture-driven edges for src/read/api/chrome.ts that an authored deck cannot show.
 //
-// chrome-read.test.js measures the write→read round-trip of the chrome model, but
+// chrome-read.test.ts measures the write→read round-trip of the chrome model, but
 // the writer authors a deliberately plain master: no `p:cSld/p:bg` of its own, and
 // every placeholder carrying explicit geometry. Real PowerPoint decks are the other
 // way round — the master owns the background and layout placeholders routinely omit
@@ -133,7 +133,7 @@ describe('SlideLayout — inherited tiers', () => {
 	})
 
 	test("the import-only layout @type reads PowerPoint's value", async () => {
-		// chrome-read.test.js pins this as null on an authored deck (the writer emits
+		// chrome-read.test.ts pins this as null on an authored deck (the writer emits
 		// none); the imported side is where a real value shows up.
 		const layout = (await open('theme-colors')).masters()[0].layouts[0]
 		assertEqual(layout.type, 'title', 'an imported layout carries its @type')

@@ -1,7 +1,7 @@
 // Embedded-font carry for appendSlides: a generator's presentation-level embedded
 // fonts (pptx.embedFont) are carried into the destination deck and merged into its
 // p:embeddedFontLst — the author-onto-template counterpart of the importSlide carry
-// in embedded-fonts.test.js. Asserts the font parts, the application/x-fontdata
+// in embedded-fonts.test.ts. Asserts the font parts, the application/x-fontdata
 // content-type Default, the presentation font rels, and the merged embeddedFontLst,
 // plus de-dupe across repeated appends and schema validity. The generator side
 // (pptx.embedFont emit) is covered in test/regression/media/embed-font.test.ts.

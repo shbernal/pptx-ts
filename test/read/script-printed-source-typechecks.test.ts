@@ -1,6 +1,6 @@
 // A printed script type-checks against the package it imports.
 //
-// `script-print.test.js` runs printed scripts, and running one says nothing about its types: Node
+// `script-print.test.ts` runs printed scripts, and running one says nothing about its types: Node
 // strips them before it executes anything. A consumer who opens a printed script in an editor, or
 // runs `tsc` over it, sees every option the write API's declarations reject. Two such defects went
 // unseen that way: a table's source style GUID printed as a string `tableStyle` refused, and table

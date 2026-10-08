@@ -4,7 +4,7 @@
 // entries, so the read-side-expansion batches build a feature on top of a
 // known-good harness instead of debugging the harness and the feature at once.
 // Assertions here mirror constructs already proven elsewhere (a rect autoShape
-// with a solid fill, per style-accessors.test.js) so the self-test can only fail
+// with a solid fill, per style-accessors.test.ts) so the self-test can only fail
 // if the harness plumbing itself breaks.
 
 import { ShapeType } from '../../dist/node.js'

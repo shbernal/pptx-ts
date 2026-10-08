@@ -25,7 +25,7 @@ import { resolveSingle } from './opc.ts'
 
 const SLIDE_LAYOUT_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout'
 
-/** The serialized XML of a part, by partname, from saved package bytes. */
+/** How many parts of `opc` have a partname matching `re`. */
 function countParts(opc: OpcPackage, re: RegExp) {
 	return [...opc.parts.keys()].filter((n) => re.test(n)).length
 }

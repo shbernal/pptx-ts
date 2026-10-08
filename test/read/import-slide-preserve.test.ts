@@ -11,11 +11,11 @@
 // ---------------------------------------------------------------------------
 // Why src/read/oxml/theme.ts branch coverage stops around 94%
 // ---------------------------------------------------------------------------
-// This file (with import-shape.test.js for the two `flattenShape`-only passes and
-// import-slide-restyle.test.js for `remapLiteralColors`) is where theme.ts's
+// This file (with import-shape.test.ts for the two `flattenShape`-only passes and
+// import-slide-restyle.test.ts for `remapLiteralColors`) is where theme.ts's
 // branches are pinned. Every arm still uncovered is the arm a schema-valid package
 // cannot take — see docs/contributing/testing.md "Deciding whether a red branch needs a test", and
-// chrome-read-edges.test.js for the same treatment of chrome.ts. Four groups, each
+// chrome-read-edges.test.ts for the same treatment of chrome.ts. Four groups, each
 // verified against the ECMA-376 content models rather than assumed:
 //
 //   1. Required attributes and children read as optional. `@val` on `a:srgbClr`,
@@ -76,7 +76,7 @@ import { resolveSingle } from './opc.ts'
 
 const SLIDE_LAYOUT_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout'
 
-/** The serialized XML of a part, by partname, from saved package bytes. */
+/** How many parts of `opc` have a partname matching `re`. */
 function countParts(opc: OpcPackage, re: RegExp) {
 	return [...opc.parts.keys()].filter((n) => re.test(n)).length
 }

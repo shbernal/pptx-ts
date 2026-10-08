@@ -7,8 +7,8 @@
 // What lives in this file is everything that comparison *rests on*, none of which running it
 // over a clean corpus can establish.
 //
-// **What makes this stronger than the tests before it.** `script-ir.test.js` checks the
-// mapping against the write API's own types, and `script-print.test.js` checks that the
+// **What makes this stronger than the tests before it.** `script-ir.test.ts` checks the
+// mapping against the write API's own types, and `script-print.test.ts` checks that the
 // emitted script runs. Neither can tell whether the deck that comes out is the deck that
 // went in. This can, and building it found nine defects that both of those passed:
 // paragraph bullets read as literal glyphs (`'none'` became an `n`), placeholders emitted
@@ -23,7 +23,7 @@
 // converter never emits is absent from both sides and compares equal. Mutation testing says
 // so out loud: deleting the `flipH` mapping, or the text-box detection, leaves this suite
 // green, because the output deck then lacks the same thing the IR does. Those belong to
-// `script-ir.test.js`, whose expectations come from `src/types/*.ts` rather than from the
+// `script-ir.test.ts`, whose expectations come from `src/types/*.ts` rather than from the
 // converter. Read a clean run there as "nothing the converter can distinguish was lost",
 // never as "nothing was lost".
 

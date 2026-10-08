@@ -1,7 +1,7 @@
 // Write→read fidelity for the `a:tcPr` accessors added alongside their write options:
 // `TableCell.anchorCtr`, `.cell3D`, and the two diagonals on `.borders`.
 //
-// Each is proven the way `table-borders.test.js` proves the edges: author the construct
+// Each is proven the way `table-borders.test.ts` proves the edges: author the construct
 // with the write API, load the bytes back through the deep read model, and assert the
 // extracted values. The write path and the read path are separate code, so neither can
 // mask a bug in the other.

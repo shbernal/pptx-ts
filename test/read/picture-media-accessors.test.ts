@@ -10,7 +10,7 @@
 //   DecoRect   — a rectangle flagged decorative (adec:decorative val="1")
 //   DescRect   — a rectangle with a plain alt-text descr, not decorative
 // The 'both' (raster+SVG) and plain 'raster' mediaKind cases live in
-// style-accessors.test.js against image.pptx.
+// style-accessors.test.ts against image.pptx.
 
 import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'

@@ -2,7 +2,7 @@
 // in src/read/api/shapes/geometry.ts (readGeometryPath) that the custgeom.pptx fixture
 // doesn't carry: quadBezTo, arcTo (with and without its optional attributes),
 // path viewport / fill / stroke defaults, and the documented non-numeric-point
-// degrade-to-0. custgeom.test.js covers moveTo / lnTo / cubicBezTo / close on a
+// degrade-to-0. custgeom.test.ts covers moveTo / lnTo / cubicBezTo / close on a
 // real deck; these hand-authored paths reach the remaining segment branches
 // off-fixture through a synthetic AutoShape.
 

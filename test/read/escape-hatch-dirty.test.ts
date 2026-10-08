@@ -243,7 +243,7 @@ describe('element_ with markDirty()', () => {
 
 // chartEx has no checked-in fixture — the writer emits every `cx:` piece, so these
 // author a waterfall in memory and round-trip the writer's own bytes (the same
-// harness test/read/chartex-read.test.js uses for the getters).
+// harness test/read/chartex-read.test.ts uses for the getters).
 function authorWaterfall(pres: TsPptx) {
 	pres.addSlide().addChart([{ name: 'Cash Flow', labels: ['Start', 'Q1', 'End'], values: [100, 40, 190] }], {
 		type: ChartType.waterfall,

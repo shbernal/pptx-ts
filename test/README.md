@@ -20,10 +20,10 @@ tooling keys on the directory names.
 
 | Path | Harness | What it covers |
 |---|---|---|
-| `test/regression/<subject>/*.test.js` | `defineRegressionSuite()` (`helpers.ts`) — see [docs/contributing/testing.md](../docs/contributing/testing.md) | write side: public API → emitted OOXML/package parts |
-| `test/read/*.test.js` | Vitest `describe`/`test` | `src/read/**` lossless read + edit round-trip |
+| `test/regression/<subject>/*.test.ts` | `defineRegressionSuite()` (`helpers.ts`) — see [docs/contributing/testing.md](../docs/contributing/testing.md) | write side: public API → emitted OOXML/package parts |
+| `test/read/*.test.ts` | Vitest `describe`/`test` | `src/read/**` lossless read + edit round-trip |
 | `test/schema-cases.ts` (+ `schema-validation.test.js`) | fixture data module | OOXML schema validation of emitted parts |
-| `test/scripts/*.test.js` | Vitest | the `scripts/` gates and shared helpers — the parsing and exemption logic whose failure mode is a gate that silently stops counting (see [scripts/README.md](../scripts/README.md)) |
+| `test/scripts/*.test.ts` | Vitest | the `scripts/` gates and shared helpers — the parsing and exemption logic whose failure mode is a gate that silently stops counting (see [scripts/README.md](../scripts/README.md)) |
 | `test/browser/*.spec.mjs` | **Playwright** (`playwright.config.ts`, `pnpm run test:browser`) — see [docs/contributing/testing.md](../docs/contributing/testing.md#browser-tests-testbrowser) | `dist/browser.js` + all four `src/runtime/browser.ts` adapter functions in a real Chromium, Node↔browser byte identity, and `tableToSlides` against a table a browser laid out |
 | `test/browser/harness/*` | served to the page, not run by a harness | the two fixtures the specs drive: `index.html` for an unbundled load of the shipped `dist/browser.js` (plus the deck definitions both runtimes build from), and `table.html` for a rendered `<table>` with a real `offsetWidth` |
 

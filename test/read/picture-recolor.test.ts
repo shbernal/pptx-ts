@@ -7,7 +7,7 @@
 // union round-trips — proving the very bytes the writer emits decode faithfully.
 //
 // (The read side of these modes is already covered off-fixture in
-// style-accessors.test.js via hand-authored `a:clrChange`/`a:grayscl`/`a:biLevel`
+// style-accessors.test.ts via hand-authored `a:clrChange`/`a:grayscl`/`a:biLevel`
 // XML; this file proves the *writer* now produces those same bytes.)
 
 import { isPicture } from '../../dist/read.js'

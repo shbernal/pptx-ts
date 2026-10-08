@@ -1,14 +1,14 @@
 // Edge coverage for src/read/api/slide-background.ts — the `p:bg` shapes the
 // writer never authors.
 //
-// slide-read-edges.test.js covers the three backgrounds the write API emits
+// slide-read-edges.test.ts covers the three backgrounds the write API emits
 // (solid / gradient / image) as a measured write→read round-trip. The decoder
 // also handles variants that only reach it from an *imported* deck: `a:pattFill`,
 // an explicit `a:noFill`, a `p:bg` carrying neither `p:bgPr` nor `p:bgRef`, a
 // `p:bgRef` whose `idx` has no `fmtScheme` entry. Those have no writer to author
 // them, so each is patched into an authored deck's `slide1.xml` as the XML an
 // imported deck would carry — the same synthetic-input approach
-// chart-parse-edge.test.js uses for `c:chartSpace`.
+// chart-parse-edge.test.ts uses for `c:chartSpace`.
 //
 // The one case with a genuine PowerPoint oracle — a stock theme whose
 // `bgFillStyleLst` third slot is a picture — is asserted against theme-colors.pptx

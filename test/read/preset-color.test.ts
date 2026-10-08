@@ -318,7 +318,7 @@ describe('resolveColorElement -- the colour models beyond srgb/scheme/sys', () =
 	// Deliberate, and pinned so it reads as a decision rather than an oversight: the schema
 	// does not say whether an scrgb percentage is linear-light or sRGB-encoded, and the two
 	// answers differ by a gamma curve. Reporting no colour is honest; reporting a guessed one
-	// is not. `import-slide-preserve.test.js` leans on this too -- it is how that suite builds
+	// is not. `import-slide-preserve.test.ts` leans on this too -- it is how that suite builds
 	// a theme slot with nothing literal behind it.
 	test('a:scrgbClr stays unresolved rather than being guessed at', () => {
 		assertEqual(resolve(`<a:scrgbClr r="50000" g="50000" b="50000"/>`), null, 'scrgbClr reports no colour')

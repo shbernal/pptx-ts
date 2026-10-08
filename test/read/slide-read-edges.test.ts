@@ -1,5 +1,5 @@
 // Read-model coverage for src/read/api/slide.ts branches the existing suites
-// don't reach: the per-format image sniffer (picture-edit.test.js only ever
+// don't reach: the per-format image sniffer (picture-edit.test.ts only ever
 // adds a PNG), the addTextBox significant-whitespace path, Slide.placeholder
 // skipping a non-AutoShape, and the Slide.name getter.
 //

@@ -11,7 +11,7 @@
 // authors (src/gen/slide/object.ts), so there is no authored trigger for the
 // inherited path -- only PowerPoint itself produces a placeholder with no own
 // transform when the user never moves it. `placeholder-inherit.pptx` (already
-// committed for the sibling text-inheritance suite, placeholder-inherit.test.js)
+// committed for the sibling text-inheritance suite, placeholder-inherit.test.ts)
 // is exactly that deck: one slide, a title + body placeholder, neither carrying
 // its own `a:xfrm`, and -- confirmed by inspecting the fixture's own
 // slideLayout12.xml -- the layout's placeholders don't either, so both

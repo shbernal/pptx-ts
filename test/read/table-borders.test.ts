@@ -10,7 +10,7 @@
 // an unspecified side to <a:ln w="0"><a:noFill/></a:ln>. So a written table's
 // cells never read `borders === null`; the null path (a cell whose a:tcPr
 // carries no border element at all) is covered from the PowerPoint fixtures in
-// table.test.js instead.
+// table.test.ts instead.
 
 import { describe, test } from 'vitest'
 import { TableStyle, type BorderProps, type TableRow, type TsPptx } from '../../dist/node.js'
