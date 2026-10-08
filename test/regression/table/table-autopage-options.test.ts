@@ -1,5 +1,5 @@
 import type JSZip from 'jszip'
-import { defineRegressionSuite, build, readEntry, listEntries, assert, assertEqual } from '../../helpers.ts'
+import { defineRegressionSuite, build, readEntry, listEntries, assert, assertEqual, at } from '../../helpers.ts'
 import type { Margin, TableProps, TableRow } from '../../../dist/node.js'
 
 // Exercises the option surface of the auto-paging engine (getSlidesForTableRows /
@@ -96,7 +96,7 @@ defineRegressionSuite('Table autoPage option surface', [
 			})
 			const files = slideFiles(zip)
 			assert(files.length >= 2, `expected overflow to multiple slides; got ${files.length}`)
-			const xml = await readEntry(zip, files[0])
+			const xml = await readEntry(zip, at(files, 0))
 			assert(xml.includes('<a:gridCol w="1828800"'), 'expected a 2in (1828800 EMU) column')
 			assert(xml.includes('<a:gridCol w="2743200"'), 'expected a 3in (2743200 EMU) column')
 		},
@@ -206,7 +206,7 @@ defineRegressionSuite('Table autoPage option surface', [
 			const files = slideFiles(zip)
 			assert(files.length >= 2, `expected overflow to multiple slides; got ${files.length}`)
 			// The header text must reappear on the second page, not only the first.
-			const page2 = await readEntry(zip, files[1])
+			const page2 = await readEntry(zip, at(files, 1))
 			assert(page2.includes('HEADER-A'), `expected repeated header on ${files[1]}; got: ${page2.slice(0, 400)}`)
 		},
 	},
@@ -234,7 +234,7 @@ defineRegressionSuite('Table autoPage option surface', [
 			})
 			const files = slideFiles(zip)
 			assert(files.length >= 1, 'expected at least one slide')
-			const page1 = await readEntry(zip, files[0])
+			const page1 = await readEntry(zip, at(files, 0))
 			// A nonzero numeric cell renders its digits; the per-cell fontSize cell renders its text.
 			assert(page1.includes('2024'), 'expected the numeric cell text "2024" to render')
 			assert(page1.includes('>ok<'), 'expected the per-cell fontSize cell text to render')

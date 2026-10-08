@@ -11,6 +11,7 @@ import {
 	xmlAttributes,
 	xmlOpeningTags,
 	listEntries,
+	at,
 } from '../../helpers.ts'
 
 const PNG_1X1 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
@@ -272,7 +273,7 @@ defineRegressionSuite('Object identity [legacy bug-21]', [
 				assertNonVisualDrawingProperty(xml, { name: escaped }, part)
 				assert(!/&amp;(?:amp|lt|gt|quot|apos);/.test(xml), `${part} escapes a name a second time`)
 			}
-			const objectName = defined(filled).objects[0].objectName
+			const objectName = at(defined(filled).objects, 0).objectName
 			assert(objectName === name, `objectName should read back as authored; got ${objectName}`)
 		},
 	},
@@ -288,7 +289,7 @@ defineRegressionSuite('Object identity [legacy bug-21]', [
 			})
 
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			const names = xmlOpeningTags(xml, 'p:cNvPr').map((tag) => xmlAttributes(tag).name)
+			const names = xmlOpeningTags(xml, 'p:cNvPr').map((tag) => defined(xmlAttributes(tag).name))
 			for (const prefix of ['Text', 'Shape', 'Image', 'Table']) {
 				assert(
 					names.some((name) => name && name.startsWith(prefix + ' ')),
@@ -415,7 +416,7 @@ defineRegressionSuite('Object identity [legacy bug-21]', [
 				const layoutXml = layoutXmls.find((xml) => xml.includes('name="title-ph"'))
 				assert(layoutXml, `expected a layout carrying the placeholder default names; got: ${layoutNames.join(', ')}`)
 				const phNames = xmlOpeningTags(layoutXml, 'p:cNvPr')
-					.map((tag) => xmlAttributes(tag).name)
+					.map((tag) => defined(xmlAttributes(tag).name))
 					.filter((n) => n === 'title-ph' || n === 'body-ph')
 				assert(
 					phNames.includes('title-ph') && phNames.includes('body-ph'),
@@ -448,7 +449,7 @@ defineRegressionSuite('Object identity [legacy bug-21]', [
 				slide.addGroup([{ rect: { x: 6, y: 1, w: 1, h: 1 } }])
 			})
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			const names = xmlOpeningTags(xml, 'p:cNvPr').map((tag) => xmlAttributes(tag).name)
+			const names = xmlOpeningTags(xml, 'p:cNvPr').map((tag) => defined(xmlAttributes(tag).name))
 			// `addShape` and `addText` share the `text` bucket, so the shape is `Shape 2`; the
 			// group's own child took `Shape 3` before the group itself was named.
 			for (const expected of ['Text 1', 'Shape 2', 'Image 1', 'Connector 1', 'Table 1', 'Chart 1', 'Group 1']) {

@@ -8,6 +8,7 @@ import {
 	assert,
 	assertEqual,
 	captureDiagnostics,
+	at,
 } from '../../helpers.ts'
 
 // Every case here pins an ASYMMETRIC or non-default input. The bugs these cover all cancel out
@@ -171,7 +172,7 @@ defineRegressionSuite('Table geometry under asymmetric input', [
 			assert(plainFull.length >= 2 && repeatedFull.length >= 2, 'expected several full pages either way')
 			for (const count of repeatedFull.slice(1)) {
 				assert(
-					count <= plainFull[0],
+					count <= at(plainFull, 0),
 					`a page carrying a repeated header fits no more rows than a page without one; ` +
 						`got ${JSON.stringify(repeated)} against ${JSON.stringify(plain)}`
 				)

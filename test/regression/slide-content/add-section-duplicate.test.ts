@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, assertEqual, captureDiagnostics } from '../../helpers.ts'
+import { defineRegressionSuite, build, assertEqual, captureDiagnostics, at } from '../../helpers.ts'
 
 // Regression: addSection() must not create a second section with a title that
 // already exists. Duplicate section titles confuse section-by-title lookups
@@ -18,8 +18,8 @@ defineRegressionSuite('addSection duplicate-title guard [upstream-issue-1152]', 
 			})
 
 			assertEqual(pres.sections.length, 2, 'duplicate "Charts" section should not be added')
-			assertEqual(pres.sections[0].title, 'Charts', 'first section')
-			assertEqual(pres.sections[1].title, 'Tables', 'second section')
+			assertEqual(at(pres.sections, 0).title, 'Charts', 'first section')
+			assertEqual(at(pres.sections, 1).title, 'Tables', 'second section')
 		},
 	},
 	{
@@ -32,7 +32,7 @@ defineRegressionSuite('addSection duplicate-title guard [upstream-issue-1152]', 
 			})
 
 			assertEqual(pres.sections.length, 1, 'titleless section should not be added')
-			assertEqual(pres.sections[0].title, 'Intro', 'only valid section remains')
+			assertEqual(at(pres.sections, 0).title, 'Intro', 'only valid section remains')
 		},
 	},
 	{

@@ -1,5 +1,5 @@
 import { ChartType } from '../../../dist/node.js'
-import { defineRegressionSuite, build, assert, assertNotIncludes } from '../../helpers.ts'
+import { defineRegressionSuite, build, assert, assertNotIncludes, at } from '../../helpers.ts'
 import { chartXml } from './chart-parts.ts'
 
 // The embedded workbook lays every series out behind the FIRST series' label columns, one row
@@ -18,7 +18,7 @@ const FIRST_LABELLED = [
 
 /** Every `<c:f>` formula in the part, in document order. */
 function formulas(xml: string): string[] {
-	return [...xml.matchAll(/<c:f>([^<]*)<\/c:f>/g)].map((m) => m[1])
+	return [...xml.matchAll(/<c:f>([^<]*)<\/c:f>/g)].map((m) => at(m, 1))
 }
 
 /** The `<c:ser>` blocks, in document order. */
@@ -145,7 +145,7 @@ defineRegressionSuite('Series worksheet references', [
 			for (const [label, block, ref] of [
 				['X', xVal, 'Sheet1!$C$2:$C$4'],
 				['Y', yVal, 'Sheet1!$D$2:$D$4'],
-			]) {
+			] as const) {
 				assert(block.includes(`<c:f>${ref}</c:f>`), `${label} spans the three sheet rows; got ${block}`)
 				assert(block.includes('<c:ptCount val="3"/>'), `${label} caches three points; got ${block}`)
 				assertNotIncludes(block, '<c:pt idx="3">', `${label} caches nothing past the rows`)

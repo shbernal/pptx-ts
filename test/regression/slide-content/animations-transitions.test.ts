@@ -13,6 +13,7 @@ import {
 	setDiagnosticHandler,
 	slideXml,
 	defined,
+	at,
 } from '../../helpers.ts'
 
 // Write-side slide transitions and preset build animations
@@ -187,7 +188,7 @@ defineRegressionSuite('Preset build animations (write)', [
 		// — `&`, `<`, `>`, `"`, `'`, tab and newline — not just `&`.
 		name: 'resolves an objectName containing XML metacharacters (top-level and group child)',
 		fn: async () => {
-			const names = ['Q&A', 'R&D', 'Risk <high> "1" \'2\'\ttabbed\nwrapped']
+			const names = ['Q&A', 'R&D', 'Risk <high> "1" \'2\'\ttabbed\nwrapped'] as const
 			const warnings: string[] = []
 			setDiagnosticHandler((d) => warnings.push(d.message))
 			let xml
@@ -220,7 +221,7 @@ defineRegressionSuite('Preset build animations (write)', [
 					.replace(/&apos;/g, "'")
 					.replace(/&amp;/g, '&')
 			const ids = new Map(
-				[...xml.matchAll(/<p:cNvPr id="(\d+)" name="([^"]*)"/g)].map((m) => [decode(m[2]), Number(m[1])])
+				[...xml.matchAll(/<p:cNvPr id="(\d+)" name="([^"]*)"/g)].map((m) => [decode(at(m, 2)), Number(m[1])])
 			)
 			names.forEach((name) => {
 				const id = ids.get(name)
@@ -362,7 +363,7 @@ defineRegressionSuite('Transition sounds (write)', [
 				new RegExp(`<Relationship Id="${embedRid}"[^>]*relationships/audio[^>]*Target="([^"]+)"`)
 			)
 			assert(relMatch, 'start sound r:embed resolves to an audio relationship')
-			const part = relMatch[1].replace('..', 'ppt')
+			const part = at(relMatch, 1).replace('..', 'ppt')
 			assert(zip.file(part) != null, `embedded WAV part ${part} is present`)
 			// Stop-previous slide carries no sndAc rel and no media reference.
 			const rels2 = await readEntry(zip, 'ppt/slides/_rels/slide2.xml.rels')
@@ -398,7 +399,7 @@ defineRegressionSuite('Transition sounds (write)', [
 				p.addSlide().transition = { type: 'fade', sound: { data: xWav, name: 'ding.wav' } }
 			})
 			const media = Object.keys(zip.files).filter((key) => key.startsWith('ppt/media/'))
-			assert(media.length === 1 && media[0].endsWith('.wav'), `sound part is a .wav, got ${media.join(', ')}`)
+			assert(media.length === 1 && at(media, 0).endsWith('.wav'), `sound part is a .wav, got ${media.join(', ')}`)
 			const ct = await readEntry(zip, '[Content_Types].xml')
 			assert(!/Extension="x-wav"/.test(ct), 'no Default is declared for a non-existent x-wav file type')
 			assert(
@@ -423,7 +424,7 @@ defineRegressionSuite('Transition sounds (write)', [
 				['audio/mp4', 'm4a', 'audio/mp4'],
 				// Already an extension: passes through untouched.
 				['audio/flac', 'flac', 'audio/flac'],
-			]
+			] as const
 			const { zip } = await build((p) => {
 				rows.forEach(([mime], idx) => {
 					// Distinct bytes per row so identical-payload dedup does not collapse the parts.
@@ -454,7 +455,7 @@ defineRegressionSuite('Transition sounds (write)', [
 				}
 			})
 			const media = Object.keys(zip.files).filter((key) => key.startsWith('ppt/media/'))
-			assert(media.length === 1 && media[0].endsWith('.mp3'), `sound part is an .mp3, got ${media.join(', ')}`)
+			assert(media.length === 1 && at(media, 0).endsWith('.mp3'), `sound part is an .mp3, got ${media.join(', ')}`)
 			const ct = await readEntry(zip, '[Content_Types].xml')
 			assertEqual(contentTypeForExtension(ct, 'mp3'), 'audio/mpeg', 'mp3 Default ContentType')
 		},

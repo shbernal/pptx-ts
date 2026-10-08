@@ -33,7 +33,7 @@ import type { SlideMasterObject } from '../../../src/types/index.ts'
 // From `src/`, not `dist/`: `warn` here is the src-side module, and `test/helpers.ts`'s
 // `captureDiagnostics` installs its handler on the built one, which is a different singleton.
 import { setDiagnosticHandler, type Diagnostic } from '../../../src/diagnostics.ts'
-import { assert, assertEqual } from '../../helpers.ts'
+import { assert, assertEqual, at, take } from '../../helpers.ts'
 
 const SERIES = [{ name: 'Rev', labels: ['Q1', 'Q2'], values: [1, 2] }]
 
@@ -207,12 +207,15 @@ describe('construct families', () => {
 				pres.defineSlideMaster({ title: 'MASTER', objects: [{ rect: { x: 0, y: 0, w: 10, h: 0.4 } }, chartChild] })
 			)
 			assertEqual(seen.length, 1, 'one diagnostic')
-			assertEqual(seen[0].code, 'family/child-not-composed', 'code')
-			assert(seen[0].message.includes('"chart"'), `message names the family: ${seen[0].message}`)
-			assert(seen[0].message.includes('defineSlideMaster()'), `message names the call: ${seen[0].message}`)
+			assertEqual(at(seen, 0).code, 'family/child-not-composed', 'code')
+			assert(at(seen, 0).message.includes('"chart"'), `message names the family: ${at(seen, 0).message}`)
+			assert(at(seen, 0).message.includes('defineSlideMaster()'), `message names the call: ${at(seen, 0).message}`)
 			// The descriptor the composed families *do* claim still landed. Read off the layout the
 			// master became, which is internal state a cast reaches rather than the public surface.
-			const [layout] = (pres as unknown as { _slideLayouts: { _slideObjects: unknown[] }[] })._slideLayouts.slice(-1)
+			const [layout] = take(
+				(pres as unknown as { _slideLayouts: { _slideObjects: unknown[] }[] })._slideLayouts.slice(-1),
+				1
+			)
 			assertEqual(layout._slideObjects.length, 1, 'only the rect was authored')
 		})
 
@@ -224,7 +227,7 @@ describe('construct families', () => {
 					{ image: { data: 'image/png;base64,iVBORw0KGgo=', x: 1, y: 2, w: 1, h: 1 } },
 				])
 			)
-			const [first] = seen
+			const [first] = take(seen, 1)
 			assertEqual(first.code, 'family/child-not-composed', 'code')
 			assert(first.message.includes('"image"'), `message names the family: ${first.message}`)
 			assert(first.message.includes('addGroup()'), `message names the call: ${first.message}`)
@@ -236,8 +239,8 @@ describe('construct families', () => {
 			// outright, which is exactly the protection a claimed-but-uncomposed key does not get.
 			// @ts-expect-error no construct family claims `notAThing`
 			const seen = diagnosticsOf(() => slide.addGroup([{ notAThing: { x: 1, y: 1 } }]))
-			assertEqual(seen[0].code, 'group/unrecognized-child', 'code')
-			assert(seen[0].message.includes('notAThing'), `message names the key: ${seen[0].message}`)
+			assertEqual(at(seen, 0).code, 'group/unrecognized-child', 'code')
+			assert(at(seen, 0).message.includes('notAThing'), `message names the key: ${at(seen, 0).message}`)
 		})
 	})
 })

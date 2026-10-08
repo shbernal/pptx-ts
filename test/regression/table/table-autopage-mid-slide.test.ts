@@ -1,5 +1,5 @@
 import type JSZip from 'jszip'
-import { defineRegressionSuite, build, listEntries, readEntry, assert } from '../../helpers.ts'
+import { defineRegressionSuite, build, listEntries, readEntry, assert, at } from '../../helpers.ts'
 
 // Regression: an autoPage table that starts mid-slide with an
 // explicit height `h` rendered only a few rows on the FIRST slide while later slides filled up.
@@ -50,7 +50,7 @@ defineRegressionSuite('Table autoPage mid-slide first-page row count', [
 			// The first slide must hold a full page worth of rows for the explicit h, not a sliver.
 			assert(counts.length >= 2, `expected overflow to multiple slides; got ${JSON.stringify(counts)}`)
 			assert(
-				counts[0] >= 15,
+				at(counts, 0) >= 15,
 				`first slide should fill the explicit h (~19 rows), not a few; got ${JSON.stringify(counts)}`
 			)
 		},

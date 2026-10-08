@@ -19,7 +19,7 @@ import TsPptx, {
 	type TableRow,
 	type TextPropsOptions,
 } from '../../../dist/node.js'
-import { defined, expectDefined, partXml, caughtSync } from '../../helpers.ts'
+import { defined, expectDefined, partXml, caughtSync, at, take } from '../../helpers.ts'
 // The `ts-pptx/measure` entry publishes the calibrated constants the bake uses, so a test
 // can state "inflated by the height safety factor" instead of re-pinning its value here.
 import { HEIGHT_SAFETY_FACTOR } from '../../../dist/measure.js'
@@ -590,7 +590,7 @@ describe('tableLayout() through dist (Silkscreen metrics)', () => {
 		const res = pres.tableLayout(rows, { x: 1, y: 1, w: 4, h: 3 })
 		expect(res.heightExact).toBe(true)
 		expect(res.heightIn).toBeCloseTo(3, 4)
-		expect(res.cells[0].hIn).toBeCloseTo(1.5, 4)
+		expect(at(res.cells, 0).hIn).toBeCloseTo(1.5, 4)
 	})
 
 	test('a rowH array slot that is missing falls back to the even split of table `h`', async () => {
@@ -600,15 +600,15 @@ describe('tableLayout() through dist (Silkscreen metrics)', () => {
 		// collapsing to auto-height (which would silently drop the caller's `h`).
 		const res = pres.tableLayout(rows, { x: 1, y: 1, w: 4, h: 3, rowH: [0.5] })
 		expect(res.heightExact).toBe(true)
-		expect(res.cells[0].hIn).toBeCloseTo(0.5, 4)
-		expect(res.cells[1].hIn).toBeCloseTo(1.5, 4)
+		expect(at(res.cells, 0).hIn).toBeCloseTo(0.5, 4)
+		expect(at(res.cells, 1).hIn).toBeCloseTo(1.5, 4)
 	})
 
 	test('omitted x/y/w default to the origin and 75% of the slide', async () => {
 		const pres = await pptxWithSilkscreen()
 		const res = pres.tableLayout([[{ text: 'a' }, { text: 'b' }]], {})
-		expect(res.cells[0].xIn).toBe(0)
-		expect(res.cells[0].yIn).toBe(0)
+		expect(at(res.cells, 0).xIn).toBe(0)
+		expect(at(res.cells, 0).yIn).toBe(0)
 		expect(res.widthIn).toBeCloseTo(10 * 0.75, 4) // 10in slide default
 	})
 
@@ -647,7 +647,7 @@ describe('tableLayout() through dist (Silkscreen metrics)', () => {
 		const res = pres.tableLayout(rows, { x: 1, y: 1, w: 4 })
 		expect(res.cells).toHaveLength(1)
 		expect(res.heightIn).toBeGreaterThan(0)
-		expect(res.cells[0].hIn).toBe(res.heightIn) // the span covers both rows
+		expect(at(res.cells, 0).hIn).toBe(res.heightIn) // the span covers both rows
 	})
 
 	test('a cell narrower than its own margins falls back to one line, not a negative height', async () => {
@@ -661,15 +661,15 @@ describe('tableLayout() through dist (Silkscreen metrics)', () => {
 		const pres = await pptxWithSilkscreen()
 		const res = pres.tableLayout([[{}, { text: 'b' }]], { x: 1, y: 1, w: 4 })
 		expect(res.cells).toHaveLength(2)
-		expect(res.cells[0].hIn).toBeGreaterThan(0)
+		expect(at(res.cells, 0).hIn).toBeGreaterThan(0)
 	})
 
 	test('a rowH array hole with no table `h` leaves that row auto-height', async () => {
 		const pres = await pptxWithSilkscreen()
 		const rows = [[{ text: 'a' }], [{ text: 'b' }]]
 		const res = pres.tableLayout(rows, { x: 1, y: 1, w: 4, rowH: [0.5] })
-		expect(res.cells[0].heightExact).toBe(true)
-		expect(res.cells[1].heightExact).toBe(false) // estimated, not pinned
+		expect(at(res.cells, 0).heightExact).toBe(true)
+		expect(at(res.cells, 1).heightExact).toBe(false) // estimated, not pinned
 		expect(res.heightExact).toBe(false)
 	})
 
@@ -691,7 +691,7 @@ describe('tableLayout() through dist (Silkscreen metrics)', () => {
 		const pres = await pptxWithSilkscreen()
 		// @ts-expect-error verifying an untyped caller's junk `text` degrades to one line
 		const res = pres.tableLayout([[{ text: true }, { text: 'b' }]], { x: 1, y: 1, w: 4 })
-		expect(res.cells[0].hIn).toBeGreaterThan(0)
+		expect(at(res.cells, 0).hIn).toBeGreaterThan(0)
 	})
 
 	test('a scalar cell `margin` is applied to all four sides', async () => {
@@ -917,7 +917,10 @@ describe('measured fit: code points the registered face has no glyph for', () =>
 			pres.addSlide().addText(text, { x: 1, y: 1, w: 3, h: 1, fontFace: 'Silkscreen', fontSize: 18, fit: 'shrink' })
 			await pres.toBytes()
 		})
-		const [d] = seen.filter((x) => x.code === 'measure/uncovered-codepoints')
+		const [d] = take(
+			seen.filter((x) => x.code === 'measure/uncovered-codepoints'),
+			1
+		)
 		expect(d.message).toMatch(/\+2 more/)
 		expect(d.message.match(/U\+[0-9A-F]{4}/g)).toHaveLength(8)
 		// Printed in the same ascending order the API reports, so the two agree.
@@ -935,8 +938,8 @@ describe('measured fit: code points the registered face has no glyph for', () =>
 		})
 		const d = seen.filter((x) => x.code === 'measure/uncovered-codepoints')
 		expect(d).toHaveLength(1)
-		expect(d[0].message).toContain('Silkscreen')
-		expect(d[0].message).toContain('U+2011')
+		expect(at(d, 0).message).toContain('Silkscreen')
+		expect(at(d, 0).message).toContain('U+2011')
 	})
 
 	test('the export pass stays quiet when every code point is covered', async () => {

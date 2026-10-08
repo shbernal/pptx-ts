@@ -1,4 +1,4 @@
-import { PNG_1X1, assert, defineRegressionSuite, firstXmlBlock, slideXml, xmlBlocks } from '../../helpers.ts'
+import { PNG_1X1, assert, defineRegressionSuite, firstXmlBlock, slideXml, xmlBlocks, at } from '../../helpers.ts'
 
 // Regression (dn-negative-extent-normalization): a negative `w`/`h` must never reach
 // `<a:ext cx>`/`<a:ext cy>`. Both are ST_PositiveCoordinate, so a negative value is out of range and
@@ -49,12 +49,12 @@ defineRegressionSuite('Negative extent normalization', [
 			})
 			const sps = xmlBlocks(xml, 'p:sp')
 			assert(sps.length === 2, `expected 2 shapes; got ${sps.length}`)
-			assert(sps[0].includes(`<a:off x="${IN}" y="${IN}"/>`), `expected origin at (1in,1in); got: ${sps[0]}`)
-			assert(sps[0].includes(`<a:ext cx="${3 * IN}" cy="${2 * IN}"/>`), `expected 3x2in extent; got: ${sps[0]}`)
-			assert(/<a:xfrm flipH="1" flipV="1">/.test(sps[0]), 'expected both flips, in schema order')
+			assert(at(sps, 0).includes(`<a:off x="${IN}" y="${IN}"/>`), `expected origin at (1in,1in); got: ${sps[0]}`)
+			assert(at(sps, 0).includes(`<a:ext cx="${3 * IN}" cy="${2 * IN}"/>`), `expected 3x2in extent; got: ${sps[0]}`)
+			assert(/<a:xfrm flipH="1" flipV="1">/.test(at(sps, 0)), 'expected both flips, in schema order')
 			// A shape with no negative extent keeps its bare <a:xfrm> — normalization is a no-op there.
-			assert(sps[1].includes('<a:xfrm>'), `expected an unflipped xfrm; got: ${sps[1]}`)
-			assert(sps[1].includes(`<a:ext cx="${2 * IN}" cy="${IN}"/>`), `expected 2x1in extent; got: ${sps[1]}`)
+			assert(at(sps, 1).includes('<a:xfrm>'), `expected an unflipped xfrm; got: ${sps[1]}`)
+			assert(at(sps, 1).includes(`<a:ext cx="${2 * IN}" cy="${IN}"/>`), `expected 2x1in extent; got: ${sps[1]}`)
 		},
 	},
 	{
@@ -71,8 +71,8 @@ defineRegressionSuite('Negative extent normalization', [
 				assert(sp.includes(`<a:off x="${IN}"`), `expected origin x at 1in; got: ${sp}`)
 				assert(sp.includes(`cx="${3 * IN}"`), `expected 3in extent; got: ${sp}`)
 			}
-			assert(!/flipH="1"/.test(sps[0]), 'flipH + negative w is not mirrored')
-			assert(/<a:xfrm flipH="1">/.test(sps[1]), 'negative w alone is mirrored')
+			assert(!/flipH="1"/.test(at(sps, 0)), 'flipH + negative w is not mirrored')
+			assert(/<a:xfrm flipH="1">/.test(at(sps, 1)), 'negative w alone is mirrored')
 		},
 	},
 	{
@@ -84,7 +84,7 @@ defineRegressionSuite('Negative extent normalization', [
 				p.layout = 'TEST'
 				p.addSlide().addShape('rect', { x: '50%', y: 4, w: '-25%', h: '-1in' })
 			})
-			const sp = xmlBlocks(xml, 'p:sp')[0]
+			const sp = at(xmlBlocks(xml, 'p:sp'), 0)
 			assert(sp.includes(`<a:off x="${2.5 * IN}" y="${3 * IN}"/>`), `expected min-corner origin; got: ${sp}`)
 			assert(sp.includes(`<a:ext cx="${2.5 * IN}" cy="${IN}"/>`), `expected absolute extents; got: ${sp}`)
 			assert(/<a:xfrm flipH="1" flipV="1">/.test(sp), 'expected both flips')
@@ -99,7 +99,7 @@ defineRegressionSuite('Negative extent normalization', [
 				s.addText('up', { x: 1, y: 4, w: 2, h: -3 })
 				s.addImage({ data: PNG_1X1, x: 5, y: 4, w: -2, h: -1 })
 			})
-			const sp = xmlBlocks(xml, 'p:sp')[0]
+			const sp = at(xmlBlocks(xml, 'p:sp'), 0)
 			assert(sp.includes(`<a:off x="${IN}" y="${IN}"/>`), `expected text origin at (1in,1in); got: ${sp}`)
 			assert(sp.includes(`<a:ext cx="${2 * IN}" cy="${3 * IN}"/>`), `expected 2x3in text extent; got: ${sp}`)
 			const pic = firstXmlBlock(xml, 'p:pic')

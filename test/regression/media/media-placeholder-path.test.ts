@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, describe, test } from 'vitest'
-import { PNG_1X1, assert, build } from '../../helpers.ts'
+import { PNG_1X1, assert, build, at } from '../../helpers.ts'
 
 // An inline source carries a placeholder path that the media pass must not try to load. That pass
 // used to recognise the placeholder by the word in it, so a real file whose name merely contained
@@ -21,7 +21,7 @@ describe('a media path that mentions the inline placeholder', () => {
 
 		const parts = zip.file(/^ppt\/media\/.+\.png$/)
 		assert(parts.length === 1, `expected one image part, got ${parts.length}`)
-		const written = await parts[0].async('nodebuffer')
+		const written = await at(parts, 0).async('nodebuffer')
 		assert(Buffer.compare(written, bytes) === 0, 'the image part must carry the bytes of the file it names')
 	})
 })

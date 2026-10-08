@@ -1,5 +1,5 @@
 import type JSZip from 'jszip'
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
+import { defineRegressionSuite, build, readEntry, assert, at } from '../../helpers.ts'
 
 // Every `<a:pPr>` on slide 1, in document order — these cases are mostly about the *pairing*
 // of two paragraphs, since either half alone passes against the bug they cover.
@@ -19,10 +19,10 @@ defineRegressionSuite('Paragraph margins (a:pPr/@marL, @indent) [issue-15-follow
 				s.addText('hanging', { x: 1, y: 1, w: 4, h: 1, bullet: true, paraMarginLeft: 36, paraIndent: -18 })
 			})
 			const { pPrs } = await paragraphProps(zip)
-			assert(/marL="457200"/.test(pPrs[0]), 'expected marL="457200" (36pt); got: ' + pPrs[0])
-			assert(/indent="-228600"/.test(pPrs[0]), 'expected indent="-228600" (-18pt); got: ' + pPrs[0])
-			assert(!/marL="342900"/.test(pPrs[0]), 'the bullet default must not survive an override; got: ' + pPrs[0])
-			assert(/<a:buChar/.test(pPrs[0]), 'the bullet itself must still be drawn; got: ' + pPrs[0])
+			assert(/marL="457200"/.test(at(pPrs, 0)), 'expected marL="457200" (36pt); got: ' + pPrs[0])
+			assert(/indent="-228600"/.test(at(pPrs, 0)), 'expected indent="-228600" (-18pt); got: ' + pPrs[0])
+			assert(!/marL="342900"/.test(at(pPrs, 0)), 'the bullet default must not survive an override; got: ' + pPrs[0])
+			assert(/<a:buChar/.test(at(pPrs, 0)), 'the bullet itself must still be drawn; got: ' + pPrs[0])
 		},
 	},
 	{
@@ -41,10 +41,10 @@ defineRegressionSuite('Paragraph margins (a:pPr/@marL, @indent) [issue-15-follow
 				)
 			})
 			const { pPrs } = await paragraphProps(zip)
-			assert(/<a:buNone\/>/.test(pPrs[0]), 'the explicit off must still be stated; got: ' + pPrs[0])
-			assert(!/marL=|indent=/.test(pPrs[0]), "'inherit' must state no margin at all; got: " + pPrs[0])
+			assert(/<a:buNone\/>/.test(at(pPrs, 0)), 'the explicit off must still be stated; got: ' + pPrs[0])
+			assert(!/marL=|indent=/.test(at(pPrs, 0)), "'inherit' must state no margin at all; got: " + pPrs[0])
 			assert(
-				/<a:pPr indent="0" marL="0"><a:buNone\/><\/a:pPr>/.test(pPrs[1]),
+				/<a:pPr indent="0" marL="0"><a:buNone\/><\/a:pPr>/.test(at(pPrs, 1)),
 				'an omitted margin option must keep writing the historical zeros; got: ' + pPrs[1]
 			)
 		},
@@ -57,9 +57,9 @@ defineRegressionSuite('Paragraph margins (a:pPr/@marL, @indent) [issue-15-follow
 				s.addText('indented', { x: 1, y: 1, w: 4, h: 1, bullet: 'inherit', paraMarginLeft: 0, paraIndent: 18 })
 			})
 			const { pPrs } = await paragraphProps(zip)
-			assert(/marL="0"/.test(pPrs[0]), 'expected an explicit marL="0"; got: ' + pPrs[0])
-			assert(/indent="228600"/.test(pPrs[0]), 'expected a positive first-line indent; got: ' + pPrs[0])
-			assert(!/<a:buNone/.test(pPrs[0]), "bullet:'inherit' must not gain a bullet child; got: " + pPrs[0])
+			assert(/marL="0"/.test(at(pPrs, 0)), 'expected an explicit marL="0"; got: ' + pPrs[0])
+			assert(/indent="228600"/.test(at(pPrs, 0)), 'expected a positive first-line indent; got: ' + pPrs[0])
+			assert(!/<a:buNone/.test(at(pPrs, 0)), "bullet:'inherit' must not gain a bullet child; got: " + pPrs[0])
 		},
 	},
 	{
@@ -78,8 +78,8 @@ defineRegressionSuite('Paragraph margins (a:pPr/@marL, @indent) [issue-15-follow
 				)
 			})
 			const { pPrs } = await paragraphProps(zip)
-			assert(/marL="0"/.test(pPrs[0]), 'the run must keep its explicit zero; got: ' + pPrs[0])
-			assert(/marL="571500"/.test(pPrs[1]), 'the second paragraph must take the shape value; got: ' + pPrs[1])
+			assert(/marL="0"/.test(at(pPrs, 0)), 'the run must keep its explicit zero; got: ' + pPrs[0])
+			assert(/marL="571500"/.test(at(pPrs, 1)), 'the second paragraph must take the shape value; got: ' + pPrs[1])
 		},
 	},
 	{
@@ -92,8 +92,8 @@ defineRegressionSuite('Paragraph margins (a:pPr/@marL, @indent) [issue-15-follow
 				s.addText('clamped', { x: 1, y: 1, w: 4, h: 1, bullet: 'inherit', paraMarginLeft: -5, paraIndent: 99999 })
 			})
 			const { pPrs } = await paragraphProps(zip)
-			assert(/marL="0"/.test(pPrs[0]), 'a negative margin must clamp to 0; got: ' + pPrs[0])
-			assert(/indent="51206400"/.test(pPrs[0]), 'indent must clamp to 4032pt; got: ' + pPrs[0])
+			assert(/marL="0"/.test(at(pPrs, 0)), 'a negative margin must clamp to 0; got: ' + pPrs[0])
+			assert(/indent="51206400"/.test(at(pPrs, 0)), 'indent must clamp to 4032pt; got: ' + pPrs[0])
 		},
 	},
 	{
@@ -113,11 +113,11 @@ defineRegressionSuite('Paragraph margins (a:pPr/@marL, @indent) [issue-15-follow
 			})
 			const { pPrs } = await paragraphProps(zip)
 			assert(
-				pPrs[0].startsWith('<a:pPr marL="342900" indent="-342900">'),
+				at(pPrs, 0).startsWith('<a:pPr marL="342900" indent="-342900">'),
 				'a drawn bullet keeps marL-then-indent at the 27pt default; got: ' + pPrs[0]
 			)
 			assert(
-				pPrs[1].startsWith('<a:pPr indent="0" marL="0">'),
+				at(pPrs, 1).startsWith('<a:pPr indent="0" marL="0">'),
 				'the no-bullet arm keeps its indent-then-marL order; got: ' + pPrs[1]
 			)
 		},

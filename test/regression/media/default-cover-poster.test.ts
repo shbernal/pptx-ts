@@ -10,7 +10,7 @@
  * bytes are asserted at the part, not the rel.
  */
 import JSZip from 'jszip'
-import { TsPptx, assert, assertEqual, build, defineRegressionSuite, defined } from '../../helpers.ts'
+import { TsPptx, assert, assertEqual, build, defineRegressionSuite, defined, at } from '../../helpers.ts'
 
 /** Smaller than the play-button artwork (14,484 bytes), far larger than any 1x1 test PNG (69). */
 const POSTER_FLOOR = 5_000
@@ -36,8 +36,8 @@ defineRegressionSuite('Default video poster', [
 			const parts = await pngParts(zip)
 			assertEqual(parts.length, 1, `exactly one poster part; got ${parts.map((p) => p.name).join(' ')}`)
 			assert(
-				parts[0].bytes.length > POSTER_FLOOR,
-				`poster part is ${parts[0].bytes.length} bytes; the deferred artwork never arrived`
+				at(parts, 0).bytes.length > POSTER_FLOOR,
+				`poster part is ${at(parts, 0).bytes.length} bytes; the deferred artwork never arrived`
 			)
 		},
 	},
@@ -50,7 +50,7 @@ defineRegressionSuite('Default video poster', [
 			})
 			const parts = await pngParts(zip)
 			assertEqual(parts.length, 1, `exactly one poster part; got ${parts.map((p) => p.name).join(' ')}`)
-			assert(parts[0].bytes.length > POSTER_FLOOR, `poster part is ${parts[0].bytes.length} bytes`)
+			assert(at(parts, 0).bytes.length > POSTER_FLOOR, `poster part is ${at(parts, 0).bytes.length} bytes`)
 		},
 	},
 	{
@@ -64,8 +64,8 @@ defineRegressionSuite('Default video poster', [
 			const parts = await pngParts(zip)
 			assertEqual(parts.length, 1, `exactly one poster part; got ${parts.map((p) => p.name).join(' ')}`)
 			assert(
-				parts[0].bytes.length < POSTER_FLOOR,
-				`the caller's cover was replaced by the default (${parts[0].bytes.length} bytes)`
+				at(parts, 0).bytes.length < POSTER_FLOOR,
+				`the caller's cover was replaced by the default (${at(parts, 0).bytes.length} bytes)`
 			)
 		},
 	},
@@ -80,8 +80,12 @@ defineRegressionSuite('Default video poster', [
 			const first = await pngParts(await JSZip.loadAsync(await pres.toBytes()))
 			const second = await pngParts(await JSZip.loadAsync(await pres.toBytes()))
 			assertEqual(second.length, first.length, 'the same poster parts on both writes')
-			assertEqual(second[0].bytes.length, first[0].bytes.length, 'the poster part is the same size on both writes')
-			assert(second[0].bytes.length > POSTER_FLOOR, 'the second write emitted an empty poster')
+			assertEqual(
+				at(second, 0).bytes.length,
+				at(first, 0).bytes.length,
+				'the poster part is the same size on both writes'
+			)
+			assert(at(second, 0).bytes.length > POSTER_FLOOR, 'the second write emitted an empty poster')
 		},
 	},
 ])

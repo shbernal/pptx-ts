@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'vitest'
 import { DOMParser, onErrorStopParsing } from '@xmldom/xmldom'
 import { latexToOmml, mathmlToOmml } from '../../../dist/math.js'
-import { asError, type ThrownError } from '../../helpers.ts'
+import { asError, type ThrownError, at } from '../../helpers.ts'
 
 // `pptx-ts/math` converts LaTeX/MathML to OMML for the `math:` option on
 // addText (upstream-issue-1456). Pipeline: LaTeX --temml--> MathML --mathml2omml--> OMML.
@@ -91,7 +91,7 @@ describe('math/latexToOmml — accents become m:acc, not m:limUpp', () => {
 		assertWellFormed(omml, latex)
 		return {
 			kinds: [...omml.matchAll(/<m:(acc|limUpp|limLow|groupChr|borderBox)\b/g)].map((m) => m[1]),
-			chars: [...omml.matchAll(/<m:chr m:val="([^"]*)"/g)].map((m) => m[1].codePointAt(0)),
+			chars: [...omml.matchAll(/<m:chr m:val="([^"]*)"/g)].map((m) => at(m, 1).codePointAt(0)),
 		}
 	}
 

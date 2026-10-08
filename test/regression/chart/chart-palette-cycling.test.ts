@@ -1,5 +1,5 @@
 import { ChartType, type OptsChartData } from '../../../dist/node.js'
-import { defineRegressionSuite, build, assert, assertEqual } from '../../helpers.ts'
+import { defineRegressionSuite, build, assert, assertEqual, at } from '../../helpers.ts'
 import { chartXml } from './chart-parts.ts'
 
 // The default series palettes are shorter than the number of series or data points a caller may
@@ -32,7 +32,7 @@ function seriesFills(xml: string): (string | undefined)[] {
 
 /** The `<a:srgbClr val>` of each `<c:dPt>` fill, in point order. */
 function pointFills(xml: string): string[] {
-	return [...xml.matchAll(/<c:dPt>.*?<a:solidFill><a:srgbClr val="([0-9A-Fa-f]{6})"\/>/gs)].map((m) => m[1])
+	return [...xml.matchAll(/<c:dPt>.*?<a:solidFill><a:srgbClr val="([0-9A-Fa-f]{6})"\/>/gs)].map((m) => at(m, 1))
 }
 
 async function barXml(seriesTotal = SERIES_COUNT) {

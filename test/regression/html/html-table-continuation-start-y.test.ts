@@ -13,7 +13,16 @@
  */
 import { Window } from 'happy-dom'
 import { tableToSlides, type TableToSlidesProps } from '../../../dist/html.js'
-import { assert, assertEqual, build, defineRegressionSuite, listEntries, readEntry, defined } from '../../helpers.ts'
+import {
+	assert,
+	assertEqual,
+	build,
+	defineRegressionSuite,
+	listEntries,
+	readEntry,
+	defined,
+	at,
+} from '../../helpers.ts'
 
 const EMU_PER_INCH = 914400
 
@@ -81,7 +90,7 @@ defineRegressionSuite('tableToSlides continuation start-Y', [
 			const ys = await frameYs({ y: 1.5 })
 			assert(ys.length > 1, `the fixture must page; got ${ys.length} slide(s)`)
 			for (const [idx, y] of ys.slice(1).entries())
-				assert(y < ys[0], `slide ${idx + 2} must move up from the first page's ${ys[0]}; got ${y}`)
+				assert(y < at(ys, 0), `slide ${idx + 2} must move up from the first page's ${ys[0]}; got ${y}`)
 		},
 	},
 ])

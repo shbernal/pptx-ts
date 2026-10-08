@@ -2,7 +2,7 @@ import { writeFileSync, mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import type { ImageProps } from '../../../dist/node.js'
-import { PNG_1X1, defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
+import { PNG_1X1, defineRegressionSuite, build, readEntry, assert, at } from '../../helpers.ts'
 
 // addImage() previously fell back to a 1in x 1in square whenever `w`/`h` were omitted, which
 // squished every dimensionless image into the wrong aspect ratio. For base64
@@ -125,7 +125,7 @@ async function extFor(opts: ImageProps) {
 	const pic = xml.slice(xml.indexOf('<p:pic'))
 	const m = /<a:ext cx="(-?\d+)" cy="(-?\d+)"\/>/.exec(pic)
 	assert(m, 'expected an <a:ext> element in the picture block; got: ' + xml)
-	return { cx: +m[1], cy: +m[2] }
+	return { cx: +at(m, 1), cy: +at(m, 2) }
 }
 
 // A path-based 4x2 PNG written to a temp file. Path images can't be measured synchronously in
@@ -133,7 +133,7 @@ async function extFor(opts: ImageProps) {
 // serialize time from the embedded media bytes.
 const tmpDir = mkdtempSync(join(tmpdir(), 'pptx-img-'))
 const PNG_4x2_PATH = join(tmpDir, 'raster-4x2.png')
-writeFileSync(PNG_4x2_PATH, Buffer.from(RASTER_4x2.png.split('base64,')[1], 'base64'))
+writeFileSync(PNG_4x2_PATH, Buffer.from(at(RASTER_4x2.png.split('base64,'), 1), 'base64'))
 
 defineRegressionSuite('Image intrinsic-size defaults', [
 	{

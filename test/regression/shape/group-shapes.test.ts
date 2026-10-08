@@ -13,6 +13,8 @@ import {
 	caughtSync,
 	asError,
 	assertRejects,
+	at,
+	take,
 } from '../../helpers.ts'
 
 // Group shapes: slide.addGroup() wraps child objects in a PowerPoint group (<p:grpSp>) with an
@@ -254,7 +256,7 @@ defineRegressionSuite('Group shapes', [
 				])
 				s.addText('After', { x: 5, y: 1, w: 1, h: 1 })
 			})
-			const [slide] = (await Presentation.load(buf)).slides
+			const [slide] = take((await Presentation.load(buf)).slides, 1)
 			const flatten = (shapes: readonly AnyShape[]): AnyShape[] =>
 				shapes.flatMap((sh) => [sh, ...(isGroupShape(sh) ? flatten(sh.shapes) : [])])
 			const all = flatten(slide.shapes)
@@ -395,11 +397,11 @@ defineRegressionSuite('Group shapes', [
 			} finally {
 				setDiagnosticHandler(null)
 			}
-			const [slide] = (await Presentation.load(buf)).slides
-			const [group] = slide.shapes
+			const [slide] = take((await Presentation.load(buf)).slides, 1)
+			const [group] = take(slide.shapes, 1)
 			assert(isGroupShape(group), 'expected the top-level shape to read back as a group')
 			assertEqual(group.shapes.length, 1, 'expected the group to have one child')
-			const frame = group.shapes[0].absoluteFrame
+			const frame = at(group.shapes, 0).absoluteFrame
 			assert(frame, 'expected a resolvable absoluteFrame, not null (degenerate chExt)')
 			assertEqual(frame.width, 1828800, 'expected the child to keep its 2in width')
 			assertEqual(frame.left, 914400, 'expected the child to keep its 1in x — a group frame never moves children')
@@ -846,9 +848,9 @@ defineRegressionSuite('Group shapes', [
 				s.addText('Hi', { x: 2, y: 1, w: 1, h: 1, objectName: 'Caption' })
 				s.groupObjects(['Box', 'Caption'], { objectName: 'Branding' })
 			})
-			const [slide] = (await Presentation.load(buf)).slides
+			const [slide] = take((await Presentation.load(buf)).slides, 1)
 			assertEqual(slide.shapes.length, 1, 'expected a single top-level group after grouping')
-			const [group] = slide.shapes
+			const [group] = take(slide.shapes, 1)
 			assert(isGroupShape(group), 'expected the top-level shape to read back as a group')
 			assertEqual(group.name, 'Branding', 'group name')
 			assertEqual(
@@ -905,7 +907,7 @@ defineRegressionSuite('Group shapes', [
 				{ objectName: 'FromGenerated' }
 			)
 			assertEqual(s.objects.length, 1, 'expected the two generated names to have resolved into one group')
-			assertEqual(s.objects[0].objectName, 'FromGenerated', 'group name')
+			assertEqual(at(s.objects, 0).objectName, 'FromGenerated', 'group name')
 		},
 	},
 	{
@@ -922,16 +924,16 @@ defineRegressionSuite('Group shapes', [
 			// A name that is itself an entity spelling comes back as that spelling, not as `&`.
 			s.addText('Bye', { x: 3, y: 1, w: 1, h: 1, objectName: '&amp;' })
 
-			assertEqual(s.objects[0].objectName, 'Q&A', 'expected the caller spelling, not `Q&amp;A`')
-			assertEqual(s.objects[1].objectName, metacharacters, 'expected every metacharacter back verbatim')
-			assertEqual(s.objects[2].objectName, '&amp;', 'expected a literal entity spelling back as authored')
+			assertEqual(at(s.objects, 0).objectName, 'Q&A', 'expected the caller spelling, not `Q&amp;A`')
+			assertEqual(at(s.objects, 1).objectName, metacharacters, 'expected every metacharacter back verbatim')
+			assertEqual(at(s.objects, 2).objectName, '&amp;', 'expected a literal entity spelling back as authored')
 			// The guarantee that matters: what comes out goes back in.
 			s.groupObjects(
 				s.objects.map((o) => o.objectName),
 				{ objectName: 'R&D' }
 			)
 			assertEqual(s.objects.length, 1, 'expected all three reported names to resolve')
-			assertEqual(s.objects[0].objectName, 'R&D', 'expected the group name as authored too')
+			assertEqual(at(s.objects, 0).objectName, 'R&D', 'expected the group name as authored too')
 		},
 	},
 	{
@@ -945,7 +947,7 @@ defineRegressionSuite('Group shapes', [
 			s.groupObjects(['Box', 'Caption'], { objectName: 'Branding' })
 
 			assertEqual(s.objects.map((o) => o.objectName).join(','), 'Branding,Loose', 'expected two top-level objects')
-			const [group] = s.objects
+			const [group] = take(s.objects, 1)
 			assertEqual(group.type, 'group', 'expected the wrapper to report as a group')
 			assert(group.canGroup, 'expected a group to be groupable, so groups can nest')
 			assertEqual(
@@ -953,7 +955,7 @@ defineRegressionSuite('Group shapes', [
 				'Box,Caption',
 				'expected the members to report as the group children, in z-order'
 			)
-			assertEqual(s.objects[1].children.length, 0, 'expected a leaf to report no children')
+			assertEqual(at(s.objects, 1).children.length, 0, 'expected a leaf to report no children')
 		},
 	},
 	{
@@ -979,7 +981,7 @@ defineRegressionSuite('Group shapes', [
 				objectName: 'Chart',
 			})
 
-			const [placeholder, chart] = s.objects
+			const [placeholder, chart] = take(s.objects, 2)
 			assert(placeholder.isPlaceholder, 'expected the placeholder to be flagged')
 			assert(!placeholder.canGroup, 'expected a placeholder to be ungroupable despite its groupable kind')
 			assertEqual(chart.type, 'chart', 'chart kind')
@@ -1012,7 +1014,7 @@ defineRegressionSuite('Group shapes', [
 			// readonly property is erased and a stray write would land.
 			// @ts-expect-error a snapshot's objectName is readonly
 			before[0].objectName = 'Renamed'
-			assertEqual(s.objects[0].objectName, 'Box', 'expected the slide to ignore a write to the snapshot')
+			assertEqual(at(s.objects, 0).objectName, 'Box', 'expected the slide to ignore a write to the snapshot')
 		},
 	},
 	{
@@ -1046,7 +1048,7 @@ defineRegressionSuite('Group shapes', [
 				(m) => ({ x: Number(m[1]), y: Number(m[2]), cx: Number(m[3]), cy: Number(m[4]) })
 			)
 			assertEqual(boxes.length, 4, 'expected the group and its three children')
-			const [frame, ...children] = boxes
+			const [frame, ...children] = take(boxes, 1)
 			for (const child of children) {
 				assert(
 					child.x >= frame.x &&

@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
+import { defineRegressionSuite, build, readEntry, assert, take } from '../../helpers.ts'
 
 // Acceptance for `headerRow` inline sugar (upstream gitbrent/PptxGenJS#1256):
 // `addTable(rows, { headerRow:{…} })` styles the first row distinctly *without* first
@@ -40,7 +40,7 @@ defineRegressionSuite('Table headerRow inline sugar', [
 
 			const rows = tableRows(xml)
 			assert(rows.length === 2, `expected 2 table rows; got ${rows.length}`)
-			const [header, body] = rows
+			const [header, body] = take(rows, 2)
 
 			// Header row carries the header fill, bold, and color
 			assert(header.includes('1A2B3C'), 'header row should carry headerRow fill color 1A2B3C')
@@ -66,7 +66,7 @@ defineRegressionSuite('Table headerRow inline sugar', [
 				})
 			})
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			const [header] = tableRows(xml)
+			const [header] = take(tableRows(xml), 1)
 
 			// Cell A keeps its explicit fill; cell B falls back to headerRow fill
 			assert(header.includes('AA0000'), 'explicit per-cell fill AA0000 must survive')
@@ -96,7 +96,7 @@ defineRegressionSuite('Table headerRow inline sugar', [
 			})
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 			assert(!/firstRow="1"/.test(xml), 'explicit hasHeader:false must not emit firstRow="1"')
-			const [header] = tableRows(xml)
+			const [header] = take(tableRows(xml), 1)
 			assert(header.includes('1A2B3C'), 'headerRow styling still applies even with hasHeader:false')
 		},
 	},

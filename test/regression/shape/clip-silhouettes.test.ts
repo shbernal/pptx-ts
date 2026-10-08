@@ -7,6 +7,7 @@ import {
 	assertEqual,
 	caughtSync,
 	defined,
+	at,
 } from '../../helpers.ts'
 import { clipPath, EMU_PER_INCH, type ClipShape } from '../../../dist/node.js'
 
@@ -51,8 +52,8 @@ defineRegressionSuite('Clip silhouettes (clipPath)', [
 		fn: () => {
 			const p = path({ kind: 'half-disc', flat: 'right' }, 4, 6)
 			assertEqual(p.length, 8, 'half-disc node count')
-			assertEqual(p[0].moveTo, true, 'path must open with a moveTo')
-			assertEqual(p[p.length - 1].close, true, 'path must close')
+			assertEqual(at(p, 0).moveTo, true, 'path must open with a moveTo')
+			assertEqual(at(p, p.length - 1).close, true, 'path must close')
 			const curves = p.filter((n) => n.curve)
 			assertEqual(curves.length, 2, 'the half-ellipse is two cubic Béziers')
 			assert(
@@ -112,11 +113,11 @@ defineRegressionSuite('Clip silhouettes (clipPath)', [
 			// Both open where the top edge leaves the flat side; with the flat side on the right
 			// that x IS the bulge depth, so it is what separates the two presets.
 			assert(
-				Number(deep[0].x) > Number(shallow[0].x),
-				`deep must bulge further into the box (deep ${deep[0].x} vs shallow ${shallow[0].x} of 4in)`
+				Number(at(deep, 0).x) > Number(at(shallow, 0).x),
+				`deep must bulge further into the box (deep ${at(deep, 0).x} vs shallow ${at(shallow, 0).x} of 4in)`
 			)
 			assert(
-				deep.every((n, i) => Boolean(n.curve) === Boolean(shallow[i].curve)),
+				deep.every((n, i) => Boolean(n.curve) === Boolean(at(shallow, i).curve)),
 				'the presets must share one node structure'
 			)
 		},

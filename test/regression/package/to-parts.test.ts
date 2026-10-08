@@ -7,7 +7,7 @@
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import TsPptx from '../../../dist/node.js'
-import { assert } from '../../helpers.ts'
+import { assert, at, take, defined } from '../../helpers.ts'
 
 /** Author an identical text-only deck each call so two builds differ only in core.xml timestamps. */
 function makePres() {
@@ -34,7 +34,9 @@ describe('toParts()', () => {
 		const buf = (await makePres().write({ outputType: 'uint8array' })) as Uint8Array
 		const zip = await JSZip.loadAsync(buf)
 		// JSZip preserves central-directory order, which is the write path's insertion order.
-		const zipPaths = Object.keys(zip.files).filter((p) => !zip.files[p].dir)
+		const zipPaths = Object.entries(zip.files)
+			.filter(([, file]) => !file.dir)
+			.map(([p]) => p)
 
 		// Order (hence path set) must match exactly.
 		assert(
@@ -45,7 +47,7 @@ describe('toParts()', () => {
 		// Per-part bytes must match (core.xml compared with its dcterms timestamps blanked).
 		for (const part of parts) {
 			assert(part.data instanceof Uint8Array, `part ${part.path} data must be a Uint8Array`)
-			const oracle = await zip.files[part.path].async('uint8array')
+			const oracle = await defined(zip.file(part.path), `write() has no ${part.path}`).async('uint8array')
 			if (part.path === 'docProps/core.xml') {
 				assert(
 					stripCoreTimestamps(part.data) === stripCoreTimestamps(oracle),
@@ -74,7 +76,7 @@ describe('toParts()', () => {
 	})
 
 	test('the public part shape is { path, data } only — no internal store hint leaks', async () => {
-		const [part] = await makePres().toParts()
+		const [part] = take(await makePres().toParts(), 1)
 		assert(
 			JSON.stringify(Object.keys(part).sort()) === JSON.stringify(['data', 'path']),
 			`unexpected public part keys: ${Object.keys(part).join(', ')}`
@@ -107,7 +109,7 @@ describe('toParts()', () => {
 			`part paths differ.\n first:  ${first.map((part) => part.path).join(', ')}\n second: ${second.map((part) => part.path).join(', ')}`
 		)
 		first.forEach((part, index) => {
-			const other = second[index]
+			const other = at(second, index)
 			const same =
 				part.path === 'docProps/core.xml'
 					? stripCoreTimestamps(part.data) === stripCoreTimestamps(other.data)

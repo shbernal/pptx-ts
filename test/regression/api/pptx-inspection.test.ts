@@ -20,6 +20,8 @@ import {
 	defined,
 	setDiagnosticHandler,
 	caught,
+	at,
+	take,
 } from '../../helpers.ts'
 import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -183,9 +185,9 @@ defineRegressionSuite('PPTX inspection primitives', [
 			assertEqual(inspection.slideSize.widthIn, 13.333, 'slide width')
 			assertEqual(inspection.slideSize.heightIn, 7.5, 'slide height')
 			assertEqual(inspection.slides.length, 1, 'slide count')
-			assertEqual(inspection.slides[0].wordCount, 2, 'word count')
+			assertEqual(at(inspection.slides, 0).wordCount, 2, 'word count')
 
-			const elements = new Map(inspection.slides[0].elements.map((element) => [element.name, element]))
+			const elements = new Map(at(inspection.slides, 0).elements.map((element) => [element.name, element]))
 			const text = elements.get('inspect:text')
 			const shape = elements.get('inspect:shape')
 			const image = elements.get('inspect:image')
@@ -221,7 +223,7 @@ defineRegressionSuite('PPTX inspection primitives', [
 			})
 
 			const inspection = await inspectPptx(buf)
-			const elements = new Map(inspection.slides[0].elements.map((element) => [element.name, element]))
+			const elements = new Map(at(inspection.slides, 0).elements.map((element) => [element.name, element]))
 
 			const fixed = defined(elements.get('fit:none'))
 			assertEqual(fixed.autofit, 'none', 'no-autofit box reports none')
@@ -272,13 +274,13 @@ defineRegressionSuite('PPTX inspection primitives', [
 			})
 
 			const inspection = await inspectPptx(buf)
-			const elements = new Map(inspection.slides[0].elements.map((element) => [element.name, element]))
+			const elements = new Map(at(inspection.slides, 0).elements.map((element) => [element.name, element]))
 
 			const runs = elements.get('runs')
 			assert(runs, 'expected named multi-run element')
 			assertEqual(runs.paragraphs.length, 2, 'two source paragraphs preserved')
-			const first = runs.paragraphs[0].runs[0]
-			const second = runs.paragraphs[1].runs[0]
+			const first = at(at(runs.paragraphs, 0).runs, 0)
+			const second = at(at(runs.paragraphs, 1).runs, 0)
 			assertEqual(first.text, 'Bold', 'first paragraph run text')
 			assertEqual(first.bold, true, 'bold flag read from a:rPr@b')
 			assertEqual(first.italic, false, 'first run is not italic')
@@ -286,7 +288,7 @@ defineRegressionSuite('PPTX inspection primitives', [
 			assertEqual(second.italic, true, 'italic flag read from a:rPr@i')
 			assertEqual(second.charSpacingPt, 2, 'charSpacing read from a:rPr@spc (hundredths→pt)')
 			// Flat textRuns still carries the same enriched props.
-			assertEqual(runs.textRuns[0].fontFace, 'Arial', 'flat textRuns also carry fontFace')
+			assertEqual(at(runs.textRuns, 0).fontFace, 'Arial', 'flat textRuns also carry fontFace')
 
 			assertEqual(defined(elements.get('scaled')).autofit, 'normAutofit', 'object shrink reports normAutofit')
 			assertEqual(defined(elements.get('scaled')).autofitFontScale, 62.5, 'baked fontScale read back as a percent')
@@ -307,7 +309,7 @@ defineRegressionSuite('PPTX inspection primitives', [
 		name: 'inspect composes enclosing group transforms into slide-absolute boxes',
 		fn: async () => {
 			const inspection = await inspectPptx(join(FIXTURES, 'group-transform.pptx'))
-			const [grouped, ungrouped] = inspection.slides
+			const [grouped, ungrouped] = take(inspection.slides, 2)
 			assertEqual(
 				ungrouped.elements.filter((el) => el.kind === 'group').length,
 				0,
@@ -344,7 +346,7 @@ defineRegressionSuite('PPTX inspection primitives', [
 		name: 'inspect reports the group itself and links it to its children',
 		fn: async () => {
 			const inspection = await inspectPptx(join(FIXTURES, 'group-transform.pptx'))
-			const [grouped] = inspection.slides
+			const [grouped] = take(inspection.slides, 1)
 
 			const groups = grouped.elements.filter((el) => el.kind === 'group')
 			assert(groups.length > 0, 'expected the fixture groups to be reported as elements')
@@ -392,7 +394,7 @@ defineRegressionSuite('PPTX inspection primitives', [
 				slide.addText('Last', { x: 3, y: 1, w: 1, h: 0.4, objectName: 'z:last' })
 			})
 
-			const [slide] = (await inspectPptx(buf)).slides
+			const [slide] = take((await inspectPptx(buf)).slides, 1)
 			const order = slide.elements.sort((a, b) => a.zIndex - b.zIndex).map((el) => el.name)
 			assertEqual(order.join(' < '), 'z:first < z:middle < z:last', 'z order matches authored document order')
 		},
@@ -416,7 +418,7 @@ defineRegressionSuite('PPTX inspection primitives', [
 				</p:grpSp>`)
 
 			const { result, warnings } = await captureWarnings(() => inspectPptx(buf))
-			const names = result.slides[0].elements.map((el) => el.name)
+			const names = at(result.slides, 0).elements.map((el) => el.name)
 
 			assert(!names.includes('unresolvable child'), 'a child with no resolvable position is not reported')
 			assert(
@@ -447,7 +449,7 @@ defineRegressionSuite('PPTX inspection primitives', [
 				</p:grpSp>`)
 
 			const { result, warnings } = await captureWarnings(() => inspectPptx(buf))
-			const names = result.slides[0].elements.map((el) => el.name)
+			const names = at(result.slides, 0).elements.map((el) => el.name)
 
 			assert(!names.includes('unmappable child'), 'a child of an untransformed group has no position to report')
 			assert(
@@ -481,12 +483,12 @@ defineRegressionSuite('PPTX inspection primitives', [
 
 			const { slides } = await inspectPptx(buf)
 			assertEqual(
-				slides.map((slide) => slide.elements[0].name).join(' < '),
+				slides.map((slide) => at(slide.elements, 0).name).join(' < '),
 				'third part < first part < second part',
 				'slide order follows p:sldIdLst'
 			)
 			assertEqual(slides.map((slide) => slide.index).join(','), '0,1,2', 'index is the deck position')
-			assertEqual(slides[0].path, 'ppt/slides/slide3.xml', 'and each slide still reports its own part')
+			assertEqual(at(slides, 0).path, 'ppt/slides/slide3.xml', 'and each slide still reports its own part')
 		},
 	},
 	{
@@ -507,9 +509,9 @@ defineRegressionSuite('PPTX inspection primitives', [
 				})
 			})
 
-			const [slide] = (await inspectPptx(buf)).slides
+			const [slide] = take((await inspectPptx(buf)).slides, 1)
 			const element = defined(slide.elements.find((el) => el.name === 'spaced'))
-			assertEqual(element.textRuns[0].text, 'Two ', 'the trailing space belongs to the run')
+			assertEqual(at(element.textRuns, 0).text, 'Two ', 'the trailing space belongs to the run')
 			assertEqual(element.text, 'Two words', 'so the joined text keeps the word boundary')
 			assertEqual(slide.wordCount, 2, 'and the word count is the visible one')
 		},
@@ -529,7 +531,7 @@ defineRegressionSuite('PPTX inspection primitives', [
 				})
 			})
 
-			const [slide] = (await inspectPptx(buf)).slides
+			const [slide] = take((await inspectPptx(buf)).slides, 1)
 			const element = defined(slide.elements.find((el) => el.name === 'two-paragraphs'))
 			assertEqual(element.paragraphs.length, 2, 'breakLine ends the paragraph')
 			assertEqual(element.text, 'first second', 'the two paragraphs stay two words')
@@ -614,7 +616,7 @@ defineRegressionSuite('PPTX inspection primitives', [
 			const smartArt = await inspectPptx(join(FIXTURES, 'smartart-families.pptx'))
 			for (const slide of smartArt.slides) {
 				assertEqual(slide.elements.length, 1, `slide ${slide.index + 1} reports its SmartArt frame`)
-				const [frame] = slide.elements
+				const [frame] = take(slide.elements, 1)
 				assertEqual(frame.kind, 'graphicFrame', 'a SmartArt frame is a graphicFrame element')
 				assertEqual(frame.graphicKind, 'diagram', 'graphicKind names the hosted construct')
 				assert(frame.box.w > 0 && frame.box.h > 0, 'the frame carries its own p:xfrm box')
@@ -626,27 +628,27 @@ defineRegressionSuite('PPTX inspection primitives', [
 
 			// Table cells reach the flat text the same way; a chart's labels deliberately
 			// do not (matching `Slide.text`), but the chart is still a box on the slide.
-			const table = (await inspectPptx(join(FIXTURES, 'table.pptx'))).slides[0]
+			const table = at((await inspectPptx(join(FIXTURES, 'table.pptx'))).slides, 0)
 			const tableFrame = table.elements.find((el) => el.graphicKind === 'table')
 			assert(tableFrame, 'the table deck reports a table frame')
 			assert(tableFrame.text.includes('cell'), 'cell text reaches the flat text')
 
-			const chartSlide = (await inspectPptx(join(FIXTURES, 'bar-chart-data-labels.pptx'))).slides[0]
+			const chartSlide = at((await inspectPptx(join(FIXTURES, 'bar-chart-data-labels.pptx'))).slides, 0)
 			const chartFrame = chartSlide.elements.find((el) => el.graphicKind === 'chart')
 			assert(chartFrame, 'the chart deck reports a chart frame')
 			assertEqual(chartFrame.text, '', 'chart labels are not slide body text')
 
 			// A frame this library does not decode is still a box, not a hole in the slide.
-			const model3d = (await inspectPptx(join(FIXTURES, 'model3d.pptx'))).slides[0]
-			assertEqual(model3d.elements[0].graphicKind, 'other', 'an unmodelled payload reports `other`')
+			const model3d = at((await inspectPptx(join(FIXTURES, 'model3d.pptx'))).slides, 0)
+			assertEqual(at(model3d.elements, 0).graphicKind, 'other', 'an unmodelled payload reports `other`')
 
 			// A graphic frame consumes a zIndex like any other element: it is one position in
 			// the depth-first walk of the shape tree, so paint order stays document order.
-			const mixed = (await inspectPptx(join(FIXTURES, 'mixed.pptx'))).slides[6]
+			const mixed = at((await inspectPptx(join(FIXTURES, 'mixed.pptx'))).slides, 6)
 			const zIndices = mixed.elements.map((el) => el.zIndex)
 			assertEqual(new Set(zIndices).size, zIndices.length, 'zIndex stays unique within the slide')
 			assert(
-				zIndices.every((z, i) => i === 0 || z > zIndices[i - 1]),
+				zIndices.every((z, i) => i === 0 || z > at(zIndices, i - 1)),
 				'elements come back in ascending paint order'
 			)
 			const mixedTable = mixed.elements.find((el) => el.graphicKind === 'table')

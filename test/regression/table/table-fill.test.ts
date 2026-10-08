@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, captureDiagnostics, assert, assertEqual } from '../../helpers.ts'
+import { defineRegressionSuite, build, readEntry, captureDiagnostics, assert, assertEqual, at } from '../../helpers.ts'
 import { TableStyle } from '../../../dist/node.js'
 
 // The two table-level fill options, and the non-solid cell fills that were emitting all
@@ -119,8 +119,8 @@ defineRegressionSuite('Table fill', [
 			const xml = await readEntry(result.zip, 'ppt/slides/slide1.xml')
 			assert(tblPr(xml).includes('val="F2F2F2"'), 'the background is on the table')
 			const tcs = cells(xml)
-			assert(tcs[0].includes('<a:srgbClr val="FF0000"/>'), 'the explicit cell keeps its own fill')
-			assert(!tcs[1].includes('<a:solidFill>'), 'the other cell shows the background through')
+			assert(at(tcs, 0).includes('<a:srgbClr val="FF0000"/>'), 'the explicit cell keeps its own fill')
+			assert(!at(tcs, 1).includes('<a:solidFill>'), 'the other cell shows the background through')
 		},
 	},
 	{
@@ -165,9 +165,9 @@ defineRegressionSuite('Table fill', [
 
 			const xml = await readEntry(result.zip, 'ppt/slides/slide1.xml')
 			const tcs = cells(xml)
-			assert(tcs[0].includes('<a:gradFill'), 'the gradient cell emits a:gradFill; got: ' + tcs[0])
-			assert(tcs[0].includes('<a:lin ang="5400000"'), 'with its angle in 60000ths of a degree; got: ' + tcs[0])
-			assert(tcs[1].includes('<a:pattFill prst="diagCross">'), 'the pattern cell emits a:pattFill; got: ' + tcs[1])
+			assert(at(tcs, 0).includes('<a:gradFill'), 'the gradient cell emits a:gradFill; got: ' + tcs[0])
+			assert(at(tcs, 0).includes('<a:lin ang="5400000"'), 'with its angle in 60000ths of a degree; got: ' + tcs[0])
+			assert(at(tcs, 1).includes('<a:pattFill prst="diagCross">'), 'the pattern cell emits a:pattFill; got: ' + tcs[1])
 		},
 	},
 	{

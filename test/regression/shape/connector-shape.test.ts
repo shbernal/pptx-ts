@@ -6,6 +6,7 @@ import {
 	setDiagnosticHandler,
 	slideXml,
 	defined,
+	at,
 } from '../../helpers.ts'
 
 // Regression: slide.addConnector emits a PowerPoint connector (<p:cxnSp>) — not a plain line
@@ -54,8 +55,8 @@ defineRegressionSuite('Connector shapes', [
 			assert(cxns[0].includes('<a:prstGeom prst="bentConnector3">'), 'elbow → bentConnector3')
 			assert(/<a:xfrm flipH="1" flipV="1">/.test(cxns[0]), 'reversed endpoints must set flipH and flipV')
 			assert(cxns[0].includes('<a:prstDash val="dash"/>'), 'expected dashed line')
-			assert(cxns[1].includes('<a:prstGeom prst="curvedConnector3">'), 'curved → curvedConnector3')
-			assert(!/flip[HV]="1"/.test(cxns[1]), 'forward endpoints must not flip')
+			assert(at(cxns, 1).includes('<a:prstGeom prst="curvedConnector3">'), 'curved → curvedConnector3')
+			assert(!/flip[HV]="1"/.test(at(cxns, 1)), 'forward endpoints must not flip')
 		},
 	},
 	{
@@ -84,9 +85,9 @@ defineRegressionSuite('Connector shapes', [
 				cxns[0].includes('<a:avLst><a:gd name="adj1" fmla="val 30000"/><a:gd name="adj2" fmla="val 70000"/></a:avLst>'),
 				'expected two bent jogs'
 			)
-			assert(cxns[1].includes('<a:prstGeom prst="curvedConnector5">'), 'curved bends:3 → curvedConnector5')
+			assert(at(cxns, 1).includes('<a:prstGeom prst="curvedConnector5">'), 'curved bends:3 → curvedConnector5')
 			assert(
-				cxns[1].includes(
+				at(cxns, 1).includes(
 					'<a:avLst><a:gd name="adj1" fmla="val 10000"/><a:gd name="adj2" fmla="val 50000"/><a:gd name="adj3" fmla="val 90000"/></a:avLst>'
 				),
 				'expected three curved jogs'

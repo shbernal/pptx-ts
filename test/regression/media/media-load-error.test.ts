@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import JSZip from 'jszip'
 import { describe, expect, test } from 'vitest'
 import TsPptx, { type Slide } from '../../../dist/node.js'
-import { assert, assertRejects, captureDiagnostics, readEntry } from '../../helpers.ts'
+import { assert, assertRejects, captureDiagnostics, readEntry, at } from '../../helpers.ts'
 
 const BROKEN_SVG = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../browser/harness/broken.svg')
 
@@ -82,7 +82,7 @@ describe('SVG preview on a runtime with no rasterizer', () => {
 			const zip = await JSZip.loadAsync(result as Buffer)
 			const svgParts = Object.keys(zip.files).filter((name) => /^ppt\/media\/.*\.svg$/.test(name))
 			expect(svgParts).toHaveLength(1)
-			const written = await readEntry(zip, svgParts[0])
+			const written = await readEntry(zip, at(svgParts, 0))
 			const expected = 'path' in image ? await readFile(image.path, 'utf8') : image.svg
 			expect(written).toBe(expected)
 		})

@@ -1,6 +1,6 @@
 import type JSZip from 'jszip'
 import type { StrokeProps } from '../../../dist/node.js'
-import { defineRegressionSuite, build, readEntry, assert, defined } from '../../helpers.ts'
+import { defineRegressionSuite, build, readEntry, assert, defined, at } from '../../helpers.ts'
 
 // Verification suite for several historical upstream table reports that this project already
 // emits correctly. These guard against regressing back into the reported symptoms:
@@ -50,8 +50,8 @@ defineRegressionSuite('Table span + border structure (verified correct)', [
 				assert(tcCount === 3, `row ${i} should have 3 cells (incl. hMerge filler), got ${tcCount}`)
 			})
 			// Origin cell carries gridSpan=2 and exactly one hMerge filler exists in row 0.
-			assert(/gridSpan="2"/.test(rows[0]), 'colspan origin cell should declare gridSpan="2"')
-			assert((rows[0].match(/hMerge="1"/g) || []).length === 1, 'row 0 should have exactly one hMerge filler cell')
+			assert(/gridSpan="2"/.test(at(rows, 0)), 'colspan origin cell should declare gridSpan="2"')
+			assert((at(rows, 0).match(/hMerge="1"/g) || []).length === 1, 'row 0 should have exactly one hMerge filler cell')
 		},
 	},
 	{
@@ -88,7 +88,7 @@ defineRegressionSuite('Table span + border structure (verified correct)', [
 			// origin (rowSpan=2) + B + vMerge continuation + C = 4 cells
 			assert(tcs.length === 4, `expected 4 cells, got ${tcs.length}`)
 			assert(/rowSpan="2"/.test(tcs[0]), 'origin cell should declare rowSpan="2"')
-			assert(/vMerge="1"/.test(tcs[2]), 'covered row should emit a vMerge continuation cell')
+			assert(/vMerge="1"/.test(at(tcs, 2)), 'covered row should emit a vMerge continuation cell')
 			tcs.forEach((c, i) =>
 				assert(hasAllFourBorders(c), `cell ${i} (incl. vMerge continuation) must carry all four borders`)
 			)

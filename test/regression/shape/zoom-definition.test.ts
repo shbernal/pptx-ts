@@ -15,6 +15,8 @@ import {
 	xmlOpeningTags,
 	asError,
 	type ThrownError,
+	at,
+	defined,
 } from '../../helpers.ts'
 import type JSZip from 'jszip'
 import type TsPptx from '../../../dist/node.js'
@@ -69,7 +71,8 @@ const attrs = (tag: string): Record<string, string> => xmlAttributes(tag)
 function frameExtent(xml: string): Record<string, string> {
 	const frame = firstXmlBlock(xml, 'p:graphicFrame')
 	const xfrm = firstXmlBlock(frame, 'p:xfrm')
-	const [off, ext] = [selfClosingTags(xfrm, 'a:off')[0], selfClosingTags(xfrm, 'a:ext')[0]]
+	const off = at(selfClosingTags(xfrm, 'a:off'), 0)
+	const ext = at(selfClosingTags(xfrm, 'a:ext'), 0)
 	return { ...attrs(off), ...attrs(ext) }
 }
 
@@ -78,7 +81,7 @@ async function slideRels(zip: JSZip) {
 	const xml = await readEntry(zip, 'ppt/slides/_rels/slide1.xml.rels')
 	return selfClosingTags(xml, 'Relationship')
 		.map((tag) => xmlAttributes(tag))
-		.map((attrs) => ({ id: attrs.Id, type: attrs.Type, target: attrs.Target }))
+		.map((attrs) => ({ id: defined(attrs.Id), type: defined(attrs.Type), target: defined(attrs.Target) }))
 }
 
 defineRegressionSuite('Zoom definition', [
@@ -291,27 +294,27 @@ defineRegressionSuite('Zoom definition', [
 			const zm = xml.slice(xml.indexOf('<psuz:summaryZm>'), xml.indexOf('<psuz:gridLayout/>'))
 			const cells = selfClosingTags(zm, 'a:off').map((tag, i) => ({
 				...attrs(tag),
-				...attrs(selfClosingTags(zm, 'a:ext')[i]),
+				...attrs(at(selfClosingTags(zm, 'a:ext'), i)),
 			}))
 			assertEqual(cells.length, 2, 'expected two tile xfrms')
-			assertEqual(cells[0].y, cells[1].y, 'both tiles should sit on one row')
-			assertEqual(cells[0].cx, cells[1].cx, 'tiles should be the same width')
+			assertEqual(at(cells, 0).y, at(cells, 1).y, 'both tiles should sit on one row')
+			assertEqual(at(cells, 0).cx, at(cells, 1).cx, 'tiles should be the same width')
 			assert(
-				Number(cells[1].x) > Number(cells[0].x),
-				`expected the second tile to the right of the first; got ${cells[0].x} then ${cells[1].x}`
+				Number(at(cells, 1).x) > Number(at(cells, 0).x),
+				`expected the second tile to the right of the first; got ${at(cells, 0).x} then ${at(cells, 1).x}`
 			)
 			// Width-bound: the pair plus the gap fills the frame, and there is slack above/below.
 			// Tile sizes are rounded to whole EMU, so the span can miss the frame by a unit or two —
 			// an EMU is 1/914400 inch, well under anything PowerPoint renders differently.
 			const frame = frameExtent(xml)
-			const spanned = Number(cells[1].x) + Number(cells[1].cx)
+			const spanned = Number(at(cells, 1).x) + Number(at(cells, 1).cx)
 			assert(
 				Math.abs(spanned - Number(frame.cx)) <= 2,
 				`expected the grid to fill the frame width (${frame.cx}); it spans ${spanned}`
 			)
 			assert(
-				Number(cells[0].cy) < Number(frame.cy),
-				`expected height slack in a width-bound grid; tile cy ${cells[0].cy} vs frame cy ${frame.cy}`
+				Number(at(cells, 0).cy) < Number(frame.cy),
+				`expected height slack in a width-bound grid; tile cy ${at(cells, 0).cy} vs frame cy ${frame.cy}`
 			)
 		},
 	},
@@ -380,8 +383,8 @@ defineRegressionSuite('Zoom definition', [
 			const rels = await slideRels(zip)
 			const previews = rels.filter((r) => r.type.endsWith('/image'))
 			assertEqual(previews.length, 2, 'expected a preview rel per zoom')
-			assertEqual(previews[0].target, previews[1].target, 'the second cover should reuse the first rel Target')
-			assert(previews[0].target.endsWith('.jpg'), `expected a .jpg target; got ${previews[0].target}`)
+			assertEqual(at(previews, 0).target, at(previews, 1).target, 'the second cover should reuse the first rel Target')
+			assert(at(previews, 0).target.endsWith('.jpg'), `expected a .jpg target; got ${at(previews, 0).target}`)
 
 			const media = listEntries(zip).filter((name) => name.startsWith('ppt/media/'))
 			assertEqual(media.length, 1, `the cover should be stored once; got: ${media.join(', ')}`)

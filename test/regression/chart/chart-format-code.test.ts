@@ -6,6 +6,7 @@ import {
 	assertIncludes,
 	assertNotIncludes,
 	firstXmlBlock,
+	at,
 } from '../../helpers.ts'
 import { chartXml } from './chart-parts.ts'
 
@@ -20,7 +21,7 @@ function valCacheFormatCode(xml: string, valTag: string): string {
 	const valBlock = firstXmlBlock(xml, valTag)
 	const cacheMatch = valBlock.match(/<c:formatCode>([\s\S]*?)<\/c:formatCode>/)
 	assert(cacheMatch, `expected a <c:formatCode> inside <${valTag}>; got: ${valBlock}`)
-	return cacheMatch[1]
+	return at(cacheMatch, 1)
 }
 
 defineRegressionSuite('Chart value format code', [

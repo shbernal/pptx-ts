@@ -6,6 +6,7 @@ import {
 	listEntries,
 	selfClosingTags,
 	xmlAttributes,
+	defined,
 } from '../../helpers.ts'
 import type JSZip from 'jszip'
 import type { PlaceholderProps, SlideMasterProps } from '../../../dist/node.js'
@@ -43,7 +44,7 @@ async function assertRelsResolve(zip: JSZip) {
 			assert(ids.includes(id), `${part} references ${id}, which ${relsName} does not declare`)
 		}
 		for (const rel of rels.filter((candidate) => candidate.TargetMode !== 'External')) {
-			const target = new URL(rel.Target, `file:///${part}`).pathname.slice(1)
+			const target = new URL(defined(rel.Target), `file:///${part}`).pathname.slice(1)
 			assert(entries.includes(target), `${relsName} ${rel.Id} targets ${rel.Target}, which is not in the package`)
 		}
 	}

@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { assert, assertEqual, build, defineRegressionSuite, readEntry } from '../../helpers.ts'
+import { assert, assertEqual, build, defineRegressionSuite, readEntry, at } from '../../helpers.ts'
 
 // Acceptance: the public read-back accessors on `Presentation` and `Slide` return what was
 // put in.
@@ -78,7 +78,7 @@ defineRegressionSuite('Public accessors', [
 
 			// Read back through `pres.slides` rather than the local reference: that also
 			// asserts the collection hands out the same object that was mutated, not a copy.
-			const slide = pres.slides[0]
+			const slide = at(pres.slides, 0)
 			assertEqual(slide.color, 'FF0000', 'color should read back what was set')
 			assertEqual(slide.hidden, true, 'hidden should read back what was set')
 
@@ -96,7 +96,7 @@ defineRegressionSuite('Public accessors', [
 				added.slideNumber = { x: 1.0, y: 6.5 }
 			})
 
-			const slide = pres.slides[0]
+			const slide = at(pres.slides, 0)
 			assert(slide.slideNumber, 'slideNumber should read back after being set')
 			assertEqual(slide.slideNumber.x, 1.0, 'slideNumber.x')
 			assertEqual(slide.slideNumber.y, 6.5, 'slideNumber.y')
@@ -125,8 +125,8 @@ defineRegressionSuite('Public accessors', [
 
 			// Slides 1 and 2 are the two the callback added; any continuation slides the
 			// autoPage table produced were appended after them.
-			const plain = pres.slides[0]
-			const paged = pres.slides[1]
+			const plain = at(pres.slides, 0)
+			const paged = at(pres.slides, 1)
 
 			assertEqual(plain.newAutoPagedSlides.length, 0, 'a table that fits should page nothing')
 			assert(paged.newAutoPagedSlides.length > 0, 'an overflowing autoPage table should report its new slides')
@@ -171,7 +171,7 @@ defineRegressionSuite('Public accessors', [
 				slide.addTable(rows(120), opts(5))
 			})
 
-			const reported = pres.slides[0].newAutoPagedSlides
+			const reported = at(pres.slides, 0).newAutoPagedSlides
 			assert(afterLong > 0, 'the first table must page, or this case proves nothing')
 			assertEqual(afterShort, afterLong, 'a shorter second table must not shrink the report')
 			assert(

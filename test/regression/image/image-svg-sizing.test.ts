@@ -6,6 +6,7 @@ import {
 	assert,
 	assertEqual,
 	captureDiagnostics,
+	at,
 } from '../../helpers.ts'
 import { EMU_PER_INCH, type ImageProps } from '../../../dist/node.js'
 
@@ -26,7 +27,7 @@ function srcRectAttrs(xml: string) {
 	const m = /<a:srcRect\b([^/]*)\/>/.exec(xml)
 	if (!m) return null
 	const attrs: Record<string, number> = {}
-	for (const a of m[1].matchAll(/(\w+)="(-?\d+)"/g)) attrs[a[1]] = parseInt(a[2], 10)
+	for (const a of at(m, 1).matchAll(/(\w+)="(-?\d+)"/g)) attrs[at(a, 1)] = parseInt(at(a, 2), 10)
 	return attrs
 }
 
@@ -37,7 +38,7 @@ function pictureExtent(xml: string) {
 	assert(pic, 'expected a <p:pic>; got: ' + xml)
 	const m = /<a:ext cx="(\d+)" cy="(\d+)"\s*\/>/.exec(pic)
 	assert(m, 'expected an <a:ext> for the picture; got: ' + xml)
-	return { cx: parseInt(m[1], 10), cy: parseInt(m[2], 10) }
+	return { cx: parseInt(at(m, 1), 10), cy: parseInt(at(m, 2), 10) }
 }
 
 async function slideXmlFor(opts: ImageProps) {

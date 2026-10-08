@@ -6,6 +6,7 @@ import {
 	assert,
 	assertEqual,
 	defined,
+	at,
 } from '../../helpers.ts'
 
 // The three `a:tcPr` constructs that had no write surface: the two diagonals
@@ -46,7 +47,7 @@ function childOrder(tcPr: string) {
 	for (const name of TCPR_CHILDREN) {
 		flat = flat.replace(new RegExp(`<a:${name}\\b[^>]*>[\\s\\S]*?</a:${name}>`, 'g'), `<a:${name}/>`)
 	}
-	return [...flat.matchAll(/<a:(\w+)[^>]*?\/>/g)].map((m) => m[1]).filter((name) => TCPR_CHILDREN.includes(name))
+	return [...flat.matchAll(/<a:(\w+)[^>]*?\/>/g)].map((m) => at(m, 1)).filter((name) => TCPR_CHILDREN.includes(name))
 }
 
 defineRegressionSuite('Table cell a:tcPr constructs', [
@@ -158,14 +159,14 @@ defineRegressionSuite('Table cell a:tcPr constructs', [
 			const xml = await readEntry(result.zip, 'ppt/slides/slide1.xml')
 			const tags = [...xml.matchAll(/<a:tcPr[^>]*>/g)].map((m) => m[0])
 			assertEqual(tags.length, 3, 'three cells')
-			assert(tags[0].includes('anchorCtr="1"'), 'the true cell carries it; got: ' + tags[0])
+			assert(at(tags, 0).includes('anchorCtr="1"'), 'the true cell carries it; got: ' + tags[0])
 			assert(
-				tags[0].indexOf('anchor="ctr"') < tags[0].indexOf('anchorCtr="1"'),
+				at(tags, 0).indexOf('anchor="ctr"') < at(tags, 0).indexOf('anchorCtr="1"'),
 				'and it follows anchor, matching the schema adjacency; got: ' + tags[0]
 			)
 			// `false` is the schema default, so writing it would be noise PowerPoint strips anyway.
-			assert(!tags[1].includes('anchorCtr'), 'an explicit false emits nothing; got: ' + tags[1])
-			assert(!tags[2].includes('anchorCtr'), 'an unset cell emits nothing; got: ' + tags[2])
+			assert(!at(tags, 1).includes('anchorCtr'), 'an explicit false emits nothing; got: ' + tags[1])
+			assert(!at(tags, 2).includes('anchorCtr'), 'an unset cell emits nothing; got: ' + tags[2])
 		},
 	},
 	{

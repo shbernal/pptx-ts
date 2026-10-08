@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
+import { defineRegressionSuite, build, readEntry, assert, at } from '../../helpers.ts'
 
 // Regression: when a table with autoPage overflows and the originating slide is
 // NOT in the last-defined section, continuation slides must land in the same
@@ -55,7 +55,7 @@ defineRegressionSuite('Table autoPage section preservation [upstream-issue-1405]
 			// 2. Section A must own more than one slide (the source + at least one overflow).
 			const sectionAMatch = presXml.match(/<p14:section name="Section A"[^>]*>([\s\S]*?)<\/p14:section>/)
 			assert(sectionAMatch, 'expected a <p14:section name="Section A"> in presentation.xml')
-			const sectionASlideCount = (sectionAMatch[1].match(/<p14:sldId\b/g) || []).length
+			const sectionASlideCount = (at(sectionAMatch, 1).match(/<p14:sldId\b/g) || []).length
 			assert(
 				sectionASlideCount >= 2,
 				`expected Section A to contain ≥2 slides (source + overflow); got ${sectionASlideCount}`
@@ -64,7 +64,7 @@ defineRegressionSuite('Table autoPage section preservation [upstream-issue-1405]
 			// 3. Section B must remain empty.
 			const sectionBMatch = presXml.match(/<p14:section name="Section B"[^>]*>([\s\S]*?)<\/p14:section>/)
 			assert(sectionBMatch, 'expected a <p14:section name="Section B"> in presentation.xml')
-			const sectionBSlideCount = (sectionBMatch[1].match(/<p14:sldId\b/g) || []).length
+			const sectionBSlideCount = (at(sectionBMatch, 1).match(/<p14:sldId\b/g) || []).length
 			assert(sectionBSlideCount === 0, `expected Section B to remain empty; got ${sectionBSlideCount} slides`)
 		},
 	},

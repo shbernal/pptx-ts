@@ -8,6 +8,8 @@ import {
 	readEntry,
 	slideXml,
 	defined,
+	at,
+	take,
 } from '../../helpers.ts'
 
 // The byte-identity harness (`scripts/byte-identity.mjs`) is what gates a behavior-preserving
@@ -129,7 +131,7 @@ defineRegressionSuite('Fill and effect emitters the byte-identity corpus never r
 			// The round trip is the point: `Shape.fillNoFill` is the accessor that separates a
 			// transparent shape from an inheriting one, and before this fix the writer's own
 			// output was the one input it could not be demonstrated on.
-			const shape = defined((await Presentation.load(buf)).slides[0].shapes.find(isAutoShape))
+			const shape = defined(at((await Presentation.load(buf)).slides, 0).shapes.find(isAutoShape))
 			assertEqual(shape.fillNoFill, true, 'a shape authored fill: none reads back as an explicit no-fill')
 			assertEqual(shape.fillColor, null, 'and carries no fill colour')
 		},
@@ -162,7 +164,7 @@ defineRegressionSuite('Fill and effect emitters the byte-identity corpus never r
 
 			// `fillNoFill` is the accessor that separates the two states, so it is what proves they
 			// did not collapse into each other.
-			const [themed, unfilled] = [...(await Presentation.load(buf)).slides[0].shapes].filter(isAutoShape)
+			const [themed, unfilled] = take([...at((await Presentation.load(buf)).slides, 0).shapes].filter(isAutoShape), 2)
 			assertEqual(themed.fillNoFill, false, "fill: { type: 'inherit' } leaves the interior inherited")
 			assertEqual(unfilled.fillNoFill, true, 'an omitted fill is still an explicit no-fill')
 		},

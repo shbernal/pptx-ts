@@ -17,7 +17,7 @@
 import { describe, test, expect } from 'vitest'
 import JSZip from 'jszip'
 import TsPptx, { setDiagnosticHandler, type TableProps, type TableRow } from '../../../dist/node.js'
-import { defined, readEntry } from '../../helpers.ts'
+import { defined, readEntry, at } from '../../helpers.ts'
 import { computeTableLayout } from '../../../src/measure/table-fit.ts'
 import { applyMeasuredFit } from '../../../src/measure/fit.ts'
 import { FontMetricsRegistry, type FontMetrics } from '../../../src/measure/font-metrics.ts'
@@ -73,7 +73,7 @@ function fitShrankRow0(opts: TableProps) {
 	// Calling it directly is what lets synthetic metrics stand in for a font file.
 	const slides = (pres as unknown as { _slides: PresSlideInternal[] })._slides
 	applyMeasuredFit(slides, registry)
-	const cell = defined(slides[0]._slideObjects[0].arrTabRows, 'the table rows')[0][0]
+	const cell = at(at(defined(at(at(slides, 0)._slideObjects, 0).arrTabRows, 'the table rows'), 0), 0)
 	return defined(cell.options?.fontSize, 'the shrink cell font size') < 18
 }
 

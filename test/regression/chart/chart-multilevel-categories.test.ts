@@ -8,6 +8,7 @@ import {
 	assertIncludes,
 	expectDefined,
 	defined,
+	at,
 } from '../../helpers.ts'
 import { chartXml } from './chart-parts.ts'
 
@@ -57,8 +58,8 @@ function cellType(sheetXml: string, addr: string): string | null {
 	const re = new RegExp(`<c r="${addr}"([^>]*)>`)
 	const m = sheetXml.match(re)
 	assert(m, `cell ${addr} not found in sheet XML`)
-	const t = m[1].match(/t="([^"]*)"/)
-	return t ? t[1] : null
+	const t = at(m, 1).match(/t="([^"]*)"/)
+	return t ? at(t, 1) : null
 }
 
 defineRegressionSuite('Multi-level category chart embedded workbook [upstream-pr-1330]', [

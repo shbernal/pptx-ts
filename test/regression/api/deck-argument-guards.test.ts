@@ -5,6 +5,7 @@ import {
 	assert,
 	assertEqual,
 	assertIncludes,
+	at,
 } from '../../helpers.ts'
 import { InvalidOptionError } from '../../../dist/node.js'
 
@@ -90,7 +91,11 @@ defineRegressionSuite('Deck argument guards', [
 				1,
 				`the slide must be in a section; sections: ${JSON.stringify(result.pres.sections.map((s) => s.title))}`
 			)
-			assertEqual(result.pres.sections[result.pres.sections.length - 1].title, 'Default-1', 'in a generated default')
+			assertEqual(
+				at(result.pres.sections, result.pres.sections.length - 1).title,
+				'Default-1',
+				'in a generated default'
+			)
 			assert(result.bytes.byteLength > 0)
 		},
 	},
@@ -141,7 +146,7 @@ defineRegressionSuite('Deck argument guards', [
 			pres.addSlide()
 
 			assertEqual(pres.sections.length, 2, 'a default section was appended')
-			assertEqual(pres.sections[1].title, 'Default-1', 'named by how many defaults exist')
+			assertEqual(at(pres.sections, 1).title, 'Default-1', 'named by how many defaults exist')
 		},
 	},
 	{
@@ -156,7 +161,7 @@ defineRegressionSuite('Deck argument guards', [
 			assertEqual(pres.slides.length, 2, 'both slides are on the deck')
 			assertEqual(pres.sections.length, 2, 'still exactly one generated default')
 			assertEqual(
-				pres.sections[1].title,
+				at(pres.sections, 1).title,
 				'Default-1',
 				'the second slide joined the existing default rather than making a Default-2'
 			)

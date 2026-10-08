@@ -1,6 +1,6 @@
 import TsPptx, { ShapeType, type ShadowProps } from '../../../dist/node.js'
 import JSZip from 'jszip'
-import { defineRegressionSuite, assert } from '../../helpers.ts'
+import { defineRegressionSuite, assert, at } from '../../helpers.ts'
 
 async function buildSlideXml(pres: TsPptx) {
 	const buf = await pres.toBytes()
@@ -55,11 +55,11 @@ defineRegressionSuite('Shared shadow options [legacy bug-05]', [
 			)
 			// And the values must be sane EMUs, not double-converted.
 			assert(
-				effects[0].indexOf('blurRad="76200"') !== -1,
+				at(effects, 0).indexOf('blurRad="76200"') !== -1,
 				'expected blurRad="76200" in shared effectLst; got: ' + effects[0]
 			)
 			assert(
-				effects[0].indexOf('blurRad="967740000"') === -1,
+				at(effects, 0).indexOf('blurRad="967740000"') === -1,
 				'unexpected double-converted blurRad in shared effectLst: ' + effects[0]
 			)
 		},
@@ -117,7 +117,7 @@ defineRegressionSuite('Shared shadow options [legacy bug-05]', [
 			// then compare.
 			const norm = (s: string) => s.replace(/\s+/g, ' ').replace(/ ?\/>/g, '/>').replace(/> </g, '><').trim()
 			const a = norm(matches[0])
-			const b = norm(matches[1])
+			const b = norm(at(matches, 1))
 			assert(
 				a === b,
 				'expected shape and image effectLst to carry the same EMU values when sharing one shadow object.\n' +

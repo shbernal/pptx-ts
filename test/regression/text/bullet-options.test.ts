@@ -1,5 +1,5 @@
 import type JSZip from 'jszip'
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
+import { defineRegressionSuite, build, readEntry, assert, at } from '../../helpers.ts'
 
 // Extract the first slide's <a:pPr ...>...</a:pPr> block (paragraph properties)
 async function getPPr(zip: JSZip) {
@@ -99,12 +99,12 @@ defineRegressionSuite('Bullet option serialization [legacy bug-19]', [
 			const paras = [...xml.matchAll(/<a:p>[\s\S]*?<\/a:p>/g)].map((m) => m[0])
 			assert(paras.length === 2, 'expected two paragraphs; got ' + paras.length + '\nxml: ' + xml)
 			assert(
-				/<a:pPr indent="0" marL="0"><a:buNone\/><\/a:pPr>/.test(paras[0]),
+				/<a:pPr indent="0" marL="0"><a:buNone\/><\/a:pPr>/.test(at(paras, 0)),
 				'an omitted bullet must keep emitting the explicit off; got: ' + paras[0]
 			)
-			assert(!/<a:pPr/.test(paras[1]), "bullet:'inherit' must emit no <a:pPr> at all here; got: " + paras[1])
-			assert(!/<a:buNone/.test(paras[1]), "bullet:'inherit' must not emit <a:buNone/>; got: " + paras[1])
-			assert(!/marL=|indent=/.test(paras[1]), "bullet:'inherit' must not flatten marL/indent; got: " + paras[1])
+			assert(!/<a:pPr/.test(at(paras, 1)), "bullet:'inherit' must emit no <a:pPr> at all here; got: " + paras[1])
+			assert(!/<a:buNone/.test(at(paras, 1)), "bullet:'inherit' must not emit <a:buNone/>; got: " + paras[1])
+			assert(!/marL=|indent=/.test(at(paras, 1)), "bullet:'inherit' must not flatten marL/indent; got: " + paras[1])
 		},
 	},
 	{

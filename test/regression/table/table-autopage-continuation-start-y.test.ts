@@ -13,7 +13,7 @@
  * The same three cases as `html-table-continuation-start-y.test.ts`, which covers `tableToSlides`.
  */
 import type { TableProps } from '../../../dist/node.js'
-import { assert, assertEqual, build, defineRegressionSuite, listEntries, readEntry } from '../../helpers.ts'
+import { assert, assertEqual, build, defineRegressionSuite, listEntries, readEntry, at } from '../../helpers.ts'
 
 const EMU_PER_INCH = 914400
 const ROWS = Array.from({ length: 90 }, (_unused, i) => [{ text: `Row ${i} column A` }, { text: `Row ${i} column B` }])
@@ -54,8 +54,8 @@ defineRegressionSuite('addTable continuation start-Y', [
 			assert(top.length > 1, `the fixture must page; got ${top.length} slide(s)`)
 			for (const [idx, { y }] of top.entries()) assertEqual(y, 0, `slide ${idx + 1} must start at 0; got ${y}`)
 			assert(
-				top[0].rows > margin[0].rows,
-				`a first page starting at 0 fits more rows than one at the margin; got ${top[0].rows} and ${margin[0].rows}`
+				at(top, 0).rows > at(margin, 0).rows,
+				`a first page starting at 0 fits more rows than one at the margin; got ${at(top, 0).rows} and ${at(margin, 0).rows}`
 			)
 		},
 	},

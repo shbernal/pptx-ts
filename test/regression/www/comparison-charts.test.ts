@@ -15,6 +15,7 @@ import {
 	type SnapshotInput,
 	type ValidityBar,
 } from '../../../www/comparison/comparison.ts'
+import { at, take } from '../../helpers.ts'
 
 /**
  * The comparison charts' arithmetic, against the committed snapshot.
@@ -50,12 +51,15 @@ describe('coverage matrix', () => {
 	})
 
 	it('titles a group it has no label for, and marks an outcome it does not know as unmeasured', () => {
-		const [group] = coverageGroups(
-			[{ id: 'probe', label: 'Probe', group: 'widgets', results: { 'ts-pptx': 'emitted', pptxgenjs: 'sideways' } }],
-			{}
+		const [group] = take(
+			coverageGroups(
+				[{ id: 'probe', label: 'Probe', group: 'widgets', results: { 'ts-pptx': 'emitted', pptxgenjs: 'sideways' } }],
+				{}
+			),
+			1
 		)
 		expect(group.label).toBe('Widgets')
-		expect(group.rows[0].outcomes.pptxgenjs).toBeNull()
+		expect(at(group.rows, 0).outcomes.pptxgenjs).toBeNull()
 		expect(group.emitted['ts-pptx']).toBe(1)
 	})
 })

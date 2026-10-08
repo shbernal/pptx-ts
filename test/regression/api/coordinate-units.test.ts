@@ -1,5 +1,5 @@
 import type { Coord } from '../../../dist/node.js'
-import { defineRegressionSuite, build, readEntry, assert, caught } from '../../helpers.ts'
+import { defineRegressionSuite, build, readEntry, assert, caught, at } from '../../helpers.ts'
 
 // Coordinates resolve through a single boundary (coordToEmu) with NO magnitude guessing:
 // a bare number is ALWAYS inches; other units use an explicit string suffix. This replaces the
@@ -18,7 +18,7 @@ async function offExtFor(opts: Box) {
 	const off = /<a:off x="(-?\d+)" y="(-?\d+)"\/>/.exec(sp)
 	const ext = /<a:ext cx="(-?\d+)" cy="(-?\d+)"\/>/.exec(sp)
 	assert(off && ext, 'expected <a:off>/<a:ext> in shape; got: ' + sp.slice(0, 300))
-	return { x: +off[1], y: +off[2], cx: +ext[1], cy: +ext[2] }
+	return { x: +at(off, 1), y: +at(off, 2), cx: +at(ext, 1), cy: +at(ext, 2) }
 }
 
 defineRegressionSuite('Coordinate units', [

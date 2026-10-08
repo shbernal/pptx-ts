@@ -1,7 +1,7 @@
 import { DOMParser, type Element, type Node } from '@xmldom/xmldom'
 import JSZip from 'jszip'
 import { ChartType, type CHART_NAME, type OptsChartData, type Slide } from '../../../dist/node.js'
-import { defineRegressionSuite, build, listEntries, assert, expectDefined, defined } from '../../helpers.ts'
+import { defineRegressionSuite, build, listEntries, assert, expectDefined, defined, at } from '../../helpers.ts'
 
 // Every formula a chart part carries names cells in its own embedded workbook, and the cache
 // beside it is a copy of what those cells hold. The workbook writer and the chart emitters work
@@ -17,7 +17,11 @@ const parser = new DOMParser()
 /** The children of `node` with the qualified name `name`. */
 const kids = (node: Node, name: string): Element[] =>
 	Array.from(node.childNodes).filter((child): child is Element => child.nodeName === name)
-const kid = (node: Node, name: string): Element => kids(node, name)[0]
+/** The first child of `node` named `name`, if it has one. */
+const optionalKid = (node: Node, name: string): Element | undefined => kids(node, name)[0]
+/** The first child of `node` named `name`, failing the test when there is none. */
+const kid = (node: Node, name: string): Element =>
+	defined(optionalKid(node, name), `no <${name}> under <${node.nodeName}>`)
 
 /** A cell reader over the embedded workbook: `(col, row) => string`. */
 type ReadCell = (col: number, row: number) => string
@@ -41,7 +45,7 @@ function columnIndex(name: string): number {
 function parseRef(f: string | null): Ref {
 	const m = /^Sheet1!\$([A-Z]+)\$(\d+)(?::\$([A-Z]+)\$(\d+))?$/.exec(f ?? '')
 	assert(m, `unparseable reference ${JSON.stringify(f)}`)
-	const c1 = columnIndex(m[1])
+	const c1 = columnIndex(at(m, 1))
 	const r1 = Number(m[2])
 	return { c1, r1, c2: m[3] ? columnIndex(m[3]) : c1, r2: m[4] ? Number(m[4]) : r1 }
 }
@@ -62,7 +66,10 @@ async function readWorkbook(zip: JSZip): Promise<ReadCell> {
 			continue
 		}
 		const idx = Number(v)
-		cells.set(c.getAttribute('r'), idx < strings.length ? strings[idx] : `<shared string ${idx} of ${strings.length}>`)
+		cells.set(
+			c.getAttribute('r'),
+			idx < strings.length ? at(strings, idx) : `<shared string ${idx} of ${strings.length}>`
+		)
 	}
 	return (col: number, row: number) => {
 		let name = ''
@@ -120,10 +127,13 @@ function compareLevel(
 function checkRef(problems: string[], node: Element, read: ReadCell): void {
 	const f = kid(node, 'c:f').textContent
 	const ref = parseRef(f)
-	const cache = kid(node, 'c:strCache') ?? kid(node, 'c:numCache')
-	const ptCount = Number(kid(cache, 'c:ptCount')?.getAttribute('val'))
+	const cache = defined(
+		optionalKid(node, 'c:strCache') ?? optionalKid(node, 'c:numCache'),
+		`${node.nodeName} has no cache`
+	)
+	const ptCount = Number(optionalKid(cache, 'c:ptCount')?.getAttribute('val'))
 	if (ref.c1 !== ref.c2 && ref.r1 !== ref.r2) problems.push(`${node.nodeName}: ${f} is two-dimensional`)
-	const pts = points(cache, 'c:pt', (pt) => kid(pt, 'c:v')?.textContent ?? '')
+	const pts = points(cache, 'c:pt', (pt) => optionalKid(pt, 'c:v')?.textContent ?? '')
 	compareLevel(problems, node.nodeName, f, rangeCells(ref), ptCount, pts, read)
 }
 
@@ -169,7 +179,7 @@ function checkClassic(xml: string, read: ReadCell): string[] {
 			kids(cache, 'c:lvl'),
 			() => ptCount,
 			'c:pt',
-			(pt) => kid(pt, 'c:v')?.textContent ?? '',
+			(pt) => optionalKid(pt, 'c:v')?.textContent ?? '',
 			read
 		)
 	}

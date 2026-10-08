@@ -1,5 +1,5 @@
 import TsPptx from '../../../dist/node.js'
-import { PNG_1X1_DATA_URI, defineRegressionSuite, assert } from '../../helpers.ts'
+import { PNG_1X1_DATA_URI, defineRegressionSuite, assert, at } from '../../helpers.ts'
 
 // Exports previously defaulted to STORE (and the typed-output `write()` branch
 // ignored `compression` entirely), producing packages several times larger than
@@ -13,7 +13,7 @@ function localHeaderMethods(buf: Uint8Array) {
 	const methods: number[] = []
 	for (let i = 0; i + 10 < bytes.length; i++) {
 		if (bytes[i] === 0x50 && bytes[i + 1] === 0x4b && bytes[i + 2] === 0x03 && bytes[i + 3] === 0x04) {
-			methods.push(bytes[i + 8] | (bytes[i + 9] << 8))
+			methods.push(at(bytes, i + 8) | (at(bytes, i + 9) << 8))
 		}
 	}
 	if (methods.length === 0) throw new Error('no ZIP local file headers found')
@@ -28,8 +28,8 @@ function localHeaderEntries(buf: Uint8Array) {
 	const entries: { name: string; method: number }[] = []
 	for (let i = 0; i + 30 < bytes.length; i++) {
 		if (bytes[i] === 0x50 && bytes[i + 1] === 0x4b && bytes[i + 2] === 0x03 && bytes[i + 3] === 0x04) {
-			const method = bytes[i + 8] | (bytes[i + 9] << 8)
-			const nameLen = bytes[i + 26] | (bytes[i + 27] << 8)
+			const method = at(bytes, i + 8) | (at(bytes, i + 9) << 8)
+			const nameLen = at(bytes, i + 26) | (at(bytes, i + 27) << 8)
 			const name = dec.decode(bytes.subarray(i + 30, i + 30 + nameLen))
 			entries.push({ name, method })
 		}

@@ -8,6 +8,7 @@ import {
 	readEntry,
 	assert,
 	defined,
+	at,
 } from '../../helpers.ts'
 
 // Regression: an autoPage table whose height (`h`) is too small to fit even a single line of text
@@ -192,7 +193,7 @@ defineRegressionSuite('Table autoPage tiny-height guard', [
 			// fit MORE rows than letting it start at the top margin. The fallback spelled this
 			// `autoPageSlideStartY || topMargin`, and `0` is falsy, so the two were identical.
 			assert(
-				stated[1] > unset[1],
+				at(stated, 1) > at(unset, 1),
 				`a stated start-Y of 0 must give a taller continuation page; got ${stated} against ${unset}`
 			)
 		},
@@ -219,7 +220,7 @@ defineRegressionSuite('Table autoPage tiny-height guard', [
 			// The other side of that `Math.min`: `y` below the margin does NOT pull continuation
 			// pages down with it, so they are taller than the first page rather than equal to it.
 			const counts = await pagedRowCounts({ y: 1.2 })
-			assert(counts[1] > counts[0], `continuation pages must reclaim the space below y; got ${counts}`)
+			assert(at(counts, 1) > at(counts, 0), `continuation pages must reclaim the space below y; got ${counts}`)
 		},
 	},
 ])

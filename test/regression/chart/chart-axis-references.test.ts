@@ -1,6 +1,6 @@
 import { DOMParser, type Element, type Node } from '@xmldom/xmldom'
 import { ChartType, type CHART_NAME, type ChartMulti, type ChartOpts, type OptsChartData } from '../../../dist/node.js'
-import { defineRegressionSuite, build, assert, captureDiagnostics, asError, defined } from '../../helpers.ts'
+import { defineRegressionSuite, build, assert, captureDiagnostics, asError, defined, at } from '../../helpers.ts'
 import { chartXml } from './chart-parts.ts'
 
 // Every `<c:axId>` a plot group carries has to name an axis the plot area emits, and the category
@@ -20,7 +20,7 @@ const LABELS = ['a', 'b', 'c']
 /** Every disagreement between the plot groups' axis references and the axes the part defines. */
 function axisProblems(xml: string): string[] {
 	const doc = parser.parseFromString(xml, 'text/xml')
-	const plotArea = doc.getElementsByTagName('c:plotArea')[0]
+	const plotArea = at(doc.getElementsByTagName('c:plotArea'), 0)
 	const children = Array.from(plotArea.childNodes).filter((node) => node.nodeType === 1)
 	const child = (node: Node, name: string) => Array.from(node.childNodes).find((c): c is Element => c.nodeName === name)
 	const val = (node: Node, name: string) => child(node, name)?.getAttribute('val')

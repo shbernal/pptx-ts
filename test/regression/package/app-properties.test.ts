@@ -30,7 +30,7 @@ defineRegressionSuite('app.xml extended properties', [
 				['LAYOUT_16x9', 'On-screen Show (16:9)'],
 				['LAYOUT_16x10', 'On-screen Show (16:10)'],
 				['LAYOUT_WIDE', 'Widescreen'],
-			]
+			] as const
 			for (const [layout, expected] of cases) {
 				const xml = await appXml((p) => {
 					p.layout = layout
@@ -51,7 +51,7 @@ defineRegressionSuite('app.xml extended properties', [
 				['LAYOUT_16x9', ' type="screen16x9"'],
 				['LAYOUT_16x10', ' type="screen16x10"'],
 				['LAYOUT_WIDE', ''],
-			]
+			] as const
 			for (const [layout, type] of cases) {
 				const { zip, pres } = await build((p) => {
 					p.layout = layout

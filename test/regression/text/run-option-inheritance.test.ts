@@ -1,5 +1,14 @@
 import type { TextProps, TextPropsOptions } from '../../../dist/node.js'
-import { defineRegressionSuite, build, readEntry, assert, assertEqual, captureDiagnostics } from '../../helpers.ts'
+import {
+	defineRegressionSuite,
+	build,
+	readEntry,
+	assert,
+	assertEqual,
+	captureDiagnostics,
+	at,
+	take,
+} from '../../helpers.ts'
 
 // What a run inherits from its shape, and what it does not.
 //
@@ -37,7 +46,7 @@ defineRegressionSuite('Run options inherited from the shape', [
 		name: "a run's explicit `bold: false` is not overwritten by the shape's `bold: true`",
 		fn: async () => {
 			const xml = await slideFor([{ text: 'a', options: { bold: false } }], { bold: true })
-			const [rPr] = runProps(xml)
+			const [rPr] = take(runProps(xml), 1)
 			assert(!/\bb="1"/.test(rPr), 'the run said not bold; got: ' + rPr)
 		},
 	},
@@ -45,7 +54,7 @@ defineRegressionSuite('Run options inherited from the shape', [
 		name: "a run's explicit `transparency: 0` is not overwritten by the shape's",
 		fn: async () => {
 			const xml = await slideFor([{ text: 'a', options: { color: 'FF0000', transparency: 0 } }], { transparency: 50 })
-			const [rPr] = runProps(xml)
+			const [rPr] = take(runProps(xml), 1)
 			assert(!rPr.includes('<a:alpha'), 'a fully opaque run emits no alpha; got: ' + rPr)
 		},
 	},
@@ -54,7 +63,7 @@ defineRegressionSuite('Run options inherited from the shape', [
 		fn: async () => {
 			// The inheritance itself is the point of the copy; only its guard changed.
 			const xml = await slideFor([{ text: 'a' }], { bold: true, color: '112233', fontSize: 24 })
-			const [rPr] = runProps(xml)
+			const [rPr] = take(runProps(xml), 1)
 			assert(/\bb="1"/.test(rPr) && /\bsz="2400"/.test(rPr), 'bold and size come from the shape; got: ' + rPr)
 			assert(rPr.includes('112233'), 'and so does the colour; got: ' + rPr)
 		},
@@ -63,7 +72,7 @@ defineRegressionSuite('Run options inherited from the shape', [
 		name: "one run's fontSize does not leak onto the runs after it",
 		fn: async () => {
 			const xml = await slideFor([{ text: 'big', options: { fontSize: 40 } }, { text: 'normal' }], {})
-			const [first, second] = runProps(xml)
+			const [first, second] = take(runProps(xml), 2)
 			assert(/\bsz="4000"/.test(first), 'the sized run keeps its size; got: ' + first)
 			assert(!/\bsz=/.test(second), 'the run after it states none; got: ' + second)
 		},
@@ -80,8 +89,8 @@ defineRegressionSuite('Run options inherited from the shape', [
 			)
 			const ends = endParaProps(xml)
 			assertEqual(ends.length, 2, `two paragraphs, two endParaRPr; got ${JSON.stringify(ends)}`)
-			assert(/\bsz="4000"/.test(ends[0]), 'the first closes on 40pt; got: ' + ends[0])
-			assert(/\bsz="1000"/.test(ends[1]), 'and the second on its own 10pt; got: ' + ends[1])
+			assert(/\bsz="4000"/.test(at(ends, 0)), 'the first closes on 40pt; got: ' + ends[0])
+			assert(/\bsz="1000"/.test(at(ends, 1)), 'and the second on its own 10pt; got: ' + ends[1])
 		},
 	},
 	{

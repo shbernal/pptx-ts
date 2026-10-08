@@ -11,6 +11,7 @@ import {
 	assertContentTypeOverride,
 	contentTypeDefaultExtensions,
 	contentTypeForExtension,
+	at,
 } from '../../helpers.ts'
 
 // 1x1 PNG (red pixel)
@@ -38,7 +39,7 @@ const AV_DATA = 'base64,AAAA'
 // both tables with different expected content types — that difference is the point.
 // The last row of each table is an extension the mapping does not list, which falls through
 // to `<mtype>/<extn>`.
-const VIDEO_CONTENT_TYPES = [
+const VIDEO_CONTENT_TYPES: [extn: string, contentType: string][] = [
 	['mp4', 'video/mp4'],
 	['m4v', 'video/mp4'],
 	['mov', 'video/quicktime'],
@@ -51,7 +52,7 @@ const VIDEO_CONTENT_TYPES = [
 	['3gp', 'video/3gp'],
 ]
 
-const AUDIO_CONTENT_TYPES = [
+const AUDIO_CONTENT_TYPES: [extn: string, contentType: string][] = [
 	['mp4', 'audio/mp4'],
 	['mpg', 'audio/mpeg'],
 	['mpeg', 'audio/mpeg'],
@@ -67,7 +68,7 @@ const AUDIO_CONTENT_TYPES = [
 ]
 
 /** One deck carrying one media item per row of `table`; returns its `[Content_Types].xml`. */
-async function buildMediaDeck(type: 'audio' | 'video', table: string[][]) {
+async function buildMediaDeck(type: 'audio' | 'video', table: [extn: string, contentType: string][]) {
 	const { zip } = await build((p) => {
 		const s = p.addSlide()
 		table.forEach(([extn], idx) => {
@@ -200,7 +201,7 @@ defineRegressionSuite('Content type defaults [legacy bug-16]', [
 			assertNoContentTypeDefault(xml, 'png')
 			const media = listEntries(zip).filter((name) => name.includes('media/'))
 			assertEqual(media.length, 1, 'expected exactly one media part')
-			assert(media[0].endsWith('.svg'), `expected an .svg media part; got ${media[0]}`)
+			assert(at(media, 0).endsWith('.svg'), `expected an .svg media part; got ${media[0]}`)
 		},
 	},
 	{

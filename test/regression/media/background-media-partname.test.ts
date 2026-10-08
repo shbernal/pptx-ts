@@ -6,6 +6,7 @@ import {
 	defineRegressionSuite,
 	assert,
 	assertEqual,
+	at,
 } from '../../helpers.ts'
 
 // A background image rel's `Target` is used twice: written into the `.rels` part, and (with
@@ -50,7 +51,7 @@ async function buildWithMasterTitle(title: string) {
 	// so find it by content rather than assuming a part name.
 	for (const relsPartName of entries.filter((name) => name.endsWith('.rels'))) {
 		const match = (await readEntry(zip, relsPartName)).match(/Target="([^"]*media[^"]*)"/)
-		if (match) return { entries, relsPartName, target: match[1] }
+		if (match) return { entries, relsPartName, target: at(match, 1) }
 	}
 	throw new Error('no media relationship found in any .rels part; entries: ' + entries.join(', '))
 }
@@ -58,7 +59,7 @@ async function buildWithMasterTitle(title: string) {
 // Each of these broke a different way before the fix: `%` made the target undecodable,
 // `?`/`#` truncated the resolved path at the query/fragment, `/` pushed the media into a
 // subdirectory. The rest are shapes worth pinning even though they always worked.
-const HOSTILE_TITLES = [
+const HOSTILE_TITLES: [label: string, title: string][] = [
 	['percent (invalid escape)', '100%done'],
 	['question mark (query)', 'what?now'],
 	['hash (fragment)', 'tag#1'],
@@ -96,7 +97,7 @@ defineRegressionSuite('background media part name character set', [
 				const { entries } = await buildWithMasterTitle(title)
 				const media = entries.filter((name) => name.includes('media/'))
 				assertEqual(media.length, 1, `expected exactly one media part for title ${JSON.stringify(title)}`)
-				const leaf = media[0].slice('ppt/media/'.length)
+				const leaf = at(media, 0).slice('ppt/media/'.length)
 				assert(
 					/^[A-Za-z0-9._-]+$/.test(leaf),
 					`media part name ${JSON.stringify(leaf)} (from title ${JSON.stringify(title)}) ` +

@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert, assertEqual } from '../../helpers.ts'
+import { defineRegressionSuite, build, readEntry, assert, assertEqual, at } from '../../helpers.ts'
 
 // A table cell's hyperlink reaches the cell's runs through the run emitter, which copies the run
 // options a cell states (its link among them) onto each run that does not state its own. The
@@ -31,11 +31,11 @@ defineRegressionSuite('Table cell hyperlinks over runs', [
 				p.addSlide().addTable(richCellRows(), { x: 1, y: 1, w: 4 })
 			})
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			const runs = [...xml.matchAll(/<a:r>([\s\S]*?)<\/a:r>/g)].map((match) => match[1])
+			const runs = [...xml.matchAll(/<a:r>([\s\S]*?)<\/a:r>/g)].map((match) => at(match, 1))
 			assertEqual(runs.length, 2, 'two runs')
-			assertEqual(/<a:srgbClr val="(\w+)"/.exec(runs[0])?.[1], 'FF0000', 'the first run keeps its own colour')
-			assert(/ b="1"/.test(runs[0]), 'and its own bold')
-			assertEqual(/<a:srgbClr val="(\w+)"/.exec(runs[1])?.[1], '0000FF', 'the second run keeps its own colour')
+			assertEqual(/<a:srgbClr val="(\w+)"/.exec(at(runs, 0))?.[1], 'FF0000', 'the first run keeps its own colour')
+			assert(/ b="1"/.test(at(runs, 0)), 'and its own bold')
+			assertEqual(/<a:srgbClr val="(\w+)"/.exec(at(runs, 1))?.[1], '0000FF', 'the second run keeps its own colour')
 			for (const [index, run] of runs.entries()) {
 				assert(run.includes('<a:hlinkClick r:id="rId'), `run ${index} carries the cell’s link`)
 			}
@@ -47,7 +47,7 @@ defineRegressionSuite('Table cell hyperlinks over runs', [
 		name: 'adding the table leaves the caller’s runs and cell options as they were',
 		fn: async () => {
 			const rows = richCellRows()
-			const cell = rows[0][0]
+			const cell = at(at(rows, 0), 0)
 			const runsBefore = JSON.stringify(cell.text)
 			const cellKeysBefore = Object.keys(cell.options).join()
 			await build((p) => {

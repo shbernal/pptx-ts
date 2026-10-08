@@ -7,6 +7,7 @@ import {
 	assertEqual,
 	assertIncludes,
 	assertNotIncludes,
+	at,
 } from '../../helpers.ts'
 import { chartXml } from './chart-parts.ts'
 
@@ -52,7 +53,7 @@ function serShapeProps(xml: string): string {
 	return block[0].slice(block[0].indexOf('<c:spPr>'))
 }
 
-const BUBBLE = [XY[0], { ...XY[1], sizes: [10, 20, 30] }]
+const BUBBLE = [at(XY, 0), { ...at(XY, 1), sizes: [10, 20, 30] }]
 
 defineRegressionSuite('Shared chart fragments', [
 	{
@@ -125,7 +126,7 @@ defineRegressionSuite('Shared chart fragments', [
 			assertIncludes(valBlock(scatter, 'c:xVal'), '<c:numRef><c:f>Sheet1!$A$2:$A$4</c:f>', 'scatter x-block')
 			assertIncludes(valBlock(scatter, 'c:yVal'), '<c:numRef><c:f>Sheet1!$B$2:$B$4</c:f>', 'scatter y-block')
 
-			const bubble = await chartFor(ChartType.bubble, [XY[0], { ...XY[1], sizes: [10, 20, 30] }])
+			const bubble = await chartFor(ChartType.bubble, [at(XY, 0), { ...XY[1], sizes: [10, 20, 30] }])
 			assertIncludes(valBlock(bubble, 'c:xVal'), '<c:numRef><c:f>Sheet1!$A$2:$A$4</c:f>', 'bubble x-block')
 			assertIncludes(
 				valBlock(bubble, 'c:yVal'),

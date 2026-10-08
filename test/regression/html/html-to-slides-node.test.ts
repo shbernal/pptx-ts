@@ -11,6 +11,7 @@ import {
 	defineRegressionSuite,
 	asError,
 	type ThrownError,
+	at,
 } from '../../helpers.ts'
 
 // Acceptance: the `ts-pptx/html` subpath converts an HTML table to slides outside a browser.
@@ -140,7 +141,7 @@ defineRegressionSuite('HTML table to slides on Node (happy-dom)', [
 			})
 			const cols = gridColWidths(await readEntry(zip, 'ppt/slides/slide1.xml'))
 			assertEqual(cols.length, 2, 'column count')
-			const ratio = cols[1] / cols[0]
+			const ratio = at(cols, 1) / at(cols, 0)
 			assert(Math.abs(ratio - 3) < 0.02, `expected a 1:3 split from the CSS widths; got ratio ${ratio}`)
 		},
 	},
@@ -170,7 +171,7 @@ defineRegressionSuite('HTML table to slides on Node (happy-dom)', [
 			})
 			const cols = gridColWidths(await readEntry(zip, 'ppt/slides/slide1.xml'))
 			assertEqual(cols[0], 8 * ONE_IN_EMU, 'the floor must raise the equal-split width')
-			assert(cols[1] < cols[0], `unfloored column should stay at its equal split; got ${cols[1]}`)
+			assert(at(cols, 1) < at(cols, 0), `unfloored column should stay at its equal split; got ${cols[1]}`)
 		},
 	},
 	{
@@ -227,7 +228,7 @@ defineRegressionSuite('HTML table to slides on Node (happy-dom)', [
 			const cols = gridColWidths(await readEntry(zip, 'ppt/slides/slide1.xml'))
 			assertEqual(cols[0], 4 * ONE_IN_EMU, 'the 8in floor divides across the 2 spanned columns')
 			assertEqual(cols[1], 4 * ONE_IN_EMU, 'both halves get the same floor')
-			assert(cols[2] < 4 * ONE_IN_EMU, `the unspanned column must not inherit the floor; got ${cols[2]}`)
+			assert(at(cols, 2) < 4 * ONE_IN_EMU, `the unspanned column must not inherit the floor; got ${cols[2]}`)
 		},
 	},
 	{

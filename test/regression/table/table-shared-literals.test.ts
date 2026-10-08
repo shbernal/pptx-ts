@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert, assertEqual } from '../../helpers.ts'
+import { defineRegressionSuite, build, readEntry, assert, assertEqual, take } from '../../helpers.ts'
 import { TableStyle, type StrokeProps } from '../../../dist/node.js'
 
 // The shape of every bug here: build the same literal into TWO objects and the second behaves
@@ -22,7 +22,7 @@ defineRegressionSuite('Table literals the caller still owns', [
 				s.addTable(rows, { x: 0.5, y: 0.5, w: 6, color: 'FF0000', bold: true })
 				s.addTable(rows, { x: 0.5, y: 3, w: 6, color: '0000FF' })
 			})
-			const [first, second] = tables(await readEntry(zip, SLIDE_XML))
+			const [first, second] = take(tables(await readEntry(zip, SLIDE_XML)), 2)
 			assert(first.includes('<a:srgbClr val="FF0000"/>'), `the first table is red; got ${first}`)
 			assert(second.includes('<a:srgbClr val="0000FF"/>'), `the second table is blue; got ${second}`)
 			assert(!second.includes('<a:srgbClr val="FF0000"/>'), `and carries none of the first's red; got ${second}`)
@@ -50,7 +50,7 @@ defineRegressionSuite('Table literals the caller still owns', [
 				s.addTable([[shared]], { x: 0.5, y: 0.5, w: 4, fontSize: 30 })
 				s.addTable([[shared]], { x: 0.5, y: 3, w: 4 })
 			})
-			const [first, second] = tables(await readEntry(zip, SLIDE_XML))
+			const [first, second] = take(tables(await readEntry(zip, SLIDE_XML)), 2)
 			assert(/sz="3000"/.test(first), `the first table sizes at 30pt; got ${first}`)
 			assert(!/sz="3000"/.test(second), `the second inherits nothing from it; got ${second}`)
 			assertEqual(JSON.stringify(shared.options), JSON.stringify({ bold: true }), 'the shared cell options')
@@ -86,11 +86,11 @@ defineRegressionSuite('Table literals the caller still owns', [
 					tableStyle: TableStyle.MEDIUM_STYLE_2_ACCENT_1,
 				})
 			})
-			const [tableLevel, cellLevel] = tables(await readEntry(zip, SLIDE_XML))
+			const [tableLevel, cellLevel] = take(tables(await readEntry(zip, SLIDE_XML)), 2)
 			for (const [label, xml] of [
 				['table-level', tableLevel],
 				['cell-level', cellLevel],
-			]) {
+			] as const) {
 				assert(xml.includes('<a:lnT'), `${label}: the stated top edge is drawn`)
 				assert(xml.includes('<a:lnB'), `${label}: the stated bottom edge is drawn`)
 				assert(!xml.includes('<a:lnL'), `${label}: the hole leaves the left edge to the style; got ${xml}`)

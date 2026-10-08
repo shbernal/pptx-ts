@@ -1,6 +1,6 @@
 import { Window } from 'happy-dom'
 import { describe, expect, it } from 'vitest'
-import { defined } from '../../helpers.ts'
+import { defined, at, take } from '../../helpers.ts'
 import { counted, slideList, splitDeck, summarizeNotes, type FidelityRow } from '../../../www/demos/deck-preview.ts'
 
 /**
@@ -30,8 +30,8 @@ describe('summarizeNotes', () => {
 		const rows = summarizeNotes([note(2, 'text.field'), note(4, 'text.field'), note(5, 'text.field')])
 
 		expect(rows).toHaveLength(1)
-		expect(rows[0].construct).toBe('text.field')
-		expect(rows[0].slides).toEqual([2, 4, 5])
+		expect(at(rows, 0).construct).toBe('text.field')
+		expect(at(rows, 0).slides).toEqual([2, 4, 5])
 	})
 
 	it('keeps constructs apart when they differ in disposition or cause', () => {
@@ -54,7 +54,7 @@ describe('summarizeNotes', () => {
 	it('does not repeat a slide that raised the same note twice', () => {
 		const rows = summarizeNotes([note(3, 'shape.placeholder'), note(3, 'shape.placeholder')])
 
-		expect(rows[0].slides).toEqual([3])
+		expect(at(rows, 0).slides).toEqual([3])
 	})
 
 	it('returns nothing for a deck that declared nothing', () => {
@@ -133,8 +133,8 @@ describe('splitDeck', () => {
 		expect(slides.map((slide) => slide.number)).toEqual([1, 2])
 		// The declared differences sit in the same aside, as a list; only the paragraphs
 		// are notes.
-		expect(slides[0].notes).toEqual(['First thought.', 'Second thought.'])
-		expect(slides[1].notes).toEqual([])
+		expect(at(slides, 0).notes).toEqual(['First thought.', 'Second thought.'])
+		expect(at(slides, 1).notes).toEqual([])
 		expect(styles).toContain('.pxh-text')
 		expect(aspectRatio).toBeCloseTo(16 / 9, 3)
 	})
@@ -144,7 +144,7 @@ describe('splitDeck', () => {
 		// group's children twice. That is fixed in 0.2.1 and the correction is gone, so
 		// what the renderer drew is what arrives -- including a table's, which was never
 		// the bug and would have broken had the fix been written structurally.
-		const [first] = splitDeck(renderedDeck()).slides
+		const [first] = take(splitDeck(renderedDeck()).slides, 1)
 		const doc = new Window().document
 		doc.body.innerHTML = first.markup
 
@@ -153,7 +153,7 @@ describe('splitDeck', () => {
 	})
 
 	it('turns editing off and inlines pictures, and rewrites nothing else', () => {
-		const [first] = splitDeck(renderedDeck()).slides
+		const [first] = take(splitDeck(renderedDeck()).slides, 1)
 		const doc = new Window().document
 		doc.body.innerHTML = first.markup
 

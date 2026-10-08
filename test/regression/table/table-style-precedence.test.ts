@@ -7,6 +7,8 @@ import {
 	assert,
 	assertEqual,
 	expectDefined,
+	at,
+	take,
 } from '../../helpers.ts'
 import { TableStyle, type TableProps, type TableRow } from '../../../dist/node.js'
 
@@ -139,7 +141,7 @@ defineRegressionSuite('Table styling: built-in styles and the direct-formatting 
 			const { slide } = await tableParts({ hasHeader: false, columns: [undefined, { fill: 'EAF1F8' }] }, [
 				[{ text: 'A' }, { text: 'B' }],
 			])
-			const [first, second] = allTcPr(slide)
+			const [first, second] = take(allTcPr(slide), 2)
 			assert(!first.includes('EAF1F8'), 'column 0 is untouched; got: ' + first)
 			assert(second.includes('EAF1F8'), 'column 1 takes its fill; got: ' + second)
 		},
@@ -151,10 +153,13 @@ defineRegressionSuite('Table styling: built-in styles and the direct-formatting 
 			const { slide } = await tableParts({ color: '112233', headerRow: { color: 'AABBCC' } }, [
 				[{ text: 'A', options: { color: '445566' } }, { text: 'B' }],
 			])
-			const [first, second] = allTcPr(slide).map((_block, idx) => {
-				const runs = slide.match(/<a:rPr[^>]*(?:\/>|>[\s\S]*?<\/a:rPr>)/g) || []
-				return runs[idx]
-			})
+			const [first, second] = take(
+				allTcPr(slide).map((_block, idx) => {
+					const runs = slide.match(/<a:rPr[^>]*(?:\/>|>[\s\S]*?<\/a:rPr>)/g) || []
+					return at(runs, idx)
+				}),
+				2
+			)
 			assert(first.includes('445566'), "the cell's own colour wins; got: " + first)
 			assert(second.includes('AABBCC'), 'and headerRow carries the rest of the row; got: ' + second)
 		},
@@ -223,7 +228,7 @@ defineRegressionSuite('Table styling: built-in styles and the direct-formatting 
 					[{ text: 'C' }, { text: 'D' }],
 				]
 			)
-			const topLeft = allTcPr(slide)[0]
+			const topLeft = at(allTcPr(slide), 0)
 			assertEqual((topLeft.match(/1A2B3C/g) || []).length, 2, 'the two perimeter sides are the outer colour')
 			assert(/<a:lnR w="0"/.test(topLeft) && /<a:lnB w="0"/.test(topLeft), 'interior sides stay suppressed')
 		},
@@ -250,7 +255,7 @@ defineRegressionSuite('Table styling: built-in styles and the direct-formatting 
 					p.addSlide().addTable([[{ text: 'H1' }]], { ...AT, styleDrivenCells: true })
 				})
 			)
-			const tcPr = allTcPr(await readEntry(result.zip, 'ppt/slides/slide1.xml'))[0]
+			const tcPr = at(allTcPr(await readEntry(result.zip, 'ppt/slides/slide1.xml')), 0)
 			assertEqual((tcPr.match(/<a:ln[LRTB] w="0"/g) || []).length, 4, 'the defaults are untouched')
 			assert(!codes.some((code) => code.startsWith('table-style/')), 'no stale code fires; got: ' + codes.join(','))
 		},

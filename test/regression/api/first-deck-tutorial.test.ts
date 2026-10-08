@@ -7,6 +7,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 import { Presentation } from '../../../dist/read.js'
 import { validateBuf, validatorInstalled } from '../../validator.ts'
+import { at } from '../../helpers.ts'
 
 /**
  * The complete program on "Your first deck" runs, and writes a deck that opens.
@@ -25,11 +26,11 @@ const MARKER = '<!-- first-deck:program -->'
 /** The source inside the `ts` fence that follows the marker comment. */
 function programFromPage() {
 	const markdown = readFileSync(PAGE, 'utf8')
-	const at = markdown.indexOf(MARKER)
-	if (at === -1) throw new Error(`${PAGE} has no ${MARKER} comment`)
-	const fence = /^```ts\r?\n([\s\S]*?)^```/m.exec(markdown.slice(at + MARKER.length))
+	const marker = markdown.indexOf(MARKER)
+	if (marker === -1) throw new Error(`${PAGE} has no ${MARKER} comment`)
+	const fence = /^```ts\r?\n([\s\S]*?)^```/m.exec(markdown.slice(marker + MARKER.length))
 	if (!fence) throw new Error(`no ts fence follows ${MARKER} in ${PAGE}`)
-	return fence[1]
+	return at(fence, 1)
 }
 
 let dir = ''

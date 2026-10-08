@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import type JSZip from 'jszip'
 
-import { PNG_1X1, defineRegressionSuite, build, readEntry, listEntries, assert, defined } from '../../helpers.ts'
+import { PNG_1X1, defineRegressionSuite, build, readEntry, listEntries, assert, defined, at } from '../../helpers.ts'
 
 const SVG_MARKUP =
 	'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" data-marker="svg-source"><circle cx="12" cy="12" r="10"/></svg>'
@@ -102,7 +102,7 @@ defineRegressionSuite('Image svg source', [
 			// The picture must still point at the SVG's own rel, not at the hyperlink's.
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 			const svgRid = defined(/<asvg:svgBlip[^>]*r:embed="([^"]+)"/.exec(xml), 'an asvg:svgBlip')[1]
-			const svgTarget = defined(new RegExp(`Id="${svgRid}"[^>]*Target="([^"]+)"`).exec(rels), `a rel ${svgRid}`)[1]
+			const svgTarget = at(defined(new RegExp(`Id="${svgRid}"[^>]*Target="([^"]+)"`).exec(rels), `a rel ${svgRid}`), 1)
 			assert(svgTarget.endsWith('.svg'), `svgBlip ${svgRid} must resolve to the svg part; got ${svgTarget}`)
 
 			const hlinkRid = defined(/<a:hlinkClick[^>]*r:id="([^"]+)"/.exec(xml), 'an a:hlinkClick')[1]

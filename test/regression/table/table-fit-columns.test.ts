@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
+import { defineRegressionSuite, build, readEntry, assert, at } from '../../helpers.ts'
 
 // Acceptance for `fitColumns: 'shrink'`: an explicit `colW` array (or a `w`)
 // wider than the space between the table's `x` and the right slide margin is scaled
@@ -50,7 +50,7 @@ defineRegressionSuite('Table fitColumns shrink-to-fit [upstream-issue-1451]', [
 				'expected columns to sum to ~9in; got ' + sumEmu(cols) / EMU
 			)
 			assert(
-				cols.every((w) => Math.abs(w - cols[0]) <= 1),
+				cols.every((w) => Math.abs(w - at(cols, 0)) <= 1),
 				'expected equal columns to stay equal; got ' + cols.join(',')
 			)
 		},
@@ -70,8 +70,8 @@ defineRegressionSuite('Table fitColumns shrink-to-fit [upstream-issue-1451]', [
 			const cols = gridColsEmu(xml)
 			assert(Math.abs(sumEmu(cols) - 9 * EMU) <= cols.length, 'expected sum ~9in; got ' + sumEmu(cols) / EMU)
 			// First column stays 3x each of the others (6:2:2 ratio preserved).
-			assert(Math.abs(cols[0] - 3 * cols[1]) <= 3, 'expected 3:1 ratio preserved; got ' + cols.join(','))
-			assert(Math.abs(cols[1] - cols[2]) <= 1, 'expected last two columns equal; got ' + cols.join(','))
+			assert(Math.abs(at(cols, 0) - 3 * at(cols, 1)) <= 3, 'expected 3:1 ratio preserved; got ' + cols.join(','))
+			assert(Math.abs(at(cols, 1) - at(cols, 2)) <= 1, 'expected last two columns equal; got ' + cols.join(','))
 		},
 	},
 	{

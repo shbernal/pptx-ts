@@ -8,6 +8,7 @@ import {
 	assertIncludes,
 	caught,
 	defined,
+	at,
 } from '../../helpers.ts'
 import type JSZip from 'jszip'
 import type { TableCellProps, TsPptx } from '../../../dist/node.js'
@@ -46,9 +47,9 @@ function slideNumbers(zip: JSZip) {
 /** `[{ id, type, target }]` for one slide's relationship part, in document order. */
 function relationships(xml: string) {
 	return [...xml.matchAll(/<Relationship Id="([^"]+)" Type="([^"]+)" Target="([^"]+)"/g)].map((m) => ({
-		id: m[1],
-		type: m[2].split('/').pop(),
-		target: m[3],
+		id: at(m, 1),
+		type: at(m, 2).split('/').pop(),
+		target: at(m, 3),
 	}))
 }
 
@@ -100,10 +101,10 @@ defineRegressionSuite('Hyperlink relationship registration', [
 			const rels = relationships(await readEntry(zip, relsPath(1)))
 			const hyper = rels.filter((r) => r.type === 'hyperlink')
 			assertEqual(hyper.length, 1, 'one cell hyperlink should mint exactly one rel')
-			assertEqual(hyper[0].target, 'https://cell.example.com', 'the rel should carry the cell URL')
+			assertEqual(at(hyper, 0).target, 'https://cell.example.com', 'the rel should carry the cell URL')
 
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assertIncludes(xml, `<a:hlinkClick r:id="${hyper[0].id}"`, 'the cell run')
+			assertIncludes(xml, `<a:hlinkClick r:id="${at(hyper, 0).id}"`, 'the cell run')
 		},
 	},
 	{
@@ -437,7 +438,7 @@ defineRegressionSuite('Hyperlink relationship registration', [
 				for (const rel of relationships(await readEntry(zip, name)))
 					if (rel.type === 'slide') targets.push({ name, target: rel.target })
 			assertEqual(targets.length, 1, `one slide link from a layout: ${JSON.stringify(targets)}`)
-			assertEqual(targets[0].target, '../slides/slide2.xml', 'the target traverses out of ppt/slideLayouts/')
+			assertEqual(at(targets, 0).target, '../slides/slide2.xml', 'the target traverses out of ppt/slideLayouts/')
 			assert(listEntries(zip).includes('ppt/slides/slide2.xml'), 'and it names a part the package actually has')
 
 			// A slide names a sibling slide bare, which is what PowerPoint writes. Same rule, different

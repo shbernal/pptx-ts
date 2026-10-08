@@ -15,7 +15,7 @@
  */
 import { expect } from 'vitest'
 import type { TableRow } from '../../../dist/node.js'
-import { assert, assertEqual, build, defineRegressionSuite, readEntry } from '../../helpers.ts'
+import { assert, assertEqual, build, defineRegressionSuite, readEntry, at } from '../../helpers.ts'
 
 const POS = { x: 0.5, y: 0.5, w: 9 }
 
@@ -70,7 +70,7 @@ defineRegressionSuite('Table input immutability', [
 				p.addSlide().addTable(rows, { ...POS, autoPage: true, autoPageCharWeight: 0.6 })
 			})
 			expect(rows).toEqual(before)
-			assertEqual(rows[0][0].options.autoPageCharWeight, 0.2, 'the cell`s own weight must survive by value')
+			assertEqual(at(at(rows, 0), 0).options.autoPageCharWeight, 0.2, 'the cell`s own weight must survive by value')
 		},
 	},
 ])

@@ -31,6 +31,7 @@ import {
 	MediaError,
 	type FontMetrics,
 } from '../../../dist/measure.js'
+import { at } from '../../helpers.ts'
 
 const fixture = (name: string) => fileURLToPath(new URL(`../../read/fixtures/fonts/${name}`, import.meta.url))
 const REG_BYTES = new Uint8Array(readFileSync(fixture('Silkscreen-Regular.ttf')))
@@ -84,7 +85,7 @@ function buildCollection(fonts: Uint8Array[]): Uint8Array {
 	const blocks: { offset: number; bytes: Uint8Array }[] = []
 	const placements = parsed.map((p, f) =>
 		p.tables.map((t) => {
-			const bytes = fonts[f].subarray(t.offset, t.offset + t.length)
+			const bytes = at(fonts, f).subarray(t.offset, t.offset + t.length)
 			const key = `${t.tag}\u0000${Buffer.from(bytes).toString('base64')}`
 			let offset = placed.get(key)
 			if (offset === undefined) {
@@ -109,7 +110,7 @@ function buildCollection(fonts: Uint8Array[]): Uint8Array {
 		dv.setUint32(12 + f * 4, dirCursor)
 		const entrySelector = Math.floor(Math.log2(tables.length))
 		const searchRange = RECORD_SIZE * 2 ** entrySelector
-		dv.setUint32(dirCursor, parsed[f].sfntVersion)
+		dv.setUint32(dirCursor, at(parsed, f).sfntVersion)
 		dv.setUint16(dirCursor + 4, tables.length)
 		dv.setUint16(dirCursor + 6, searchRange)
 		dv.setUint16(dirCursor + 8, entrySelector)
@@ -143,11 +144,11 @@ describe('a synthesized collection: the unwrapped member equals the standalone f
 	test('listFontFaces reads each member name out of its own name table', () => {
 		const faces = listFontFaces(TTC)
 		expect(faces.map((f) => f.index)).toEqual([0, 1])
-		expect(faces[0].family).toBe('Silkscreen')
-		expect(faces[0].subfamily).toBe('Regular')
-		expect(faces[0].postScriptName).toBe('Silkscreen-Regular')
-		expect(faces[1].subfamily).toBe('Bold')
-		expect(faces[1].postScriptName).toBe('Silkscreen-Bold')
+		expect(at(faces, 0).family).toBe('Silkscreen')
+		expect(at(faces, 0).subfamily).toBe('Regular')
+		expect(at(faces, 0).postScriptName).toBe('Silkscreen-Regular')
+		expect(at(faces, 1).subfamily).toBe('Bold')
+		expect(at(faces, 1).postScriptName).toBe('Silkscreen-Bold')
 	})
 
 	test('a plain TTF is a one-entry list, so a caller never branches on the container', () => {
@@ -363,10 +364,10 @@ describe('a malformed collection is refused, not read into garbage', () => {
 		// other names, and stays selectable by the PostScript name.
 		const FAMILY = 1
 		const bytes = corrupt((dv, raw) => dv.setUint16(nameRecord(raw, FAMILY) + 10, 0xffff))
-		const face = listFontFaces(bytes)[0]
+		const face = at(listFontFaces(bytes), 0)
 		expect(face.family).toBeUndefined()
 		expect(face.postScriptName).toBe('Silkscreen-Regular')
-		expect(listFontFaces(TTC)[0].family).toBe('Silkscreen') // the field is there to lose
+		expect(at(listFontFaces(TTC), 0).family).toBe('Silkscreen') // the field is there to lose
 	})
 
 	test('a record on an unrecognized platform is still read', async () => {
@@ -375,7 +376,7 @@ describe('a malformed collection is refused, not read into garbage', () => {
 		// from. Ignoring an unknown platform outright would silently unname the face.
 		const FAMILY = 1
 		const bytes = corrupt((dv, raw) => dv.setUint16(nameRecord(raw, FAMILY), 2))
-		expect(listFontFaces(bytes)[0].family).toBe('Silkscreen')
+		expect(at(listFontFaces(bytes), 0).family).toBe('Silkscreen')
 		expect((await parseFontMetrics(bytes, { font: 'Silkscreen' })).unitsPerEm).toBe(1000)
 	})
 

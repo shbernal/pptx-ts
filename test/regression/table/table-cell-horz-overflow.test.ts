@@ -6,6 +6,7 @@ import {
 	assert,
 	assertEqual,
 	defined,
+	at,
 } from '../../helpers.ts'
 
 // `TableCellProps.horzOverflow` -> `a:tcPr/@horzOverflow`.
@@ -48,8 +49,8 @@ defineRegressionSuite('Table cell horzOverflow', [
 
 			const tags = tcPrTags(await readEntry(result.zip, 'ppt/slides/slide1.xml'))
 			assertEqual(tags.length, 2, 'two cells -> two a:tcPr')
-			assert(tags[0].includes('horzOverflow="overflow"'), 'authored cell carries the attribute; got: ' + tags[0])
-			assert(!tags[1].includes('horzOverflow'), 'the sibling cell stays untouched; got: ' + tags[1])
+			assert(at(tags, 0).includes('horzOverflow="overflow"'), 'authored cell carries the attribute; got: ' + tags[0])
+			assert(!at(tags, 1).includes('horzOverflow'), 'the sibling cell stays untouched; got: ' + tags[1])
 		},
 	},
 	{

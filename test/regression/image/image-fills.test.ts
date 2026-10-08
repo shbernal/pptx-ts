@@ -15,6 +15,7 @@ import {
 	assertXmlOrder,
 	defined,
 	assertRejects,
+	at,
 } from '../../helpers.ts'
 
 /** Read a slide's XML straight out of a PowerPoint-authored fixture package. */
@@ -279,14 +280,14 @@ defineRegressionSuite('Table cell image (blip) fills', [
 			assert(cells.length === 8, `expected 8 cells in the oracle; got ${cells.length}`)
 
 			// A1: picture fill, no borders but the style's lnB.
-			assertIncludes(cells[0], '<a:blipFill>', 'A1 carries a blipFill')
-			assertXmlOrder(cells[0], '<a:lnB', '<a:blipFill', 'oracle A1 tcPr')
+			assertIncludes(at(cells, 0), '<a:blipFill>', 'A1 carries a blipFill')
+			assertXmlOrder(at(cells, 0), '<a:lnB', '<a:blipFill', 'oracle A1 tcPr')
 			// B1 (index 2): picture fill AND all four explicit borders — the child-order case.
 			// `CT_TableCellProperties` puts `EG_FillProperties` at order 7, after lnL/lnR/lnT/lnB.
-			assertXmlOrder(cells[2], '<a:lnL', '<a:lnR', 'oracle B1 tcPr')
-			assertXmlOrder(cells[2], '<a:lnB', '<a:blipFill', 'oracle B1 tcPr')
+			assertXmlOrder(at(cells, 2), '<a:lnL', '<a:lnR', 'oracle B1 tcPr')
+			assertXmlOrder(at(cells, 2), '<a:lnB', '<a:blipFill', 'oracle B1 tcPr')
 			// Merged row: the origin (gridSpan="2") holds the fill; the covered cell is bare.
-			assertIncludes(cells[4], '<a:blipFill>', 'merged origin carries the fill')
+			assertIncludes(at(cells, 4), '<a:blipFill>', 'merged origin carries the fill')
 			assert(cells[5] === '<a:tcPr/>', `covered cell is bare in the oracle; got ${cells[5]}`)
 			// All four picture cells share ONE relationship — PowerPoint dedupes the source.
 			const embeds = [...oracle.matchAll(/<a:blip r:embed="(rId\d+)"/g)].map((m) => m[1])
@@ -312,13 +313,13 @@ defineRegressionSuite('Table cell image (blip) fills', [
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 			const cells = tcPrBlocks(xml)
 
-			const m = /<a:blip r:embed="(rId\d+)"/.exec(cells[0])
+			const m = /<a:blip r:embed="(rId\d+)"/.exec(at(cells, 0))
 			assert(m, `expected a blipFill referencing a media rel; got: ${cells[0]}`)
-			assertIncludes(cells[0], '<a:stretch><a:fillRect/></a:stretch>', 'stretched cell fill')
+			assertIncludes(at(cells, 0), '<a:stretch><a:fillRect/></a:stretch>', 'stretched cell fill')
 			// Same child order the oracle shows, and the order CT_TableCellProperties requires.
-			assertXmlOrder(cells[0], '<a:lnB', '<a:blipFill', 'cell tcPr')
+			assertXmlOrder(at(cells, 0), '<a:lnB', '<a:blipFill', 'cell tcPr')
 			// The sibling solid fill is untouched.
-			assertIncludes(cells[1], '<a:solidFill><a:srgbClr val="FF0000"/></a:solidFill>', 'solid cell fill')
+			assertIncludes(at(cells, 1), '<a:solidFill><a:srgbClr val="FF0000"/></a:solidFill>', 'solid cell fill')
 
 			const rels = await readEntry(zip, 'ppt/slides/_rels/slide1.xml.rels')
 			assertIncludes(rels, `Id="${m[1]}"`, 'media relationship id present')
@@ -330,7 +331,7 @@ defineRegressionSuite('Table cell image (blip) fills', [
 			// inside `a:tcPr` for its *tiled* cell (D1 in the fixture), so the form is authored by
 			// PowerPoint itself. Changing the shared `genXmlImageFill` would move bytes for every
 			// shape and text-box fill for no behavioural gain.
-			assertIncludes(cells[0], '<a:blipFill dpi="0" rotWithShape="1">', 'shared emitter spelling')
+			assertIncludes(at(cells, 0), '<a:blipFill dpi="0" rotWithShape="1">', 'shared emitter spelling')
 			assertIncludes(squash(await fixtureSlideXml('table-cell-image-fill')), '<a:blipFill dpi="0" rotWithShape="1">')
 		},
 	},

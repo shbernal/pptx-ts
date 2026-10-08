@@ -15,6 +15,7 @@ import {
 	assertNotIncludes,
 	captureDiagnostics,
 	defined,
+	at,
 } from '../../helpers.ts'
 import { chartXml } from './chart-parts.ts'
 
@@ -696,7 +697,7 @@ defineRegressionSuite('Chart option validation', [
 				['barGapWidthPct', NaN],
 				['firstSliceAng', '90'],
 				['lineDataSymbolSize', NaN],
-			]) {
+			] as const) {
 				let thrown: unknown = null
 				try {
 					const pres = new TsPptx()
@@ -862,8 +863,8 @@ defineRegressionSuite('Chart option validation', [
 			assertNotIncludes(xml, 'bogus', 'the entry label position is not written')
 			assertNotIncludes(xml, 'zillions', 'nor its display unit')
 			assertNotIncludes(xml, '<c:majorUnit val="-1"/>', 'nor its unit')
-			assertEqual(catAxes[0].catAxisLabelPos, 'bogus', "the caller's entry is not rewritten")
-			assertEqual(valAxes[0].valAxisMajorUnit, -1, "the caller's entry is not rewritten")
+			assertEqual(at(catAxes, 0).catAxisLabelPos, 'bogus', "the caller's entry is not rewritten")
+			assertEqual(at(valAxes, 0).valAxisMajorUnit, -1, "the caller's entry is not rewritten")
 		},
 	},
 	{

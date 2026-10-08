@@ -23,6 +23,7 @@ import {
 	listEntries,
 	readEntry,
 	defined,
+	at,
 } from '../../helpers.ts'
 
 /** A few bytes standing in for a metafile. Nothing reads them as one; only the declared type matters. */
@@ -99,7 +100,7 @@ describe('image sources through the definers', () => {
 		})
 		const parts = await mediaParts(zip)
 		assertEqual(parts.length, 1, 'one media part')
-		const { name, bytes } = parts[0]
+		const { name, bytes } = at(parts, 0)
 		assert(bytes.length > 0, `${name} is not empty`)
 		assert(bytes[0] === 0x89 && bytes[1] === 0x50, `${name} is a PNG, not the caller's text`)
 	})

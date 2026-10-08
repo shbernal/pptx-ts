@@ -1,5 +1,5 @@
 import type { StrokeProps } from '../../../dist/node.js'
-import { defineRegressionSuite, build, readEntry, captureDiagnostics, assert, assertEqual } from '../../helpers.ts'
+import { defineRegressionSuite, build, readEntry, captureDiagnostics, assert, assertEqual, at } from '../../helpers.ts'
 
 // `TableProps.outerBorder` -> the table's perimeter only.
 //
@@ -113,7 +113,7 @@ defineRegressionSuite('Table outerBorder', [
 			}
 			// The top-left cell's top and left take the 2pt red perimeter; its right and bottom
 			// keep the 0.5pt grey grid. Widths are in EMU-ish points (`ptsToEmuLenient`), colours in hex.
-			const first = tcs[0]
+			const first = at(tcs, 0)
 			const perimeter = [...first.matchAll(/<a:(ln[LRTB])[^>]*>[\s\S]*?<a:srgbClr val="([^"]*)"/g)].map(
 				(m) => `${m[1]}=${m[2]}`
 			)
@@ -144,9 +144,9 @@ defineRegressionSuite('Table outerBorder', [
 			const xml = await readEntry(result.zip, 'ppt/slides/slide1.xml')
 			const tcs = cells(xml)
 			assertEqual(tcs.length, 4, 'the merge grid is rectangular: 2 rows x 2 columns')
-			assert(tcs[1].includes('hMerge="1"'), 'the second cell of row 0 is the covered half of the span')
-			assertEqual(edges(tcs[0]), 'solid,none,none,solid', 'the origin takes the top and left')
-			assertEqual(edges(tcs[1]), 'solid,solid,none,none', 'the covered cell takes the top and the right')
+			assert(at(tcs, 1).includes('hMerge="1"'), 'the second cell of row 0 is the covered half of the span')
+			assertEqual(edges(at(tcs, 0)), 'solid,none,none,solid', 'the origin takes the top and left')
+			assertEqual(edges(at(tcs, 1)), 'solid,solid,none,none', 'the covered cell takes the top and the right')
 		},
 	},
 	{
@@ -163,9 +163,9 @@ defineRegressionSuite('Table outerBorder', [
 
 			const tcs = cells(await readEntry(result.zip, 'ppt/slides/slide1.xml'))
 			assertEqual(tcs.length, 4, 'the merge grid is rectangular')
-			assert(tcs[2].includes('vMerge="1"'), 'the first cell of row 1 is the covered half of the span')
-			assertEqual(edges(tcs[0]), 'solid,none,none,solid', 'the origin takes the top and left')
-			assertEqual(edges(tcs[2]), 'none,none,solid,solid', 'the covered cell takes the left and the bottom')
+			assert(at(tcs, 2).includes('vMerge="1"'), 'the first cell of row 1 is the covered half of the span')
+			assertEqual(edges(at(tcs, 0)), 'solid,none,none,solid', 'the origin takes the top and left')
+			assertEqual(edges(at(tcs, 2)), 'none,none,solid,solid', 'the covered cell takes the left and the bottom')
 		},
 	},
 	{

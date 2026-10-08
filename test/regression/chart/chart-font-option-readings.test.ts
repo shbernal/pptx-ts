@@ -1,5 +1,5 @@
 import { ChartType, type CHART_NAME, type ChartOpts, type OptsChartData } from '../../../dist/node.js'
-import { assert, assertEqual, build, captureDiagnostics, defineRegressionSuite } from '../../helpers.ts'
+import { assert, assertEqual, build, captureDiagnostics, defineRegressionSuite, at } from '../../helpers.ts'
 import { chartXml } from './chart-parts.ts'
 
 // One chart part used to carry two readings of the same data-label font option. Two builders
@@ -24,7 +24,9 @@ const BASE = { x: 1, y: 1, w: 4, h: 3 }
 function labelFontSizes(xml: string): string[] {
 	const blocks = [...xml.matchAll(/<c:dLbls>[\s\S]*?<\/c:dLbls>/g)].map((m) => m[0])
 	assert(blocks.length > 0, 'expected at least one <c:dLbls> block in the chart part')
-	return [...new Set(blocks.flatMap((b) => [...b.matchAll(/<a:(?:defRPr|rPr)[^>]*\ssz="(\d+)"/g)].map((m) => m[1])))]
+	return [
+		...new Set(blocks.flatMap((b) => [...b.matchAll(/<a:(?:defRPr|rPr)[^>]*\ssz="(\d+)"/g)].map((m) => at(m, 1)))),
+	]
 }
 
 /** Build a one-chart deck and hand back its label sizes plus whatever it warned about. */
@@ -77,8 +79,8 @@ async function labelDefRPrFor(fixture: Fixture, opts: ChartOpts): Promise<string
 	return firstLabelDefRPr(await chartXml(zip))
 }
 
-const BAR = FIXTURES[0]
-const PIE = FIXTURES[1]
+const BAR = at(FIXTURES, 0)
+const PIE = at(FIXTURES, 1)
 
 defineRegressionSuite(
 	'Data-label font options have one reading per chart',

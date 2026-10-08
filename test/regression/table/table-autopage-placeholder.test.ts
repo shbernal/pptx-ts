@@ -1,5 +1,5 @@
 import type JSZip from 'jszip'
-import { defineRegressionSuite, build, readEntry, listEntries, assert } from '../../helpers.ts'
+import { defineRegressionSuite, build, readEntry, listEntries, assert, at } from '../../helpers.ts'
 
 // Regression: an autoPage table that overflows onto continuation slides should be able to
 // carry the source slide's populated placeholders (e.g. a title) onto every overflow slide.
@@ -61,7 +61,7 @@ defineRegressionSuite('Table autoPage placeholder propagation', [
 			const { zip } = await deck(false)
 			const slides = overflowSlideFiles(zip)
 			assert(slides.length >= 2, `expected ≥2 slides; got ${slides.length}`)
-			const firstXml = await readEntry(zip, slides[0])
+			const firstXml = await readEntry(zip, at(slides, 0))
 			assert(firstXml.includes(`<a:t>${TITLE}</a:t>`), 'source slide must still carry the populated title')
 			for (const file of slides.slice(1)) {
 				const xml = await readEntry(zip, file)

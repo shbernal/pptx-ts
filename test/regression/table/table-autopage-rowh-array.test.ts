@@ -1,5 +1,5 @@
 import type JSZip from 'jszip'
-import { defineRegressionSuite, build, readEntry, listEntries, assert, defined } from '../../helpers.ts'
+import { defineRegressionSuite, build, readEntry, listEntries, assert, defined, at } from '../../helpers.ts'
 
 // Regression: a `rowH` *array* is keyed by the ORIGINAL row
 // index. Auto-paging splits rows across slides (and can repeat the header row), so applying the
@@ -41,12 +41,12 @@ defineRegressionSuite('Table autoPage rowH array follows original rows', [
 			assert(slides.length >= 2, `expected pagination across multiple slides, got ${slides.length}`)
 
 			// Slide 1 owns original row 0 → its first row must be the configured 2".
-			const first = rowHeightsEmu(await readEntry(zip, slides[0]))
+			const first = rowHeightsEmu(await readEntry(zip, at(slides, 0)))
 			assert(first[0] === TALL_EMU, `slide1 first row should be 2" (${TALL_EMU}); got ${first[0]}`)
 
 			// Every later slide holds short rows only → no row may carry the tall height.
 			for (let i = 1; i < slides.length; i++) {
-				const heights = rowHeightsEmu(await readEntry(zip, slides[i]))
+				const heights = rowHeightsEmu(await readEntry(zip, at(slides, i)))
 				assert(
 					!heights.includes(TALL_EMU),
 					`${slides[i]} must not repeat the tall first-row height; got ${JSON.stringify(heights)}`

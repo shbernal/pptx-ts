@@ -58,6 +58,8 @@ import {
 	assertIncludes,
 	firstXmlBlock,
 	listEntries,
+	at,
+	take,
 } from './helpers.ts'
 import { validateBuf } from './validator.ts'
 
@@ -3767,7 +3769,7 @@ export default [
 			const load = async (name: string) =>
 				Presentation.load(await readFile(new URL(`./read/fixtures/${name}.pptx`, import.meta.url)))
 			const sounds = await load('slide-transition-sound')
-			const [first, second, third] = sounds.slides
+			const [first, second, third] = take(sounds.slides, 3)
 			first.transition = { ...defined(first.transition), speed: 'slow', advanceAfterMs: 1500 }
 			second.transition = { ...defined(second.transition), durationMs: null }
 			third.transition = { ...defined(third.transition), sound: null }
@@ -4457,7 +4459,8 @@ export default [
 			assertIncludes(serLines, '<a:schemeClr val="accent3"/>', 'serLines scheme color')
 
 			// No scheme token leaked into an srgbClr val anywhere in the part.
-			for (const [, val] of chartXml.matchAll(/<a:srgbClr val="([^"]*)"/g)) {
+			for (const match of chartXml.matchAll(/<a:srgbClr val="([^"]*)"/g)) {
+				const val = at(match, 1)
 				assert(/^[0-9A-F]{6}$/.test(val), `srgbClr val is not 6-digit uppercase hex: ${val}`)
 			}
 		},
@@ -4528,7 +4531,7 @@ export default [
 
 			// Both groups plot against the same primary axis pair.
 			const barGroups = [...chartXml.matchAll(/<c:barChart>([\s\S]*?)<\/c:barChart>/g)].map((m) =>
-				[...m[1].matchAll(/<c:axId val="(\d+)"\/>/g)].map((a) => a[1]).join(',')
+				[...at(m, 1).matchAll(/<c:axId val="(\d+)"\/>/g)].map((a) => a[1]).join(',')
 			)
 			assertEqual(barGroups.length, 2, 'two c:barChart groups emitted')
 			assertEqual(barGroups[0], barGroups[1], 'both bar groups share one axId pair')
@@ -4750,7 +4753,7 @@ export default [
 				{ x: 1, y: 1, w: 9, colW: [3, 3, 3] }
 			)
 			const pres = await Presentation.load(await authored.toBytes())
-			const frame = defined(pres.slides[0].shapes.find(isGraphicFrame))
+			const frame = defined(at(pres.slides, 0).shapes.find(isGraphicFrame))
 			const table = defined(frame.table)
 
 			// Fill first, then borders, then a diagonal — the order most likely to produce an
@@ -4791,13 +4794,13 @@ export default [
 			const source = await load('slide-animation-rich')
 			const target = await load('slide-transition')
 			const pNs = 'http://schemas.openxmlformats.org/presentationml/2006/main'
-			const ids = source.slides[0].shapes.map((shape) =>
-				Number(shape.element_.getElementsByTagNameNS(pNs, 'cNvPr')[0].getAttribute('id'))
+			const ids = at(source.slides, 0).shapes.map((shape) =>
+				Number(at(shape.element_.getElementsByTagNameNS(pNs, 'cNvPr'), 0).getAttribute('id'))
 			)
-			const slide = target.slides[0]
+			const slide = at(target.slides, 0)
 			const options = { carryAnimation: true, theme: 'copy' } as const
-			target.importShapes(slide, source.slides[0], [ids.indexOf(2)], options)
-			target.importShapes(slide, source.slides[0], [ids.indexOf(3), ids.indexOf(4)], options)
+			target.importShapes(slide, at(source.slides, 0), [ids.indexOf(2)], options)
+			target.importShapes(slide, at(source.slides, 0), [ids.indexOf(3), ids.indexOf(4)], options)
 			await expectNoSchemaErrors(Buffer.from(await target.save()), 'carried-animation-pruned')
 		},
 	},
@@ -4861,7 +4864,7 @@ export default [
 
 			const pres = await Presentation.load(await pptx.toBytes())
 			tokens.SCHEME_COLOR_VALUES.forEach((token, i) => {
-				const shape = pres.slides[i + 1].shapes[0]
+				const shape = at(at(pres.slides, i + 1).shapes, 0)
 				shape.fillSchemeColor = token
 				shape.lineSchemeColor = token
 			})
@@ -5069,7 +5072,7 @@ export default [
 
 			const errors = await validateBuf(await zip.generateAsync({ type: 'nodebuffer' }))
 			assertEqual(errors.length, 1, 'perturbed deck error count')
-			const err = errors[0]
+			const err = at(errors, 0)
 			assertEqual(err.id, 'Sch_UndeclaredAttribute', 'error id')
 			assertEqual(err.type, 'Schema', 'error type')
 			assertEqual(err.partUri, '/' + slidePath, 'error part uri')
@@ -5091,7 +5094,7 @@ export default [
 		fn: async () => {
 			const errors = await validateBuf(Buffer.from('not a pptx'))
 			assertEqual(errors.length, 1, 'non-package error count')
-			const err = errors[0]
+			const err = at(errors, 0)
 			assertEqual(err.type, 'Package', 'error type')
 			assertEqual(err.id, 'PackageOpenError', 'error id')
 			// A package-level failure has no part to point at, which is why

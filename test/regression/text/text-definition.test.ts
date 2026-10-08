@@ -14,6 +14,7 @@ import {
 	assertNonVisualDrawingProperty,
 	defined,
 	caught,
+	at,
 } from '../../helpers.ts'
 
 // The option-normalization half of `gen/define/text.ts` — the work `addTextDefinition` does before
@@ -183,8 +184,8 @@ defineRegressionSuite('Text definition', [
 				[0, 'the string overload'],
 				[1, 'the array overload'],
 			] as [number, string][]) {
-				assertIncludes(shapes[idx], '<a:ln w="12700"', label)
-				assertIncludes(shapes[idx], '<a:prstDash val="solid"/>', label)
+				assertIncludes(at(shapes, idx), '<a:ln w="12700"', label)
+				assertIncludes(at(shapes, idx), '<a:prstDash val="solid"/>', label)
 			}
 		},
 	},
@@ -214,11 +215,11 @@ defineRegressionSuite('Text definition', [
 			const shapes = (await readEntry(zip, 'ppt/slides/slide1.xml')).match(/<p:sp>[\s\S]*?<\/p:sp>/g) || []
 			assertEqual(shapes.length, 3, 'expected all three text boxes')
 			assertNotIncludes(defined(shapes[0]), 'numCol', 'the box added before the two-column one')
-			assertIncludes(shapes[1], 'numCol="2"', 'the box that actually asked for two columns')
-			assertNotIncludes(shapes[2], 'numCol', 'the box added after the two-column one')
+			assertIncludes(at(shapes, 1), 'numCol="2"', 'the box that actually asked for two columns')
+			assertNotIncludes(at(shapes, 2), 'numCol', 'the box added after the two-column one')
 			assertNonVisualDrawingProperty(defined(shapes[0]), { name: 'Text 1' }, 'the first box')
-			assertNonVisualDrawingProperty(shapes[1], { name: 'Text 2' }, 'the second box')
-			assertNonVisualDrawingProperty(shapes[2], { name: 'Text 3' }, 'the third box')
+			assertNonVisualDrawingProperty(at(shapes, 1), { name: 'Text 2' }, 'the second box')
+			assertNonVisualDrawingProperty(at(shapes, 2), { name: 'Text 3' }, 'the third box')
 			assertEqual(warnings.length, 0, `expected no diagnostics; got ${JSON.stringify(warnings)}`)
 			assertEqual(
 				JSON.stringify(STYLE),
@@ -272,8 +273,8 @@ defineRegressionSuite('Text definition', [
 			const shapes = xml.match(/<p:sp>[\s\S]*?<\/p:sp>/g) || []
 			assertEqual(shapes.length, 3, 'expected all three text boxes')
 			assertNotIncludes(defined(shapes[0]), 'spcCol', 'the rejected negative spacing')
-			assertNotIncludes(shapes[1], 'spcCol', 'the accepted zero spacing')
-			assertIncludes(shapes[2], 'spcCol="254000"', 'the positive spacing, 20pt in EMU')
+			assertNotIncludes(at(shapes, 1), 'spcCol', 'the accepted zero spacing')
+			assertIncludes(at(shapes, 2), 'spcCol="254000"', 'the positive spacing, 20pt in EMU')
 			// Every box kept its columns: the spacing is judged on its own, not the whole block.
 			for (const shape of shapes) assertIncludes(shape, 'numCol="2"', 'a columns box')
 		},
@@ -296,8 +297,8 @@ defineRegressionSuite('Text definition', [
 			const shapes = xml.match(/<p:sp>[\s\S]*?<\/p:sp>/g) || []
 			assertEqual(shapes.length, 3, 'expected all three text boxes')
 			assertIncludes(defined(shapes[0]), 'u="sng"', 'the shorthand form')
-			assertIncludes(shapes[1], 'u="dbl"', 'the explicit form')
-			assertNotIncludes(shapes[2], ' u="', 'underline: false')
+			assertIncludes(at(shapes, 1), 'u="dbl"', 'the explicit form')
+			assertNotIncludes(at(shapes, 2), ' u="', 'underline: false')
 		},
 	},
 	{

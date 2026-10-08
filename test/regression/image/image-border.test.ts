@@ -10,7 +10,7 @@
 // `lineColor`/`lineWidthPt`/`lineDash` — so the last case here is the round trip that proves the
 // two halves now meet.
 
-import { PNG_1X1, defineRegressionSuite, build, readEntry, assert, assertEqual, defined } from '../../helpers.ts'
+import { PNG_1X1, defineRegressionSuite, build, readEntry, assert, assertEqual, defined, at } from '../../helpers.ts'
 import { Presentation } from '../../../dist/read.js'
 
 /** The `<a:ln …>` opening tag inside the slide's one `p:pic`, or `null`. */
@@ -67,7 +67,7 @@ defineRegressionSuite('Image border', [
 				})
 			})
 			const pres = await Presentation.load(buf)
-			const picture = pres.slides[0].shapes.find((shape) => shape.shapeType === 'picture')
+			const picture = at(pres.slides, 0).shapes.find((shape) => shape.shapeType === 'picture')
 			assert(picture, 'the deck has a picture')
 			assertEqual(picture.lineColor, '0088CC', 'lineColor')
 			assertEqual(picture.lineWidthPt, 2, 'lineWidthPt')

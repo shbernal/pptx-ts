@@ -1,5 +1,5 @@
 import { ChartType } from '../../../dist/node.js'
-import { defineRegressionSuite, build, assert } from '../../helpers.ts'
+import { defineRegressionSuite, build, assert, at } from '../../helpers.ts'
 import { chartXml } from './chart-parts.ts'
 
 // `seriesOptions` is indexed by the series' OWN position -- the number it carries in `<c:idx>` and
@@ -58,10 +58,13 @@ defineRegressionSuite('seriesOptions reaches the XY and stock plots', [
 			const xml = await chartXml(zip)
 			const sers = xml.split('<c:ser>').slice(1)
 			// 6pt = 76200 EMU; a stated 0 is the caller's "no outline" and emits `<a:noFill/>`.
-			assert(sers[0].includes('<a:ln w="76200"'), 'the first series should stroke at 6pt; got ' + sers[0].slice(0, 400))
 			assert(
-				/<c:spPr>.*?<a:ln><a:noFill\/><\/a:ln>/s.test(sers[1]),
-				'the second series asked for no outline; got ' + sers[1].slice(0, 400)
+				at(sers, 0).includes('<a:ln w="76200"'),
+				'the first series should stroke at 6pt; got ' + at(sers, 0).slice(0, 400)
+			)
+			assert(
+				/<c:spPr>.*?<a:ln><a:noFill\/><\/a:ln>/s.test(at(sers, 1)),
+				'the second series asked for no outline; got ' + at(sers, 1).slice(0, 400)
 			)
 		},
 	},
@@ -82,8 +85,11 @@ defineRegressionSuite('seriesOptions reaches the XY and stock plots', [
 				})
 			})
 			const sers = (await chartXml(zip)).split('<c:ser>').slice(1)
-			assert(sers[0].includes('AB12CD'), "the first series' labels take its own colour; got " + sers[0].slice(0, 900))
-			assert(!sers[1].includes('AB12CD'), 'the second series keeps the chart-level colour')
+			assert(
+				at(sers, 0).includes('AB12CD'),
+				"the first series' labels take its own colour; got " + at(sers, 0).slice(0, 900)
+			)
+			assert(!at(sers, 1).includes('AB12CD'), 'the second series keeps the chart-level colour')
 		},
 	},
 	{
@@ -99,7 +105,7 @@ defineRegressionSuite('seriesOptions reaches the XY and stock plots', [
 			const xml = await chartXml(zip)
 			const sers = xml.split('<c:ser>').slice(1)
 			assert(seriesFills(xml)[0] === 'FF00FF', 'the first bubble series takes its override colour')
-			assert(sers[0].includes('<a:ln w="76200"'), 'and its 6pt outline; got ' + sers[0].slice(0, 400))
+			assert(at(sers, 0).includes('<a:ln w="76200"'), 'and its 6pt outline; got ' + at(sers, 0).slice(0, 400))
 		},
 	},
 	{

@@ -10,7 +10,16 @@
 import { ChartType } from '../../../dist/node.js'
 import type JSZip from 'jszip'
 import { expect, vi } from 'vitest'
-import { defineRegressionSuite, build, readEntry, listEntries, assert, assertIncludes, defined } from '../../helpers.ts'
+import {
+	defineRegressionSuite,
+	build,
+	readEntry,
+	listEntries,
+	assert,
+	assertIncludes,
+	defined,
+	at,
+} from '../../helpers.ts'
 
 const chartNumber = (path: string): number => Number(defined(path.match(/\d+/))[0])
 
@@ -42,8 +51,8 @@ defineRegressionSuite('Chart input immutability', [
 			})
 
 			expect(data).toEqual(before)
-			assert(data[0].labels === labels, 'the caller`s labels array should still be the same object')
-			assert(!('_dataIndex' in data[0]), '_dataIndex should not be stamped onto the caller`s series')
+			assert(at(data, 0).labels === labels, 'the caller`s labels array should still be the same object')
+			assert(!('_dataIndex' in at(data, 0)), '_dataIndex should not be stamped onto the caller`s series')
 			// The normalization still reaches the emitter.
 			assertIncludes(await firstChartPart(zip), '<c:v>A</c:v>', 'chart part')
 		},
@@ -118,7 +127,7 @@ defineRegressionSuite('Chart input immutability', [
 			})
 
 			expect(charts).toEqual(before)
-			assert(!('_dataIndex' in charts[1].data[0]), 'subchart series should not be stamped')
+			assert(!('_dataIndex' in at(at(charts, 1).data, 0)), 'subchart series should not be stamped')
 
 			// The subchart series are plotted from `opts._type[i].data`, so the normalized copies
 			// have to reach that path: without them the second series emits `<c:idx val="undefined"/>`.

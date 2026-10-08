@@ -11,7 +11,7 @@
  * loop now, which is the only collection the pairing lives in.
  */
 import type JSZip from 'jszip'
-import { assert, assertEqual, build, defineRegressionSuite, readEntry } from '../../helpers.ts'
+import { assert, assertEqual, build, defineRegressionSuite, readEntry, at } from '../../helpers.ts'
 
 const VIDEO_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/video'
 const AUDIO_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/audio'
@@ -55,7 +55,7 @@ defineRegressionSuite('Media relationship pairing', [
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 			const videoFile = /<a:videoFile[^>]*r:link="(rId\d+)"/.exec(xml)
 			assert(videoFile, `expected an <a:videoFile r:link>; got: ${xml}`)
-			assertEqual(rels[videoFile[1]], VIDEO_REL, '<a:videoFile> must point at the ECMA video rel')
+			assertEqual(rels[at(videoFile, 1)], VIDEO_REL, '<a:videoFile> must point at the ECMA video rel')
 		},
 	},
 	{

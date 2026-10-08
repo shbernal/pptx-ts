@@ -1,7 +1,7 @@
 // The internal cell type carries the src enum, so the seed below uses src's `SlideObjectType`.
 import { SlideObjectType } from '../../../src/enums.ts'
 import type { TableCellInternal } from '../../../src/types/internal.ts'
-import { defineRegressionSuite, build, readEntry, assert, assertEqual, defined } from '../../helpers.ts'
+import { defineRegressionSuite, build, readEntry, assert, assertEqual, defined, at } from '../../helpers.ts'
 // The pager's core is not exported from the package, and the last case here is about a guard
 // only a direct caller can reach. Every other case goes through the public `addTable`.
 import { getSlidesForTableRows } from '../../../src/gen/table/autopage.ts'
@@ -137,7 +137,11 @@ defineRegressionSuite('Table autoPage width arithmetic', [
 			const stated = getSlidesForTableRows(rows, { colW: [], fontSize: 12 }, layout, null)
 			const unstated = getSlidesForTableRows(rows, { fontSize: 12 }, layout, null)
 			assertEqual(stated.length, 1, 'one page for one row')
-			assertEqual(stated[0].rows.length, unstated[0].rows.length, 'an empty colW must page exactly as an absent one')
+			assertEqual(
+				at(stated, 0).rows.length,
+				at(unstated, 0).rows.length,
+				'an empty colW must page exactly as an absent one'
+			)
 		},
 	},
 ])

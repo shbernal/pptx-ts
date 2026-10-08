@@ -1,6 +1,6 @@
 import type JSZip from 'jszip'
 import type { TableCellProps, TableRow } from '../../../dist/node.js'
-import { defineRegressionSuite, build, listEntries, readEntry, assert, assertEqual } from '../../helpers.ts'
+import { defineRegressionSuite, build, listEntries, readEntry, assert, assertEqual, at } from '../../helpers.ts'
 
 // Regression: upstream gitbrent/PptxGenJS#1200 — "tableToSlides autoPaging not working": a table
 // paged onto several slides, but the rows on the generated slides ran off the bottom edge.
@@ -61,7 +61,7 @@ async function cellTextPerSlide(zip: JSZip) {
 	const perSlide = []
 	for (const name of slideXmlNames(zip)) {
 		const xml = await readEntry(zip, name)
-		perSlide.push([...xml.matchAll(/<a:t>([^<]*)<\/a:t>/g)].map((match) => match[1]))
+		perSlide.push([...xml.matchAll(/<a:t>([^<]*)<\/a:t>/g)].map((match) => at(match, 1)))
 	}
 	return perSlide
 }
@@ -90,7 +90,7 @@ defineRegressionSuite('Table autoPage continuation-slide row budget (gitbrent/Pp
 
 			// All but the last: the last holds whatever remains and is allowed to be short.
 			const full = counts.slice(0, -1)
-			const first = full[0]
+			const first = at(full, 0)
 			assert(
 				full.every((count) => count === first),
 				'every full page must hold the same number of identical rows; the pages disagreeing means a ' +

@@ -1,5 +1,5 @@
 import type { StrokeProps } from '../../../dist/node.js'
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
+import { defineRegressionSuite, build, readEntry, assert, at } from '../../helpers.ts'
 
 // Regression: borders (and fill) configured on a colspan/rowspan table cell must
 // render across the whole merged region. PowerPoint defines a merged region's
@@ -17,7 +17,7 @@ function coveredCellTcPr(xml: string, mergeAttr: string) {
 	const re = new RegExp(`<a:tc ${mergeAttr}>(.*?)</a:tc>`)
 	const m = xml.match(re)
 	assert(m, `expected a covered cell with ${mergeAttr}; got: ${xml.slice(0, 600)}`)
-	return m[1]
+	return at(m, 1)
 }
 
 defineRegressionSuite('Table merged-cell borders [upstream-issue-680]', [

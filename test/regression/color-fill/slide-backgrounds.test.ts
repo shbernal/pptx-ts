@@ -10,6 +10,7 @@ import {
 	selfClosingTags,
 	xmlAttributes,
 	defined,
+	at,
 } from '../../helpers.ts'
 
 defineRegressionSuite('Slide backgrounds [legacy bug-12]', [
@@ -58,14 +59,14 @@ defineRegressionSuite('Slide backgrounds [legacy bug-12]', [
 				const s = p.addSlide()
 				s.background = { path: 'demos/common/images/cc_logo.jpg' }
 			})
-			const rels = selfClosingTags(await readEntry(zip, 'ppt/slides/_rels/slide1.xml.rels'), 'Relationship')
-				.map((tag) => xmlAttributes(tag))
-				.filter((attrs) => attrs.Type.endsWith('/image'))
+			const rels = relsOf(await readEntry(zip, 'ppt/slides/_rels/slide1.xml.rels')).filter((rel) =>
+				rel.Type.endsWith('/image')
+			)
 			assertEqual(rels.length, 1, 'expected one background image rel')
-			assert(rels[0].Target.endsWith('.jpeg'), `expected a .jpeg rel Target; got ${rels[0].Target}`)
+			assert(at(rels, 0).Target.endsWith('.jpeg'), `expected a .jpeg rel Target; got ${at(rels, 0).Target}`)
 
-			const part = rels[0].Target.replace(/^\.\./, 'ppt')
-			assert(listEntries(zip).includes(part), `rel Target ${rels[0].Target} has no part at ${part}`)
+			const part = at(rels, 0).Target.replace(/^\.\./, 'ppt')
+			assert(listEntries(zip).includes(part), `rel Target ${at(rels, 0).Target} has no part at ${part}`)
 			assertEqual(
 				contentTypeForExtension(await readEntry(zip, '[Content_Types].xml'), 'jpeg'),
 				'image/jpeg',
@@ -177,8 +178,11 @@ const PNG_B =
 	'image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP8z8DwHwAFAAH/Re1ZlAAAAABJRU5ErkJggg=='
 
 /** The attributes of every `Relationship` in a `.rels` part. */
-function relsOf(xml: string) {
-	return selfClosingTags(xml, 'Relationship').map((tag) => xmlAttributes(tag))
+function relsOf(xml: string): { Id: string; Type: string; Target: string }[] {
+	return selfClosingTags(xml, 'Relationship').map((tag) => {
+		const attrs = xmlAttributes(tag)
+		return { Id: defined(attrs.Id), Type: defined(attrs.Type), Target: defined(attrs.Target) }
+	})
 }
 
 /** The `ppt/slideLayouts/slideLayoutN.xml` whose `p:cSld@name` is `title`. */

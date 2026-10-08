@@ -10,6 +10,7 @@ import {
 	assertIncludes,
 	assertNonVisualDrawingProperty,
 	type TsPptx,
+	at,
 } from '../../helpers.ts'
 
 // The definers write their normalization back onto the options object they are handed -- assigned
@@ -73,8 +74,8 @@ defineRegressionSuite('Caller-owned options', [
 			const shapes = await shapesOn(zip)
 			assertEqual(shapes.length, 3, 'expected all three shapes')
 			assertNonVisualDrawingProperty(defined(shapes[0]), { name: 'Shape 1' }, 'the first shape')
-			assertNonVisualDrawingProperty(shapes[1], { name: 'Shape 2' }, 'the second shape')
-			assertNonVisualDrawingProperty(shapes[2], { name: 'Shape 3' }, 'the third shape')
+			assertNonVisualDrawingProperty(at(shapes, 1), { name: 'Shape 2' }, 'the second shape')
+			assertNonVisualDrawingProperty(at(shapes, 2), { name: 'Shape 3' }, 'the third shape')
 			assertEqual(warnings.length, 0, `expected no diagnostics; got ${JSON.stringify(warnings)}`)
 			assertEqual(
 				JSON.stringify(STYLE),
@@ -141,7 +142,7 @@ defineRegressionSuite('Caller-owned options', [
 			const frames = xml.match(/<p:graphicFrame>[\s\S]*?<\/p:graphicFrame>/g) || []
 			assertEqual(frames.length, 2, 'expected both tables')
 			assertNonVisualDrawingProperty(defined(frames[0]), { name: 'Table 1' }, 'the first table')
-			assertNonVisualDrawingProperty(frames[1], { name: 'Table 2' }, 'the second table')
+			assertNonVisualDrawingProperty(at(frames, 1), { name: 'Table 2' }, 'the second table')
 			assertEqual(warnings.length, 0, `expected no diagnostics; got ${JSON.stringify(warnings)}`)
 			assertEqual(
 				JSON.stringify(STYLE),

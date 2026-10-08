@@ -10,6 +10,7 @@ import {
 	selfClosingTags,
 	xmlAttributes,
 	xmlOpeningTags,
+	at,
 } from '../../helpers.ts'
 import type JSZip from 'jszip'
 import type TsPptx from '../../../dist/node.js'
@@ -127,8 +128,8 @@ defineRegressionSuite('Comment definition', [
 			})
 			const authors = await commentAuthors(zip)
 			assertEqual(authors.length, 1, 'expected one author entry')
-			assertEqual(authors[0].name, 'plato', 'the display name is kept as typed')
-			assertEqual(authors[0].initials, 'P', 'the derived initial')
+			assertEqual(at(authors, 0).name, 'plato', 'the display name is kept as typed')
+			assertEqual(at(authors, 0).initials, 'P', 'the derived initial')
 		},
 	},
 	{
@@ -142,7 +143,7 @@ defineRegressionSuite('Comment definition', [
 			})
 			const authors = await commentAuthors(zip)
 			assertEqual(authors.length, 1, 'expected one author entry')
-			assertEqual(authors[0].initials, 'AL', 'first and last initial, uppercased')
+			assertEqual(at(authors, 0).initials, 'AL', 'first and last initial, uppercased')
 		},
 	},
 	{
@@ -160,11 +161,11 @@ defineRegressionSuite('Comment definition', [
 			})
 			const cms = await commentsOnSlide1(zip)
 			assertEqual(cms.length, 2, 'expected both comments to survive')
-			assertEqual(cms[0].dt, '2026-07-28T12:00:00.000Z', 'the Date, as ISO-8601')
-			assert(!('dt' in cms[1]), `expected no dt attribute on the second comment; got ${JSON.stringify(cms[1])}`)
+			assertEqual(at(cms, 0).dt, '2026-07-28T12:00:00.000Z', 'the Date, as ISO-8601')
+			assert(!('dt' in at(cms, 1)), `expected no dt attribute on the second comment; got ${JSON.stringify(cms[1])}`)
 			// Same author twice: one registry entry, numbered 1 then 2.
 			assertEqual((await commentAuthors(zip)).length, 1, 'expected a single author entry')
-			assertEqual([cms[0].idx, cms[1].idx].join(','), '1,2', 'per-author idx numbering')
+			assertEqual([at(cms, 0).idx, at(cms, 1).idx].join(','), '1,2', 'per-author idx numbering')
 		},
 	},
 ])

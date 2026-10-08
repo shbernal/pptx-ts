@@ -1,5 +1,5 @@
 import type { TextPropsOptions } from '../../../dist/node.js'
-import { defineRegressionSuite, build, readEntry, assert, defined } from '../../helpers.ts'
+import { defineRegressionSuite, build, readEntry, assert, defined, at } from '../../helpers.ts'
 
 defineRegressionSuite('Text formatting [legacy bug-01]', [
 	{
@@ -45,8 +45,8 @@ defineRegressionSuite('Text formatting [legacy bug-01]', [
 			const paragraphs = xml.match(/<a:p>[\s\S]*?<\/a:p>/g) || []
 			// 'first' → para 1 (break from \n); 'second tail' → para 2 (no trailing break)
 			assert(paragraphs.length === 2, 'expected 2 paragraphs, got ' + paragraphs.length)
-			assert(paragraphs[1].includes('second'), 'expected "second" in second paragraph')
-			assert(paragraphs[1].includes('tail'), 'expected "tail" in same paragraph as "second"')
+			assert(at(paragraphs, 1).includes('second'), 'expected "second" in second paragraph')
+			assert(at(paragraphs, 1).includes('tail'), 'expected "tail" in same paragraph as "second"')
 		},
 	},
 	{
@@ -85,10 +85,13 @@ defineRegressionSuite('Text formatting [legacy bug-01]', [
 			assert(text(paragraphs[0]) === 'A', 'p1 text should be "A", got "' + text(paragraphs[0]) + '"')
 			// Lang change alone must NOT break the line: all four runs stay together
 			assert(
-				text(paragraphs[1]) === 'B text C eng',
-				'p2 should keep mixed-lang runs together, got "' + text(paragraphs[1]) + '"'
+				text(at(paragraphs, 1)) === 'B text C eng',
+				'p2 should keep mixed-lang runs together, got "' + text(at(paragraphs, 1)) + '"'
 			)
-			assert(text(paragraphs[2]) === 'D num 3', 'p3 text should be "D num 3", got "' + text(paragraphs[2]) + '"')
+			assert(
+				text(at(paragraphs, 2)) === 'D num 3',
+				'p3 text should be "D num 3", got "' + text(at(paragraphs, 2)) + '"'
+			)
 			for (const p of paragraphs) {
 				const pPrCount = (p.match(/<a:pPr[\s>]/g) || []).length
 				assert(pPrCount <= 1, 'paragraph has ' + pPrCount + ' <a:pPr> tags but OOXML allows at most 1: ' + p)
@@ -112,8 +115,8 @@ defineRegressionSuite('Text formatting [legacy bug-01]', [
 			assert(paragraphs.length === 3, 'expected 3 paragraphs (incl. blank middle), got ' + paragraphs.length)
 			const text = (p: string) => (p.match(/<a:t>[^<]*<\/a:t>/g) || []).map((t) => t.replace(/<\/?a:t>/g, '')).join('')
 			assert(text(paragraphs[0]) === 'line1', 'p1 should be "line1"')
-			assert(text(paragraphs[1]) === '', 'p2 should be the blank line')
-			assert(text(paragraphs[2]) === 'line3', 'p3 should be "line3"')
+			assert(text(at(paragraphs, 1)) === '', 'p2 should be the blank line')
+			assert(text(at(paragraphs, 2)) === 'line3', 'p3 should be "line3"')
 		},
 	},
 	{

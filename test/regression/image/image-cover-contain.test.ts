@@ -1,5 +1,5 @@
 import type { ImageProps } from '../../../dist/node.js'
-import { PNG_1X1, defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
+import { PNG_1X1, defineRegressionSuite, build, readEntry, assert, at } from '../../helpers.ts'
 
 // `cover`/`contain` crop the *source* bitmap, so the emitted `<a:srcRect>` must be derived
 // from the image's NATURAL pixel ratio — not the displayed box (options.w/h). Previously the
@@ -51,7 +51,7 @@ async function srcRectFor(opts: ImageProps): Promise<SrcRect> {
 	const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 	const m = /<a:srcRect l="(-?\d+)" r="(-?\d+)" t="(-?\d+)" b="(-?\d+)"\/>/.exec(xml)
 	assert(m, 'expected a srcRect element; got: ' + xml)
-	return { l: +m[1], r: +m[2], t: +m[3], b: +m[4] }
+	return { l: +at(m, 1), r: +at(m, 2), t: +at(m, 3), b: +at(m, 4) }
 }
 
 defineRegressionSuite('Image cover/contain natural-ratio crop', [
