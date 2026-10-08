@@ -30,8 +30,9 @@ Everything except the Office sign-in is automatic. The container runs only while
    window. It installs Node 24 and PowerShell 7, opens the worker's port in the guest firewall,
    turns off the lock screen and screen saver, sets the Office no-update policy, installs
    Microsoft 365 Apps with the Office Deployment Tool (`oem/install-office.cmd`, about 3 GB),
-   and registers the worker's logon task. Its log is `C:\OEM\install.log`. If the Office step
-   failed, run `C:\OEM\install-office.cmd` again.
+   installs the Aptos fonts for the user (`oem/install-fonts.ps1`), and registers the worker's
+   logon task. Its log is `C:\OEM\install.log`. If the Office or font step failed, run its
+   script again.
 4. **Manual:** open PowerPoint once in the VM, sign in with the Microsoft 365 account so it
    activates, and dismiss the first-run dialogs. A dialog left open blocks every COM call after
    it.
@@ -46,6 +47,16 @@ Everything except the Office sign-in is automatic. The container runs only while
 installed. Fixtures record the PowerPoint build that authored them, and an unattended update
 would change it in the middle of a series. To move to a newer build on purpose, use
 **File > Account > Update Options > Update Now** in PowerPoint, then rerun `pnpm ppt:health`.
+
+### Fonts
+
+Microsoft 365 serves Aptos as a cloud font that only Office can see, so GDI substitutes
+Microsoft Sans Serif for it. The authoring readiness guard and the font oracle would then
+refuse to run. `oem/install-fonts.ps1` installs Microsoft's own Aptos download, pinned by
+hash, under `%LOCALAPPDATA%` and registers it in `HKCU`, which is where both look. Its
+regular, bold and semibold faces have the same advances as the committed metrics sidecar.
+To add the fonts to a VM built before this step existed, run the script as a job:
+`pnpm ppt:run tools/powerpoint-vm/oem/install-fonts.ps1`.
 
 ## Day to day
 
@@ -104,6 +115,7 @@ port on `127.0.0.1` only. Keep it that way, and never forward these ports to ano
 | `.env.example` | The settings `.env` takes. `.env` is gitignored and holds the token |
 | `oem/install.bat` | One-time provisioning at the first logon |
 | `oem/install-office.cmd` | Installs Microsoft 365 Apps with the Office Deployment Tool; rerunnable |
+| `oem/install-fonts.ps1` | Installs Microsoft's Aptos download per-user and registers it for GDI; rerunnable |
 | `oem/office.xml` | The Office Deployment Tool configuration: product, apps, no updates |
 | `oem/start-worker.cmd` | The logon task: mirrors the worker from the share and keeps it running |
 | `storage/` | The disk image (gitignored) |

@@ -57,6 +57,11 @@ rem A failure here still leaves the worker running, so `pnpm ppt:health` can say
 rem missing. Rerun C:\OEM\install-office.cmd to retry.
 call "%~dp0install-office.cmd" || echo Office was not installed. See the lines above.
 
+echo === Aptos fonts
+rem Microsoft 365 keeps Aptos to itself as a cloud font. The authoring guards and the font
+rem oracle need it registered for GDI. Rerun C:\OEM\install-fonts.ps1 to retry.
+powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "%~dp0install-fonts.ps1" || echo Aptos was not installed. See the lines above.
+
 echo === Autologon
 rem dockur's answer file signs the user in automatically (AutoLogon with a LogonCount of 65432),
 rem so the worker's logon task runs after every boot without anyone at the console. Report it.
