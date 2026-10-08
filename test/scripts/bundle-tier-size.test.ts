@@ -4,7 +4,7 @@
 // esbuild's, not ours. What is ours is that each tier really is a superset of the one
 // before it (a `full` that lost its chart call would measure a cheaper program and read as
 // a win). The verdict it draws from a number is shared with the other size gate and tested
-// in `ratchet-utils.test.js`.
+// in `ratchet-utils.test.ts`.
 
 import { describe, expect, test } from 'vitest'
 import { programFor } from '../../scripts/bundle-tier-size.mjs'
