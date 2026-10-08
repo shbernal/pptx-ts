@@ -98,9 +98,9 @@ slide.addGroup(
 | all four | that box, exactly |
 | one, two or three of them | a `group/partial-frame` warning, then the bounding box |
 
-```ts
+```ts live
 // The frame is larger than the rectangle, and the rectangle stays at x 1, y 1
-slide.addGroup([{ rect: { x: 1, y: 1, w: 2, h: 1 } }], { x: 0.5, y: 0.5, w: 3, h: 2 })
+slide.addGroup([{ rect: { x: 1, y: 1, w: 2, h: 1, fill: { color: "BBD3FB" } } }], { x: 0.5, y: 0.5, w: 3, h: 2 })
 ```
 
 - A partial frame such as `{ x: 5 }` reads like a move, and a group frame cannot move its children, so pptx-ts falls back to the bounding box rather than draw the frame away from its content.
@@ -109,8 +109,8 @@ slide.addGroup([{ rect: { x: 1, y: 1, w: 2, h: 1 } }], { x: 0.5, y: 0.5, w: 3, h
 
 ## Rotate, flip and lock a group
 
-```ts
-slide.addGroup([{ rect: { x: 1, y: 1, w: 2, h: 1 } }], {
+```ts live
+slide.addGroup([{ rect: { x: 1, y: 1, w: 2, h: 1, fill: { color: "BBD3FB" } } }], {
   rotate: 45,
   flipH: true,
   objectName: "Badge",
@@ -124,14 +124,14 @@ slide.addGroup([{ rect: { x: 1, y: 1, w: 2, h: 1 } }], {
 
 ## Nest groups
 
-```ts
+```ts live
 slide.addGroup(
   [
-    { rect: { x: 1, y: 1, w: 1, h: 1 } },
+    { rect: { x: 1, y: 1, w: 1, h: 1, fill: { color: "BBD3FB" } } },
     {
       group: {
         children: [
-          { rect: { x: 3, y: 1, w: 1, h: 1 } },
+          { rect: { x: 3, y: 1, w: 1, h: 1, fill: { color: "BBD3FB" } } },
           { text: { text: "Nested", options: { x: 3, y: 1, w: 1, h: 1 } } },
         ],
         options: { objectName: "Inner" },
@@ -150,10 +150,10 @@ slide.addGroup(
 
 `groupObjects()` takes the `objectName` of each top-level object to group. It suits a slide built by separate functions, where replaying each object's descriptor just to group it is not an option.
 
-```ts
-slide.addShape("rect", { x: 1, y: 1, w: 2, h: 1, objectName: "Header" })
+```ts live
+slide.addShape("rect", { x: 1, y: 1, w: 2, h: 1, fill: { color: "BBD3FB" }, objectName: "Header" })
 slide.addText("Caption", { x: 1.2, y: 2.2, w: 1.6, h: 0.6, objectName: "Caption" })
-slide.addShape("rect", { x: 5, y: 1, w: 1, h: 1, objectName: "Loose" })
+slide.addShape("rect", { x: 5, y: 1, w: 1, h: 1, fill: { color: "BBD3FB" }, objectName: "Loose" })
 
 slide.groupObjects(["Header", "Caption"], { objectName: "Banner" })
 // "Header" and "Caption" are now inside "Banner". "Loose" stays top-level.
@@ -207,8 +207,8 @@ The frame and naming rules are the same as for `addGroup()`.
 
 `slide.objects` returns the objects on the slide, bottom of the stack first, with the names `groupObjects()` accepts. It is how code that did not add the objects finds out what to group.
 
-```ts
-slide.addShape("rect", { x: 1, y: 1, w: 3, h: 2, objectName: "card:frame" })
+```ts live
+slide.addShape("rect", { x: 1, y: 1, w: 3, h: 2, fill: { color: "BBD3FB" }, objectName: "card:frame" })
 slide.addText("Revenue", { x: 1.2, y: 1.2, w: 2.6, h: 0.5, objectName: "card:title" })
 slide.addText("Draft", { x: 5, y: 1, w: 1, h: 0.5 })
 
