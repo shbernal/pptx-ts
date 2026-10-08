@@ -7,10 +7,11 @@
 
 import { describe, test } from 'vitest'
 import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.ts'
-import { assert, assertEqual, defined } from '../helpers.ts'
+import type { Presentation, Run } from '../../dist/read.js'
+import { assert, assertEqual, defined, type TsPptx } from '../helpers.ts'
 
 /** A text box whose runs each carry one character-formatting property. */
-function formattedRuns(pres) {
+function formattedRuns(pres: TsPptx) {
 	pres.addSlide().addText(
 		[
 			{ text: 'Struck', options: { strike: true } },
@@ -27,14 +28,14 @@ function formattedRuns(pres) {
 }
 
 /** Every run of the first text-bearing shape, flattened across paragraphs. */
-function runsOf(presentation) {
+function runsOf(presentation: Presentation): Run[] {
 	const shape = firstShape(presentation, (s) => s.hasTextFrame)
 	assert(shape, 'authored text box is read back')
 	return defined(shape.textFrame).paragraphs.flatMap((p) => p.runs)
 }
 
 /** The run whose text is exactly `text`. */
-function run(runs, text) {
+function run(runs: Run[], text: string): Run {
 	const found = runs.find((r) => r.text === text)
 	assert(found, `run "${text}" is present`)
 	return found

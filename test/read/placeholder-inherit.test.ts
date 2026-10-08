@@ -15,17 +15,14 @@
 // explicit run formatting, so the inherited-value paths (notably the font-face
 // resolution and the "chain defines no bold" fallthrough) stayed uncovered.
 
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, test } from 'vitest'
 
+import type { AnyShape } from '../../dist/read.js'
 import { assert, assertEqual } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
 /** First run of the first paragraph of a shape's text frame. */
-function firstRun(shape) {
+function firstRun(shape: AnyShape) {
 	const frame = shape.textFrame
 	assert(frame, `expected a text frame on shape "${shape?.name}"`)
 	const para = frame.paragraphs[0]

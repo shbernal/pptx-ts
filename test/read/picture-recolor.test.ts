@@ -11,6 +11,7 @@
 // XML; this file proves the *writer* now produces those same bytes.)
 
 import { isPicture } from '../../dist/read.js'
+import type { ImageBaseProps } from '../../dist/node.js'
 import { describe, test } from 'vitest'
 import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.ts'
 import { assert, assertEqual, defined } from '../helpers.ts'
@@ -21,7 +22,7 @@ const PNG_1x1 =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP8z8DwHwAFAAH/Re1ZlAAAAABJRU5ErkJggg=='
 
 /** Author a single image carrying `imgOpts`, and read back its `recolor`. */
-async function recolorOf(imgOpts) {
+async function recolorOf(imgOpts: Pick<ImageBaseProps, 'grayscale' | 'biLevel' | 'clrChange'>) {
 	const { presentation, buf } = await authorRead((pres) => {
 		pres.addSlide().addImage({ data: PNG_1x1, x: 1, y: 1, w: 2, h: 2, ...imgOpts })
 	})

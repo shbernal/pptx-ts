@@ -23,13 +23,13 @@
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { assert, readEntry } from '../helpers.ts'
+import { assert, defined, readEntry } from '../helpers.ts'
 import { readFixture } from './corpus.ts'
 
 /** Element children of `presentation.xml`'s root, in document order, as qnames. */
-function childOrder(presentation) {
-	const root = presentation.opc.part('/ppt/presentation.xml').dom.documentElement
-	const out = []
+function childOrder(presentation: Presentation): string[] {
+	const root = defined(defined(presentation.opc.part('/ppt/presentation.xml')).dom.documentElement)
+	const out: string[] = []
 	for (let n = root.firstChild; n; n = n.nextSibling) {
 		if (n.nodeType === 1) out.push(n.nodeName)
 	}

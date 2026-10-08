@@ -11,11 +11,12 @@
 // answers were being computed twice with nothing keeping them in step.
 
 import { describe, test } from 'vitest'
+import type { AnyShape, Placeholder } from '../../dist/read.js'
 import { assert, assertEqual, defined } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 /** The `resolved*` family plus identity and geometry, from whichever view is passed. */
-function readable(view) {
+function readable(view: Placeholder | AnyShape) {
 	const run = view.textFrame?.paragraphs?.[0]?.runs?.[0] ?? null
 	return {
 		id: view.id,

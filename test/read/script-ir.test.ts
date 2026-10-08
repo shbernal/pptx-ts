@@ -16,11 +16,12 @@
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
 import JSZip from 'jszip'
-import { Presentation, isAutoShape } from '../../dist/read.js'
-import { canonicalDeckIr, readModelToIr } from '../../dist/script.js'
+import { Presentation, isAutoShape, type TransitionInput } from '../../dist/read.js'
+import { canonicalDeckIr, readModelToIr, type CallIr, type DeckIr, type IrValue } from '../../dist/script.js'
 import { PNG_1X1, assert, assertEqual, defined, expectDefined, readEntry } from '../helpers.ts'
 import { authorRead } from './authored.ts'
 import { fixtureNames, fixturePath, freshIr, irFor, readFixture } from './corpus.ts'
+import { at, opt, arrayOf, objectOf } from './ir-path.ts'
 
 /** A 1x1 SVG; only the blip it produces matters here. */
 const SVG_SQUARE =
@@ -33,17 +34,17 @@ const SVG_SQUARE =
 const transitionOracle = JSON.parse(await readFile(fixturePath('slide-transition.oracle.json'), 'utf8'))
 
 /** Every call across every slide, flattened. */
-function allCalls(ir) {
+function allCalls(ir: DeckIr): CallIr[] {
 	return ir.slides.flatMap((slide) => slide.calls)
 }
 
 /** Note constructs recorded anywhere in the deck. */
-function constructs(ir) {
+function constructs(ir: DeckIr): Set<string> {
 	return new Set(ir.fidelity.map((note) => note.construct))
 }
 
 /** Walk every value in the IR, so an invariant can be asserted over all of them. */
-function* walk(value, trail = '$') {
+function* walk(value: unknown, trail = '$'): Generator<[string, unknown]> {
 	yield [trail, value]
 	if (Array.isArray(value)) {
 		for (const [index, item] of value.entries()) yield* walk(item, `${trail}[${index}]`)
@@ -92,7 +93,7 @@ describe('deck IR — corpus invariants', () => {
 		// `freshIr`, deliberately: `irFor` memoizes, so it would hand back one object twice and
 		// compare it against itself. Two conversions is the whole assertion.
 		const [first, second] = [await freshIr(name), await freshIr(name)]
-		const strip = (ir) =>
+		const strip = (ir: DeckIr) =>
 			JSON.stringify({ ...ir, assets: ir.assets.map((a) => [a.name, a.contentType, a.bytes.length]) })
 		assertEqual(strip(second), strip(first), `${name}: two conversions differ`)
 	})
@@ -101,7 +102,15 @@ describe('deck IR — corpus invariants', () => {
 	// was listed as 3 because the code passed the chart type positionally, so the test
 	// confirmed the bug instead of catching it. They are transcribed from the `Slide`
 	// interface in `src/types/slide.ts`; check them there, not against the mapper.
-	const arity = { addText: 2, addShape: 2, addImage: 1, addTable: 2, addChart: 2, addConnector: 1, addGroup: 2 }
+	const arity: Partial<Record<CallIr['method'], number>> = {
+		addText: 2,
+		addShape: 2,
+		addImage: 1,
+		addTable: 2,
+		addChart: 2,
+		addConnector: 1,
+		addGroup: 2,
+	}
 
 	test.for(fixtureNames)('%s calls only real write-API methods, with their arguments', async (name) => {
 		for (const call of allCalls(await irFor(name))) {
@@ -127,14 +136,15 @@ describe('deck IR — geometry', () => {
 	test('position is raw EMU, so it survives the round-trip exactly', async () => {
 		const ir = await irFor('mixed.pptx')
 		const positioned = allCalls(ir)
-			.map((call) => call.args.find((arg) => arg && typeof arg === 'object' && 'x' in arg))
-			.filter(Boolean)
+			.map((call) => call.args.find((arg) => arg !== null && typeof arg === 'object' && 'x' in arg))
+			.filter((arg) => arg !== undefined)
+			.map((arg) => objectOf(arg))
 		assert(positioned.length > 0, 'mixed.pptx should produce positioned calls')
 		for (const options of positioned) {
 			for (const key of ['x', 'y', 'w', 'h']) {
 				if (options[key] === undefined) continue
 				assert(
-					/^-?\d+emu$/.test(options[key]),
+					/^-?\d+emu$/.test(String(options[key])),
 					`${key} should be an exact EMU string, got ${JSON.stringify(options[key])}`
 				)
 			}
@@ -159,10 +169,10 @@ describe('deck IR — geometry', () => {
 			const expected = firstPath.commands
 				.filter((command) => 'x' in command)
 				.map((command) => Math.round((command.x * frame.width) / firstPath.w))
-			const actual = shape.args[1].points
-				.filter((point) => point.x !== undefined)
+			const actual = arrayOf(at(shape.args[1], 'points'))
+				.filter((point) => at(point, 'x') !== undefined)
 				.slice(0, expected.length)
-				.map((point) => Number(String(point.x).replace('emu', '')))
+				.map((point) => Number(String(at(point, 'x')).replace('emu', '')))
 			assertEqual(actual.join(','), expected.join(','), `${shape.sourceName}: path x coordinates`)
 		}
 	})
@@ -189,10 +199,10 @@ describe('deck IR — geometry', () => {
 		const call = allCalls(rescaled).find((candidate) => candidate.sourceName === shape.name)
 		const baseline = allCalls(await irFor('custgeom.pptx')).find((candidate) => candidate.sourceName === shape.name)
 
-		const spanOf = (one) => {
-			const xs = one.args[1].points
-				.filter((point) => point.x !== undefined)
-				.map((p) => Number(String(p.x).replace('emu', '')))
+		const spanOf = (one: CallIr | undefined) => {
+			const xs = arrayOf(at(defined(one).args[1], 'points'))
+				.filter((point) => at(point, 'x') !== undefined)
+				.map((p) => Number(String(at(p, 'x')).replace('emu', '')))
 			return Math.max(...xs) - Math.min(...xs)
 		}
 		// Twice the viewport over the same box means every coordinate maps to half the width.
@@ -205,11 +215,11 @@ describe('deck IR — geometry', () => {
 		// every clipped picture came back a rectangle with no note.
 		const source = await Presentation.load(await readFixture('picture-custgeom.pptx'))
 		const ir = await irFor('picture-custgeom.pptx')
-		const optionsOf = (name) => {
+		const optionsOf = (name: string) => {
 			const call = allCalls(ir).find((candidate) => candidate.sourceName === name)
 			assert(call, `${name} emits a call`)
 			assertEqual(call.method, 'addImage', `${name} is still an image`)
-			return call.args[0]
+			return objectOf(call.args[0])
 		}
 
 		for (const name of ['pic-clip-lines', 'pic-clip-curve']) {
@@ -220,9 +230,9 @@ describe('deck IR — geometry', () => {
 				.filter((command) => 'x' in command)
 				.map((command) => Math.round((command.x * frame.width) / path.w))
 			const options = optionsOf(name)
-			const actual = options.points
-				.filter((point) => point.x !== undefined)
-				.map((point) => Number(String(point.x).replace('emu', '')))
+			const actual = arrayOf(options.points)
+				.filter((point) => at(point, 'x') !== undefined)
+				.map((point) => Number(String(at(point, 'x')).replace('emu', '')))
 			assertEqual(actual.join(','), expected.join(','), `${name}: clip path x coordinates`)
 			assertEqual(options.shape, undefined, `${name}: a freeform clip prints no preset`)
 		}
@@ -260,11 +270,11 @@ describe('deck IR — geometry', () => {
 		const ir = readModelToIr(presentation)
 		const call = allCalls(ir).find((candidate) => candidate.method === 'addImage')
 		assert(call, 'the picture emits an addImage call')
-		const line = call.args[0].line
+		const line = at(call.args[0], 'line')
 		assert(line, `the call carries a line; got ${JSON.stringify(call.args[0])}`)
-		assertEqual(line.color, '0088CC', 'its colour')
-		assertEqual(line.width, 2, 'its width')
-		assertEqual(line.dashType, 'dash', 'its dash')
+		assertEqual(at(line, 'color'), '0088CC', 'its colour')
+		assertEqual(at(line, 'width'), 2, 'its width')
+		assertEqual(at(line, 'dashType'), 'dash', 'its dash')
 	})
 })
 
@@ -276,7 +286,7 @@ describe('deck IR — connectors', () => {
 	// the four combinations are asserted against the box corners they must produce.
 	const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
 
-	async function connectorEndpoints({ flipH, flipV }) {
+	async function connectorEndpoints({ flipH, flipV }: { flipH: boolean; flipV: boolean }) {
 		const deck = await Presentation.load(await readFixture('mixed.pptx'))
 		const shape = defined(
 			deck.slides.flatMap((slide) => slide.shapes).find((candidate) => candidate.constructor.name === 'Connector')
@@ -290,9 +300,9 @@ describe('deck IR — connectors', () => {
 
 		const frame = defined(shape.absoluteFrame)
 		const ir = readModelToIr(await Presentation.load(await deck.save()))
-		const call = allCalls(ir).find((candidate) => candidate.sourceName === shape.name)
-		const at = (key) => Number(String(call.args[0][key]).replace('emu', ''))
-		return { call: [at('x1'), at('y1'), at('x2'), at('y2')], frame }
+		const call = defined(allCalls(ir).find((candidate) => candidate.sourceName === shape.name))
+		const coord = (key: string) => Number(String(at(call.args[0], key)).replace('emu', ''))
+		return { call: [coord('x1'), coord('y1'), coord('x2'), coord('y2')], frame }
 	}
 
 	test('each flip combination maps onto the right diagonal of the box', async () => {
@@ -318,7 +328,7 @@ describe('deck IR — groups', () => {
 		const ir = await irFor('group-transform.pptx')
 		const nested = allCalls(ir).find((call) => call.sourceName === 'nested-rot-in-scale')
 		assert(nested, 'group-transform.pptx has a nested-rot-in-scale group')
-		const kinds = nested.args[0].map((child) => Object.keys(child)[0])
+		const kinds = arrayOf(nested.args[0]).map((child) => Object.keys(objectOf(child))[0])
 		assert(kinds.includes('group'), `nested group should emit a group child, got ${kinds.join(',')}`)
 	})
 
@@ -327,8 +337,8 @@ describe('deck IR — groups', () => {
 	test.for(fixtureNames)('%s emits key-tagged GroupChildProps for every group child', async (name) => {
 		for (const call of allCalls(await irFor(name))) {
 			if (call.method !== 'addGroup') continue
-			for (const child of call.args[0]) {
-				const keys = Object.keys(child)
+			for (const child of arrayOf(call.args[0])) {
+				const keys = Object.keys(objectOf(child))
 				assertEqual(keys.length, 1, `${name}: a group child must be a single-key descriptor`)
 				assert(groupChildKeys.has(keys[0]), `${name}: ${keys[0]} is not a GroupChildProps variant`)
 			}
@@ -379,9 +389,9 @@ describe('deck IR — losses the read model cannot see', () => {
 		assertEqual(shape.lineCap, 'rnd', 'the reader sees the written cap as its raw OOXML token')
 
 		const ir = readModelToIr(presentation)
-		const line = allCalls(ir).find((call) => call.method === 'addShape').args[1].line
-		assertEqual(line.cap, 'round', "the IR carries it back in the write API's spelling")
-		assertEqual(line.dashType, 'dash', 'alongside the dash it modifies')
+		const line = at(defined(allCalls(ir).find((call) => call.method === 'addShape')).args[1], 'line')
+		assertEqual(at(line, 'cap'), 'round', "the IR carries it back in the write API's spelling")
+		assertEqual(at(line, 'dashType'), 'dash', 'alongside the dash it modifies')
 		assertEqual(
 			ir.fidelity.filter((note) => note.construct === 'line.align').length,
 			0,
@@ -397,7 +407,7 @@ describe('deck IR — losses the read model cannot see', () => {
 		const { buf } = await authorRead((pres) => {
 			pres.addSlide().addShape('rect', { x: 1, y: 1, w: 3, h: 1, line: { color: 'C00000', width: 6 } })
 		})
-		const irWith = async (algn) => {
+		const irWith = async (algn: string) => {
 			const zip = await JSZip.loadAsync(buf)
 			const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
 			const patched = slideXml.replace(/<a:ln w="76200"/, `<a:ln w="76200" algn="${algn}"`)
@@ -442,7 +452,7 @@ describe('deck IR — text autofit', () => {
 	// compared two models that were both missing them and called the deck clean.
 
 	/** The `fit` option of the deck's single `addText` call. */
-	const fitOf = (ir) => allCalls(ir).find((call) => call.method === 'addText').args[1].fit
+	const fitOf = (ir: DeckIr) => at(defined(allCalls(ir).find((call) => call.method === 'addText')).args[1], 'fit')
 
 	test('a baked normAutofit keeps its fontScale and lnSpcReduction through the IR', async () => {
 		const { presentation } = await authorRead((pres) => {
@@ -517,10 +527,8 @@ describe('deck IR — the explicit off for text decorations', () => {
 	// models that were both missing it and called the deck clean.
 
 	/** The per-run option objects of the deck's single `addText` call. */
-	const runOptionsOf = (ir) =>
-		allCalls(ir)
-			.find((call) => call.method === 'addText')
-			.args[0].map((run) => run.options)
+	const runOptionsOf = (ir: DeckIr) =>
+		arrayOf(defined(allCalls(ir).find((call) => call.method === 'addText')).args[0]).map((run) => at(run, 'options'))
 
 	test('a run stating the off token keeps it, in the XML and through the IR', async () => {
 		const { presentation, buf } = await authorRead((pres) => {
@@ -551,9 +559,13 @@ describe('deck IR — the explicit off for text decorations', () => {
 
 		const ir = readModelToIr(presentation)
 		const options = runOptionsOf(ir)
-		assertEqual(JSON.stringify(options[0].underline), JSON.stringify({ style: 'none' }), 'the IR carries u="none"')
-		assertEqual(options[1].strike, 'noStrike', 'and strike="noStrike"')
-		assertEqual(options[2].caps, 'none', 'and cap="none"')
+		assertEqual(
+			JSON.stringify(at(options[0], 'underline')),
+			JSON.stringify({ style: 'none' }),
+			'the IR carries u="none"'
+		)
+		assertEqual(at(options[1], 'strike'), 'noStrike', 'and strike="noStrike"')
+		assertEqual(at(options[2], 'caps'), 'none', 'and cap="none"')
 
 		const canonical = JSON.stringify(canonicalDeckIr(ir))
 		for (const carried of ['"underline":{"style":"none"}', '"strike":"noStrike"', '"caps":"none"']) {
@@ -575,7 +587,7 @@ describe('deck IR — the explicit off for text decorations', () => {
 
 		const options = runOptionsOf(readModelToIr(presentation))[0] ?? {}
 		for (const key of ['underline', 'strike', 'caps']) {
-			assertEqual(options[key], undefined, `${key} is left out, which is what re-emits an inheriting run`)
+			assertEqual(at(options, key), undefined, `${key} is left out, which is what re-emits an inheriting run`)
 		}
 	})
 })
@@ -590,8 +602,8 @@ describe('deck IR — slide transitions', () => {
 	// with a ground-truth answer instead of a self-consistent one.
 
 	/** One representative row per distinct `ns:element` in PowerPoint's probed effect table. */
-	function distinctEffects(namespace) {
-		const seen = new Map()
+	function distinctEffects(namespace: string): TransitionInput[] {
+		const seen = new Map<string, TransitionInput>()
 		for (const row of transitionOracle.entryEffectTable) {
 			if (row.ns !== namespace || seen.has(row.element)) continue
 			seen.set(row.element, { type: row.element, namespace: row.ns, variant: row.variant })
@@ -606,7 +618,7 @@ describe('deck IR — slide transitions', () => {
 	 * so a `p14` effect can be authored here even though the write API has no name for one —
 	 * which is exactly the case that needs testing and that no fixture in the corpus contains.
 	 */
-	async function irWithTransitions(specs) {
+	async function irWithTransitions(specs: TransitionInput[]) {
 		const deck = await Presentation.load(await readFixture('slide-transition.pptx'))
 		deck.slides.forEach((slide, index) => {
 			slide.transition = specs[index] ?? null
@@ -620,7 +632,7 @@ describe('deck IR — slide transitions', () => {
 		return readModelToIr(reloaded)
 	}
 
-	function chunked(items, size) {
+	function chunked<T>(items: T[], size: number): T[][] {
 		return Array.from({ length: Math.ceil(items.length / size) }, (_, i) => items.slice(i * size, i * size + size))
 	}
 
@@ -735,20 +747,22 @@ describe('deck IR — picture fills', () => {
 	// borders-first child order, and a merge origin.
 
 	/** The cell option objects of the first `addTable`, merge continuations already dropped. */
-	function cellOptions(ir) {
-		const call = allCalls(ir).find((item) => item.method === 'addTable')
-		return call.args[0].flat().map((cell) => cell.options ?? {})
+	function cellOptions(ir: DeckIr): IrValue[] {
+		const call = defined(allCalls(ir).find((item) => item.method === 'addTable'))
+		return arrayOf(call.args[0])
+			.flatMap((row) => arrayOf(row))
+			.map((cell) => at(cell, 'options') ?? {})
 	}
 
 	test('every image-filled cell carries its bytes as an image fill', async () => {
 		const ir = await irFor('table-cell-image-fill.pptx')
 		const fills = cellOptions(ir)
-			.map((options) => options.fill)
-			.filter((fill) => fill?.type === 'image')
+			.map((options) => at(options, 'fill'))
+			.filter((fill) => opt(fill, 'type') === 'image')
 
 		assertEqual(fills.length, 4, 'the fixture has four picture cells — stretched, bordered, merged, tiled')
 		for (const fill of fills) {
-			assertEqual(fill.image.data.$asset, 'image1.jpg', 'each resolves to the one shared media part')
+			assertEqual(at(fill, 'image', 'data', '$asset'), 'image1.jpg', 'each resolves to the one shared media part')
 		}
 		assertEqual(ir.assets.length, 1, 'and the part is registered once, not once per cell')
 		assertEqual(ir.assets[0].contentType, 'image/jpeg', "with the package's own content type")
@@ -757,15 +771,15 @@ describe('deck IR — picture fills', () => {
 
 	test('the cells that are not image-filled gain no image fill', async () => {
 		const ir = await irFor('table-cell-image-fill.pptx')
-		const fills = cellOptions(ir).map((options) => options.fill)
-		assertEqual(fills.filter((fill) => fill?.type === 'image').length, 4, 'four picture cells')
+		const fills = cellOptions(ir).map((options) => at(options, 'fill'))
+		assertEqual(fills.filter((fill) => opt(fill, 'type') === 'image').length, 4, 'four picture cells')
 
 		// The fifth is the solid cell's OWN `a:solidFill` — PowerPoint authored the red, so
 		// dropping it made the replica wrong. `TableCell.hasOwnFill` is what tells that apart
 		// from a colour a cell merely inherits from the table style's banding, which is still
 		// left to the style (the two bare cells below carry nothing).
 		assertEqual(fills.filter((fill) => fill !== undefined).length, 5, 'plus the one cell with its own solid fill')
-		assertEqual(fills.filter((fill) => fill?.color === 'FF0000').length, 1, "and it keeps the source's red")
+		assertEqual(fills.filter((fill) => opt(fill, 'color') === 'FF0000').length, 1, "and it keeps the source's red")
 		assertEqual(fills.filter((fill) => fill === undefined).length, 2, 'the two bare cells are left to the style')
 	})
 
@@ -802,7 +816,11 @@ describe('deck IR — picture fills', () => {
 
 		const call = allCalls(ir).find((item) => item.sourceName === 'equation-box')
 		assert(call, 'the image-filled shape emits a call')
-		assertEqual(call.args[0].fill?.type ?? call.args[1]?.fill?.type, 'image', 'and it is filled with an image')
+		assertEqual(
+			opt(at(call.args[0], 'fill'), 'type') ?? opt(call.args[1], 'fill', 'type'),
+			'image',
+			'and it is filled with an image'
+		)
 		assertEqual(ir.assets.length > 0, true, 'whose bytes are registered as an asset')
 		// That fill's `a:fillRect` bleeds past the bottom edge (b="-6667"), which the write
 		// path's fixed `<a:fillRect/>` cannot express.
@@ -821,9 +839,12 @@ describe('deck IR — picture fills', () => {
 				fill: { type: 'image', image: { data: PNG_1X1 }, transparency: 25 },
 			})
 		})
-		const fill = allCalls(readModelToIr(presentation)).find((call) => call.method === 'addText').args[1].fill
-		assertEqual(fill.type, 'image', 'the fill is an image fill')
-		assertEqual(fill.transparency, 25, 'a:alphaModFix amt=75000 → 0.75 opacity → 25 % transparent')
+		const fill = at(
+			defined(allCalls(readModelToIr(presentation)).find((call) => call.method === 'addText')).args[1],
+			'fill'
+		)
+		assertEqual(at(fill, 'type'), 'image', 'the fill is an image fill')
+		assertEqual(at(fill, 'transparency'), 25, 'a:alphaModFix amt=75000 → 0.75 opacity → 25 % transparent')
 	})
 
 	test('an opaque image fill emits no transparency key at all', async () => {
@@ -833,8 +854,15 @@ describe('deck IR — picture fills', () => {
 		const { presentation } = await authorRead((pres) => {
 			pres.addSlide().addText('img', { x: 1, y: 1, w: 3, h: 1, fill: { type: 'image', image: { data: PNG_1X1 } } })
 		})
-		const fill = allCalls(readModelToIr(presentation)).find((call) => call.method === 'addText').args[1].fill
-		assertEqual('transparency' in fill, false, `an opaque fill states no transparency, got ${JSON.stringify(fill)}`)
+		const fill = at(
+			defined(allCalls(readModelToIr(presentation)).find((call) => call.method === 'addText')).args[1],
+			'fill'
+		)
+		assertEqual(
+			'transparency' in objectOf(fill),
+			false,
+			`an opaque fill states no transparency, got ${JSON.stringify(fill)}`
+		)
 	})
 
 	test("an image fill's source crop carries as `image.crop`, in percent", async () => {
@@ -848,14 +876,18 @@ describe('deck IR — picture fills', () => {
 			})
 		})
 		const ir = readModelToIr(presentation)
-		const fill = allCalls(ir).find((call) => call.method === 'addText').args[1].fill
+		const fill = at(defined(allCalls(ir).find((call) => call.method === 'addText')).args[1], 'fill')
 
 		// The reader divides the source's thousandths of a percent by 100000; the trip back is
 		// the exact inverse, so 33333 → 0.33333 → 33.333 rather than to within a rounding step.
-		assertEqual(fill.image.crop.l, 12.5, 'l="12500" comes back as 12.5 %')
-		assertEqual(fill.image.crop.t, 33.333, 't="33333" survives its third decimal')
-		assertEqual(fill.image.crop.b, 25, 'b="25000" comes back as 25 %')
-		assertEqual('r' in fill.image.crop, false, 'an uncropped edge is the option default, not a spelled zero')
+		assertEqual(at(fill, 'image', 'crop', 'l'), 12.5, 'l="12500" comes back as 12.5 %')
+		assertEqual(at(fill, 'image', 'crop', 't'), 33.333, 't="33333" survives its third decimal')
+		assertEqual(at(fill, 'image', 'crop', 'b'), 25, 'b="25000" comes back as 25 %')
+		assertEqual(
+			'r' in objectOf(at(fill, 'image', 'crop')),
+			false,
+			'an uncropped edge is the option default, not a spelled zero'
+		)
 		assertEqual(
 			ir.fidelity.filter((note) => note.construct === 'fill.picture.geometry').length,
 			0,
@@ -869,8 +901,15 @@ describe('deck IR — picture fills', () => {
 		const { presentation } = await authorRead((pres) => {
 			pres.addSlide().addText('img', { x: 1, y: 1, w: 3, h: 1, fill: { type: 'image', image: { data: PNG_1X1 } } })
 		})
-		const fill = allCalls(readModelToIr(presentation)).find((call) => call.method === 'addText').args[1].fill
-		assertEqual('crop' in fill.image, false, `an explicit empty srcRect states no crop, got ${JSON.stringify(fill)}`)
+		const fill = at(
+			defined(allCalls(readModelToIr(presentation)).find((call) => call.method === 'addText')).args[1],
+			'fill'
+		)
+		assertEqual(
+			'crop' in objectOf(at(fill, 'image')),
+			false,
+			`an explicit empty srcRect states no crop, got ${JSON.stringify(fill)}`
+		)
 	})
 
 	test('a source crop the write path would refuse stays uncarried, with a note that says why', async () => {
@@ -893,9 +932,13 @@ describe('deck IR — picture fills', () => {
 		zip.file('ppt/slides/slide1.xml', bled)
 		const ir = readModelToIr(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
 
-		const fill = allCalls(ir).find((call) => call.method === 'addText').args[1].fill
-		assertEqual(fill.type, 'image', 'the bytes still carry — only the crop does not')
-		assertEqual('crop' in fill.image, false, 'and no crop is emitted for insets the option cannot hold')
+		const fill = at(defined(allCalls(ir).find((call) => call.method === 'addText')).args[1], 'fill')
+		assertEqual(at(fill, 'type'), 'image', 'the bytes still carry — only the crop does not')
+		assertEqual(
+			'crop' in objectOf(at(fill, 'image')),
+			false,
+			'and no crop is emitted for insets the option cannot hold'
+		)
 		const noted = ir.fidelity.filter((note) => note.construct === 'fill.picture.geometry')
 		assertEqual(noted.length, 1, 'the loss is declared')
 		assert(noted[0].detail.includes('a:srcRect'), `and names the source crop, got: ${noted[0].detail}`)
@@ -910,8 +953,8 @@ describe('deck IR — picture fills', () => {
 			slide.addText('plain', { x: 3, y: 3, w: 2, h: 1 })
 		})
 		const calls = allCalls(readModelToIr(presentation))
-		const image = calls.find((call) => call.method === 'addImage').args[0]
-		const [described, plain] = calls.filter((call) => call.method === 'addText').map((call) => call.args[1])
+		const image = objectOf(defined(calls.find((call) => call.method === 'addImage')).args[0])
+		const [described, plain] = calls.filter((call) => call.method === 'addText').map((call) => objectOf(call.args[1]))
 		assertEqual(image.altText, 'A red square', 'the picture keeps its description')
 		assertEqual(described.altText, 'described text', 'so does the text box')
 		assertEqual('altText' in plain, false, `a shape with no description states none, got ${JSON.stringify(plain)}`)
@@ -928,18 +971,22 @@ describe('deck IR — picture fills', () => {
 				shadow: { type: 'outer', blur: 3, offset: 2, angle: 45, color: '336699' },
 			})
 		})
-		const image = allCalls(readModelToIr(presentation)).find((call) => call.method === 'addImage').args[0]
-		assertEqual(image.shadow?.type, 'outer', `the shadow is carried, got ${JSON.stringify(image)}`)
-		assertEqual(image.shadow.color, '336699', 'with its colour')
-		assertEqual(image.shadow.blur, 3, 'its blur')
-		assertEqual(image.shadow.angle, 45, 'and its angle')
+		const image = objectOf(
+			defined(allCalls(readModelToIr(presentation)).find((call) => call.method === 'addImage')).args[0]
+		)
+		assertEqual(opt(image.shadow, 'type'), 'outer', `the shadow is carried, got ${JSON.stringify(image)}`)
+		assertEqual(at(image.shadow, 'color'), '336699', 'with its colour')
+		assertEqual(at(image.shadow, 'blur'), 3, 'its blur')
+		assertEqual(at(image.shadow, 'angle'), 45, 'and its angle')
 	})
 
 	test("a picture's crop carries at the source's precision, and one `crop` cannot hold is noted", async () => {
 		const { presentation, buf } = await authorRead((pres) => {
 			pres.addSlide().addImage({ data: PNG_1X1, x: 1, y: 1, w: 1, h: 1, crop: { l: 12.5, t: 33.333 } })
 		})
-		const kept = allCalls(readModelToIr(presentation)).find((call) => call.method === 'addImage').args[0]
+		const kept = objectOf(
+			defined(allCalls(readModelToIr(presentation)).find((call) => call.method === 'addImage')).args[0]
+		)
 		assertEqual(JSON.stringify(kept.crop), '{"l":12.5,"t":33.333}', 'a crop in range carries, zero edges left out')
 
 		// PowerPoint writes a negative inset for a fit crop. Passed through, it put `{ l: -5 }` in
@@ -950,7 +997,7 @@ describe('deck IR — picture fills', () => {
 		assert(bled !== slideXml, 'the authored srcRect was found and made negative')
 		zip.file('ppt/slides/slide1.xml', bled)
 		const ir = readModelToIr(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
-		const image = allCalls(ir).find((call) => call.method === 'addImage').args[0]
+		const image = objectOf(defined(allCalls(ir).find((call) => call.method === 'addImage')).args[0])
 		assertEqual(
 			'crop' in image,
 			false,
@@ -970,8 +1017,8 @@ describe('deck IR — picture fills', () => {
 		zip.file('ppt/slides/slide1.xml', slideXml.replace(/<a:blip r:embed="rId\d+"/, '<a:blip r:embed="rIdNope"'))
 		const ir = readModelToIr(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
 
-		const call = allCalls(ir).find((item) => item.method === 'addText')
-		assertEqual(call.args[1].fill, undefined, 'no fill is invented for bytes that are not there')
+		const call = defined(allCalls(ir).find((item) => item.method === 'addText'))
+		assertEqual(at(call.args[1], 'fill'), undefined, 'no fill is invented for bytes that are not there')
 		const noted = ir.fidelity.find((note) => note.construct === 'fill.picture')
 		assert(noted, 'the loss is declared')
 		assertEqual(noted.disposition, 'dropped', 'the fill is gone, not approximated')
@@ -1002,8 +1049,8 @@ describe('deck IR — picture fills', () => {
 		zip.file('ppt/slides/slide1.xml', repointed)
 		const ir = readModelToIr(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
 
-		const call = allCalls(ir).find((item) => item.method === 'addText')
-		assertEqual(call.args[1].fill, undefined, 'the shape comes out unfilled rather than silently blank')
+		const call = defined(allCalls(ir).find((item) => item.method === 'addText'))
+		assertEqual(at(call.args[1], 'fill'), undefined, 'the shape comes out unfilled rather than silently blank')
 		const noted = ir.fidelity.find((note) => note.construct === 'fill.picture')
 		assert(noted, 'and says so')
 		assertEqual(noted.cause, 'unwritable', 'the bytes are readable; the write API will not take them')
@@ -1014,7 +1061,7 @@ describe('deck IR — picture fills', () => {
 /** The per-shape notes a graphic frame with no write-API emitter raises, one per payload. */
 describe('deck IR — text links, freeform text and fields', () => {
 	/** Load `buf` with `rewrite` applied to one part, as a fresh IR. */
-	async function irWithPart(buf, partName, rewrite) {
+	async function irWithPart(buf: Uint8Array, partName: string, rewrite: (xml: string) => string) {
 		const zip = await JSZip.loadAsync(buf)
 		const xml = await readEntry(zip, partName)
 		const next = rewrite(xml)
@@ -1034,12 +1081,11 @@ describe('deck IR — text links, freeform text and fields', () => {
 			})
 			pres.addSlide().addText('two', { x: 1, y: 1, w: 3, h: 1 })
 		})
-		// `args` is IrValue[]; addText's first argument is its run array.
-		/** @param {import('../../dist/script.js').IrValue} runs */
-		const firstRun = (runs) => /** @type {{ options: Record<string, unknown> }[]} */ (runs)[0]
+		// addText's first argument is its run array.
+		const firstRun = (runs: IrValue) => objectOf(arrayOf(runs)[0])
 		const run = firstRun(readModelToIr(presentation).slides[0].calls[0].args[0])
 		assertEqual(
-			JSON.stringify(run.options.hyperlink),
+			JSON.stringify(at(run.options, 'hyperlink')),
 			'{"slide":2,"tooltip":"Two"}',
 			'the jump carries its slide number'
 		)
@@ -1049,7 +1095,7 @@ describe('deck IR — text links, freeform text and fields', () => {
 			xml.replace('ppaction://hlinksldjump', 'ppaction://hlinkshowjump?jump=nextslide')
 		)
 		const jumped = firstRun(ir.slides[0].calls[0].args[0])
-		assertEqual('hyperlink' in jumped.options, false, 'the show jump is not written as a run link')
+		assertEqual('hyperlink' in objectOf(jumped.options), false, 'the show jump is not written as a run link')
 		assertEqual(ir.fidelity.filter((note) => note.construct === 'text.hyperlink').length, 1, 'and its loss is declared')
 	})
 
@@ -1067,9 +1113,16 @@ describe('deck IR — text links, freeform text and fields', () => {
 		})
 		const [call] = allCalls(readModelToIr(presentation))
 		assertEqual(call.method, 'addText', 'the freeform keeps its text')
-		assertEqual(call.args[0].map((item) => item.text).join(''), 'Hello freeform', 'all of it')
-		assertEqual(call.args[1].shape, 'custGeom', 'on its custom geometry')
-		assert(Array.isArray(call.args[1].points) && call.args[1].points.length > 0, 'with its points')
+		assertEqual(
+			arrayOf(call.args[0])
+				.map((item) => at(item, 'text'))
+				.join(''),
+			'Hello freeform',
+			'all of it'
+		)
+		assertEqual(at(call.args[1], 'shape'), 'custGeom', 'on its custom geometry')
+		const points = at(call.args[1], 'points')
+		assert(Array.isArray(points) && points.length > 0, 'with its points')
 	})
 
 	test('a field in a table cell is noted, as the same field in a text box is', async () => {
@@ -1107,7 +1160,7 @@ describe('deck IR — text links, freeform text and fields', () => {
 
 describe('deck IR — connector strokes and grouped connectors', () => {
 	/** `mixed.pptx` with every connector's `p:cxnSp` rewritten by `rewrite`, as a fresh IR. */
-	async function mixedWithConnectors(rewrite) {
+	async function mixedWithConnectors(rewrite: (cxn: string) => string) {
 		const zip = await JSZip.loadAsync(await readFixture('mixed.pptx'))
 		let count = 0
 		for (const name of Object.keys(zip.files).filter((entry) => /^ppt\/slides\/slide\d+\.xml$/.test(entry))) {
@@ -1135,7 +1188,7 @@ describe('deck IR — connector strokes and grouped connectors', () => {
 		const lines = calls.filter((call) => call.method === 'addShape' && call.args[0] === 'line')
 		assert(lines.length > 0, 'the connectors are emitted as line shapes')
 		for (const call of lines) {
-			assertEqual(call.args[1].line?.type, 'none', `${call.sourceName} states no outline`)
+			assertEqual(opt(at(call.args[1], 'line'), 'type'), 'none', `${call.sourceName} states no outline`)
 		}
 	})
 
@@ -1147,7 +1200,7 @@ describe('deck IR — connector strokes and grouped connectors', () => {
 			ir.fidelity.filter((note) => note.construct === 'connector.line').map((note) => note.shapeName)
 		)
 		for (const call of connectors) {
-			assert(noted.has(call.sourceName), `${call.sourceName}: the dropped cap is noted`)
+			assert(noted.has(defined(call.sourceName)), `${call.sourceName}: the dropped cap is noted`)
 		}
 	})
 
@@ -1159,9 +1212,10 @@ describe('deck IR — connector strokes and grouped connectors', () => {
 		for (const groupName of ['Groupe 7', 'Groupe 2']) {
 			const group = allCalls(ir).find((call) => call.method === 'addGroup' && call.sourceName === groupName)
 			assert(group, `${groupName} is emitted`)
-			const lines = group.args[0].filter((child) => child.shape?.type === 'line')
+			const lines = arrayOf(group.args[0]).filter((child) => opt(at(child, 'shape'), 'type') === 'line')
 			assert(lines.length > 0, `${groupName} keeps its connector as a line child`)
-			for (const child of lines) assert(child.shape.options.line, `${groupName}: the line child carries its stroke`)
+			for (const child of lines)
+				assert(at(child, 'shape', 'options', 'line'), `${groupName}: the line child carries its stroke`)
 		}
 	})
 })

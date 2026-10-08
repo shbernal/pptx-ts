@@ -11,7 +11,7 @@ import { readFile } from 'node:fs/promises'
 
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
-import { Presentation } from '../../dist/read.js'
+import { Presentation, type OpcPackage } from '../../dist/read.js'
 import {
 	TsPptx,
 	captureDiagnostics,
@@ -33,7 +33,7 @@ const SLIDE_LAYOUT_REL = `${R_NS}/slideLayout`
 const PR_NS = 'http://schemas.openxmlformats.org/package/2006/relationships'
 const MODERN_AUTHORS_REL = 'http://schemas.microsoft.com/office/2018/10/relationships/authors'
 
-function partNames(opc) {
+function partNames(opc: OpcPackage): Set<string> {
 	return new Set(opc.parts.keys())
 }
 

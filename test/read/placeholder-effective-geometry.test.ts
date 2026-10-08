@@ -19,14 +19,10 @@
 // geometry below was read directly out of that XML (independent of the reader
 // code under test), not derived by running the getter.
 
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, test } from 'vitest'
 
 import { assert, assertEqual } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // Read from ppt/slideMasters/slideMaster1.xml inside placeholder-inherit.pptx.
 const MASTER_TITLE = { left: 838200, top: 365125, width: 10515600, height: 1325563 }

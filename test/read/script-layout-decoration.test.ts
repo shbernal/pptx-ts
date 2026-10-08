@@ -35,7 +35,14 @@ import { fileURLToPath } from 'node:url'
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import TsPptx, { ChartType } from '../../dist/node.js'
-import { Presentation } from '../../dist/read.js'
+import {
+	Presentation,
+	isGraphicFrame,
+	isGroupShape,
+	isPicture,
+	type AnyShape,
+	type SlideLayout,
+} from '../../dist/read.js'
 import {
 	canonicalDeckIr,
 	diffDeckIr,
@@ -43,9 +50,12 @@ import {
 	printStandaloneScript,
 	readModelToIr,
 	LAYOUT_NOTE_PREFIX,
+	type DeckIr,
+	type IrValue,
 } from '../../dist/script.js'
 import { assert, assertEqual, defined, readEntry } from '../helpers.ts'
 import { FIXTURES } from './corpus.ts'
+import { at, opt, arrayOf, objectOf } from './ir-path.ts'
 
 const run = promisify(execFile)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -60,12 +70,12 @@ const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const PNG_1x1 =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP8z8DwHwAFAAH/Re1ZlAAAAABJRU5ErkJggg=='
 
-async function load(name) {
+async function load(name: string) {
 	return Presentation.load(await readFile(path.join(FIXTURES, name)))
 }
 
 /** Every `SlideLayout` in a deck, in the gallery order the IR's `layoutIndex` addresses. */
-function layoutsOf(presentation) {
+function layoutsOf(presentation: Presentation): SlideLayout[] {
 	return presentation.masters().flatMap((master) => master.layouts)
 }
 
@@ -73,47 +83,48 @@ function layoutsOf(presentation) {
  * The same placeholder test the converter uses, spelled out here rather than imported: a test
  * that shared the predicate with the code under test could not catch it being wrong.
  */
-function isPlaceholder(shape) {
+function isPlaceholder(shape: AnyShape): boolean {
 	return shape.element_.getElementsByTagNameNS(P_NS, 'ph').length > 0
 }
 
 /** A layout's decorative shapes, flattened through groups the way the converter flattens them. */
-function decorationOf(shapes, out = []) {
+function decorationOf(shapes: AnyShape[], out: AnyShape[] = []): AnyShape[] {
 	for (const shape of shapes) {
 		if (isPlaceholder(shape)) continue
-		if (shape.shapes) decorationOf(shape.shapes, out)
+		if (isGroupShape(shape)) decorationOf(shape.shapes, out)
 		else out.push(shape)
 	}
 	return out
 }
 
 /** The `objectName` an emitted `SlideMasterObject` carries, whichever variant it is. */
-function nameOfObject(object) {
-	const [body] = Object.values(object)
-	return body.options?.objectName ?? body.objectName ?? null
+function nameOfObject(object: IrValue): IrValue {
+	const [body] = Object.values(objectOf(object))
+	return opt(at(body, 'options'), 'objectName') ?? at(body, 'objectName') ?? null
 }
 
 /** The single-key tag of an emitted `SlideMasterObject` — `shape`, `text`, `image`, `chart`. */
-function tagOf(object) {
-	return Object.keys(object)[0]
+function tagOf(object: IrValue | undefined): string {
+	return Object.keys(objectOf(object))[0]
 }
 
-function objectsOfLayout(ir, index) {
-	return ir.chrome.masters.find((master) => master.layoutIndex === index)?.props.objects ?? []
+function objectsOfLayout(ir: DeckIr, index: number): IrValue[] {
+	return arrayOf(ir.chrome.masters.find((master) => master.layoutIndex === index)?.props.objects ?? [])
 }
 
 /** Author a deck through the write API and return its bytes. */
-async function authored(build) {
+async function authored(build: (pptx: TsPptx) => void): Promise<Buffer> {
 	const pptx = new TsPptx()
 	build(pptx)
-	return /** @type {Buffer} */ (await pptx.write({ outputType: 'nodebuffer' }))
+	// `write` is typed as every output type's union; `nodebuffer` is the Buffer arm.
+	return (await pptx.write({ outputType: 'nodebuffer' })) as Buffer
 }
 
 /**
  * Print the standalone script for these bytes, run it with no template in reach, and read back
  * what it produced.
  */
-async function runStandalone(bytes) {
+async function runStandalone(bytes: Uint8Array) {
 	await mkdir(SCRATCH, { recursive: true })
 	const dir = await mkdtemp(path.join(SCRATCH, 'layout-deco-'))
 	try {
@@ -165,7 +176,7 @@ describe('layout decoration — the IR, read against the deck rather than the co
 		// not the converter's arithmetic.
 		const presentation = await load('mixed.pptx')
 		const layout = layoutsOf(presentation)[0]
-		const groups = layout.shapes.filter((shape) => shape.shapes)
+		const groups = layout.shapes.filter(isGroupShape)
 		assert(groups.length > 0, 'the layout carries at least one group')
 
 		const ir = readModelToIr(presentation)
@@ -175,18 +186,18 @@ describe('layout decoration — the IR, read against the deck rather than the co
 		for (const shape of decorationOf(layout.shapes)) {
 			const object = objects.find((entry) => nameOfObject(entry) === shape.name)
 			assert(object, `${shape.name} is emitted`)
-			const frame = shape.absoluteFrame
-			const options = Object.values(object)[0].options
-			assertEqual(options.x, `${frame.left}emu`, `${shape.name} x`)
-			assertEqual(options.y, `${frame.top}emu`, `${shape.name} y`)
-			assertEqual(options.w, `${frame.width}emu`, `${shape.name} w`)
-			assertEqual(options.h, `${frame.height}emu`, `${shape.name} h`)
+			const frame = defined(shape.absoluteFrame)
+			const options = at(Object.values(objectOf(object))[0], 'options')
+			assertEqual(at(options, 'x'), `${frame.left}emu`, `${shape.name} x`)
+			assertEqual(at(options, 'y'), `${frame.top}emu`, `${shape.name} y`)
+			assertEqual(at(options, 'w'), `${frame.width}emu`, `${shape.name} w`)
+			assertEqual(at(options, 'h'), `${frame.height}emu`, `${shape.name} h`)
 		}
 
 		// Every group, at every depth, is named by a note — including the nested ones, which a
 		// walk that stopped at the top level would miss.
 		const flattened = ir.fidelity.filter((note) => note.construct === `${LAYOUT_NOTE_PREFIX}group`)
-		const nested = layout.shapes.flatMap((shape) => (shape.shapes ?? []).filter((child) => child.shapes))
+		const nested = layout.shapes.flatMap((shape) => (isGroupShape(shape) ? shape.shapes.filter(isGroupShape) : []))
 		for (const group of [...groups, ...nested]) {
 			assert(
 				flattened.some((note) => note.shapeName === group.name),
@@ -205,16 +216,18 @@ describe('layout decoration — the IR, read against the deck rather than the co
 		// The ten `p:clrMap` slots the write path can name. The other seven degrade to a literal
 		// there anyway, so the converter bakes them deliberately and says so — the leg below.
 		const writable = new Set(['accent1', 'accent2', 'accent3', 'accent4', 'accent5', 'accent6', 'bg1', 'bg2', 'tx1', 'tx2']) // prettier-ignore
-		const tokened = decorationOf(layout.shapes).filter((shape) => writable.has(shape.fillSchemeColor))
+		const tokened = decorationOf(layout.shapes).filter(
+			(shape) => shape.fillSchemeColor !== null && writable.has(shape.fillSchemeColor)
+		)
 		assert(tokened.length > 0, 'the fixture layout paints from the theme')
 
 		const ir = readModelToIr(presentation)
 		const objects = objectsOfLayout(ir, 0)
 		for (const shape of tokened) {
 			const object = objects.find((entry) => nameOfObject(entry) === shape.name)
-			const fill = Object.values(object)[0].options.fill
+			const fill = at(Object.values(objectOf(object))[0], 'options', 'fill')
 			// A gradient carries its tokens in its stops instead; either way none may be a hex.
-			const token = fill.color ?? fill.gradient?.stops?.[0]?.color
+			const token = at(fill, 'color') ?? opt(at(fill, 'gradient'), 'stops', 0, 'color')
 			assertEqual(token, shape.fillSchemeColor, `${shape.name} keeps its scheme token`)
 		}
 
@@ -247,14 +260,14 @@ describe('layout decoration — the IR, read against the deck rather than the co
 		for (const connector of connectors) {
 			const object = objects.find((entry) => nameOfObject(entry) === connector.name)
 			assert(object, `${connector.name} is emitted rather than dropped`)
-			assertEqual(object.shape.type, 'line', `${connector.name} is a line preset`)
-			const frame = connector.absoluteFrame
-			assertEqual(object.shape.options.x, `${frame.left}emu`, `${connector.name} x`)
-			assertEqual(object.shape.options.w, `${frame.width}emu`, `${connector.name} w`)
-			assertEqual(object.shape.options.flipH ?? false, connector.flipH, `${connector.name} flipH`)
+			assertEqual(at(object, 'shape', 'type'), 'line', `${connector.name} is a line preset`)
+			const frame = defined(connector.absoluteFrame)
+			assertEqual(at(object, 'shape', 'options', 'x'), `${frame.left}emu`, `${connector.name} x`)
+			assertEqual(at(object, 'shape', 'options', 'w'), `${frame.width}emu`, `${connector.name} w`)
+			assertEqual(at(object, 'shape', 'options', 'flipH') ?? false, connector.flipH, `${connector.name} flipH`)
 			// The stroke is the whole reason it is visible; a line shape with no `line` would be a
 			// hairline black default rather than the source's rule.
-			assert(object.shape.options.line?.color, `${connector.name} keeps its stroke colour`)
+			assert(opt(at(object, 'shape', 'options', 'line'), 'color'), `${connector.name} keeps its stroke colour`)
 		}
 	})
 
@@ -270,10 +283,16 @@ describe('layout decoration — the IR, read against the deck rather than the co
 		for (const box of boxes) {
 			const object = objects.find((entry) => nameOfObject(entry) === box.name)
 			assertEqual(tagOf(object), 'text', `${box.name} is a text object`)
-			assertEqual(object.text.options.isTextBox, true, `${box.name} stays a text box rather than an auto shape`)
 			assertEqual(
-				object.text.text.map((runIr) => runIr.text).join(''),
-				box.textFrame.text,
+				at(object, 'text', 'options', 'isTextBox'),
+				true,
+				`${box.name} stays a text box rather than an auto shape`
+			)
+			assertEqual(
+				arrayOf(at(object, 'text', 'text'))
+					.map((runIr) => at(runIr, 'text'))
+					.join(''),
+				defined(box.textFrame).text,
 				`${box.name} keeps its glyphs`
 			)
 		}
@@ -341,10 +360,12 @@ describe('layout decoration — the emitted script rebuilds it, with no template
 		// between two sides that are both empty.
 		const { ir, outputIr, printed } = await runStandalone(await readFile(path.join(FIXTURES, 'read-stress.pptx')))
 		const perturbed = canonicalDeckIr(outputIr)
-		const masters = /** @type {Record<string, any>[]} */ (perturbed.chrome.masters)
-		const victim = masters.find((master) => Array.isArray(master.objects) && master.objects.length > 0)
+		const victim = perturbed.chrome.masters.find((master) => {
+			const objects = at(master, 'objects')
+			return Array.isArray(objects) && objects.length > 0
+		})
 		assert(victim, 'the output IR has a decorated layout to strip')
-		delete victim.objects
+		delete objectOf(victim).objects
 
 		const dirty = diffDeckIr(canonicalDeckIr(ir), perturbed, printed.notes)
 		assert(
@@ -382,16 +403,19 @@ describe('layout decoration — kinds the fixture corpus does not contain', () =
 
 		const ir = readModelToIr(await Presentation.load(bytes))
 		const master = defined(ir.chrome.masters.find((entry) => entry.props.title === 'Branded'))
-		const [object] = /** @type {any[]} */ (master.props.objects)
+		const [object] = arrayOf(master.props.objects)
 		assertEqual(tagOf(object), 'image', 'the layout image is emitted as an image object')
 		assertEqual(nameOfObject(object), 'Wordmark', 'and keeps its name')
-		assert(object.image.data?.$asset, 'with its bytes carried as an asset rather than a path')
+		assert(opt(at(object, 'image', 'data'), '$asset'), 'with its bytes carried as an asset rather than a path')
 
 		const { output, report } = await runStandalone(bytes)
 		assertEqual(report.undeclared.length, 0, 'no undeclared round-trip difference')
-		const rebuilt = layoutsOf(output).find((layout) => layout.name === 'Branded')
+		const rebuilt = defined(layoutsOf(output).find((layout) => layout.name === 'Branded'))
 		const picture = decorationOf(rebuilt.shapes).find((shape) => shape.name === 'Wordmark')
-		assert(picture?.imagePartName, 'the output layout holds a picture with an embedded image part')
+		assert(
+			picture && isPicture(picture) && picture.imagePartName,
+			'the output layout holds a picture with an embedded image part'
+		)
 	})
 
 	test('a chart on a layout carries its series across', async () => {
@@ -413,16 +437,16 @@ describe('layout decoration — kinds the fixture corpus does not contain', () =
 
 		const ir = readModelToIr(await Presentation.load(bytes))
 		const master = defined(ir.chrome.masters.find((entry) => entry.props.title === 'Dashboard'))
-		const [object] = /** @type {any[]} */ (master.props.objects)
+		const [object] = arrayOf(master.props.objects)
 		assertEqual(tagOf(object), 'chart', 'the layout chart is emitted as a chart object')
-		assertEqual(object.chart.type, 'bar', 'with the type lifted back out of the addChart options')
-		assertEqual(object.chart.data[0].values.join(','), '3,5', 'and its cached series values')
+		assertEqual(at(object, 'chart', 'type'), 'bar', 'with the type lifted back out of the addChart options')
+		assertEqual(arrayOf(at(object, 'chart', 'data', 0, 'values')).join(','), '3,5', 'and its cached series values')
 
 		const { output, report } = await runStandalone(bytes)
 		assertEqual(report.undeclared.length, 0, 'no undeclared round-trip difference')
-		const rebuilt = layoutsOf(output).find((layout) => layout.name === 'Dashboard')
+		const rebuilt = defined(layoutsOf(output).find((layout) => layout.name === 'Dashboard'))
 		assert(
-			decorationOf(rebuilt.shapes).some((shape) => shape.chart),
+			decorationOf(rebuilt.shapes).some((shape) => isGraphicFrame(shape) && shape.chart),
 			'the output layout holds a chart'
 		)
 	})
@@ -451,9 +475,9 @@ describe('layout decoration — kinds the fixture corpus does not contain', () =
 
 		const relocated = await zip.generateAsync({ type: 'nodebuffer' })
 		const presentation = await Presentation.load(relocated)
-		const layout = layoutsOf(presentation).find((entry) => entry.name === 'Tabular')
+		const layout = defined(layoutsOf(presentation).find((entry) => entry.name === 'Tabular'))
 		assert(
-			decorationOf(layout.shapes).some((shape) => shape.table),
+			decorationOf(layout.shapes).some((shape) => isGraphicFrame(shape) && shape.table),
 			'the layout really holds the table now'
 		)
 

@@ -24,13 +24,11 @@
 // the package, so the write side emits `tableStyles.xml` as a bare stub and cannot
 // define a style for the read side to resolve. See `authorReadWithFixtureStyles`.
 
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, test } from 'vitest'
 import JSZip from 'jszip'
-import { Presentation } from '../../dist/read.js'
+import { Presentation, type Table, type TableCell } from '../../dist/read.js'
 import { TableStyle } from '../../dist/node.js'
-import { PNG_1X1, assert, assertEqual, defined, readEntry } from '../helpers.ts'
+import { PNG_1X1, assert, assertEqual, defined, readEntry, type TsPptx } from '../helpers.ts'
 import { openFixture, readFixture } from './corpus.ts'
 import {
 	authorRead,
@@ -41,9 +39,7 @@ import {
 	validatorInstalled,
 } from './authored.ts'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
-function tableOf(presentation) {
+function tableOf(presentation: Presentation): Table | null {
 	for (const slide of presentation.slides) {
 		for (const shape of slide.shapes) {
 			if (shape.shapeType === 'graphicFrame' && shape.table) return shape.table
@@ -52,12 +48,17 @@ function tableOf(presentation) {
 	return null
 }
 
+/** The cell at (`row`, `col`) of a table that must be there. */
+function cellOf(table: Table | null, row: number, col: number): TableCell {
+	return defined(defined(table, 'the table is read back').cell(row, col), `cell (${row}, ${col}) exists`)
+}
+
 describe('TableCell.pictureFill — a:tcPr/a:blipFill (PowerPoint oracle)', () => {
 	test('a stretched picture cell reads its image, mode, and stretch rect', async () => {
 		const table = tableOf(await openFixture('table-cell-image-fill'))
 		assert(table, 'the fixture table is read back')
 
-		const fill = table.cell(0, 0).pictureFill
+		const fill = cellOf(table, 0, 0).pictureFill
 		assert(fill, 'A1 surfaces a picture fill')
 		assertEqual(fill.relId, 'rId2', "the blip's r:embed, verbatim")
 		assertEqual(fill.partName, '/ppt/media/image1.jpg', 'and resolves against the slide relationships')
@@ -74,7 +75,7 @@ describe('TableCell.pictureFill — a:tcPr/a:blipFill (PowerPoint oracle)', () =
 	test('a picture cell that also carries borders reads both (the child-order case)', async () => {
 		// `CT_TableCellProperties` puts EG_FillProperties at order 7, i.e. after
 		// lnL/lnR/lnT/lnB — B1 in the fixture has all four plus the fill.
-		const cell = tableOf(await openFixture('table-cell-image-fill')).cell(1, 0)
+		const cell = cellOf(tableOf(await openFixture('table-cell-image-fill')), 1, 0)
 		const fill = cell.pictureFill
 		assert(fill, 'the fill is found past the four preceding border elements')
 		assertEqual(fill.relId, 'rId2', 'and shares the deduped relationship')
@@ -83,7 +84,7 @@ describe('TableCell.pictureFill — a:tcPr/a:blipFill (PowerPoint oracle)', () =
 	})
 
 	test('a tiled picture cell reads its tile offsets, scales, flip and alignment', async () => {
-		const fill = tableOf(await openFixture('table-cell-image-fill')).cell(3, 0).pictureFill
+		const fill = cellOf(tableOf(await openFixture('table-cell-image-fill')), 3, 0).pictureFill
 		assert(fill, 'D1 surfaces a picture fill')
 		assertEqual(fill.mode, 'tile', 'a:tile → tile')
 		assert(fill.tile, 'the tile geometry is decoded')
@@ -103,25 +104,25 @@ describe('TableCell.pictureFill — a:tcPr/a:blipFill (PowerPoint oracle)', () =
 
 	test('a merged origin carries the fill and its covered cell reports none', async () => {
 		const table = tableOf(await openFixture('table-cell-image-fill'))
-		const origin = table.cell(2, 0)
+		const origin = cellOf(table, 2, 0)
 		assertEqual(origin.gridSpan, 2, 'C1 is the merge origin')
 		assert(origin.pictureFill, 'the origin holds the picture fill')
-		const covered = table.cell(2, 1)
+		const covered = cellOf(table, 2, 1)
 		assertEqual(covered.isMergeContinuation, true, 'C2 is the covered half')
 		assertEqual(covered.pictureFill, null, 'PowerPoint writes a bare <a:tcPr/> there, so nothing to read')
 	})
 
 	test('non-picture cells report null, and a solid-filled cell still resolves its colour', async () => {
 		const table = tableOf(await openFixture('table-cell-image-fill'))
-		assertEqual(table.cell(0, 1).pictureFill, null, 'the solid control cell has no picture fill')
-		assertEqual(table.cell(0, 1).resolvedFill?.effectiveHex, 'FF0000', 'and its solid fill still reads')
-		assertEqual(table.cell(3, 1).pictureFill, null, 'a bare <a:tcPr/> cell has no picture fill')
-		assertEqual(table.cell(1, 1).pictureFill, null, 'a borders-only cell has no picture fill')
+		assertEqual(cellOf(table, 0, 1).pictureFill, null, 'the solid control cell has no picture fill')
+		assertEqual(cellOf(table, 0, 1).resolvedFill?.effectiveHex, 'FF0000', 'and its solid fill still reads')
+		assertEqual(cellOf(table, 3, 1).pictureFill, null, 'a bare <a:tcPr/> cell has no picture fill')
+		assertEqual(cellOf(table, 1, 1).pictureFill, null, 'a borders-only cell has no picture fill')
 	})
 
 	test('every picture cell resolves to the one shared media part', async () => {
 		const table = tableOf(await openFixture('table-cell-image-fill'))
-		const parts = [table.cell(0, 0), table.cell(1, 0), table.cell(2, 0), table.cell(3, 0)].map(
+		const parts = [cellOf(table, 0, 0), cellOf(table, 1, 0), cellOf(table, 2, 0), cellOf(table, 3, 0)].map(
 			(cell) => cell.pictureFill?.partName
 		)
 		assertEqual(new Set(parts).size, 1, 'PowerPoint dedupes the source to one relationship')
@@ -237,7 +238,7 @@ describe('TableCell.resolvedFill — a non-solid own fill suppresses the style g
 	 * because PowerPoint reads `<a:tableStyleId>` off its own gallery and never out of the
 	 * package. `MEDIUM_STYLE_2_ACCENT_1` is defined in the fixture, with `firstRow` shading.
 	 */
-	function styledTable(pres) {
+	function styledTable(pres: TsPptx) {
 		pres
 			.addSlide()
 			.addTable([[{ text: 'A', options: { fill: { type: 'image', image: { data: PNG_1X1 } } } }, { text: 'B' }]], {
@@ -256,11 +257,11 @@ describe('TableCell.resolvedFill — a non-solid own fill suppresses the style g
 		assert(table.resolvedStyle, 'the authored tableStyle resolves, so the style graph is live')
 
 		// The control: same row, same style, no fill of its own — it must still inherit.
-		const plain = defined(table.cell(0, 1))
+		const plain = defined(cellOf(table, 0, 1))
 		assertEqual(plain.pictureFill, null, 'the neighbour is not image-filled')
 		assert(plain.resolvedFill?.effectiveHex, 'and it inherits the firstRow shading from the style')
 
-		const picture = defined(table.cell(0, 0))
+		const picture = defined(cellOf(table, 0, 0))
 		assert(picture.pictureFill, 'the image-filled cell surfaces its picture')
 		assertEqual(
 			picture.resolvedFill,

@@ -12,50 +12,48 @@
 // The 'both' (raster+SVG) and plain 'raster' mediaKind cases live in
 // style-accessors.test.js against image.pptx.
 
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
-import { Picture } from '../../dist/read.js'
-/** @import { ShapeHost } from '../../dist/read.js' */
+import { Picture, isPicture, type AnyShape, type ShapeHost, type Slide } from '../../dist/read.js'
 import { assert, assertEqual, defined } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
 /** Flatten a shape list, descending into groups. */
-function allShapes(shapes) {
+function allShapes(shapes: readonly AnyShape[]): AnyShape[] {
 	return shapes.flatMap((shape) => (shape.shapeType === 'group' ? [shape, ...allShapes(shape.shapes)] : [shape]))
 }
 
-function named(slide, name) {
+function named(slide: Slide, name: string): AnyShape
+function named<T extends AnyShape>(slide: Slide, name: string, guard: (shape: AnyShape) => shape is T): T
+function named(slide: Slide, name: string, guard?: (shape: AnyShape) => boolean): AnyShape {
 	const shape = allShapes(slide.shapes).find((s) => s.name === name)
 	assert(shape, `expected a shape named ${name}`)
+	if (guard) assert(guard(shape), `expected ${name} to be of the requested kind`)
 	return shape
 }
 
 /** Wrap a standalone `<p:pic>…</p:pic>` string in a Picture with a stand-in slide. */
-function pictureFromXml(innerXml) {
+function pictureFromXml(innerXml: string): Picture {
 	const xml = `<p:spTree xmlns:p="${P_NS}" xmlns:a="${A_NS}">${innerXml}</p:spTree>`
 	const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 	const el = spTree.getElementsByTagNameNS(P_NS, 'pic')[0]
 	// Stand-in slide: none of the accessors under test reach through to it.
-	return new Picture(el, /** @type {ShapeHost} */ ({}))
+	return new Picture(el, {} as ShapeHost)
 }
 
 describe('Picture media accessors (picture-media.pptx)', () => {
 	test('mediaKind reports svg for an SVG-only picture and raster for a plain one', async () => {
 		const slide = (await openFixture('picture-media')).slides[0]
-		assertEqual(named(slide, 'SvgPic').mediaKind, 'svg', 'a blip with only asvg:svgBlip is svg-only')
-		assertEqual(named(slide, 'CroppedPic').mediaKind, 'raster', 'a blip with only r:embed is raster')
+		assertEqual(named(slide, 'SvgPic', isPicture).mediaKind, 'svg', 'a blip with only asvg:svgBlip is svg-only')
+		assertEqual(named(slide, 'CroppedPic', isPicture).mediaKind, 'raster', 'a blip with only r:embed is raster')
 	})
 
 	test('mediaPartName falls back to the SVG part when there is no raster', async () => {
 		const slide = (await openFixture('picture-media')).slides[0]
-		const svgPic = named(slide, 'SvgPic')
+		const svgPic = named(slide, 'SvgPic', isPicture)
 		assertEqual(svgPic.imagePartName, null, 'an SVG-only picture has no raster part')
 		const part = svgPic.mediaPartName
 		assert(part && part.endsWith('.svg'), `mediaPartName resolves to the .svg part; got ${part}`)
@@ -64,7 +62,7 @@ describe('Picture media accessors (picture-media.pptx)', () => {
 
 	test('crop reads a:srcRect as per-edge fractions', async () => {
 		const slide = (await openFixture('picture-media')).slides[0]
-		const crop = named(slide, 'CroppedPic').crop
+		const crop = named(slide, 'CroppedPic', isPicture).crop
 		assert(crop, 'the cropped picture reports a crop')
 		// srcRect l="41666" t="27778" r="20833" b="13889" (thousandths of a percent).
 		assertEqual(crop.left, 41666 / 100000, 'left edge fraction')
@@ -75,7 +73,7 @@ describe('Picture media accessors (picture-media.pptx)', () => {
 
 	test('crop is null when the picture has no a:srcRect', async () => {
 		const slide = (await openFixture('picture-media')).slides[0]
-		assertEqual(named(slide, 'SvgPic').crop, null, 'an uncropped picture reports null')
+		assertEqual(named(slide, 'SvgPic', isPicture).crop, null, 'an uncropped picture reports null')
 	})
 })
 

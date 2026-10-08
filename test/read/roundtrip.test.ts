@@ -5,6 +5,7 @@
 // reserialize from their DOM and stay schema-valid.
 
 import JSZip from 'jszip'
+import type { ValidationDiagnostic } from 'ooxml-validate'
 import { describe, test } from 'vitest'
 import { ContentTypes, OpcPackage, Relationships, resolveRelativePartName, relsPartNameFor } from '../../dist/read.js'
 import {
@@ -30,11 +31,9 @@ const SLIDE_CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.presen
  * Only *bytes* are cached, never an `OpcPackage`: `laziness` asserts no part was parsed, and
  * a package shared with a test that read a DOM would fail on the neighbour's access rather
  * than its own.
- *
- * @type {Map<string, Promise<{ input: Buffer, saved: Uint8Array }>>}
  */
-const roundTripped = new Map()
-function roundTrip(name) {
+const roundTripped = new Map<string, Promise<{ input: Buffer; saved: Uint8Array }>>()
+function roundTrip(name: string) {
 	let pending = roundTripped.get(name)
 	if (!pending) {
 		pending = (async () => {
@@ -116,7 +115,7 @@ describe('OPC round-trip — corpus invariants', () => {
 })
 
 /** A stable, order-independent identity for a validator verdict. */
-function errorFingerprint(errors) {
+function errorFingerprint(errors: readonly ValidationDiagnostic[]): string {
 	return errors
 		.map((e) => `${e.id} ${e.partUri ?? ''} ${e.xpath ?? ''}`)
 		.sort()

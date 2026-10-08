@@ -12,8 +12,8 @@
 import { describe, expect, test } from 'vitest'
 import JSZip from 'jszip'
 import { Presentation } from '../../dist/read.js'
-import { readModelToIr } from '../../dist/script.js'
-import { ChartType } from '../../dist/node.js'
+import { readModelToIr, type CallIr, type DeckIr } from '../../dist/script.js'
+import { ChartType, type CHART_NAME, type ChartOpts, type OptsChartData } from '../../dist/node.js'
 import { assert, assertEqual, defined, readEntry } from '../helpers.ts'
 import { authorRead } from './authored.ts'
 import { readFixture } from './corpus.ts'
@@ -27,24 +27,30 @@ const XY = [
 	{ name: 'Y2', values: [7, 8, 9] },
 ]
 
+/** A chart call's series argument, typed as the `addChart` parameter it is printed into. */
+const seriesOf = (call: CallIr) => call.args[0] as OptsChartData[]
+
+/** A chart call's options argument, typed as the `addChart` parameter it is printed into. */
+const optionsOf = (call: CallIr) => call.args[1] as ChartOpts
+
 /** The first chart call in the IR. */
-function chartCall(ir) {
+function chartCall(ir: DeckIr): CallIr {
 	const call = ir.slides.flatMap((slide) => slide.calls).find((one) => one.method === 'addChart')
 	assert(call, 'the IR has a chart call')
 	return call
 }
 
 /** The chart call for the graphic frame named `objectName`. */
-function chartNamed(ir, objectName) {
+function chartNamed(ir: DeckIr, objectName: string): CallIr {
 	const call = ir.slides
 		.flatMap((slide) => slide.calls)
-		.find((one) => one.method === 'addChart' && one.args[1].objectName === objectName)
+		.find((one) => one.method === 'addChart' && optionsOf(one).objectName === objectName)
 	assert(call, `the IR has a chart call for ${objectName}`)
 	return call
 }
 
 /** Apply `rewrite` to every chart part of `buf`, reload, and convert. */
-async function irWithChartXml(buf, rewrite) {
+async function irWithChartXml(buf: Uint8Array, rewrite: (xml: string) => string): Promise<DeckIr> {
 	const zip = await JSZip.loadAsync(buf)
 	for (const name of Object.keys(zip.files)) {
 		if (!/^ppt\/charts\/chart\d+\.xml$/.test(name)) continue
@@ -55,14 +61,14 @@ async function irWithChartXml(buf, rewrite) {
 }
 
 /** Every note construct the IR recorded. */
-const constructs = (ir) => ir.fidelity.map((note) => note.construct)
+const constructs = (ir: DeckIr) => ir.fidelity.map((note) => note.construct)
 
 /** The note constructs the IR recorded against the shape named `shapeName`. */
-const constructsOn = (ir, shapeName) =>
+const constructsOn = (ir: DeckIr, shapeName: string) =>
 	ir.fidelity.filter((note) => note.shapeName === shapeName).map((note) => note.construct)
 
 /** A one-chart deck of `type`. */
-function chartDeck(type, options = {}) {
+function chartDeck(type: CHART_NAME, options: ChartOpts = {}) {
 	return authorRead((pres) => {
 		pres.addSlide().addChart(SERIES, { type, x: 1, y: 1, w: 6, h: 4, ...options })
 	})
@@ -122,8 +128,7 @@ describe('the chart mapper declares what it cannot carry', () => {
 		const ir = await irWithChartXml(buf, (xml) => xml.replace('<c:pt idx="1"><c:v>2</c:v></c:pt>', ''))
 		assert(constructs(ir).includes('chart.blanks'), 'the blank is noted; got ' + JSON.stringify(constructs(ir)))
 		const call = defined(ir.slides[0].calls.find((c) => c.method === 'addChart'))
-		// `args` is IrValue[]; the first argument of addChart is its series array.
-		const values = /** @type {{ values: unknown[] }[]} */ (call.args[0])[0].values
+		const values = defined(seriesOf(call)[0].values)
 		assertEqual(values[1], 0, 'and the gap reads as a zero: ' + JSON.stringify(values))
 	})
 
@@ -162,7 +167,7 @@ describe('the chart mapper declares what it cannot carry', () => {
 			return xml.slice(0, at) + '<c:pt idx="0"><c:v>10</c:v></c:pt>' + xml.slice(at + find.length)
 		})
 		assert(constructs(ir).includes('chart.xValues'), 'the move is noted; got ' + JSON.stringify(constructs(ir)))
-		expect(chartCall(ir).args[0][0]).toEqual({ values: [1, 2, 3] })
+		expect(seriesOf(chartCall(ir))[0]).toEqual({ values: [1, 2, 3] })
 	})
 })
 
@@ -241,7 +246,7 @@ describe('chart data keeps the shape addChart takes', () => {
 
 	test('PowerPoint multi-level categories become labels leaf first, the outer level filled in with blanks', async () => {
 		const ir = readModelToIr(await Presentation.load(await readFixture('chart-series-shapes')))
-		expect(chartNamed(ir, 'multilevel-bar-chart').args[0][0].labels).toEqual([
+		expect(seriesOf(chartNamed(ir, 'multilevel-bar-chart'))[0].labels).toEqual([
 			['Q1', 'Q2', 'Q1', 'Q2'],
 			['North', '', 'South', ''],
 		])
@@ -249,11 +254,11 @@ describe('chart data keeps the shape addChart takes', () => {
 })
 
 /** The options argument of slide 1's chart call. */
-const chartOptions = (ir) => ir.slides[0].calls.find((call) => call.method === 'addChart').args[1]
+const chartOptions = (ir: DeckIr) => optionsOf(defined(ir.slides[0].calls.find((call) => call.method === 'addChart')))
 
 /** Rewrite every `<qname val="from"/>` in the chart part to `to`, asserting at least one was there. */
-function flipFlag(qname, from, to) {
-	return (xml) => {
+function flipFlag(qname: string, from: string, to: string) {
+	return (xml: string) => {
 		let flipped = 0
 		const out = xml.replaceAll(`<${qname} val="${from}"/>`, () => {
 			flipped++
@@ -271,7 +276,7 @@ describe('chart options are spelled the way ChartOpts spells them', () => {
 		// PowerPoint writes a pie's label flags into `c:ser/c:dLbls` and an all-off block for the
 		// group. Read from the group block, the fixture's labelled pie was rebuilt with no labels.
 		const ir = readModelToIr(await Presentation.load(await readFixture('chart-series-shapes')))
-		const options = chartNamed(ir, 'pie-chart').args[1]
+		const options = optionsOf(chartNamed(ir, 'pie-chart'))
 		assertEqual(options.showLabel, true, 'the slice names are asked for the way the writer reads them')
 		assert(!('showCatName' in options), 'and not under a key the writer ignores')
 		assertEqual(options.showPercent, true, 'the percentages are kept')

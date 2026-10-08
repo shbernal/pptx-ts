@@ -12,27 +12,29 @@
 
 import { describe, test } from 'vitest'
 
-import { assert, assertEqual } from '../helpers.ts'
+import type { Presentation, Slide } from '../../dist/read.js'
+import { assert, assertEqual, defined } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 const PRESENTATION = '/ppt/presentation.xml'
 
 /** The presentation part's XML as the deck currently holds it. */
-function presentationXml(deck) {
-	return new TextDecoder().decode(deck.opc.part(PRESENTATION).serialize())
+function presentationXml(deck: Presentation): string {
+	return new TextDecoder().decode(defined(deck.opc.part(PRESENTATION)).serialize())
 }
 
 /** Each section as `name: id id …`, in order. */
-function sections(deck) {
+function sections(deck: Presentation): string[] {
 	return [...presentationXml(deck).matchAll(/<p14:section name="([^"]*)"[^>]*>([\s\S]*?)<\/p14:section>/g)].map(
 		([, name, body]) => `${name}: ${[...body.matchAll(/<p14:sldId id="(\d+)"/g)].map(([, id]) => id).join(' ')}`
 	)
 }
 
 /** The slide ids each custom show lists, as `name: id id …`, resolved through the relationships. */
-function customShows(deck) {
+function customShows(deck: Presentation): string[] {
 	const rels = deck.opc.relationshipsFor(PRESENTATION)
-	const idOf = (relId) => deck.slides.find((slide) => slide.partName === rels.resolveTarget(relId))?.slideId ?? '?'
+	const idOf = (relId: string) =>
+		deck.slides.find((slide) => slide.partName === rels.resolveTarget(relId))?.slideId ?? '?'
 	return [...presentationXml(deck).matchAll(/<p:custShow name="([^"]*)"[^>]*>([\s\S]*?)<\/p:custShow>/g)].map(
 		([, name, body]) =>
 			`${name}: ${[...body.matchAll(/<p:sld r:id="([^"]+)"/g)].map(([, relId]) => idOf(relId)).join(' ')}`
@@ -40,7 +42,7 @@ function customShows(deck) {
 }
 
 /** Where the click action on the shape named `name` jumps: the target slide's id, or `null` for no link. */
-function jumpOf(deck, slide, name) {
+function jumpOf(deck: Presentation, slide: Slide, name: string) {
 	const shape = slide.shapes.find((s) => s.name === name)
 	assert(shape, `expected a shape named ${name}`)
 	const link = shape.element_.getElementsByTagNameNS(
@@ -48,7 +50,9 @@ function jumpOf(deck, slide, name) {
 		'hlinkClick'
 	)[0]
 	if (!link) return null
-	const relId = link.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id')
+	const relId = defined(
+		link.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id')
+	)
 	const target = deck.opc.relationshipsFor(slide.partName).resolveTarget(relId)
 	return deck.slides.find((s) => s.partName === target)?.slideId ?? target
 }

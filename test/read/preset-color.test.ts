@@ -218,7 +218,7 @@ const PRESET_COLOR_VAL = [
 const CTX = { clrMap: new Map(), clrScheme: new Map(), fmtScheme: null, fontScheme: null }
 
 /** Parse one DrawingML colour element from source and resolve it against an empty theme. */
-function resolve(xml) {
+function resolve(xml: string) {
 	const doc = new DOMParser().parseFromString(`<a:wrap xmlns:a="${A_NS}">${xml}</a:wrap>`, 'text/xml')
 	const [el] = defined(doc.documentElement).getElementsByTagNameNS(A_NS, '*')
 	return resolveColorElement(el ?? null, CTX)

@@ -11,12 +11,13 @@
 import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import { Presentation } from '../../dist/read.js'
-import { readModelToIr } from '../../dist/script.js'
+import { readModelToIr, type DeckIr } from '../../dist/script.js'
 import { assert, assertEqual, defined, readEntry } from '../helpers.ts'
 import { authorRead } from './authored.ts'
+import { at, opt } from './ir-path.ts'
 
 /** Apply `rewrite` to every slide part of `buf`, reload, and convert. */
-async function irWithSlideXml(buf, rewrite) {
+async function irWithSlideXml(buf: Uint8Array, rewrite: (xml: string) => string): Promise<DeckIr> {
 	const zip = await JSZip.loadAsync(buf)
 	for (const name of Object.keys(zip.files)) {
 		if (!/^ppt\/slides\/slide\d+\.xml$/.test(name)) continue
@@ -27,10 +28,10 @@ async function irWithSlideXml(buf, rewrite) {
 }
 
 /** Every note construct the IR recorded. */
-const constructs = (ir) => ir.fidelity.map((note) => note.construct)
+const constructs = (ir: DeckIr) => ir.fidelity.map((note) => note.construct)
 
 /** The first `addTable` call on slide 1. */
-const tableCall = (ir) => ir.slides[0].calls.find((call) => call.method === 'addTable')
+const tableCall = (ir: DeckIr) => defined(ir.slides[0].calls.find((call) => call.method === 'addTable'))
 
 /** A one-cell table whose fill, background and border are each a different mapped token. */
 function tableDeck() {
@@ -53,8 +54,8 @@ describe('an unwritable scheme token is baked and noted, not passed through raw'
 	test("a cell's fill token", async () => {
 		const { buf } = await tableDeck()
 		const ir = await irWithSlideXml(buf, (xml) => xml.replaceAll('val="accent1"', 'val="dk1"'))
-		const cell = tableCall(ir).args[0][0][0]
-		assert(cell.options.fill.color !== 'dk1', `the raw token must not reach the script; got ${cell.options.fill.color}`)
+		const color = at(tableCall(ir).args[0], 0, 0, 'options', 'fill', 'color')
+		assert(color !== 'dk1', `the raw token must not reach the script; got ${String(color)}`)
 		assert(
 			constructs(ir).includes('table.cell.fill.schemeToken'),
 			'and the bake is noted; got ' + JSON.stringify(constructs(ir))
@@ -74,8 +75,8 @@ describe('an unwritable scheme token is baked and noted, not passed through raw'
 			constructs(ir).includes('table.fill.schemeToken'),
 			'the table background bake is noted; got ' + JSON.stringify(constructs(ir))
 		)
-		const fill = tableCall(ir).args[1].tableFill
-		assert(fill.color !== 'lt2', `the raw token must not reach the script; got ${fill.color}`)
+		const color = at(tableCall(ir).args[1], 'tableFill', 'color')
+		assert(color !== 'lt2', `the raw token must not reach the script; got ${String(color)}`)
 	})
 
 	test("a cell border's token", async () => {
@@ -127,9 +128,9 @@ describe('an unwritable scheme token is baked and noted, not passed through raw'
 		)
 		const shape = ir.slides[0].calls.find((call) => call.method === 'addShape')
 		assert(shape, 'the IR carries the shape')
-		const options = shape.args.find((arg) => arg && typeof arg === 'object' && 'line' in arg)
-		const color = /** @type {any} */ (options)?.line?.color
-		assert(color !== 'dk1' && /^[0-9A-F]{6}$/.test(String(color)), `the token is baked to hex; got ${color}`)
+		const options = shape.args.find((arg) => arg !== null && typeof arg === 'object' && 'line' in arg)
+		const color = opt(options, 'line', 'color')
+		assert(color !== 'dk1' && /^[0-9A-F]{6}$/.test(String(color)), `the token is baked to hex; got ${String(color)}`)
 	})
 
 	test("an unnamed shape's note is scoped to that shape, not to the slide", async () => {
@@ -150,7 +151,7 @@ describe('an unwritable scheme token is baked and noted, not passed through raw'
 	})
 
 	/** A shape with an outer shadow in `color`, authored and read back. */
-	const shadowDeck = (color) =>
+	const shadowDeck = (color: string) =>
 		authorRead((pres) => {
 			pres.addSlide().addShape('rect', {
 				x: 1,
@@ -161,15 +162,20 @@ describe('an unwritable scheme token is baked and noted, not passed through raw'
 			})
 		})
 	/** The `shadow` or `glow` option of slide 1's first shape call. */
-	const effectOf = (ir, key) =>
-		ir.slides[0].calls.flatMap((call) => call.args).find((arg) => arg && typeof arg === 'object' && key in arg)?.[key]
+	const effectOf = (ir: DeckIr, key: string) =>
+		opt(
+			ir.slides[0].calls
+				.flatMap((call) => call.args)
+				.find((arg) => arg !== null && typeof arg === 'object' && key in arg),
+			key
+		)
 
 	test("a shadow's writable token stays a token", async () => {
 		// The shadow writer takes a scheme token (`createColorElement` writes `a:schemeClr`), so a
 		// writable one has no reason to be baked. It used to be, and the copy stopped tracking its theme.
 		const { presentation } = await shadowDeck('accent5')
 		const shadow = effectOf(readModelToIr(presentation), 'shadow')
-		assertEqual(shadow?.color, 'accent5', 'the shadow keeps its token')
+		assertEqual(opt(shadow, 'color'), 'accent5', 'the shadow keeps its token')
 	})
 
 	test("a shadow's unwritable token is baked and noted", async () => {
@@ -179,8 +185,8 @@ describe('an unwritable scheme token is baked and noted, not passed through raw'
 			constructs(ir).includes('shadow.schemeToken'),
 			'the shadow bake is noted; got ' + JSON.stringify(constructs(ir))
 		)
-		const color = effectOf(ir, 'shadow')?.color
-		assert(/^[0-9A-F]{6}$/.test(String(color)), `the token is baked to hex; got ${color}`)
+		const color = opt(effectOf(ir, 'shadow'), 'color')
+		assert(/^[0-9A-F]{6}$/.test(String(color)), `the token is baked to hex; got ${String(color)}`)
 	})
 
 	test("a glow's unwritable token is baked and noted", async () => {
@@ -197,12 +203,12 @@ describe('an unwritable scheme token is baked and noted, not passed through raw'
 		)
 		assertEqual(injected, 1, 'the glow is injected into the shape')
 		assert(constructs(ir).includes('glow.schemeToken'), 'the glow bake is noted; got ' + JSON.stringify(constructs(ir)))
-		const color = effectOf(ir, 'glow')?.color
-		assert(/^[0-9A-F]{6}$/.test(String(color)), `the token is baked to hex; got ${color}`)
+		const color = opt(effectOf(ir, 'glow'), 'color')
+		assert(/^[0-9A-F]{6}$/.test(String(color)), `the token is baked to hex; got ${String(color)}`)
 	})
 
 	/** A shape with a pattern fill whose foreground is `fgColor`, authored and read back. */
-	const patternDeck = (fgColor) =>
+	const patternDeck = (fgColor: string) =>
 		authorRead((pres) => {
 			pres.addSlide().addShape('rect', {
 				x: 1,
@@ -218,9 +224,9 @@ describe('an unwritable scheme token is baked and noted, not passed through raw'
 		// resolved hex, so a theme-coloured hatch was baked with nothing to tell it from a literal.
 		const { presentation } = await patternDeck('accent2')
 		const ir = readModelToIr(presentation)
-		const pattern = effectOf(ir, 'fill')?.pattern
-		assertEqual(pattern?.fgColor, 'accent2', 'the foreground keeps its token')
-		assertEqual(pattern?.bgColor, 'FFFFFF', 'and a literal background stays a literal')
+		const pattern = opt(effectOf(ir, 'fill'), 'pattern')
+		assertEqual(opt(pattern, 'fgColor'), 'accent2', 'the foreground keeps its token')
+		assertEqual(opt(pattern, 'bgColor'), 'FFFFFF', 'and a literal background stays a literal')
 		assert(!constructs(ir).includes('fill.pattern.schemeToken'), 'and nothing is noted')
 	})
 
@@ -231,8 +237,8 @@ describe('an unwritable scheme token is baked and noted, not passed through raw'
 			constructs(ir).includes('fill.pattern.schemeToken'),
 			'the pattern bake is noted; got ' + JSON.stringify(constructs(ir))
 		)
-		const color = effectOf(ir, 'fill')?.pattern?.fgColor
-		assert(/^[0-9A-F]{6}$/.test(String(color)), `the token is baked to hex; got ${color}`)
+		const color = opt(effectOf(ir, 'fill'), 'pattern', 'fgColor')
+		assert(/^[0-9A-F]{6}$/.test(String(color)), `the token is baked to hex; got ${String(color)}`)
 	})
 
 	test('a writable token still passes through as a token', async () => {
@@ -240,7 +246,7 @@ describe('an unwritable scheme token is baked and noted, not passed through raw'
 		// guard has to prove the bake is the exception rather than the rule.
 		const { presentation } = await tableDeck()
 		const ir = readModelToIr(presentation)
-		assertEqual(tableCall(ir).args[0][0][0].options.fill.color, 'accent1', 'a mapped token survives')
+		assertEqual(at(tableCall(ir).args[0], 0, 0, 'options', 'fill', 'color'), 'accent1', 'a mapped token survives')
 		assert(!constructs(ir).includes('table.cell.fill.schemeToken'), 'and nothing is noted')
 	})
 })
@@ -295,7 +301,10 @@ describe('a graphic frame with no absolute frame is mapped like a shape', () => 
 		})
 		const ir = await irWithSlideXml(buf, (xml) => {
 			const shape = defined(/<p:sp>[\s\S]*?<\/p:sp>/.exec(xml))[0]
-			const doubled = shape.replace(/<a:path w="(\d+)" h="(\d+)"/, (_, w, h) => `<a:path w="${w * 2}" h="${h * 2}"`)
+			const doubled = shape.replace(
+				/<a:path w="(\d+)" h="(\d+)"/,
+				(_, w: string, h: string) => `<a:path w="${Number(w) * 2}" h="${Number(h) * 2}"`
+			)
 			const group =
 				'<p:grpSp><p:nvGrpSpPr><p:cNvPr id="99" name="Grp"/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>' +
 				'<p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="1000" cy="1000"/>' +
@@ -317,10 +326,10 @@ describe('a shape nothing can place is dropped with a note', () => {
 	// emitted with no geometry, which the writer places at its default position.
 
 	/** Delete the own `a:xfrm` of every shape and connector on the slide, and count them. */
-	async function withoutFrames(buf) {
+	async function withoutFrames(buf: Uint8Array) {
 		let stripped = 0
 		const ir = await irWithSlideXml(buf, (xml) =>
-			xml.replace(/(<p:spPr>)\s*<a:xfrm\b[^>]*>[\s\S]*?<\/a:xfrm>/g, (_, open) => {
+			xml.replace(/(<p:spPr>)\s*<a:xfrm\b[^>]*>[\s\S]*?<\/a:xfrm>/g, (_, open: string) => {
 				stripped++
 				return open
 			})
@@ -371,10 +380,11 @@ describe('a fully opaque source emits no transparency key', () => {
 			xml.replaceAll('val="accent1"', 'val="dk1"').replaceAll('<a:alpha val="60000"/>', '<a:alpha val="100000"/>')
 		)
 		const shape = defined(ir.slides[0].calls.find((call) => call.method === 'addShape'))
-		const fill = /** @type {Record<string, unknown>} */ (/** @type {Record<string, unknown>} */ (shape.args[1]).fill)
+		const fill = at(shape.args[1], 'fill')
+		const color = at(fill, 'color')
 		// `dk1` resolves through the theme's colour map to the dark-1 slot, not to the caller's hex.
-		assert(fill.color !== 'dk1', `the token was baked; got ${String(fill.color)}`)
-		assertEqual(fill.transparency, undefined, 'and fully opaque states nothing')
+		assert(color !== 'dk1', `the token was baked; got ${String(color)}`)
+		assertEqual(at(fill, 'transparency'), undefined, 'and fully opaque states nothing')
 	})
 })
 
@@ -403,10 +413,10 @@ describe('a percentage keeps the precision the source wrote', () => {
 				},
 			})
 		})
-		const shape = readModelToIr(presentation).slides[0].calls.find((call) => call.method === 'addShape')
-		const stops = /** @type {any} */ (shape).args[1].fill.gradient.stops
-		assertEqual(stops[1].position, 33.333, 'the stop sits where the source put it')
-		assertEqual(stops[1].transparency, 12.5, 'at the transparency the source gave it')
+		const shape = defined(readModelToIr(presentation).slides[0].calls.find((call) => call.method === 'addShape'))
+		const stops = at(shape.args[1], 'fill', 'gradient', 'stops')
+		assertEqual(at(stops, 1, 'position'), 33.333, 'the stop sits where the source put it')
+		assertEqual(at(stops, 1, 'transparency'), 12.5, 'at the transparency the source gave it')
 	})
 
 	test("a slide background's transparency, down to a hair under opaque", async () => {
@@ -477,11 +487,7 @@ describe('an `xsd:boolean` attribute is parsed, not compared to `1`', () => {
 		})
 		const ir = await irWithSlideXml(buf, (xml) => xml.replaceAll('txBox="1"', 'txBox="true"'))
 		const text = defined(ir.slides[0].calls.find((call) => call.method === 'addText'))
-		assertEqual(
-			/** @type {Record<string, unknown>} */ (text.args[1]).isTextBox,
-			true,
-			'the other lexical form of the same boolean means the same thing'
-		)
+		assertEqual(at(text.args[1], 'isTextBox'), true, 'the other lexical form of the same boolean means the same thing')
 	})
 })
 
@@ -501,8 +507,11 @@ describe('a fill transparency is read on every surface that can carry one', () =
 			})
 		})
 		const ir = await irWithSlideXml(buf, (xml) => xml.replaceAll('val="accent1"', 'val="dk1"'))
-		const cell = tableCall(ir).args[0][0][0]
-		assertEqual(cell.options.fill.transparency, 40, 'the cell keeps the alpha its source stated')
+		assertEqual(
+			at(tableCall(ir).args[0], 0, 0, 'options', 'fill', 'transparency'),
+			40,
+			'the cell keeps the alpha its source stated'
+		)
 	})
 
 	test("the table's own background", async () => {
@@ -515,6 +524,6 @@ describe('a fill transparency is read on every surface that can carry one', () =
 				'<a:tblPr><a:solidFill><a:schemeClr val="lt2"><a:alpha val="60000"/></a:schemeClr></a:solidFill></a:tblPr>'
 			)
 		)
-		assertEqual(tableCall(ir).args[1].tableFill.transparency, 40, 'and so does the table behind it')
+		assertEqual(at(tableCall(ir).args[1], 'tableFill', 'transparency'), 40, 'and so does the table behind it')
 	})
 })

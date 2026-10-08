@@ -15,32 +15,30 @@
 // (picture-recolor.test.js), the 'both' raster+SVG mediaKind (style-accessors),
 // and hdphoto/.wdp artistic-effect layers.
 
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, test } from 'vitest'
 
-import { assert, assertEqual } from '../helpers.ts'
+import { isGraphicFrame, isPicture, type AnyShape, type Presentation } from '../../dist/read.js'
+import { assert, assertEqual, defined } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
-let cached
-async function pres() {
+let cached: Promise<Presentation> | undefined
+async function pres(): Promise<Presentation> {
 	if (!cached) cached = openFixture('read-stress')
 	return cached
 }
 
 /** Flatten a shape list, descending into groups. */
-function allShapes(shapes) {
+function allShapes(shapes: readonly AnyShape[]): AnyShape[] {
 	return shapes.flatMap((s) => (s.shapeType === 'group' ? [s, ...allShapes(s.shapes)] : [s]))
 }
 async function everyShape() {
 	const p = await pres()
 	return p.slides.flatMap((s) => allShapes(s.shapes))
 }
-function named(shapes, name) {
+function named<T extends AnyShape>(shapes: AnyShape[], name: string, guard: (shape: AnyShape) => shape is T): T {
 	const s = shapes.find((x) => x.name === name)
 	assert(s, `expected a shape named ${name}`)
+	assert(guard(s), `expected ${name} to be of the requested kind`)
 	return s
 }
 
@@ -78,15 +76,15 @@ describe('read-stress.pptx — combined read-model integration', () => {
 
 	test('blip recolor: grayscale and biLevel both resolve', async () => {
 		const shapes = await everyShape()
-		const gray = named(shapes, 'GrayPic')
+		const gray = named(shapes, 'GrayPic', isPicture)
 		assertEqual(gray.recolor?.kind, 'grayscale', 'ColorType grayscale -> grayscale recolor')
-		const bi = named(shapes, 'BiLevelPic')
+		const bi = named(shapes, 'BiLevelPic', isPicture)
 		assertEqual(bi.recolor?.kind, 'biLevel', 'ColorType black&white -> biLevel recolor')
 	})
 
 	test('SVG picture resolves as svg-only with an svg part', async () => {
 		const shapes = await everyShape()
-		const svg = named(shapes, 'SvgIcon')
+		const svg = named(shapes, 'SvgIcon', isPicture)
 		// Real PowerPoint COM writes an svg-only blip (empty a:blip + asvg:svgBlip).
 		assertEqual(svg.mediaKind, 'svg', 'inserted .svg is svg-only')
 		assert((svg.svgPartName ?? '').endsWith('.svg'), `svgPartName should resolve, got ${svg.svgPartName}`)
@@ -103,13 +101,14 @@ describe('read-stress.pptx — combined read-model integration', () => {
 
 	test('styled table: cells with no own fill resolve fill from the table style', async () => {
 		const shapes = await everyShape()
-		const gf = named(shapes, 'StyledTable')
+		const gf = named(shapes, 'StyledTable', isGraphicFrame)
 		assert(gf.hasTable, 'StyledTable is a table')
-		const tbl = gf.table
+		const tbl = defined(gf.table)
 		assert(tbl.styleId, 'table carries a style id')
 		let resolvedFromStyle = 0
 		for (const row of tbl.rows) {
 			for (const c of row.cells) {
+				// @ts-expect-error `fillColor` is not a TableCell accessor (it reads undefined); `hasOwnFill` is the current one
 				const ownFill = c.fillColor || c.fillSchemeColor
 				if (!ownFill && c.resolvedFill?.effectiveHex) resolvedFromStyle++
 			}
@@ -119,9 +118,9 @@ describe('read-stress.pptx — combined read-model integration', () => {
 
 	test('inline scheme fill with lumMod resolves through the transform chain', async () => {
 		const shapes = await everyShape()
-		const gf = named(shapes, 'LumModTable')
+		const gf = named(shapes, 'LumModTable', isGraphicFrame)
 		let found = false
-		for (const row of gf.table.rows) {
+		for (const row of defined(gf.table).rows) {
 			for (const c of row.cells) {
 				if (c.fillSchemeColor === 'accent4' && c.resolvedFill?.transforms?.some((t) => t.name === 'lumMod')) {
 					found = true
@@ -142,7 +141,7 @@ describe('read-stress.pptx — combined read-model integration', () => {
 		const threaded = comments.find((c) => (c.replies?.length ?? 0) >= 1)
 		assert(threaded, 'at least one comment has replies')
 
-		const inThread = new Set()
+		const inThread = new Set<string | null>()
 		inThread.add(threaded.author)
 		for (const r of threaded.replies) inThread.add(r.author)
 		assert(inThread.size >= 2, `a reply thread should involve >=2 distinct authors, got ${[...inThread]}`)
@@ -150,7 +149,7 @@ describe('read-stress.pptx — combined read-model integration', () => {
 
 	test('speaker notes are extracted', async () => {
 		const p = await pres()
-		const notes = p.slides.map((s) => s.notesText).filter((n) => n && n.trim())
+		const notes = p.slides.map((s) => s.notesText).filter((n): n is string => Boolean(n?.trim()))
 		assert(notes.length >= 1, 'at least one slide has speaker notes')
 		assert(
 			notes.some((n) => /Speaker note/i.test(n)),
