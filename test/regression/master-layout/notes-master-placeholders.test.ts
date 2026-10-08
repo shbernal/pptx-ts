@@ -4,7 +4,7 @@ import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.t
 // notesMaster1.xml down to an empty <p:spTree>, on the theory that PowerPoint's repair
 // pass removes them. That was a misdiagnosis: the real repair trigger was notesMaster1's
 // theme relationship pointing at the slideMaster's theme1.xml (fixed by giving it theme2.xml,
-// guarded in theme-relationships.test.js). Our notesMaster emits the verbatim
+// guarded in theme-relationships.test.ts). Our notesMaster emits the verbatim
 // PowerPoint-authored placeholder set, and makeXmlNotesSlide placeholders inherit their
 // geometry/style from these master placeholders — so stripping them would orphan those
 // inheritances and re-trigger repair. This suite locks in that we KEEP them.
