@@ -144,21 +144,52 @@ function windowsFontIndex() {
  */
 export function resolveGenuineFontFile(face) {
 	if (process.platform === 'win32') return windowsFontIndex().get(faceLabel(face).toLowerCase()) ?? null
+	const styleBits = [face.bold ? 'bold' : '', face.italic ? 'italic' : ''].filter(Boolean).join(' ')
+	if (!styleBits) return fcMatch(face.family, face)
+	// Some families list each weight as a family of its own: fontconfig files Aptos's bold
+	// face under `Aptos Bold`, so `Aptos:style=bold` answers with the regular face. Asking for
+	// the style first and the per-style family second covers both layouts.
+	return fcMatch(`${face.family}:style=${styleBits}`, face) ?? fcMatch(faceLabel(face), face)
+}
+
+/**
+ * One `fc-match` query, accepted only when it answers with the requested face rather than
+ * a substitute.
+ *
+ * @param {string} pattern
+ * @param {Face} face
+ * @returns {string | null}
+ */
+function fcMatch(pattern, face) {
 	try {
-		const styleBits = [face.bold ? 'bold' : '', face.italic ? 'italic' : ''].filter(Boolean).join(' ')
-		const pattern = styleBits ? `${face.family}:style=${styleBits}` : face.family
-		const out = execFileSync('fc-match', ['-f', '%{family}\t%{file}', pattern], {
+		const out = execFileSync('fc-match', ['-f', '%{family}\t%{style}\t%{file}', pattern], {
 			encoding: 'utf8',
 			stdio: ['ignore', 'pipe', 'ignore'],
 		})
-		const [fam, file] = out.split('\t')
-		if (!fam || !file) return null
+		const [fam, style, file] = out.split('\t')
+		if (!fam || style === undefined || !file) return null
 		// Reject substitution: the resolved family must contain the requested name.
 		if (!fam.toLowerCase().includes(face.family.toLowerCase())) return null
+		if (!fcStyleMatches(style, face)) return null
 		return file.trim()
 	} catch {
 		return null
 	}
+}
+
+/**
+ * Whether a fontconfig style list (`SemiBold,Regular`, `Bold Italic`) is the face asked
+ * for. Weight and slant must both agree, word for word, so `SemiBold` is not bold and a
+ * regular face does not stand in for a bold one.
+ *
+ * @param {string} style
+ * @param {{ bold?: boolean, italic?: boolean }} face
+ * @returns {boolean}
+ */
+export function fcStyleMatches(style, face) {
+	const words = new Set(style.toLowerCase().split(/[\s,]+/))
+	const italic = words.has('italic') || words.has('oblique')
+	return words.has('bold') === !!face.bold && italic === !!face.italic
 }
 
 // ---------------------------------------------------------------------------

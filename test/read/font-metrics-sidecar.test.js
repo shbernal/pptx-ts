@@ -25,6 +25,7 @@ import {
 	deriveFace,
 	diffFace,
 	faceLabel,
+	fcStyleMatches,
 	genuineMetrics,
 	GENUINE_REQUIRED,
 	neededFaces,
@@ -107,4 +108,20 @@ describe.skipIf(GENUINE_REQUIRED.length === 0)('font metrics sidecar: declared i
 			).toBeTruthy()
 		})
 	}
+})
+
+// fontconfig answers a style query with the closest face it has, so the resolver checks the
+// style it got back. Without this, `Aptos:style=bold` resolved to the regular face and the
+// bold entry was compared against the wrong advances.
+describe('fcStyleMatches', () => {
+	test('weight and slant must both agree, word for word', () => {
+		expect(fcStyleMatches('Bold', { bold: true })).toBe(true)
+		expect(fcStyleMatches('Regular', { bold: true })).toBe(false)
+		expect(fcStyleMatches('SemiBold,Regular', { bold: true })).toBe(false)
+		expect(fcStyleMatches('SemiBold,Regular', {})).toBe(true)
+		expect(fcStyleMatches('Bold', {})).toBe(false)
+		expect(fcStyleMatches('Bold Italic', { bold: true, italic: true })).toBe(true)
+		expect(fcStyleMatches('Oblique', { italic: true })).toBe(true)
+		expect(fcStyleMatches('Italic', { bold: true, italic: true })).toBe(false)
+	})
 })
