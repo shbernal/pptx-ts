@@ -30,7 +30,7 @@ const SVG_DATA =
 	'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiLz4='
 
 // The A/V content type is resolved from the media *extension*, so the payload is never
-// decoded to decide it — four bytes are enough (same shortcut as media-loop.test.js).
+// decoded to decide it — four bytes are enough (same shortcut as media-loop.test.ts).
 const AV_DATA = 'base64,AAAA'
 
 // What PowerPoint itself authors for each embedded media extension. `mp4`, `mpg` and `mpeg`

@@ -11,7 +11,7 @@ import {
 
 // `createHyperlinkRels` walks the text/table-cell tree and mints one slide relationship per
 // hyperlink, stamping the resolved `_rId` back onto the hyperlink so the emitter can write
-// `r:id`. Its shape-level behaviour is pinned by slide-hyperlinks.test.js (theme colors) and
+// `r:id`. Its shape-level behaviour is pinned by slide-hyperlinks.test.ts (theme colors) and
 // the notes/zoom suites; what those never reach is the *table* half — hyperlinks that arrive
 // through `addTable`, where a cell's link is registered on the cell and reaches its runs through
 // the run emitter, and where auto-paging re-runs the whole walk once per emitted slide.

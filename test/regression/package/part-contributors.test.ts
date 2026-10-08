@@ -62,7 +62,7 @@ function sourceWith(pres, partContributors) {
 // `ppt/embeddings/Microsoft_Excel_WorksheetN.xlsx` the chart contributor writes. A regex could only
 // ever blank the first — the embedded workbook is a deflated zip by the time this sees it — which
 // left the reversed-list case failing whenever its two builds straddled a one-second tick. Same
-// fix, same reasoning, as test/regression/api/construct-families.test.js.
+// fix, same reasoning, as test/regression/api/construct-families.test.ts.
 beforeAll(() => {
 	vi.useFakeTimers({ toFake: ['Date'] })
 	vi.setSystemTime(new Date('2026-01-01T00:00:00Z'))
