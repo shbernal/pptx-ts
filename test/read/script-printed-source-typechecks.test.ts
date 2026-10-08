@@ -35,10 +35,9 @@ const OPTIONS = {
 
 /**
  * Every diagnostic one program over `files` reports, as `TS<code> <file>: <message>`.
- * @param {Map<string, string>} files - source text by path, every path under {@link ROOT}
- * @returns {string[]}
+ * @param files - source text by path, every path under {@link ROOT}
  */
-function typeErrors(files) {
+function typeErrors(files: Map<string, string>): string[] {
 	const host = ts.createCompilerHost(OPTIONS)
 	const { getSourceFile, fileExists, readFile } = host
 	host.getSourceFile = (fileName, languageVersion, onError, shouldCreate) => {

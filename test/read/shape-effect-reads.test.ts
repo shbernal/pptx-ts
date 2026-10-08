@@ -17,8 +17,7 @@
 import { ShapeType } from '../../dist/node.js'
 import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
-import { AutoShape } from '../../dist/read.js'
-/** @import { ShapeHost } from '../../dist/read.js' */
+import { AutoShape, type ColorRef, type Presentation, type ShapeHost, type ThemeContext } from '../../dist/read.js'
 import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.ts'
 import { assert, assertEqual, defined, expectDefined } from '../helpers.ts'
 
@@ -26,7 +25,7 @@ const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
 
 /** Empty colour maps resolve `a:srgbClr` literally; no theme parts beyond that. */
-function ctx() {
+function ctx(): ThemeContext {
 	return {
 		clrMap: new Map(),
 		clrScheme: new Map(),
@@ -38,19 +37,19 @@ function ctx() {
 }
 
 /** An `AutoShape` over a hand-authored `p:sp` body, resolving against a theme stub. */
-function sp(spPrInner) {
+function sp(spPrInner: string) {
 	const xml = `<p:spTree xmlns:p="${P_NS}" xmlns:a="${A_NS}"><p:sp>${spPrInner}</p:sp></p:spTree>`
 	const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 	const el = spTree.getElementsByTagNameNS(P_NS, 'sp')[0]
-	return new AutoShape(el, /** @type {ShapeHost} */ ({ themeContext: () => ctx() }))
+	return new AutoShape(el, { themeContext: () => ctx() } as Pick<ShapeHost, 'themeContext'> as ShapeHost)
 }
 
 /**
  * Assert a colour reference carries no colour at all: every field `null`.
- * @param {import('../../dist/read.js').ColorRef} ref - the colour reference
- * @param {string} label - what the colour is, for the messages
+ * @param ref - the colour reference
+ * @param label - what the colour is, for the messages
  */
-function assertNoColor(ref, label) {
+function assertNoColor(ref: ColorRef, label: string) {
 	assertEqual(ref.srgb, null, `${label}: no literal`)
 	assertEqual(ref.scheme, null, `${label}: no token`)
 	assertEqual(ref.preset, null, `${label}: no preset`)
@@ -327,7 +326,7 @@ describe('Shape.patternFill — preset hatch reads', () => {
 // carrying each with the write API, read it back, and assert the bytes round-trip.
 describe('Shape effects/fill — write→read fidelity', () => {
 	/** The authored rect autoShape, located in the read model. */
-	function rectOf(presentation) {
+	function rectOf(presentation: Presentation) {
 		const rect = firstShape(presentation, (s) => s.shapeType === 'autoShape' && s.presetGeometry === 'rect')
 		assert(rect, 'the authored rect is read back')
 		return rect

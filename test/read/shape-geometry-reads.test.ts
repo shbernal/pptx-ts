@@ -8,23 +8,22 @@
 
 import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
-import { AutoShape } from '../../dist/read.js'
-/** @import { ShapeHost } from '../../dist/read.js' */
+import { AutoShape, type ShapeHost } from '../../dist/read.js'
 import { assert, assertEqual, defined } from '../helpers.ts'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
 
 /** An `AutoShape` over a hand-authored `p:sp` body (geometry reads need no theme). */
-function sp(spPrInner) {
+function sp(spPrInner: string) {
 	const xml = `<p:spTree xmlns:p="${P_NS}" xmlns:a="${A_NS}"><p:sp>${spPrInner}</p:sp></p:spTree>`
 	const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 	const el = spTree.getElementsByTagNameNS(P_NS, 'sp')[0]
-	return new AutoShape(el, /** @type {ShapeHost} */ ({}))
+	return new AutoShape(el, {} as ShapeHost)
 }
 
 /** The single path of a one-path custGeom built from `pathXml`. */
-function onlyPath(pathXml) {
+function onlyPath(pathXml: string) {
 	const geom = sp(`<p:spPr><a:custGeom><a:pathLst>${pathXml}</a:pathLst></a:custGeom></p:spPr>`).customGeometry
 	assert(geom, 'expected a custom geometry')
 	assertEqual(geom.paths.length, 1, 'one a:path')

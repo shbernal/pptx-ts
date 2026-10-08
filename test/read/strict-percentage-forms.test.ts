@@ -14,7 +14,7 @@
 import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import TsPptx from '../../dist/node.js'
-import { Presentation } from '../../dist/read.js'
+import { Presentation, type TextFrame } from '../../dist/read.js'
 import { assert, assertEqual, defined, readEntry } from '../helpers.ts'
 
 const SLIDE_PATH = 'ppt/slides/slide1.xml'
@@ -22,9 +22,9 @@ const SLIDE_PATH = 'ppt/slides/slide1.xml'
 /**
  * Author a one-shape deck carrying every percentage under test, optionally rewrite its slide
  * XML, and return the shape's text frame from the loaded result.
- * @param {(xml: string) => string} [edit] - rewrite applied to `ppt/slides/slide1.xml`
+ * @param edit - rewrite applied to `ppt/slides/slide1.xml`
  */
-async function frameFrom(edit) {
+async function frameFrom(edit?: (xml: string) => string) {
 	const pres = new TsPptx()
 	pres.addSlide().addText('probe', {
 		x: 1,
@@ -47,7 +47,8 @@ async function frameFrom(edit) {
 }
 
 /** Add a `baseline` attribute to the run properties, in whichever lexical form. */
-const withBaseline = (value) => (xml) => xml.replace('<a:rPr lang="en-US"', `<a:rPr baseline="${value}" lang="en-US"`)
+const withBaseline = (value: string) => (xml: string) =>
+	xml.replace('<a:rPr lang="en-US"', `<a:rPr baseline="${value}" lang="en-US"`)
 
 describe('ST_Percentage union — the string form reads as the value it states', () => {
 	test('a:rPr/@baseline: both lexical forms give the same percentage', async () => {
@@ -57,7 +58,7 @@ describe('ST_Percentage union — the string form reads as the value it states',
 			['30%', 30],
 			['62.5%', 62.5],
 			['-40%', -40],
-		]) {
+		] as const) {
 			const frame = await frameFrom(withBaseline(value))
 			assertEqual(frame.paragraphs[0].runs[0].baselinePct, expected, `baseline ${value}`)
 		}
@@ -65,7 +66,7 @@ describe('ST_Percentage union — the string form reads as the value it states',
 
 	test('a:spcPct/@val: both lexical forms give the same line spacing', async () => {
 		/** The paragraph's line spacing, asserted to be the percent variant. */
-		const percentSpacing = (frame, label) => {
+		const percentSpacing = (frame: TextFrame, label: string) => {
 			const spacing = frame.paragraphs[0].lineSpacing
 			assert(spacing?.type === 'percent', `${label}: expected a percent spacing; got ${spacing?.type}`)
 			return spacing.percent
@@ -74,7 +75,7 @@ describe('ST_Percentage union — the string form reads as the value it states',
 		for (const [value, expected] of [
 			['150%', 150],
 			['112.5%', 112.5],
-		]) {
+		] as const) {
 			const frame = await frameFrom((xml) => xml.replace('<a:spcPct val="150000"', `<a:spcPct val="${value}"`))
 			assertEqual(percentSpacing(frame, value), expected, `spcPct ${value}`)
 		}

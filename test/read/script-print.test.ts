@@ -21,8 +21,14 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { promisify } from 'node:util'
 import { describe, test } from 'vitest'
-import { Presentation, isGraphicFrame } from '../../dist/read.js'
-import { printScript, printStandaloneScript, readModelToIr } from '../../dist/script.js'
+import { Presentation, isConnector, isGraphicFrame, isGroupShape, type AnyShape } from '../../dist/read.js'
+import {
+	printScript,
+	printStandaloneScript,
+	readModelToIr,
+	type PrintScriptOptions,
+	type SlideIr,
+} from '../../dist/script.js'
 import { assert, assertEqual, defined } from '../helpers.ts'
 import { authorRead } from './authored.ts'
 import { REPO, SCRATCH, fixtureNames, irFor, readFixture } from './corpus.ts'
@@ -30,10 +36,10 @@ import { REPO, SCRATCH, fixtureNames, irFor, readFixture } from './corpus.ts'
 const run = promisify(execFile)
 
 /** Every shape name on a slide, descending into groups. */
-function shapeNames(shapes, out = []) {
+function shapeNames(shapes: AnyShape[], out: string[] = []): string[] {
 	for (const shape of shapes) {
 		out.push(shape.name)
-		if (shape.shapes) shapeNames(shape.shapes, out)
+		if (isGroupShape(shape)) shapeNames(shape.shapes, out)
 	}
 	return out
 }
@@ -45,7 +51,7 @@ function shapeNames(shapes, out = []) {
  * `fromTemplate` strips a deck's slides for you, so the source deck and the template asset
  * are the same bytes.
  */
-async function runPrinted(fixtureName, options = {}) {
+async function runPrinted(fixtureName: string, options: PrintScriptOptions = {}) {
 	await mkdir(SCRATCH, { recursive: true })
 	const dir = await mkdtemp(path.join(SCRATCH, 'script-print-'))
 	try {
@@ -172,12 +178,12 @@ describe('script printer — the emitted script runs', () => {
 		// flips wrong and every up-or-leftward connector is silently mirrored.
 		const source = await Presentation.load(await readFixture('mixed.pptx'))
 		const { output } = await runPrinted('mixed.pptx')
-		const connectorsOf = (pres) =>
+		const connectorsOf = (pres: Presentation) =>
 			pres.slides
 				.flatMap((slide) => slide.shapes)
-				.filter((shape) => shape.constructor.name === 'Connector')
+				.filter(isConnector)
 				.map((shape) => {
-					const frame = shape.absoluteFrame
+					const frame = defined(shape.absoluteFrame)
 					return `${frame.left},${frame.top},${frame.width},${frame.height},${shape.flipH},${shape.flipV}`
 				})
 				.sort()
@@ -238,8 +244,7 @@ describe('script printer — the emitted script runs', () => {
 		// A real IR with its slides swapped out, so the slide size still matches the template
 		// that `appendSlides` will compare it against.
 		const base = await irFor('empty.pptx')
-		/** @type {import('../../dist/script.js').SlideIr} */
-		const slide = {
+		const slide: SlideIr = {
 			number: 1,
 			source: 'authored',
 			layout: null,

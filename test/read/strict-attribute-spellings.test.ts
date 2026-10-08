@@ -18,13 +18,13 @@
 
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
-import { Presentation } from '../../dist/read.js'
+import { Presentation, isPicture } from '../../dist/read.js'
 import { TableStyle } from '../../dist/node.js'
 import { PNG_1X1, assert, assertEqual, defined, readEntry } from '../helpers.ts'
 import { authorRead, authorReadWithFixtureStyles, firstTable } from './authored.ts'
 
 /** Apply `rewrite` to every slide part of `buf` and reload the result. */
-async function reloadWithSlideXml(buf, rewrite) {
+async function reloadWithSlideXml(buf: Uint8Array, rewrite: (xml: string) => string) {
 	const zip = await JSZip.loadAsync(buf)
 	for (const name of Object.keys(zip.files)) {
 		if (!/^ppt\/slides\/slide\d+\.xml$/.test(name)) continue
@@ -140,7 +140,7 @@ describe('what the digit-only readings cost downstream', () => {
 		})
 		const digits = await Presentation.load(buf)
 		const words = await reloadWithSlideXml(buf, (xml) => xml.replaceAll('firstRow="1"', 'firstRow="true"'))
-		const fillOf = (presentation) =>
+		const fillOf = (presentation: Presentation) =>
 			defined(defined(firstTable(presentation)).cell(0, 0)).resolvedFill?.effectiveHex ?? null
 		assert(fillOf(digits), 'the digit spelling resolves a header fill')
 		assertEqual(fillOf(words), fillOf(digits), 'and so does the word spelling')
@@ -152,8 +152,8 @@ describe('what the digit-only readings cost downstream', () => {
 		const { buf } = await authorSpellingDeck()
 		const fixed = await Presentation.load(buf)
 		const percent = await reloadWithSlideXml(buf, (xml) => xml.replace(/<a:srcRect l="\d+"/, '<a:srcRect l="20%"'))
-		const cropOf = (presentation) =>
-			presentation.slides[0].shapes.find((shape) => shape.shapeType === 'picture').crop.left
+		const cropOf = (presentation: Presentation) =>
+			defined(defined(presentation.slides[0].shapes.find(isPicture)).crop).left
 		assertEqual(cropOf(fixed), 0.2, 'the authored deck crops a fifth off the left')
 		assertEqual(cropOf(percent), cropOf(fixed), 'and `20%` is the same fifth')
 	})

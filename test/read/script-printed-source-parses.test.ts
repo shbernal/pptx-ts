@@ -14,7 +14,7 @@ import JSZip from 'jszip'
 import ts from 'typescript-6'
 import { Presentation } from '../../dist/read.js'
 import { printScript, printStandaloneScript, readModelToIr } from '../../dist/script.js'
-import { assert, assertEqual, readEntry } from '../helpers.ts'
+import { assert, assertEqual, defined, readEntry } from '../helpers.ts'
 import { authorRead } from './authored.ts'
 import { readFixture } from './corpus.ts'
 
@@ -64,14 +64,14 @@ async function hostileDeck() {
 async function hostileIr() {
 	const ir = readModelToIr(await hostileDeck())
 	let planted = 0
-	/** @param {any} value */
-	const plant = (value) => {
+	const plant = (value: unknown): void => {
 		if (!value || typeof value !== 'object') return
-		for (const key of Object.keys(value)) {
-			if (value[key] === RUN) {
-				value[key] = LONE
+		const record = value as Record<string, unknown>
+		for (const key of Object.keys(record)) {
+			if (record[key] === RUN) {
+				record[key] = LONE
 				planted++
-			} else plant(value[key])
+			} else plant(record[key])
 		}
 	}
 	plant(ir.slides)
@@ -80,13 +80,11 @@ async function hostileIr() {
 }
 
 /** The printed module's parse errors, as message text. */
-function parseErrors(code) {
+function parseErrors(code: string) {
 	const source = ts.createSourceFile('script.ts', code, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS)
 	// `parseDiagnostics` is not in the public typings, but it is exactly the syntax-only set wanted:
 	// a program's diagnostics would also type-check against a package this test does not install.
-	const diagnostics = /** @type {{ parseDiagnostics: readonly import('typescript-6').Diagnostic[] }} */ (
-		/** @type {unknown} */ (source)
-	).parseDiagnostics
+	const diagnostics = (source as unknown as { parseDiagnostics: readonly ts.Diagnostic[] }).parseDiagnostics
 	return diagnostics.map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'))
 }
 
@@ -123,23 +121,20 @@ describe('a printed script parses whatever the deck names hold', () => {
 /** The global a payload that ran would set. */
 const PAYLOAD_GLOBAL = '__tsPptxContentTypePayload'
 const PAYLOAD = `image/png;\${globalThis.${PAYLOAD_GLOBAL}=1}`
+/** `globalThis` with the slot a payload that ran would set. */
+const globals = globalThis as typeof globalThis & { [PAYLOAD_GLOBAL]?: unknown }
 
-/**
- * Run every file-mode binding in `code` with the file read stubbed, and return the bound values.
- * @param {string} code
- */
-async function evaluateBindings(code) {
+/** Run every file-mode binding in `code` with the file read stubbed, and return the bound values. */
+async function evaluateBindings(code: string) {
 	const lines = code.split('\n').filter((line) => line.includes('readFile(here('))
 	assert(lines.length > 0, 'the script binds media from files')
-	const names = lines.map((line) => /** @type {RegExpExecArray} */ (/^const (\w+) = /.exec(line))[1])
-	const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor
+	const names = lines.map((line) => defined(/^const (\w+) = /.exec(line))[1])
+	const AsyncFunction = (Object.getPrototypeOf(async () => {}) as { constructor: FunctionConstructor }).constructor
 	const run = new AsyncFunction('readFile', 'here', `${lines.join('\n')}\nreturn [${names.join(', ')}]`)
-	return /** @type {Promise<string[]>} */ (
-		run(
-			async () => ({ toString: () => 'BYTES' }),
-			(/** @type {string} */ p) => p
-		)
-	)
+	return run(
+		async () => ({ toString: () => 'BYTES' }),
+		(p: string) => p
+	) as Promise<string[]>
 }
 
 describe('a content type in the deck does not become code in the printed script', () => {
@@ -161,11 +156,11 @@ describe('a content type in the deck does not become code in the printed script'
 			'a valid type is kept'
 		)
 
-		delete globalThis[PAYLOAD_GLOBAL]
+		delete globals[PAYLOAD_GLOBAL]
 		const { code } = printScript(ir)
 		assertEqual(parseErrors(code).join('; '), '', 'the module parses')
 		const values = await evaluateBindings(code)
-		assertEqual(globalThis[PAYLOAD_GLOBAL], undefined, 'the payload did not run')
+		assertEqual(globals[PAYLOAD_GLOBAL], undefined, 'the payload did not run')
 		assert(values.includes('data:application/octet-stream;base64,BYTES'), 'the binding is a data URI')
 	})
 
@@ -176,11 +171,11 @@ describe('a content type in the deck does not become code in the printed script'
 			assert(png, 'the fixture has a PNG asset')
 			png.contentType = PAYLOAD
 
-			delete globalThis[PAYLOAD_GLOBAL]
+			delete globals[PAYLOAD_GLOBAL]
 			const { code } = print(ir)
 			assertEqual(parseErrors(code).join('; '), '', `${print.name}: the module parses`)
 			const values = await evaluateBindings(code)
-			assertEqual(globalThis[PAYLOAD_GLOBAL], undefined, `${print.name}: the payload did not run`)
+			assertEqual(globals[PAYLOAD_GLOBAL], undefined, `${print.name}: the payload did not run`)
 			assert(values.includes(`data:${PAYLOAD};base64,BYTES`), `${print.name}: the type is printed as text`)
 		}
 	})

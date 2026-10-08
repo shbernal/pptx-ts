@@ -12,6 +12,7 @@
 
 import { describe, test } from 'vitest'
 
+import type { Slide } from '../../dist/read.js'
 import { assert, assertEqual, partXml } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
@@ -24,14 +25,14 @@ const STYLE_FILL = `<a:solidFill><a:srgbClr val="${STYLE_HEX}"><a:shade val="150
 /** `a:lnStyleLst` entry 2's attributes: the ones no own `a:ln` in the fixture states. */
 const STYLE_ATTRS = 'cap="flat" cmpd="sng" algn="ctr"'
 
-function shapeNamed(slide, name) {
+function shapeNamed(slide: Slide, name: string) {
 	const shape = slide.shapes.find((s) => s.name === name)
 	assert(shape, `expected a shape named ${name}`)
 	return shape
 }
 
 /** The `a:ln` in the `p:spPr` of the shape named `name`, from serialized slide XML. */
-function ownLine(xml, name) {
+function ownLine(xml: string, name: string) {
 	const sp = xml.split('<p:sp>').find((chunk) => chunk.includes(`name="${name}"`))
 	assert(sp, `expected a shape named ${name} in the slide XML`)
 	const spPr = sp.slice(sp.indexOf('<p:spPr>'), sp.indexOf('</p:spPr>'))

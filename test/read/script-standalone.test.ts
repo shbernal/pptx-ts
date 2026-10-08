@@ -23,14 +23,23 @@ import path from 'node:path'
 import { promisify } from 'node:util'
 import JSZip from 'jszip'
 import { describe, expect, test } from 'vitest'
-import TsPptx, { ChartType, SchemeColor } from '../../dist/node.js'
-import { Presentation } from '../../dist/read.js'
-import { canonicalDeckIr, diffDeckIr, printScript, printStandaloneScript, readModelToIr } from '../../dist/script.js'
+import TsPptx, { ChartType, SchemeColor, type BackgroundOption } from '../../dist/node.js'
+import { Presentation, isGroupShape, type AnyShape, type ThemeColorSlot } from '../../dist/read.js'
+import {
+	canonicalDeckIr,
+	diffDeckIr,
+	printScript,
+	printStandaloneScript,
+	readModelToIr,
+	type DeckIr,
+	type IrValue,
+	type PrintStandaloneScriptOptions,
+} from '../../dist/script.js'
 import { assert, assertEqual, defined, readEntry } from '../helpers.ts'
 import { REPO, SCRATCH, SNAPSHOTS, fixtureNames, irFor, readFixture } from './corpus.ts'
 
 /** The `schemeClr` tokens the write path can carry as tokens (`SchemeColor`), for the ladder below. */
-const WRITABLE_SCHEME_TOKENS = new Set(/** @type {string[]} */ (Object.values(SchemeColor)))
+const WRITABLE_SCHEME_TOKENS = new Set<string>(Object.values(SchemeColor))
 
 const run = promisify(execFile)
 
@@ -40,7 +49,7 @@ const run = promisify(execFile)
  * No template is written, which is the whole point of the tier: if the script needed one, this
  * would fail rather than quietly pass with the source deck's chrome in scope.
  */
-async function runStandalone(bytes, options = {}) {
+async function runStandalone(bytes: Uint8Array, options: PrintStandaloneScriptOptions = {}) {
 	await mkdir(SCRATCH, { recursive: true })
 	const dir = await mkdtemp(path.join(SCRATCH, 'standalone-'))
 	try {
@@ -71,17 +80,18 @@ async function runStandalone(bytes, options = {}) {
 }
 
 /** Author a deck through the write API and return its bytes, for cases the corpus lacks. */
-async function authored(build) {
+async function authored(build: (pptx: TsPptx) => void) {
 	const pptx = new TsPptx()
 	build(pptx)
-	return /** @type {Buffer} */ (await pptx.write({ outputType: 'nodebuffer' }))
+	// `write` is typed as every output type's union; `nodebuffer` is the Buffer arm.
+	return (await pptx.write({ outputType: 'nodebuffer' })) as Buffer
 }
 
 /** Every shape name on a slide, descending into groups. */
-function shapeNames(shapes, out = []) {
+function shapeNames(shapes: AnyShape[], out: string[] = []): string[] {
 	for (const shape of shapes) {
 		out.push(shape.name)
-		if (shape.shapes) shapeNames(shape.shapes, out)
+		if (isGroupShape(shape)) shapeNames(shape.shapes, out)
 	}
 	return out
 }
@@ -173,7 +183,7 @@ describe('standalone printer — the chrome IR, read against the deck rather tha
 			)
 			const background = layouts[index].background ?? presentation.masters()[0].background
 			if (background?.type === 'solid' && background.colorRef.resolved) {
-				const emitted = /** @type {Record<string, string> | undefined} */ (master.props.background)
+				const emitted = master.props.background as Record<string, string> | undefined
 				// The shared colour ladder: a token the write path can name is kept as a token, so the
 				// copy keeps tracking its theme, and only a colour that has no token is baked to hex.
 				// This used to assert the resolved hex unconditionally, which was the mapper reading
@@ -217,7 +227,11 @@ describe('standalone printer — the emitted script runs, with no template in re
 		const theme = output.masters()[0].theme
 		assert(theme !== null, 'the output deck has a theme')
 		for (const [slot, hex] of Object.entries(ir.chrome.theme.colorScheme ?? {})) {
-			assertEqual(theme.colorScheme[slot]?.replace(/^#/, '').toUpperCase(), hex, `colour slot ${slot} survived`)
+			assertEqual(
+				theme.colorScheme[slot as ThemeColorSlot]?.replace(/^#/, '').toUpperCase(),
+				hex,
+				`colour slot ${slot} survived`
+			)
 		}
 	})
 
@@ -292,7 +306,7 @@ describe('standalone printer — cases the fixture corpus does not contain', () 
 	})
 
 	test('a gradient and a pattern background survive the script, on a slide and on a layout', async () => {
-		const gradient = {
+		const gradient: BackgroundOption = {
 			type: 'gradient',
 			gradient: {
 				kind: 'linear',
@@ -311,7 +325,10 @@ describe('standalone printer — cases the fixture corpus does not contain', () 
 		const { ir, printed, outputIr, report } = await runStandalone(bytes)
 		assert(printed.code.includes("type: 'gradient'"), 'the script spells the gradient out')
 		expect(outputIr.slides[0].background).toEqual(ir.slides[0].background)
-		const banded = (deck) => deck.chrome.masters.find((master) => master.props.title === 'BANDED')?.props.background
+		const banded = (deck: DeckIr) =>
+			deck.chrome.masters.find((master) => master.props.title === 'BANDED')?.props.background as
+				| Record<string, IrValue>
+				| undefined
 		assertEqual(banded(ir)?.type, 'pattern', 'the layout’s pattern reaches the IR')
 		expect(banded(outputIr)).toEqual(banded(ir))
 		assertEqual(report.undeclared.length, 0, `no undeclared difference (got ${JSON.stringify(report.undeclared)})`)

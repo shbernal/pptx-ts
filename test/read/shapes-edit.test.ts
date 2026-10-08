@@ -116,8 +116,7 @@ describe('Shape.delete', () => {
 		s.addShape(ShapeType.rect, { x: 6, y: 3, w: 2, h: 1, objectName: 'B' })
 		s.addConnector({ x1: 3, y1: 1.5, x2: 6, y2: 3.5, startShape: 'A', startShapeIdx: 3, endShape: 'B', endShapeIdx: 1 })
 		const presentation = await Presentation.load(await pptx.write({ outputType: 'uint8array' }))
-		const slideXmlOf = async (/** @type {Uint8Array} */ bytes) =>
-			readEntry(await JSZip.loadAsync(bytes), 'ppt/slides/slide1.xml')
+		const slideXmlOf = async (bytes: Uint8Array) => readEntry(await JSZip.loadAsync(bytes), 'ppt/slides/slide1.xml')
 		assert(/<a:stCxn\b/.test(await slideXmlOf(await presentation.save())), 'precondition: the start is bound')
 
 		presentation.slides[0].shapeByName('A')?.delete()

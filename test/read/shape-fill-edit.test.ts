@@ -8,28 +8,37 @@
 
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
-import { Presentation } from '../../dist/read.js'
-import { throws, bytesEqual, assert, assertEqual, partBodies, assertUnchangedExcept, caughtSync } from '../helpers.ts'
+import { Presentation, type ShapeType } from '../../dist/read.js'
+import {
+	throws,
+	bytesEqual,
+	assert,
+	assertEqual,
+	partBodies,
+	assertUnchangedExcept,
+	caughtSync,
+	defined,
+} from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture } from './corpus.ts'
 
-async function editAndReopen(name, edit) {
+async function editAndReopen(name: string, edit: (presentation: Presentation) => unknown) {
 	const presentation = await openFixture(name)
 	await edit(presentation)
 	const saved = await presentation.save()
 	return { presentation, saved, reopened: await Presentation.load(saved) }
 }
 
-function replaceTextShape(presentation) {
-	return presentation.slides[0].shapes.find((shape) => shape.name === 'replaceText')
+function replaceTextShape(presentation: Presentation) {
+	return defined(presentation.slides[0].shapes.find((shape) => shape.name === 'replaceText'))
 }
 
-function findByKind(presentation, shapeType) {
-	return presentation.slides.flatMap((slide) => slide.shapes).find((shape) => shape.shapeType === shapeType)
+function findByKind(presentation: Presentation, shapeType: ShapeType) {
+	return defined(presentation.slides.flatMap((slide) => slide.shapes).find((shape) => shape.shapeType === shapeType))
 }
 
 /** Slide XML restricted to the p:spPr of the named shape, for ordering assertions. */
-function spPrXml(slideXml, name) {
+function spPrXml(slideXml: string, name: string) {
 	const nameIdx = slideXml.indexOf(`name="${name}"`)
 	const start = slideXml.indexOf('<p:spPr>', nameIdx)
 	const end = slideXml.indexOf('</p:spPr>', start)
@@ -193,7 +202,7 @@ describe('Per-kind fill / line support', () => {
 		const frame = findByKind(mixed, 'graphicFrame')
 		const group = findByKind(mixed, 'group')
 		const picture = findByKind(await openFixture('image'), 'picture')
-		const codeOf = (/** @type {() => unknown} */ fn) => caughtSync(fn)?.code ?? null
+		const codeOf = (fn: () => unknown) => caughtSync(fn)?.code ?? null
 		assertEqual(
 			codeOf(() => (frame.fillColor = '000000')),
 			'shape/fill-unsupported',
@@ -237,8 +246,9 @@ describe('Per-kind fill / line support', () => {
 			'spPr'
 		)[0]
 		const A = 'http://schemas.openxmlformats.org/drawingml/2006/main'
-		const fill = spPr.ownerDocument.createElementNS(A, 'a:solidFill')
-		const clr = spPr.ownerDocument.createElementNS(A, 'a:srgbClr')
+		const doc = defined(spPr.ownerDocument)
+		const fill = doc.createElementNS(A, 'a:solidFill')
+		const clr = doc.createElementNS(A, 'a:srgbClr')
 		clr.setAttribute('val', '123456')
 		fill.appendChild(clr)
 		spPr.appendChild(fill)

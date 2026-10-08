@@ -19,8 +19,7 @@
 
 import { DOMParser, XMLSerializer } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
-import { AutoShape, GroupShape } from '../../dist/read.js'
-/** @import { ShapeHost } from '../../dist/read.js' */
+import { AutoShape, GroupShape, type ShapeHost, type ThemeContext } from '../../dist/read.js'
 import { assert, defined } from '../helpers.ts'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
@@ -28,7 +27,7 @@ const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
 const R_NS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
 
 /** Empty colour maps — nothing here resolves a colour, it only places elements. */
-function ctx() {
+function ctx(): ThemeContext {
 	return {
 		clrMap: new Map(),
 		clrScheme: new Map(),
@@ -40,19 +39,19 @@ function ctx() {
 }
 
 /** An `AutoShape` over a hand-authored `p:sp` body, plus a serializer for the result. */
-function sp(body) {
+function sp(body: string) {
 	const xml = `<p:spTree xmlns:p="${P_NS}" xmlns:a="${A_NS}"><p:sp>${body}</p:sp></p:spTree>`
 	const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 	const el = spTree.getElementsByTagNameNS(P_NS, 'sp')[0]
 	// A host stub: the setters mark the owning part dirty on the way out, and nothing here
 	// has a part behind it.
 	const host = { themeContext: () => ctx(), part: { markDirty: () => {} } }
-	const shape = new AutoShape(el, /** @type {ShapeHost} */ (host))
+	const shape = new AutoShape(el, host as unknown as ShapeHost)
 	return { shape, xml: () => new XMLSerializer().serializeToString(el) }
 }
 
 /** The order of `p:sp`'s direct element children, as qnames. */
-function childOrder(xml) {
+function childOrder(xml: string) {
 	return [...xml.matchAll(/<(p:[a-zA-Z0-9]+)[\s/>]/g)].map((m) => m[1]).filter((n) => n !== 'p:sp')
 }
 
@@ -84,17 +83,17 @@ describe('a created p:spPr lands in schema order', () => {
 })
 
 /** A `GroupShape` over a hand-authored `p:grpSp` body, plus a serializer for the result. */
-function grpSp(body) {
+function grpSp(body: string) {
 	const xml = `<p:spTree xmlns:p="${P_NS}" xmlns:a="${A_NS}"><p:grpSp>${body}</p:grpSp></p:spTree>`
 	const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 	const el = spTree.getElementsByTagNameNS(P_NS, 'grpSp')[0]
 	const host = { themeContext: () => ctx(), part: { markDirty: () => {} } }
-	const shape = new GroupShape(el, /** @type {ShapeHost} */ (host))
+	const shape = new GroupShape(el, host as unknown as ShapeHost)
 	return { shape, xml: () => new XMLSerializer().serializeToString(el) }
 }
 
 /** The order of `p:grpSp`'s direct element children, as qnames. */
-function groupChildOrder(xml) {
+function groupChildOrder(xml: string) {
 	return [...xml.matchAll(/<(p:[a-zA-Z0-9]+)[\s/>]/g)].map((m) => m[1]).filter((n) => n !== 'p:grpSp')
 }
 

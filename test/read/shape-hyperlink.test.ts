@@ -13,12 +13,12 @@
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
 import { readModelToIr } from '../../dist/script.js'
-import TsPptx from '../../dist/node.js'
-import { assert, assertEqual } from '../helpers.ts'
+import TsPptx, { type HyperlinkProps } from '../../dist/node.js'
+import { assert, assertEqual, defined } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 /** Every shape on every slide, flattened. */
-const allShapes = (presentation) => presentation.slides.flatMap((slide) => slide.shapes)
+const allShapes = (presentation: Presentation) => presentation.slides.flatMap((slide) => slide.shapes)
 
 /** A deck with one linked shape of each form, read back. */
 async function authorLinked() {
@@ -45,7 +45,7 @@ describe('Shape.hyperlink', () => {
 		const presentation = await openFixture('slide-jump-link')
 		const linked = allShapes(presentation).find((shape) => shape.hyperlink !== null)
 		assert(linked, 'the fixture has a shape carrying a link')
-		const link = linked.hyperlink
+		const link = defined(linked.hyperlink)
 		assertEqual(link.action, 'ppaction://hlinksldjump', 'it is a slide jump')
 		assert(link.relId, 'it is backed by a relationship')
 		assert(
@@ -59,16 +59,20 @@ describe('Shape.hyperlink', () => {
 		const { presentation } = await authorLinked()
 		const byName = Object.fromEntries(allShapes(presentation).map((shape) => [shape.name, shape.hyperlink]))
 
-		assertEqual(byName.urlShape.url, 'https://example.invalid/a', 'a url link reports its url')
-		assertEqual(byName.urlShape.tooltip, 'go', 'and its tooltip')
-		assertEqual(byName.urlShape.targetPartName, null, 'and no internal target')
+		assertEqual(defined(byName.urlShape).url, 'https://example.invalid/a', 'a url link reports its url')
+		assertEqual(defined(byName.urlShape).tooltip, 'go', 'and its tooltip')
+		assertEqual(defined(byName.urlShape).targetPartName, null, 'and no internal target')
 
-		assertEqual(byName.jumpShape.action, 'ppaction://hlinksldjump', 'a slide jump reports its action')
-		assertEqual(byName.jumpShape.targetPartName, '/ppt/slides/slide2.xml', 'and the slide it points at')
+		assertEqual(defined(byName.jumpShape).action, 'ppaction://hlinksldjump', 'a slide jump reports its action')
+		assertEqual(defined(byName.jumpShape).targetPartName, '/ppt/slides/slide2.xml', 'and the slide it points at')
 
 		// An action-only link carries no `@r:id`, so there is nothing to resolve either way.
-		assertEqual(byName.actionShape.action, 'ppaction://hlinkshowjump?jump=nextslide', 'a show jump reports its action')
-		assertEqual(byName.actionShape.relId, null, 'and is backed by no relationship')
+		assertEqual(
+			defined(byName.actionShape).action,
+			'ppaction://hlinkshowjump?jump=nextslide',
+			'a show jump reports its action'
+		)
+		assertEqual(defined(byName.actionShape).relId, null, 'and is backed by no relationship')
 
 		assertEqual(byName.plainShape, null, 'an unlinked shape reports null')
 	})
@@ -85,10 +89,10 @@ describe('Shape.hyperlink', () => {
 			objectName: 'runLinked',
 		})
 		const presentation = await Presentation.load(await pres.toBytes())
-		const shape = allShapes(presentation).find((candidate) => candidate.name === 'runLinked')
+		const shape = defined(allShapes(presentation).find((candidate) => candidate.name === 'runLinked'))
 		assertEqual(shape.hyperlink, null, 'the shape itself carries no link')
-		const run = shape.textFrame.paragraphs[0].runs[0]
-		assertEqual(run.hyperlink.url, 'https://example.invalid/run', "but its run's link reads")
+		const run = defined(shape.textFrame).paragraphs[0].runs[0]
+		assertEqual(defined(run.hyperlink).url, 'https://example.invalid/run', "but its run's link reads")
 	})
 })
 
@@ -98,15 +102,15 @@ describe('pptxToScript keeps a shape hyperlink', () => {
 		const ir = readModelToIr(presentation)
 		const calls = ir.slides.flatMap((slide) => slide.calls)
 		/** The call's options bag — always its last argument, whatever the method. */
-		const optionsOf = (name) => {
+		const optionsOf = (name: string) => {
 			const call = calls.find((candidate) => candidate.sourceName === name)
 			assert(call, `${name} emits a call`)
-			return /** @type {any} */ (call.args[call.args.length - 1])
+			return call.args[call.args.length - 1] as { hyperlink?: HyperlinkProps }
 		}
-		assertEqual(optionsOf('urlShape').hyperlink.url, 'https://example.invalid/a', 'a url link')
-		assertEqual(optionsOf('urlShape').hyperlink.tooltip, 'go', 'with its tooltip')
-		assertEqual(optionsOf('jumpShape').hyperlink.slide, 2, 'a slide jump prints the slide number')
-		assertEqual(optionsOf('actionShape').hyperlink.action, 'nextslide', 'a show jump prints the action')
+		assertEqual(optionsOf('urlShape').hyperlink?.url, 'https://example.invalid/a', 'a url link')
+		assertEqual(optionsOf('urlShape').hyperlink?.tooltip, 'go', 'with its tooltip')
+		assertEqual(optionsOf('jumpShape').hyperlink?.slide, 2, 'a slide jump prints the slide number')
+		assertEqual(optionsOf('actionShape').hyperlink?.action, 'nextslide', 'a show jump prints the action')
 		assertEqual(optionsOf('plainShape').hyperlink, undefined, 'an unlinked shape prints no hyperlink')
 		assertEqual(
 			ir.fidelity.filter((note) => note.construct === 'shape.hyperlink').length,

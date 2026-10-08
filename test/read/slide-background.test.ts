@@ -15,6 +15,7 @@
 
 import JSZip from 'jszip'
 import { describe, expect, test } from 'vitest'
+import type { BackgroundOption } from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
 import { readModelToIr } from '../../dist/script.js'
 import { assert, assertEqual, defined, readEntry } from '../helpers.ts'
@@ -23,10 +24,10 @@ import { irFor, openFixture } from './corpus.ts'
 
 const FIXTURE = 'slide-background.pptx'
 
-const GRADIENT = {
-	type: /** @type {const} */ ('gradient'),
+const GRADIENT: BackgroundOption = {
+	type: 'gradient',
 	gradient: {
-		kind: /** @type {const} */ ('linear'),
+		kind: 'linear',
 		angle: 90,
 		stops: [
 			{ color: 'FF0000', position: 0 },
@@ -34,9 +35,9 @@ const GRADIENT = {
 		],
 	},
 }
-const PATTERN = {
-	type: /** @type {const} */ ('pattern'),
-	pattern: { preset: /** @type {const} */ ('dkHorz'), fgColor: 'accent1', bgColor: 'FFFFFF' },
+const PATTERN: BackgroundOption = {
+	type: 'pattern',
+	pattern: { preset: 'dkHorz', fgColor: 'accent1', bgColor: 'FFFFFF' },
 }
 
 describe('the read model resolves a slide-scoped background of every kind', () => {

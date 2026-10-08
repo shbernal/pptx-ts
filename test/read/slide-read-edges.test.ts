@@ -7,10 +7,9 @@
 // TextFrame.autofit): asserted write→read through the shared harness, since the
 // writer already authors each feature.
 
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, test } from 'vitest'
 
+import type { Slide } from '../../dist/read.js'
 import { assert, assertEqual, assertRejects, defined, expectDefined } from '../helpers.ts'
 import { authorRead, schemaErrors, validatorInstalled } from './authored.ts'
 import { openFixture } from './corpus.ts'
@@ -19,13 +18,10 @@ import { openFixture } from './corpus.ts'
 const PNG_1PX =
 	'image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
 
-/** The first autoShape text frame on a read slide (addText/addTextBox emit a `p:sp`). */
-function textFrameOf(slide) {
-	const shape = slide.shapes.find((s) => s.shapeType === 'autoShape')
-	return shape ? shape.textFrame : null
+/** The first autoShape text frame on a read slide (addText/addTextBox emit a `p:sp`); asserts there is one. */
+function textFrameOf(slide: Slide) {
+	return defined(defined(slide.shapes.find((s) => s.shapeType === 'autoShape')).textFrame)
 }
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // Minimal magic-byte headers for each format sniffImageType recognizes. Only the
 // signature bytes matter — addPicture never decodes the image.
@@ -44,7 +40,14 @@ const GEOM = { left: 0, top: 0, width: 100000, height: 100000 }
 describe('Slide.addPicture — image format sniffing', () => {
 	test('each format signature resolves to the right media extension', async () => {
 		const slide = (await openFixture('empty')).slides[0]
-		const expected = { jpeg: 'jpeg', gif: 'gif', bmp: 'bmp', 'tiff-ii': 'tiff', 'tiff-mm': 'tiff', webp: 'webp' }
+		const expected: Record<string, string> = {
+			jpeg: 'jpeg',
+			gif: 'gif',
+			bmp: 'bmp',
+			'tiff-ii': 'tiff',
+			'tiff-mm': 'tiff',
+			webp: 'webp',
+		}
 		for (const [label, bytes] of Object.entries(HEADERS)) {
 			const picture = slide.addPicture(new Uint8Array(bytes), { ...GEOM, name: `img-${label}` })
 			const partName = picture.imagePartName

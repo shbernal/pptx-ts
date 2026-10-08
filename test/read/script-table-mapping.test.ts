@@ -6,14 +6,14 @@
 
 import { describe, test } from 'vitest'
 import JSZip from 'jszip'
-import TsPptx from '../../dist/node.js'
+import TsPptx, { type TableProps, type TableRow } from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { readModelToIr } from '../../dist/script.js'
-import { assert, assertEqual, captureDiagnostics, readEntry } from '../helpers.ts'
+import { readModelToIr, type DeckIr } from '../../dist/script.js'
+import { assert, assertEqual, captureDiagnostics, defined, readEntry } from '../helpers.ts'
 import { authorRead } from './authored.ts'
 
 /** Apply `rewrite` to every slide part of `buf`, reload, and convert. */
-async function irWithSlideXml(buf, rewrite) {
+async function irWithSlideXml(buf: Uint8Array, rewrite: (xml: string) => string) {
 	const zip = await JSZip.loadAsync(buf)
 	for (const name of Object.keys(zip.files)) {
 		if (!/^ppt\/slides\/slide\d+\.xml$/.test(name)) continue
@@ -23,11 +23,14 @@ async function irWithSlideXml(buf, rewrite) {
 	return readModelToIr(reopened)
 }
 
-/** The first `addTable` call on slide 1. */
-function tableCall(ir) {
+/**
+ * The first `addTable` call on slide 1, its arguments read as the write API's: the IR is
+ * `IrValue`-typed by design, so nothing narrows them for us.
+ */
+function tableCall(ir: DeckIr) {
 	const call = ir.slides[0].calls.find((c) => c.method === 'addTable')
 	assert(call, 'the IR carries an addTable call')
-	return call
+	return { rows: call.args[0] as TableRow[], options: call.args[1] as TableProps }
 }
 
 describe('table mapper: cell margins', () => {
@@ -43,7 +46,7 @@ describe('table mapper: cell margins', () => {
 			})
 		)
 		assertEqual(rewritten, 1, 'the one cell now states only marL')
-		const margin = tableCall(ir).args[0][0][0].options.margin
+		const margin = defined(tableCall(ir).rows[0][0].options).margin
 		// `[top, right, bottom, left]` in inches: 0.05 and 0.1 are 45720 and 91440 EMU.
 		assertEqual(JSON.stringify(margin), JSON.stringify([0.05, 0.1, 0.05, 0]), 'the unset sides take the defaults')
 	})
@@ -69,7 +72,7 @@ describe('table mapper: row heights', () => {
 		assertEqual(seen, 3, 'the table has three rows at 0.5in')
 
 		const call = tableCall(ir)
-		assertEqual(JSON.stringify(call.args[1].rowH), JSON.stringify([0.5, null, 0.5]), 'the auto row is null')
+		assertEqual(JSON.stringify(call.options.rowH), JSON.stringify([0.5, null, 0.5]), 'the auto row is null')
 		const note = ir.fidelity.find((entry) => entry.construct === 'table.rowAuto')
 		assert(note, 'the auto row is noted')
 		assert(
@@ -79,7 +82,7 @@ describe('table mapper: row heights', () => {
 
 		const { result: bytes, codes } = await captureDiagnostics(() => {
 			const pres = new TsPptx()
-			pres.addSlide().addTable(call.args[0], call.args[1])
+			pres.addSlide().addTable(call.rows, call.options)
 			return pres.toBytes()
 		})
 		assert(!codes.includes('table/invalid-row-height'), `the replay accepts the row; got ${JSON.stringify(codes)}`)

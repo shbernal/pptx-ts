@@ -15,8 +15,6 @@
 // (the Ion theme) rather than synthesized, since it pins whose relationships a
 // theme-materialized fill resolves against.
 
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
@@ -24,15 +22,13 @@ import { assert, assertEqual, defined, readEntry } from '../helpers.ts'
 import { authorRead } from './authored.ts'
 import { openFixture } from './corpus.ts'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
 /**
  * Author a one-slide deck, splice `bgXml` in as the slide's `p:cSld/p:bg` (first
  * child, per CT_CommonSlideData's sequence), and return the reloaded
  * `slide.background`. The rest of the package — theme, layout, master, rels — is
  * the writer's own, so colour tokens and `fmtScheme` lookups resolve for real.
  */
-async function backgroundFrom(bgXml) {
+async function backgroundFrom(bgXml: string) {
 	const { buf } = await authorRead((pres) => {
 		pres.addSlide()
 	})
