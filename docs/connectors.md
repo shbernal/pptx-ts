@@ -163,7 +163,7 @@ slide.addConnector({
 
 ## Style the line
 
-```ts
+```ts live
 slide.addConnector({
   x1: 1, y1: 1, x2: 5, y2: 3,
   color: "C00000",
