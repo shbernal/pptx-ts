@@ -340,7 +340,7 @@ describe('measureText.uncoveredCodepoints (the font-fallback gap)', () => {
 			withCmap(() => true)
 		) // 1.0 em, like the face PowerPoint falls back to
 
-		// 24 Plane-2 ideographs, which break per character (see cjk-line-breaking.test.js).
+		// 24 Plane-2 ideographs, which break per character (see cjk-line-breaking.test.ts).
 		const text = '\u{20000}'.repeat(24)
 		const opts = { wIn: 2, fontSize: 18, fontFace: 'Partial' }
 		const modeled = measureText(lacksAstral, text, opts)

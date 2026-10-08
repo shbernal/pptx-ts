@@ -182,7 +182,7 @@ describe('solvers through dist', () => {
 describe('getHeuristicFontMetrics through dist: the per-character width buckets', () => {
 	// The unregistered-font fallback is the width model behind every `fit:` on a face with
 	// no registered metrics, so its buckets decide whether a headless render pre-shrinks
-	// enough. `font-heuristic.test.js` proves them from `src/`; this drives the shipped
+	// enough. `font-heuristic.test.ts` proves them from `src/`; this drives the shipped
 	// bundle, where an entry dropped by the emitter would otherwise go unnoticed.
 	const h = getHeuristicFontMetrics()
 	/** Advance of `text` in em, at the 1000pt size that makes an em 1000pt. */
