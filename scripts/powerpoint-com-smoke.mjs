@@ -49,9 +49,9 @@
 import os from 'node:os'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { spawnSync } from 'node:child_process'
 import { decodePng } from './png-utils.mjs'
 import { collect, parseCliOrExit, skipOrFail } from './script-utils.mjs'
+import { clearResiliency } from './powerpoint/windows.mjs'
 import {
 	EXPECTED_ACTION,
 	EXPECTED_OLE_PROGID,
@@ -108,16 +108,6 @@ if (os.platform() !== 'win32') {
 	process.exit(
 		skipOrFail('TSPPTX_COM_SMOKE', 'the PowerPoint COM smoke is Windows-only (platform: ' + os.platform() + ').')
 	)
-}
-// --- 2. clear the PowerPoint Resiliency key ---------------------------------
-// A prior crash can leave the file in the Disabled/Resiliency list, so PowerPoint refuses
-// to open it (or opens in reduced-functionality mode) and the smoke gives a false failure.
-function clearResiliency() {
-	for (const ver of ['16.0', '15.0', '14.0']) {
-		spawnSync('reg', ['delete', `HKCU\\Software\\Microsoft\\Office\\${ver}\\PowerPoint\\Resiliency`, '/f'], {
-			stdio: 'ignore',
-		})
-	}
 }
 
 /**
