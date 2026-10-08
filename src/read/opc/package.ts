@@ -83,8 +83,12 @@ export class OpcPackage {
 		return new OpcPackage(parts, contentTypes, contentTypesBytes)
 	}
 
-	part(partName: string): Part | undefined {
-		return this.parts.get(partName)
+	/**
+	 * The part at `partName`, or `undefined`. Takes `null`, as a part-name getter such as
+	 * `Picture.imagePartName` reads when there is no part to name, and misses on it.
+	 */
+	part(partName: string | null): Part | undefined {
+		return partName === null ? undefined : this.parts.get(partName)
 	}
 
 	partsByContentType(contentType: string): Part[] {

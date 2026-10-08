@@ -15,7 +15,7 @@ import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
 import { validateBuf, validatorInstalled } from '../validator.js'
 import { fixturePath, openFixture, readOracle } from './corpus.js'
-import { partBodies, assertUnchangedExcept } from '../helpers.js'
+import { partBodies, assertUnchangedExcept, defined } from '../helpers.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -157,23 +157,23 @@ describe('slide.transition (write/edit)', () => {
 		// the sound.
 		const pres = await openFixture('slide-transition-sound')
 		const slide = pres.slides[0]
-		const sound = slide.transition.sound
+		const sound = defined(slide.transition, 'the fixture slide has a transition').sound
 		assert.ok(sound, 'the fixture slide has a sound')
 
-		slide.transition = { ...slide.transition, speed: 'slow' }
+		slide.transition = { ...defined(slide.transition), speed: 'slow' }
 		let reopened = await Presentation.load(await pres.save())
 		assert.deepEqual(reopened.slides[0].transition.sound, sound, 'a spread keeps the sound')
 		assert.equal(reopened.slides[0].transition.speed, 'slow', 'and changes the speed')
 
 		assert.throws(
 			() => {
-				slide.transition = { ...slide.transition, sound: { ...sound, name: 'other.wav' } }
+				slide.transition = { ...defined(slide.transition), sound: { ...sound, name: 'other.wav' } }
 			},
 			(err) => /** @type {any} */ (err).code === 'transition/sound-unsupported'
 		)
 		assert.deepEqual(slide.transition.sound, sound, 'a refused sound changes nothing')
 
-		slide.transition = { ...slide.transition, sound: null }
+		slide.transition = { ...defined(slide.transition), sound: null }
 		reopened = await Presentation.load(await pres.save())
 		assert.equal(reopened.slides[0].transition.sound, null, 'null removes the sound')
 	})

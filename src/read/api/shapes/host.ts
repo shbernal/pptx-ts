@@ -35,6 +35,6 @@ export interface ShapeHost {
 	readonly relationships: Relationships
 	/** The host's resolved colour/font context, backing every `resolved*` getter. */
 	themeContext(): ThemeContext
-	/** The shape anywhere in this host's tree with the given drawing id, or `undefined`. */
-	shapeByIdDeep(id: number): AnyShape | undefined
+	/** The shape anywhere in this host's tree with the given drawing id, or `undefined` (always, for `null`). */
+	shapeByIdDeep(id: number | null): AnyShape | undefined
 }

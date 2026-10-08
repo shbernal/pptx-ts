@@ -221,9 +221,11 @@ export function buildShapes(parent: Element, host: ShapeHost): AnyShape[] {
  * pre-order so a group is visited before its children. Backs
  * {@link ShapeHost.shapeByIdDeep} on all three hosts — drawing ids are unique
  * within a part, so the first match is the only match and the walk order just
- * fixes a deterministic one.
+ * fixes a deterministic one. A `null` id, as a shape's `id` reads when it has
+ * no `@id`, is a miss, not a match on the first shape that lacks one too.
  */
-export function findShapeByIdDeep(shapes: AnyShape[], id: number): AnyShape | undefined {
+export function findShapeByIdDeep(shapes: AnyShape[], id: number | null): AnyShape | undefined {
+	if (id === null) return undefined
 	for (const shape of shapes) {
 		if (shape.id === id) return shape
 		if (shape instanceof GroupShape) {

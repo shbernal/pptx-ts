@@ -563,9 +563,11 @@ export class Diagram {
 
 	/**
 	 * The point with this `@modelId`, or `null` — the lookup every connection getter implies,
-	 * since a `DiagramConnection` names its ends by id and nothing else resolves them.
+	 * since a `DiagramConnection` names its ends by id and nothing else resolves them. Takes
+	 * `null`, as a connection end with no id reads, and misses on it.
 	 */
-	point(modelId: string): DiagramPoint | null {
+	point(modelId: string | null): DiagramPoint | null {
+		if (modelId === null) return null
 		return this.points.find((candidate) => candidate.modelId === modelId) ?? null
 	}
 

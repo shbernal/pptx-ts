@@ -38,7 +38,16 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import JSZip from 'jszip'
 import { latexToOmml } from '../dist/math.js'
-import { build, assert, assertEqual, readEntry, assertIncludes, firstXmlBlock, listEntries } from './helpers.js'
+import {
+	build,
+	assert,
+	assertEqual,
+	defined,
+	readEntry,
+	assertIncludes,
+	firstXmlBlock,
+	listEntries,
+} from './helpers.js'
 import { validateBuf } from './validator.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -3727,9 +3736,10 @@ export default [
 			const load = async (/** @type {string} */ name) =>
 				Presentation.load(await readFile(new URL(`./read/fixtures/${name}.pptx`, import.meta.url)))
 			const sounds = await load('slide-transition-sound')
-			sounds.slides[0].transition = { ...sounds.slides[0].transition, speed: 'slow', advanceAfterMs: 1500 }
-			sounds.slides[1].transition = { ...sounds.slides[1].transition, durationMs: null }
-			sounds.slides[2].transition = { ...sounds.slides[2].transition, sound: null }
+			const [first, second, third] = sounds.slides
+			first.transition = { ...defined(first.transition), speed: 'slow', advanceAfterMs: 1500 }
+			second.transition = { ...defined(second.transition), durationMs: null }
+			third.transition = { ...defined(third.transition), sound: null }
 			await expectNoSchemaErrors(Buffer.from(await sounds.save()), 'read-transition-sound-edits')
 			const plain = await load('slide-transition')
 			for (const slide of plain.slides) {

@@ -378,6 +378,7 @@ describe('Diagram — the authored tree', () => {
 		const edge = diagram.connections.find((connection) => connection.type === 'parOf' && connection.sourceOrder === 0)
 		assertEqual(diagram.point(edge.destinationId).modelId, edge.destinationId, 'a connection end resolves to its point')
 		assert(diagram.point('{00000000-0000-0000-0000-000000000000}') === null, 'an id naming no point reads null')
+		assert(diagram.point(null) === null, 'a connection end with no id reads null')
 	})
 
 	test('a parOf cycle raises rather than walking forever', async () => {

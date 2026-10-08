@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **The read model's lookups take the nullable ids its getters return.** `Slide.shapeById`,
+  `shapeByIdDeep` (on slides, layouts, masters and notes), `Diagram.point` and `OpcPackage.part`
+  now accept `null` and miss on it, so a value read back can be passed straight in under
+  `strictNullChecks`: `slide.shapeById(shape.id)`, `diagram.point(connection.destinationId)`,
+  `opc.part(picture.imagePartName)`. Before, the getters typed `number | null` or
+  `string | null` and the lookups only `number` or `string`. At run time `shapeById(null)` also
+  matched the first shape whose `p:cNvPr` has no `@id`; it now returns `undefined`. No migration
+  is needed.
+
 - **The default branch is now `main`, renamed from `master`.** The library is unchanged. A
   dependency on `github:shbernal/ts-pptx#master` should switch to `#main`, or better, to a pinned
   commit sha. GitHub redirects old `blob/master/` links, and the repository's own links now point

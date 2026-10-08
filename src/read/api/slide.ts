@@ -532,8 +532,12 @@ export class Slide implements ShapeHost {
 		return this.placeholder('sldNum') ?? null
 	}
 
-	/** The first top-level shape with the given drawing id (`p:cNvPr/@id`), or `undefined`. */
-	shapeById(id: number): AnyShape | undefined {
+	/**
+	 * The first top-level shape with the given drawing id (`p:cNvPr/@id`), or `undefined`. Takes
+	 * `null`, as a shape's `id` reads when its `p:cNvPr` has no `@id`, and misses on it.
+	 */
+	shapeById(id: number | null): AnyShape | undefined {
+		if (id === null) return undefined
 		return this.shapes.find((shape) => shape.id === id)
 	}
 
@@ -548,7 +552,7 @@ export class Slide implements ShapeHost {
 	 * resolution ({@link Connector.startConnection}), which must
 	 * resolve a binding into a group that top-level {@link shapeById} cannot see.
 	 */
-	shapeByIdDeep(id: number): AnyShape | undefined {
+	shapeByIdDeep(id: number | null): AnyShape | undefined {
 		return findShapeByIdDeep(this.shapes, id)
 	}
 

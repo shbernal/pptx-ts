@@ -345,8 +345,8 @@ abstract class TemplatePart implements ShapeHost {
 		return spTree ? buildShapes(spTree, this) : []
 	}
 
-	/** The shape anywhere in this tier's tree with the given drawing id, or `undefined`. */
-	shapeByIdDeep(id: number): AnyShape | undefined {
+	/** The shape anywhere in this tier's tree with the given drawing id, or `undefined` (always, for `null`). */
+	shapeByIdDeep(id: number | null): AnyShape | undefined {
 		return findShapeByIdDeep(this.shapes, id)
 	}
 

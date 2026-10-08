@@ -33,6 +33,21 @@ describe('shape addressing', () => {
 		assertEqual(slide.shapeByName('does-not-exist'), undefined, 'missing name yields undefined')
 	})
 
+	test('a shape with no drawing id reads null, and looking that id up misses', async () => {
+		const slide = (await openFixture('textbox')).slides[0]
+		const shape = slide.shapeByName('replaceText')
+		assert(shape, 'shapeByName finds the textbox')
+		const cNvPr = shape.element_.getElementsByTagName('p:cNvPr')[0]
+		assert(cNvPr, 'the textbox has a p:cNvPr')
+		cNvPr.removeAttribute('id')
+		assertEqual(shape.id, null, 'no @id reads null')
+		// Passed straight back, the null must not match the shape that lacks an id.
+		assertEqual(slide.shapeById(shape.id), undefined, 'shapeById misses on null')
+		assertEqual(slide.shapeByIdDeep(shape.id), undefined, 'shapeByIdDeep misses on null')
+		// The same holds for a part name: a picture with no embedded image reads `imagePartName` null.
+		assertEqual(slide.presentation.opc.part(null), undefined, 'opc.part misses on null')
+	})
+
 	test('placeholder(type, idx?) targets master/layout placeholders', async () => {
 		const slide = (await openFixture('mixed')).slides[0]
 		const title = slide.placeholder('ctrTitle')
