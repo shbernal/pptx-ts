@@ -6,7 +6,7 @@
  * ...cell.options } }`) before the auto-pager sees them. The pager then writes to its own
  * working copy freely, which is only safe while that copy exists. Nothing stated that
  * dependency, so nothing would have caught its removal; the chart path has had the same guard
- * for its own normalization (`test/regression/chart/chart-input-immutability.test.js`) and the
+ * for its own normalization (`test/regression/chart/chart-input-immutability.test.ts`) and the
  * table path had none.
  *
  * Freezing rather than comparing afterwards is deliberate: a write to a frozen object throws in

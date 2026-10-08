@@ -8,7 +8,7 @@
  * wrapped against the 4in column instead of its own 0.8in one, priced at one line instead of
  * several, and every continuation page took more body rows than it had room for.
  *
- * The oracle is the one `table-autopage-continuation-budget.test.js` uses. Every body row is
+ * The oracle is the one `table-autopage-continuation-budget.test.ts` uses. Every body row is
  * identical and `autoPageSlideStartY` equals `y`, so every page has the same usable height and the
  * same header; a full continuation page therefore holds exactly as many body rows as the first.
  */

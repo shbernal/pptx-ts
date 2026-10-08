@@ -10,7 +10,7 @@
  * - A `y` above the top margin was pushed down to the margin on every page after the first, while
  *   the pager's `Math.min(y, margin)` budgeted it from `y`.
  *
- * The same three cases as `html-table-continuation-start-y.test.js`, which covers `tableToSlides`.
+ * The same three cases as `html-table-continuation-start-y.test.ts`, which covers `tableToSlides`.
  */
 import { assert, assertEqual, build, defineRegressionSuite, listEntries, readEntry } from '../../helpers.ts'
 

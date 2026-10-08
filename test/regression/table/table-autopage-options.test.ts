@@ -29,7 +29,7 @@ function bodyRows(n) {
 /**
  * Run `fn` with `console.log` captured, returning the lines it emitted. Restoring in a
  * `finally` matters: a throwing build must not leave the rest of the suite stubbed.
- * (Same shape as the `console.warn` capture in connector-shape.test.js.)
+ * (Same shape as the `console.warn` capture in connector-shape.test.ts.)
  */
 async function captureLog(fn) {
 	const orig = console.log
