@@ -1,8 +1,9 @@
+import type { TsPptx } from '../../../dist/node.js'
 import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 // A master with a single title placeholder; a slide created against it should
 // inherit the placeholder (rendered as a <p:sp> with <p:ph type="title" .../>).
-function defineMaster(p, title) {
+function defineMaster(p: TsPptx, title: string) {
 	p.defineSlideMaster({
 		title,
 		objects: [{ placeholder: { options: { name: 'title', type: 'title', x: 0.5, y: 0.5, w: 9, h: 1 }, text: '' } }],

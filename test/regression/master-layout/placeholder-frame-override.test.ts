@@ -1,6 +1,7 @@
 import JSZip from 'jszip'
 import { defineRegressionSuite, build, readEntry, assert, assertEqual, defined } from '../../helpers.ts'
 import { readFixture } from '../../read/corpus.ts'
+import type { TsPptx } from '../../../dist/node.js'
 
 // What wins when an object names a placeholder AND states options of its own.
 //
@@ -27,7 +28,7 @@ import { readFixture } from '../../read/corpus.ts'
  * all-zero transform ahead of every shape, and matching that instead makes each case here
  * pass or fail for a reason that has nothing to do with the shape.
  */
-async function frameOf(zip) {
+async function frameOf(zip: JSZip) {
 	const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 	const sp = /<p:sp>[\s\S]*?<\/p:sp>/.exec(xml)
 	assert(sp, 'expected a shape on the slide; got: ' + xml)
@@ -40,7 +41,7 @@ async function frameOf(zip) {
 const EMU = 914400
 
 /** A master whose `body` placeholder sits at (1, 1) and is 8 x 4 inches. */
-function withBodyPlaceholder(p) {
+function withBodyPlaceholder(p: TsPptx) {
 	p.defineSlideMaster({
 		title: 'PH_FRAME',
 		objects: [{ placeholder: { options: { name: 'body', type: 'body', x: 1, y: 1, w: 8, h: 4 }, text: '' } }],
@@ -189,7 +190,7 @@ defineRegressionSuite('placeholder frame vs the object own coordinates', [
 		name: 'the PowerPoint-authored oracle states only what the slide overrides',
 		fn: async () => {
 			const zip = await JSZip.loadAsync(await readFixture('placeholder-override'))
-			const bodyPrOf = async (part) => {
+			const bodyPrOf = async (part: string) => {
 				const xml = await readEntry(zip, part)
 				const sp = (xml.match(/<p:sp>[\s\S]*?<\/p:sp>/g) || []).find((block) => /<p:ph idx="1"/.test(block))
 				assert(sp, `${part} has no body placeholder`)

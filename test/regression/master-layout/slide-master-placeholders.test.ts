@@ -7,6 +7,8 @@ import {
 	selfClosingTags,
 	xmlAttributes,
 } from '../../helpers.ts'
+import type JSZip from 'jszip'
+import type { PlaceholderProps, SlideMasterProps } from '../../../dist/node.js'
 
 // A slide seeds every layout placeholder it leaves empty with a copy of that placeholder's options.
 // The copy was shallow, so its nested `fill` and `hyperlink` objects were the layout's own:
@@ -17,7 +19,7 @@ const PNG =
 	'image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
 
 /** A master with one body placeholder carrying `extra` options. */
-function seededMaster(extra) {
+function seededMaster(extra: Omit<PlaceholderProps, 'name' | 'type'>): SlideMasterProps {
 	return {
 		title: 'SEEDED',
 		objects: [{ placeholder: { options: { name: 'body', type: 'body', x: 1, y: 1, w: 6, h: 3, ...extra }, text: '' } }],
@@ -28,7 +30,7 @@ function seededMaster(extra) {
  * In every slide and layout part: rel ids are unique, every `r:embed` / `r:id` / `r:link` names a
  * rel the part declares, and every internal rel target is in the package.
  */
-async function assertRelsResolve(zip) {
+async function assertRelsResolve(zip: JSZip) {
 	const entries = listEntries(zip)
 	for (const part of entries.filter((name) => /^ppt\/(slides|slideLayouts)\/[^/]+\.xml$/.test(name))) {
 		const relsName = part.replace(/([^/]+)$/, '_rels/$1.rels')

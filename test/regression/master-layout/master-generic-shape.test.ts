@@ -1,6 +1,7 @@
+import type JSZip from 'jszip'
 import { defineRegressionSuite, build, readEntry, listEntries, assert } from '../../helpers.ts'
 
-async function layoutXmlMatching(zip, re) {
+async function layoutXmlMatching(zip: JSZip, re: RegExp) {
 	const layouts = listEntries(zip).filter((p) => /^ppt\/slideLayouts\/slideLayout\d+\.xml$/.test(p))
 	for (const path of layouts) {
 		const xml = await readEntry(zip, path)

@@ -1,3 +1,4 @@
+import type JSZip from 'jszip'
 import {
 	setDiagnosticHandler,
 	captureDiagnostics,
@@ -14,7 +15,7 @@ import {
 // per-level <p:txStyles> (titleStyle / bodyStyle / otherStyle). Previously the block was a fixed
 // Office-default literal with no API to set nested bullet character, size, or color.
 
-async function masterXml(zip) {
+async function masterXml(zip: JSZip) {
 	return readEntry(zip, 'ppt/slideMasters/slideMaster1.xml')
 }
 
@@ -230,7 +231,7 @@ defineRegressionSuite('Master text styles', [
 	{
 		name: 'levels beyond 9 are ignored with a warning',
 		fn: async () => {
-			const warnings = []
+			const warnings: string[] = []
 			setDiagnosticHandler((d) => warnings.push(d.message))
 			try {
 				const { zip } = await build((p) => {

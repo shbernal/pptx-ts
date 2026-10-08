@@ -1,3 +1,4 @@
+import type JSZip from 'jszip'
 import { defineRegressionSuite, build, readEntry, listEntries, assert } from '../../helpers.ts'
 
 // `defineSlideMaster` text objects previously wrapped `text.text` in a fresh
@@ -5,7 +6,7 @@ import { defineRegressionSuite, build, readEntry, listEntries, assert } from '..
 // therefore arrived at addTextDefinition as `[{ text: TextProps[] }]` and the runs
 // were lost or stringified instead of serialized.
 
-async function findLayoutXmlContaining(zip, needle) {
+async function findLayoutXmlContaining(zip: JSZip, needle: string) {
 	const layouts = listEntries(zip).filter((p) => /^ppt\/slideLayouts\/slideLayout\d+\.xml$/.test(p))
 	for (const path of layouts) {
 		const xml = await readEntry(zip, path)
