@@ -643,7 +643,7 @@ function addColophon(pptx) {
 				},
 			},
 			{ text: '  ·  regenerate this deck with  ', options: { color: BRAND.ash, fontSize: 12 } },
-			{ text: 'pnpm demos:build', options: { color: BRAND.sand, fontSize: 12, fontFace: FONT.mono } },
+			{ text: 'pnpm showcases:build', options: { color: BRAND.sand, fontSize: 12, fontFace: FONT.mono } },
 		],
 		{ x: 0.95, y: 5.6, w: 10, h: 0.4, margin: 0, fontFace: FONT.body }
 	)
