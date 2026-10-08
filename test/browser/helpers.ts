@@ -61,6 +61,17 @@ export function defined<T>(value: T, message?: string): NonNullable<T> {
 }
 
 /**
+ * `list[index]`, failing the spec when the index is out of range. The Playwright counterpart
+ * of `at` in `test/helpers.ts`.
+ */
+export function at<T>(list: ArrayLike<T>, index: number, message?: string): T {
+	const i = index < 0 ? list.length + index : index
+	expect(i, message).toBeGreaterThanOrEqual(0)
+	expect(i, message).toBeLessThan(list.length)
+	return list[i] as T
+}
+
+/**
  * The successful arm of a harness outcome, failing the spec with `context` and the page's
  * own error message otherwise.
  */

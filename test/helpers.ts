@@ -228,6 +228,19 @@ function defined<T>(value: T, message?: string): NonNullable<T> {
 	return value
 }
 
+/**
+ * `list[index]`, failing the test when the index is out of range, for reads such as
+ * `at(presentation.slides, 0)` where the fixture always has the element. Bounds only: an
+ * element that is itself `null` or `undefined` comes back as it is. A negative index counts
+ * from the end, as in `Array.prototype.at`.
+ */
+function at<T>(list: ArrayLike<T>, index: number, message?: string): T {
+	const i = index < 0 ? list.length + index : index
+	if (!Number.isInteger(i) || i < 0 || i >= list.length)
+		throw new Error(`${message ? message + ': ' : ''}index ${index} is out of range for a length of ${list.length}`)
+	return list[i] as T
+}
+
 function assertEqual(actual: unknown, expected: unknown, msg?: string): void {
 	if (actual !== expected)
 		throw new Error(
@@ -488,6 +501,7 @@ export {
 	assert,
 	expectDefined,
 	defined,
+	at,
 	assertEqual,
 	assertIncludes,
 	assertNotIncludes,

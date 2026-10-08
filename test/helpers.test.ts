@@ -2,7 +2,7 @@
 // deck turns into confusing failures far from the cause. These cases pin the helper contracts
 // that other suites rely on.
 import { describe, expect, test } from 'vitest'
-import { assertIncludes, defined, expectDefined, slideXml } from './helpers.ts'
+import { assertIncludes, at, defined, expectDefined, slideXml } from './helpers.ts'
 
 const SILKSCREEN = 'test/read/fixtures/fonts/Silkscreen-Regular.ttf'
 
@@ -36,5 +36,16 @@ describe('test helpers', () => {
 			)
 		).toThrow(/the match/)
 		expect(() => defined(null)).toThrow(/not to be null/)
+	})
+	test('at reads an index in range, counts back from a negative one, and fails out of range', () => {
+		expect(at(['a', 'b'], 1)).toBe('b')
+		expect(at(['a', 'b'], -1)).toBe('b')
+		// Bounds only: a present slot holding `null` is the element, not a failure.
+		expect(at([null], 0)).toBeNull()
+		expect(() => at(['a'], 1, 'the second slide')).toThrow(
+			/the second slide: index 1 is out of range for a length of 1/
+		)
+		expect(() => at([], 0)).toThrow(/out of range/)
+		expect(() => at(['a'], 0.5)).toThrow(/out of range/)
 	})
 })
