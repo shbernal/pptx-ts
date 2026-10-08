@@ -56,7 +56,7 @@ Each cell comes from `package.json`, `lefthook.yml` or a workflow under `.github
 
 Reading the matrix:
 
-- `test` is `vitest run` over every `test/**/*.test.ts` and `test/**/*.test.js` file: the regression, read, schema,
+- `test` is `vitest run` over every `test/**/*.test.ts` file: the regression, read, schema,
   script and font-oracle suites. `test:unit`, `test:read` and `test:schema` run parts of it.
 - `test:coverage` is `test` plus the `vitest.config.ts` coverage thresholds. The Node 24.x leg
   of the `test` job runs it in place of `test`.
@@ -226,8 +226,8 @@ pnpm exec vitest run test/regression -t "content type default"     # by test nam
 
 ## Test suites
 
-`pnpm test` is `vitest run` with no target list. Vitest discovers every `test/**/*.test.js` and
-`test/**/*.test.ts` file, so a new file runs with no list to edit. It excludes `test/browser/**`, which belongs to
+`pnpm test` is `vitest run` with no target list. Vitest discovers every `test/**/*.test.ts` file, so a
+new file runs with no list to edit. It excludes `test/browser/**`, which belongs to
 Playwright.
 
 A documentation-only change needs no test, unless it changes a claim about the package, the
@@ -265,9 +265,10 @@ Two mechanisms replace the guarantee isolation gave:
 ### TypeScript tests
 
 Tests are TypeScript. `typecheck:test` checks them with `tsconfig.test.json` at `src/`'s
-strictness, except `noPropertyAccessFromIndexSignature`, which is house style, and
-`noUncheckedIndexedAccess`. An unused binding fails the check, because in a test it is usually a
-stale assertion. Prefix one with `_` when it is deliberate.
+strictness, except `noPropertyAccessFromIndexSignature`, which is house style: tests read
+attribute bags and fixture records by name. `noUncheckedIndexedAccess` is on, so an indexed read
+is `T | undefined` until something checks it. An unused binding fails the check, because in a
+test it is usually a stale assertion. Prefix one with `_` when it is deliberate.
 
 A few `.mjs` files under `test/` stay JavaScript because something other than a test runner
 loads them: the pages under `test/browser/harness/`, which the browser imports unbundled, and
@@ -298,7 +299,7 @@ happy-dom.
   asserts on. No tooling keys on the directory, so a file can move freely.
 - Paths inside a suite are relative to its directory, for example `../../helpers.ts` and
   `../../../dist/node.js`.
-- A Vitest file is `*.test.ts` or `*.test.js`. The Playwright specs in `test/browser/` are
+- A Vitest file is `*.test.ts`. The Playwright specs in `test/browser/` are
   `*.spec.ts`; the pages they drive under `test/browser/harness/` stay `.mjs`, since the
   browser loads them unbundled.
 
@@ -320,6 +321,10 @@ Prefer public API deck generation plus focused package and XML assertions:
   project typechecks with `strictNullChecks`, and both helpers fail as an assertion where a bare
   dereference would fail as a `TypeError`. A Playwright spec imports `defined` from
   `test/browser/helpers.ts` instead, since `test/helpers.ts` asserts through Vitest.
+- Read an element the fixture always has with `at(list, i)`, and destructure leading elements
+  with `const [first, second] = take(list, 2)`. Both fail the test on a list that is too short,
+  and neither checks the element itself, so a slot holding `null` reads as `null`. Never reach
+  for `!`; the lint forbids it. `test/browser/helpers.ts` has its own `at`.
 - Assert a failure without a hand-rolled `try`/`catch`: a catch variable is `unknown`. Use
   `assertRejects()` to match the message, `caught()` or `caughtSync()` to get the thrown
   `Error` back (or `null`) and check its `code`, class or `cause`, or Vitest's `toThrow()`.

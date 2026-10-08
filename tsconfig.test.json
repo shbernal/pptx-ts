@@ -13,13 +13,14 @@
 		"allowImportingTsExtensions": true,
 		"incremental": true,
 		"tsBuildInfoFile": ".tmp/tsconfig.test.tsbuildinfo",
-		// The `.ts` tests are held to `src/`'s strictness with two exceptions.
-		// `noPropertyAccessFromIndexSignature` is house style, not correctness, and tests read
-		// a lot of `Record<string, …>` fixture data. `noUncheckedIndexedAccess` is off until
-		// the whole suite is TypeScript. The unused-binding checks stay on: an unused binding
-		// in a test is usually a stale assertion. Prefix one with `_` when it is deliberate.
-		"noPropertyAccessFromIndexSignature": false,
-		"noUncheckedIndexedAccess": false
+		// Tests are held to `src/`'s strictness, `noUncheckedIndexedAccess` included: read a
+		// fixture element with `at(list, i)` or `take(list, n)` from `test/helpers.ts`, which
+		// fail as an assertion where an absent element would fail later as a `TypeError`.
+		// The one relaxation is `noPropertyAccessFromIndexSignature`, which is house style
+		// rather than correctness. Tests read attribute bags and fixture records
+		// (`attrs.Target`, `opts.color`) by name, and turning it on reported over 300 such
+		// reads and no bug among them.
+		"noPropertyAccessFromIndexSignature": false
 	},
 	"include": ["test/**/*.ts", "test/**/*.mjs"],
 	"exclude": [
