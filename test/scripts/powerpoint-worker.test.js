@@ -105,6 +105,16 @@ describe('runner', () => {
 		expect(hooks.killPowerPoint).not.toHaveBeenCalled()
 	})
 
+	test("Office's owner files never come back", async () => {
+		const executor = async (command, args, { cwd }) => {
+			fs.writeFileSync(path.join(cwd, 'deck.pptx'), 'deck')
+			fs.writeFileSync(path.join(cwd, '~$deck.pptx'), 'owner')
+			return { code: 0, out: '', err: '', timedOut: false }
+		}
+		const result = await createRunner({ executor, hooks: fakeHooks(), tmpRoot }).run(validateJob(wireJob()))
+		expect(Object.keys(result.files)).toEqual(['deck.pptx'])
+	})
+
 	test('a timeout kills PowerPoint and is reported', async () => {
 		const hooks = fakeHooks()
 		const executor = async () => ({ code: -1, out: '', err: '', timedOut: true })

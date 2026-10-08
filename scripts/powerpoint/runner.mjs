@@ -9,8 +9,8 @@
 //   3. runs the entry script with the workspace as its working directory;
 //   4. force-quits PowerPoint if the script timed out or exited non-zero, so a repair prompt
 //      cannot wedge the next job;
-//   5. returns every file that is new or whose content hash changed, except the entry script and
-//      anything under the job's `scratch` directory;
+//   5. returns every file that is new or whose content hash changed, except the entry script,
+//      anything under the job's `scratch` directory, and Office's `~$` owner files;
 //   6. deletes the workspace.
 //
 // PowerPoint is a single instance, so jobs queue in arrival order and never overlap.
@@ -151,7 +151,16 @@ async function changedFiles(workspace, before, job) {
 		const rel = path.relative(workspace, abs).split(path.sep).join('/')
 		if (rel === job.entry) continue
 		if (job.scratch !== null && (rel === job.scratch || rel.startsWith(job.scratch + '/'))) continue
-		const content = await fs.readFile(abs)
+		// Office's owner file for a document it still has open; it goes when the document closes.
+		if (entry.name.startsWith('~$')) continue
+		let content
+		try {
+			content = await fs.readFile(abs)
+		} catch (error) {
+			// Listed, then deleted before it could be read: PowerPoint was still closing something.
+			if (/** @type {NodeJS.ErrnoException} */ (error).code === 'ENOENT') continue
+			throw error
+		}
 		if (before.get(rel) === hash(content)) continue
 		files[rel] = content.toString('base64')
 	}
