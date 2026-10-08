@@ -10,7 +10,7 @@
 
 import { describe, test } from 'vitest'
 import { Chart, Part } from '../../dist/read.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined } from '../helpers.js'
 
 const CHART_CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.drawingml.chart+xml'
 const NS =
@@ -62,7 +62,7 @@ describe('Chart read model — plot-area / chart-type edges', () => {
 
 	test('element_ exposes the chartSpace document element', () => {
 		const c = chart(`<c:chart><c:plotArea/></c:chart>`)
-		assertEqual(c.element_.localName, 'chartSpace', 'element_ is the c:chartSpace root')
+		assertEqual(defined(c.element_).localName, 'chartSpace', 'element_ is the c:chartSpace root')
 	})
 })
 
@@ -201,9 +201,9 @@ describe('ChartSeries read model — whether a fill is there', () => {
 
 	test('the forms that already worked still do', () => {
 		const srgb = seriesWithSpPr('<a:solidFill><a:srgbClr val="FF0000"/></a:solidFill>')
-		assertEqual(srgb.fill.colorRef.srgb, 'FF0000', 'an srgb fill')
+		assertEqual(defined(srgb.fill).colorRef.srgb, 'FF0000', 'an srgb fill')
 		const scheme = seriesWithSpPr('<a:solidFill><a:schemeClr val="accent1"/></a:solidFill>')
-		assertEqual(scheme.fill.colorRef.scheme, 'accent1', 'a scheme fill')
+		assertEqual(defined(scheme.fill).colorRef.scheme, 'accent1', 'a scheme fill')
 		const none = seriesWithSpPr('<a:noFill/>')
 		assert(none.fill, 'an explicit noFill is reported')
 		assertEqual(none.fill.noFill, true, 'as noFill')

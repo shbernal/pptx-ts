@@ -8,7 +8,7 @@
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { throws, bytesEqual, assert, assertEqual, partBodies, assertUnchangedExcept } from '../helpers.js'
+import { throws, bytesEqual, assert, assertEqual, defined, partBodies, assertUnchangedExcept } from '../helpers.js'
 import { validateBuf, validatorInstalled } from '../validator.js'
 import { fixturePath, openFixture } from './corpus.js'
 
@@ -167,7 +167,9 @@ describe('Shape geometry editing', () => {
 			frame.left = 1000000
 			frame.width = 5000000
 		})
-		const frame = reopened.slides.flatMap((slide) => slide.shapes).find((shape) => shape.shapeType === 'graphicFrame')
+		const frame = defined(
+			reopened.slides.flatMap((slide) => slide.shapes).find((shape) => shape.shapeType === 'graphicFrame')
+		)
 		assertEqual(frame.left, 1000000, 'graphic frame left reloads')
 		assertEqual(frame.width, 5000000, 'graphic frame width reloads')
 	})

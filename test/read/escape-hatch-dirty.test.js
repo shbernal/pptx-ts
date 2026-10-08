@@ -13,7 +13,7 @@ import { describe, test } from 'vitest'
 import { ChartType } from '../../dist/node.js'
 import { Presentation, isGraphicFrame } from '../../dist/read.js'
 import { authorRead } from './authored.js'
-import { bytesEqual, assert, assertEqual, partBodies } from '../helpers.js'
+import { bytesEqual, assert, assertEqual, defined, partBodies } from '../helpers.js'
 import { fixturePath } from './corpus.js'
 
 /**
@@ -172,10 +172,13 @@ describe('element_ with markDirty()', () => {
 		})
 		assertEqual(changed.join(), SLIDE1, 'only the owning slide part should be reserialized')
 		const reopened = await Presentation.load(saved)
-		const cell = reopened.slides
-			.flatMap((slide) => slide.shapes)
-			.filter(isGraphicFrame)
-			.find((shape) => shape.table).table.rows[0].cells[0]
+		const frame = defined(
+			reopened.slides
+				.flatMap((slide) => slide.shapes)
+				.filter(isGraphicFrame)
+				.find((shape) => shape.table)
+		)
+		const cell = defined(frame.table).rows[0].cells[0]
 		assertEqual(cell.element_.getAttribute('marL'), '91440', 'the marked edit reaches the output')
 	})
 
@@ -332,7 +335,7 @@ describe('shared-chrome and notes element_ / markDirty()', () => {
 		})
 		assertEqual(changed.join(), 'ppt/slideMasters/slideMaster1.xml', 'only the owning master part is reserialized')
 		const reopened = await Presentation.load(saved)
-		const sldNum = reopened.slides[0].master.placeholders.find((ph) => ph.type === 'sldNum')
+		const sldNum = defined(defined(reopened.slides[0].master).placeholders.find((ph) => ph.type === 'sldNum'))
 		assertEqual(sldNum.name, 'HATCHED-PH', 'the marked edit reaches the output')
 	})
 
@@ -346,7 +349,7 @@ describe('shared-chrome and notes element_ / markDirty()', () => {
 		assertEqual(changed.length, 1, `exactly one part should be reserialized, got ${changed.join()}`)
 		assert(changed[0].startsWith('ppt/theme/'), `expected a theme part, got ${changed[0]}`)
 		const reopened = await Presentation.load(saved)
-		assertEqual(reopened.slides[0].theme.name, 'Hatched Theme', 'the marked edit reaches the output')
+		assertEqual(defined(reopened.slides[0].theme).name, 'Hatched Theme', 'the marked edit reaches the output')
 	})
 
 	test('NotesPlaceholder.markDirty() reserializes the owning notes-slide part', async () => {
@@ -361,7 +364,11 @@ describe('shared-chrome and notes element_ / markDirty()', () => {
 		assertEqual(changed.length, 1, `exactly one part should be reserialized, got ${changed.join()}`)
 		assert(changed[0].startsWith('ppt/notesSlides/'), `expected a notes-slide part, got ${changed[0]}`)
 		const reopened = await Presentation.load(saved)
-		assertEqual(reopened.slides[0].notesSlide.body.text, 'HATCHED NOTE', 'the marked edit reaches the output')
+		assertEqual(
+			defined(defined(reopened.slides[0].notesSlide).body).text,
+			'HATCHED NOTE',
+			'the marked edit reaches the output'
+		)
 	})
 
 	test('ResolvedTableStyle.markDirty() reserializes tableStyles.xml', async () => {

@@ -7,7 +7,7 @@ import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import TsPptx from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined } from '../helpers.js'
 
 const SLIDE_PATH = 'ppt/slides/slide1.xml'
 const SLIDE_RELS_PATH = 'ppt/slides/_rels/slide1.xml.rels'
@@ -166,7 +166,7 @@ describe('One reading per fact', () => {
 		assert(shape?.shapeType === 'graphicFrame', `expected a graphic frame; got ${shape?.shapeType}`)
 		const table = shape.table
 		assert(table, 'the graphic frame holds a table')
-		return table.cell(0, 0)
+		return defined(table.cell(0, 0), 'the table has a cell at 0,0')
 	}
 
 	test('a solid fill in a place CT_TableCell has none is not reported as the cell fill', async () => {

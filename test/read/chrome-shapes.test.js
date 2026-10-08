@@ -35,7 +35,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined } from '../helpers.js'
 import { authorRead, schemaErrors, validatorInstalled } from './authored.js'
 import { openFixture } from './corpus.js'
 
@@ -84,13 +84,13 @@ describe('SlideMaster.shapes — PowerPoint-authored master furniture (mixed.ppt
 		assertEqual(band.fillSchemeColor, 'bg2', 'the raw fill reference is a scheme colour')
 		assertEqual(band.resolvedFill?.effectiveHex, '1C1C1C', 'bg2 resolves through the master clrMap to a literal hex')
 
-		const accent = master.shapes.find((shape) => shape.name === 'Rectangle 2')
+		const accent = defined(master.shapes.find((shape) => shape.name === 'Rectangle 2'))
 		assertEqual(accent.fillSchemeColor, 'accent2', 'a second decorative rect fills from accent2')
 		assertEqual(accent.resolvedFill?.effectiveHex, 'FFCF01', 'accent2 resolves to the theme yellow')
 
 		// A title placeholder in the same tree sets an explicit no-fill; the flag
 		// separates that from "inherits a fill", which resolvedFill cannot.
-		const title = master.shapes.find((shape) => shape.placeholder?.type === 'title')
+		const title = defined(master.shapes.find((shape) => shape.placeholder?.type === 'title'))
 		assertEqual(title.fillNoFill, true, 'the title placeholder sets an explicit a:noFill')
 		assertEqual(title.resolvedFill, null, 'and so resolves no fill colour')
 	})
@@ -109,7 +109,7 @@ describe('SlideMaster.shapes — PowerPoint-authored master furniture (mixed.ppt
 			'both views hand out the same live p:sp elements'
 		)
 		assertEqual(
-			fromShapes.map((shape) => shape.placeholder.type).join(','),
+			fromShapes.map((shape) => defined(shape.placeholder).type).join(','),
 			master.placeholders.map((ph) => ph.type).join(','),
 			'and agree on p:ph@type'
 		)

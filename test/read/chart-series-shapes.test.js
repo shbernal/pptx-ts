@@ -10,7 +10,7 @@ import { describe, expect, test } from 'vitest'
 import JSZip from 'jszip'
 import { ChartType } from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual, captureDiagnostics } from '../helpers.js'
+import { assert, assertEqual, captureDiagnostics, readEntry } from '../helpers.js'
 import { authorRead } from './authored.js'
 import { openFixture, readFixture } from './corpus.js'
 
@@ -69,7 +69,7 @@ describe('Scatter and bubble series read their X, Y and size caches', () => {
 		const labelsAfter = async (respell) => {
 			const zip = await JSZip.loadAsync(buf)
 			const part = 'ppt/charts/chart5.xml'
-			const xml = await zip.file(part).async('string')
+			const xml = await readEntry(zip, part)
 			const cache =
 				/<c:xVal><c:strRef><c:f>[^<]*<\/c:f><c:strCache><c:ptCount val="4"\/>([\s\S]*?)<\/c:strCache><\/c:strRef><\/c:xVal>/
 			assert(cache.test(xml), 'slide 5 caches its X labels as a string reference')

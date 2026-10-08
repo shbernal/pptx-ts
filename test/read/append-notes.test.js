@@ -14,7 +14,7 @@ import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import TsPptx from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined, readEntry } from '../helpers.js'
 import { validateBuf, validatorInstalled } from '../validator.js'
 import { fixturePath } from './corpus.js'
 
@@ -26,7 +26,7 @@ const SLIDE_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relatio
 async function appendOnto(fixture, build) {
 	const bytes = await readFile(fixturePath(fixture))
 	const deck = await Presentation.fromTemplate(bytes)
-	const size = deck.slideSize
+	const size = defined(deck.slideSize, `${fixture} declares a slide size`)
 	const pptx = new TsPptx()
 	pptx.defineLayout({ name: 'MATCH', width: size.widthEmu / 914400, height: size.heightEmu / 914400 })
 	pptx.layout = 'MATCH'
@@ -138,7 +138,7 @@ describe('appendSlides carries speaker notes', () => {
 
 		const slide = reread.slides[0]
 		const slideRels = reread.opc.relationshipsFor(slide.partName)
-		const notesPartName = slideRels.resolveTarget([...slideRels].find((r) => r.type === NOTES_SLIDE_REL).id)
+		const notesPartName = slideRels.resolveTarget(defined([...slideRels].find((r) => r.type === NOTES_SLIDE_REL)).id)
 		const notesRels = relsOf(reread.opc, notesPartName)
 
 		const hyperlinks = notesRels.filter((r) => r.type.endsWith('/hyperlink'))
@@ -197,7 +197,7 @@ describe('appendSlides carries speaker notes', () => {
 			slide.addNotes('registered?')
 		})
 		const zip = await JSZip.loadAsync(out)
-		const contentTypes = await zip.file('[Content_Types].xml').async('string')
+		const contentTypes = await readEntry(zip, '[Content_Types].xml')
 		for (const [part, type] of [
 			['/ppt/notesSlides/notesSlide1.xml', 'notesSlide+xml'],
 			['/ppt/notesMasters/notesMaster1.xml', 'notesMaster+xml'],

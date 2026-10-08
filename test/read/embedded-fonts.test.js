@@ -9,7 +9,7 @@ import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual, bytesEqual } from '../helpers.js'
+import { assert, assertEqual, bytesEqual, readEntry } from '../helpers.js'
 import { validateBuf, validatorInstalled } from '../validator.js'
 import { openFixture, readFixture } from './corpus.js'
 
@@ -30,12 +30,12 @@ describe('Presentation.importSlide({ embedFonts })', () => {
 		const fontParts = names.filter((n) => /^ppt\/fonts\/font\d+\.fntdata$/.test(n)).sort()
 		assertEqual(fontParts.length, 2, `two font parts carried (got ${JSON.stringify(fontParts)})`)
 
-		const ct = await zip.file('[Content_Types].xml').async('string')
+		const ct = await readEntry(zip, '[Content_Types].xml')
 		assert(/<Default Extension="fntdata" ContentType="application\/x-fontdata"\/>/.test(ct), 'fntdata Default added')
 		// One Default, no per-part Override (ensureDefault ran before the part was copied).
 		assertEqual((ct.match(/x-fontdata/g) || []).length, 1, 'content type registered once (Default only)')
 
-		const rels = await zip.file('ppt/_rels/presentation.xml.rels').async('string')
+		const rels = await readEntry(zip, 'ppt/_rels/presentation.xml.rels')
 		const fontRels = [...rels.matchAll(/<Relationship[^>]*\/relationships\/font"[^>]*\/>/g)].map((m) => m[0])
 		assertEqual(fontRels.length, 2, 'two font relationships')
 		assert(
@@ -43,7 +43,7 @@ describe('Presentation.importSlide({ embedFonts })', () => {
 			'font rels target the carried parts'
 		)
 
-		const pres = await zip.file('ppt/presentation.xml').async('string')
+		const pres = await readEntry(zip, 'ppt/presentation.xml')
 		const lst = pres.match(/<p:embeddedFontLst>[\s\S]*?<\/p:embeddedFontLst>/)?.[0]
 		assert(lst, 'embeddedFontLst present')
 		// Typeface identity (typeface + pitchFamily + charset) is cloned from the source p:font.
@@ -72,7 +72,7 @@ describe('Presentation.importSlide({ embedFonts })', () => {
 		const fontParts = Object.keys(zip.files).filter((n) => /^ppt\/fonts\/font\d+\.fntdata$/.test(n))
 		assertEqual(fontParts.length, 2, 'each face copied exactly once across repeated imports')
 
-		const pres = await zip.file('ppt/presentation.xml').async('string')
+		const pres = await readEntry(zip, 'ppt/presentation.xml')
 		assertEqual(
 			(pres.match(/<p:embeddedFont>/g) || []).length,
 			1,
@@ -87,7 +87,7 @@ describe('Presentation.importSlide({ embedFonts })', () => {
 	test('marks the destination as embedding fonts', async () => {
 		const target = await openFixture('empty')
 		const presentationXml = async (/** @type {Uint8Array} */ bytes) =>
-			(await entries(bytes)).file('ppt/presentation.xml').async('string')
+			readEntry(await entries(bytes), 'ppt/presentation.xml')
 		assert(!/embedTrueTypeFonts/.test(await presentationXml(await target.save())), 'precondition: no flag')
 		target.importSlide(await openFixture('embedded-fonts'), 0, { embedFonts: true })
 		assert(
@@ -103,7 +103,7 @@ describe('Presentation.importSlide({ embedFonts })', () => {
 
 		const zip = await entries(await target.save())
 		assert(!Object.keys(zip.files).some((n) => /fntdata/.test(n)), 'no font parts without embedFonts')
-		const pres = await zip.file('ppt/presentation.xml').async('string')
+		const pres = await readEntry(zip, 'ppt/presentation.xml')
 		assert(!/embeddedFontLst/.test(pres), 'no embeddedFontLst without embedFonts')
 		assert(!/embedTrueTypeFonts/.test(pres), 'no embedTrueTypeFonts without embedFonts')
 	})
@@ -126,11 +126,11 @@ describe('an embedded font face whose r:id names no relationship', () => {
 	/** `embedded-fonts.pptx` with the relationship behind its regular face removed. */
 	async function danglingFaceSource() {
 		const zip = await JSZip.loadAsync(await readFixture('embedded-fonts.pptx'))
-		const presentation = await zip.file('ppt/presentation.xml').async('string')
+		const presentation = await readEntry(zip, 'ppt/presentation.xml')
 		const relId = /<p:regular r:id="([^"]+)"/.exec(presentation)?.[1]
 		assert(relId, 'the fixture embeds a regular face')
 		const relsPath = 'ppt/_rels/presentation.xml.rels'
-		const rels = await zip.file(relsPath).async('string')
+		const rels = await readEntry(zip, relsPath)
 		const pruned = rels.replace(new RegExp(`<Relationship [^>]*Id="${relId}"[^>]*/>`), '')
 		assert(pruned !== rels, 'the relationship behind the regular face was removed')
 		zip.file(relsPath, pruned)
@@ -172,7 +172,7 @@ describe('an embedded font face whose r:id names no relationship', () => {
 describe('an embedded font entry with no faces', () => {
 	test('is not carried, and leaves the destination unmarked', async () => {
 		const zip = await JSZip.loadAsync(await readFixture('embedded-fonts.pptx'))
-		const presentation = await zip.file('ppt/presentation.xml').async('string')
+		const presentation = await readEntry(zip, 'ppt/presentation.xml')
 		const faceless = presentation.replace(/<p:(regular|bold|italic|boldItalic) r:id="[^"]*"\/>/g, '')
 		assert(
 			faceless !== presentation && /<p:embeddedFont><p:font /.test(faceless),
@@ -183,7 +183,7 @@ describe('an embedded font entry with no faces', () => {
 
 		const target = await openFixture('empty')
 		target.importSlide(source, 0, { embedFonts: true })
-		const pres = await (await entries(await target.save())).file('ppt/presentation.xml').async('string')
+		const pres = await readEntry(await entries(await target.save()), 'ppt/presentation.xml')
 		assert(
 			!/embeddedFont/.test(pres),
 			`no embedded font list; got ${/<p:embeddedFontLst>.*?<\/p:embeddedFontLst>/.exec(pres)?.[0]}`

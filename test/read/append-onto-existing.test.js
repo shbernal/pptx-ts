@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, test } from 'vitest'
 import TsPptx, { ChartType } from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { bytesEqual, PNG_1X1, assert, assertEqual, assertIncludes, partBodies } from '../helpers.js'
+import { bytesEqual, PNG_1X1, assert, assertEqual, assertIncludes, partBodies, defined } from '../helpers.js'
 import { validateBuf, validatorInstalled } from '../validator.js'
 import { FIXTURES, fixturePath } from './corpus.js'
 import { resolveSingle } from './opc.js'
@@ -376,8 +376,8 @@ describe('Presentation.appendSlides', () => {
 
 		// The two external rels share the link Target and are External; the poster is a real part.
 		const rels = [...reopened.opc.relationshipsFor(added.partName)]
-		const videoRel = rels.find((r) => r.id === fileRid)
-		const msRel = rels.find((r) => r.id === mediaRid)
+		const videoRel = defined(rels.find((r) => r.id === fileRid))
+		const msRel = defined(rels.find((r) => r.id === mediaRid))
 		assertEqual(videoRel.target, link, 'ECMA video rel Target is the external link')
 		assertEqual(msRel.target, link, 'MS-2007 media rel shares the same link Target')
 		assertEqual(videoRel.targetMode, 'External', 'ECMA video rel is External')
@@ -598,11 +598,15 @@ describe('Presentation.appendSlides', () => {
 		const reopened = await Presentation.load(await pres.save())
 		const rels = [...reopened.opc.relationshipsFor(added.partName)]
 
-		const hyperlink = rels.find((r) => r.type === HYPERLINK_REL)
+		const hyperlink = defined(rels.find((r) => r.type === HYPERLINK_REL))
 		assertEqual(hyperlink.target, LINK, 'hyperlink Target survives the round-trip unmangled')
 		// Both halves of the online-video pair share the link and must agree.
-		assertEqual(rels.find((r) => r.type === VIDEO_REL).target, VIDEO, 'ECMA video rel Target is unmangled')
-		assertEqual(rels.find((r) => r.type === MS_MEDIA_REL).target, VIDEO, 'MS-2007 media rel Target is unmangled')
+		assertEqual(defined(rels.find((r) => r.type === VIDEO_REL)).target, VIDEO, 'ECMA video rel Target is unmangled')
+		assertEqual(
+			defined(rels.find((r) => r.type === MS_MEDIA_REL)).target,
+			VIDEO,
+			'MS-2007 media rel Target is unmangled'
+		)
 	})
 
 	test('rejects a link to a slide the source deck does not have, leaving the deck as it was', async () => {

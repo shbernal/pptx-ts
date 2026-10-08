@@ -11,7 +11,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, test } from 'vitest'
 import { applyColorTransforms } from '../../dist/read.js'
-import { assert } from '../helpers.js'
+import { assert, defined } from '../helpers.js'
 import { openFixture } from './corpus.js'
 
 /** Parse `RRGGBB` → [r,g,b] 0–255. */
@@ -125,7 +125,7 @@ describe('applyColorTransforms — saturation/hue/alpha modifiers', () => {
 
 	test('alphaOff adds to the running opacity', () => {
 		const { alpha } = applyColorTransforms('451DC7', tf(['alpha', 30000], ['alphaOff', 50000]))
-		assert(Math.abs(alpha - 0.8) < 1e-9, `alpha 0.3 then alphaOff 0.5 → 0.8, got ${alpha}`)
+		assert(Math.abs(defined(alpha) - 0.8) < 1e-9, `alpha 0.3 then alphaOff 0.5 → 0.8, got ${alpha}`)
 	})
 
 	test('null values skip each modifier (identity)', () => {

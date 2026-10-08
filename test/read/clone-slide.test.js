@@ -8,15 +8,28 @@
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { throws, assert, assertEqual, partBodies, assertUnchangedExcept } from '../helpers.js'
+import { throws, assert, assertEqual, partBodies, assertUnchangedExcept, defined } from '../helpers.js'
 import { validateBuf, validatorInstalled } from '../validator.js'
 import { fixturePath, openFixture } from './corpus.js'
+
+/**
+ * The text frame of the first shape on `slide` that has one.
+ * @param {import('../../dist/read.js').Slide} slide
+ */
+function firstTextFrame(slide) {
+	return defined(
+		defined(
+			slide.shapes.find((s) => s.hasTextFrame),
+			'a shape with a text frame'
+		).textFrame
+	)
+}
 
 describe('Presentation.cloneSlide', () => {
 	test('appends an independent duplicate that reloads with the source content', async () => {
 		const presentation = await openFixture('textbox')
 		const beforeCount = presentation.slides.length
-		const sourceText = presentation.slides[0].shapes.find((s) => s.hasTextFrame).text
+		const sourceText = defined(presentation.slides[0].shapes.find((s) => s.hasTextFrame)).text
 		const clone = presentation.cloneSlide(0)
 		assertEqual(presentation.slides.length, beforeCount + 1, 'a slide was appended in-memory')
 		assertEqual(clone.index, beforeCount, 'clone is the last slide')
@@ -34,12 +47,11 @@ describe('Presentation.cloneSlide', () => {
 	test('clone is independent of the source (editing one does not affect the other)', async () => {
 		const presentation = await openFixture('textbox')
 		const clone = presentation.cloneSlide(0)
-		clone.shapes.find((s) => s.hasTextFrame).textFrame.paragraphs[0].runs[0].text = 'CLONE ONLY'
+		firstTextFrame(clone).paragraphs[0].runs[0].text = 'CLONE ONLY'
 
 		const reopened = await Presentation.load(await presentation.save())
-		const sourceRun = reopened.slides[0].shapes.find((s) => s.hasTextFrame).textFrame.paragraphs[0].runs[0].text
-		const cloneRun = reopened.slides[reopened.slides.length - 1].shapes.find((s) => s.hasTextFrame).textFrame
-			.paragraphs[0].runs[0].text
+		const sourceRun = firstTextFrame(reopened.slides[0]).paragraphs[0].runs[0].text
+		const cloneRun = firstTextFrame(reopened.slides[reopened.slides.length - 1]).paragraphs[0].runs[0].text
 		assertEqual(cloneRun, 'CLONE ONLY', 'edit landed on the clone')
 		assert(sourceRun !== 'CLONE ONLY', 'source slide is untouched by the clone edit')
 	})
@@ -78,7 +90,7 @@ describe('Presentation.cloneSlide', () => {
 		const rels = reopened.opc.relationshipsFor(clone.partName)
 		const types = [...rels].map((rel) => rel.type.split('/').pop()).sort()
 		assertEqual(JSON.stringify(types), JSON.stringify(['chart', 'slideLayout']), 'the clone kept both relationships')
-		const chartRel = [...rels].find((rel) => rel.type.endsWith('/chart'))
+		const chartRel = defined([...rels].find((rel) => rel.type.endsWith('/chart')))
 		assert(
 			reopened.opc.part(rels.resolveTarget(chartRel.id)) !== undefined,
 			'and the chart relationship resolves to a part that is in the package'

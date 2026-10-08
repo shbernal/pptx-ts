@@ -13,7 +13,7 @@ import JSZip from 'jszip'
 import { describe, test, beforeAll } from 'vitest'
 import TsPptx from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, readEntry } from '../helpers.js'
 import { validateBuf, validatorInstalled } from '../validator.js'
 import { FIXTURES, fixturePath } from './corpus.js'
 
@@ -58,12 +58,12 @@ describe('Presentation.appendSlides — embedded fonts', () => {
 		const fontParts = names.filter((n) => /^ppt\/fonts\/font\d+\.fntdata$/.test(n)).sort()
 		assertEqual(fontParts.length, 2, `two font parts carried (got ${JSON.stringify(fontParts)})`)
 
-		const ct = await zip.file('[Content_Types].xml').async('string')
+		const ct = await readEntry(zip, '[Content_Types].xml')
 		assert(/<Default Extension="fntdata" ContentType="application\/x-fontdata"\/>/.test(ct), 'fntdata Default added')
 		// One Default, no per-part Override (ensureDefault ran before the part was created).
 		assertEqual((ct.match(/x-fontdata/g) || []).length, 1, 'content type registered once (Default only)')
 
-		const rels = await zip.file('ppt/_rels/presentation.xml.rels').async('string')
+		const rels = await readEntry(zip, 'ppt/_rels/presentation.xml.rels')
 		const fontRels = [...rels.matchAll(/<Relationship[^>]*\/relationships\/font"[^>]*\/>/g)].map((m) => m[0])
 		assertEqual(fontRels.length, 2, 'two font relationships')
 		assert(
@@ -71,7 +71,7 @@ describe('Presentation.appendSlides — embedded fonts', () => {
 			'font rels target the carried parts'
 		)
 
-		const pres = await zip.file('ppt/presentation.xml').async('string')
+		const pres = await readEntry(zip, 'ppt/presentation.xml')
 		const lst = pres.match(/<p:embeddedFontLst>[\s\S]*?<\/p:embeddedFontLst>/)?.[0]
 		assert(lst, 'embeddedFontLst present')
 		assert(/<p:font typeface="Silkscreen"\/>/.test(lst), `p:font identity carried; got ${lst}`)
@@ -95,7 +95,7 @@ describe('Presentation.appendSlides — embedded fonts', () => {
 		const fontParts = Object.keys(zip.files).filter((n) => /^ppt\/fonts\/font\d+\.fntdata$/.test(n))
 		assertEqual(fontParts.length, 2, 'each face written exactly once across repeated appends')
 
-		const pres = await zip.file('ppt/presentation.xml').async('string')
+		const pres = await readEntry(zip, 'ppt/presentation.xml')
 		assertEqual(
 			(pres.match(/<p:embeddedFont>/g) || []).length,
 			1,
@@ -114,7 +114,7 @@ describe('Presentation.appendSlides — embedded fonts', () => {
 
 		const zip = await zipOf(await target.save())
 		assert(!Object.keys(zip.files).some((n) => /fntdata/.test(n)), 'no font parts when the generator embeds none')
-		const pres = await zip.file('ppt/presentation.xml').async('string')
+		const pres = await readEntry(zip, 'ppt/presentation.xml')
 		assert(!/embeddedFontLst/.test(pres), 'no embeddedFontLst when the generator embeds none')
 	})
 

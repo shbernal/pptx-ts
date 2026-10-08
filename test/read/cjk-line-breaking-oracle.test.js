@@ -26,6 +26,7 @@ import { measureLayout, WIDTH_SAFETY_FACTOR, HEIGHT_SAFETY_FACTOR } from '../../
 import { collectUncoveredCodepoints, FontMetricsRegistry } from '../../src/measure/font-metrics.ts'
 import { oracleMetrics } from './font-oracle.js'
 import { fixturePath, readOracle } from './corpus.js'
+import { defined, expectDefined } from '../helpers.js'
 
 const EMU_PER_PT = 12700
 const DECK = 'autofit-cjk-wrap'
@@ -56,7 +57,7 @@ describe('CJK oracle: the sidecar still describes the committed deck', () => {
 	for (const c of oracle.cases) {
 		test(`${c.id}: baked a:ext/@cy matches the recorded height`, () => {
 			const sp = shapes.get(c.id)
-			expect(sp, `no shape named ${c.id}`).toBeTruthy()
+			expectDefined(sp, `no shape named ${c.id}`)
 			expect(sp).toContain('<a:spAutoFit/>')
 			const cy = Number(/<a:ext cx="\d+" cy="(\d+)"\/>/.exec(sp)?.[1])
 			expect(cy / EMU_PER_PT).toBeCloseTo(c.bakedHeightPt, 3)
@@ -94,7 +95,7 @@ describe(`CJK oracle: the wrap model reproduces PowerPoint's line breaking`, () 
 			}
 			const innerWidthPt = c.boxWidthPt - c.insetLeftPt - c.insetRightPt
 			const layout = measureLayout(paragraphs, innerWidthPt, resolve, 100, 0, WIDTH_SAFETY_FACTOR)
-			expect(layout).not.toBeNull()
+			expectDefined(layout)
 
 			// The line count is the claim: it is what a per-character break opportunity
 			// changes, and what a wrong one costs (a phantom line shrinks text that fits,
@@ -116,7 +117,7 @@ describe(`CJK oracle: the wrap model reproduces PowerPoint's line breaking`, () 
 		const c = oracle.cases.find((x) => x.id === 'cjk__kinsoku_hanging_comma')
 		const paragraphs = [{ runs: [{ text: c.text, sizePt: c.sizePt, fontFace: c.fontFace }] }]
 		const innerWidthPt = c.boxWidthPt - c.insetLeftPt - c.insetRightPt
-		const layout = measureLayout(paragraphs, innerWidthPt, resolve, 100, 0, WIDTH_SAFETY_FACTOR)
+		const layout = defined(measureLayout(paragraphs, innerWidthPt, resolve, 100, 0, WIDTH_SAFETY_FACTOR))
 
 		// PowerPoint refuses to start a line with U+3001 and hangs it past the inset:
 		// its first line measures wider than the box it is laid out in.

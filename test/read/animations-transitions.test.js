@@ -15,13 +15,13 @@ import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
 import { validateBuf, validatorInstalled } from '../validator.js'
 import { fixturePath, openFixture, readOracle } from './corpus.js'
-import { partBodies, assertUnchangedExcept, defined } from '../helpers.js'
+import { partBodies, assertUnchangedExcept, defined, readEntry } from '../helpers.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 async function slidePartXml(pptxBytes, slideNumber) {
 	const zip = await JSZip.loadAsync(pptxBytes)
-	return zip.file(`ppt/slides/slide${slideNumber}.xml`).async('string')
+	return readEntry(zip, `ppt/slides/slide${slideNumber}.xml`)
 }
 
 describe('slide.transition (read)', () => {
@@ -65,7 +65,7 @@ describe('slide.transition (write/edit)', () => {
 		assert.ok(/<p:transition spd="med"><p:wipe dir="u"\/><\/p:transition>/.test(xml), 'bare wipe XML')
 
 		const reopened = await Presentation.load(saved)
-		const info = reopened.slides[0].transition
+		const info = defined(reopened.slides[0].transition)
 		assert.equal(info.type, 'wipe')
 		assert.equal(info.speed, 'med')
 		assert.equal(info.durationMs, null)
@@ -82,7 +82,7 @@ describe('slide.transition (write/edit)', () => {
 		assert.ok(xml.includes('Requires="p14"'), 'Choice requires p14')
 
 		const reopened = await Presentation.load(saved)
-		const info = reopened.slides[2].transition
+		const info = defined(reopened.slides[2].transition)
 		assert.equal(info.type, 'dissolve')
 		assert.equal(info.durationMs, 2000)
 		assert.equal(info.speed, 'slow')
@@ -92,14 +92,14 @@ describe('slide.transition (write/edit)', () => {
 		const pres = await openFixture('slide-transition')
 		pres.slides[0].transition = { type: 'fade', durationMs: 1500 }
 		const reopened = await Presentation.load(await pres.save())
-		assert.equal(reopened.slides[0].transition.speed, 'slow')
+		assert.equal(defined(reopened.slides[0].transition).speed, 'slow')
 	})
 
 	test('round-trips advTm / advClick auto-advance', async () => {
 		const pres = await openFixture('slide-transition')
 		pres.slides[0].transition = { type: 'fade', speed: 'med', advanceOnClick: false, advanceAfterMs: 3000 }
 		const reopened = await Presentation.load(await pres.save())
-		const info = reopened.slides[0].transition
+		const info = defined(reopened.slides[0].transition)
 		assert.equal(info.advanceOnClick, false)
 		assert.equal(info.advanceAfterMs, 3000)
 	})
@@ -162,8 +162,8 @@ describe('slide.transition (write/edit)', () => {
 
 		slide.transition = { ...defined(slide.transition), speed: 'slow' }
 		let reopened = await Presentation.load(await pres.save())
-		assert.deepEqual(reopened.slides[0].transition.sound, sound, 'a spread keeps the sound')
-		assert.equal(reopened.slides[0].transition.speed, 'slow', 'and changes the speed')
+		assert.deepEqual(defined(reopened.slides[0].transition).sound, sound, 'a spread keeps the sound')
+		assert.equal(defined(reopened.slides[0].transition).speed, 'slow', 'and changes the speed')
 
 		assert.throws(
 			() => {
@@ -171,11 +171,11 @@ describe('slide.transition (write/edit)', () => {
 			},
 			(err) => /** @type {any} */ (err).code === 'transition/sound-unsupported'
 		)
-		assert.deepEqual(slide.transition.sound, sound, 'a refused sound changes nothing')
+		assert.deepEqual(defined(slide.transition).sound, sound, 'a refused sound changes nothing')
 
 		slide.transition = { ...defined(slide.transition), sound: null }
 		reopened = await Presentation.load(await pres.save())
-		assert.equal(reopened.slides[0].transition.sound, null, 'null removes the sound')
+		assert.equal(defined(reopened.slides[0].transition).sound, null, 'null removes the sound')
 	})
 })
 
@@ -345,12 +345,12 @@ describe('slide-transition-sound (read fixture)', () => {
 			const xml = await slidePartXml(bytes, s.slide)
 			assert.ok(xml.includes(s.soundRels.sndAcXml), `slide ${s.slide} sndAc present verbatim`)
 			if (s.soundRels.audioRel) {
-				const rels = await zip.file(`ppt/slides/_rels/slide${s.slide}.xml.rels`).async('string')
+				const rels = await readEntry(zip, `ppt/slides/_rels/slide${s.slide}.xml.rels`)
 				assert.ok(rels.includes(s.soundRels.audioRel.target), `slide ${s.slide} audio rel target`)
 				assert.ok(rels.includes('relationships/audio'), `slide ${s.slide} audio rel type`)
 			}
 		}
-		const ct = await zip.file('[Content_Types].xml').async('string')
+		const ct = await readEntry(zip, '[Content_Types].xml')
 		assert.ok(ct.includes('<Default Extension="wav" ContentType="audio/x-wav"/>'), 'wav Default content type')
 	})
 

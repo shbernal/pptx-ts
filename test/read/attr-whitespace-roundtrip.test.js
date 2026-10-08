@@ -17,7 +17,7 @@
 
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, readEntry } from '../helpers.js'
 import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.js'
 
 /** The German built-in layout name, split across two lines exactly as PowerPoint ships it. */
@@ -86,7 +86,7 @@ describe('XML attribute whitespace — write→read fidelity', () => {
 		// rather than by a parser that happens to be lenient about literal newlines in attributes.
 		const { buf } = await authorWhitespaceDeck()
 		const zip = await JSZip.loadAsync(buf)
-		const slideXml = await zip.file('ppt/slides/slide1.xml').async('string')
+		const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
 		const cNvPr = slideXml.slice(slideXml.indexOf('<p:cNvPr'), slideXml.indexOf('</p:nvSpPr>'))
 		assert(cNvPr.includes('name="Kapitel&#10;Eins"'), `objectName uses a character reference: ${cNvPr}`)
 		assert(cNvPr.includes('&#9;'), 'the alt text tab uses a character reference')

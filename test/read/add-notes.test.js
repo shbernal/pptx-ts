@@ -16,7 +16,7 @@
 import { describe, test } from 'vitest'
 import TsPptx from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual, bytesEqual } from '../helpers.js'
+import { assert, assertEqual, bytesEqual, defined } from '../helpers.js'
 import { validateBuf, validatorInstalled } from '../validator.js'
 import { openFixture } from './corpus.js'
 import { assertNoDanglingRels, resolveSingle } from './opc.js'
@@ -93,12 +93,13 @@ describe('Slide.addNotes on a loaded deck', () => {
 		const reopened = await Presentation.load(await read.save())
 
 		assertEqual(reopened.slides[0].notesText, 'line one\nline two', 'flattened text matches')
+		const reopenedNotes = defined(reopened.slides[0].notesTextFrame, 'the reopened slide has notes')
 		assertEqual(
-			reopened.slides[0].notesTextFrame.paragraphs.length,
-			written.slides[0].notesTextFrame.paragraphs.length,
+			reopenedNotes.paragraphs.length,
+			defined(written.slides[0].notesTextFrame, 'the written slide has notes').paragraphs.length,
 			'same paragraph count as the write path'
 		)
-		assertEqual(reopened.slides[0].notesTextFrame.paragraphs.length, 2, 'two paragraphs')
+		assertEqual(reopenedNotes.paragraphs.length, 2, 'two paragraphs')
 	})
 
 	// The anti-drift guard the module doc promises. The read model reserializes every
@@ -218,16 +219,17 @@ describe('Slide.addNotes on a loaded deck', () => {
 
 	test('replaces the body of a slide that already has notes, keeping the same part', async () => {
 		const deck = await authoredDeck((slide) => slide.addNotes('original'))
-		const partName = deck.slides[0].notesSlide.part.partName
+		const partName = defined(deck.slides[0].notesSlide).part.partName
 		deck.slides[0].addNotes('replaced\nover two lines')
 
 		const reopened = await Presentation.load(await deck.save())
-		assertEqual(reopened.slides[0].notesSlide.part.partName, partName, 'no second notes part was created')
+		const notes = defined(reopened.slides[0].notesSlide, 'the reopened slide has notes')
+		assertEqual(notes.part.partName, partName, 'no second notes part was created')
 		assertEqual(reopened.slides[0].notesText, 'replaced\nover two lines', 'body was replaced')
-		assertEqual(reopened.slides[0].notesTextFrame.paragraphs.length, 2, 'and re-split into paragraphs')
+		assertEqual(defined(reopened.slides[0].notesTextFrame).paragraphs.length, 2, 'and re-split into paragraphs')
 		// The other two placeholders are untouched by a body rewrite.
-		assert(reopened.slides[0].notesSlide.slideImage, 'sldImg placeholder survives')
-		assert(reopened.slides[0].notesSlide.slideNumber, 'sldNum placeholder survives')
+		assert(notes.slideImage, 'sldImg placeholder survives')
+		assert(notes.slideNumber, 'sldNum placeholder survives')
 	})
 
 	test('empty text is a note with one empty paragraph, not a missing part', async () => {
@@ -261,7 +263,7 @@ describe('Slide.addNotes on a loaded deck', () => {
 		const layout = resolveSingle(deck.opc, slide.partName, SLIDE_LAYOUT_REL)
 		const master = resolveSingle(deck.opc, layout, SLIDE_MASTER_REL)
 		const masterRels = deck.opc.relationshipsFor(master)
-		masterRels.remove([...masterRels].find((rel) => rel.type === THEME_REL).id)
+		masterRels.remove(defined([...masterRels].find((rel) => rel.type === THEME_REL)).id)
 		const before = await deck.save()
 
 		let code = null
@@ -277,7 +279,7 @@ describe('Slide.addNotes on a loaded deck', () => {
 
 	test('a notes part whose target is missing is reported, not silently replaced', async () => {
 		const deck = await authoredDeck((slide) => slide.addNotes('original'))
-		const partName = deck.slides[0].notesSlide.part.partName
+		const partName = defined(deck.slides[0].notesSlide).part.partName
 		deck.opc.removePart(partName)
 
 		let code = null

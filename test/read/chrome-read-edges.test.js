@@ -54,7 +54,7 @@ import { fileURLToPath } from 'node:url'
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, readEntry } from '../helpers.js'
 import { authorRead, schemaErrors, validatorInstalled } from './authored.js'
 import { openFixture } from './corpus.js'
 
@@ -77,7 +77,7 @@ async function patchedMaster(mutate) {
 	})
 	const zip = await JSZip.loadAsync(buf)
 	const partName = 'ppt/slideMasters/slideMaster1.xml'
-	const xml = await zip.file(partName).async('string')
+	const xml = await readEntry(zip, partName)
 	const patched = mutate(xml)
 	assert(patched !== xml, 'the patch actually changed the master XML')
 	zip.file(partName, patched)

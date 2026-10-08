@@ -21,6 +21,7 @@
 //      of falling through to the sidecar and reporting green, which is the exact failure
 //      this whole arrangement exists to prevent.
 import { describe, test, expect } from 'vitest'
+import { expectDefined } from '../helpers.js'
 import {
 	deriveFace,
 	diffFace,
@@ -57,7 +58,7 @@ describe('font metrics sidecar: complete', () => {
 	for (const face of needed) {
 		test(`${faceLabel(face)}: every code point the cases use is recorded`, () => {
 			const entry = entryFor(face)
-			expect(entry, `no sidecar entry for ${faceLabel(face)}`).toBeTruthy()
+			expectDefined(entry, `no sidecar entry for ${faceLabel(face)}`)
 			const missing = face.codepoints
 				.filter((cp) => entry.advances[String(cp)] === undefined)
 				.map((cp) => `U+${cp.toString(16).toUpperCase().padStart(4, '0')}`)
@@ -75,9 +76,9 @@ describe('font metrics sidecar: faithful to the fonts it was recorded from', () 
 		const installed = resolveGenuineFontFile(face)
 		test.skipIf(!installed)(`${faceLabel(face)}: recorded advances match the installed font`, async () => {
 			const metrics = await genuineMetrics(face)
-			expect(metrics, `${faceLabel(face)} resolved to ${installed} but would not parse`).toBeTruthy()
+			expectDefined(metrics, `${faceLabel(face)} resolved to ${installed} but would not parse`)
 			const entry = entryFor(face)
-			expect(entry, `no sidecar entry for ${faceLabel(face)}`).toBeTruthy()
+			expectDefined(entry, `no sidecar entry for ${faceLabel(face)}`)
 			// Compare the whole entry, not a sample: a drifting advance is one number, and a
 			// spot check is how it survives.
 			expect(diffFace(entry, deriveFace(face, metrics))).toEqual([])

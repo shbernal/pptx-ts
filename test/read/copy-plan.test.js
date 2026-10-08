@@ -54,6 +54,7 @@ describe('an import plan lists exactly the parts the import adds', () => {
 					// A page whose jump link targets a page not yet brought across is refused
 					// (`import/unresolved-slide-link`), so a plan that refuses is half of the claim too:
 					// the import it stands for must refuse the same way and add nothing.
+					/** @type {CopyPlan | null} */
 					let plan = null
 					let refused = null
 					try {

@@ -10,7 +10,7 @@
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined, readEntry } from '../helpers.js'
 import { openFixture } from './corpus.js'
 
 const EDITED = 'EDITED IN SESSION'
@@ -18,7 +18,7 @@ const EDITED = 'EDITED IN SESSION'
 /** `textbox.pptx` with the first text shape on slide 1 rewritten, and not yet saved. */
 async function editedTextbox() {
 	const deck = await openFixture('textbox')
-	deck.slides[0].shapes.find((shape) => shape.hasTextFrame).text = EDITED
+	defined(deck.slides[0].shapes.find((shape) => shape.hasTextFrame)).text = EDITED
 	return deck
 }
 
@@ -59,7 +59,7 @@ describe('copies carry the part as it is now', () => {
 		const imported = target.importSlide(source, 0, { theme: 'preserve' })
 		const clone = target.cloneSlide(imported.index)
 		const zip = await JSZip.loadAsync(await target.save())
-		const xml = await zip.file(clone.partName.slice(1)).async('string')
+		const xml = await readEntry(zip, clone.partName.slice(1))
 		assert(!/schemeClr/.test(xml), 'no scheme token came back into the clone')
 		assert(/<a:srgbClr val="B01513"/.test(xml), 'the clone keeps the flattened accent1')
 	})
