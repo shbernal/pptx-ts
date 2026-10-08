@@ -6,7 +6,15 @@
 // from the live DOM. No mutation here; the edit tests cover setters.
 
 import { describe, test } from 'vitest'
-import { Presentation, isAutoShape, isConnector, isGraphicFrame, isGroupShape, isPicture } from '../../dist/read.js'
+import {
+	Presentation,
+	isAutoShape,
+	isConnector,
+	isGraphicFrame,
+	isGroupShape,
+	isPicture,
+	type AnyShape,
+} from '../../dist/read.js'
 import { assert, assertEqual, defined, expectDefined } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
@@ -155,7 +163,7 @@ describe('empty deck', () => {
 // fixtures lack: connectors, nested groups, tables, charts, and SmartArt.
 describe('mixed.pptx — connectors, groups, graphic frames', () => {
 	/** Flatten a shape list, descending into groups. */
-	function allShapes(shapes) {
+	function allShapes(shapes: readonly AnyShape[]): AnyShape[] {
 		return shapes.flatMap((shape) => (shape.shapeType === 'group' ? [shape, ...allShapes(shape.shapes)] : [shape]))
 	}
 
@@ -202,7 +210,7 @@ describe('mixed.pptx — connectors, groups, graphic frames', () => {
 
 	test('distinguishes table, chart, and SmartArt graphic frames', async () => {
 		const slides = (await openFixture('mixed')).slides
-		const frameOn = (index) => slides[index].shapes.find((shape) => shape.shapeType === 'graphicFrame')
+		const frameOn = (index: number) => slides[index].shapes.find((shape) => shape.shapeType === 'graphicFrame')
 
 		const table = frameOn(6) // slide7: a:tbl
 		assert(table, 'slide7 has a graphic frame')
@@ -225,7 +233,7 @@ describe('mixed.pptx — connectors, groups, graphic frames', () => {
 	// narrow on: exactly one guard matches each shape, across every kind the deck
 	// contains (autoShape/picture/connector/graphicFrame/group).
 	test('type guards partition shapes by their shapeType discriminant', async () => {
-		function allShapes(shapes) {
+		function allShapes(shapes: readonly AnyShape[]): AnyShape[] {
 			return shapes.flatMap((shape) => (shape.shapeType === 'group' ? [shape, ...allShapes(shape.shapes)] : [shape]))
 		}
 		const guards = {
@@ -263,10 +271,9 @@ describe('proxy identity', () => {
 	test('every collection getter hands back fresh proxies over the same DOM nodes', async () => {
 		const presentation = await openFixture('mixed')
 
-		/** @param {string} label @param {() => any} read */
-		const freshEachTime = (label, read) => {
-			const first = read()
-			const second = read()
+		const freshEachTime = (label: string, read: () => { readonly element_: unknown } | null | undefined) => {
+			const first = defined(read(), `${label} reads a value`)
+			const second = defined(read(), `${label} reads a value`)
 			assert(first !== second, `${label} builds a fresh proxy per access`)
 			// Guard the guard: two `undefined`s would compare equal and prove nothing.
 			assert(first.element_, `${label} exposes its DOM node`)

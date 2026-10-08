@@ -34,15 +34,14 @@ async function sizelessDeck() {
 }
 
 /** The `code` of whatever `fn` throws, or `null` if it returned. */
-async function codeOf(fn) {
+async function codeOf(fn: () => unknown) {
 	return (await caught(fn))?.code ?? null
 }
 
 describe('slide-size preconditions agree across every import entry point', () => {
 	// The four entry points whose source is another loaded `Presentation`. `appendSlides` is
 	// the fifth and takes a *generator* rather than a package, so it gets its own cases below.
-	/** @type {[string, (target: any, source: any) => unknown][]} */
-	const ENTRY_POINTS = [
+	const ENTRY_POINTS: [string, (target: Presentation, source: Presentation) => unknown][] = [
 		['importSlide', (target, source) => target.importSlide(source, 0)],
 		['importSlides', (target, source) => target.importSlides([{ source, sourceIndex: 0, outputIndex: 0 }])],
 		['importSlideMasters', (target, source) => target.importSlideMasters(source)],

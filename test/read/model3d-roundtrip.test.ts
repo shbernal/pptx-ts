@@ -11,7 +11,6 @@
 
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, test } from 'vitest'
 import TsPptx from '../../dist/node.js'
 import { Presentation, OpcPackage } from '../../dist/read.js'
@@ -19,28 +18,26 @@ import { bytesEqual, assert, assertEqual, defined, partBodies } from '../helpers
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { FIXTURES, fixturePath } from './corpus.ts'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
 const MODEL3D_REL = 'http://schemas.microsoft.com/office/2017/06/relationships/model3d'
 const IMAGE_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image'
 const AM3D_NS = 'http://schemas.microsoft.com/office/drawing/2017/model3d'
 
-function text(bodies, name) {
+function text(bodies: Map<string, Uint8Array>, name: string) {
 	const bytes = bodies.get(name)
 	assert(bytes, `part ${name} is present`)
 	return new TextDecoder().decode(bytes)
 }
 
 /** The `<am3d:model3d …>…</am3d:model3d>` subtree of a slide body, or `undefined`. */
-function model3dSubtree(body) {
+function model3dSubtree(body: string) {
 	const start = body.indexOf('<am3d:model3d ')
 	const end = body.indexOf('</am3d:model3d>')
 	return start === -1 || end === -1 ? undefined : body.slice(start, end + '</am3d:model3d>'.length)
 }
 
 /** Rel `Type`s in a slide's `.rels`, keyed by Id. */
-function relTypes(relsXml) {
-	const out = new Map()
+function relTypes(relsXml: string) {
+	const out = new Map<string, string>()
 	for (const m of relsXml.matchAll(/<Relationship\b[^>]*\/>/g)) {
 		const id = /\bId="([^"]+)"/.exec(m[0])?.[1]
 		const type = /\bType="([^"]+)"/.exec(m[0])?.[1]
@@ -173,7 +170,7 @@ describe('3D model: ts-pptx-authored', () => {
 			...options,
 		})
 		// `write` is typed for every output target; `nodebuffer` resolves to a Buffer here.
-		return partBodies(/** @type {Buffer} */ (await pptx.write({ outputType: 'nodebuffer' })))
+		return partBodies((await pptx.write({ outputType: 'nodebuffer' })) as Buffer)
 	}
 
 	test('emits the rel graph and content type the PowerPoint fixture pins', async () => {
@@ -206,8 +203,8 @@ describe('3D model: ts-pptx-authored', () => {
 
 		// Normalize away the two things that legitimately differ: rIds, and the frame extent,
 		// which appears in `am3d:spPr`'s frame-local xfrm.
-		const normalize = (xml) =>
-			model3dSubtree(xml)
+		const normalize = (xml: string) =>
+			defined(model3dSubtree(xml), 'the slide carries an am3d:model3d')
 				.replace(/rId\d+/g, 'rId#')
 				.replace(/<a:ext cx="\d+" cy="\d+"\/>/, '<a:ext/>')
 		assertEqual(
@@ -252,7 +249,7 @@ describe('3D model: ts-pptx-authored', () => {
 			w: 4,
 			h: 3,
 		})
-		const errors = await validateBuf(/** @type {Buffer} */ (await pptx.write({ outputType: 'nodebuffer' })))
+		const errors = await validateBuf((await pptx.write({ outputType: 'nodebuffer' })) as Buffer)
 		assertEqual(errors.length, 0, `validator errors: ${JSON.stringify(errors).slice(0, 2000)}`)
 	})
 })

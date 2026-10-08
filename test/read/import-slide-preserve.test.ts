@@ -68,7 +68,7 @@
 import { readFile } from 'node:fs/promises'
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
-import { Presentation } from '../../dist/read.js'
+import { Presentation, type OpcPackage } from '../../dist/read.js'
 import { assert, assertEqual, partXml, readEntry } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture } from './corpus.ts'
@@ -77,7 +77,7 @@ import { resolveSingle } from './opc.ts'
 const SLIDE_LAYOUT_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout'
 
 /** The serialized XML of a part, by partname, from saved package bytes. */
-function countParts(opc, re) {
+function countParts(opc: OpcPackage, re: RegExp) {
 	return [...opc.parts.keys()].filter((n) => re.test(n)).length
 }
 
@@ -639,7 +639,7 @@ describe("Presentation.importSlide({ theme: 'preserve' })", () => {
 		const plain = target.importSlide(await openFixture('mixed'), 0, { theme: 'preserve' })
 		const withGfx = target.importSlide(await openFixture('mixed'), 0, { theme: 'preserve', carryMasterGraphics: true })
 		const bytes = await target.save()
-		const countPh = (xml) => (xml.match(/<p:ph[ />]/g) ?? []).length
+		const countPh = (xml: string) => (xml.match(/<p:ph[ />]/g) ?? []).length
 
 		const plainPh = countPh(await partXml(bytes, plain.partName))
 		const gfxPh = countPh(await partXml(bytes, withGfx.partName))
@@ -865,7 +865,7 @@ describe("Presentation.importSlide({ theme: 'preserve' })", () => {
 		const imported = target.importSlide(source, 0, { theme: 'preserve' })
 		const xml = await partXml(await target.save(), imported.partName)
 
-		const spOf = (type) =>
+		const spOf = (type: string) =>
 			(xml.match(new RegExp(`<p:sp>(?:(?!</p:sp>)[\\s\\S])*?type="${type}"[\\s\\S]*?</p:sp>`)) ?? [''])[0]
 		const expect = {
 			dt: '<a:off x="508000" y="6095999"/><a:ext cx="2540000" cy="508000"/>',
@@ -1002,7 +1002,7 @@ describe("Presentation.importSlide({ theme: 'preserve' })", () => {
 		const paras = [...sp.matchAll(/<a:p>[\s\S]*?<\/a:p>/g)].map((m) => m[0])
 		assertEqual(paras.length, 2, 'both paragraphs survived')
 
-		const runsOf = (para) => [...para.matchAll(/<a:r>[\s\S]*?<\/a:r>/g)].map((m) => m[0])
+		const runsOf = (para: string) => [...para.matchAll(/<a:r>[\s\S]*?<\/a:r>/g)].map((m) => m[0])
 		const first = runsOf(paras[0])
 		assert(first.length > 0, 'paragraph 1 has runs')
 		for (const run of first) {
@@ -1045,7 +1045,7 @@ describe("Presentation.importSlide({ theme: 'preserve' })", () => {
 		const baseline = await openFixture('mixed')
 		baseline.importSlide(await openFixture('mixed'), THEMED_SLIDE_INDEX, { theme: 'preserve' })
 		const baseXml = await partXml(await baseline.save(), baseline.slides[baseline.slides.length - 1].partName)
-		const countLines = (xml) => (xml.match(/<a:ln[ >]/g) ?? []).length
+		const countLines = (xml: string) => (xml.match(/<a:ln[ >]/g) ?? []).length
 		assert(countLines(baseXml) > 0, 'precondition: the unmutated import materializes lines from the style matrix')
 
 		for (const [label, build] of Object.entries({

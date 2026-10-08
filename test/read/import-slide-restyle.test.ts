@@ -17,8 +17,8 @@
 import { readFile } from 'node:fs/promises'
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
-import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual, partXml, readEntry } from '../helpers.ts'
+import { Presentation, type OpcPackage, type Part } from '../../dist/read.js'
+import { assert, assertEqual, defined, partXml, readEntry } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture } from './corpus.ts'
 import { resolveSingle } from './opc.ts'
@@ -26,13 +26,13 @@ import { resolveSingle } from './opc.ts'
 const SLIDE_LAYOUT_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout'
 
 /** The serialized XML of a part, by partname, from saved package bytes. */
-function countParts(opc, re) {
+function countParts(opc: OpcPackage, re: RegExp) {
 	return [...opc.parts.keys()].filter((n) => re.test(n)).length
 }
 
 /** The XML body of a part as it would be saved, as a string. */
-function partText(part) {
-	return new TextDecoder('utf-8').decode(part.serialize())
+function partText(part: Part | undefined) {
+	return new TextDecoder('utf-8').decode(defined(part, 'the part exists').serialize())
 }
 
 /** The index of the first `mixed` slide that uses scheme colours + a p:style + a clrMapOvr. */

@@ -13,21 +13,21 @@
 
 import { describe, test } from 'vitest'
 
-import { Presentation } from '../../dist/read.js'
+import { Presentation, isGraphicFrame, type Slide } from '../../dist/read.js'
 import { assert, assertEqual, defined } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 const TABLES = ['StyledTable', 'NoGridTable', 'NoStyleTable']
 
 /** The first run of every cell of the table named `name` on `slide`, row by row. */
-function cellRuns(slide, name) {
-	const shape = slide.shapes.find((s) => s.name === name && s.shapeType === 'graphicFrame' && s.table)
+function cellRuns(slide: Slide, name: string) {
+	const shape = slide.shapes.filter(isGraphicFrame).find((s) => s.name === name && s.table)
 	assert(shape, `expected a table named ${name}`)
-	return shape.table.rows.map((row) => row.cells.map((cell) => cell.textFrame.paragraphs[0].runs[0]))
+	return defined(shape.table).rows.map((row) => row.cells.map((cell) => defined(cell.textFrame).paragraphs[0].runs[0]))
 }
 
 /** Save `target` and reopen it at the slide whose partname is `partName`. */
-async function reopened(target, partName) {
+async function reopened(target: Presentation, partName: string) {
 	const slide = (await Presentation.load(await target.save())).slides.find((s) => s.partName === partName)
 	assert(slide, 'the imported slide is found after a save')
 	return slide

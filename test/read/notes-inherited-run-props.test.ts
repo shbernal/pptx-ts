@@ -23,6 +23,7 @@
 // which maps (clrMap tx1→dk1) to the default theme dk1 (black, 000000).
 
 import { describe, test } from 'vitest'
+import type { Presentation } from '../../dist/read.js'
 import { authorRead, schemaErrors, validatorInstalled } from './authored.ts'
 import { assert, assertEqual } from '../helpers.ts'
 
@@ -32,7 +33,7 @@ const NOTES_MINOR_FACE = 'Calibri' // +mn-lt -> theme2 minorFont latin (default 
 const NOTES_STYLE_COLOR = '000000' // schemeClr tx1 -> clrMap dk1 -> default theme dk1
 
 /** The first notes-body run of the first slide. */
-function firstNotesRun(presentation) {
+function firstNotesRun(presentation: Presentation) {
 	const run = presentation.slides[0]?.notesSlide?.body?.textFrame?.paragraphs[0]?.runs[0]
 	assert(run, 'the authored notes body run reads back')
 	return run

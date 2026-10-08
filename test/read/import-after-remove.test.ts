@@ -6,13 +6,13 @@
 // called a new slide already scaled.
 
 import { describe, test } from 'vitest'
-import { Presentation } from '../../dist/read.js'
+import { Presentation, type Slide } from '../../dist/read.js'
 import { assert, assertEqual, captureDiagnostics } from '../helpers.ts'
 import { openFixture, readFixture } from './corpus.ts'
 import { assertNoDanglingRels } from './opc.ts'
 
 /** The left edge of every picture on `slide`, in EMU. */
-function pictureLefts(slide) {
+function pictureLefts(slide: Slide) {
 	return slide.shapes.filter((shape) => shape.shapeType === 'picture').map((shape) => shape.left)
 }
 

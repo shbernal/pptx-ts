@@ -5,17 +5,13 @@
 // the Comments.Add2 / Replies.Add2 COM API: slide 2 carries one comment by Ada
 // Lovelace with one reply by Grace Hopper; slide 1 has none.
 
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, test } from 'vitest'
 
 import { assert, assertEqual } from '../helpers.ts'
 import { authorRead } from './authored.ts'
 import { openFixture } from './corpus.ts'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
-async function load(name) {
+async function load(name: string) {
 	return openFixture(name)
 }
 

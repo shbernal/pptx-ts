@@ -16,7 +16,7 @@ import { describe, test } from 'vitest'
 import { assert, assertEqual } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
-async function pictureNamed(name) {
+async function pictureNamed(name: string) {
 	const slide = (await openFixture('picture-custgeom')).slides[0]
 	const shape = slide.shapes.find((s) => s.name === name)
 	assert(shape, `expected shape named ${name}`)

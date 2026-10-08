@@ -10,7 +10,7 @@
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
 import TsPptx from '../../dist/node.js'
-import { Presentation } from '../../dist/read.js'
+import { Presentation, type OpcPackage } from '../../dist/read.js'
 import { throws, assert, assertEqual, defined, expectDefined, partBodies, assertUnchangedExcept } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture } from './corpus.ts'
@@ -22,7 +22,7 @@ const SLIDE_MASTER_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/
 const THEME_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme'
 
 /** Walk a slide's layout → master → theme chain, asserting every hop targets an existing part. */
-function assertGraphResolves(opc, slidePartName) {
+function assertGraphResolves(opc: OpcPackage, slidePartName: string) {
 	const layout = resolveSingle(opc, slidePartName, SLIDE_LAYOUT_REL)
 	assert(layout && opc.part(layout), `slide ${slidePartName} resolves to an existing layout (${layout})`)
 	const master = resolveSingle(opc, layout, SLIDE_MASTER_REL)
@@ -32,18 +32,22 @@ function assertGraphResolves(opc, slidePartName) {
 	return { layout, master, theme }
 }
 
+/** The root element of a part, asserting the part exists. */
+function rootOf(opc: OpcPackage, partName: string) {
+	return defined(defined(opc.part(partName), `part ${partName}`).dom.documentElement)
+}
+
 /** Partnames the master lists in p:sldLayoutIdLst, resolved via the master's rels. */
-function masterLayoutList(opc, masterPartName) {
-	const part = opc.part(masterPartName)
-	const root = part.dom.documentElement
+function masterLayoutList(opc: OpcPackage, masterPartName: string) {
+	const root = rootOf(opc, masterPartName)
 	const rels = opc.relationshipsFor(masterPartName)
-	const out = []
-	for (let n = root.firstChild; n; n = n.nextSibling) {
-		if (n.nodeType !== 1 || n.localName !== 'sldLayoutIdLst') continue
-		for (let e = n.firstChild; e; e = e.nextSibling) {
-			if (e.nodeType !== 1 || e.localName !== 'sldLayoutId') continue
+	const out: string[] = []
+	for (const n of root.children) {
+		if (n.localName !== 'sldLayoutIdLst') continue
+		for (const e of n.children) {
+			if (e.localName !== 'sldLayoutId') continue
 			const relId = e.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id')
-			out.push(rels.resolveTarget(relId))
+			out.push(rels.resolveTarget(defined(relId)))
 		}
 	}
 	return out
@@ -52,19 +56,19 @@ function masterLayoutList(opc, masterPartName) {
 const OFFICE_DOCUMENT_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument'
 
 /** Master partnames registered in presentation.xml's p:sldMasterIdLst (resolved via rels). */
-function registeredMasters(opc) {
+function registeredMasters(opc: OpcPackage) {
 	const rootRels = opc.relationshipsFor('/')
-	const officeDoc = [...rootRels].find((rel) => rel.type === OFFICE_DOCUMENT_REL)
+	const officeDoc = defined([...rootRels].find((rel) => rel.type === OFFICE_DOCUMENT_REL))
 	const presName = rootRels.resolveTarget(officeDoc.id)
-	const root = opc.part(presName).dom.documentElement
+	const root = rootOf(opc, presName)
 	const rels = opc.relationshipsFor(presName)
-	const out = []
-	for (let n = root.firstChild; n; n = n.nextSibling) {
-		if (n.nodeType !== 1 || n.localName !== 'sldMasterIdLst') continue
-		for (let e = n.firstChild; e; e = e.nextSibling) {
-			if (e.nodeType !== 1 || e.localName !== 'sldMasterId') continue
+	const out: string[] = []
+	for (const n of root.children) {
+		if (n.localName !== 'sldMasterIdLst') continue
+		for (const e of n.children) {
+			if (e.localName !== 'sldMasterId') continue
 			const relId = e.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id')
-			out.push(rels.resolveTarget(relId))
+			out.push(rels.resolveTarget(defined(relId)))
 		}
 	}
 	return out
@@ -363,7 +367,7 @@ describe('Presentation.importSlide', () => {
 // copied anyway, growing the layout gallery by one entry per imported slide.
 describe('Presentation.importSlide from the deck this one was templated from', () => {
 	/** A destination templated from `name`, and a second, unstripped handle on the same file. */
-	async function selfTemplate(name) {
+	async function selfTemplate(name: string) {
 		const bytes = await readFile(fixturePath(name))
 		return { dest: await Presentation.fromTemplate(bytes), source: await Presentation.load(bytes), bytes }
 	}
@@ -548,8 +552,7 @@ describe('generate → read import bridge', () => {
 		pres.layout = 'LAYOUT_WIDE'
 		pres.addSlide().addText('interior slide one', { x: 1, y: 1, w: 6, h: 1 })
 		pres.addSlide().addText('interior slide two', { x: 1, y: 1, w: 6, h: 1 })
-		const out = await pres.toBytes()
-		return out instanceof Uint8Array ? out : new Uint8Array(/** @type {ArrayBuffer} */ (out))
+		return pres.toBytes()
 	}
 
 	test('a TsPptx-generated deck loads and accepts an imported bookend', async () => {
@@ -582,27 +585,28 @@ describe('generate → read import bridge', () => {
 // ---------------------------------------------------------------------------
 
 /** First `a:ext` `cx` value in an XML string (document order), or null. */
-function firstExtCx(xml) {
+function firstExtCx(xml: string) {
 	const m = xml.match(/<a:ext\b[^>]*\bcx="(\d+)"/)
 	return m ? Number(m[1]) : null
 }
 
 /** Decode a part's raw body from a save()'d zip bodies map (keys have no leading slash). */
-function partText(bodies, partName) {
+function partText(bodies: Map<string, Uint8Array>, partName: string) {
 	const body = bodies.get(partName.replace(/^\//, ''))
 	return body ? new TextDecoder().decode(body) : null
 }
 
 /** The picture shape on the last slide of a reopened deck. */
-function lastSlidePicture(pres) {
+function lastSlidePicture(pres: Presentation) {
 	const last = pres.slides[pres.slides.length - 1]
-	return last.shapes.find((s) => s.shapeType === 'picture')
+	return defined(last.shapes.find((s) => s.shapeType === 'picture'))
 }
 
 describe('Presentation.importSlide({ rescale })', () => {
 	// image (16:9, 12192000×6858000) → mixed (4:3, 9144000×6858000):
 	// fit scale = min(0.75, 1.0) = 0.75; centering dx = 0, dy = 857250.
-	const near = (got, want, label) => assert(Math.abs(got - want) <= 2, `${label}: ${got} ≈ ${want}`)
+	const near = (got: number, want: number, label: string) =>
+		assert(Math.abs(got - want) <= 2, `${label}: ${got} ≈ ${want}`)
 
 	test("'fit' rescales slide geometry uniformly and centers the slack", async () => {
 		const target = await openFixture('mixed') // 4:3
@@ -611,7 +615,7 @@ describe('Presentation.importSlide({ rescale })', () => {
 
 		target.importSlide(source, 0, { rescale: 'fit' })
 		const reopened = await Presentation.load(await target.save())
-		const pic = lastSlidePicture(reopened).absoluteFrame
+		const pic = defined(lastSlidePicture(reopened).absoluteFrame)
 
 		near(pic.left, Math.round(src.left * 0.75), 'left scaled by 0.75')
 		near(pic.top, Math.round(src.top * 0.75 + 857250), 'top scaled + centered')
@@ -628,7 +632,7 @@ describe('Presentation.importSlide({ rescale })', () => {
 
 		target.importSlide(source, 0, { rescale: 'stretch' })
 		const reopened = await Presentation.load(await target.save())
-		const pic = lastSlidePicture(reopened).absoluteFrame
+		const pic = defined(lastSlidePicture(reopened).absoluteFrame)
 
 		near(pic.width, Math.round(src.width * 0.75), 'width scaled by sx (0.75)')
 		near(pic.height, src.height, 'height unchanged (sy = 1.0)')
@@ -642,7 +646,7 @@ describe('Presentation.importSlide({ rescale })', () => {
 
 		target.importSlide(source, 0, { rescale: true })
 		const reopened = await Presentation.load(await target.save())
-		const pic = lastSlidePicture(reopened).absoluteFrame
+		const pic = defined(lastSlidePicture(reopened).absoluteFrame)
 		near(pic.width, Math.round(src.width * 0.75), 'rescale:true scales like fit')
 	})
 
@@ -651,7 +655,9 @@ describe('Presentation.importSlide({ rescale })', () => {
 		const source = await openFixture('image')
 
 		const srcLayout = resolveSingle(source.opc, source.slides[0].partName, SLIDE_LAYOUT_REL)
-		const srcLayoutCx = firstExtCx(partText(await partBodies(await readFile(fixturePath('image'))), srcLayout))
+		const srcLayoutCx = firstExtCx(
+			defined(partText(await partBodies(await readFile(fixturePath('image'))), defined(srcLayout)))
+		)
 
 		target.importSlide(source, 0, { rescale: 'fit' })
 		const savedBytes = await target.save()
@@ -661,7 +667,7 @@ describe('Presentation.importSlide({ rescale })', () => {
 			reopened.slides[reopened.slides.length - 1].partName,
 			SLIDE_LAYOUT_REL
 		)
-		const importedCx = firstExtCx(partText(await partBodies(savedBytes), importedLayout))
+		const importedCx = firstExtCx(defined(partText(await partBodies(savedBytes), defined(importedLayout))))
 
 		assert(srcLayoutCx !== null && importedCx !== null, 'both layouts expose a measurable ext')
 		near(importedCx, Math.round(srcLayoutCx * 0.75), 'imported layout ext scaled by 0.75')
@@ -695,26 +701,26 @@ describe('Presentation.importSlide({ importNotes })', () => {
 	const NOTES_TEXT = 'Speaker notes so PowerPoint emits the notes slide.'
 
 	/** Concatenated <a:t> text of the part, or null when the part is absent. */
-	function partNotesText(bodies, partName) {
+	function partNotesText(bodies: Map<string, Uint8Array>, partName: string) {
 		const xml = partText(bodies, partName)
 		if (!xml) return null
 		return [...xml.matchAll(/<a:t>([^<]*)<\/a:t>/g)].map((m) => m[1]).join('\n')
 	}
 
 	/** notesMaster partnames registered in presentation.xml's p:notesMasterIdLst. */
-	function registeredNotesMasters(opc) {
+	function registeredNotesMasters(opc: OpcPackage) {
 		const rootRels = opc.relationshipsFor('/')
-		const officeDoc = [...rootRels].find((rel) => rel.type === OFFICE_DOCUMENT_REL)
+		const officeDoc = defined([...rootRels].find((rel) => rel.type === OFFICE_DOCUMENT_REL))
 		const presName = rootRels.resolveTarget(officeDoc.id)
-		const root = opc.part(presName).dom.documentElement
+		const root = rootOf(opc, presName)
 		const rels = opc.relationshipsFor(presName)
-		const out = []
-		for (let n = root.firstChild; n; n = n.nextSibling) {
-			if (n.nodeType !== 1 || n.localName !== 'notesMasterIdLst') continue
-			for (let e = n.firstChild; e; e = e.nextSibling) {
-				if (e.nodeType !== 1 || e.localName !== 'notesMasterId') continue
+		const out: string[] = []
+		for (const n of root.children) {
+			if (n.localName !== 'notesMasterIdLst') continue
+			for (const e of n.children) {
+				if (e.localName !== 'notesMasterId') continue
 				const relId = e.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id')
-				out.push(rels.resolveTarget(relId))
+				out.push(rels.resolveTarget(defined(relId)))
 			}
 		}
 		return out

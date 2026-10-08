@@ -37,8 +37,7 @@ import {
 const needed = neededFaces()
 const sidecar = readSidecar()
 
-/** @param {{ family: string, bold?: boolean, italic?: boolean }} face */
-function entryFor(face) {
+function entryFor(face: { family: string; bold?: boolean; italic?: boolean }) {
 	return sidecar.faces.find(
 		(f) =>
 			f.family.toLowerCase() === face.family.toLowerCase() && !!f.bold === !!face.bold && !!f.italic === !!face.italic

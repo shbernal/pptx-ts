@@ -25,12 +25,12 @@
 // `notesText`/`notesTextFrame` are now thin delegates over the body placeholder.
 
 import { describe, test } from 'vitest'
-import { NotesPlaceholder, Placeholder } from '../../dist/read.js'
+import { NotesPlaceholder, Placeholder, type Presentation } from '../../dist/read.js'
 import { authorRead, schemaErrors, validatorInstalled } from './authored.ts'
-import { assert, assertEqual } from '../helpers.ts'
+import { assert, assertEqual, defined } from '../helpers.ts'
 
 /** The first slide of `presentation`. */
-function firstSlide(presentation) {
+function firstSlide(presentation: Presentation) {
 	const slide = presentation.slides[0]
 	assert(slide, 'the authored slide is read back')
 	return slide
@@ -63,7 +63,7 @@ describe('Slide.notesTextFrame — write→read fidelity', () => {
 			pres.addSlide().addNotes([{ text: 'Themed', options: { color: 'accent1' } }])
 		})
 
-		const run = firstSlide(presentation).notesTextFrame.paragraphs[0].runs[0]
+		const run = defined(firstSlide(presentation).notesTextFrame).paragraphs[0].runs[0]
 		assert(run, 'the themed notes run reads back')
 		// Own-attribute getters: the scheme token is surfaced, and `color` (hex only) is null.
 		assertEqual(run.schemeColor, 'accent1', 'the scheme token is read as the own attribute')
@@ -105,7 +105,7 @@ describe('Slide.notesTextFrame — write→read fidelity', () => {
 		const linked = frame.paragraphs[0].runs.find((r) => r.hyperlink !== null)
 		assert(linked, 'the linked run reads back with a hyperlink')
 		assertEqual(
-			linked.hyperlink.url,
+			defined(linked.hyperlink).url,
 			'https://example.com/notes',
 			'the notes hyperlink url resolves via the notes rels'
 		)

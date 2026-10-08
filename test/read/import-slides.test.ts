@@ -21,7 +21,7 @@
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import TsPptx from '../../dist/node.js'
-import { Presentation } from '../../dist/read.js'
+import { Presentation, type OpcPackage, type Slide } from '../../dist/read.js'
 import { assert, assertEqual, bytesEqual, defined, readEntry, caughtSync } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { openFixture } from './corpus.ts'
@@ -35,20 +35,20 @@ const TAGS_CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.present
 const FONT_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/font'
 
 /** Every `notesMaster` a deck registers in presentation.xml, resolved to partnames. */
-function notesMasters(pres) {
+function notesMasters(pres: Presentation) {
 	const rels = pres.opc.relationshipsFor(pres.presentationPart.partName)
 	return rels.byType(NOTES_MASTER_REL).map((rel) => rels.resolveTarget(rel.id))
 }
 
 /** The notesMaster part a notes slide binds to, or null when it names none. */
-function notesMasterOf(pres, notesPartName) {
+function notesMasterOf(pres: Presentation, notesPartName: string) {
 	const rels = pres.opc.relationshipsFor(notesPartName)
 	const rel = rels.byType(NOTES_MASTER_REL)[0]
 	return rel ? rels.resolveTarget(rel.id) : null
 }
 
 /** The `tags` targets of one part, resolved -- the owned part the notes copies must not share. */
-function tagTargets(opc, partName) {
+function tagTargets(opc: OpcPackage, partName: string) {
 	const rels = opc.relationshipsFor(partName)
 	return rels.byType(TAGS_REL).map((rel) => rels.resolveTarget(rel.id))
 }
@@ -76,9 +76,9 @@ async function sourceWithOwnedNotesPart() {
 }
 
 /** The internal SLIDE_REL targets of one slide part, resolved via its own rels. */
-function slideLinkTargets(opc, partName) {
+function slideLinkTargets(opc: OpcPackage, partName: string) {
 	const rels = opc.relationshipsFor(partName)
-	const out = []
+	const out: string[] = []
 	for (const rel of rels) {
 		if (rel.type !== SLIDE_REL || rel.targetMode === 'External') continue
 		out.push(rels.resolveTarget(rel.id))
@@ -87,9 +87,9 @@ function slideLinkTargets(opc, partName) {
 }
 
 /** Every internal relationship target of one part, sorted, for comparing two pages' dependencies. */
-function depTargets(opc, partName) {
+function depTargets(opc: OpcPackage, partName: string) {
 	const rels = opc.relationshipsFor(partName)
-	const out = []
+	const out: string[] = []
 	for (const rel of rels) {
 		if (rel.targetMode === 'External') continue
 		out.push(rels.resolveTarget(rel.id))
@@ -98,7 +98,7 @@ function depTargets(opc, partName) {
 }
 
 /** Catch a synchronous throw and return its stable `code`, or null when nothing threw. */
-function catchCode(fn) {
+function catchCode(fn: () => unknown) {
 	return caughtSync(fn)?.code ?? null
 }
 
@@ -112,7 +112,7 @@ async function otherCanvasDeck() {
 }
 
 /** Every `a:off` on a page, as `x,y` strings, so a rescale shows up as a list that moved. */
-function offsetsOf(slide) {
+function offsetsOf(slide: Slide) {
 	const xml = new TextDecoder().decode(slide.part.serialize())
 	return [...xml.matchAll(/<a:off x="(-?\d+)" y="(-?\d+)"\/>/g)].map((m) => `${m[1]},${m[2]}`)
 }
@@ -191,7 +191,7 @@ describe('Presentation.importSlides', () => {
 		assert(bytesEqual(beforeBytes, await target.save()), 'and again, no byte changed')
 	})
 
-	test.for(/** @type {const} */ (['copy', 'preserve', 'restyle']))(
+	test.for(['copy', 'preserve', 'restyle'] as const)(
 		'importSlide in %s mode refuses a page whose jump link leaves the import, as importSlides does',
 		async (theme) => {
 			// `importSlide` used to follow the link and copy its target page too, as a slide part in
@@ -209,7 +209,7 @@ describe('Presentation.importSlides', () => {
 		}
 	)
 
-	test.for(/** @type {const} */ (['copy', 'preserve', 'restyle']))(
+	test.for(['copy', 'preserve', 'restyle'] as const)(
 		'importSlide in %s mode brings a page that links to itself once, with the link on the new page',
 		async (theme) => {
 			// The rebind builds its page itself and did not enter it in the copy registry before
@@ -235,7 +235,7 @@ describe('Presentation.importSlides', () => {
 		}
 	)
 
-	test.for(/** @type {const} */ (['preserve', 'restyle']))(
+	test.for(['preserve', 'restyle'] as const)(
 		'importSlide in %s mode takes a page whose source layout is missing, which it never reads',
 		async (theme) => {
 			// Both modes bind the page to this deck's own layout, so the source's is never copied. The
@@ -652,7 +652,8 @@ describe('Presentation.importSlides', () => {
 		const target = await openFixture('read-stress') // already carries a notesMaster
 		const [ownMaster] = notesMasters(target)
 		assert(ownMaster !== undefined, 'the fixture registers a notesMaster to defend')
-		const masterParts = (pres) => [...pres.opc.parts.keys()].filter((name) => name.includes('/notesMasters/')).length
+		const masterParts = (pres: Presentation) =>
+			[...pres.opc.parts.keys()].filter((name) => name.includes('/notesMasters/')).length
 		const mastersBefore = masterParts(target)
 		const source = await openFixture('notes-slide-image')
 		const at = target.slides.length
@@ -703,7 +704,7 @@ describe('Presentation.importSlides', () => {
 		// to reach that: the destination has none, so it would be copied.
 		const target = await openFixture('textbox')
 		const broken = await openFixture('notes-slide-image')
-		broken.opc.removePart(notesMasterOf(broken, defined(broken.slides[0].notesSlide).partName))
+		broken.opc.removePart(defined(notesMasterOf(broken, defined(broken.slides[0].notesSlide).partName)))
 
 		const beforeBytes = await target.save()
 		assertEqual(
@@ -726,7 +727,7 @@ describe('Presentation.importSlides', () => {
 		// batch the copy would have completed.
 		const target = await openFixture('read-stress') // has a notesMaster
 		const broken = await openFixture('notes-slide-image')
-		broken.opc.removePart(notesMasterOf(broken, defined(broken.slides[0].notesSlide).partName))
+		broken.opc.removePart(defined(notesMasterOf(broken, defined(broken.slides[0].notesSlide).partName)))
 		const at = target.slides.length
 
 		target.importSlides([{ source: broken, sourceIndex: 0, outputIndex: at, importNotes: true }])
@@ -747,7 +748,7 @@ describe('Presentation.importSlides', () => {
 		const target = await openFixture('textbox')
 		const first = await openFixture('notes-slide-image')
 		const second = await openFixture('notes-slide-image')
-		second.opc.removePart(notesMasterOf(second, defined(second.slides[0].notesSlide).partName))
+		second.opc.removePart(defined(notesMasterOf(second, defined(second.slides[0].notesSlide).partName)))
 		assertEqual(notesMasters(target).length, 0, 'the destination starts without a notes master')
 
 		const [a, b] = target.importSlides([
@@ -759,7 +760,8 @@ describe('Presentation.importSlides', () => {
 		assertNoDanglingRels(reopened.opc)
 		const masters = notesMasters(reopened)
 		assertEqual(masters.length, 1, 'one notes master was installed')
-		const masterOf = (slide) => notesMasterOf(reopened, defined(reopened.slides[slide.index].notesSlide).partName)
+		const masterOf = (slide: Slide) =>
+			notesMasterOf(reopened, defined(reopened.slides[slide.index].notesSlide).partName)
 		assertEqual(masterOf(a), masters[0], 'the first page binds to it')
 		assertEqual(masterOf(b), masters[0], 'and so does the second, whose own master was never read')
 	})

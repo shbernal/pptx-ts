@@ -14,7 +14,7 @@ import { readFile } from 'node:fs/promises'
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import TsPptx from '../../dist/node.js'
-import { Presentation } from '../../dist/read.js'
+import { Presentation, type ImportSlideMastersOptions, type OpcPackage } from '../../dist/read.js'
 import {
 	throws,
 	bytesEqual,
@@ -34,45 +34,50 @@ const R_NS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationship
 const THEME_REL = `${R_NS}/theme`
 const OFFICE_DOCUMENT_REL = `${R_NS}/officeDocument`
 
-function presentationPartName(opc) {
+function presentationPartName(opc: OpcPackage) {
 	const rootRels = opc.relationshipsFor('/')
-	const officeDoc = [...rootRels].find((rel) => rel.type === OFFICE_DOCUMENT_REL)
+	const officeDoc = defined([...rootRels].find((rel) => rel.type === OFFICE_DOCUMENT_REL))
 	return rootRels.resolveTarget(officeDoc.id)
 }
 
+/** The root element of a part, asserting the part exists. */
+function rootOf(opc: OpcPackage, partName: string) {
+	return defined(defined(opc.part(partName), `part ${partName}`).dom.documentElement)
+}
+
 /** Master partnames registered in presentation.xml's p:sldMasterIdLst (resolved via rels). */
-function registeredMasters(opc) {
+function registeredMasters(opc: OpcPackage) {
 	const presName = presentationPartName(opc)
-	const root = opc.part(presName).dom.documentElement
+	const root = rootOf(opc, presName)
 	const rels = opc.relationshipsFor(presName)
-	const out = []
-	for (let n = root.firstChild; n; n = n.nextSibling) {
-		if (n.nodeType !== 1 || n.localName !== 'sldMasterIdLst') continue
-		for (let e = n.firstChild; e; e = e.nextSibling) {
-			if (e.nodeType !== 1 || e.localName !== 'sldMasterId') continue
-			out.push(rels.resolveTarget(e.getAttributeNS(R_NS, 'id')))
+	const out: string[] = []
+	for (const n of root.children) {
+		if (n.localName !== 'sldMasterIdLst') continue
+		for (const e of n.children) {
+			if (e.localName !== 'sldMasterId') continue
+			out.push(rels.resolveTarget(defined(e.getAttributeNS(R_NS, 'id'))))
 		}
 	}
 	return out
 }
 
 /** Partnames the master lists in p:sldLayoutIdLst, resolved via the master's rels. */
-function masterLayoutList(opc, masterPartName) {
-	const root = opc.part(masterPartName).dom.documentElement
+function masterLayoutList(opc: OpcPackage, masterPartName: string) {
+	const root = rootOf(opc, masterPartName)
 	const rels = opc.relationshipsFor(masterPartName)
-	const out = []
-	for (let n = root.firstChild; n; n = n.nextSibling) {
-		if (n.nodeType !== 1 || n.localName !== 'sldLayoutIdLst') continue
-		for (let e = n.firstChild; e; e = e.nextSibling) {
-			if (e.nodeType !== 1 || e.localName !== 'sldLayoutId') continue
-			out.push(rels.resolveTarget(e.getAttributeNS(R_NS, 'id')))
+	const out: string[] = []
+	for (const n of root.children) {
+		if (n.localName !== 'sldLayoutIdLst') continue
+		for (const e of n.children) {
+			if (e.localName !== 'sldLayoutId') continue
+			out.push(rels.resolveTarget(defined(e.getAttributeNS(R_NS, 'id'))))
 		}
 	}
 	return out
 }
 
 /** Count source layouts on the first registered master of a package. */
-function sourceLayoutCount(opc) {
+function sourceLayoutCount(opc: OpcPackage) {
 	return masterLayoutList(opc, registeredMasters(opc)[0]).length
 }
 
@@ -84,21 +89,21 @@ const ST_MASTER_LAYOUT_ID_MIN = 2147483648
  * all masters), as raw numbers. These draw from ONE presentation-wide id space and
  * must all be unique — a duplicate makes PowerPoint report the file as corrupt.
  */
-function allMasterAndLayoutIds(opc) {
-	const ids = []
-	const presRoot = opc.part(presentationPartName(opc)).dom.documentElement
-	for (let n = presRoot.firstChild; n; n = n.nextSibling) {
-		if (n.nodeType !== 1 || n.localName !== 'sldMasterIdLst') continue
-		for (let e = n.firstChild; e; e = e.nextSibling) {
-			if (e.nodeType === 1 && e.localName === 'sldMasterId') ids.push(Number(e.getAttribute('id')))
+function allMasterAndLayoutIds(opc: OpcPackage) {
+	const ids: number[] = []
+	const presRoot = rootOf(opc, presentationPartName(opc))
+	for (const n of presRoot.children) {
+		if (n.localName !== 'sldMasterIdLst') continue
+		for (const e of n.children) {
+			if (e.localName === 'sldMasterId') ids.push(Number(e.getAttribute('id')))
 		}
 	}
 	for (const master of registeredMasters(opc)) {
-		const root = opc.part(master).dom.documentElement
-		for (let n = root.firstChild; n; n = n.nextSibling) {
-			if (n.nodeType !== 1 || n.localName !== 'sldLayoutIdLst') continue
-			for (let e = n.firstChild; e; e = e.nextSibling) {
-				if (e.nodeType === 1 && e.localName === 'sldLayoutId') ids.push(Number(e.getAttribute('id')))
+		const root = rootOf(opc, master)
+		for (const n of root.children) {
+			if (n.localName !== 'sldLayoutIdLst') continue
+			for (const e of n.children) {
+				if (e.localName === 'sldLayoutId') ids.push(Number(e.getAttribute('id')))
 			}
 		}
 	}
@@ -200,7 +205,7 @@ describe('Presentation.importSlideMasters', () => {
 		assertEqual(result[0].layoutPartNames.length, 3, 'only the first three layouts were grafted')
 
 		const reopened = await Presentation.load(await target.save())
-		const grafted = registeredMasters(reopened.opc).pop()
+		const grafted = defined(registeredMasters(reopened.opc).pop())
 		assertEqual(masterLayoutList(reopened.opc, grafted).length, 3, 'the grafted master lists exactly the subset')
 		assertNoDanglingRels(reopened.opc)
 	})
@@ -223,7 +228,7 @@ describe('Presentation.importSlideMasters', () => {
 		target.importSlideMasters(source)
 		const reopened = await Presentation.load(await target.save())
 		assertEqual(registeredMasters(reopened.opc).length, afterFirst, 'a second graft adds no new master')
-		const grafted = registeredMasters(reopened.opc).pop()
+		const grafted = defined(registeredMasters(reopened.opc).pop())
 		assertEqual(masterLayoutList(reopened.opc, grafted).length, familySize, 'and no duplicate layout entries')
 		assertNoDanglingRels(reopened.opc)
 	})
@@ -274,7 +279,7 @@ describe('Presentation.importSlideMasters', () => {
 // Oracle: test/read/fixtures/embedded-fonts.pptx (PowerPoint-authored, SIL OFL
 // 'Silkscreen', regular + bold) + embedded-fonts.oracle.json.
 describe('Presentation.importSlideMasters({ embedFonts })', () => {
-	async function graft(options) {
+	async function graft(options?: ImportSlideMastersOptions) {
 		const target = await openFixture('empty')
 		const source = await openFixture('embedded-fonts')
 		target.importSlideMasters(source, options)
@@ -379,15 +384,14 @@ describe('Presentation.importSlideMasters({ tableStyles })', () => {
 	const ACCENT3 = '{F5AB1C69-6EDB-4FF4-983F-18BD219EF322}' // fixture's default
 	const ACCENT1 = '{5C22544A-7EE6-4342-B048-85BDC9FD1C3A}' // the standard default
 
-	async function tableStylesXmlOf(pptxBytes) {
+	async function tableStylesXmlOf(pptxBytes: Uint8Array) {
 		const zip = await JSZip.loadAsync(pptxBytes)
-		const file = zip.file('ppt/tableStyles.xml')
-		return file ? file.async('string') : null
+		return defined(zip.file('ppt/tableStyles.xml'), 'the package has ppt/tableStyles.xml').async('string')
 	}
-	function styleIds(xml) {
+	function styleIds(xml: string) {
 		return [...xml.matchAll(/<a:tblStyle[^>]*styleId="([^"]+)"/g)].map((m) => m[1])
 	}
-	function defOf(xml) {
+	function defOf(xml: string) {
 		return xml.match(/<a:tblStyleLst[^>]*\bdef="([^"]+)"/)?.[1]
 	}
 
@@ -573,8 +577,7 @@ describe('generate → read slide-master graft bridge', () => {
 		pres.layout = 'LAYOUT_WIDE'
 		pres.addSlide().addText('interior one', { x: 1, y: 1, w: 6, h: 1 })
 		pres.addSlide().addText('interior two', { x: 1, y: 1, w: 6, h: 1 })
-		const out = await pres.toBytes()
-		return out instanceof Uint8Array ? out : new Uint8Array(/** @type {ArrayBuffer} */ (out))
+		return pres.toBytes()
 	}
 
 	test('a generated deck ships a grafted master without changing its slides', async () => {

@@ -12,9 +12,10 @@
 // package schema-valid.
 
 import { readFile } from 'node:fs/promises'
+import type { Element } from '@xmldom/xmldom'
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
-import { Presentation } from '../../dist/read.js'
+import { Presentation, type AnyShape, type OpcPackage, type Slide } from '../../dist/read.js'
 import { TsPptx, PNG_1X1, bytesEqual, throws, assert, assertEqual, defined, readEntry, caughtSync } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture } from './corpus.ts'
@@ -24,19 +25,19 @@ const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 
 /** The `code` of what `fn` throws, or `null` when it does not throw. */
-function codeOf(fn) {
+function codeOf(fn: () => unknown) {
 	return caughtSync(fn)?.code ?? null
 }
 
 /** Count the package parts whose name matches `re`. */
-function countParts(opc, re) {
+function countParts(opc: OpcPackage, re: RegExp) {
 	return [...opc.parts.keys()].filter((n) => re.test(n)).length
 }
 
 /** All `p:cNvPr/@id` values within a shape subtree (inclusive of nested group children). */
-function cNvPrIds(element) {
+function cNvPrIds(element: Element) {
 	const live = element.getElementsByTagNameNS(P_NS, 'cNvPr')
-	const out = []
+	const out: number[] = []
 	for (let i = 0; i < live.length; i++) {
 		const id = live[i].getAttribute('id')
 		if (id != null) out.push(Number(id))
@@ -45,8 +46,8 @@ function cNvPrIds(element) {
 }
 
 /** Geometry tuples (`a:off`/`a:ext`/`a:chOff`/`a:chExt`) within a subtree, document order. */
-function geometryTuples(element) {
-	const out = []
+function geometryTuples(element: Element) {
+	const out: string[] = []
 	for (const tag of ['off', 'ext', 'chOff', 'chExt']) {
 		const live = element.getElementsByTagNameNS(A_NS, tag)
 		for (let i = 0; i < live.length; i++) {
@@ -60,9 +61,9 @@ function geometryTuples(element) {
 }
 
 /** Table column widths (`a:gridCol@w`, EMU) within a subtree, document order. */
-function gridColWidths(element) {
+function gridColWidths(element: Element) {
 	const live = element.getElementsByTagNameNS(A_NS, 'gridCol')
-	const out = []
+	const out: number[] = []
 	for (let i = 0; i < live.length; i++) {
 		const w = live[i].getAttribute('w')
 		if (w != null) out.push(Number(w))
@@ -70,37 +71,37 @@ function gridColWidths(element) {
 	return out
 }
 
-function schemeClrCount(element) {
+function schemeClrCount(element: Element) {
 	return element.getElementsByTagNameNS(A_NS, 'schemeClr').length
 }
 
 /** All `p:ph` (placeholder marker) elements within a subtree. */
-function phElements(element) {
+function phElements(element: Element) {
 	return Array.from(element.getElementsByTagNameNS(P_NS, 'ph'))
 }
 
 /** Whether a shape subtree carries an explicit `a:xfrm` (baked or authored geometry). */
-function hasXfrm(element) {
+function hasXfrm(element: Element) {
 	return element.getElementsByTagNameNS(A_NS, 'xfrm').length > 0
 }
 
 /** Direct level-children local names of a subtree's first `a:lstStyle` (empty when none). */
-function lstStyleLevels(element) {
+function lstStyleLevels(element: Element) {
 	const live = element.getElementsByTagNameNS(A_NS, 'lstStyle')
 	if (live.length === 0) return []
-	const out = []
+	const out: string[] = []
 	for (let node = live[0].firstChild; node; node = node.nextSibling) {
-		if (node.nodeType === 1) out.push(node.localName)
+		if (node.nodeType === 1) out.push(defined(node.localName))
 	}
 	return out
 }
 
-function srgbClrCount(element) {
+function srgbClrCount(element: Element) {
 	return element.getElementsByTagNameNS(A_NS, 'srgbClr').length
 }
 
 /** Index of the first shape on `slide` matching `pred`. */
-function findShapeIndex(slide, pred) {
+function findShapeIndex(slide: Slide, pred: (shape: AnyShape) => unknown) {
 	return slide.shapes.findIndex(pred)
 }
 
@@ -283,7 +284,7 @@ describe('Presentation.importShape', () => {
 		// Every id (group + children) was reassigned away from the source ids and is
 		// unique within the host slide.
 		for (const id of importedIds) assert(!srcIds.has(id), `child id ${id} was reassigned off the source ids`)
-		const hostIds = cNvPrIds(target.slides[0].shapeTree())
+		const hostIds = cNvPrIds(defined(target.slides[0].shapeTree()))
 		assertEqual(new Set(hostIds).size, hostIds.length, 'all host drawing ids are unique')
 
 		// No rescale: every off/ext/chOff/chExt matches the source verbatim.
@@ -323,12 +324,12 @@ describe('Presentation.importShape', () => {
 	test('reassigns the lifted shape id off every host id (no collision)', async () => {
 		const target = await openFixture('empty')
 		const source = await openFixture('image')
-		const hostIdsBefore = new Set(cNvPrIds(target.slides[0].shapeTree()))
+		const hostIdsBefore = new Set(cNvPrIds(defined(target.slides[0].shapeTree())))
 		const picIndex = findShapeIndex(source.slides[0], (s) => s.shapeType === 'picture')
 
 		const shape = target.importShape(target.slides[0], source.slides[0], picIndex)
-		assert(!hostIdsBefore.has(shape.id), `imported id ${shape.id} differs from every host id`)
-		const hostIds = cNvPrIds(target.slides[0].shapeTree())
+		assert(!hostIdsBefore.has(defined(shape.id)), `imported id ${shape.id} differs from every host id`)
+		const hostIds = cNvPrIds(defined(target.slides[0].shapeTree()))
 		assertEqual(new Set(hostIds).size, hostIds.length, 'all host drawing ids remain unique')
 	})
 
@@ -363,7 +364,7 @@ describe('Presentation.importShape', () => {
 		assertEqual(shapes[0].shapeType, source.slides[0].shapes[0].shapeType, 'first lifted shape matches first index')
 		assertEqual(shapes[1].shapeType, source.slides[0].shapes[1].shapeType, 'second lifted shape matches second index')
 		assertEqual(targetSlide.shapes.length, before + 2, 'both shapes appended')
-		const hostIds = cNvPrIds(targetSlide.shapeTree())
+		const hostIds = cNvPrIds(defined(targetSlide.shapeTree()))
 		assertEqual(new Set(hostIds).size, hostIds.length, 'all ids unique after the batch')
 
 		const reopened = await Presentation.load(await target.save())
@@ -463,7 +464,7 @@ describe('Presentation.importShape (placeholder lift)', () => {
 		// …and its inherited geometry was baked before demotion, so it keeps position/size.
 		assert(hasXfrm(shape.element_), 'inherited geometry baked onto the lifted shape')
 		// …and it does not collide with the host's own ctrTitle (host keeps exactly one).
-		const hostPhTypes = phElements(target.slides[0].shapeTree()).map((ph) => ph.getAttribute('type'))
+		const hostPhTypes = phElements(defined(target.slides[0].shapeTree())).map((ph) => ph.getAttribute('type'))
 		assertEqual(
 			hostPhTypes.filter((t) => t === 'ctrTitle').length,
 			1,
@@ -538,7 +539,8 @@ describe('Presentation.importShape (placeholder lift)', () => {
 describe('Presentation.importShape({ rescale })', () => {
 	// image/table (16:9, 12192000×6858000) → mixed (4:3, 9144000×6858000):
 	// fit scale = min(0.75, 1.0) = 0.75; centering dx = 0, dy = 857250.
-	const near = (got, want, label) => assert(Math.abs(got - want) <= 2, `${label}: ${got} ≈ ${want}`)
+	const near = (got: number | null, want: number, label: string) =>
+		assert(Math.abs(defined(got, `${label}: a value`) - want) <= 2, `${label}: ${got} ≈ ${want}`)
 
 	test("'fit' scales the lifted shape uniformly and centers the slack", async () => {
 		const target = await openFixture('mixed') // 4:3

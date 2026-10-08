@@ -9,7 +9,7 @@
 
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
-import { Presentation } from '../../dist/read.js'
+import { Presentation, type Picture } from '../../dist/read.js'
 import {
 	assert,
 	assertEqual,
@@ -39,10 +39,10 @@ const PNG_2X1 = new Uint8Array(
 )
 
 /** The picture's `a:srcRect` attributes, as a plain record (absent attributes are absent). */
-function srcRectOf(picture) {
+function srcRectOf(picture: Picture) {
 	const match = /<a:srcRect\b([^>]*)\/?>/.exec(picture.element_.toString())
 	assert(match, 'expected an a:srcRect; got: ' + picture.element_.toString())
-	const attrs = {}
+	const attrs: Partial<Record<string, string>> = {}
 	for (const [, name, value] of match[1].matchAll(/([a-zA-Z]+)="([^"]*)"/g)) attrs[name] = value
 	return attrs
 }

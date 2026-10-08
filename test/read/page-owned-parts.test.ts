@@ -18,7 +18,7 @@
 //   - shared deck furniture is still shared, and the result is schema-valid.
 
 import { describe, test } from 'vitest'
-import { Presentation } from '../../dist/read.js'
+import { Presentation, type OpcPackage } from '../../dist/read.js'
 import { assert, assertEqual } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { openFixture } from './corpus.ts'
@@ -30,7 +30,7 @@ const DIAGRAM_PAGE = 1 // SmartArt: five diagram parts
 const CHART_PAGE = 7 // a chart with an embedded workbook and user shapes
 
 /** Internal relationship targets of one part, by rel-type suffix. */
-function targetsByType(opc, partName, typeSuffix) {
+function targetsByType(opc: OpcPackage, partName: string, typeSuffix: string) {
 	const rels = opc.relationshipsFor(partName)
 	return [...rels]
 		.filter((rel) => rel.targetMode !== 'External' && rel.type.endsWith(`/${typeSuffix}`))
@@ -38,14 +38,14 @@ function targetsByType(opc, partName, typeSuffix) {
 }
 
 /** The one internal target of `typeSuffix`, asserting there is exactly one. */
-function targetByType(opc, partName, typeSuffix) {
+function targetByType(opc: OpcPackage, partName: string, typeSuffix: string) {
 	const found = targetsByType(opc, partName, typeSuffix)
 	assertEqual(found.length, 1, `${partName} has exactly one ${typeSuffix} relationship`)
 	return found[0]
 }
 
 /** Every internal partname reachable from `partName`, itself excluded. */
-function reachable(opc, partName, seen = new Set()) {
+function reachable(opc: OpcPackage, partName: string, seen = new Set<string>()) {
 	const rels = opc.relationshipsFor(partName)
 	for (const rel of rels) {
 		if (rel.targetMode === 'External') continue
@@ -180,7 +180,7 @@ describe('a page copy owns what the page owned', () => {
 		const reopened = await Presentation.load(await target.save())
 		const layoutA = targetByType(reopened.opc, a.partName, 'slideLayout')
 		const layoutB = targetByType(reopened.opc, b.partName, 'slideLayout')
-		const masterOf = (layout) => targetByType(reopened.opc, layout, 'slideMaster')
+		const masterOf = (layout: string) => targetByType(reopened.opc, layout, 'slideMaster')
 		assertEqual(masterOf(layoutA), masterOf(layoutB), 'both pages hang off the one imported master')
 	})
 
