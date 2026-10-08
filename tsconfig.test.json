@@ -27,6 +27,7 @@
 		// Typechecked by `docs/tsconfig.json`: it loads VitePress, whose declarations only
 		// compile under `skipLibCheck`, and this project keeps full lib checking.
 		"test/regression/www/mermaid-fence.test.ts",
+		"test/regression/www/live-fence.test.js",
 		// Run directly with `node`, like `scripts/`, so `tsconfig.scripts.json` checks them.
 		"test/read/fixtures/authoring/**"
 	]

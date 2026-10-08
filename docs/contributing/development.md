@@ -280,6 +280,19 @@ A fenced block whose language is `mermaid` renders as a diagram on the site, thr
 parses a graph. A graph that does not parse shows its parse error in place of the diagram, so look
 at the page under `pnpm run docs:dev` before committing it.
 
+### Live examples
+
+A fence written ` ```ts live ` renders as its code, then the slide that code builds and a
+download button, through `www/live/`. The body runs with `pptx`, a fresh presentation, and
+`slide`, its first slide, in scope, and nothing else: no imports. It may `await` and add slides.
+Mark a snippet live only when it is a whole call; leave a bare option object as a plain `ts`
+fence.
+
+`test/regression/www/live-examples.test.js` runs every live fence in Node and fails on a throw,
+a warning or a package the validator rejects, so a live example cannot rot unnoticed. What it
+cannot see is how the slide looks: `pptx-html` draws the preview, and where it cannot carry a
+construct the example says so under the slide. Look at the page under `pnpm run docs:dev`.
+
 ### The demos page
 
 - **It is a test fixture.** The Playwright `demo` project drives `/demos`. It is the only place

@@ -3,6 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { type DefaultTheme, defineConfig } from 'vitepress'
 import { mermaidFences } from '../../www/diagrams/fence'
+import { liveExampleModules, liveFencePlugin } from '../../www/live/fence'
 
 const configDir = path.dirname(fileURLToPath(import.meta.url))
 const docsDir = path.resolve(configDir, '..')
@@ -64,8 +65,12 @@ export default defineConfig({
 	description: docsConfig.description,
 	lang: 'en-US',
 	markdown: {
-		// `mermaid` fences render as diagrams, drawn in the browser by `www/diagrams/`.
-		config: mermaidFences,
+		// `mermaid` fences render as diagrams, drawn in the browser by `www/diagrams/`, and
+		// `ts live` fences as their code plus the slide it builds, by `www/live/`.
+		config: (md) => {
+			mermaidFences(md)
+			liveFencePlugin(md)
+		},
 	},
 	srcExclude: docsConfig.repoOnly.map((dir) => `${dir}/**`),
 	title: docsConfig.name,
@@ -83,6 +88,8 @@ export default defineConfig({
 		sidebar: apiSidebar ? { '/reference/api/': apiSidebar, '/': sidebar } : { '/': sidebar },
 	},
 	vite: {
+		// Serves each live fence's body as a module; the fence plugin above imports them.
+		plugins: [liveExampleModules(docsDir)],
 		build: {
 			chunkSizeWarningLimit: 5000,
 		},

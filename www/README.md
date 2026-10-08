@@ -14,7 +14,7 @@ a state machine in it.
 www/
   theme/
     index.ts    the VitePress theme: extends the default, registers the components below
-    style.css   the site's own palette, diagram and demos page styles
+    style.css   the site's own palette, diagram, demos page and live example styles
   comparison/
     comparison.ts       what the comparison charts draw, as data: plain TS, typechecked, unit-tested
     comparison.data.ts  runs it over scripts/comparison/snapshot.json while the site builds
@@ -25,12 +25,36 @@ www/
     MermaidDiagram.vue  the component a fence becomes; redraws on a colour mode change
   demos/
     deck-preview.ts    the pipeline and its types — plain TS, typechecked, unit-tested
+    showcases.ts       the showcase decks the viewer can show, by slug
     DeckPreview.vue    the slide viewer: stage, filmstrip, notes and the build button
     SlideFrame.vue     one slide in a shadow root, which keeps the site's CSS out of it
+  live/
+    snippet.ts         what a `ts live` fence is and what its body becomes, shared with the tests
+    fence.ts           the markdown-it rule and the Vite plugin that compile a fence into a module
+    live-example.ts    run a compiled fence, then preview or download what it built
+    LiveExample.vue    the slide under the code, and its download button
 ```
 
 VitePress only looks for a theme at `<root>/.vitepress/theme`, so `docs/.vitepress/theme/index.ts`
 is a one-line re-export of `www/theme`. That shim is the entire cost of the boundary.
+
+## Live examples
+
+A ` ```ts live ` fence becomes its highlighted code followed by `<LiveExample>`. The code shown
+is the code that runs, and nothing is evaluated from a string:
+
+1. The fence rule (`live/fence.ts`) hashes the body and emits the component with a `load` prop.
+2. A wrapper around `md.render` hoists `const __liveN = () => import('virtual:live-example/<hash>')`
+   into the page's `<script setup>`, joining one the author wrote. A template expression cannot
+   hold a dynamic `import()`, which is why the import is hoisted rather than inline.
+3. The Vite plugin in the same file serves that module: the body wrapped by `wrapSnippet` into
+   `export default async function (pptx, slide) { ... }`, compiled by esbuild.
+4. The component waits until it scrolls near the viewport, then builds a presentation from the
+   browser entry, runs the module against it, and renders the bytes the way the demos page does.
+
+`liveFences()` in `snippet.ts` finds the same fences without a markdown parser, and the
+Node test that runs every fence uses it. The fence rule fails the build if it compiles a fence
+that scan missed, so no live fence can escape the test.
 
 ## Working on it
 

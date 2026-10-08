@@ -9,6 +9,10 @@
  * the library and the whole of `pptx-html`; a synchronous import would put all of that in
  * the chunk every page of the site loads, to serve one page.
  *
+ * `<LiveExample />` is what a `ts live` fence renders as (`www/live/`). Asynchronous for the
+ * reason `<DeckPreview />` is: it carries `pptx-html` and the library, and only pages with a
+ * live fence mount it.
+ *
  * `<MermaidDiagram />` is what a `mermaid` fence renders as. The component itself is small
  * and registered synchronously; mermaid is imported inside it on first render
  * (`www/diagrams/render.ts`), so it stays out of pages that draw no diagram. That holds only
@@ -21,6 +25,7 @@ import DefaultTheme from 'vitepress/theme'
 import { defineAsyncComponent } from 'vue'
 import { MERMAID_COMPONENT } from '../diagrams/fence'
 import MermaidDiagram from '../diagrams/MermaidDiagram.vue'
+import { LIVE_COMPONENT } from '../live/snippet'
 import './style.css'
 
 export default {
@@ -29,6 +34,10 @@ export default {
 		app.component(
 			'DeckPreview',
 			defineAsyncComponent(() => import('../demos/DeckPreview.vue'))
+		)
+		app.component(
+			LIVE_COMPONENT,
+			defineAsyncComponent(() => import('../live/LiveExample.vue'))
 		)
 		app.component(MERMAID_COMPONENT, MermaidDiagram)
 		// The comparison charts, asynchronous for the reason `<DeckPreview />` is: one page draws them.

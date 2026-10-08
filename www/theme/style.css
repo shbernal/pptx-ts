@@ -963,3 +963,115 @@
 		animation: none !important;
 	}
 }
+
+/* --- live examples ---------------------------------------------------------------- */
+
+/*
+ * What a `ts live` fence renders as, straight after its code block. Scoped under
+ * `.live-example` with two classes per rule, for the reason the demos page gives above.
+ * The slide sits on the code block's own surface so the pair reads as one object.
+ */
+/* The code block above gives up its bottom margin and corners, so the two join. */
+.vp-doc div[class*='language-']:has(+ .live-example) {
+	margin-bottom: 0;
+	border-bottom-right-radius: 0;
+	border-bottom-left-radius: 0;
+}
+
+/* Below 640px VitePress runs code blocks to the screen edge; the example follows it there. */
+.vp-doc .live-example {
+	margin: 0 -24px 16px;
+	border-top: 1px solid var(--vp-c-divider);
+	background: var(--vp-code-block-bg);
+	padding: 16px 24px;
+}
+
+@media (min-width: 640px) {
+	.vp-doc .live-example {
+		margin: 0 0 16px;
+		border-radius: 0 0 8px 8px;
+		padding: 16px;
+	}
+}
+
+.live-example .live-example__canvas {
+	display: grid;
+	gap: 12px;
+}
+
+.live-example .slide-frame,
+.live-example .live-example__placeholder {
+	display: block;
+	border-radius: 4px;
+	aspect-ratio: var(--deck-aspect);
+	overflow: hidden;
+	box-shadow:
+		0 1px 2px rgba(0, 0, 0, 0.08),
+		0 8px 24px -8px rgba(0, 0, 0, 0.25);
+}
+
+.live-example .live-example__placeholder {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	align-items: center;
+	justify-content: center;
+	background: var(--vp-c-bg-alt);
+	padding: 1rem;
+	color: var(--vp-c-text-2);
+	font-size: 0.85rem;
+	text-align: center;
+}
+
+.live-example .live-example__bar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px 16px;
+	align-items: center;
+	justify-content: space-between;
+	margin-top: 12px;
+}
+
+.live-example .live-example__label {
+	color: var(--vp-c-text-3);
+	font-size: 0.8rem;
+}
+
+.live-example .live-example__button {
+	border: 1px solid var(--vp-c-divider);
+	border-radius: 999px;
+	background: var(--vp-c-bg);
+	padding: 0.3rem 0.85rem;
+	color: var(--vp-c-text-1);
+	font-size: 0.8rem;
+	font-weight: 500;
+}
+
+.live-example .live-example__button:hover:not(:disabled) {
+	border-color: var(--vp-c-brand-1);
+	color: var(--vp-c-brand-1);
+}
+
+.live-example .live-example__button:disabled {
+	opacity: 0.6;
+	cursor: progress;
+}
+
+.live-example .live-example__note {
+	margin: 8px 0 0;
+	color: var(--vp-c-text-2);
+	font-size: 0.8rem;
+}
+
+.live-example .live-example__note--bad {
+	color: var(--vp-c-danger-1);
+}
+
+.live-example .live-example__note summary {
+	cursor: pointer;
+}
+
+.live-example .live-example__note ul,
+.live-example .live-example__note p {
+	margin: 4px 0 0;
+}

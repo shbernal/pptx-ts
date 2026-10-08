@@ -1144,7 +1144,7 @@ They answer different questions, and none can answer another's:
 
 | Project | Fixture | What only it can prove |
 |---|---|---|
-| `demo` | the site's `/demos` page behind `vitepress preview` | the **bundled** path a real consumer takes: Vite resolving the `browser` export condition, Rollup tree-shaking it |
+| `demo` | the site's `/demos` page and its live examples behind `vitepress preview` | the **bundled** path a real consumer takes: Vite resolving the `browser` export condition, Rollup tree-shaking it |
 | `runtime-adapter` | `test/browser/harness/index.html` behind `scripts/browser-harness-server.mjs` | the shipped `dist/browser.js` loading **unbundled**, and the adapter loaders the demo cannot reach |
 | `html-table` | `test/browser/harness/table.html`, same server | `tableToSlides` reading a **non-zero `offsetWidth`** (the one width basis no Node DOM can produce) and the end-to-end conversions that basis feeds |
 
@@ -1164,6 +1164,7 @@ documents.
 |---|---|---|
 | `deck-download.spec.ts` | demo | the object-URL download is a real OPC package: read back with **jszip**, an implementation independent of the `fflate` the library writes with |
 | `cross-runtime-bytes.spec.ts` | demo | the browser-built deck is **byte-identical** to the Node-built one, part for part |
+| `deck-live-examples.spec.mjs` | demo | every live example on a docs page paints the slide its code builds, its download is that deck, and a page without one loads none of the machinery |
 | `adapter-media.spec.ts` | runtime-adapter | `loadMedia` and `createSvgPngPreview`: a fetched raster image lands as the same bytes Node reads off disk *and* as the source file's; the `<canvas>` rasterizer emits a real PNG where Node stubs a placeholder; 404, undecodable-SVG and zero-dimension-SVG each fail with the right code |
 | `adapter-fonts.spec.ts` | runtime-adapter | `loadFontData`: a font fetched over HTTP bakes the same `fontScale` and embeds the same `/ppt/fonts/` bytes as one read off disk; a 404 rejects with `font/fetch-failed` |
 | `adapter-coverage.spec.ts` | runtime-adapter | all four adapter functions ran, and `dist/browser.js`'s executed share stayed above its floor |

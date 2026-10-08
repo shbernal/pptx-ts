@@ -14,7 +14,7 @@ doc_type: "guide"
 A fill paints an area: a shape's interior, a slide's background, a table cell, a chart area. The same
 options work in every one of them:
 
-```ts
+```ts live
 slide.addShape("rect", {
   x: 1, y: 1, w: 4, h: 2,
   fill: {
@@ -57,19 +57,22 @@ same. A line is always an object: `line: { color: "FF0000" }`.
 
 ## Linear gradients
 
-```ts
-fill: {
-  type: "gradient",
-  gradient: {
-    kind: "linear",
-    angle: 45,
-    stops: [
-      { position: 0, color: "FFFFFF" },
-      { position: 60, color: "accent1", transparency: 20 },
-      { position: 100, color: "1F3A5F" },
-    ],
+```ts live
+slide.addShape("rect", {
+  x: 1, y: 1, w: 6, h: 3.5,
+  fill: {
+    type: "gradient",
+    gradient: {
+      kind: "linear",
+      angle: 45,
+      stops: [
+        { position: 0, color: "FFFFFF" },
+        { position: 60, color: "accent1", transparency: 20 },
+        { position: 100, color: "1F3A5F" },
+      ],
+    },
   },
-}
+})
 ```
 
 `angle` is the direction the colours run, in degrees clockwise: `0` runs left to right and `90` runs top
@@ -104,18 +107,21 @@ you list them in.
 
 ## Radial gradients
 
-```ts
-fill: {
-  type: "gradient",
-  gradient: {
-    kind: "radial",
-    center: { x: 30, y: 30 },
-    stops: [
-      { position: 0, color: "FFFFFF" },
-      { position: 100, color: "1F3A5F" },
-    ],
+```ts live
+slide.addShape("rect", {
+  x: 1, y: 1, w: 6, h: 3.5,
+  fill: {
+    type: "gradient",
+    gradient: {
+      kind: "radial",
+      center: { x: 30, y: 30 },
+      stops: [
+        { position: 0, color: "FFFFFF" },
+        { position: 100, color: "1F3A5F" },
+      ],
+    },
   },
-}
+})
 ```
 
 The stop at position 0 is the colour at the centre, and later stops spread outwards to the edges.
@@ -149,8 +155,11 @@ colour or a `type`. `{ gradient: { ... } }` on its own leaves the chart area tra
 
 ## Patterns
 
-```ts
-fill: { type: "pattern", pattern: { preset: "diagCross", fgColor: "1F3A5F", bgColor: "FFFFFF" } }
+```ts live
+slide.addShape("rect", {
+  x: 1, y: 1, w: 4, h: 2,
+  fill: { type: "pattern", pattern: { preset: "diagCross", fgColor: "1F3A5F", bgColor: "FFFFFF" } },
+})
 ```
 
 `preset` names one of PowerPoint's patterns (see

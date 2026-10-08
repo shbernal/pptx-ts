@@ -30,7 +30,7 @@
 	// carries no `vue-tsc`. That is the reason `www/demos/deck-preview.ts` exists — the
 	// component's logic is in a file this project does read.
 	//
-	// One test belongs here rather than to `tsconfig.test.json`: it builds VitePress's markdown
+	// Two tests belong here rather than to `tsconfig.test.json`: they build VitePress's markdown
 	// renderer from the site config, and VitePress's declarations only compile under the
 	// `skipLibCheck` above, which the test project does not take.
 	"include": [
@@ -38,6 +38,7 @@
 		".vitepress/**/*.mts",
 		"../www/**/*.ts",
 		"../www/**/*.d.ts",
-		"../test/regression/www/mermaid-fence.test.ts"
+		"../test/regression/www/mermaid-fence.test.ts",
+		"../test/regression/www/live-fence.test.js"
 	]
 }
