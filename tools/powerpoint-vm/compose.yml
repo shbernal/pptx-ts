@@ -1,0 +1,47 @@
+# A Windows VM with desktop PowerPoint for the ts-pptx worker. See README.md.
+#
+# Every published port binds to 127.0.0.1 only. The worker on 8765 executes whatever script it
+# is sent, so it must never be reachable from another machine.
+#
+# Settings come from .env beside this file (copy .env.example). They are prefixed VM_ because
+# compose prefers the shell's environment over .env, and USERNAME is already set in most shells.
+name: ts-pptx-powerpoint
+services:
+  windows:
+    # Pinned: a new tag can change the answer file and the setup scripts this VM's provisioning
+    # relies on (autologon, the C:\OEM\install.bat hook, the \\host.lan\Data share).
+    image: dockurr/windows:6.06
+    container_name: ts-pptx-powerpoint
+    environment:
+      # Windows 11 Pro rather than the lighter LTSC edition: Microsoft 365 Apps support on LTSC
+      # is not clearly documented, and Pro is what PowerPoint users actually run.
+      VERSION: '11'
+      RAM_SIZE: ${VM_RAM_SIZE:-6G}
+      CPU_CORES: ${VM_CPU_CORES:-4}
+      DISK_SIZE: ${VM_DISK_SIZE:-64G}
+      USERNAME: ${VM_USERNAME:-Docker}
+      PASSWORD: ${VM_PASSWORD:?set VM_PASSWORD in tools/powerpoint-vm/.env}
+      # The keyboard layout Windows is installed with, such as es-ES. Read at install time only.
+      KEYBOARD: ${VM_KEYBOARD:-en-US}
+      # Keep install.bat's output in C:\OEM\install.log.
+      LOG: 'Y'
+      # The default NAT network forwards every port to Windows. This covers the user-mode
+      # fallback dockur takes when it cannot create a TAP device.
+      USER_PORTS: '8765'
+    devices:
+      - /dev/kvm
+      - /dev/net/tun
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - 127.0.0.1:8006:8006 # web viewer
+      - 127.0.0.1:3389:3389/tcp # RDP
+      - 127.0.0.1:3389:3389/udp
+      - 127.0.0.1:8765:8765 # the worker
+    volumes:
+      - ./storage:/storage # the disk image; gitignored
+      - ./oem:/oem # copied to C:\OEM; install.bat runs at the first logon
+      - ./shared:/shared # \\host.lan\Data in Windows; `pnpm ppt:vm:sync` writes the worker here
+    restart: 'no'
+    # dockur waits up to 105 s for Windows to shut down before forcing it.
+    stop_grace_period: 3m

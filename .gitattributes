@@ -22,3 +22,8 @@
 
 # SVG is text; keep it LF like the rest.
 *.svg  text eol=lf
+
+# cmd.exe misparses labels and `goto` in a batch file with LF endings, so the VM's
+# provisioning scripts keep CRLF in every working tree.
+tools/powerpoint-vm/oem/*.bat text eol=crlf
+tools/powerpoint-vm/oem/*.cmd text eol=crlf

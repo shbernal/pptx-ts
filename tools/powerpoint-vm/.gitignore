@@ -1,0 +1,5 @@
+# The VM's disk image and downloads.
+/storage/
+# Staged by `pnpm ppt:vm:sync`, including the worker token.
+/shared/
+.env

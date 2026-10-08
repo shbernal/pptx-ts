@@ -85,10 +85,13 @@ are in every aggregate the repo has.
 | `com/contract.mjs` | Library | The shape names, `ProgID`s and `PpActionType` values the COM decks, VBScripts and verifiers all have to agree on | `powerpoint-com-smoke.mjs` |
 | `com/decks.mjs` | Library | Builds the four decks the COM smoke drives, from the current `dist/` | `powerpoint-com-smoke.mjs` |
 | `com/vbs.mjs` | Library | The VBScript sources that drive desktop PowerPoint, one per deck | `powerpoint-com-smoke.mjs` |
+| `powerpoint/connection.mjs` | Library | The worker's URL and token, from the environment or `tools/powerpoint-vm/.env` | `powerpoint/health.mjs`, `powerpoint/vm-sync.mjs` |
+| `powerpoint/health.mjs` | Gate | Asks the worker for its health and prints the PowerPoint build it drives; fails when the worker is unreachable or sees no PowerPoint | manual (`ppt:health`) |
 | `powerpoint/job.mjs` | Library | The PowerPoint worker's job and result shapes, and the validation a job passes before anything touches the disk | `powerpoint/worker.mjs`; unit-tested |
 | `powerpoint/runner.mjs` | Library | Runs PowerPoint jobs one at a time, each in a fresh workspace, and returns the files a job created or changed | `powerpoint/worker.mjs`; unit-tested |
 | `powerpoint/windows.mjs` | Library | The Windows side effects around a PowerPoint run: clear the Resiliency keys, force-quit PowerPoint, read its build | `powerpoint/runner.mjs`, `powerpoint-com-smoke.mjs` |
-| `powerpoint/worker.mjs` | Service | HTTP worker that runs jobs against desktop PowerPoint, so a Windows VM serves as a remote oracle; it executes what it is sent, so it binds to the host only | manual, Windows (`--fake` anywhere); unit-tested |
+| `powerpoint/vm-sync.mjs` | Generator | Stages the worker and its token in the PowerPoint VM's shared folder and restarts a running VM | manual (`ppt:vm:sync`, `ppt:vm:up`) |
+| `powerpoint/worker.mjs` | Service | HTTP worker that runs jobs against desktop PowerPoint, so a Windows VM serves as a remote oracle; it executes what it is sent, so it binds to the host only | the PowerPoint VM's logon task, or by hand on Windows (`--fake` anywhere); unit-tested |
 | `comparison/corpus-data.mjs` | Library | Keeps each corpus's shared values out of the libraries' reach: the copy the page renders is cloned before any arm runs, and the live values are restored between arms | `comparison/probes.mjs`, `comparison/programs.mjs` |
 | `comparison/health.mjs` | Library | Activity, adoption and source size for both projects, from the GitHub and npm APIs and a shallow clone | `comparison/measure.mjs` |
 | `comparison/hygiene.mjs` | Library | What each library costs to install and to ship, from clean per-library installs | `comparison/measure.mjs` |

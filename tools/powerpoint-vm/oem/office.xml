@@ -1,0 +1,33 @@
+<!--
+  Office Deployment Tool configuration for the PowerPoint VM. install.bat runs
+  `setup.exe /configure office.xml` once, elevated.
+
+  O365ProPlusRetail is Microsoft 365 Apps for enterprise, the desktop apps that come with
+  Microsoft 365 E3/E5 and the education A3/A5 plans. A consumer (Personal, Family) or Business
+  Standard account activates a different product: change the ID to O365HomePremRetail or
+  O365BusinessRetail before the first boot.
+
+  Excel and Word stay: PowerPoint opens Excel to edit chart data, and embeds Word and Excel
+  objects. Everything else is left out.
+
+  Updates are off so the PowerPoint build that authors fixtures changes only on purpose.
+-->
+<Configuration>
+  <Add OfficeClientEdition="64" Channel="Current">
+    <Product ID="O365ProPlusRetail">
+      <Language ID="en-us" />
+      <ExcludeApp ID="Access" />
+      <ExcludeApp ID="Groove" />
+      <ExcludeApp ID="Lync" />
+      <ExcludeApp ID="OneDrive" />
+      <ExcludeApp ID="OneNote" />
+      <ExcludeApp ID="Outlook" />
+      <ExcludeApp ID="OutlookForWindows" />
+      <ExcludeApp ID="Publisher" />
+      <ExcludeApp ID="Teams" />
+    </Product>
+  </Add>
+  <Updates Enabled="FALSE" />
+  <Display Level="None" AcceptEULA="TRUE" />
+  <Property Name="FORCEAPPSHUTDOWN" Value="TRUE" />
+</Configuration>
