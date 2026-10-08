@@ -181,7 +181,7 @@ defineRegressionSuite('Shared chart fragments', [
 	},
 	{
 		// The category-axis half of the time-unit validation. The series-axis half is pinned in
-		// chart-bar3d-series-axis.test.js; this one had nothing.
+		// chart-bar3d-series-axis.test.ts; this one had nothing.
 		name: 'category-axis time units are lowercased, and an unrecognized one is dropped with a warning',
 		fn: async () => {
 			const ok = await chartFor(ChartType.line, [{ name: 'S', labels: ['a', 'b'], values: [1, 2] }], {

@@ -16,7 +16,7 @@ import { chartXml } from './chart-parts.ts'
 // The normalization half of `gen/define/chart.ts` -- everything `addChartDefinition` does to the
 // options bag before a byte of chart XML exists: the defensive copy, the enum corrections keyed to
 // chart type, the bounded-integer clamps, the plotArea/chartArea/dataBorder defaults, and the combo
-// pass that re-runs all of it per subchart. `chart-option-validation.test.js` covers the marker-size
+// pass that re-runs all of it per subchart. `chart-option-validation.test.ts` covers the marker-size
 // and gridLine scrubs; this covers the rest of the same surface.
 //
 // Assertions go through the emitted chart part rather than the options object, because the options
