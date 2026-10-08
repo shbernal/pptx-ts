@@ -215,7 +215,7 @@
 				"pptxgenjs": "no-api"
 			},
 			"source": {
-				"pptx-ts": "const CUBE_GLB = 'demos/common/media/cube.glb'\n\npres.addSlide().addModel3d({ path: CUBE_GLB, meterPerModelUnit: 0.5, x: 1, y: 1, w: 4, h: 3 })"
+				"pptx-ts": "const CUBE_GLB = 'test/assets/cube.glb'\n\npres.addSlide().addModel3d({ path: CUBE_GLB, meterPerModelUnit: 0.5, x: 1, y: 1, w: 4, h: 3 })"
 			}
 		},
 		{

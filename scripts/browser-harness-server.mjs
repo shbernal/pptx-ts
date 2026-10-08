@@ -47,7 +47,7 @@ const MOUNTS = [
 	'node_modules/opentype.js/dist/',
 	'test/browser/harness/',
 	// Media and font fixtures, reused rather than duplicated as new binaries.
-	'demos/common/images/',
+	'test/assets/',
 	'test/read/fixtures/fonts/',
 ]
 

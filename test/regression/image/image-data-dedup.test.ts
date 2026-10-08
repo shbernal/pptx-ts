@@ -106,7 +106,7 @@ defineRegressionSuite('Image base64 data de-duplication', [
 		// to record what the Node runtime actually does with it.
 		name: 'an SVG placed twice embeds one svg part and one png fallback',
 		fn: async () => {
-			const svgPath = 'demos/common/images/lock-green.svg'
+			const svgPath = 'test/assets/lock-green.svg'
 			const oneSlide = await build((p) => {
 				const s = p.addSlide()
 				s.addImage({ path: svgPath, x: 1, y: 1, w: 1, h: 1 })

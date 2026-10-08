@@ -44,7 +44,7 @@ import type TsPptx from '../../../dist/node.js'
 //     a 1-based `_slideNum`. Dead here, load-bearing where it was copied from.
 
 /** A jpg on disk, so a cover image can be supplied by `path` with no `data` alongside it. */
-const COVER_JPG = 'demos/common/images/cc_logo.jpg'
+const COVER_JPG = 'test/assets/cc_logo.jpg'
 
 /** Build, capturing library warnings (`log.ts` routes every one through `console.warn`). */
 async function buildCapturingWarnings(buildFn: (pres: TsPptx) => unknown) {

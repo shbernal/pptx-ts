@@ -7,12 +7,12 @@ describe('repoReferences', () => {
 	test('picks up the repo files a recipe names, and nothing that is not a file', () => {
 		const source = [
 			"$REPO = (Resolve-Path (Join-Path $PSScriptRoot '..\\..\\..\\..')).Path",
-			"$logo = Join-Path $REPO 'demos\\common\\images\\cc_logo.jpg'",
+			"$logo = Join-Path $REPO 'test\\assets\\cc_logo.jpg'",
 			"$FIX = Join-Path $REPO 'test\\read\\fixtures'",
 			"$SCRATCH = Join-Path $REPO '.tmp'",
 			"$gone = Join-Path $REPO 'no\\such\\file.png'",
 		].join('\n')
-		expect(repoReferences(source)).toEqual(['demos/common/images/cc_logo.jpg'])
+		expect(repoReferences(source)).toEqual(['test/assets/cc_logo.jpg'])
 	})
 })
 

@@ -381,7 +381,7 @@ defineRegressionSuite('Table cell image (blip) fills', [
 						w: 6,
 						h: 3,
 						headerRow: { fill: { type: 'image', image: { data: PNG_1X1 } } },
-						columns: [{}, { fill: { image: { path: 'demos/common/images/cc_logo.jpg' } } }],
+						columns: [{}, { fill: { image: { path: 'test/assets/cc_logo.jpg' } } }],
 					}
 				)
 			})

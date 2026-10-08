@@ -310,7 +310,7 @@ d0349b049dec32cce83e2f04967e94e4484801cb6a7a972db3d9bf5c33a69996  media/tiny.mp4
   oracle for picture fill of a table cell. Authored via desktop PowerPoint COM on
   Windows (2026-07-27, `authoring/author-table-cell-image-fill.ps1`) with
   `Cell.Shape.Fill.UserPicture()`; the source image is the repo-local
-  `demos/common/images/cc_logo.jpg`, so no new binary asset entered `test/`. The table
+  `test/assets/cc_logo.jpg`, an image the regression suites already use. The table
   style is deliberately **"No Style, No Grid"**
   (`{2D5ABB26-0587-4C30-8999-92F81FD0307C}`), so every fill in the slide XML is one the
   fixture set explicitly rather than one a style contributed. Row by row:

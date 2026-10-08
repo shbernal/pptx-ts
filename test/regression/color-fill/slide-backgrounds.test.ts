@@ -57,7 +57,7 @@ defineRegressionSuite('Slide backgrounds [legacy bug-12]', [
 		fn: async () => {
 			const { zip } = await build((p) => {
 				const s = p.addSlide()
-				s.background = { path: 'demos/common/images/cc_logo.jpg' }
+				s.background = { path: 'test/assets/cc_logo.jpg' }
 			})
 			const rels = relsOf(await readEntry(zip, 'ppt/slides/_rels/slide1.xml.rels')).filter((rel) =>
 				rel.Type.endsWith('/image')

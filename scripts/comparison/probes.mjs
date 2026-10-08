@@ -45,7 +45,7 @@ const OLE_BLOB_B64 = Buffer.from('ts-pptx comparison probe payload').toString('b
 const OMML_INLINE = '<m:oMath><m:r><m:t>n-1</m:t></m:r></m:oMath>'
 
 /** A real glTF binary, so the deck a probe leaves behind is one PowerPoint opens. */
-const CUBE_GLB = path.join(ROOT, 'demos', 'common', 'media', 'cube.glb')
+const CUBE_GLB = path.join(ROOT, 'test', 'assets', 'cube.glb')
 /** A real font file, for the same reason: an embedded face PowerPoint will not bind is not evidence. */
 const SILKSCREEN_TTF = path.join(ROOT, 'test', 'read', 'fixtures', 'fonts', 'Silkscreen-Regular.ttf')
 

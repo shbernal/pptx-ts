@@ -23,10 +23,10 @@ import { buildDeckBase64, DECKS } from './decks.mjs'
  * arms are reached the way a consumer would reach them.
  */
 const ASSETS = {
-	png: '/demos/common/images/logo_square.png',
-	svg: '/demos/common/images/lock-green.svg',
+	png: '/test/assets/logo_square.png',
+	svg: '/test/assets/lock-green.svg',
 	font: '/test/read/fixtures/fonts/Silkscreen-Regular.ttf',
-	missingPng: '/demos/common/images/no-such-image.png',
+	missingPng: '/test/assets/no-such-image.png',
 	missingFont: '/test/read/fixtures/fonts/no-such-font.ttf',
 	brokenSvg: '/test/browser/harness/broken.svg',
 	zeroSizeSvg: '/test/browser/harness/zero-size.svg',

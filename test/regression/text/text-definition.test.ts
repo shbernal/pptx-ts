@@ -68,8 +68,8 @@ const JPG_DATA =
 const SVG_DATA =
 	'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiLz4='
 // Real files, for the path-only halves. Both are read from disk during export, so they have to exist.
-const JPG_PATH = 'demos/common/images/cc_logo.jpg'
-const SVG_PATH = 'demos/common/images/lock-green.svg'
+const JPG_PATH = 'test/assets/cc_logo.jpg'
+const SVG_PATH = 'test/assets/lock-green.svg'
 
 /** Build, capturing library diagnostics as `{ code, message }` pairs. */
 async function buildCapturingLogs(buildFn: (pres: TsPptx) => unknown) {

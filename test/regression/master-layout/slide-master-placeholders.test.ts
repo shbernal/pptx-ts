@@ -67,7 +67,7 @@ defineRegressionSuite('Seeded layout placeholders keep their own rels', [
 		name: 'an image-fill placeholder loaded from a path, beside slide hyperlinks',
 		fn: async () => {
 			const { zip } = await build((p) => {
-				p.defineSlideMaster(seededMaster({ fill: { image: { path: 'demos/common/images/cc_logo.jpg' } } }))
+				p.defineSlideMaster(seededMaster({ fill: { image: { path: 'test/assets/cc_logo.jpg' } } }))
 				const s = p.addSlide({ masterTitle: 'SEEDED' })
 				s.addText('one', { x: 1, y: 5, w: 3, h: 0.5, hyperlink: { url: 'https://example.invalid/1' } })
 				s.addText('two', { x: 4, y: 5, w: 3, h: 0.5, hyperlink: { url: 'https://example.invalid/2' } })

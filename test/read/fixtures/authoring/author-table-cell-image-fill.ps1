@@ -4,7 +4,7 @@ $ErrorActionPreference = 'Stop'
 $REPO = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')).Path
 $FIX  = Join-Path $REPO 'test\read\fixtures'
 $out  = Join-Path $FIX 'table-cell-image-fill.pptx'
-$img  = Join-Path $REPO 'demos\common\images\cc_logo.jpg'
+$img  = Join-Path $REPO 'test\assets\cc_logo.jpg'
 
 if (-not (Test-Path $img)) { throw "source image not found: $img" }
 if (Test-Path $out) { Remove-Item $out -Force }

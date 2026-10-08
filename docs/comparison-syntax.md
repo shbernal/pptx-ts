@@ -293,7 +293,7 @@ pres.addSlide().addOleObject({ data: OLE_BLOB_B64, extn: 'bin', x: 1, y: 1, w: 4
 **pptx-ts**
 
 ```js
-const CUBE_GLB = 'demos/common/media/cube.glb'
+const CUBE_GLB = 'test/assets/cube.glb'
 
 pres.addSlide().addModel3d({ path: CUBE_GLB, meterPerModelUnit: 0.5, x: 1, y: 1, w: 4, h: 3 })
 ```

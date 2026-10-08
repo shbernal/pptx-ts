@@ -63,7 +63,7 @@ describe('literal', () => {
 	// The alternative is a committed snapshot carrying the directory layout of whichever
 	// machine measured it, which would also make the page's own diff machine-dependent.
 	test('writes a path under the repository root relative to it, with forward slashes', () => {
-		expect(literal(path.join(ROOT, 'demos', 'common', 'media', 'cube.glb'))).toBe("'demos/common/media/cube.glb'")
+		expect(literal(path.join(ROOT, 'test', 'assets', 'cube.glb'))).toBe("'test/assets/cube.glb'")
 	})
 
 	test('renders the nested shape a chart series has', () => {

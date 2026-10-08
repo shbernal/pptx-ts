@@ -150,7 +150,7 @@ defineRegressionSuite('Chart area and plot area fills', [
 		name: "type 'image' is not supported on a chart and says so instead of failing silently",
 		fn: async () => {
 			const { result, codes } = await captureDiagnostics(() =>
-				fillsFor({ chartArea: { fill: { type: 'image', image: { path: 'demos/media/starlabs.png' } } } })
+				fillsFor({ chartArea: { fill: { type: 'image', image: { path: 'test/assets/cc_logo.jpg' } } } })
 			)
 			assertEqual(result.space, '<a:noFill/>', 'the chart area falls back to no fill')
 			assert(

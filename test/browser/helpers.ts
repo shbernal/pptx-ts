@@ -137,10 +137,10 @@ export async function buildDeckInBrowser(page: Page): Promise<{ bytes: Uint8Arra
  * difference between the two sides of every cross-runtime comparison below.
  */
 export const NODE_ASSETS = {
-	png: path.join(ROOT, 'demos', 'common', 'images', 'logo_square.png'),
-	svg: path.join(ROOT, 'demos', 'common', 'images', 'lock-green.svg'),
+	png: path.join(ROOT, 'test', 'assets', 'logo_square.png'),
+	svg: path.join(ROOT, 'test', 'assets', 'lock-green.svg'),
 	font: path.join(ROOT, 'test', 'read', 'fixtures', 'fonts', 'Silkscreen-Regular.ttf'),
-	missingPng: path.join(ROOT, 'demos', 'common', 'images', 'no-such-image.png'),
+	missingPng: path.join(ROOT, 'test', 'assets', 'no-such-image.png'),
 	missingFont: path.join(ROOT, 'test', 'read', 'fixtures', 'fonts', 'no-such-font.ttf'),
 	brokenSvg: path.join(ROOT, 'test', 'browser', 'harness', 'broken.svg'),
 	zeroSizeSvg: path.join(ROOT, 'test', 'browser', 'harness', 'zero-size.svg'),
