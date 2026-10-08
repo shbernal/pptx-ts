@@ -284,30 +284,16 @@ const crossed: TableCell = { text: '', options: { diagonal: { tlToBr: { type: 's
 
 ## Merge cells
 
-```ts
+```ts live
 slide.addTable(
   [
     [{ text: 'Wide', options: { colspan: 3 } }],
     [{ text: 'Tall', options: { rowspan: 2 } }, { text: 'B2' }, { text: 'C2' }],
     [{ text: 'B3' }, { text: 'C3' }],
   ],
-  { x: 1, y: 1, w: 9 },
+  { x: 1, y: 1, w: 8, h: 2, border: { type: 'solid', color: '999999' } },
 )
 ```
-
-<svg role="img" aria-label="The merged table from the example: Wide spans the three columns of the first row, Tall spans the first column of the second and third rows, and B2, C2, B3 and C3 fill the rest." viewBox="0 0 240 100" width="240" style="max-width:100%;height:auto">
-<rect x="10" y="10" width="220" height="80" fill="none" stroke="currentColor" stroke-width="1.5"/>
-<line x1="10" y1="37" x2="230" y2="37" stroke="currentColor" stroke-width="1.5"/>
-<line x1="83" y1="63" x2="230" y2="63" stroke="currentColor" stroke-width="1.5"/>
-<line x1="83" y1="37" x2="83" y2="90" stroke="currentColor" stroke-width="1.5"/>
-<line x1="157" y1="37" x2="157" y2="90" stroke="currentColor" stroke-width="1.5"/>
-<text x="120" y="28" fill="currentColor" font-size="11" font-family="monospace" text-anchor="middle">Wide</text>
-<text x="46" y="67" fill="currentColor" font-size="11" font-family="monospace" text-anchor="middle">Tall</text>
-<text x="120" y="54" fill="currentColor" font-size="11" font-family="monospace" text-anchor="middle">B2</text>
-<text x="193" y="54" fill="currentColor" font-size="11" font-family="monospace" text-anchor="middle">C2</text>
-<text x="120" y="81" fill="currentColor" font-size="11" font-family="monospace" text-anchor="middle">B3</text>
-<text x="193" y="81" fill="currentColor" font-size="11" font-family="monospace" text-anchor="middle">C3</text>
-</svg>
 
 - Put `colspan` or `rowspan` on the cell that starts the span.
 - A row under a `rowspan` leaves out the covered cell. The library builds the full grid.
