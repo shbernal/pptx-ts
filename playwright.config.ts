@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test'
+import { SITE_BASE } from './docs/.vitepress/site-base.ts'
 
 /**
  * The browser lane.
@@ -51,10 +52,10 @@ const HARNESS_PORT = 4174
 // the same port gets nothing: a 60s webServer timeout with no clue why.
 const HOST = '127.0.0.1'
 
-// The published site's own base (`docs/.vitepress/config.mts`), which `vitepress preview`
-// honours — the site is NOT at `/`. The demos page is a route under it, so the baseURL is
-// the site root and the spec navigates to `./demos`.
-const BASE_URL = `http://${HOST}:${PORT}/pptx-ts/`
+// The site's own base, imported from the module the site config builds with, which
+// `vitepress preview` honours: the site is NOT at `/`. The demos page is a route under it, so
+// the baseURL is the site root and the spec navigates to `./demos`.
+const BASE_URL = `http://${HOST}:${PORT}${SITE_BASE}`
 
 // The harness page sits at its real repo path, so the relative `../../../dist/browser.js`
 // inside `harness.mjs` is the same specifier on disk and over HTTP — one path that both

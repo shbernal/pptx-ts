@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { type DefaultTheme, defineConfig } from 'vitepress'
 import { mermaidFences } from '../../www/diagrams/fence'
 import { liveExampleModules, liveFencePlugin } from '../../www/live/fence'
+import { SITE_BASE } from './site-base'
 
 const configDir = path.dirname(fileURLToPath(import.meta.url))
 const docsDir = path.resolve(configDir, '..')
@@ -60,7 +61,7 @@ function readApiSidebar(): DefaultTheme.SidebarItem[] | undefined {
 const apiSidebar = readApiSidebar()
 
 export default defineConfig({
-	base: process.env.VITEPRESS_BASE ?? '/pptx-ts/',
+	base: SITE_BASE,
 	cleanUrls: true,
 	description: docsConfig.description,
 	lang: 'en-US',

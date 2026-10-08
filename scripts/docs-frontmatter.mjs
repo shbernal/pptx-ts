@@ -237,7 +237,7 @@ export function githubBlobBase(docsDir) {
 
 /**
  * The URL prefix the published site actually answers on, derived rather than restated: the
- * GitHub Pages host comes from `repository`, the path from the VitePress `base`. Writing the
+ * GitHub Pages host comes from `repository`, the path from `SITE_BASE` in `docs/.vitepress/site-base.ts`. Writing the
  * value out a second time is what let `llms.txt` drift to a host that never existed, which is
  * why the llms generator and `docs-check.mjs` both read it from here. `DOCS_BASE_URL` overrides it.
  * @param {string} docsDir - absolute path to the docs directory
@@ -249,9 +249,11 @@ export function canonicalBase(docsDir) {
 	const slug = githubSlug(docsDir)
 	if (!slug) return { base: null, errors: ['package.json: cannot derive the GitHub Pages host from `repository`'] }
 
-	const config = readFileSync(path.join(docsDir, '.vitepress', 'config.mts'), 'utf8')
-	const configured = config.match(/^\s*base:.*?'([^']+)'/m)
-	if (!configured) return { base: null, errors: ['docs/.vitepress/config.mts: cannot read the `base` option'] }
+	// `docs/.vitepress/site-base.ts` is the one definition `config.mts` and `playwright.config.ts`
+	// both import.
+	const source = readFileSync(path.join(docsDir, '.vitepress', 'site-base.ts'), 'utf8')
+	const configured = source.match(/^export const SITE_BASE = .*?'([^']+)'/m)
+	if (!configured) return { base: null, errors: ['docs/.vitepress/site-base.ts: cannot read the default `SITE_BASE`'] }
 
 	// An unreadable `base` collapses to `/`, which the slug check below then rejects loudly.
 	const base = (process.env.VITEPRESS_BASE ?? configured[1] ?? '').replace(/\/?$/, '/')
@@ -259,7 +261,9 @@ export function canonicalBase(docsDir) {
 	// A project Pages site is served under /<repo>/, so a `base` that disagrees means the whole
 	// site 404s no matter how well-formed the routes underneath it are.
 	if (!process.env.VITEPRESS_BASE && base !== `/${slug[2]}/`) {
-		errors.push(`docs/.vitepress/config.mts: \`base\` is \`${base}\`, but Pages serves this repo at \`/${slug[2]}/\``)
+		errors.push(
+			`docs/.vitepress/site-base.ts: \`SITE_BASE\` is \`${base}\`, but Pages serves this repo at \`/${slug[2]}/\``
+		)
 	}
 	return { base: `https://${slug[1]}.github.io${base}`, errors }
 }
