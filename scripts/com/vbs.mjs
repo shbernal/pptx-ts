@@ -3,11 +3,16 @@
  *
  * Every builder returns a complete `.vbs` source string: {@link vbsOpenHeader} opens the deck and
  * prints `OPEN_OK` or `OPEN_ERR`, the middle reads the construct under test back out over COM, and
- * {@link vbsFooter} closes and quits. The entry point writes the string to a temp file, runs it
- * under `cscript`, and hands the stdout lines to a verifier.
+ * {@link vbsFooter} closes and quits. The entry point ships the string and the deck as one
+ * PowerPoint job, runs it under `cscript`, and hands the stdout lines to a verifier.
  *
- * String building, not string escaping: every value spliced in here is a repo constant or a path
- * this script made, never caller input.
+ * No absolute path is spliced in. A builder takes the deck's file name, the script finds the deck
+ * beside itself through `WScript.ScriptFullName`, and every PNG it exports is written beside it
+ * too and named relative to it on stdout. So the same script runs in whatever workspace the job
+ * lands in, on this machine or in a VM, and the PNGs come back as the job's output files.
+ *
+ * String building, not string escaping: every value spliced in here is a repo constant or a file
+ * name checked by {@link deckFileName}, never caller input.
  */
 
 import { MODEL3D_EXPORT, PRSTGEOM_CASES, PRSTGEOM_EXPORT } from './contract.mjs'
@@ -22,15 +27,27 @@ import { MODEL3D_EXPORT, PRSTGEOM_CASES, PRSTGEOM_EXPORT } from './contract.mjs'
  * itself enumerates zero shapes under a headless open too, which is how that was pinned down.)
  */
 /**
- * @param {string} pptxFile
+ * A deck's file name, checked to be one a VBScript string literal can carry as is.
+ * @param {string} name
+ * @returns {string}
+ */
+export function deckFileName(name) {
+	if (!/^[\w.-]+\.pptx$/i.test(name)) throw new Error(`not a plain .pptx file name: ${JSON.stringify(name)}`)
+	return name
+}
+
+/**
+ * @param {string} deckName the deck's file name, in the script's own folder
  * @param {boolean} [withWindow] open with a window, for the features a headless open will not instantiate
  * @returns {string}
  */
-export function vbsOpenHeader(pptxFile, withWindow = false) {
+export function vbsOpenHeader(deckName, withWindow = false) {
 	// WithWindow:=msoFalse (0) keeps it headless; ReadOnly avoids touching the file.
 	const openArgs = withWindow ? '0, 0, -1' : '-1, 0, 0'
 	return `Option Explicit
-Dim ppt, pres, sld, shp
+Dim ppt, pres, sld, shp, fso, here
+Set fso = CreateObject("Scripting.FileSystemObject")
+here = fso.GetParentFolderName(WScript.ScriptFullName)
 On Error Resume Next
 Set ppt = CreateObject("PowerPoint.Application")
 If Err.Number <> 0 Then
@@ -38,7 +55,7 @@ If Err.Number <> 0 Then
   WScript.Quit 3
 End If
 Err.Clear
-Set pres = ppt.Presentations.Open("${pptxFile.replace(/\\/g, '\\\\')}", ${openArgs})
+Set pres = ppt.Presentations.Open(fso.BuildPath(here, "${deckFileName(deckName)}"), ${openArgs})
 If Err.Number <> 0 Then
   WScript.StdOut.WriteLine "OPEN_ERR\t" & Hex(Err.Number) & "\t" & Err.Description
   ppt.Quit
@@ -56,11 +73,11 @@ WScript.Quit 0
 `
 }
 
-/** @param {string} pptxFile @returns {string} */
-export function buildNavVbs(pptxFile) {
+/** @param {string} deckName @returns {string} */
+export function buildNavVbs(deckName) {
 	// Emits tab-separated `ACTION` lines (slideIdx, objectName, resolvedActionNum).
 	return (
-		vbsOpenHeader(pptxFile) +
+		vbsOpenHeader(deckName) +
 		`Dim act
 For Each sld In pres.Slides
   For Each shp In sld.Shapes
@@ -77,12 +94,12 @@ Next
 	)
 }
 
-/** @param {string} pptxFile @returns {string} */
-export function buildGeomVbs(pptxFile) {
+/** @param {string} deckName @returns {string} */
+export function buildGeomVbs(deckName) {
 	// Emits one tab-separated `CONN` line per connector shape:
 	//   CONN <name> <beginConnected(-1/0)> <beginConnectedShapeName> <beginConnectionSite>
 	return (
-		vbsOpenHeader(pptxFile) +
+		vbsOpenHeader(deckName) +
 		`Dim cf, tgt
 For Each sld In pres.Slides
   For Each shp In sld.Shapes
@@ -99,12 +116,12 @@ Next
 	)
 }
 
-/** @param {string} pptxFile @returns {string} */
-export function buildOleVbs(pptxFile) {
+/** @param {string} deckName @returns {string} */
+export function buildOleVbs(deckName) {
 	// Emits one tab-separated `OLE` line per embedded-object shape: name, resolved ProgID.
 	// msoEmbeddedOLEObject = 7, msoLinkedOLEObject = 10.
 	return (
-		vbsOpenHeader(pptxFile, true) +
+		vbsOpenHeader(deckName, true) +
 		`Dim i, j
 For i = 1 To pres.Slides.Count
   Set sld = pres.Slides(i)
@@ -120,14 +137,14 @@ Next
 	)
 }
 
-/** @param {string} pptxFile @returns {string} */
-export function buildModel3dVbs(pptxFile) {
+/** @param {string} deckName @returns {string} */
+export function buildModel3dVbs(deckName) {
 	// Emits `M3D <name> <Shape.Type> <Model3D.CameraPositionZ>` per shape, then exports slide 1 to
 	// PNG so the caller can prove the model actually rasterized. A window is needed here for the
 	// same reason as OLE: a headless PowerPoint does not instantiate the 3D renderer.
-	const png = pptxFile.replace(/\.pptx$/i, '.png').replace(/\\/g, '\\\\')
+	const png = deckFileName(deckName).replace(/\.pptx$/i, '.png')
 	return (
-		vbsOpenHeader(pptxFile, true) +
+		vbsOpenHeader(deckName, true) +
 		`Dim j, camZ
 Set sld = pres.Slides(1)
 For j = 1 To sld.Shapes.Count
@@ -139,7 +156,7 @@ For j = 1 To sld.Shapes.Count
   WScript.StdOut.WriteLine "M3D" & vbTab & shp.Name & vbTab & shp.Type & vbTab & camZ
 Next
 Err.Clear
-sld.Export "${png}", "PNG", ${MODEL3D_EXPORT.w}, ${MODEL3D_EXPORT.h}
+sld.Export fso.BuildPath(here, "${png}"), "PNG", ${MODEL3D_EXPORT.w}, ${MODEL3D_EXPORT.h}
 If Err.Number <> 0 Then
   WScript.StdOut.WriteLine "EXPORT_ERR" & vbTab & Hex(Err.Number) & vbTab & Err.Description
 Else
@@ -150,20 +167,20 @@ End If
 	)
 }
 
-/** @param {string} pptxFile @returns {string} */
-export function buildPresetGeomVbs(pptxFile) {
-	// Exports every slide to `<deck>-<n>.png` and emits one `PNG <n> <path>` line each. Nothing is
+/** @param {string} deckName @returns {string} */
+export function buildPresetGeomVbs(deckName) {
+	// Exports every slide to `<deck>-<n>.png` and emits one `PNG <n> <name>` line each. Nothing is
 	// read back over COM on purpose: `Shape.Adjustments` reports the *stored* guide, out-of-range
 	// value and all, so it cannot answer what PowerPoint paints. Only the pixels can.
-	const base = pptxFile.replace(/\.pptx$/i, '').replace(/\\/g, '\\\\')
+	const base = deckFileName(deckName).replace(/\.pptx$/i, '')
 	return (
-		vbsOpenHeader(pptxFile) +
+		vbsOpenHeader(deckName) +
 		`Dim i, png
 For i = 1 To pres.Slides.Count
   png = "${base}-" & i & ".png"
   Err.Clear
   On Error Resume Next
-  pres.Slides(i).Export png, "PNG", ${PRSTGEOM_EXPORT.w}, ${PRSTGEOM_EXPORT.h}
+  pres.Slides(i).Export fso.BuildPath(here, png), "PNG", ${PRSTGEOM_EXPORT.w}, ${PRSTGEOM_EXPORT.h}
   If Err.Number <> 0 Then
     WScript.StdOut.WriteLine "EXPORT_ERR" & vbTab & i & vbTab & Hex(Err.Number) & vbTab & Err.Description
   Else

@@ -55,6 +55,10 @@ would change it in the middle of a series. To move to a newer build on purpose, 
 | `pnpm ppt:vm:down` | Shuts Windows down cleanly and removes the container. The disk stays in `storage/` |
 | `pnpm ppt:vm:sync` | Re-stages the worker from the repo and restarts the VM if it is running |
 | `pnpm ppt:health` | Reports the worker's PowerPoint build, or why it cannot be reached |
+| `pnpm run test:com` | Runs the PowerPoint COM smoke through the worker |
+
+`.env` sets `TSPPTX_POWERPOINT_URL`, which sends `test:com` to the worker instead of looking for
+a local PowerPoint. The environment variable of the same name overrides it.
 
 ### Re-syncing the worker
 

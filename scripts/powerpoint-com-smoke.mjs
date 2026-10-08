@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * PowerPoint desktop COM smoke test (Windows only).
+ * PowerPoint desktop COM smoke test: Windows with PowerPoint, or any OS through the worker.
  *
  * CI's XML/schema checks can't catch three classes of desktop regression:
  *   1. Files that PowerPoint reports as corrupt and offers to "repair" (0x80070570),
@@ -44,14 +44,20 @@
  *   node scripts/powerpoint-com-smoke.mjs --keep          # ...and keep the generated .pptx files
  *   node scripts/powerpoint-com-smoke.mjs --file deck.pptx # corruption-open check on an existing deck
  *
- * Requirements: Windows with PowerPoint installed. No-ops with a clear message elsewhere.
+ * Each deck runs as one PowerPoint job (`powerpoint/client.mjs`): the deck and its VBScript go
+ * in, the script's stdout and any PNG it exported come back. With `TSPPTX_POWERPOINT_URL` set the
+ * job goes to the worker, typically the VM in `tools/powerpoint-vm/` on a Linux host; otherwise
+ * it runs against this machine's own PowerPoint, on Windows. With neither, the run is a SKIP,
+ * or a failure under `TSPPTX_COM_SMOKE=required`. A worker that is set but unreachable, or that
+ * refuses the token, is always a failure.
  */
 import os from 'node:os'
+import { mkdtempSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { decodePng } from './png-utils.mjs'
-import { collect, parseCliOrExit, skipOrFail } from './script-utils.mjs'
-import { clearResiliency } from './powerpoint/windows.mjs'
+import { parseCliOrExit, skipOrFail } from './script-utils.mjs'
+import { TransportError, encodeFiles, resolveTransport, returnedFiles, runJob } from './powerpoint/client.mjs'
 import {
 	EXPECTED_ACTION,
 	EXPECTED_OLE_PROGID,
@@ -83,7 +89,7 @@ import {
 } from './com/vbs.mjs'
 
 // --- args -------------------------------------------------------------------
-const USAGE = `PowerPoint COM smoke — open generated decks in desktop PowerPoint (Windows only).
+const USAGE = `PowerPoint COM smoke: open generated decks in desktop PowerPoint, locally or through the worker.
 
   pnpm run test:com
   pnpm run test:com -- --keep
@@ -95,7 +101,10 @@ Options:
   -h, --help      show this message
 
 Environment:
-  TSPPTX_COM_SMOKE   set to "required" to fail, not SKIP, when PowerPoint is unavailable`
+  TSPPTX_COM_SMOKE          set to "required" to fail, not SKIP, when PowerPoint is unavailable
+  TSPPTX_POWERPOINT_URL     drive the PowerPoint worker at this URL instead of a local PowerPoint
+  TSPPTX_POWERPOINT_TOKEN   the worker's token
+The last two fall back to tools/powerpoint-vm/.env.`
 
 const { values } = parseCliOrExit(process.argv.slice(2), {
 	usage: USAGE,
@@ -104,33 +113,46 @@ const { values } = parseCliOrExit(process.argv.slice(2), {
 const KEEP = values.keep
 const EXISTING_FILE = values.file ?? null
 
-if (os.platform() !== 'win32') {
-	process.exit(
-		skipOrFail('TSPPTX_COM_SMOKE', 'the PowerPoint COM smoke is Windows-only (platform: ' + os.platform() + ').')
-	)
-}
+/** Where a job puts the deck and its script. Returned files are named relative to it. */
+const JOB_DIR = 'com-smoke'
 
 /**
- * Write a VBS for `file`, drive PowerPoint (retry once), and return the raw cscript result.
+ * What one deck's job printed, and the files its script wrote beside itself, by file name.
+ * @typedef {{code: number, out: string, err: string, files: Map<string, Buffer>}} DeckRun
+ */
+
+/**
+ * Drive PowerPoint on one deck as a job (retry once) and return what came back.
+ * @param {import('./powerpoint/client.mjs').Transport} transport
  * @param {string} label
  * @param {string} file the deck to open
- * @param {(file: string) => string} buildVbs
- * @returns {Promise<{code: number, out: string, err: string}>}
+ * @param {(deckName: string) => string} buildVbs
+ * @returns {Promise<DeckRun>}
  */
-async function driveDeck(label, file, buildVbs) {
-	const vbsFile = path.join(os.tmpdir(), `ts-pptx-com-smoke-${label}-${process.pid}.vbs`)
-	await fs.writeFile(vbsFile, buildVbs(file))
-	// cscript can transiently fail if PowerPoint is mid-launch; retry once.
-	/** @type {{code: number, out: string, err: string}} */
-	let result = { code: -1, out: '', err: 'cscript was never run' }
+async function driveDeck(transport, label, file, buildVbs) {
+	const deckName = `${label}.pptx`
+	const entry = `${JOB_DIR}/${label}.vbs`
+	const job = {
+		runner: /** @type {const} */ ('cscript'),
+		entry,
+		files: encodeFiles({ [`${JOB_DIR}/${deckName}`]: await fs.readFile(file), [entry]: buildVbs(deckName) }),
+	}
+	// cscript can transiently fail if PowerPoint is mid-launch; retry once. The runner clears the
+	// Resiliency keys before each attempt.
+	/** @type {DeckRun} */
+	let run = { code: -1, out: '', err: 'cscript was never run', files: new Map() }
 	for (let attempt = 1; attempt <= 2; attempt++) {
-		clearResiliency()
-		result = await collect('cscript', ['//nologo', '//B', vbsFile])
-		if (result.code !== -1 && !/OPEN_ERR/.test(result.out)) break
+		const result = await runJob(transport, job)
+		/** @type {Map<string, Buffer>} */
+		const files = new Map()
+		for (const [rel, content] of returnedFiles(result)) {
+			if (rel.startsWith(JOB_DIR + '/')) files.set(rel.slice(JOB_DIR.length + 1), content)
+		}
+		run = { code: result.exitCode, out: result.stdout, err: result.stderr, files }
+		if (run.code !== -1 && !/OPEN_ERR/.test(run.out)) break
 		if (attempt === 1) console.log(`[${label}] first attempt failed; retrying once...`)
 	}
-	await fs.rm(vbsFile, { force: true })
-	return result
+	return run
 }
 
 // --- 4. verifiers -----------------------------------------------------------
@@ -236,12 +258,13 @@ function verifyOle(lines) {
 }
 
 /**
- * Verifier for the 3D-model deck. Async because it reads back the exported PNG — which is the
- * only check here that distinguishes "PowerPoint resolved a model" from "PowerPoint drew one".
+ * Verifier for the 3D-model deck. It reads back the exported PNG, which is the only check here
+ * that distinguishes "PowerPoint resolved a model" from "PowerPoint drew one".
  * @param {string[]} lines
- * @returns {Promise<string[]>}
+ * @param {Map<string, Buffer>} files the files the script exported, by name
+ * @returns {string[]}
  */
-async function verifyModel3d(lines) {
+function verifyModel3d(lines, files) {
 	/** @type {string[]} */
 	const failures = []
 	const row = lines
@@ -273,19 +296,22 @@ async function verifyModel3d(lines) {
 		failures.push(`3D model: slide export failed (${exportErr || 'no EXPORT line'})`)
 		return failures
 	}
-	const pngPath = exportLine.split('\t')[1]
-	if (!pngPath) {
-		failures.push('3D model: EXPORT line carries no path')
+	const pngName = exportLine.split('\t')[1]
+	if (!pngName) {
+		failures.push('3D model: EXPORT line carries no file name')
+		return failures
+	}
+	const png = files.get(pngName)
+	if (!png) {
+		failures.push(`3D model: the exported ${pngName} did not come back from the job`)
 		return failures
 	}
 	let img
 	try {
-		img = decodePng(await fs.readFile(pngPath))
+		img = decodePng(png)
 	} catch (e) {
 		failures.push(`3D model: could not read the exported PNG (${String(e)})`)
 		return failures
-	} finally {
-		if (!KEEP) await fs.rm(pngPath, { force: true })
 	}
 
 	// The frame, in exported pixels, from the layout the deck was built at.
@@ -335,9 +361,10 @@ async function verifyModel3d(lines) {
  * are not. The second is the sensitivity check: without it, six slides that failed to render
  * anything would satisfy every equality in the set.
  * @param {string[]} lines
- * @returns {Promise<string[]>}
+ * @param {Map<string, Buffer>} files the files the script exported, by name
+ * @returns {string[]}
  */
-async function verifyPresetGeom(lines) {
+function verifyPresetGeom(lines, files) {
 	/** @type {string[]} */
 	const failures = []
 	const exportErr = lines.find((l) => l.startsWith('EXPORT_ERR'))
@@ -364,8 +391,10 @@ async function verifyPresetGeom(lines) {
 	/** @type {Map<string, string>} */
 	const pixels = new Map()
 	try {
-		for (const [label, png] of pngByLabel) {
-			const img = decodePng(await fs.readFile(png))
+		for (const [label, pngName] of pngByLabel) {
+			const png = files.get(pngName)
+			if (!png) throw new Error(`the exported ${pngName} did not come back from the job`)
+			const img = decodePng(png)
 			/** @type {number[]} */
 			const flat = []
 			for (let y = 0; y < img.h; y++) for (let x = 0; x < img.w; x++) flat.push(...img.rgb(x, y))
@@ -374,8 +403,6 @@ async function verifyPresetGeom(lines) {
 	} catch (e) {
 		failures.push(`preset geometry: could not read an exported PNG (${String(e)})`)
 		return failures
-	} finally {
-		if (!KEEP) for (const png of pngByLabel.values()) await fs.rm(png, { force: true })
 	}
 
 	for (const testCase of PRSTGEOM_CASES) {
@@ -404,15 +431,31 @@ async function verifyPresetGeom(lines) {
 
 // --- 5. orchestrate ---------------------------------------------------------
 async function main() {
-	/** @type {{label:string, file:string, generated:boolean, buildVbs:Function, verify:Function}[]} */
+	/** @type {import('./powerpoint/client.mjs').Transport} */
+	let transport
+	try {
+		transport = resolveTransport()
+	} catch (e) {
+		if (!(e instanceof TransportError)) throw e
+		console.error('PowerPoint COM smoke cannot run: ' + e.message)
+		process.exit(1)
+	}
+	if (transport.kind === 'none') process.exit(skipOrFail('TSPPTX_COM_SMOKE', transport.reason))
+	console.log(
+		transport.kind === 'remote'
+			? `Driving PowerPoint through the worker at ${transport.url}.`
+			: "Driving this machine's PowerPoint."
+	)
+	const keepDir = KEEP ? mkdtempSync(path.join(os.tmpdir(), 'ts-pptx-com-smoke-')) : null
+
 	/**
 	 * One deck to drive: how to build its VBS, and how to read the result back.
 	 * @typedef {object} Spec
 	 * @property {string} label
 	 * @property {string} file
 	 * @property {boolean} generated whether this run created the deck and may delete it
-	 * @property {(file: string) => string} buildVbs
-	 * @property {(lines: string[]) => string[] | Promise<string[]>} verify
+	 * @property {(deckName: string) => string} buildVbs
+	 * @property {(lines: string[], files: Map<string, Buffer>) => string[]} verify
 	 */
 	/** @type {Spec[]} */
 	const specs = []
@@ -423,7 +466,7 @@ async function main() {
 			label: 'file',
 			file: path.resolve(EXISTING_FILE),
 			generated: false,
-			buildVbs: /** @param {string} f */ (f) => vbsOpenHeader(f) + vbsFooter(),
+			buildVbs: /** @param {string} deckName */ (deckName) => vbsOpenHeader(deckName) + vbsFooter(),
 			verify: () => [],
 		}
 		specs.push(fileSpec)
@@ -464,9 +507,23 @@ async function main() {
 
 	const failures = []
 	for (const [index, spec] of specs.entries()) {
-		const result = await driveDeck(spec.label, spec.file, spec.buildVbs)
+		let result
+		try {
+			result = await driveDeck(transport, spec.label, spec.file, spec.buildVbs)
+		} catch (e) {
+			if (!(e instanceof TransportError)) throw e
+			failures.push(`[${spec.label}] ${e.message}`)
+			break
+		}
 		if (spec.generated && !KEEP) await fs.rm(spec.file, { force: true })
 		else if (spec.generated) console.log('Kept deck: ' + spec.file)
+		if (keepDir) {
+			for (const [name, content] of result.files) {
+				const kept = path.join(keepDir, name)
+				await fs.writeFile(kept, content)
+				console.log('Kept export: ' + kept)
+			}
+		}
 
 		const lines = result.out.split(/\r?\n/).filter(Boolean)
 		const open = checkOpen(spec.label, lines, result.out)
@@ -489,9 +546,12 @@ async function main() {
 			break
 		}
 		failures.push(...open.failures)
-		if (!open.failures.length) failures.push(...(await spec.verify(lines)))
+		if (!open.failures.length) failures.push(...spec.verify(lines, result.files))
 		if (result.err.trim()) console.error(`[${spec.label}] stderr: ` + result.err.trim())
 	}
+
+	// A run that stopped early leaves the decks it never reached; they are generated, so go too.
+	if (!KEEP) for (const spec of specs) if (spec.generated) await fs.rm(spec.file, { force: true })
 
 	if (failures.length) {
 		console.error('\nPowerPoint COM smoke FAILED:')

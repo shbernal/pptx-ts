@@ -69,7 +69,7 @@ are in every aggregate the repo has.
 | `package-smoke.mjs` | Gate | Installs the tarball and exercises every subpath | `verify:full`, `check:package` |
 | `path-refs.mjs` | Gate | Every backticked repo path in the tree must name a file that exists | `check:core` |
 | `png-utils.mjs` | Library | Minimal PNG encode/decode, for the gates that read pixels | `powerpoint-com-smoke.mjs`; unit-tested |
-| `powerpoint-com-smoke.mjs` | Gate | Opens decks in desktop PowerPoint over COM | manual, Windows only (`test:com`) |
+| `powerpoint-com-smoke.mjs` | Gate | Opens decks in desktop PowerPoint over COM, each as one PowerPoint job | manual (`test:com`): Windows with PowerPoint, or any OS through the worker |
 | `pptx-parts.mjs` | Library | Explode/diff `.pptx` packages | — |
 | `ooxml-literal-gate.mjs` | Gate | Schema URI and content-type literals outside `src/ooxml/` vs `ooxml-literal-allowlist.json`, each with its reason | `check:core` |
 | `ratchet-utils.mjs` | Library | Budget mechanics the two size gates share: headroom, slack, verdict, budget file and stale-key check | — |
@@ -84,8 +84,9 @@ are in every aggregate the repo has.
 | `xml-equivalence.mjs` | Library | Proves two XML parts differ only in inert inter-element whitespace | `byte-identity.mjs prove-whitespace`; unit-tested |
 | `com/contract.mjs` | Library | The shape names, `ProgID`s and `PpActionType` values the COM decks, VBScripts and verifiers all have to agree on | `powerpoint-com-smoke.mjs` |
 | `com/decks.mjs` | Library | Builds the four decks the COM smoke drives, from the current `dist/` | `powerpoint-com-smoke.mjs` |
-| `com/vbs.mjs` | Library | The VBScript sources that drive desktop PowerPoint, one per deck | `powerpoint-com-smoke.mjs` |
-| `powerpoint/connection.mjs` | Library | The worker's URL and token, from the environment or `tools/powerpoint-vm/.env` | `powerpoint/health.mjs`, `powerpoint/vm-sync.mjs` |
+| `com/vbs.mjs` | Library | The VBScript sources that drive desktop PowerPoint, one per deck; each finds its deck beside itself, so it runs in any job workspace | `powerpoint-com-smoke.mjs` |
+| `powerpoint/client.mjs` | Library | Runs a PowerPoint job on whichever PowerPoint is at hand: the worker when `TSPPTX_POWERPOINT_URL` is set, else this Windows machine's own | `powerpoint-com-smoke.mjs`; unit-tested |
+| `powerpoint/connection.mjs` | Library | The worker's URL and token, from the environment or `tools/powerpoint-vm/.env` | `powerpoint/client.mjs`, `powerpoint/health.mjs`, `powerpoint/vm-sync.mjs` |
 | `powerpoint/health.mjs` | Gate | Asks the worker for its health and prints the PowerPoint build it drives; fails when the worker is unreachable or sees no PowerPoint | manual (`ppt:health`) |
 | `powerpoint/job.mjs` | Library | The PowerPoint worker's job and result shapes, and the validation a job passes before anything touches the disk | `powerpoint/worker.mjs`; unit-tested |
 | `powerpoint/runner.mjs` | Library | Runs PowerPoint jobs one at a time, each in a fresh workspace, and returns the files a job created or changed | `powerpoint/worker.mjs`; unit-tested |
