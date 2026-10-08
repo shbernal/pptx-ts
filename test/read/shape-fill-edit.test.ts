@@ -18,6 +18,7 @@ import {
 	assertUnchangedExcept,
 	caughtSync,
 	defined,
+	at,
 } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture } from './corpus.ts'
@@ -30,7 +31,7 @@ async function editAndReopen(name: string, edit: (presentation: Presentation) =>
 }
 
 function replaceTextShape(presentation: Presentation) {
-	return defined(presentation.slides[0].shapes.find((shape) => shape.name === 'replaceText'))
+	return defined(at(presentation.slides, 0).shapes.find((shape) => shape.name === 'replaceText'))
 }
 
 function findByKind(presentation: Presentation, shapeType: ShapeType) {
@@ -241,10 +242,10 @@ describe('Per-kind fill / line support', () => {
 	test('a fill a deck wrote on a picture still clears', async () => {
 		const presentation = await openFixture('image')
 		const picture = findByKind(presentation, 'picture')
-		const spPr = picture.element_.getElementsByTagNameNS(
-			'http://schemas.openxmlformats.org/presentationml/2006/main',
-			'spPr'
-		)[0]
+		const spPr = at(
+			picture.element_.getElementsByTagNameNS('http://schemas.openxmlformats.org/presentationml/2006/main', 'spPr'),
+			0
+		)
 		const A = 'http://schemas.openxmlformats.org/drawingml/2006/main'
 		const doc = defined(spPr.ownerDocument)
 		const fill = doc.createElementNS(A, 'a:solidFill')

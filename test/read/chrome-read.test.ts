@@ -19,7 +19,7 @@
 import { describe, test } from 'vitest'
 import type { Presentation } from '../../dist/read.js'
 import { authorRead, schemaErrors, validatorInstalled } from './authored.ts'
-import { assert, assertEqual, defined } from '../helpers.ts'
+import { assert, assertEqual, defined, at } from '../helpers.ts'
 
 /** The first slide of `presentation`. */
 function firstSlide(presentation: Presentation) {
@@ -118,8 +118,8 @@ describe('Theme / SlideMaster / SlideLayout — write→read fidelity', () => {
 		const branded = master.layouts.find((l) => l.name === 'BRANDED')
 		assert(branded, 'the BRANDED layout reads back')
 		assertEqual(branded.placeholders.length, 1, 'the non-placeholder rect is excluded from placeholders')
-		assertEqual(branded.placeholders[0].type, 'sldNum', 'the one layout placeholder is the slide-number one')
-		assertEqual(branded.placeholders[0].left, 457200, 'the layout placeholder geometry round-trips too')
+		assertEqual(at(branded.placeholders, 0).type, 'sldNum', 'the one layout placeholder is the slide-number one')
+		assertEqual(at(branded.placeholders, 0).left, 457200, 'the layout placeholder geometry round-trips too')
 	})
 
 	test('a layout exposes its name, its (import-only) type, and its own background (T2.2)', async () => {
@@ -151,7 +151,7 @@ describe('Theme / SlideMaster / SlideLayout — write→read fidelity', () => {
 		const masters = presentation.masters()
 		assertEqual(masters.length, 1, 'the deck has one master')
 		const slide = firstSlide(presentation)
-		assertEqual(slide.master?.partName, masters[0].partName, 'slide.master is the deck master')
+		assertEqual(slide.master?.partName, at(masters, 0).partName, 'slide.master is the deck master')
 
 		// The full walk slide → layout → master → theme resolves the branded palette.
 		assert(slide.layout, 'the slide binds to a layout')

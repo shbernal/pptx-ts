@@ -11,7 +11,7 @@ import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
 import TsPptx from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { bytesEqual, assert, assertEqual, partBodies } from '../helpers.ts'
+import { bytesEqual, assert, assertEqual, partBodies, at } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath } from './corpus.ts'
 import { resolveSingle } from './opc.ts'
@@ -93,7 +93,7 @@ describe('Presentation.fromTemplate', () => {
 		const reopened = await Presentation.load(await deck.save())
 		assertEqual(reopened.slides.length, 1, 'the saved deck has exactly the authored slide')
 
-		const slide = reopened.slides[0]
+		const slide = at(reopened.slides, 0)
 		assertEqual(
 			resolveSingle(reopened.opc, slide.partName, SLIDE_LAYOUT_REL),
 			target.partName,

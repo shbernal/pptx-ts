@@ -14,7 +14,7 @@ import path from 'node:path'
 import { describe, test } from 'vitest'
 import TsPptx from '../../dist/node.js'
 import { Presentation, OpcPackage } from '../../dist/read.js'
-import { bytesEqual, assert, assertEqual, defined, partBodies } from '../helpers.ts'
+import { bytesEqual, assert, assertEqual, defined, partBodies, at } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { FIXTURES, fixturePath } from './corpus.ts'
 
@@ -65,10 +65,10 @@ describe('3D model: PowerPoint-authored fixture', () => {
 
 	test('a model reads back as an inert graphicFrame — no typed accessor, but not dropped either', async () => {
 		const pres = await Presentation.load(await readFile(fixturePath('model3d')))
-		const shapes = pres.slides[0].shapes
+		const shapes = at(pres.slides, 0).shapes
 		assertEqual(shapes.length, 1, 'the model is enumerated as one shape')
-		assertEqual(shapes[0].shapeType, 'graphicFrame', 'it surfaces as a graphicFrame')
-		assertEqual(shapes[0].name, 'Cube3D', 'carrying its objectName')
+		assertEqual(at(shapes, 0).shapeType, 'graphicFrame', 'it surfaces as a graphicFrame')
+		assertEqual(at(shapes, 0).name, 'Cube3D', 'carrying its objectName')
 		// Deliberate v1 scope: there is no `Model3d` shape class and no camera accessor. What this
 		// pins is that the shape is *visible* to the read model, so a caller enumerating shapes sees
 		// it rather than a silently shorter list.
@@ -107,7 +107,7 @@ describe('3D model: PowerPoint-authored fixture', () => {
 		const out = await target.save()
 		const after = await partBodies(out)
 		const reopened = await Presentation.load(out)
-		const slide = reopened.slides[reopened.slides.length - 1]
+		const slide = at(reopened.slides, reopened.slides.length - 1)
 		const body = text(after, slide.partName.slice(1))
 
 		// The subtree survives verbatim apart from rId renumbering, which is what the import does.
@@ -125,14 +125,14 @@ describe('3D model: PowerPoint-authored fixture', () => {
 		// Both rels came along, and both resolve to real parts.
 		const relsXml = text(after, `ppt/slides/_rels/${slide.partName.split('/').pop()}.rels`)
 		const rels = relTypes(relsXml)
-		const modelRid = defined(/<am3d:model3d r:embed="(rId\d+)"/.exec(body))[1]
-		const previewRid = defined(/<am3d:blip r:embed="(rId\d+)"/.exec(body))[1]
+		const modelRid = at(defined(/<am3d:model3d r:embed="(rId\d+)"/.exec(body)), 1)
+		const previewRid = at(defined(/<am3d:blip r:embed="(rId\d+)"/.exec(body)), 1)
 		assertEqual(rels.get(modelRid), MODEL3D_REL, 'the model3d rel survives the import')
 		assertEqual(rels.get(previewRid), IMAGE_REL, 'the preview image rel survives the import')
 		for (const rid of [modelRid, previewRid]) {
 			const target_ = /<Relationship\b[^>]*\bId="(?:rId\d+)"[^>]*\/>/g
 			const match = [...relsXml.matchAll(target_)].find((m) => m[0].includes(`Id="${rid}"`))
-			const rel = defined(/\bTarget="([^"]+)"/.exec(defined(match)[0]))[1].replace('../', 'ppt/')
+			const rel = at(defined(/\bTarget="([^"]+)"/.exec(defined(match)[0])), 1).replace('../', 'ppt/')
 			assert(after.has(rel), `${rid} resolves to a real part (${rel})`)
 		}
 
@@ -178,8 +178,8 @@ describe('3D model: ts-pptx-authored', () => {
 		const body = text(bodies, 'ppt/slides/slide1.xml')
 		const rels = relTypes(text(bodies, 'ppt/slides/_rels/slide1.xml.rels'))
 
-		const modelRid = defined(/<am3d:model3d r:embed="(rId\d+)"/.exec(body))[1]
-		const previewRid = defined(/<am3d:blip r:embed="(rId\d+)"/.exec(body))[1]
+		const modelRid = at(defined(/<am3d:model3d r:embed="(rId\d+)"/.exec(body)), 1)
+		const previewRid = at(defined(/<am3d:blip r:embed="(rId\d+)"/.exec(body)), 1)
 		assertEqual(rels.get(modelRid), MODEL3D_REL, 'the payload rel uses the MS 2017/06 model3d type')
 		assertEqual(rels.get(previewRid), IMAGE_REL, 'the preview rel is an ordinary image rel')
 		assertEqual(

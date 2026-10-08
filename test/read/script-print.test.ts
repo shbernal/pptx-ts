@@ -29,7 +29,7 @@ import {
 	type PrintScriptOptions,
 	type SlideIr,
 } from '../../dist/script.js'
-import { assert, assertEqual, defined } from '../helpers.ts'
+import { assert, assertEqual, defined, at } from '../helpers.ts'
 import { authorRead } from './authored.ts'
 import { REPO, SCRATCH, fixtureNames, irFor, readFixture } from './corpus.ts'
 
@@ -161,15 +161,17 @@ describe('script printer — the emitted script runs', () => {
 	test('a plain deck round-trips its slides, hidden flag and text', async () => {
 		const { output } = await runPrinted('hidden.pptx')
 		assertEqual(output.slides.length, 2, 'slide count')
-		assertEqual(output.slides[1].hidden, true, 'slide 2 stays hidden')
-		assert(output.slides[0].shapes.length > 0, 'slide 1 has content')
+		assertEqual(at(output.slides, 1).hidden, true, 'slide 2 stays hidden')
+		assert(at(output.slides, 0).shapes.length > 0, 'slide 1 has content')
 	})
 
 	test('a chart survives, which needs `type` inside the options object', async () => {
 		// `addChart(data, { type })` — passing the type positionally throws at run time and is
 		// invisible to every static check, since the IR types args as `IrValue[]`.
 		const { output } = await runPrinted('bar-chart-data-labels.pptx')
-		const frames = output.slides[0].shapes.filter(isGraphicFrame).filter((shape) => shape.chart)
+		const frames = at(output.slides, 0)
+			.shapes.filter(isGraphicFrame)
+			.filter((shape) => shape.chart)
 		assertEqual(frames.length, 1, 'the chart was regenerated')
 	})
 
@@ -199,12 +201,12 @@ describe('script printer — the emitted script runs', () => {
 		assert(printed.code.includes('deck.importSlide(source, 1)'), 'and slide 2 is copied rather than rebuilt')
 		assertEqual(output.slides.length, 11, 'slide count')
 
-		const frame = output.slides[1].shapes.find(isGraphicFrame)
+		const frame = at(output.slides, 1).shapes.find(isGraphicFrame)
 		assert(frame?.hasDiagram, 'the copied slide still holds its SmartArt frame')
 		const source = await Presentation.load(await readFixture('mixed.pptx'))
 		assertEqual(
 			defined(frame.diagram).text,
-			defined(defined(source.slides[1].shapes.find(isGraphicFrame)).diagram).text,
+			defined(defined(at(source.slides, 1).shapes.find(isGraphicFrame)).diagram).text,
 			'with every node string intact'
 		)
 
@@ -266,7 +268,7 @@ describe('script printer — the emitted script runs', () => {
 			// would have made the file unparseable) and it renders them as real line breaks,
 			// which is what a `.pptx` can actually hold. Everything else must survive verbatim.
 			const expected = hostile.replaceAll('\u2028', '\n').replaceAll('\u2029', '\n')
-			assertEqual(defined(output.slides[0].shapes[0].textFrame).text, expected, 'text survived the round trip')
+			assertEqual(defined(at(at(output.slides, 0).shapes, 0).textFrame).text, expected, 'text survived the round trip')
 		} finally {
 			await rm(dir, { recursive: true, force: true })
 		}

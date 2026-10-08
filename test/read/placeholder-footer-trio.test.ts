@@ -23,7 +23,7 @@
 import { describe, test } from 'vitest'
 
 import type { Slide } from '../../dist/read.js'
-import { assert, assertEqual } from '../helpers.ts'
+import { assert, assertEqual, at } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 // Read from ppt/slideMasters/slideMaster1.xml inside placeholder-footer-trio.pptx.
@@ -42,7 +42,7 @@ function phShape(slide: Slide, type: string) {
 describe('read: footer-trio placeholder geometry inheritance', () => {
 	for (const type of ['dt', 'ftr', 'sldNum'] as const) {
 		test(`a slide ${type} placeholder resolves to its OWN-TYPE master box, not another member of the trio`, async () => {
-			const slide = (await openFixture('placeholder-footer-trio')).slides[0]
+			const slide = at((await openFixture('placeholder-footer-trio')).slides, 0)
 			const shape = phShape(slide, type)
 			assert(shape, `expected a slide ${type} placeholder`)
 

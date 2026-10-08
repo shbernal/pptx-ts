@@ -18,7 +18,7 @@ import { describe, expect, test } from 'vitest'
 import type { BackgroundOption } from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
 import { readModelToIr } from '../../dist/script.js'
-import { assert, assertEqual, defined, readEntry } from '../helpers.ts'
+import { assert, assertEqual, defined, readEntry, at } from '../helpers.ts'
 import { authorRead } from './authored.ts'
 import { irFor, openFixture } from './corpus.ts'
 
@@ -65,7 +65,7 @@ describe('the read model resolves a slide-scoped background of every kind', () =
 describe('the converter carries a slide-scoped background instead of dropping it', () => {
 	test('a picture background becomes an asset reference rather than a fidelity note', async () => {
 		const ir = await irFor(FIXTURE)
-		const background = ir.slides[0].background
+		const background = at(ir.slides, 0).background
 		assert(background, 'slide 1 keeps its own background')
 		const data = defined(
 			background.data,
@@ -78,7 +78,7 @@ describe('the converter carries a slide-scoped background instead of dropping it
 
 	test('a theme reference bakes its resolved colour and says so, at slide scope', async () => {
 		const ir = await irFor(FIXTURE)
-		const background = ir.slides[1].background
+		const background = at(ir.slides, 1).background
 		assert(background, 'slide 2 keeps its own background')
 		assertEqual(background.color, 'E97132', 'the colour the p:bgRef currently resolves to is baked in')
 		const note = ir.fidelity.find((n) => n.construct === 'slide.background')
@@ -95,7 +95,7 @@ describe('the converter carries a slide-scoped background instead of dropping it
 
 	test('a background transparency reaches the IR, which nothing used to produce', async () => {
 		const ir = await irFor(FIXTURE)
-		const background = ir.slides[2].background
+		const background = at(ir.slides, 2).background
 		assert(background, 'slide 3 keeps its own background')
 		assertEqual(background.color, 'C83C28', 'the colour survives')
 		// The read model reports opacity as a 0-1 fraction and the write option takes
@@ -114,9 +114,9 @@ describe('the converter carries a slide-scoped background instead of dropping it
 			pptx.addSlide({ masterTitle: 'GRADIENT' })
 		})
 		const ir = readModelToIr(presentation)
-		expect(ir.slides[0].background).toEqual(GRADIENT)
-		expect(ir.slides[1].background).toEqual(PATTERN)
-		assertEqual(ir.slides[2].background, undefined, 'the third slide inherits its layout’s')
+		expect(at(ir.slides, 0).background).toEqual(GRADIENT)
+		expect(at(ir.slides, 1).background).toEqual(PATTERN)
+		assertEqual(at(ir.slides, 2).background, undefined, 'the third slide inherits its layout’s')
 		const layout = ir.chrome.masters.find((master) => master.props.title === 'GRADIENT')
 		expect(layout?.props.background).toEqual(GRADIENT)
 		const losses = ir.fidelity.filter((note) => note.construct.includes('background') && note.disposition === 'dropped')
@@ -133,10 +133,10 @@ describe('the converter carries a slide-scoped background instead of dropping it
 		const bg = '<p:bg><p:bgRef idx="1003"><a:schemeClr val="accent1"/></p:bgRef></p:bg>'
 		zip.file('ppt/slides/slide1.xml', slideXml.replace(/(<p:cSld[^>]*>)/, `$1${bg}`))
 		const pres = await Presentation.load(await zip.generateAsync({ type: 'uint8array' }))
-		assertEqual(pres.slides[0].background?.type, 'themeRef', 'the patched slide reads a theme reference')
+		assertEqual(at(pres.slides, 0).background?.type, 'themeRef', 'the patched slide reads a theme reference')
 
 		const ir = readModelToIr(pres)
-		assertEqual(ir.slides[0].background?.type, 'gradient', 'the gradient it resolves to is carried')
+		assertEqual(at(ir.slides, 0).background?.type, 'gradient', 'the gradient it resolves to is carried')
 		const note = defined(
 			ir.fidelity.find((n) => n.construct === 'slide.background'),
 			'a slide.background note'

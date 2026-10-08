@@ -7,7 +7,7 @@ import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import TsPptx from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual, defined } from '../helpers.ts'
+import { assert, assertEqual, defined, at } from '../helpers.ts'
 
 const SLIDE_PATH = 'ppt/slides/slide1.xml'
 const SLIDE_RELS_PATH = 'ppt/slides/_rels/slide1.xml.rels'
@@ -16,7 +16,7 @@ const PNG =
 
 /** The one picture on slide 1, narrowed off the shape union. */
 function onlyPicture(pres: Presentation) {
-	const shape = pres.slides[0].shapes[0]
+	const shape = at(pres.slides, 0).shapes[0]
 	assert(shape?.shapeType === 'picture', `expected a picture; got ${shape?.shapeType}`)
 	return shape
 }
@@ -84,7 +84,7 @@ describe('Picture partnames degrade like their picture-fill twin', () => {
 
 	test('a whole shape walk survives one broken embed', async () => {
 		const pres = await pictureDeck({ editSlide: (xml) => xml.replace(/r:embed="[^"]*"/, 'r:embed="rIdGone"') })
-		const names = pres.slides[0].shapes.map((shape) =>
+		const names = at(pres.slides, 0).shapes.map((shape) =>
 			shape.shapeType === 'picture' ? (shape.mediaPartName ?? '(none)') : shape.shapeType
 		)
 		assertEqual(names.join(','), '(none)', 'the walk completes instead of taking the slide down')
@@ -153,7 +153,7 @@ describe('One reading per fact', () => {
 		const zip = await JSZip.loadAsync(await pres.toBytes())
 		await rewrite(zip, SLIDE_PATH, edit)
 		const presentation = await Presentation.load(await zip.generateAsync({ type: 'nodebuffer' }))
-		const shape = presentation.slides[0].shapes[0]
+		const shape = at(presentation.slides, 0).shapes[0]
 		assert(shape?.shapeType === 'graphicFrame', `expected a graphic frame; got ${shape?.shapeType}`)
 		const table = shape.table
 		assert(table, 'the graphic frame holds a table')

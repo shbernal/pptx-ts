@@ -18,7 +18,7 @@
 import { describe, test } from 'vitest'
 
 import type { AnyShape } from '../../dist/read.js'
-import { assert, assertEqual } from '../helpers.ts'
+import { assert, assertEqual, at } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 /** First run of the first paragraph of a shape's text frame. */
@@ -34,7 +34,7 @@ function firstRun(shape: AnyShape) {
 
 describe('read: placeholder text-property inheritance', () => {
 	test('a bare title run inherits size + theme (major) face from the master txStyles', async () => {
-		const slide = (await openFixture('placeholder-inherit')).slides[0]
+		const slide = at((await openFixture('placeholder-inherit')).slides, 0)
 		const title = slide.shapes.find((s) => (s.name ?? '').startsWith('Title'))
 		assert(title, 'expected a title placeholder shape')
 		const run = firstRun(title)
@@ -52,7 +52,7 @@ describe('read: placeholder text-property inheritance', () => {
 	})
 
 	test('a bare body run inherits size + theme (minor) face from the master txStyles', async () => {
-		const slide = (await openFixture('placeholder-inherit')).slides[0]
+		const slide = at((await openFixture('placeholder-inherit')).slides, 0)
 		// The body placeholder is the non-title text placeholder.
 		const body = slide.shapes.find((s) => !(s.name ?? '').startsWith('Title') && s.textFrame)
 		assert(body, 'expected a body placeholder shape')

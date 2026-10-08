@@ -19,18 +19,18 @@
 import { describe, test } from 'vitest'
 import type { Slide } from '../../dist/read.js'
 
-import { assert, assertEqual, defined } from '../helpers.ts'
+import { assert, assertEqual, defined, at } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 function runOf(slide: Slide, shapeName: string) {
 	const shape = slide.shapes.find((s) => s.name === shapeName)
 	assert(shape, `expected a shape named ${shapeName}`)
-	return defined(shape.textFrame).paragraphs[0].runs[0]
+	return at(at(defined(shape.textFrame).paragraphs, 0).runs, 0)
 }
 
 describe('p:defaultTextStyle is the run-resolution fallback (default-text-style.pptx)', () => {
 	test('a bare non-placeholder run resolves size/colour/face from p:defaultTextStyle', async () => {
-		const run = runOf((await openFixture('default-text-style')).slides[0], 'PlainBox')
+		const run = runOf(at((await openFixture('default-text-style')).slides, 0), 'PlainBox')
 		// The run itself sets nothing — every resolved value is the default text style's.
 		assertEqual(run.fontSizePt, null, 'the run sets no own @sz')
 		assertEqual(run.fontName, null, 'the run sets no own a:latin')
@@ -42,7 +42,7 @@ describe('p:defaultTextStyle is the run-resolution fallback (default-text-style.
 	})
 
 	test('the default text style sets no bold, so resolvedBold stays null', async () => {
-		const run = runOf((await openFixture('default-text-style')).slides[0], 'PlainBox')
+		const run = runOf(at((await openFixture('default-text-style')).slides, 0), 'PlainBox')
 		// The default tier must not fabricate a bold value it does not carry — the
 		// distinction between an inherited false and "nothing inherits" is preserved.
 		assertEqual(run.bold, null, 'the run sets no own @b')
@@ -52,7 +52,7 @@ describe('p:defaultTextStyle is the run-resolution fallback (default-text-style.
 
 describe('p:style/a:fontRef supplies run colour + face (default-text-style.pptx)', () => {
 	test("a styled shape's bare run takes its colour + face from the fontRef", async () => {
-		const run = runOf((await openFixture('default-text-style')).slides[0], 'StyledRect')
+		const run = runOf(at((await openFixture('default-text-style')).slides, 0), 'StyledRect')
 		assertEqual(run.color, null, 'the run sets no own colour')
 		assertEqual(run.fontName, null, 'the run sets no own a:latin')
 		assert(run.resolvedColor, 'the run resolves a colour')
@@ -64,13 +64,13 @@ describe('p:style/a:fontRef supplies run colour + face (default-text-style.pptx)
 	})
 
 	test('a fontRef carries no size, so size still falls through to the default text style', async () => {
-		const run = runOf((await openFixture('default-text-style')).slides[0], 'StyledRect')
+		const run = runOf(at((await openFixture('default-text-style')).slides, 0), 'StyledRect')
 		assertEqual(run.fontSizePt, null, 'the run sets no own @sz')
 		assertEqual(run.resolvedSizePt, 18, 'no size on the fontRef → p:defaultTextStyle sz=1800')
 	})
 
 	test("a run's own colour and face still win over the fontRef", async () => {
-		const run = runOf((await openFixture('default-text-style')).slides[0], 'StyledRect')
+		const run = runOf(at((await openFixture('default-text-style')).slides, 0), 'StyledRect')
 		// Setting own values (in memory) must override the fontRef tier below them.
 		run.color = 'FF0000'
 		run.fontName = 'Verdana'

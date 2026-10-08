@@ -27,7 +27,7 @@
 import { describe, test } from 'vitest'
 import { NotesPlaceholder, Placeholder, type Presentation } from '../../dist/read.js'
 import { authorRead, schemaErrors, validatorInstalled } from './authored.ts'
-import { assert, assertEqual, defined } from '../helpers.ts'
+import { assert, assertEqual, defined, at } from '../helpers.ts'
 
 /** The first slide of `presentation`. */
 function firstSlide(presentation: Presentation) {
@@ -44,16 +44,16 @@ describe('Slide.notesTextFrame — write→read fidelity', () => {
 
 		const frame = firstSlide(presentation).notesTextFrame
 		assert(frame, 'the notes body is exposed as a text frame')
-		const runs = frame.paragraphs[0].runs
+		const runs = at(frame.paragraphs, 0).runs
 		assertEqual(runs.length, 2, 'both notes runs read back')
 
-		assertEqual(runs[0].text, 'Loud', 'first run text round-trips')
-		assertEqual(runs[0].bold, true, 'first run stays bold')
-		assertEqual(runs[0].color?.toUpperCase(), 'C00000', 'first run colour round-trips')
+		assertEqual(at(runs, 0).text, 'Loud', 'first run text round-trips')
+		assertEqual(at(runs, 0).bold, true, 'first run stays bold')
+		assertEqual(at(runs, 0).color?.toUpperCase(), 'C00000', 'first run colour round-trips')
 
-		assertEqual(runs[1].text, ' and plain', 'second run text round-trips')
-		assertEqual(runs[1].bold, null, 'the second run carries no bold of its own')
-		assertEqual(runs[1].color, null, 'the second run carries no colour of its own')
+		assertEqual(at(runs, 1).text, ' and plain', 'second run text round-trips')
+		assertEqual(at(runs, 1).bold, null, 'the second run carries no bold of its own')
+		assertEqual(at(runs, 1).color, null, 'the second run carries no colour of its own')
 	})
 
 	test('a scheme-coloured notes run resolves to a theme hex via resolvedColor (T1.2)', async () => {
@@ -63,7 +63,7 @@ describe('Slide.notesTextFrame — write→read fidelity', () => {
 			pres.addSlide().addNotes([{ text: 'Themed', options: { color: 'accent1' } }])
 		})
 
-		const run = defined(firstSlide(presentation).notesTextFrame).paragraphs[0].runs[0]
+		const run = at(defined(firstSlide(presentation).notesTextFrame).paragraphs, 0).runs[0]
 		assert(run, 'the themed notes run reads back')
 		// Own-attribute getters: the scheme token is surfaced, and `color` (hex only) is null.
 		assertEqual(run.schemeColor, 'accent1', 'the scheme token is read as the own attribute')
@@ -83,8 +83,8 @@ describe('Slide.notesTextFrame — write→read fidelity', () => {
 		const frame = slide.notesTextFrame
 		assert(frame, 'the notes body is exposed as a text frame')
 		assertEqual(frame.paragraphs.length, 2, 'the newline starts a second paragraph')
-		assertEqual(frame.paragraphs[0].text, 'line one', 'first paragraph text')
-		assertEqual(frame.paragraphs[1].text, 'line two', 'second paragraph text')
+		assertEqual(at(frame.paragraphs, 0).text, 'line one', 'first paragraph text')
+		assertEqual(at(frame.paragraphs, 1).text, 'line two', 'second paragraph text')
 
 		// The flattened convenience keeps agreeing with the frame (paragraphs joined by \n).
 		assertEqual(slide.notesText, 'line one\nline two', 'notesText stays the flattened view')
@@ -102,7 +102,7 @@ describe('Slide.notesTextFrame — write→read fidelity', () => {
 
 		const frame = firstSlide(presentation).notesTextFrame
 		assert(frame, 'the notes body is exposed as a text frame')
-		const linked = frame.paragraphs[0].runs.find((r) => r.hyperlink !== null)
+		const linked = at(frame.paragraphs, 0).runs.find((r) => r.hyperlink !== null)
 		assert(linked, 'the linked run reads back with a hyperlink')
 		assertEqual(
 			defined(linked.hyperlink).url,
@@ -125,7 +125,7 @@ describe('Slide.notesTextFrame — write→read fidelity', () => {
 		const frame = slide.notesTextFrame
 		assert(frame, 'the empty notes body is still a frame')
 		assertEqual(frame.paragraphs.length, 1, 'the empty body carries a single empty paragraph')
-		assertEqual(frame.paragraphs[0].text, '', 'that paragraph is empty')
+		assertEqual(at(frame.paragraphs, 0).text, '', 'that paragraph is empty')
 	})
 
 	test('notesSlide models the three placeholders (T2.1)', async () => {
@@ -217,7 +217,7 @@ describe('Slide.notesTextFrame — write→read fidelity', () => {
 		assertEqual(slide.notesSlide?.text, 'shared body', 'notesSlide.text matches the body')
 		assertEqual(slide.notesText, 'shared body', 'notesText delegates to the same body')
 		assertEqual(
-			slide.notesTextFrame?.paragraphs[0].text,
+			at(defined(slide.notesTextFrame).paragraphs, 0).text,
 			'shared body',
 			'notesTextFrame delegates to the same body frame'
 		)

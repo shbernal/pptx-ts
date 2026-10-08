@@ -8,7 +8,7 @@
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { bytesEqual, assert, assertEqual, defined, partBodies } from '../helpers.ts'
+import { bytesEqual, assert, assertEqual, defined, partBodies, at } from '../helpers.ts'
 import { fixturePath, openFixture } from './corpus.ts'
 
 /** The first chart on any slide of the fixture. */
@@ -35,11 +35,11 @@ describe('Chart read model', () => {
 		const chart = defined(firstChart(await openFixture('mixed')))
 		const series = chart.series
 		assertEqual(series.length, 2, 'two series')
-		assertEqual(series[0].name, 'Costs', 'first series name')
-		assertEqual(series[1].name, 'Revenue', 'second series name')
-		assertEqual(series[0].index, 0, 'first series index')
+		assertEqual(at(series, 0).name, 'Costs', 'first series name')
+		assertEqual(at(series, 1).name, 'Revenue', 'second series name')
+		assertEqual(at(series, 0).index, 0, 'first series index')
 
-		const values = series[0].values
+		const values = at(series, 0).values
 		assertEqual(values.length, 16, 'first series has 16 cached values')
 		assertEqual(values[0], 360000, 'first cached value')
 		assertEqual(values[15], 435000, 'last cached value')
@@ -54,7 +54,7 @@ describe('Chart read model', () => {
 		const categories = chart.categories
 		assertEqual(categories.length, 16, '16 categories')
 		assertEqual(categories[0], '3200', 'first category as written')
-		assertEqual(chart.categories.length, chart.series[0].values.length, 'categories align with values')
+		assertEqual(chart.categories.length, at(chart.series, 0).values.length, 'categories align with values')
 	})
 
 	test('element_ escape hatches expose the underlying chartSpace and c:ser elements', async () => {
@@ -62,7 +62,7 @@ describe('Chart read model', () => {
 		const space = chart.element_
 		assert(space, 'chart.element_ returns the chartSpace document element')
 		assertEqual(space.localName, 'chartSpace', 'element_ is the c:chartSpace root')
-		const serEl = chart.series[0].element_
+		const serEl = at(chart.series, 0).element_
 		assertEqual(serEl.localName, 'ser', 'series.element_ is the underlying c:ser element')
 	})
 

@@ -9,7 +9,7 @@ import JSZip from 'jszip'
 import TsPptx, { type TableProps, type TableRow } from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
 import { readModelToIr, type DeckIr } from '../../dist/script.js'
-import { assert, assertEqual, captureDiagnostics, defined, readEntry } from '../helpers.ts'
+import { assert, assertEqual, captureDiagnostics, defined, readEntry, at } from '../helpers.ts'
 import { authorRead } from './authored.ts'
 
 /** Apply `rewrite` to every slide part of `buf`, reload, and convert. */
@@ -28,7 +28,7 @@ async function irWithSlideXml(buf: Uint8Array, rewrite: (xml: string) => string)
  * `IrValue`-typed by design, so nothing narrows them for us.
  */
 function tableCall(ir: DeckIr) {
-	const call = ir.slides[0].calls.find((c) => c.method === 'addTable')
+	const call = at(ir.slides, 0).calls.find((c) => c.method === 'addTable')
 	assert(call, 'the IR carries an addTable call')
 	return { rows: call.args[0] as TableRow[], options: call.args[1] as TableProps }
 }
@@ -46,7 +46,7 @@ describe('table mapper: cell margins', () => {
 			})
 		)
 		assertEqual(rewritten, 1, 'the one cell now states only marL')
-		const margin = defined(tableCall(ir).rows[0][0].options).margin
+		const margin = defined(at(at(tableCall(ir).rows, 0), 0).options).margin
 		// `[top, right, bottom, left]` in inches: 0.05 and 0.1 are 45720 and 91440 EMU.
 		assertEqual(JSON.stringify(margin), JSON.stringify([0.05, 0.1, 0.05, 0]), 'the unset sides take the defaults')
 	})

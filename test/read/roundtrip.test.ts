@@ -16,6 +16,7 @@ import {
 	bytesEqual,
 	defined,
 	partBodies,
+	at,
 } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixtureNames, readFixture } from './corpus.ts'
@@ -93,13 +94,13 @@ describe('OPC round-trip — corpus invariants', () => {
 		const pkg = await OpcPackage.load(await readFixture(name))
 		const slides = pkg.partsByContentType(SLIDE_CONTENT_TYPE)
 		assert(slides.length >= 1, `${name}: expected at least one slide part`)
-		assertEqual(pkg.contentTypes.contentTypeFor(slides[0].partName), SLIDE_CONTENT_TYPE, `${name}: slide Override`)
+		assertEqual(pkg.contentTypes.contentTypeFor(at(slides, 0).partName), SLIDE_CONTENT_TYPE, `${name}: slide Override`)
 
 		const packageRels = pkg.relationshipsFor('/')
 		const officeDocument = packageRels.byType(OFFICE_DOCUMENT_REL)
 		assertEqual(officeDocument.length, 1, `${name}: officeDocument relationship count`)
 		assertEqual(
-			packageRels.resolveTarget(officeDocument[0].id),
+			packageRels.resolveTarget(at(officeDocument, 0).id),
 			'/ppt/presentation.xml',
 			`${name}: officeDocument target`
 		)
@@ -158,7 +159,7 @@ describe('dirty path: mutate one slide, save', () => {
 	async function mutateFirstTextRun() {
 		const input = await readFixture('textbox')
 		const pkg = await OpcPackage.load(input)
-		const slide = pkg.partsByContentType(SLIDE_CONTENT_TYPE)[0]
+		const slide = at(pkg.partsByContentType(SLIDE_CONTENT_TYPE), 0)
 		const textNode = slide.dom.getElementsByTagName('a:t')[0]
 		assert(textNode, 'textbox slide should contain an <a:t> run')
 		textNode.textContent = 'EDITED BY ROUNDTRIP TEST'
@@ -215,7 +216,7 @@ describe('partname and overlay units', () => {
 		pkg.addPart(partName, part.contentType, part.serialize())
 		assertEqual([...pkg.relationshipsFor(partName)].length, 0, 'the re-added part has no relationships')
 		// The id the old set held is free: a copy re-adding its source's ids must not collide.
-		pkg.relationshipsFor(partName).addWithId(before[0].id, before[0].type, before[0].target)
+		pkg.relationshipsFor(partName).addWithId(at(before, 0).id, at(before, 0).type, at(before, 0).target)
 		const reloaded = await OpcPackage.load(await pkg.save())
 		assertEqual([...reloaded.relationshipsFor(partName)].length, 1, 'only the relationship added since is saved')
 	})

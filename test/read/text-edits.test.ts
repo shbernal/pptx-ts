@@ -19,7 +19,7 @@ import {
 	type TextContext,
 	type ThemeContext,
 } from '../../dist/read.js'
-import { assert, assertEqual, caughtSync, defined } from '../helpers.ts'
+import { assert, assertEqual, caughtSync, defined, at } from '../helpers.ts'
 import { authorRead } from './authored.ts'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
@@ -50,7 +50,7 @@ function frame(inner: string) {
 
 /** The first run of a single-paragraph frame. */
 function run(runInner: string) {
-	return frame(`<a:p>${runInner}</a:p>`).paragraphs[0].runs[0]
+	return at(at(frame(`<a:p>${runInner}</a:p>`).paragraphs, 0).runs, 0)
 }
 
 describe('Run character-property setters', () => {
@@ -113,7 +113,7 @@ describe('Run character-property setters', () => {
 		}
 		const xml = `<p:txBody xmlns:p="${P_NS}" xmlns:a="${A_NS}"><a:bodyPr/><a:p><a:r><a:rPr b="1"/><a:t>x</a:t></a:r></a:p></p:txBody>`
 		const txBody = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
-		const r = new TextFrame(txBody, bareText(part)).paragraphs[0].runs[0]
+		const r = at(at(new TextFrame(txBody, bareText(part)).paragraphs, 0).runs, 0)
 		r.color = null
 		r.schemeColor = null
 		r.fontName = null
@@ -144,8 +144,8 @@ describe('Run.resolvedColor with a fill of its own that is not solid', () => {
 		const { presentation } = await authorRead((pres) => {
 			pres.addSlide().addText('run', { x: 1, y: 1, w: 3, h: 1, color: '336699' })
 		})
-		const run = defined(presentation.slides[0].shapes[0].textFrame).paragraphs[0].runs[0]
-		const rPr = run.element_.getElementsByTagNameNS(A_NS, 'rPr')[0]
+		const run = at(at(defined(at(at(presentation.slides, 0).shapes, 0).textFrame).paragraphs, 0).runs, 0)
+		const rPr = at(run.element_.getElementsByTagNameNS(A_NS, 'rPr'), 0)
 		for (const child of Array.from(rPr.childNodes)) {
 			if (child.nodeName === 'a:solidFill') rPr.removeChild(child)
 		}
@@ -180,7 +180,7 @@ describe('Paragraph getter edges', () => {
 	 * @param kind - the kind the bullet is expected to have
 	 */
 	function bulletOf<K extends BulletDetail['kind']>(pPr: string, kind: K): Extract<BulletDetail, { kind: K }> {
-		const bullet = frame(`<a:p><a:pPr>${pPr}</a:pPr><a:r><a:t>x</a:t></a:r></a:p>`).paragraphs[0].bulletDetail
+		const bullet = at(frame(`<a:p><a:pPr>${pPr}</a:pPr><a:r><a:t>x</a:t></a:r></a:p>`).paragraphs, 0).bulletDetail
 		if (bullet?.kind !== kind) throw new Error(`expected a ${kind} bullet, got ${JSON.stringify(bullet)}`)
 		return bullet as Extract<BulletDetail, { kind: K }>
 	}
@@ -199,7 +199,7 @@ describe('Paragraph getter edges', () => {
 		const buBlip = bulletOf(`<a:buBlip><a:blip/></a:buBlip>`, 'picture')
 		assertEqual(buBlip.imagePartName, null, 'unresolvable embed reads null')
 
-		const bare = frame(`<a:p><a:r><a:t>x</a:t></a:r></a:p>`).paragraphs[0]
+		const bare = at(frame(`<a:p><a:r><a:t>x</a:t></a:r></a:p>`).paragraphs, 0)
 		assertEqual(bare.bulletDetail, null, 'no a:pPr at all → inherited, reported as null')
 	})
 
@@ -219,7 +219,7 @@ describe('Paragraph getter edges', () => {
 				`<p:txBody xmlns:p="${P_NS}" xmlns:a="${A_NS}" xmlns:r="${R_NS}"><a:bodyPr/>` +
 				`<a:p><a:pPr><a:buBlip><a:blip r:embed="${relId}"/></a:buBlip></a:pPr><a:r><a:t>x</a:t></a:r></a:p></p:txBody>`
 			const txBody = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
-			const bullet = new TextFrame(txBody, bareText(stubPart(), rels)).paragraphs[0].bulletDetail
+			const bullet = at(new TextFrame(txBody, bareText(stubPart(), rels)).paragraphs, 0).bulletDetail
 			if (bullet?.kind !== 'picture') throw new Error(`expected a picture bullet, got ${JSON.stringify(bullet)}`)
 			return bullet.imagePartName
 		}
@@ -261,13 +261,13 @@ describe('Paragraph getter edges', () => {
 	})
 
 	test('text concatenates runs and fields and renders a:br as a newline', () => {
-		const p = frame(`<a:p><a:r><a:t>A</a:t></a:r><a:br/><a:fld><a:t>B</a:t></a:fld></a:p>`).paragraphs[0]
+		const p = at(frame(`<a:p><a:r><a:t>A</a:t></a:r><a:br/><a:fld><a:t>B</a:t></a:fld></a:p>`).paragraphs, 0)
 		assertEqual(p.text, 'A\nB', 'run + break + field text in order')
 	})
 
 	test('element_ exposes the a:p element', () => {
 		assertEqual(
-			frame(`<a:p><a:r><a:t>x</a:t></a:r></a:p>`).paragraphs[0].element_.localName,
+			at(frame(`<a:p><a:r><a:t>x</a:t></a:r></a:p>`).paragraphs, 0).element_.localName,
 			'p',
 			'element_ is the a:p'
 		)
@@ -279,14 +279,18 @@ describe('TextFrame.text setter + resolvedAnchor + element_', () => {
 		const f = frame(`<a:p><a:r><a:rPr b="1"/><a:t>first</a:t></a:r></a:p><a:p><a:r><a:t>second</a:t></a:r></a:p>`)
 		f.text = 'merged'
 		assertEqual(f.paragraphs.length, 1, 'collapsed to a single paragraph')
-		assertEqual(f.paragraphs[0].text, 'merged', 'new text is written')
-		assertEqual(f.paragraphs[0].runs[0].bold, true, 'the first run rPr (bold) is carried onto the new run')
+		assertEqual(at(f.paragraphs, 0).text, 'merged', 'new text is written')
+		assertEqual(at(at(f.paragraphs, 0).runs, 0).bold, true, 'the first run rPr (bold) is carried onto the new run')
 	})
 
 	test('setting text on an empty body creates the paragraph and preserves whitespace', () => {
 		const f = frame(``) // just <a:bodyPr/>, no a:p
 		f.text = '  spaced  '
-		assertEqual(f.paragraphs[0].runs[0].text, '  spaced  ', 'a fresh paragraph carries the padded text verbatim')
+		assertEqual(
+			at(at(f.paragraphs, 0).runs, 0).text,
+			'  spaced  ',
+			'a fresh paragraph carries the padded text verbatim'
+		)
 	})
 
 	test('resolvedAnchor returns the own bodyPr anchor, else null with no placeholder', () => {

@@ -22,6 +22,7 @@ import {
 	assertUnchangedExcept,
 	defined,
 	readEntry,
+	at,
 } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture } from './corpus.ts'
@@ -42,7 +43,7 @@ describe('Presentation.removeSlide', () => {
 		const deck = await openFixture('mixed')
 		const before = deck.slides.length
 		assert(before > 1, 'fixture has multiple slides')
-		const removedId = deck.slides[0].slideId
+		const removedId = at(deck.slides, 0).slideId
 		const removedPart = deck.removeSlide(0)
 
 		assertEqual(deck.slides.length, before - 1, 'one fewer slide in-memory')
@@ -57,7 +58,7 @@ describe('Presentation.removeSlide', () => {
 
 	test('keeps shared chrome (layout/master/theme) when a slide is removed', async () => {
 		const deck = await openFixture('mixed')
-		const layout = defined(resolveSingle(deck.opc, deck.slides[0].partName, SLIDE_LAYOUT_REL))
+		const layout = defined(resolveSingle(deck.opc, at(deck.slides, 0).partName, SLIDE_LAYOUT_REL))
 		const master = resolveSingle(deck.opc, layout, SLIDE_MASTER_REL)
 		deck.removeSlide(0)
 		const reopened = await Presentation.load(await deck.save())
@@ -146,11 +147,11 @@ describe('Presentation.removeSlide', () => {
 		pres.addSlide().addText('one', { x: 1, y: 1, w: 3, h: 1 })
 		pres.addSlide().addText('back', { x: 1, y: 1, w: 3, h: 1, hyperlink: { slide: 1 } })
 		const deck = await Presentation.load(await pres.toBytes())
-		const linking = deck.slides[1].partName
+		const linking = at(deck.slides, 1).partName
 
 		const { codes, messages } = await captureDiagnostics(() => deck.removeSlide(0))
 		assertEqual(codes.join(), 'slide/removed-link-target', 'one warning')
-		assert(messages[0].includes(linking), 'naming the slide that linked')
+		assert(at(messages, 0).includes(linking), 'naming the slide that linked')
 
 		const reopened = await Presentation.load(await deck.save())
 		assertNoDanglingRels(reopened.opc)
@@ -158,7 +159,7 @@ describe('Presentation.removeSlide', () => {
 		assertEqual(slideRels.length, 0, 'the jump link relationship is gone')
 		const xml = new TextDecoder().decode(defined(reopened.opc.part(linking)).serialize())
 		assert(!xml.includes('hlinkClick'), 'and so is every link element that named it')
-		assertEqual(reopened.slides[0].shapes[0].text, 'back', 'the text that carried the link stays')
+		assertEqual(at(at(reopened.slides, 0).shapes, 0).text, 'back', 'the text that carried the link stays')
 	})
 
 	test('takes the removed slide out of a custom show, with the relationship only that entry named', async () => {

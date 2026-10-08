@@ -25,6 +25,7 @@ import {
 	assertUnchangedExcept,
 	readEntry,
 	caughtSync,
+	at,
 } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture } from './corpus.ts'
@@ -78,7 +79,7 @@ function masterLayoutList(opc: OpcPackage, masterPartName: string) {
 
 /** Count source layouts on the first registered master of a package. */
 function sourceLayoutCount(opc: OpcPackage) {
-	return masterLayoutList(opc, registeredMasters(opc)[0]).length
+	return masterLayoutList(opc, at(registeredMasters(opc), 0)).length
 }
 
 /** ST_SlideMasterId / ST_SlideLayoutId floor (ECMA-376); both ids share this space. */
@@ -121,7 +122,7 @@ describe('Presentation.importSlideMasters', () => {
 
 		const result = target.importSlideMasters(source)
 		assertEqual(result.length, 1, 'one master was grafted')
-		assertEqual(result[0].layoutPartNames.length, familySize, 'all source layouts came across (not just used ones)')
+		assertEqual(at(result, 0).layoutPartNames.length, familySize, 'all source layouts came across (not just used ones)')
 
 		const reopened = await Presentation.load(await target.save())
 		const opc = reopened.opc
@@ -129,7 +130,7 @@ describe('Presentation.importSlideMasters', () => {
 
 		const masters = registeredMasters(opc)
 		assertEqual(masters.length, mastersBefore + 1, 'the grafted master is registered in p:sldMasterIdLst')
-		const grafted = masters[masters.length - 1] // registerMaster appends
+		const grafted = at(masters, masters.length - 1) // registerMaster appends
 		const listed = masterLayoutList(opc, grafted)
 		assertEqual(listed.length, familySize, 'the grafted master lists its full layout family')
 		assertEqual(new Set(listed).size, listed.length, 'with no duplicate layout entries')
@@ -202,7 +203,7 @@ describe('Presentation.importSlideMasters', () => {
 		const target = await openFixture('empty')
 		const source = await openFixture('image')
 		const result = target.importSlideMasters(source, { layouts: (_name, index) => index < 3 })
-		assertEqual(result[0].layoutPartNames.length, 3, 'only the first three layouts were grafted')
+		assertEqual(at(result, 0).layoutPartNames.length, 3, 'only the first three layouts were grafted')
 
 		const reopened = await Presentation.load(await target.save())
 		const grafted = defined(registeredMasters(reopened.opc).pop())
@@ -238,8 +239,8 @@ describe('Presentation.importSlideMasters', () => {
 		// missing from the source used to leave a registered master holding part of its family.
 		const target = await openFixture('empty')
 		const source = await openFixture('image')
-		const layouts = masterLayoutList(source.opc, registeredMasters(source.opc)[0])
-		source.opc.removePart(layouts[layouts.length - 1])
+		const layouts = masterLayoutList(source.opc, at(registeredMasters(source.opc), 0))
+		source.opc.removePart(at(layouts, layouts.length - 1))
 		const mastersBefore = registeredMasters(target.opc).length
 		const before = await target.save()
 
@@ -496,7 +497,7 @@ describe('Presentation.importSlideMasters({ primary })', () => {
 
 		const withFlag = registeredMasters((await Presentation.load(await graftedFirst.save())).opc)
 		assertEqual(withFlag.length, beforeCount + 1, 'the grafted master is registered')
-		assertEqual(withFlag[0], result[0].partName, 'the grafted master now leads the list')
+		assertEqual(withFlag[0], at(result, 0).partName, 'the grafted master now leads the list')
 
 		// Same graft without the flag: the grafted master appends after the original.
 		const appended = await openFixture('empty')
@@ -505,7 +506,7 @@ describe('Presentation.importSlideMasters({ primary })', () => {
 		const withoutFlag = registeredMasters((await Presentation.load(await appended.save())).opc)
 		assertEqual(
 			withoutFlag[withoutFlag.length - 1],
-			trailing[0].partName,
+			at(trailing, 0).partName,
 			'without the flag the grafted master trails, confirming the flag is what moved it'
 		)
 	})

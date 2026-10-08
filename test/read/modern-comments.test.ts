@@ -7,7 +7,7 @@
 
 import { describe, test } from 'vitest'
 
-import { assert, assertEqual } from '../helpers.ts'
+import { assert, assertEqual, at, take } from '../helpers.ts'
 import { authorRead } from './authored.ts'
 import { openFixture } from './corpus.ts'
 
@@ -21,27 +21,27 @@ describe('modern (2018) comments', () => {
 		assertEqual(pres.commentSchema, 'modern', 'a modernComment_* part → modern')
 		// The modern schema does not populate the legacy accessors.
 		assertEqual(pres.commentAuthors.length, 0, 'no legacy commentAuthors')
-		assertEqual(pres.slides[1].comments.length, 0, 'no legacy per-slide comments')
+		assertEqual(at(pres.slides, 1).comments.length, 0, 'no legacy per-slide comments')
 	})
 
 	test('modernCommentAuthors decode with GUID ids, userId and providerId', async () => {
 		const authors = (await load('modern-comments.pptx')).modernCommentAuthors
 		assertEqual(authors.length, 2, 'two authors in authors.xml')
-		assertEqual(authors[0].id, '{E8A64ABA-B822-D93A-1829-32C11809D46F}', 'author id is the GUID string')
-		assertEqual(authors[0].name, 'Ada Lovelace', 'first author name')
-		assertEqual(authors[0].initials, 'AL', 'first author initials')
-		assertEqual(authors[0].userId, 'ada@example.com', 'userId decoded')
-		assertEqual(authors[0].providerId, 'Windows Live', 'providerId decoded')
-		assertEqual(authors[1].name, 'Grace Hopper', 'second author name')
+		assertEqual(at(authors, 0).id, '{E8A64ABA-B822-D93A-1829-32C11809D46F}', 'author id is the GUID string')
+		assertEqual(at(authors, 0).name, 'Ada Lovelace', 'first author name')
+		assertEqual(at(authors, 0).initials, 'AL', 'first author initials')
+		assertEqual(at(authors, 0).userId, 'ada@example.com', 'userId decoded')
+		assertEqual(at(authors, 0).providerId, 'Windows Live', 'providerId decoded')
+		assertEqual(at(authors, 1).name, 'Grace Hopper', 'second author name')
 	})
 
 	test('a slide with no modern comments part reads []', async () => {
 		const pres = await load('modern-comments.pptx')
-		assertEqual(pres.slides[0].modernComments.length, 0, 'slide 1 has no modern comments')
+		assertEqual(at(pres.slides, 0).modernComments.length, 0, 'slide 1 has no modern comments')
 	})
 
 	test('a comment resolves its author, position, timestamp and body text', async () => {
-		const [comment] = (await load('modern-comments.pptx')).slides[1].modernComments
+		const [comment] = at((await load('modern-comments.pptx')).slides, 1).modernComments
 		assert(comment, 'slide 2 has one modern comment')
 		assertEqual(comment.id, '{0B4BE8B0-B578-4C2F-B9E5-A882080696D3}', 'comment GUID id')
 		assertEqual(comment.author, 'Ada Lovelace', 'author resolved via @authorId GUID')
@@ -54,9 +54,9 @@ describe('modern (2018) comments', () => {
 	})
 
 	test('the reply is nested under the comment and resolves its own author', async () => {
-		const [comment] = (await load('modern-comments.pptx')).slides[1].modernComments
+		const [comment] = take(at((await load('modern-comments.pptx')).slides, 1).modernComments, 1)
 		assertEqual(comment.replies.length, 1, 'one reply, nested not flattened')
-		const reply = comment.replies[0]
+		const reply = at(comment.replies, 0)
 		assertEqual(reply.id, '{95F4A554-CD5C-4107-8752-201F04D46DCB}', 'reply GUID id')
 		assertEqual(reply.author, 'Grace Hopper', 'reply resolves the second author')
 		assertEqual(reply.authorInitials, 'GH', 'reply author initials')

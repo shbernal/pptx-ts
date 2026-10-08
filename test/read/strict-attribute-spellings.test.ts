@@ -20,7 +20,7 @@ import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { Presentation, isPicture } from '../../dist/read.js'
 import { TableStyle } from '../../dist/node.js'
-import { PNG_1X1, assert, assertEqual, defined, readEntry } from '../helpers.ts'
+import { PNG_1X1, assert, assertEqual, defined, readEntry, at } from '../helpers.ts'
 import { authorRead, authorReadWithFixtureStyles, firstTable } from './authored.ts'
 
 /** Apply `rewrite` to every slide part of `buf` and reload the result. */
@@ -91,12 +91,12 @@ describe('xsd:boolean spelled true/false', () => {
 	test('Slide.hidden reads p:sld/@show="false"', async () => {
 		const { buf } = await authorSpellingDeck()
 		const hiddenPresentation = await Presentation.load(buf)
-		hiddenPresentation.slides[0].hidden = true
+		at(hiddenPresentation.slides, 0).hidden = true
 		const reopened = await reloadWithSlideXml(await hiddenPresentation.save(), (xml) => {
 			assert(xml.includes('show="0"'), 'the setter writes the digit form')
 			return xml.replaceAll('show="0"', 'show="false"')
 		})
-		assertEqual(reopened.slides[0].hidden, true, 'show="false" is a hidden slide')
+		assertEqual(at(reopened.slides, 0).hidden, true, 'show="false" is a hidden slide')
 	})
 })
 
@@ -107,7 +107,7 @@ describe('a:ST_Percentage spelled with a literal %', () => {
 			assert(/<a:srcRect l="\d+"/.test(xml), 'the authored deck writes the fixed-point form')
 			return xml.replace(/<a:srcRect l="\d+"/, '<a:srcRect l="10%"')
 		})
-		const picture = defined(reopened.slides[0].shapes.find((shape) => shape.shapeType === 'picture'))
+		const picture = defined(at(reopened.slides, 0).shapes.find((shape) => shape.shapeType === 'picture'))
 		assertEqual(defined(picture.crop, 'the picture reads a crop').left, 0.1, 'l="10%" is a tenth of the source width')
 	})
 
@@ -117,7 +117,7 @@ describe('a:ST_Percentage spelled with a literal %', () => {
 			assert(xml.includes('pos="50000"'), 'the authored deck writes the fixed-point form')
 			return xml.replaceAll('pos="50000"', 'pos="50%"')
 		})
-		const gradientFill = defined(reopened.slides[0].shapes.find((s) => s.gradientFill)?.gradientFill)
+		const gradientFill = defined(at(reopened.slides, 0).shapes.find((s) => s.gradientFill)?.gradientFill)
 		const positions = gradientFill.stops.map((stop) => stop.position)
 		assert(positions.includes(0.5), `a 50% stop reads as 0.5, got ${JSON.stringify(positions)}`)
 	})
@@ -153,7 +153,7 @@ describe('what the digit-only readings cost downstream', () => {
 		const fixed = await Presentation.load(buf)
 		const percent = await reloadWithSlideXml(buf, (xml) => xml.replace(/<a:srcRect l="\d+"/, '<a:srcRect l="20%"'))
 		const cropOf = (presentation: Presentation) =>
-			defined(defined(presentation.slides[0].shapes.find(isPicture)).crop).left
+			defined(defined(at(presentation.slides, 0).shapes.find(isPicture)).crop).left
 		assertEqual(cropOf(fixed), 0.2, 'the authored deck crops a fifth off the left')
 		assertEqual(cropOf(percent), cropOf(fixed), 'and `20%` is the same fifth')
 	})

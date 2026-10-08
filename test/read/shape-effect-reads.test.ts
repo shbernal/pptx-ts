@@ -19,7 +19,7 @@ import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
 import { AutoShape, type ColorRef, type Presentation, type ShapeHost, type ThemeContext } from '../../dist/read.js'
 import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.ts'
-import { assert, assertEqual, defined, expectDefined } from '../helpers.ts'
+import { assert, assertEqual, defined, expectDefined, at } from '../helpers.ts'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
@@ -40,7 +40,7 @@ function ctx(): ThemeContext {
 function sp(spPrInner: string) {
 	const xml = `<p:spTree xmlns:p="${P_NS}" xmlns:a="${A_NS}"><p:sp>${spPrInner}</p:sp></p:spTree>`
 	const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
-	const el = spTree.getElementsByTagNameNS(P_NS, 'sp')[0]
+	const el = at(spTree.getElementsByTagNameNS(P_NS, 'sp'), 0)
 	return new AutoShape(el, { themeContext: () => ctx() } as Pick<ShapeHost, 'themeContext'> as ShapeHost)
 }
 
@@ -164,8 +164,8 @@ describe('Shape.gradientFill — the a:path (radial/rectangular) branch', () => 
 		assertEqual(grad.path, 'circle', 'the path shape is surfaced')
 		assertEqual(grad.angleDeg, null, 'a path gradient has no linear angle')
 		assertEqual(grad.stops.length, 2, 'both stops surfaced')
-		assertEqual(grad.stops[0].position, 0, 'first stop at 0%')
-		assertEqual(grad.stops[1].position, null, 'a stop with no @pos reports a null position')
+		assertEqual(at(grad.stops, 0).position, 0, 'first stop at 0%')
+		assertEqual(at(grad.stops, 1).position, null, 'a stop with no @pos reports a null position')
 	})
 
 	test('a non-gradient fill has no gradientFill', () => {

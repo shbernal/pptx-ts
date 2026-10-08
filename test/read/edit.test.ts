@@ -8,7 +8,7 @@
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { throws, bytesEqual, assert, assertEqual, defined, partBodies, assertUnchangedExcept } from '../helpers.ts'
+import { throws, bytesEqual, assert, assertEqual, defined, partBodies, assertUnchangedExcept, at } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture } from './corpus.ts'
 
@@ -21,7 +21,7 @@ async function editAndReopen(name: string, edit: (presentation: Presentation) =>
 }
 
 function replaceTextShape(presentation: Presentation) {
-	return defined(presentation.slides[0].shapes.find((shape) => shape.name === 'replaceText'))
+	return defined(at(presentation.slides, 0).shapes.find((shape) => shape.name === 'replaceText'))
 }
 
 /** The text frame of the `replaceText` shape on slide 1. */
@@ -32,14 +32,14 @@ function replaceTextFrame(presentation: Presentation) {
 describe('Run text editing', () => {
 	test('run.text mutates the a:t node and survives a reload', async () => {
 		const { reopened } = await editAndReopen('textbox', (presentation) => {
-			replaceTextFrame(presentation).paragraphs[0].runs[0].text = 'CHANGED'
+			at(at(replaceTextFrame(presentation).paragraphs, 0).runs, 0).text = 'CHANGED'
 		})
-		assertEqual(replaceTextFrame(reopened).paragraphs[0].runs[0].text, 'CHANGED', 'edited run text reloads')
+		assertEqual(at(at(replaceTextFrame(reopened).paragraphs, 0).runs, 0).text, 'CHANGED', 'edited run text reloads')
 	})
 
 	test('whitespace-significant text gets xml:space="preserve"', async () => {
 		const { saved } = await editAndReopen('textbox', (presentation) => {
-			replaceTextFrame(presentation).paragraphs[0].runs[0].text = '  spaced  '
+			at(at(replaceTextFrame(presentation).paragraphs, 0).runs, 0).text = '  spaced  '
 		})
 		const slideXml = new TextDecoder().decode((await partBodies(saved)).get('ppt/slides/slide1.xml'))
 		assert(slideXml.includes('xml:space="preserve"'), 'preserve attr present')
@@ -49,7 +49,7 @@ describe('Run text editing', () => {
 	test('editing one slide leaves every other part byte-identical', async () => {
 		const input = await readFile(fixturePath('textbox'))
 		const presentation = await Presentation.load(input)
-		replaceTextFrame(presentation).paragraphs[0].runs[0].text = 'CHANGED'
+		at(at(replaceTextFrame(presentation).paragraphs, 0).runs, 0).text = 'CHANGED'
 		const inputBodies = await partBodies(input)
 		const outputBodies = await partBodies(await presentation.save())
 		const dirty = 'ppt/slides/slide1.xml'
@@ -61,13 +61,13 @@ describe('Run text editing', () => {
 describe('Run font properties', () => {
 	test('sets size, bold, font, and explicit colour; clears the prior scheme colour', async () => {
 		const { reopened } = await editAndReopen('textbox', (presentation) => {
-			const run = replaceTextFrame(presentation).paragraphs[0].runs[0]
+			const run = at(at(replaceTextFrame(presentation).paragraphs, 0).runs, 0)
 			run.fontSizePt = 32
 			run.bold = true
 			run.fontName = 'Georgia'
 			run.color = 'FF0000' // run[0] starts with a schemeClr fill; this must replace it
 		})
-		const run = replaceTextFrame(reopened).paragraphs[0].runs[0]
+		const run = at(at(replaceTextFrame(reopened).paragraphs, 0).runs, 0)
 		assertEqual(run.fontSizePt, 32, 'font size reloads (3200 → 32pt)')
 		assertEqual(run.bold, true, 'bold reloads')
 		assertEqual(run.fontName, 'Georgia', 'font name reloads')
@@ -79,36 +79,38 @@ describe('Run font properties', () => {
 	test('setting a boolean prop to null removes it (back to inherited)', async () => {
 		// run[0] is italic; clearing it should drop the @i attribute, not set i="0".
 		const { saved, reopened } = await editAndReopen('textbox', (presentation) => {
-			replaceTextFrame(presentation).paragraphs[0].runs[0].italic = null
+			at(at(replaceTextFrame(presentation).paragraphs, 0).runs, 0).italic = null
 		})
-		assertEqual(replaceTextFrame(reopened).paragraphs[0].runs[0].italic, null, 'italic now inherited')
+		assertEqual(at(at(replaceTextFrame(reopened).paragraphs, 0).runs, 0).italic, null, 'italic now inherited')
 		const slideXml = new TextDecoder().decode((await partBodies(saved)).get('ppt/slides/slide1.xml'))
 		assert(!/<a:rPr[^>]*\bi="0"/.test(slideXml), 'must not emit i="0"; the attribute is removed')
 	})
 
 	test('creates an a:rPr when a plain run gains a property', async () => {
 		const { reopened } = await editAndReopen('textbox', (presentation) => {
-			const plain = defined(replaceTextFrame(presentation).paragraphs[0].runs.find((run) => run.text === ' is test'))
+			const plain = defined(
+				at(replaceTextFrame(presentation).paragraphs, 0).runs.find((run) => run.text === ' is test')
+			)
 			assertEqual(plain.bold, null, 'precondition: plain run has no rPr/@b')
 			plain.bold = true
 		})
-		const plain = replaceTextFrame(reopened).paragraphs[0].runs.find((run) => run.text === ' is test')
+		const plain = at(replaceTextFrame(reopened).paragraphs, 0).runs.find((run) => run.text === ' is test')
 		assert(plain, 'the " is test" run still exists')
 		assertEqual(plain.bold, true, 'bold persisted via a freshly created rPr')
 	})
 
 	test('schemeColor setter replaces an explicit srgb fill', async () => {
 		const { reopened } = await editAndReopen('textbox', (presentation) => {
-			const run = replaceTextFrame(presentation).paragraphs[0].runs[0]
+			const run = at(at(replaceTextFrame(presentation).paragraphs, 0).runs, 0)
 			run.schemeColor = 'accent4'
 		})
-		const run = replaceTextFrame(reopened).paragraphs[0].runs[0]
+		const run = at(at(replaceTextFrame(reopened).paragraphs, 0).runs, 0)
 		assertEqual(run.schemeColor, 'accent4', 'scheme colour reloads')
 		assertEqual(run.color, null, 'no explicit srgb colour remains')
 	})
 
 	test('rejects a non-positive font size and a malformed colour', async () => {
-		const run = replaceTextFrame(await openFixture('textbox')).paragraphs[0].runs[0]
+		const run = at(at(replaceTextFrame(await openFixture('textbox')).paragraphs, 0).runs, 0)
 		assert(
 			throws(() => (run.fontSizePt = 0)),
 			'fontSizePt = 0 should throw'
@@ -183,18 +185,18 @@ describe('Shape geometry editing', () => {
 describe('Slide.hidden editing', () => {
 	test('hiding a slide writes show="0" and survives a reload', async () => {
 		const { reopened } = await editAndReopen('textbox', (presentation) => {
-			assertEqual(presentation.slides[0].hidden, false, 'slide starts shown')
-			presentation.slides[0].hidden = true
+			assertEqual(at(presentation.slides, 0).hidden, false, 'slide starts shown')
+			at(presentation.slides, 0).hidden = true
 		})
-		assertEqual(reopened.slides[0].hidden, true, 'hidden state reloads')
+		assertEqual(at(reopened.slides, 0).hidden, true, 'hidden state reloads')
 	})
 
 	test('showing a hidden slide removes the attribute (canonical shown form)', async () => {
 		const { reopened, saved } = await editAndReopen('hidden', (presentation) => {
-			assertEqual(presentation.slides[1].hidden, true, 'slide 2 starts hidden')
-			presentation.slides[1].hidden = false
+			assertEqual(at(presentation.slides, 1).hidden, true, 'slide 2 starts hidden')
+			at(presentation.slides, 1).hidden = false
 		})
-		assertEqual(reopened.slides[1].hidden, false, 'shown state reloads')
+		assertEqual(at(reopened.slides, 1).hidden, false, 'shown state reloads')
 		const bodies = await partBodies(saved)
 		const slide2 = new TextDecoder().decode(bodies.get('ppt/slides/slide2.xml'))
 		assert(!slide2.includes('show='), `@show should be absent when shown; got: ${slide2.slice(0, 200)}`)
@@ -203,7 +205,7 @@ describe('Slide.hidden editing', () => {
 	test('toggling hidden marks only the owning slide part dirty', async () => {
 		const presentation = await openFixture('textbox')
 		const inputBodies = await partBodies(await presentation.save())
-		presentation.slides[1].hidden = true
+		at(presentation.slides, 1).hidden = true
 		const outputBodies = await partBodies(await presentation.save())
 		const dirty = 'ppt/slides/slide2.xml'
 		assert(!bytesEqual(inputBodies.get(dirty), outputBodies.get(dirty)), 'hidden slide body should differ')
@@ -220,7 +222,7 @@ describe('schema validity of edited packages', () => {
 			const shape = replaceTextShape(presentation)
 			shape.left = 914400
 			shape.width = 1828800
-			const run = defined(shape.textFrame).paragraphs[0].runs[0]
+			const run = at(at(defined(shape.textFrame).paragraphs, 0).runs, 0)
 			run.text = 'Edited'
 			run.fontSizePt = 28
 			run.bold = true

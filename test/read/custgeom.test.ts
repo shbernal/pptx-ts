@@ -15,7 +15,7 @@
 import { describe, test } from 'vitest'
 import type { CustomGeometryPath, Slide } from '../../dist/read.js'
 
-import { assert, assertEqual } from '../helpers.ts'
+import { assert, assertEqual, at } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 async function openCustgeom() {
@@ -39,11 +39,11 @@ function assertPath(actual: CustomGeometryPath, expected: CustomGeometryPath) {
 
 describe('Shape.customGeometry — real PowerPoint XML (custgeom.pptx)', () => {
 	test('freeform-lines: closed triangle from moveTo + lnTo + close', async () => {
-		const slide = (await openCustgeom()).slides[0]
+		const slide = at((await openCustgeom()).slides, 0)
 		const geom = shapeNamed(slide, 'freeform-lines').customGeometry
 		assert(geom, 'freeform-lines has custom geometry')
 		assertEqual(geom.paths.length, 1, 'one a:path')
-		assertPath(geom.paths[0], {
+		assertPath(at(geom.paths, 0), {
 			w: 2540001,
 			h: 2540001,
 			fill: 'norm', // no @fill → schema default
@@ -58,11 +58,11 @@ describe('Shape.customGeometry — real PowerPoint XML (custgeom.pptx)', () => {
 	})
 
 	test('freeform-cubic: cubicBezTo control points read in c1,c2,end order', async () => {
-		const slide = (await openCustgeom()).slides[0]
+		const slide = at((await openCustgeom()).slides, 0)
 		const geom = shapeNamed(slide, 'freeform-cubic').customGeometry
 		assert(geom, 'freeform-cubic has custom geometry')
 		assertEqual(geom.paths.length, 1, 'one a:path')
-		assertPath(geom.paths[0], {
+		assertPath(at(geom.paths, 0), {
 			w: 2540001,
 			h: 3302001,
 			fill: 'norm',
@@ -77,14 +77,15 @@ describe('Shape.customGeometry — real PowerPoint XML (custgeom.pptx)', () => {
 	})
 
 	test('freeform-hole: one path carries two moveTo…close contours in document order', async () => {
-		const slide = (await openCustgeom()).slides[0]
+		const slide = at((await openCustgeom()).slides, 0)
 		const geom = shapeNamed(slide, 'freeform-hole').customGeometry
 		assert(geom, 'freeform-hole has custom geometry')
 		// PowerPoint's Merge Shapes → Subtract emits a single a:path, NOT two.
 		assertEqual(geom.paths.length, 1, 'a hole is one a:path with multiple contours')
-		const { commands } = geom.paths[0]
-		assertEqual(geom.paths[0].w, 2540000, 'path w')
-		assertEqual(geom.paths[0].h, 1524000, 'path h')
+		const path = at(geom.paths, 0)
+		const { commands } = path
+		assertEqual(path.w, 2540000, 'path w')
+		assertEqual(path.h, 1524000, 'path h')
 		// Two moveTo / two close: the inner ellipse contour then the outer rectangle.
 		assertEqual(commands.filter((c) => c.cmd === 'moveTo').length, 2, 'two contours start with moveTo')
 		assertEqual(commands.filter((c) => c.cmd === 'close').length, 2, 'each contour closes')
@@ -110,7 +111,7 @@ describe('Shape.customGeometry — real PowerPoint XML (custgeom.pptx)', () => {
 	})
 
 	test('preset-rect: a preset-geometry shape reports customGeometry === null', async () => {
-		const slide = (await openCustgeom()).slides[0]
+		const slide = at((await openCustgeom()).slides, 0)
 		const rect = shapeNamed(slide, 'preset-rect')
 		assertEqual(rect.customGeometry, null, 'preset geometry → no custom geometry')
 		assertEqual(rect.presetGeometry, 'rect', 'preset-rect still reports its preset name')

@@ -17,7 +17,7 @@ import type { Element } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
 import TsPptx, { type Slide } from '../../dist/node.js'
 import { Presentation, type OpcPackage } from '../../dist/read.js'
-import { assert, assertEqual, bytesEqual, defined, caughtSync } from '../helpers.ts'
+import { assert, assertEqual, bytesEqual, defined, caughtSync, at } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { openFixture } from './corpus.ts'
 import { assertNoDanglingRels, resolveSingle } from './opc.ts'
@@ -68,7 +68,7 @@ function registeredNotesMasters(opc: OpcPackage) {
 
 /** The body placeholder's `p:txBody` XML of a slide's notes part. */
 function notesBodyXml(pres: Presentation, slideIndex: number) {
-	const xml = new TextDecoder().decode(defined(pres.slides[slideIndex].notesSlide).part.serialize())
+	const xml = new TextDecoder().decode(defined(at(pres.slides, slideIndex).notesSlide).part.serialize())
 	// The three placeholders in document order are sldImg (no txBody), body, sldNum.
 	const bodies = xml.match(/<p:txBody>[\s\S]*?<\/p:txBody>/g)
 	return bodies ? bodies[0] : null
@@ -86,21 +86,21 @@ describe('Slide.addNotes on a loaded deck', () => {
 		assertEqual(notes.text, 'what changed, and why', 'addNotes returns the modeled notes slide')
 
 		const reopened = await Presentation.load(await target.save())
-		assertEqual(reopened.slides[1].notesText, 'what changed, and why', 'notes survive save → reload')
+		assertEqual(at(reopened.slides, 1).notesText, 'what changed, and why', 'notes survive save → reload')
 		assertNoDanglingRels(reopened.opc)
 	})
 
 	test('splits on \\n into paragraphs, matching the write-side addNotes', async () => {
 		const written = await authoredDeck((slide) => slide.addNotes('line one\nline two'))
 		const read = await authoredDeck()
-		read.slides[0].addNotes('line one\nline two')
+		at(read.slides, 0).addNotes('line one\nline two')
 		const reopened = await Presentation.load(await read.save())
 
-		assertEqual(reopened.slides[0].notesText, 'line one\nline two', 'flattened text matches')
-		const reopenedNotes = defined(reopened.slides[0].notesTextFrame, 'the reopened slide has notes')
+		assertEqual(at(reopened.slides, 0).notesText, 'line one\nline two', 'flattened text matches')
+		const reopenedNotes = defined(at(reopened.slides, 0).notesTextFrame, 'the reopened slide has notes')
 		assertEqual(
 			reopenedNotes.paragraphs.length,
-			defined(written.slides[0].notesTextFrame, 'the written slide has notes').paragraphs.length,
+			defined(at(written.slides, 0).notesTextFrame, 'the written slide has notes').paragraphs.length,
 			'same paragraph count as the write path'
 		)
 		assertEqual(reopenedNotes.paragraphs.length, 2, 'two paragraphs')
@@ -113,7 +113,7 @@ describe('Slide.addNotes on a loaded deck', () => {
 	test('authors the same notes body the write path does, modulo empty-element spelling', async () => {
 		const written = await authoredDeck((slide) => slide.addNotes('line one\nline two'))
 		const read = await authoredDeck()
-		read.slides[0].addNotes('line one\nline two')
+		at(read.slides, 0).addNotes('line one\nline two')
 		const reopened = await Presentation.load(await read.save())
 
 		const collapseEmptyTags = (xml: string | null) => defined(xml).replace(/<([a-z0-9:]+)([^>]*?)><\/\1>/gi, '<$1$2/>')
@@ -131,7 +131,7 @@ describe('Slide.addNotes on a loaded deck', () => {
 		imported.addNotes('note')
 
 		const reopened = await Presentation.load(await target.save())
-		const slideName = reopened.slides[1].partName
+		const slideName = at(reopened.slides, 1).partName
 		const notesName = resolveSingle(reopened.opc, slideName, NOTES_SLIDE_REL)
 		assert(notesName, 'slide gained a notesSlide rel')
 
@@ -148,13 +148,13 @@ describe('Slide.addNotes on a loaded deck', () => {
 
 	test('annotates a deck that has no notes part and no notes master at all', async () => {
 		const deck = await openFixture('empty')
-		assertEqual(deck.slides[0].notesSlide, null, 'fixture slide has no notes part')
+		assertEqual(at(deck.slides, 0).notesSlide, null, 'fixture slide has no notes part')
 		assertEqual(registeredNotesMasters(deck.opc).length, 0, 'and the deck has no notes master')
 
-		deck.slides[0].addNotes('notes on a deck that never had any')
+		at(deck.slides, 0).addNotes('notes on a deck that never had any')
 
 		const reopened = await Presentation.load(await deck.save())
-		assertEqual(reopened.slides[0].notesText, 'notes on a deck that never had any')
+		assertEqual(at(reopened.slides, 0).notesText, 'notes on a deck that never had any')
 		assertEqual(registeredNotesMasters(reopened.opc).length, 1, 'a notes master was installed')
 		assertNoDanglingRels(reopened.opc)
 	})
@@ -174,8 +174,8 @@ describe('Slide.addNotes on a loaded deck', () => {
 		const masters = registeredNotesMasters(reopened.opc)
 		assertEqual(masters.length, 1, 'exactly one notesMaster registered')
 
-		const notesA = defined(resolveSingle(reopened.opc, reopened.slides[a.index].partName, NOTES_SLIDE_REL))
-		const notesB = defined(resolveSingle(reopened.opc, reopened.slides[b.index].partName, NOTES_SLIDE_REL))
+		const notesA = defined(resolveSingle(reopened.opc, at(reopened.slides, a.index).partName, NOTES_SLIDE_REL))
+		const notesB = defined(resolveSingle(reopened.opc, at(reopened.slides, b.index).partName, NOTES_SLIDE_REL))
 		assert(notesA !== notesB, 'each slide got its own notes part')
 		assertEqual(
 			resolveSingle(reopened.opc, notesA, NOTES_MASTER_REL),
@@ -183,8 +183,8 @@ describe('Slide.addNotes on a loaded deck', () => {
 			'both notes parts bind to the same master'
 		)
 		assertEqual(resolveSingle(reopened.opc, notesA, NOTES_MASTER_REL), masters[0], 'and it is the registered one')
-		assertEqual(reopened.slides[a.index].notesText, 'first')
-		assertEqual(reopened.slides[b.index].notesText, 'second')
+		assertEqual(at(reopened.slides, a.index).notesText, 'first')
+		assertEqual(at(reopened.slides, b.index).notesText, 'second')
 		assertNoDanglingRels(reopened.opc)
 	})
 
@@ -206,10 +206,10 @@ describe('Slide.addNotes on a loaded deck', () => {
 
 	test('the installed notes master binds to its own theme part, not the slide master’s', async () => {
 		const target = await openFixture('empty')
-		target.slides[0].addNotes('note')
+		at(target.slides, 0).addNotes('note')
 
 		const reopened = await Presentation.load(await target.save())
-		const master = registeredNotesMasters(reopened.opc)[0]
+		const master = at(registeredNotesMasters(reopened.opc), 0)
 		const notesTheme = resolveSingle(reopened.opc, master, THEME_REL)
 		assert(notesTheme, 'the notes master resolves a theme')
 
@@ -223,14 +223,14 @@ describe('Slide.addNotes on a loaded deck', () => {
 
 	test('replaces the body of a slide that already has notes, keeping the same part', async () => {
 		const deck = await authoredDeck((slide) => slide.addNotes('original'))
-		const partName = defined(deck.slides[0].notesSlide).part.partName
-		deck.slides[0].addNotes('replaced\nover two lines')
+		const partName = defined(at(deck.slides, 0).notesSlide).part.partName
+		at(deck.slides, 0).addNotes('replaced\nover two lines')
 
 		const reopened = await Presentation.load(await deck.save())
-		const notes = defined(reopened.slides[0].notesSlide, 'the reopened slide has notes')
+		const notes = defined(at(reopened.slides, 0).notesSlide, 'the reopened slide has notes')
 		assertEqual(notes.part.partName, partName, 'no second notes part was created')
-		assertEqual(reopened.slides[0].notesText, 'replaced\nover two lines', 'body was replaced')
-		assertEqual(defined(reopened.slides[0].notesTextFrame).paragraphs.length, 2, 'and re-split into paragraphs')
+		assertEqual(at(reopened.slides, 0).notesText, 'replaced\nover two lines', 'body was replaced')
+		assertEqual(defined(at(reopened.slides, 0).notesTextFrame).paragraphs.length, 2, 'and re-split into paragraphs')
 		// The other two placeholders are untouched by a body rewrite.
 		assert(notes.slideImage, 'sldImg placeholder survives')
 		assert(notes.slideNumber, 'sldNum placeholder survives')
@@ -243,8 +243,8 @@ describe('Slide.addNotes on a loaded deck', () => {
 		imported.addNotes('')
 
 		const reopened = await Presentation.load(await target.save())
-		assert(reopened.slides[1].notesSlide, 'the part exists')
-		assertEqual(reopened.slides[1].notesText, '', 'and reads back as empty, not null')
+		assert(at(reopened.slides, 1).notesSlide, 'the part exists')
+		assertEqual(at(reopened.slides, 1).notesText, '', 'and reads back as empty, not null')
 	})
 
 	test('escapes XML metacharacters in the note', async () => {
@@ -255,7 +255,7 @@ describe('Slide.addNotes on a loaded deck', () => {
 		imported.addNotes(raw)
 
 		const reopened = await Presentation.load(await target.save())
-		assertEqual(reopened.slides[1].notesText, raw, 'metacharacters round-trip as text, not markup')
+		assertEqual(at(reopened.slides, 1).notesText, raw, 'metacharacters round-trip as text, not markup')
 	})
 
 	test('a notes master that cannot be installed leaves no notes part behind', async () => {
@@ -263,7 +263,7 @@ describe('Slide.addNotes on a loaded deck', () => {
 		// master to a theme. It used to run after the notes part and the slide's relationship to it
 		// were added, so the refusal left both.
 		const deck = await openFixture('empty')
-		const slide = deck.slides[0]
+		const slide = at(deck.slides, 0)
 		const layout = defined(resolveSingle(deck.opc, slide.partName, SLIDE_LAYOUT_REL))
 		const master = defined(resolveSingle(deck.opc, layout, SLIDE_MASTER_REL))
 		const masterRels = deck.opc.relationshipsFor(master)
@@ -278,10 +278,10 @@ describe('Slide.addNotes on a loaded deck', () => {
 
 	test('a notes part whose target is missing is reported, not silently replaced', async () => {
 		const deck = await authoredDeck((slide) => slide.addNotes('original'))
-		const partName = defined(deck.slides[0].notesSlide).part.partName
+		const partName = defined(at(deck.slides, 0).notesSlide).part.partName
 		deck.opc.removePart(partName)
 
-		const code = caughtSync(() => deck.slides[0].addNotes('replacement'))?.code ?? null
+		const code = caughtSync(() => at(deck.slides, 0).addNotes('replacement'))?.code ?? null
 		assertEqual(code, 'package/part-missing', 'a dangling notes rel surfaces rather than being papered over')
 	})
 
@@ -289,7 +289,7 @@ describe('Slide.addNotes on a loaded deck', () => {
 		// The install branch, on a real PowerPoint deck: a notes part, a notes master,
 		// and a cloned theme all newly authored into a package that had none of them.
 		const target = await openFixture('empty')
-		target.slides[0].addNotes('validated notes\nsecond paragraph')
+		at(target.slides, 0).addNotes('validated notes\nsecond paragraph')
 		const errors = await validateBuf(Buffer.from(await target.save()))
 		assertEqual(errors.length, 0, `validator errors: ${JSON.stringify(errors).slice(0, 2000)}`)
 	})

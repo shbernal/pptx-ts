@@ -13,7 +13,7 @@
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { throws, bytesEqual, assert, assertEqual, defined, expectDefined, partBodies } from '../helpers.ts'
+import { throws, bytesEqual, assert, assertEqual, defined, expectDefined, partBodies, at } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture } from './corpus.ts'
 
@@ -24,7 +24,7 @@ const PNG_1X1 = new Uint8Array(
 
 describe('shape addressing', () => {
 	test('shapeByName and shapeById resolve the same shape', async () => {
-		const slide = (await openFixture('textbox')).slides[0]
+		const slide = at((await openFixture('textbox')).slides, 0)
 		const byName = slide.shapeByName('replaceText')
 		assert(byName, 'shapeByName finds the textbox')
 		const byId = slide.shapeById(byName.id)
@@ -34,7 +34,7 @@ describe('shape addressing', () => {
 	})
 
 	test('a shape with no drawing id reads null, and looking that id up misses', async () => {
-		const slide = (await openFixture('textbox')).slides[0]
+		const slide = at((await openFixture('textbox')).slides, 0)
 		const shape = slide.shapeByName('replaceText')
 		assert(shape, 'shapeByName finds the textbox')
 		const cNvPr = shape.element_.getElementsByTagName('p:cNvPr')[0]
@@ -49,7 +49,7 @@ describe('shape addressing', () => {
 	})
 
 	test('placeholder(type, idx?) targets master/layout placeholders', async () => {
-		const slide = (await openFixture('mixed')).slides[0]
+		const slide = at((await openFixture('mixed')).slides, 0)
 		const title = slide.placeholder('ctrTitle')
 		expectDefined(title, 'finds the centre-title placeholder')
 		assertEqual(title.name, 'Titre 1', 'ctrTitle is the expected shape')
@@ -62,7 +62,7 @@ describe('shape addressing', () => {
 	})
 
 	test('non-placeholder shapes report a null placeholder', async () => {
-		const slide = (await openFixture('textbox')).slides[0]
+		const slide = at((await openFixture('textbox')).slides, 0)
 		assertEqual(defined(slide.shapeByName('replaceText')).placeholder, null, 'a plain text box is not a placeholder')
 	})
 })
@@ -70,15 +70,15 @@ describe('shape addressing', () => {
 describe('whole-text-frame text swap', () => {
 	test('Shape.text collapses to one run, preserving the first run formatting, and reloads', async () => {
 		const presentation = await openFixture('textbox')
-		const shape = defined(presentation.slides[0].shapeByName('replaceText'))
+		const shape = defined(at(presentation.slides, 0).shapeByName('replaceText'))
 		shape.text = 'BRAND NEW TEXT'
 
 		const reopened = await Presentation.load(await presentation.save())
-		const frame = defined(defined(reopened.slides[0].shapeByName('replaceText')).textFrame)
+		const frame = defined(defined(at(reopened.slides, 0).shapeByName('replaceText')).textFrame)
 		assertEqual(frame.text, 'BRAND NEW TEXT', 'whole-frame text reloads')
 		assertEqual(frame.paragraphs.length, 1, 'collapsed to a single paragraph')
-		const run = frame.paragraphs[0].runs[0]
-		assertEqual(frame.paragraphs[0].runs.length, 1, 'collapsed to a single run')
+		const run = at(at(frame.paragraphs, 0).runs, 0)
+		assertEqual(at(frame.paragraphs, 0).runs.length, 1, 'collapsed to a single run')
 		// The first original run was italic, 20pt — that formatting carries over.
 		assertEqual(run.italic, true, 'first run italic preserved')
 		assertEqual(run.fontSizePt, 20, 'first run size preserved')
@@ -86,38 +86,42 @@ describe('whole-text-frame text swap', () => {
 
 	test('TextFrame.text behaves identically to Shape.text', async () => {
 		const presentation = await openFixture('textbox')
-		defined(defined(presentation.slides[0].shapeByName('replaceText')).textFrame).text = 'VIA FRAME'
+		defined(defined(at(presentation.slides, 0).shapeByName('replaceText')).textFrame).text = 'VIA FRAME'
 		const reopened = await Presentation.load(await presentation.save())
-		assertEqual(defined(reopened.slides[0].shapeByName('replaceText')).text, 'VIA FRAME', 'textFrame.text reloads')
+		assertEqual(defined(at(reopened.slides, 0).shapeByName('replaceText')).text, 'VIA FRAME', 'textFrame.text reloads')
 	})
 
 	test('placeholder text can be replaced in place', async () => {
 		const presentation = await openFixture('mixed')
-		defined(presentation.slides[0].placeholder('ctrTitle')).text = 'Replaced Title'
+		defined(at(presentation.slides, 0).placeholder('ctrTitle')).text = 'Replaced Title'
 		const reopened = await Presentation.load(await presentation.save())
-		assertEqual(defined(reopened.slides[0].placeholder('ctrTitle')).text, 'Replaced Title', 'placeholder title reloads')
+		assertEqual(
+			defined(at(reopened.slides, 0).placeholder('ctrTitle')).text,
+			'Replaced Title',
+			'placeholder title reloads'
+		)
 	})
 
 	test('Paragraph.text replaces one paragraph and leaves its siblings alone', async () => {
 		const presentation = await openFixture('textbox')
-		const frame = defined(defined(presentation.slides[0].shapeByName('replaceText')).textFrame)
+		const frame = defined(defined(at(presentation.slides, 0).shapeByName('replaceText')).textFrame)
 		const before = frame.paragraphs.map((paragraph) => paragraph.text)
 		assert(before.length > 1, 'fixture has several paragraphs to distinguish the two setters')
-		frame.paragraphs[0].text = 'ONE PARAGRAPH ONLY'
+		at(frame.paragraphs, 0).text = 'ONE PARAGRAPH ONLY'
 
 		const reopened = await Presentation.load(await presentation.save())
-		const reframe = defined(defined(reopened.slides[0].shapeByName('replaceText')).textFrame)
+		const reframe = defined(defined(at(reopened.slides, 0).shapeByName('replaceText')).textFrame)
 		assertEqual(reframe.paragraphs.length, before.length, 'sibling paragraphs survive')
-		assertEqual(reframe.paragraphs[0].text, 'ONE PARAGRAPH ONLY', 'the edited paragraph reloads')
-		assertEqual(reframe.paragraphs[1].text, before[1], 'the next paragraph is untouched')
+		assertEqual(at(reframe.paragraphs, 0).text, 'ONE PARAGRAPH ONLY', 'the edited paragraph reloads')
+		assertEqual(at(reframe.paragraphs, 1).text, before[1], 'the next paragraph is untouched')
 		// The paragraph's first run was italic, 20pt — that formatting carries over.
-		assertEqual(reframe.paragraphs[0].runs.length, 1, 'collapsed to a single run')
-		assertEqual(reframe.paragraphs[0].runs[0].italic, true, 'first run italic preserved')
-		assertEqual(reframe.paragraphs[0].runs[0].fontSizePt, 20, 'first run size preserved')
+		assertEqual(at(reframe.paragraphs, 0).runs.length, 1, 'collapsed to a single run')
+		assertEqual(at(at(reframe.paragraphs, 0).runs, 0).italic, true, 'first run italic preserved')
+		assertEqual(at(at(reframe.paragraphs, 0).runs, 0).fontSizePt, 20, 'first run size preserved')
 	})
 
 	test('Shape.text throws on a shape with no text frame', async () => {
-		const picture = (await openFixture('image')).slides[0].shapeByName('Grafik 5')
+		const picture = at((await openFixture('image')).slides, 0).shapeByName('Grafik 5')
 		expectDefined(picture, 'fixture has the picture')
 		assert(
 			throws(() => {
@@ -131,19 +135,19 @@ describe('whole-text-frame text swap', () => {
 describe('targeted run edit preserves sibling run formatting', () => {
 	test('replacing one run leaves its siblings (italic/bold) untouched', async () => {
 		const presentation = await openFixture('textbox')
-		const frame = defined(defined(presentation.slides[0].shapeByName('replaceText')).textFrame)
+		const frame = defined(defined(at(presentation.slides, 0).shapeByName('replaceText')).textFrame)
 		// Para 2 holds the "{{replace}}" run (16pt) among differently-formatted siblings.
-		const para = frame.paragraphs[2]
+		const para = at(frame.paragraphs, 2)
 		const target = para.runs.find((run) => run.text === '{{replace}}')
 		expectDefined(target, 'found the {{replace}} run')
 		target.text = 'VALUE'
 
 		const reopened = await Presentation.load(await presentation.save())
-		const reframe = defined(defined(reopened.slides[0].shapeByName('replaceText')).textFrame)
+		const reframe = defined(defined(at(reopened.slides, 0).shapeByName('replaceText')).textFrame)
 		assert(reframe.text.includes('VALUE'), 'the targeted run text changed')
 		// Sibling runs in paragraph 0 keep their original character formatting.
-		const p0 = reframe.paragraphs[0]
-		assertEqual(p0.runs[0].italic, true, 'the italic "This" run is preserved')
+		const p0 = at(reframe.paragraphs, 0)
+		assertEqual(at(p0.runs, 0).italic, true, 'the italic "This" run is preserved')
 		assertEqual(
 			defined(p0.runs.find((run) => run.text === 'content')).bold,
 			true,
@@ -156,7 +160,7 @@ describe('acceptance: target a shape, swap text + image, untouched parts byte-st
 	test('image.pptx — replace a text box and swap a picture, leaving other parts byte-identical', async () => {
 		const input = await readFile(fixturePath('image'))
 		const presentation = await Presentation.load(input)
-		const slide = presentation.slides[0]
+		const slide = at(presentation.slides, 0)
 
 		defined(slide.shapeByName('Textfeld 1')).text = 'swapped caption'
 		const picture = slide.shapeByName('Grafik 5')
@@ -189,8 +193,12 @@ describe('acceptance: target a shape, swap text + image, untouched parts byte-st
 
 		// Re-read the saved deck and confirm the edits took.
 		const reopened = await Presentation.load(saved)
-		assertEqual(defined(reopened.slides[0].shapeByName('Textfeld 1')).text, 'swapped caption', 'caption edit reloads')
-		const reloadedPic = reopened.slides[0].shapeByName('Grafik 5')
+		assertEqual(
+			defined(at(reopened.slides, 0).shapeByName('Textfeld 1')).text,
+			'swapped caption',
+			'caption edit reloads'
+		)
+		const reloadedPic = at(reopened.slides, 0).shapeByName('Grafik 5')
 		assert(reloadedPic?.shapeType === 'picture', 'Grafik 5 reloads as a picture')
 		const newPartName = reloadedPic.imagePartName
 		assert(newPartName !== oldPartName, 'picture points at a new media part')
@@ -202,7 +210,7 @@ describe('acceptance: target a shape, swap text + image, untouched parts byte-st
 
 	test.skipIf(!validatorInstalled)('the edited deck stays schema-valid', async () => {
 		const presentation = await openFixture('image')
-		const slide = presentation.slides[0]
+		const slide = at(presentation.slides, 0)
 		defined(slide.shapeByName('Textfeld 1')).text = 'swapped caption'
 		const grafik = slide.shapeByName('Grafik 5')
 		assert(grafik?.shapeType === 'picture', 'Grafik 5 is a picture')

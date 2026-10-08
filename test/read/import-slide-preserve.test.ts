@@ -69,7 +69,7 @@ import { readFile } from 'node:fs/promises'
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { Presentation, type OpcPackage } from '../../dist/read.js'
-import { assert, assertEqual, partXml, readEntry } from '../helpers.ts'
+import { assert, assertEqual, partXml, readEntry, at } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture } from './corpus.ts'
 import { resolveSingle } from './opc.ts'
@@ -578,9 +578,13 @@ describe("Presentation.importSlide({ theme: 'preserve' })", () => {
 
 		// The imported slide binds to the first layout of the first master, in id-list order: the
 		// deck's own gallery order, not the order its `.rels` files happen to list parts in.
-		const last = reopened.slides[reopened.slides.length - 1]
+		const last = at(reopened.slides, reopened.slides.length - 1)
 		const layout = resolveSingle(opc, last.partName, SLIDE_LAYOUT_REL)
-		assertEqual(layout, reopened.layouts()[0].partName, 'imported slide binds to the first layout of the first master')
+		assertEqual(
+			layout,
+			at(reopened.layouts(), 0).partName,
+			'imported slide binds to the first layout of the first master'
+		)
 
 		// No dangling internal relationships anywhere in the package.
 		for (const partName of opc.parts.keys()) {
@@ -603,7 +607,7 @@ describe("Presentation.importSlide({ theme: 'preserve' })", () => {
 		const target = await openFixture('image')
 		const imported = target.importSlide(source, picSlide, { theme: 'preserve' })
 		const reopened = await Presentation.load(await target.save())
-		const last = reopened.slides[reopened.slides.length - 1]
+		const last = at(reopened.slides, reopened.slides.length - 1)
 		const pic = last.shapes.find((s) => s.shapeType === 'picture')
 		assert(pic, 'imported slide still has its picture')
 		assert(
@@ -684,7 +688,7 @@ describe("Presentation.importSlide({ theme: 'preserve' })", () => {
 		const imported = target.importSlide(source, 0, { theme: 'preserve', carryMasterGraphics: true })
 		const reopened = await Presentation.load(await target.save())
 
-		const last = reopened.slides[reopened.slides.length - 1]
+		const last = at(reopened.slides, reopened.slides.length - 1)
 		assertEqual(imported.partName, last.partName, 'imported slide is the appended one')
 		const pic = last.shapes.find((s) => s.shapeType === 'picture')
 		assert(pic, 'the carried master picture lands as a slide picture')
@@ -770,8 +774,8 @@ describe("Presentation.importSlide({ theme: 'preserve' })", () => {
 
 		const sp = (xml.match(/<p:sp>(?:(?!<\/p:sp>)[\s\S])*?ctrTitle[\s\S]*?<\/p:sp>/) ?? [''])[0]
 		const runs = [...sp.matchAll(/<a:r>[\s\S]*?<\/a:r>/g)].map((m) => m[0])
-		assert(/\bsz="4444"/.test(runs[0]), 'the run keeps its explicit size')
-		assert(!/\bsz="3200"/.test(runs[0]), 'the inherited size did not overwrite it')
+		assert(/\bsz="4444"/.test(at(runs, 0)), 'the run keeps its explicit size')
+		assert(!/\bsz="3200"/.test(at(runs, 0)), 'the inherited size did not overwrite it')
 		assert(
 			runs.slice(1).every((r) => /\bsz="3200"/.test(r)),
 			'sibling runs still inherit the resolved master size'
@@ -949,7 +953,7 @@ describe("Presentation.importSlide({ theme: 'preserve' })", () => {
 		const sp = (xml.match(/<p:sp>(?:(?!<\/p:sp>)[\s\S])*?ctrTitle[\s\S]*?<\/p:sp>/) ?? [''])[0]
 		const paras = [...sp.matchAll(/<a:p>[\s\S]*?<\/a:p>/g)].map((m) => m[0])
 		assertEqual(paras.length, 2, 'both paragraphs survived')
-		assert(/Second line/.test(paras[1]), 'the spliced paragraph is the second one')
+		assert(/Second line/.test(at(paras, 1)), 'the spliced paragraph is the second one')
 		for (const [i, para] of paras.entries()) {
 			const runs = [...para.matchAll(/<a:r>[\s\S]*?<\/a:r>/g)].map((m) => m[0])
 			assert(runs.length > 0, `paragraph ${i} has runs`)
@@ -1003,22 +1007,22 @@ describe("Presentation.importSlide({ theme: 'preserve' })", () => {
 		assertEqual(paras.length, 2, 'both paragraphs survived')
 
 		const runsOf = (para: string) => [...para.matchAll(/<a:r>[\s\S]*?<\/a:r>/g)].map((m) => m[0])
-		const first = runsOf(paras[0])
+		const first = runsOf(at(paras, 0))
 		assert(first.length > 0, 'paragraph 1 has runs')
 		for (const run of first) {
 			assert(!/<a:solidFill/.test(run), 'the paragraph defRPr fixes the colour, so none was baked onto the run')
 			assert(!/\bsz="/.test(run), 'the paragraph defRPr fixes the size, so none was baked onto the run')
 		}
 		assert(
-			/<a:defRPr sz="2222"><a:solidFill><a:srgbClr val="ABCDEF"\/><\/a:solidFill><\/a:defRPr>/.test(paras[0]),
+			/<a:defRPr sz="2222"><a:solidFill><a:srgbClr val="ABCDEF"\/><\/a:solidFill><\/a:defRPr>/.test(at(paras, 0)),
 			'the paragraph defRPr itself is carried through untouched'
 		)
 
-		const second = runsOf(paras[1])
+		const second = runsOf(at(paras, 1))
 		assertEqual(second.length, 1, 'paragraph 2 has its one run')
-		assert(!/\bsz="/.test(second[0]), "the text body's lstStyle fixes the size, so none was baked")
+		assert(!/\bsz="/.test(at(second, 0)), "the text body's lstStyle fixes the size, so none was baked")
 		assert(
-			/<a:solidFill><a:srgbClr val="333399"\/><\/a:solidFill>/.test(second[0]),
+			/<a:solidFill><a:srgbClr val="333399"\/><\/a:solidFill>/.test(at(second, 0)),
 			'its colour is not fixed anywhere on the slide, so the inherited one is still baked'
 		)
 	})
@@ -1044,7 +1048,7 @@ describe("Presentation.importSlide({ theme: 'preserve' })", () => {
 		// against the destination theme.
 		const baseline = await openFixture('mixed')
 		baseline.importSlide(await openFixture('mixed'), THEMED_SLIDE_INDEX, { theme: 'preserve' })
-		const baseXml = await partXml(await baseline.save(), baseline.slides[baseline.slides.length - 1].partName)
+		const baseXml = await partXml(await baseline.save(), at(baseline.slides, baseline.slides.length - 1).partName)
 		const countLines = (xml: string) => (xml.match(/<a:ln[ >]/g) ?? []).length
 		assert(countLines(baseXml) > 0, 'precondition: the unmutated import materializes lines from the style matrix')
 
@@ -1132,7 +1136,7 @@ describe("Presentation.importSlide({ theme: 'preserve' })", () => {
 		// The read-model sibling of the bake above: `resolvedFrame` walks the same
 		// layout-then-master tiers and must skip both when the slide has neither.
 		const source = await Presentation.load(await deckMixedSlideNoLayoutRel())
-		const shape = source.slides[0].shapes[0]
+		const shape = at(at(source.slides, 0).shapes, 0)
 		assert(shape.placeholder, 'the shape under test is a placeholder')
 		assertEqual(shape.left, null, 'precondition: it carries no own geometry')
 		assertEqual(shape.resolvedFrame, null, 'with no tier to inherit from, there is no effective frame')

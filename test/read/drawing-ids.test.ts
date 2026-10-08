@@ -9,7 +9,7 @@
 
 import type { Element } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
-import { assert, assertEqual, defined } from '../helpers.ts'
+import { assert, assertEqual, defined, at } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
@@ -39,7 +39,7 @@ describe('drawing ids across carried and imported shapes', () => {
 		async (name) => {
 			const target = await openFixture('empty')
 			const source = await openFixture(name)
-			const ownIds = drawingIds(defined(source.slides[0].part.dom.documentElement))
+			const ownIds = drawingIds(defined(at(source.slides, 0).part.dom.documentElement))
 			const imported = target.importSlide(source, 0, { theme: 'preserve', carryMasterGraphics: true })
 			const ids = drawingIds(defined(imported.part.dom.documentElement))
 			assert(ids.length > ownIds.length, `decorations were carried onto the slide (${ids.length} ids, ${ownIds.length} of its own)`) // prettier-ignore
@@ -53,12 +53,12 @@ describe('drawing ids across carried and imported shapes', () => {
 		// connectors whose `a:endCxn` both name that rectangle. Their `a:stCxn` name shapes outside
 		// the group, which the import does not carry; those are covered by the next case.
 		const source = await openFixture('mixed')
-		const sourceGroup = source.slides[4].shapes[4].element_
+		const sourceGroup = at(at(source.slides, 4).shapes, 4).element_
 		const inside = bindingTargets(sourceGroup).filter((name) => name !== null)
 		assertEqual(inside.join(), 'Rectangle 3,Rectangle 3', 'the fixture group binds two connectors inside itself')
 
 		const target = await openFixture('mixed')
-		const imported = target.importShape(target.slides[0], source.slides[4], 4)
+		const imported = target.importShape(at(target.slides, 0), at(source.slides, 4), 4)
 		assert(drawingIds(imported.element_).join() !== drawingIds(sourceGroup).join(), 'the imported group was renumbered')
 		assertEqual(
 			bindingTargets(imported.element_).join(),
@@ -72,12 +72,12 @@ describe('drawing ids across carried and imported shapes', () => {
 		// a shape outside the group. Imported onto slide 1 the group is renumbered 4, 5 and 6, so the
 		// source id, kept, bound the connector to its own enclosing group.
 		const source = await openFixture('mixed')
-		const sourceGroup = source.slides[4].shapes[3].element_
+		const sourceGroup = at(at(source.slides, 4).shapes, 3).element_
 		const targets = bindingTargets(sourceGroup)
 		assert(targets.includes(null), 'the fixture group binds a connector to a shape outside itself')
 
 		const target = await openFixture('mixed')
-		const imported = target.importShape(target.slides[0], source.slides[4], 3)
+		const imported = target.importShape(at(target.slides, 0), at(source.slides, 4), 3)
 		assertEqual(
 			bindingTargets(imported.element_).join(),
 			targets.filter((name) => name !== null).join(),

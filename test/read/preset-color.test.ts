@@ -238,14 +238,14 @@ describe('presetColorHex -- the ST_PresetColorVal table', () => {
 			['dkSlateBlue', 'darkSlateBlue'],
 			['ltGoldenrodYellow', 'lightGoldenrodYellow'],
 			['medAquamarine', 'mediumAquamarine'],
-		]) {
+		] as const) {
 			assertEqual(presetColorHex(short), presetColorHex(long), `${short} is ${long}`)
 		}
 		for (const [grey, gray] of [
 			['grey', 'gray'],
 			['dimGrey', 'dimGray'],
 			['ltSlateGrey', 'lightSlateGray'],
-		]) {
+		] as const) {
 			assertEqual(presetColorHex(grey), presetColorHex(gray), `${grey} is ${gray}`)
 		}
 	})

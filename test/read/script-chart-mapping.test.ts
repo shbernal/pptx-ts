@@ -14,7 +14,7 @@ import JSZip from 'jszip'
 import { Presentation } from '../../dist/read.js'
 import { readModelToIr, type CallIr, type DeckIr } from '../../dist/script.js'
 import { ChartType, type CHART_NAME, type ChartOpts, type OptsChartData } from '../../dist/node.js'
-import { assert, assertEqual, defined, readEntry } from '../helpers.ts'
+import { assert, assertEqual, defined, readEntry, at } from '../helpers.ts'
 import { authorRead } from './authored.ts'
 import { readFixture } from './corpus.ts'
 
@@ -82,7 +82,7 @@ describe('the chart mapper declares what it cannot carry', () => {
 		const ir = await irWithChartXml(buf, (xml) => xml.replaceAll('c:barChart', 'c:ofPieChart'))
 		assert(constructs(ir).includes('chart.type'), 'the unwritable type is noted; got ' + JSON.stringify(constructs(ir)))
 		assertEqual(
-			ir.slides[0].calls.filter((call) => call.method === 'addChart').length,
+			at(ir.slides, 0).calls.filter((call) => call.method === 'addChart').length,
 			0,
 			'and no chart call is emitted'
 		)
@@ -116,7 +116,7 @@ describe('the chart mapper declares what it cannot carry', () => {
 		})
 		const ir = readModelToIr(await Presentation.load(buf))
 		assert(constructs(ir).includes('chart.combo'), 'the flattening is noted; got ' + JSON.stringify(constructs(ir)))
-		const call = ir.slides[0].calls.find((c) => c.method === 'addChart')
+		const call = at(ir.slides, 0).calls.find((c) => c.method === 'addChart')
 		assert(call, 'and one chart call is still emitted')
 	})
 
@@ -127,8 +127,8 @@ describe('the chart mapper declares what it cannot carry', () => {
 		const { buf } = await chartDeck(ChartType.line)
 		const ir = await irWithChartXml(buf, (xml) => xml.replace('<c:pt idx="1"><c:v>2</c:v></c:pt>', ''))
 		assert(constructs(ir).includes('chart.blanks'), 'the blank is noted; got ' + JSON.stringify(constructs(ir)))
-		const call = defined(ir.slides[0].calls.find((c) => c.method === 'addChart'))
-		const values = defined(seriesOf(call)[0].values)
+		const call = defined(at(ir.slides, 0).calls.find((c) => c.method === 'addChart'))
+		const values = defined(at(seriesOf(call), 0).values)
 		assertEqual(values[1], 0, 'and the gap reads as a zero: ' + JSON.stringify(values))
 	})
 
@@ -146,7 +146,7 @@ describe('the chart mapper declares what it cannot carry', () => {
 		assert(removed > 0, 'the value caches are removed')
 		assert(constructs(ir).includes('chart.data'), 'the empty chart is noted; got ' + JSON.stringify(constructs(ir)))
 		assertEqual(
-			ir.slides[0].calls.filter((call) => call.method === 'addChart').length,
+			at(ir.slides, 0).calls.filter((call) => call.method === 'addChart').length,
 			0,
 			'and no chart call is emitted'
 		)
@@ -246,7 +246,7 @@ describe('chart data keeps the shape addChart takes', () => {
 
 	test('PowerPoint multi-level categories become labels leaf first, the outer level filled in with blanks', async () => {
 		const ir = readModelToIr(await Presentation.load(await readFixture('chart-series-shapes')))
-		expect(seriesOf(chartNamed(ir, 'multilevel-bar-chart'))[0].labels).toEqual([
+		expect(at(seriesOf(chartNamed(ir, 'multilevel-bar-chart')), 0).labels).toEqual([
 			['Q1', 'Q2', 'Q1', 'Q2'],
 			['North', '', 'South', ''],
 		])
@@ -254,7 +254,8 @@ describe('chart data keeps the shape addChart takes', () => {
 })
 
 /** The options argument of slide 1's chart call. */
-const chartOptions = (ir: DeckIr) => optionsOf(defined(ir.slides[0].calls.find((call) => call.method === 'addChart')))
+const chartOptions = (ir: DeckIr) =>
+	optionsOf(defined(at(ir.slides, 0).calls.find((call) => call.method === 'addChart')))
 
 /** Rewrite every `<qname val="from"/>` in the chart part to `to`, asserting at least one was there. */
 function flipFlag(qname: string, from: string, to: string) {

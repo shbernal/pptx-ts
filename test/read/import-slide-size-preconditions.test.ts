@@ -12,7 +12,7 @@ import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import TsPptx from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { assertEqual, readEntry, caught } from '../helpers.ts'
+import { assertEqual, readEntry, caught, at } from '../helpers.ts'
 
 /** A one-page deck at the given layout. */
 async function deck(layout = 'LAYOUT_16x9') {
@@ -45,7 +45,7 @@ describe('slide-size preconditions agree across every import entry point', () =>
 		['importSlide', (target, source) => target.importSlide(source, 0)],
 		['importSlides', (target, source) => target.importSlides([{ source, sourceIndex: 0, outputIndex: 0 }])],
 		['importSlideMasters', (target, source) => target.importSlideMasters(source)],
-		['importShapes', (target, source) => target.importShapes(target.slides[0], source.slides[0], [0])],
+		['importShapes', (target, source) => target.importShapes(at(target.slides, 0), at(source.slides, 0), [0])],
 	]
 
 	/** A generator deck at the given layout — what `appendSlides` takes as its source. */
@@ -79,7 +79,7 @@ describe('slide-size preconditions agree across every import entry point', () =>
 		// Its source is a generator, which always declares a size, so the unknown half can only
 		// ever be about the *target* package. Both are still the same two conditions.
 		const target = await Presentation.load(await deck('LAYOUT_16x9'))
-		const layout = target.layouts()[0].name
+		const layout = at(target.layouts(), 0).name
 		assertEqual(
 			await codeOf(() => target.appendSlides(generator('LAYOUT_4x3'), { layout })),
 			'import/slide-size-mismatch',
@@ -88,7 +88,7 @@ describe('slide-size preconditions agree across every import entry point', () =>
 
 		const sizeless = await Presentation.load(await sizelessDeck())
 		assertEqual(
-			await codeOf(() => sizeless.appendSlides(generator(), { layout: sizeless.layouts()[0].name })),
+			await codeOf(() => sizeless.appendSlides(generator(), { layout: at(sizeless.layouts(), 0).name })),
 			'import/slide-size-unknown',
 			'appendSlides into a deck with no p:sldSz'
 		)

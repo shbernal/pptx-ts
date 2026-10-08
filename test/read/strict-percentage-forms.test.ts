@@ -15,7 +15,7 @@ import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import TsPptx from '../../dist/node.js'
 import { Presentation, type TextFrame } from '../../dist/read.js'
-import { assert, assertEqual, defined, readEntry } from '../helpers.ts'
+import { assert, assertEqual, defined, readEntry, at } from '../helpers.ts'
 
 const SLIDE_PATH = 'ppt/slides/slide1.xml'
 
@@ -43,7 +43,7 @@ async function frameFrom(edit?: (xml: string) => string) {
 		zip.file(SLIDE_PATH, after)
 	}
 	const presentation = await Presentation.load(await zip.generateAsync({ type: 'nodebuffer' }))
-	return defined(presentation.slides[0].shapes[0].textFrame, 'the authored text box has a text frame')
+	return defined(at(at(presentation.slides, 0).shapes, 0).textFrame, 'the authored text box has a text frame')
 }
 
 /** Add a `baseline` attribute to the run properties, in whichever lexical form. */
@@ -52,7 +52,7 @@ const withBaseline = (value: string) => (xml: string) =>
 
 describe('ST_Percentage union — the string form reads as the value it states', () => {
 	test('a:rPr/@baseline: both lexical forms give the same percentage', async () => {
-		assertEqual((await frameFrom()).paragraphs[0].runs[0].baselinePct, null, 'no @baseline is still null')
+		assertEqual(at(at((await frameFrom()).paragraphs, 0).runs, 0).baselinePct, null, 'no @baseline is still null')
 		for (const [value, expected] of [
 			['30000', 30],
 			['30%', 30],
@@ -60,14 +60,14 @@ describe('ST_Percentage union — the string form reads as the value it states',
 			['-40%', -40],
 		] as const) {
 			const frame = await frameFrom(withBaseline(value))
-			assertEqual(frame.paragraphs[0].runs[0].baselinePct, expected, `baseline ${value}`)
+			assertEqual(at(at(frame.paragraphs, 0).runs, 0).baselinePct, expected, `baseline ${value}`)
 		}
 	})
 
 	test('a:spcPct/@val: both lexical forms give the same line spacing', async () => {
 		/** The paragraph's line spacing, asserted to be the percent variant. */
 		const percentSpacing = (frame: TextFrame, label: string) => {
-			const spacing = frame.paragraphs[0].lineSpacing
+			const spacing = at(frame.paragraphs, 0).lineSpacing
 			assert(spacing?.type === 'percent', `${label}: expected a percent spacing; got ${spacing?.type}`)
 			return spacing.percent
 		}
@@ -97,18 +97,20 @@ describe('ST_Percentage union — the string form reads as the value it states',
 
 	test('a value in neither form is still null', async () => {
 		const frame = await frameFrom(withBaseline('lots'))
-		assertEqual(frame.paragraphs[0].runs[0].baselinePct, null, 'unparseable @baseline')
+		assertEqual(at(at(frame.paragraphs, 0).runs, 0).baselinePct, null, 'unparseable @baseline')
 	})
 
 	test('a:buSzPct/@val: both lexical forms give the same bullet size', async () => {
 		// `ST_TextBulletSizePercent` is a string type in both profiles, and its only declared form is
 		// `75%`; PowerPoint writes the fixed-point `75000`. It was read as fixed-point only, so the
 		// form the schema declares came back as no size at all.
-		const fixed = (await frameFrom()).paragraphs[0].bulletDetail
+		const fixed = at((await frameFrom()).paragraphs, 0).bulletDetail
 		assert(fixed?.kind === 'char', `expected a glyph bullet; got ${fixed?.kind}`)
 		assertEqual(fixed.sizePct, 75, 'buSzPct in thousandths of a percent')
-		const percent = (await frameFrom((xml) => xml.replace('<a:buSzPct val="75000"/>', '<a:buSzPct val="75%"/>')))
-			.paragraphs[0].bulletDetail
+		const percent = at(
+			(await frameFrom((xml) => xml.replace('<a:buSzPct val="75000"/>', '<a:buSzPct val="75%"/>'))).paragraphs,
+			0
+		).bulletDetail
 		assert(percent?.kind === 'char', `expected a glyph bullet; got ${percent?.kind}`)
 		assertEqual(percent.sizePct, 75, 'buSzPct with a literal %')
 	})

@@ -18,7 +18,7 @@
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual, defined, readEntry } from '../helpers.ts'
+import { assert, assertEqual, defined, readEntry, at } from '../helpers.ts'
 import { authorRead } from './authored.ts'
 import { openFixture } from './corpus.ts'
 
@@ -38,7 +38,7 @@ async function backgroundFrom(bgXml: string) {
 	zip.file('ppt/slides/slide1.xml', slideXml.replace(/(<p:cSld[^>]*>)/, `$1${bgXml}`))
 	const patched = await zip.generateAsync({ type: 'uint8array' })
 	// Every case splices a p:bg onto the slide, so the chain always stops there.
-	return defined((await Presentation.load(patched)).slides[0].background, 'the spliced p:bg reads a background')
+	return defined(at((await Presentation.load(patched)).slides, 0).background, 'the spliced p:bg reads a background')
 }
 
 describe('slide background — imported-only p:bg variants', () => {
@@ -122,7 +122,7 @@ describe('slide background — imported-only p:bg variants', () => {
 		assertEqual(stops.length, 3, 'all three stops decode')
 		// Every stop is `phClr` + its own shade/tint, so each resolves off accent1 (4472C4)
 		// to a *different* hex — proving the substitution happened before the transforms.
-		assertEqual(stops[0].colorRef.srgb, '4472C4', 'the phClr was substituted with the resolved accent1')
+		assertEqual(at(stops, 0).colorRef.srgb, '4472C4', 'the phClr was substituted with the resolved accent1')
 		assertEqual(
 			new Set(stops.map((s) => s.colorRef.resolved?.effectiveHex ?? null)).size,
 			3,
@@ -142,7 +142,7 @@ describe('slide background — a theme-materialized image fill resolves against 
 	}
 
 	test("the master's picture background resolves to the theme's media part", async () => {
-		const bg = (await ionDeck()).masters()[0].background
+		const bg = at((await ionDeck()).masters(), 0).background
 		assert(bg?.type === 'themeRef', 'the Ion master authors p:bgRef idx=1003')
 		assertEqual(bg.idx, 1003, 'the picture slot of the bg fill-style list')
 		assert(bg.resolvedFill?.type === 'image', 'that slot materializes to a blipFill')
@@ -155,7 +155,7 @@ describe('slide background — a theme-materialized image fill resolves against 
 	})
 
 	test('a slide inheriting that background resolves the same media part', async () => {
-		const bg = (await ionDeck()).slides[0].background
+		const bg = at((await ionDeck()).slides, 0).background
 		assert(bg?.type === 'themeRef', 'the slide inherits the theme-indexed background')
 		assert(bg.resolvedFill?.type === 'image', 'and the same picture fill')
 		assertEqual(bg.resolvedFill.partName, '/ppt/media/image1.jpeg', 'inherited backgrounds resolve identically')

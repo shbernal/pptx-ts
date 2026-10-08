@@ -9,7 +9,7 @@ import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual, bytesEqual, caughtSync, readEntry } from '../helpers.ts'
+import { assert, assertEqual, bytesEqual, caughtSync, defined, readEntry, take } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { openFixture, readFixture } from './corpus.ts'
 
@@ -137,7 +137,7 @@ describe('an embedded font face whose r:id names no relationship', () => {
 	}
 
 	test('the getter lists only the faces that resolve', async () => {
-		const [font] = (await danglingFaceSource()).embeddedFonts
+		const [font] = take((await danglingFaceSource()).embeddedFonts, 1)
 		assertEqual(font.typeface, 'Silkscreen', 'the typeface is still read')
 		assertEqual(font.faces.map((face) => face.slot).join(','), 'bold', 'the dangling regular face is skipped')
 	})
@@ -153,7 +153,7 @@ describe('an embedded font face whose r:id names no relationship', () => {
 		const source = await danglingFaceSource()
 		const target = await openFixture('empty')
 		const before = await target.save()
-		const thrown = caughtSync(() => imports[name](target, source))
+		const thrown = caughtSync(() => defined(imports[name], name)(target, source))
 		assert(thrown, `${name} throws`)
 		assertEqual(thrown.code, 'package/part-missing', `${name} names the missing font part`)
 		assertEqual(thrown.name, 'PackageReadError', `${name} raises it as a package error`)

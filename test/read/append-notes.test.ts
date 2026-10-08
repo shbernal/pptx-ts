@@ -14,7 +14,7 @@ import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import TsPptx from '../../dist/node.js'
 import { Presentation, type OpcPackage } from '../../dist/read.js'
-import { assert, assertEqual, defined, readEntry } from '../helpers.ts'
+import { assert, assertEqual, defined, readEntry, at, take } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath } from './corpus.ts'
 
@@ -31,7 +31,7 @@ async function appendOnto(fixture: string, build: (pptx: TsPptx) => void) {
 	pptx.defineLayout({ name: 'MATCH', width: size.widthEmu / 914400, height: size.heightEmu / 914400 })
 	pptx.layout = 'MATCH'
 	build(pptx)
-	await deck.appendSlides(pptx, { layout: deck.layouts()[0] })
+	await deck.appendSlides(pptx, { layout: at(deck.layouts(), 0) })
 	const out = await deck.save()
 	return { out, reread: await Presentation.load(out) }
 }
@@ -48,7 +48,7 @@ describe('appendSlides carries speaker notes', () => {
 			slide.addNotes('These are the notes')
 		})
 
-		const slide = reread.slides[0]
+		const slide = at(reread.slides, 0)
 		assertEqual(slide.notesText, 'These are the notes', 'notes text round-trips')
 
 		// The slide -> notesSlide rel resolves to a real part...
@@ -69,7 +69,7 @@ describe('appendSlides carries speaker notes', () => {
 		const { reread } = await appendOnto('placeholder-inherit.pptx', (pptx) => {
 			pptx.addSlide().addText('Body', { x: 1, y: 1, w: 4, h: 1 })
 		})
-		assertEqual(reread.slides[0].notesText, null, 'no notes were invented')
+		assertEqual(at(reread.slides, 0).notesText, null, 'no notes were invented')
 		const notesParts = [...reread.opc.parts.keys()].filter((n) => /notesSlides\/notesSlide\d+\.xml$/.test(n))
 		assertEqual(notesParts.length, 0, 'no notesSlide part was added')
 	})
@@ -99,15 +99,15 @@ describe('appendSlides carries speaker notes', () => {
 		assertEqual(presRels.filter((r) => r.type === NOTES_MASTER_REL).length, 1, 'one notesMaster rel')
 
 		// The notesMaster's own .rels must resolve a theme, or the part dangles.
-		const masterRels = relsOf(reread.opc, masters[0])
+		const masterRels = relsOf(reread.opc, at(masters, 0))
 		const themeRel = masterRels.find((r) => r.type.endsWith('/theme'))
 		assert(themeRel, 'the installed notesMaster references a theme')
 		const themeTarget = reread.opc.relationshipsFor(masters[0]).resolveTarget(themeRel.id)
 		assert(reread.opc.part(themeTarget), `notesMaster theme part ${themeTarget} exists`)
 
 		// Both slides' notes survive and stay distinct.
-		assertEqual(reread.slides[0].notesText, 'notes A', 'first slide notes')
-		assertEqual(reread.slides[1].notesText, 'notes B', 'second slide notes')
+		assertEqual(at(reread.slides, 0).notesText, 'notes A', 'first slide notes')
+		assertEqual(at(reread.slides, 1).notesText, 'notes B', 'second slide notes')
 	})
 
 	test("reuses the template's own notes master instead of installing a second", async () => {
@@ -126,7 +126,7 @@ describe('appendSlides carries speaker notes', () => {
 		const after = [...reread.opc.parts.keys()].filter((n) => /notesMasters\/notesMaster\d+\.xml$/.test(n))
 		assertEqual(after.length, 1, 'no second notesMaster was installed')
 		assertEqual(after[0], before[0], "the template's own notesMaster partname is reused")
-		assertEqual(reread.slides[0].notesText, 'destination master wins', 'notes still round-trip')
+		assertEqual(at(reread.slides, 0).notesText, 'destination master wins', 'notes still round-trip')
 	})
 
 	test('notes hyperlink rels are preserved alongside the reserved notesMaster/slide rels', async () => {
@@ -136,14 +136,14 @@ describe('appendSlides carries speaker notes', () => {
 			slide.addNotes([{ text: 'see ' }, { text: 'docs', options: { hyperlink: { url: 'https://example.com/' } } }])
 		})
 
-		const slide = reread.slides[0]
+		const slide = at(reread.slides, 0)
 		const slideRels = reread.opc.relationshipsFor(slide.partName)
 		const notesPartName = slideRels.resolveTarget(defined([...slideRels].find((r) => r.type === NOTES_SLIDE_REL)).id)
 		const notesRels = relsOf(reread.opc, notesPartName)
 
 		const hyperlinks = notesRels.filter((r) => r.type.endsWith('/hyperlink'))
 		assertEqual(hyperlinks.length, 1, 'the notes hyperlink rel survived')
-		assertEqual(hyperlinks[0].target, 'https://example.com/', 'hyperlink target')
+		assertEqual(at(hyperlinks, 0).target, 'https://example.com/', 'hyperlink target')
 		// Reserved ids must not have been overwritten by the hyperlink.
 		assert(
 			notesRels.some((r) => r.id === 'rId1' && r.type === NOTES_MASTER_REL),
@@ -165,7 +165,7 @@ describe('appendSlides carries speaker notes', () => {
 			slide.addChart([{ name: 'D', labels: ['a', 'b'], values: [1, 2] }], { type: 'bar', x: 1, y: 1, w: 4, h: 3 })
 			slide.addNotes('chart notes')
 		})
-		const slide = reread.slides[0]
+		const slide = at(reread.slides, 0)
 		assertEqual(slide.notesText, 'chart notes', 'the notes survive')
 		const types = relsOf(reread.opc, slide.partName).map((r) => r.type.split('/').pop())
 		assert(types.includes('chart') && types.includes('notesSlide'), `both rels are wired: ${types.join(', ')}`)
@@ -182,7 +182,7 @@ describe('appendSlides carries speaker notes', () => {
 			first.addNotes('link notes')
 			pptx.addSlide().addText('second', { x: 1, y: 1, w: 4, h: 1 })
 		})
-		const [first, second] = reread.slides
+		const [first, second] = take(reread.slides, 2)
 		assertEqual(first.notesText, 'link notes', 'the notes survive')
 		const rels = reread.opc.relationshipsFor(first.partName)
 		const link = [...rels].find((r) => r.type === SLIDE_REL)
@@ -201,7 +201,7 @@ describe('appendSlides carries speaker notes', () => {
 		for (const [part, type] of [
 			['/ppt/notesSlides/notesSlide1.xml', 'notesSlide+xml'],
 			['/ppt/notesMasters/notesMaster1.xml', 'notesMaster+xml'],
-		]) {
+		] as const) {
 			assert(
 				contentTypes.includes(`PartName="${part}"`),
 				`[Content_Types].xml declares an Override for ${part}; got:\n${contentTypes}`

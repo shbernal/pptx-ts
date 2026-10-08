@@ -14,7 +14,7 @@ import JSZip from 'jszip'
 import type TsPptx from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
 import { authorRead, firstTable, schemaErrors, validatorInstalled } from './authored.ts'
-import { assert, assertEqual, defined, readEntry } from '../helpers.ts'
+import { assert, assertEqual, defined, readEntry, at } from '../helpers.ts'
 
 /** A one-cell table carrying every new `a:tcPr` construct at once. */
 function decoratedTable(pres: TsPptx) {
@@ -198,14 +198,17 @@ describe('TableCell.textFrame carries the owning part-s relationships', () => {
 			slide.addText([{ text: 'docs', options: { hyperlink: { url: URL } } }], { x: 0.5, y: 2, w: 4, h: 1 })
 		})
 
-		const cellRun = defined(defined(defined(firstTable(presentation)).cell(0, 0)).textFrame).paragraphs[0].runs[0]
+		const cellRun = at(
+			at(defined(defined(defined(firstTable(presentation)).cell(0, 0)).textFrame).paragraphs, 0).runs,
+			0
+		)
 		assertEqual(defined(cellRun.hyperlink).url, URL, 'the cell run resolves its url')
 
 		const box = defined(
-			presentation.slides[0].shapes.find((shape) => shape.shapeType === 'autoShape' && shape.textFrame),
+			at(presentation.slides, 0).shapes.find((shape) => shape.shapeType === 'autoShape' && shape.textFrame),
 			'the text box'
 		)
-		const boxRun = defined(box.textFrame).paragraphs[0].runs[0]
+		const boxRun = at(at(defined(box.textFrame).paragraphs, 0).runs, 0)
 		assertEqual(defined(cellRun.hyperlink).url, defined(boxRun.hyperlink).url, 'both runs on the slide agree')
 	})
 })

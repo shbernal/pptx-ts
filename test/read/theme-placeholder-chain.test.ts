@@ -11,7 +11,7 @@
 import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
 import { TextFrame, type Part, type PlaceholderRef, type ThemeContext } from '../../dist/read.js'
-import { assertEqual, defined } from '../helpers.ts'
+import { assertEqual, defined, at } from '../helpers.ts'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
@@ -55,12 +55,18 @@ function phRun(flatten: ThemeContext, ph: PlaceholderRef = { type: 'body', idx: 
 	const txBody = parse(
 		`<p:txBody xmlns:p="${P_NS}" xmlns:a="${A_NS}"><a:bodyPr/><a:p><a:r><a:t>x</a:t></a:r></a:p></p:txBody>`
 	)
-	return new TextFrame(txBody, {
-		part: stubPart(),
-		ctx: flatten,
-		rels: null,
-		inherit: { ph, fontRef: null },
-	}).paragraphs[0].runs[0]
+	return at(
+		at(
+			new TextFrame(txBody, {
+				part: stubPart(),
+				ctx: flatten,
+				rels: null,
+				inherit: { ph, fontRef: null },
+			}).paragraphs,
+			0
+		).runs,
+		0
+	)
 }
 
 /** The hex the first run's colour resolves to; failing when it resolves to none. */

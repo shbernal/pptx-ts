@@ -10,7 +10,7 @@ import { describe, expect, test } from 'vitest'
 import JSZip from 'jszip'
 import { ChartType, type CHART_NAME, type ChartOpts, type OptsChartData } from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual, captureDiagnostics, readEntry } from '../helpers.ts'
+import { assert, assertEqual, captureDiagnostics, readEntry, at, take } from '../helpers.ts'
 import { authorRead } from './authored.ts'
 import { openFixture, readFixture } from './corpus.ts'
 
@@ -43,7 +43,7 @@ async function pointWarnings<R>(read: () => Promise<R>) {
 
 describe('Scatter and bubble series read their X, Y and size caches', () => {
 	test('a PowerPoint scatter series reads c:xVal and c:yVal, and no c:val', async () => {
-		const [series] = chartNamed(await openFixture('chart-series-shapes'), 'scatter-chart').series
+		const [series] = take(chartNamed(await openFixture('chart-series-shapes'), 'scatter-chart').series, 1)
 		assertEqual(series.name, 'Y', 'the series name')
 		expect(series.xValues).toEqual([1, 2, 3, 4])
 		expect(series.yValues).toEqual([2.5, 4, 3.5, 6])
@@ -56,7 +56,7 @@ describe('Scatter and bubble series read their X, Y and size caches', () => {
 		// One text cell ("2026e") makes PowerPoint cache the whole X column as strings, the years with
 		// it, and plot the points at X = 1..4: the slide renders pixel-identical to slide 1's scatter,
 		// which has the same Y values against X = 1..4. So no label is a coordinate, not even "2023".
-		const [series] = chartNamed(await openFixture('chart-series-shapes'), 'scatter-text-x-chart').series
+		const [series] = take(chartNamed(await openFixture('chart-series-shapes'), 'scatter-text-x-chart').series, 1)
 		expect(series.xLabels).toEqual(['2023', '2024', '2025', '2026e'])
 		expect(series.xValues).toEqual([null, null, null, null])
 		expect(series.yValues).toEqual([2.5, 4, 3.5, 6])
@@ -78,7 +78,7 @@ describe('Scatter and bubble series read their X, Y and size caches', () => {
 				xml.replace(cache, (_match, points: string) => `<c:xVal>${respell(points)}</c:xVal>`)
 			)
 			const presentation = await Presentation.load(await zip.generateAsync({ type: 'uint8array' }))
-			const [series] = chartNamed(presentation, 'scatter-text-x-chart').series
+			const [series] = take(chartNamed(presentation, 'scatter-text-x-chart').series, 1)
 			return { labels: series.xLabels, values: series.xValues }
 		}
 
@@ -94,7 +94,7 @@ describe('Scatter and bubble series read their X, Y and size caches', () => {
 	})
 
 	test('a PowerPoint bubble series reads its sizes beside X and Y', async () => {
-		const [series] = chartNamed(await openFixture('chart-series-shapes'), 'bubble-chart').series
+		const [series] = take(chartNamed(await openFixture('chart-series-shapes'), 'bubble-chart').series, 1)
 		expect(series.xValues).toEqual([1, 2, 3, 4])
 		expect(series.yValues).toEqual([2, 4, 3, 6])
 		expect(series.bubbleSizes).toEqual([5, 10, 7, 12])
@@ -103,7 +103,7 @@ describe('Scatter and bubble series read their X, Y and size caches', () => {
 	test('a PowerPoint bubble against a column holding text reads X labels, and no X values', async () => {
 		// The bubble takes the same `c:xVal` as a scatter, and renders pixel-identical to slide 2's
 		// bubble, which has the same Y values and sizes against X = 1..4.
-		const [series] = chartNamed(await openFixture('chart-series-shapes'), 'bubble-text-x-chart').series
+		const [series] = take(chartNamed(await openFixture('chart-series-shapes'), 'bubble-text-x-chart').series, 1)
 		expect(series.xLabels).toEqual(['2023', '2024', '2025', '2026e'])
 		expect(series.xValues).toEqual([null, null, null, null])
 		expect(series.yValues).toEqual([2, 4, 3, 6])
@@ -113,8 +113,8 @@ describe('Scatter and bubble series read their X, Y and size caches', () => {
 	test('a PowerPoint scatter or bubble with no X column reads no X values and no X labels', async () => {
 		// Neither series has a `c:xVal`. Each renders pixel-identical to the same chart against X = 1..4.
 		const presentation = await openFixture('chart-series-shapes')
-		const [scatter] = chartNamed(presentation, 'scatter-no-x-chart').series
-		const [bubble] = chartNamed(presentation, 'bubble-no-x-chart').series
+		const [scatter] = take(chartNamed(presentation, 'scatter-no-x-chart').series, 1)
+		const [bubble] = take(chartNamed(presentation, 'bubble-no-x-chart').series, 1)
 		expect([scatter.xValues, scatter.xLabels, scatter.yValues]).toEqual([[], null, [2.5, 4, 3.5, 6]])
 		expect([bubble.xValues, bubble.xLabels, bubble.yValues, bubble.bubbleSizes]).toEqual([
 			[],
@@ -152,7 +152,7 @@ describe('Scatter and bubble series read their X, Y and size caches', () => {
 			],
 			{ type: ChartType.bubble }
 		)
-		const [series] = chart.series
+		const [series] = take(chart.series, 1)
 		expect(series.yValues).toEqual([4, 5, 6])
 		expect(series.bubbleSizes).toEqual([7, 8, 9])
 		assertEqual(series.dataLabels, null, 'the bubble writer puts its labels on the group')
@@ -163,7 +163,7 @@ describe('Multi-level categories read level by level', () => {
 	test('a PowerPoint two-level axis reads leaf first, with the outer level sparse, and warns about nothing', async () => {
 		const { result, codes } = await pointWarnings(async () => {
 			const chart = chartNamed(await openFixture('chart-series-shapes'), 'multilevel-bar-chart')
-			return { levels: chart.categoryLevels, categories: chart.categories, values: chart.series[0].values }
+			return { levels: chart.categoryLevels, categories: chart.categories, values: at(chart.series, 0).values }
 		})
 		expect(result.levels).toEqual([
 			['Q1', 'Q2', 'Q1', 'Q2'],
@@ -200,7 +200,7 @@ describe('Multi-level categories read level by level', () => {
 describe('Data labels a series carries itself', () => {
 	test("a PowerPoint pie's label flags are on the series, and its group block is all off", async () => {
 		const chart = chartNamed(await openFixture('chart-series-shapes'), 'pie-chart')
-		expect(chart.series[0].dataLabels).toMatchObject({
+		expect(at(chart.series, 0).dataLabels).toMatchObject({
 			showCategoryName: true,
 			showPercent: true,
 			showValue: false,
@@ -221,7 +221,11 @@ describe('Data labels a series carries itself', () => {
 			showPercent: true,
 			showLabel: true,
 		})
-		expect(chart.series[0].dataLabels).toMatchObject({ showPercent: true, showCategoryName: true, showValue: false })
+		expect(at(chart.series, 0).dataLabels).toMatchObject({
+			showPercent: true,
+			showCategoryName: true,
+			showValue: false,
+		})
 		assertEqual(chart.dataLabels, null, 'the pie writer emits no group block')
 	})
 })

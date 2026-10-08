@@ -8,7 +8,7 @@
 import { describe, test } from 'vitest'
 import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.ts'
 import type { Presentation, Run } from '../../dist/read.js'
-import { assert, assertEqual, defined, type TsPptx } from '../helpers.ts'
+import { assert, assertEqual, defined, type TsPptx, at } from '../helpers.ts'
 
 /** A text box whose runs each carry one character-formatting property. */
 function formattedRuns(pres: TsPptx) {
@@ -112,7 +112,7 @@ describe('Paragraph line spacing — a:lnSpc', () => {
 			})
 		).presentation
 		const shape = defined(firstShape(presentation, (s) => s.hasTextFrame))
-		const spacing = defined(shape.textFrame).paragraphs[0].lineSpacing
+		const spacing = at(defined(shape.textFrame).paragraphs, 0).lineSpacing
 		assert(spacing, 'the paragraph exposes line spacing')
 		assert(spacing.type === 'percent', 'lineSpacingMultiple → percent form')
 		assertEqual(spacing.percent, 150, '1.5× → 150%')
@@ -125,7 +125,7 @@ describe('Paragraph line spacing — a:lnSpc', () => {
 			})
 		).presentation
 		const shape = defined(firstShape(presentation, (s) => s.hasTextFrame))
-		const spacing = defined(shape.textFrame).paragraphs[0].lineSpacing
+		const spacing = at(defined(shape.textFrame).paragraphs, 0).lineSpacing
 		assert(spacing, 'the paragraph exposes line spacing')
 		assert(spacing.type === 'points', 'lineSpacing → points form')
 		assertEqual(spacing.valuePt, 24, 'authored point height')
@@ -138,7 +138,7 @@ describe('Paragraph line spacing — a:lnSpc', () => {
 			})
 		).presentation
 		const shape = defined(firstShape(presentation, (s) => s.hasTextFrame))
-		assertEqual(defined(shape.textFrame).paragraphs[0].lineSpacing, null, 'no a:lnSpc → null')
+		assertEqual(at(defined(shape.textFrame).paragraphs, 0).lineSpacing, null, 'no a:lnSpc → null')
 	})
 })
 

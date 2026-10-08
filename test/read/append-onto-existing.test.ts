@@ -13,7 +13,18 @@ import path from 'node:path'
 import { describe, test } from 'vitest'
 import TsPptx, { ChartType } from '../../dist/node.js'
 import { Presentation, type OpcPackage } from '../../dist/read.js'
-import { bytesEqual, PNG_1X1, assert, assertEqual, assertIncludes, partBodies, defined, caught } from '../helpers.ts'
+import {
+	bytesEqual,
+	PNG_1X1,
+	assert,
+	assertEqual,
+	assertIncludes,
+	partBodies,
+	defined,
+	caught,
+	at,
+	take,
+} from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { FIXTURES, fixturePath } from './corpus.ts'
 import { resolveSingle } from './opc.ts'
@@ -116,12 +127,12 @@ describe('Presentation.appendSlides', () => {
 		// Round-trip: the new slide is present, last, and carries the authored text.
 		const reopened = await Presentation.load(out)
 		assertEqual(reopened.slides.length, beforeSlideCount + 1, 'the deck gained exactly one slide')
-		const zipPath = added[0].partName.slice(1)
+		const zipPath = at(added, 0).partName.slice(1)
 		const body = new TextDecoder().decode(after.get(zipPath))
 		assert(body.includes('hello append'), 'the appended slide carries the authored text')
 
 		// Layout binding resolves to the EXISTING layout — no new chrome.
-		const newSlide = reopened.slides[reopened.slides.length - 1]
+		const newSlide = at(reopened.slides, reopened.slides.length - 1)
 		assertEqual(
 			resolveSingle(reopened.opc, newSlide.partName, SLIDE_LAYOUT_REL),
 			target.partName,
@@ -143,10 +154,10 @@ describe('Presentation.appendSlides', () => {
 		const pptx = wideGenerator()
 		pptx.addSlide().addText('inserted first', { x: 1, y: 1, w: 6, h: 1 })
 
-		const [added] = await pres.appendSlides(pptx, { layout: handle, at: 0 })
+		const [added] = take(await pres.appendSlides(pptx, { layout: handle, at: 0 }), 1)
 		const reopened = await Presentation.load(await pres.save())
 		assertEqual(reopened.slides.length, 3, 'the slide was added')
-		assertEqual(reopened.slides[0].slideId, added.slideId, 'the appended slide landed first (at: 0)')
+		assertEqual(at(reopened.slides, 0).slideId, added.slideId, 'the appended slide landed first (at: 0)')
 	})
 
 	test.skipIf(!validatorInstalled)(
@@ -253,8 +264,8 @@ describe('Presentation.appendSlides', () => {
 		const reopened = await Presentation.load(out)
 		const avSlides = reopened.slides.slice(-2)
 		const cases = [
-			{ slide: avSlides[0], avRel: VIDEO_REL, mediaExt: '.mp4' },
-			{ slide: avSlides[1], avRel: AUDIO_REL, mediaExt: '.mp3' },
+			{ slide: at(avSlides, 0), avRel: VIDEO_REL, mediaExt: '.mp4' },
+			{ slide: at(avSlides, 1), avRel: AUDIO_REL, mediaExt: '.mp3' },
 		]
 		for (const { slide, avRel, mediaExt } of cases) {
 			const body = new TextDecoder().decode(after.get(slide.partName.slice(1)))
@@ -331,7 +342,7 @@ describe('Presentation.appendSlides', () => {
 		const pptx = wideGenerator()
 		pptx.addSlide().addMedia({ type: 'online', link, cover: PNG_1X1, x: 1, y: 1, w: 4, h: 3 })
 
-		const [added] = await pres.appendSlides(pptx, { layout: 'Blank' })
+		const [added] = take(await pres.appendSlides(pptx, { layout: 'Blank' }), 1)
 		const out = await pres.save()
 		const after = await partBodies(out)
 
@@ -433,7 +444,7 @@ describe('Presentation.appendSlides', () => {
 			h: 3,
 		})
 
-		const [added] = await pres.appendSlides(pptx, { layout: 'Blank' })
+		const [added] = take(await pres.appendSlides(pptx, { layout: 'Blank' }), 1)
 		const out = await pres.save()
 		const after = await partBodies(out)
 
@@ -477,7 +488,7 @@ describe('Presentation.appendSlides', () => {
 		assertEqual(`/${chartZipPath}`, chartPart, "the slide's chartEx rel resolves to the chartEx part")
 		assertEqual(resolveSingle(reopened.opc, added.partName, CHART_REL), null, 'no classic chart rel was written')
 		const body = new TextDecoder().decode(after.get(added.partName.slice(1)))
-		const chartRid = (body.match(/<cx:chart[^>]*r:id="(rId\d+)"/) || [])[1]
+		const chartRid = at(body.match(/<cx:chart[^>]*r:id="(rId\d+)"/) || [], 1)
 		assertEqual(typeOfRid(reopened.opc, added.partName, chartRid), CHARTEX_REL, 'cx:chart r:id → MS chartEx rel')
 
 		// The chart part's own three rels resolve: workbook, colors, style.
@@ -486,7 +497,7 @@ describe('Presentation.appendSlides', () => {
 			[PACKAGE_REL, 'workbook'],
 			[CHART_COLOR_STYLE_REL, 'color-style'],
 			[CHART_STYLE_REL, 'chart-style'],
-		]) {
+		] as const) {
 			const target = resolveSingle(reopened.opc, chartPart, rel)
 			assert(target && reopened.opc.part(target), `the chart's ${label} rel resolves (${target})`)
 		}
@@ -522,7 +533,7 @@ describe('Presentation.appendSlides', () => {
 			h: 3,
 		})
 
-		const [added] = await pres.appendSlides(pptx, { layout: 'Blank' })
+		const [added] = take(await pres.appendSlides(pptx, { layout: 'Blank' }), 1)
 		const out = await pres.save()
 		const after = await partBodies(out)
 
@@ -572,8 +583,8 @@ describe('Presentation.appendSlides', () => {
 		assertEqual(added.length, 2, 'both slides were appended')
 
 		const reopened = await Presentation.load(await pres.save())
-		const linkTarget = resolveSingle(reopened.opc, added[0].partName, SLIDE_REL)
-		assertEqual(linkTarget, added[1].partName, 'the internal link resolves to the 2nd appended slide')
+		const linkTarget = resolveSingle(reopened.opc, at(added, 0).partName, SLIDE_REL)
+		assertEqual(linkTarget, at(added, 1).partName, 'the internal link resolves to the 2nd appended slide')
 	})
 
 	test('round-trips & in hyperlink and online-video Targets without double-escaping', async () => {
@@ -591,7 +602,7 @@ describe('Presentation.appendSlides', () => {
 		slide.addText([{ text: 'link', options: { hyperlink: { url: LINK } } }], { x: 1, y: 1, w: 6, h: 1 })
 		slide.addMedia({ type: 'online', link: VIDEO, cover: PNG_1X1, x: 1, y: 3, w: 4, h: 3 })
 
-		const [added] = await pres.appendSlides(pptx, { layout: 'Blank' })
+		const [added] = take(await pres.appendSlides(pptx, { layout: 'Blank' }), 1)
 		const reopened = await Presentation.load(await pres.save())
 		const rels = [...reopened.opc.relationshipsFor(added.partName)]
 

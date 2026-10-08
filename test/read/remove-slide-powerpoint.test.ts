@@ -13,7 +13,7 @@
 import { describe, test } from 'vitest'
 
 import type { Presentation, Slide } from '../../dist/read.js'
-import { assert, assertEqual, defined } from '../helpers.ts'
+import { assert, assertEqual, defined, at } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 const PRESENTATION = '/ppt/presentation.xml'
@@ -26,7 +26,8 @@ function presentationXml(deck: Presentation): string {
 /** Each section as `name: id id …`, in order. */
 function sections(deck: Presentation): string[] {
 	return [...presentationXml(deck).matchAll(/<p14:section name="([^"]*)"[^>]*>([\s\S]*?)<\/p14:section>/g)].map(
-		([, name, body]) => `${name}: ${[...body.matchAll(/<p14:sldId id="(\d+)"/g)].map(([, id]) => id).join(' ')}`
+		(section) =>
+			`${section[1]}: ${[...at(section, 2).matchAll(/<p14:sldId id="(\d+)"/g)].map(([, id]) => id).join(' ')}`
 	)
 }
 
@@ -36,8 +37,8 @@ function customShows(deck: Presentation): string[] {
 	const idOf = (relId: string) =>
 		deck.slides.find((slide) => slide.partName === rels.resolveTarget(relId))?.slideId ?? '?'
 	return [...presentationXml(deck).matchAll(/<p:custShow name="([^"]*)"[^>]*>([\s\S]*?)<\/p:custShow>/g)].map(
-		([, name, body]) =>
-			`${name}: ${[...body.matchAll(/<p:sld r:id="([^"]+)"/g)].map(([, relId]) => idOf(relId)).join(' ')}`
+		(show) =>
+			`${show[1]}: ${[...at(show, 2).matchAll(/<p:sld r:id="([^"]+)"/g)].map((sld) => idOf(at(sld, 1))).join(' ')}`
 	)
 }
 
@@ -75,7 +76,7 @@ describe("Presentation.removeSlide against PowerPoint's own deletion (slide-jump
 
 	test('a jump link to the removed slide is dropped where PowerPoint leaves it jumping to another slide', async () => {
 		const powerPoint = await openFixture('slide-jump-link-target-deleted')
-		const theirReferrer = powerPoint.slides[0]
+		const theirReferrer = at(powerPoint.slides, 0)
 		assertEqual(
 			jumpOf(powerPoint, theirReferrer, 'LinkedText'),
 			theirReferrer.slideId,
@@ -85,7 +86,7 @@ describe("Presentation.removeSlide against PowerPoint's own deletion (slide-jump
 
 		const deck = await openFixture('slide-jump-link')
 		deck.removeSlide(0)
-		const referrer = deck.slides[0]
+		const referrer = at(deck.slides, 0)
 		assertEqual(jumpOf(deck, referrer, 'LinkedText'), null, 'removeSlide: the text link is gone')
 		assertEqual(jumpOf(deck, referrer, 'LinkedShape'), null, 'and the shape link')
 		assertEqual(jumpOf(deck, referrer, 'ControlText'), 258, 'while a link to a slide that stays is untouched')

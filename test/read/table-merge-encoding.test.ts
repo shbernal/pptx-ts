@@ -15,7 +15,7 @@
 import { describe, test } from 'vitest'
 
 import type { Table } from '../../dist/read.js'
-import { assert, assertEqual, defined } from '../helpers.ts'
+import { assert, assertEqual, defined, at } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 const SPAN_ATTRIBUTES = ['rowSpan', 'gridSpan', 'hMerge', 'vMerge']
@@ -25,7 +25,7 @@ const cellAt = (table: Table, row: number, column: number) =>
 
 /** The table on slide `index` of the fixture, read fresh. */
 async function tableOn(index: number) {
-	for (const shape of (await openFixture('table-merge-encoding')).slides[index].shapes) {
+	for (const shape of at((await openFixture('table-merge-encoding')).slides, index).shapes) {
 		if (shape.shapeType === 'graphicFrame' && shape.table) return shape.table
 	}
 	throw new Error(`slide ${index + 1} holds no table`)
@@ -55,7 +55,7 @@ describe('Table.mergeCells writes the spans PowerPoint writes (table-merge-encod
 			spanGrid(table).every((row) => row.every((cell) => cell === '')),
 			'unmerging leaves no span attribute to compare against'
 		)
-		table.mergeCells(0, 0, to[0], to[1])
+		table.mergeCells(0, 0, at(to, 0), at(to, 1))
 		assertEqual(JSON.stringify(spanGrid(table)), JSON.stringify(powerPoint))
 	})
 })
@@ -101,7 +101,7 @@ describe('Table.mergeCells keeps the text of the cells it covers', () => {
 			[0, 1],
 			[1, 0],
 			[1, 1],
-		]) {
+		] as const) {
 			assertEqual(cellAt(table, r, c).text, '', `the covered cell (${r},${c}) is emptied`)
 		}
 		assertEqual(cellAt(table, 2, 0).text, '3,1', 'a cell outside the rectangle is untouched')

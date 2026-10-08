@@ -7,12 +7,14 @@
 
 import { describe, test } from 'vitest'
 import { isGraphicFrame, type Table } from '../../dist/read.js'
-import { assert, assertEqual } from '../helpers.ts'
+import { assert, assertEqual, at, take } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 async function tables() {
 	const pres = await openFixture('table-styles')
-	return pres.slides[0].shapes.filter(isGraphicFrame).flatMap((s) => (s.table ? [s.table] : []))
+	return at(pres.slides, 0)
+		.shapes.filter(isGraphicFrame)
+		.flatMap((s) => (s.table ? [s.table] : []))
 }
 
 function fillHex(table: Table, row: number, col: number) {
@@ -21,7 +23,7 @@ function fillHex(table: Table, row: number, col: number) {
 
 describe('Table.resolvedStyle names the referenced tableStyles.xml entry', () => {
 	test('each table resolves its GUID to the matching style id + name', async () => {
-		const [medium2, medium4, light2] = await tables()
+		const [medium2, medium4, light2] = take(await tables(), 3)
 		assertEqual(medium2.resolvedStyle?.styleId, '{F5AB1C69-6EDB-4FF4-983F-18BD219EF322}', 'medium2 styleId')
 		assertEqual(medium2.resolvedStyle?.name, 'Medium Style 2 - Accent 3', 'medium2 name')
 		assertEqual(medium4.resolvedStyle?.name, 'Medium Style 4 - Accent 4', 'medium4 name')
@@ -32,7 +34,7 @@ describe('Table.resolvedStyle names the referenced tableStyles.xml entry', () =>
 
 describe('TableCell.resolvedFill composes the style graph in precedence order', () => {
 	test('firstRow header, banded body rows, and wholeTbl (Medium Style 2 - Accent 3)', async () => {
-		const [medium2] = await tables()
+		const [medium2] = take(await tables(), 1)
 		// accent3 = 196B24. Header = accent3 full; body row 1 = band1H (tint 40%);
 		// body row 2 = band2H (empty) which falls through to wholeTbl (tint 20%).
 		assertEqual(fillHex(medium2, 0, 0), '196B24', 'firstRow -> accent3 full')
@@ -43,7 +45,7 @@ describe('TableCell.resolvedFill composes the style graph in precedence order', 
 	})
 
 	test('a missing band2H part falls straight to wholeTbl (Medium Style 4 - Accent 4)', async () => {
-		const [, medium4] = await tables()
+		const [, medium4] = take(await tables(), 2)
 		// This style defines no band2H, so the second body row also uses wholeTbl.
 		assertEqual(fillHex(medium4, 0, 0), 'E7F0F7', 'firstRow -> accent4 tint 20%')
 		assertEqual(fillHex(medium4, 1, 0), 'CCDFEF', 'first body row -> band1H tint 40%')
@@ -51,7 +53,7 @@ describe('TableCell.resolvedFill composes the style graph in precedence order', 
 	})
 
 	test('a fillRef header resolves through the theme; a noFill body reads null (Light Style 2 - Accent 1)', async () => {
-		const [, , light2] = await tables()
+		const [, , light2] = take(await tables(), 3)
 		// firstRow supplies its fill via a:fillRef idx="1" (style-matrix), not a direct
 		// a:fill -> resolves to accent1 full. The body rows are wholeTbl a:noFill.
 		assertEqual(fillHex(light2, 0, 0), '156082', 'firstRow fillRef -> accent1')

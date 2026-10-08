@@ -14,7 +14,7 @@ import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
 import { readModelToIr } from '../../dist/script.js'
 import TsPptx, { type HyperlinkProps } from '../../dist/node.js'
-import { assert, assertEqual, defined } from '../helpers.ts'
+import { assert, assertEqual, defined, at } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 /** Every shape on every slide, flattened. */
@@ -91,7 +91,7 @@ describe('Shape.hyperlink', () => {
 		const presentation = await Presentation.load(await pres.toBytes())
 		const shape = defined(allShapes(presentation).find((candidate) => candidate.name === 'runLinked'))
 		assertEqual(shape.hyperlink, null, 'the shape itself carries no link')
-		const run = defined(shape.textFrame).paragraphs[0].runs[0]
+		const run = at(at(defined(shape.textFrame).paragraphs, 0).runs, 0)
 		assertEqual(defined(run.hyperlink).url, 'https://example.invalid/run', "but its run's link reads")
 	})
 })

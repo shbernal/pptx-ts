@@ -11,7 +11,16 @@ import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
 import TsPptx from '../../dist/node.js'
 import { Presentation, type OpcPackage } from '../../dist/read.js'
-import { throws, assert, assertEqual, defined, expectDefined, partBodies, assertUnchangedExcept } from '../helpers.ts'
+import {
+	throws,
+	assert,
+	assertEqual,
+	defined,
+	expectDefined,
+	partBodies,
+	assertUnchangedExcept,
+	at,
+} from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture } from './corpus.ts'
 import { assertNoDanglingRels, resolveSingle } from './opc.ts'
@@ -79,7 +88,7 @@ describe('Presentation.importSlide', () => {
 		const target = await openFixture('empty')
 		const source = await openFixture('image')
 		const beforeCount = target.slides.length
-		const sourcePicCount = source.slides[0].shapes.filter((s) => s.shapeType === 'picture').length
+		const sourcePicCount = at(source.slides, 0).shapes.filter((s) => s.shapeType === 'picture').length
 		assert(sourcePicCount > 0, 'source slide actually has a picture to carry')
 
 		const imported = target.importSlide(source, 0)
@@ -91,7 +100,7 @@ describe('Presentation.importSlide', () => {
 		const ids = reopened.slides.map((s) => s.slideId)
 		assertEqual(new Set(ids).size, ids.length, 'slide ids are unique')
 
-		const last = reopened.slides[reopened.slides.length - 1]
+		const last = at(reopened.slides, reopened.slides.length - 1)
 		assertEqual(
 			last.shapes.filter((s) => s.shapeType === 'picture').length,
 			sourcePicCount,
@@ -123,7 +132,7 @@ describe('Presentation.importSlide', () => {
 
 		const imported = target.importSlide(source, sourceTableSlide)
 		const reopened = await Presentation.load(await target.save())
-		const last = reopened.slides[reopened.slides.length - 1]
+		const last = at(reopened.slides, reopened.slides.length - 1)
 		const table = last.shapes.filter((s) => s.shapeType === 'graphicFrame').find((f) => f.table)?.table
 		assert(table, 'imported slide still has a table')
 		assertGraphResolves(reopened.opc, last.partName)
@@ -185,8 +194,8 @@ describe('Presentation.importSlide', () => {
 		assertNoDanglingRels(reopened.opc)
 
 		const opc = reopened.opc
-		const a = reopened.slides[reopened.slides.length - 2]
-		const b = reopened.slides[reopened.slides.length - 1]
+		const a = at(reopened.slides, reopened.slides.length - 2)
+		const b = at(reopened.slides, reopened.slides.length - 1)
 		const ga = assertGraphResolves(opc, a.partName)
 		const gb = assertGraphResolves(opc, b.partName)
 
@@ -238,8 +247,8 @@ describe('Presentation.importSlide', () => {
 		assertEqual(new Set(ids).size, ids.length, 'slide ids are unique')
 
 		// The page duplicates; everything under it still dedupes.
-		const a = reopened.slides[reopened.slides.length - 2]
-		const b = reopened.slides[reopened.slides.length - 1]
+		const a = at(reopened.slides, reopened.slides.length - 2)
+		const b = at(reopened.slides, reopened.slides.length - 1)
 		const ga = assertGraphResolves(reopened.opc, a.partName)
 		const gb = assertGraphResolves(reopened.opc, b.partName)
 		assertEqual(ga.layout, gb.layout, 'both copies share the one copied layout')
@@ -252,7 +261,7 @@ describe('Presentation.importSlide', () => {
 		)
 
 		// Both copies carry the source page's content, not one empty shell.
-		const sourceShapeCount = source.slides[0].shapes.length
+		const sourceShapeCount = at(source.slides, 0).shapes.length
 		assertEqual(a.shapes.length, sourceShapeCount, 'the first copy has the source shapes')
 		assertEqual(b.shapes.length, sourceShapeCount, 'and so does the second')
 	})
@@ -293,7 +302,7 @@ describe('Presentation.importSlide', () => {
 		const reopened = await Presentation.load(await target.save())
 		const opc = reopened.opc
 
-		const { master } = assertGraphResolves(opc, reopened.slides[reopened.slides.length - 1].partName)
+		const { master } = assertGraphResolves(opc, at(reopened.slides, reopened.slides.length - 1).partName)
 		const masters = registeredMasters(opc)
 		assertEqual(masters.length, before + 1, 'importing a slide on a new master registers one more master')
 		assert(masters.includes(master), 'and the registered master is the slide’s own copied master')
@@ -375,7 +384,7 @@ describe('Presentation.importSlide from the deck this one was templated from', (
 	test('binds to the chrome the template already holds instead of copying it in again', async () => {
 		const { dest, source } = await selfTemplate('multi-theme')
 		const galleryBefore = dest.layouts().map((l) => l.partName)
-		const sourceLayout = defined(source.slides[0].layout).partName
+		const sourceLayout = defined(at(source.slides, 0).layout).partName
 
 		const imported = dest.importSlide(source, 0)
 		assertEqual(
@@ -394,7 +403,7 @@ describe('Presentation.importSlide from the deck this one was templated from', (
 			'the layout gallery is unchanged: no duplicate entry per imported slide'
 		)
 		assertEqual(registeredMasters(reopened.opc).length, 1, 'and no second master is registered')
-		assertGraphResolves(reopened.opc, reopened.slides[0].partName)
+		assertGraphResolves(reopened.opc, at(reopened.slides, 0).partName)
 		assertNoDanglingRels(reopened.opc)
 	})
 
@@ -462,7 +471,7 @@ describe('Presentation.importSlide({ at })', () => {
 
 		const reopened = await Presentation.load(await target.save())
 		assertEqual(reopened.slides.length, ids.length + 1, 'slide count grew by one')
-		assertEqual(reopened.slides[0].slideId, imported.slideId, 'imported slide is first after round-trip')
+		assertEqual(at(reopened.slides, 0).slideId, imported.slideId, 'imported slide is first after round-trip')
 		assertEqual(
 			JSON.stringify(reopened.slides.slice(1).map((s) => s.slideId)),
 			JSON.stringify(ids),
@@ -492,7 +501,7 @@ describe('Presentation.importSlide({ at })', () => {
 		assertEqual(imported.index, ids.length, 'an at past the end appends')
 
 		const reopened = await Presentation.load(await target.save())
-		assertEqual(reopened.slides[reopened.slides.length - 1].slideId, imported.slideId, 'imported slide is last')
+		assertEqual(at(reopened.slides, reopened.slides.length - 1).slideId, imported.slideId, 'imported slide is last')
 		assertNoDanglingRels(reopened.opc)
 	})
 
@@ -518,14 +527,14 @@ describe('Presentation.importSlide({ at })', () => {
 
 	test('cloneSlide accepts at to place the duplicate', async () => {
 		const target = await openFixture('mixed')
-		const firstId = target.slides[0].slideId
+		const firstId = at(target.slides, 0).slideId
 
 		const clone = target.cloneSlide(target.slides.length - 1, { at: 0 })
 		assertEqual(clone.index, 0, 'clone reports index 0')
 
 		const reopened = await Presentation.load(await target.save())
-		assertEqual(reopened.slides[0].slideId, clone.slideId, 'clone is first after round-trip')
-		assertEqual(reopened.slides[1].slideId, firstId, 'the former first slide shifted back by one')
+		assertEqual(at(reopened.slides, 0).slideId, clone.slideId, 'clone is first after round-trip')
+		assertEqual(at(reopened.slides, 1).slideId, firstId, 'the former first slide shifted back by one')
 		assertNoDanglingRels(reopened.opc)
 	})
 
@@ -565,8 +574,8 @@ describe('generate → read import bridge', () => {
 
 		const reopened = await Presentation.load(await deck.save())
 		assertEqual(reopened.slides.length, interiorCount + 1, 'the bookend was added to the generated deck')
-		assertEqual(reopened.slides[0].slideId, cover.slideId, 'imported cover is first')
-		assertGraphResolves(reopened.opc, reopened.slides[0].partName)
+		assertEqual(at(reopened.slides, 0).slideId, cover.slideId, 'imported cover is first')
+		assertGraphResolves(reopened.opc, at(reopened.slides, 0).partName)
 		assertNoDanglingRels(reopened.opc)
 	})
 
@@ -598,7 +607,7 @@ function partText(bodies: Map<string, Uint8Array>, partName: string) {
 
 /** The picture shape on the last slide of a reopened deck. */
 function lastSlidePicture(pres: Presentation) {
-	const last = pres.slides[pres.slides.length - 1]
+	const last = at(pres.slides, pres.slides.length - 1)
 	return defined(last.shapes.find((s) => s.shapeType === 'picture'))
 }
 
@@ -611,7 +620,7 @@ describe('Presentation.importSlide({ rescale })', () => {
 	test("'fit' rescales slide geometry uniformly and centers the slack", async () => {
 		const target = await openFixture('mixed') // 4:3
 		const source = await openFixture('image') // 16:9
-		const src = defined(defined(source.slides[0].shapes.find((s) => s.shapeType === 'picture')).absoluteFrame)
+		const src = defined(defined(at(source.slides, 0).shapes.find((s) => s.shapeType === 'picture')).absoluteFrame)
 
 		target.importSlide(source, 0, { rescale: 'fit' })
 		const reopened = await Presentation.load(await target.save())
@@ -621,14 +630,14 @@ describe('Presentation.importSlide({ rescale })', () => {
 		near(pic.top, Math.round(src.top * 0.75 + 857250), 'top scaled + centered')
 		near(pic.width, Math.round(src.width * 0.75), 'width scaled by 0.75')
 		near(pic.height, Math.round(src.height * 0.75), 'height scaled by 0.75')
-		assertGraphResolves(reopened.opc, reopened.slides[reopened.slides.length - 1].partName)
+		assertGraphResolves(reopened.opc, at(reopened.slides, reopened.slides.length - 1).partName)
 		assertNoDanglingRels(reopened.opc)
 	})
 
 	test("'stretch' scales each axis independently (height unchanged when only width differs)", async () => {
 		const target = await openFixture('mixed')
 		const source = await openFixture('image')
-		const src = defined(defined(source.slides[0].shapes.find((s) => s.shapeType === 'picture')).absoluteFrame)
+		const src = defined(defined(at(source.slides, 0).shapes.find((s) => s.shapeType === 'picture')).absoluteFrame)
 
 		target.importSlide(source, 0, { rescale: 'stretch' })
 		const reopened = await Presentation.load(await target.save())
@@ -642,7 +651,7 @@ describe('Presentation.importSlide({ rescale })', () => {
 	test('true is an alias for fit', async () => {
 		const target = await openFixture('mixed')
 		const source = await openFixture('image')
-		const src = defined(defined(source.slides[0].shapes.find((s) => s.shapeType === 'picture')).absoluteFrame)
+		const src = defined(defined(at(source.slides, 0).shapes.find((s) => s.shapeType === 'picture')).absoluteFrame)
 
 		target.importSlide(source, 0, { rescale: true })
 		const reopened = await Presentation.load(await target.save())
@@ -654,7 +663,7 @@ describe('Presentation.importSlide({ rescale })', () => {
 		const target = await openFixture('mixed')
 		const source = await openFixture('image')
 
-		const srcLayout = resolveSingle(source.opc, source.slides[0].partName, SLIDE_LAYOUT_REL)
+		const srcLayout = resolveSingle(source.opc, at(source.slides, 0).partName, SLIDE_LAYOUT_REL)
 		const srcLayoutCx = firstExtCx(
 			defined(partText(await partBodies(await readFile(fixturePath('image'))), defined(srcLayout)))
 		)
@@ -664,7 +673,7 @@ describe('Presentation.importSlide({ rescale })', () => {
 		const reopened = await Presentation.load(savedBytes)
 		const importedLayout = resolveSingle(
 			reopened.opc,
-			reopened.slides[reopened.slides.length - 1].partName,
+			at(reopened.slides, reopened.slides.length - 1).partName,
 			SLIDE_LAYOUT_REL
 		)
 		const importedCx = firstExtCx(defined(partText(await partBodies(savedBytes), defined(importedLayout))))
@@ -732,7 +741,7 @@ describe('Presentation.importSlide({ importNotes })', () => {
 		const imported = target.importSlide(source, 0)
 
 		const reopened = await Presentation.load(await target.save())
-		const importedName = reopened.slides[imported.index].partName
+		const importedName = at(reopened.slides, imported.index).partName
 		assertEqual(
 			resolveSingle(reopened.opc, importedName, NOTES_SLIDE_REL),
 			null,
@@ -750,7 +759,7 @@ describe('Presentation.importSlide({ importNotes })', () => {
 		const savedBytes = await target.save()
 		const bodies = await partBodies(savedBytes)
 		const reopened = await Presentation.load(savedBytes)
-		const importedName = reopened.slides[imported.index].partName
+		const importedName = at(reopened.slides, imported.index).partName
 
 		const notesName = resolveSingle(reopened.opc, importedName, NOTES_SLIDE_REL)
 		assert(notesName && reopened.opc.part(notesName), 'imported slide resolves to a notesSlide part')
@@ -782,7 +791,7 @@ describe('Presentation.importSlide({ importNotes })', () => {
 		const imported = target.importSlide(source, 0, { importNotes: true, rescale: 'fit' })
 
 		const reopened = await Presentation.load(await target.save())
-		const importedName = reopened.slides[imported.index].partName
+		const importedName = at(reopened.slides, imported.index).partName
 		const notesName = resolveSingle(reopened.opc, importedName, NOTES_SLIDE_REL)
 		assert(notesName, 'imported slide has a notesSlide')
 

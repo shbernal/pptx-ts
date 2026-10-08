@@ -20,7 +20,7 @@
 import { DOMParser, XMLSerializer } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
 import { AutoShape, GroupShape, type ShapeHost, type ThemeContext } from '../../dist/read.js'
-import { assert, defined } from '../helpers.ts'
+import { assert, defined, at } from '../helpers.ts'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
@@ -42,7 +42,7 @@ function ctx(): ThemeContext {
 function sp(body: string) {
 	const xml = `<p:spTree xmlns:p="${P_NS}" xmlns:a="${A_NS}"><p:sp>${body}</p:sp></p:spTree>`
 	const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
-	const el = spTree.getElementsByTagNameNS(P_NS, 'sp')[0]
+	const el = at(spTree.getElementsByTagNameNS(P_NS, 'sp'), 0)
 	// A host stub: the setters mark the owning part dirty on the way out, and nothing here
 	// has a part behind it.
 	const host = { themeContext: () => ctx(), part: { markDirty: () => {} } }
@@ -86,7 +86,7 @@ describe('a created p:spPr lands in schema order', () => {
 function grpSp(body: string) {
 	const xml = `<p:spTree xmlns:p="${P_NS}" xmlns:a="${A_NS}"><p:grpSp>${body}</p:grpSp></p:spTree>`
 	const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
-	const el = spTree.getElementsByTagNameNS(P_NS, 'grpSp')[0]
+	const el = at(spTree.getElementsByTagNameNS(P_NS, 'grpSp'), 0)
 	const host = { themeContext: () => ctx(), part: { markDirty: () => {} } }
 	const shape = new GroupShape(el, host as unknown as ShapeHost)
 	return { shape, xml: () => new XMLSerializer().serializeToString(el) }

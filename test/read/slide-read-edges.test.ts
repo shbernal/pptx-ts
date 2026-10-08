@@ -10,7 +10,7 @@
 import { describe, test } from 'vitest'
 
 import type { Slide } from '../../dist/read.js'
-import { assert, assertEqual, assertRejects, defined, expectDefined } from '../helpers.ts'
+import { assert, assertEqual, assertRejects, defined, expectDefined, at } from '../helpers.ts'
 import { authorRead, schemaErrors, validatorInstalled } from './authored.ts'
 import { openFixture } from './corpus.ts'
 
@@ -39,7 +39,7 @@ const GEOM = { left: 0, top: 0, width: 100000, height: 100000 }
 
 describe('Slide.addPicture — image format sniffing', () => {
 	test('each format signature resolves to the right media extension', async () => {
-		const slide = (await openFixture('empty')).slides[0]
+		const slide = at((await openFixture('empty')).slides, 0)
 		const expected: Record<string, string> = {
 			jpeg: 'jpeg',
 			gif: 'gif',
@@ -59,7 +59,7 @@ describe('Slide.addPicture — image format sniffing', () => {
 	})
 
 	test('bytes too short to match any signature still throw without an explicit type', async () => {
-		const slide = (await openFixture('empty')).slides[0]
+		const slide = at((await openFixture('empty')).slides, 0)
 		// JPEG needs 3 signature bytes, so 2 sniff to nothing.
 		await assertRejects(
 			() => slide.addPicture(new Uint8Array([0xff, 0xd8]), GEOM),
@@ -71,10 +71,10 @@ describe('Slide.addPicture — image format sniffing', () => {
 
 describe('Slide misc read/edit edges', () => {
 	test('addTextBox preserves significant leading/trailing whitespace', async () => {
-		const slide = (await openFixture('empty')).slides[0]
+		const slide = at((await openFixture('empty')).slides, 0)
 		const box = slide.addTextBox({ text: '  padded  ', ...GEOM })
 		assertEqual(
-			defined(box.textFrame).paragraphs[0].runs[0].text,
+			at(at(defined(box.textFrame).paragraphs, 0).runs, 0).text,
 			'  padded  ',
 			'the whitespace text is written verbatim'
 		)
@@ -83,27 +83,27 @@ describe('Slide misc read/edit edges', () => {
 	test('placeholder() skips non-AutoShape shapes when scanning', async () => {
 		// image.pptx carries pictures (non-AutoShape). placeholder() must iterate past
 		// them without error; a missing type simply returns undefined.
-		const slide = (await openFixture('image')).slides[0]
+		const slide = at((await openFixture('image')).slides, 0)
 		assertEqual(slide.placeholder('nonexistent-type'), undefined, 'no matching placeholder → undefined')
 	})
 
 	test('name reads p:cSld/@name (null when the slide is unnamed)', async () => {
-		const slide = (await openFixture('empty')).slides[0]
+		const slide = at((await openFixture('empty')).slides, 0)
 		// The getter must not throw; an unnamed slide reads null.
 		const name = slide.name
 		assert(name === null || typeof name === 'string', `name is a string or null, got ${typeof name}`)
 	})
 
 	test('addTextBox with no text writes an empty paragraph', async () => {
-		const slide = (await openFixture('empty')).slides[0]
+		const slide = at((await openFixture('empty')).slides, 0)
 		const box = slide.addTextBox(GEOM)
-		assertEqual(defined(box.textFrame).paragraphs[0].text, '', 'an empty text box has an empty first paragraph')
+		assertEqual(at(defined(box.textFrame).paragraphs, 0).text, '', 'an empty text box has an empty first paragraph')
 	})
 
 	test('notesText reads the notes body when a notes slide is attached', async () => {
 		// notes-slide-image.pptx carries a real notes slide; the read must resolve the
 		// notesSlide rel, find the body placeholder, and flatten its text.
-		const slide = (await openFixture('notes-slide-image')).slides[0]
+		const slide = at((await openFixture('notes-slide-image')).slides, 0)
 		const notes = slide.notesText
 		assert(notes === null || typeof notes === 'string', 'notesText is a string (or null when no notes part)')
 	})
@@ -115,7 +115,7 @@ describe('Slide.background — write→read fidelity', () => {
 			const slide = pres.addSlide()
 			slide.background = { color: 'C0392B' }
 		})
-		const bg = presentation.slides[0].background
+		const bg = at(presentation.slides, 0).background
 		assert(bg !== null, 'the slide has a background')
 		assert(bg.type === 'solid', 'solid colour background')
 		assertEqual(bg.source, 'slide', 'authored on the slide, not inherited')
@@ -137,14 +137,14 @@ describe('Slide.background — write→read fidelity', () => {
 				},
 			}
 		})
-		const bg = defined(presentation.slides[0].background)
+		const bg = defined(at(presentation.slides, 0).background)
 		assert(bg.type === 'gradient', 'gradient background')
 		assertEqual(bg.source, 'slide', 'authored on the slide')
 		assertEqual(bg.gradient.kind, 'linear', 'linear gradient')
 		assertEqual(bg.gradient.angleDeg, 45, '45° preserved through the OOXML 60000ths encoding')
 		assertEqual(bg.gradient.stops.length, 2, 'both stops read')
-		assertEqual(bg.gradient.stops[0].colorRef.resolved?.effectiveHex, 'FF0000', 'first stop colour')
-		assertEqual(bg.gradient.stops[1].position, 1, 'last stop at position 1 (100%)')
+		assertEqual(at(bg.gradient.stops, 0).colorRef.resolved?.effectiveHex, 'FF0000', 'first stop colour')
+		assertEqual(at(bg.gradient.stops, 1).position, 1, 'last stop at position 1 (100%)')
 	})
 
 	test('image background reads its rel id and resolved absolute part name', async () => {
@@ -152,7 +152,7 @@ describe('Slide.background — write→read fidelity', () => {
 			const slide = pres.addSlide()
 			slide.background = { data: PNG_1PX }
 		})
-		const bg = defined(presentation.slides[0].background)
+		const bg = defined(at(presentation.slides, 0).background)
 		assert(bg.type === 'image', 'image background')
 		assertEqual(bg.source, 'slide', 'authored on the slide')
 		assert(bg.relId != null, 'the blip rel id is read')
@@ -166,7 +166,7 @@ describe('Slide.background — write→read fidelity', () => {
 		const { presentation } = await authorRead((pres) => {
 			pres.addSlide() // no background set → falls through to the default layout's p:bg
 		})
-		const bg = presentation.slides[0].background
+		const bg = at(presentation.slides, 0).background
 		expectDefined(bg, 'the effective background is inherited, not null')
 		assert(bg.type === 'themeRef', 'the default layout background is a theme-indexed p:bgRef')
 		assertEqual(bg.source, 'layout', 'inherited from the layout, not the slide')
@@ -177,7 +177,7 @@ describe('Slide.background — write→read fidelity', () => {
 		const { presentation } = await authorRead((pres) => {
 			pres.addSlide() // inherits the default layout's p:bgRef idx=1001
 		})
-		const bg = defined(presentation.slides[0].background)
+		const bg = defined(at(presentation.slides, 0).background)
 		assert(bg.type === 'themeRef', 'theme-indexed background')
 		assertEqual(bg.idx, 1001, 'raw idx kept for fidelity')
 		// idx 1001 → bgFillStyleLst entry 1 = <a:solidFill><a:schemeClr val="phClr"/></a:solidFill>;
@@ -207,11 +207,11 @@ describe('TextFrame.autofit — write→read fidelity', () => {
 			pres.addSlide().addText('shrink', { x: 1, y: 1, w: 3, h: 1, fit: 'shrink' })
 			pres.addSlide().addText('plain', { x: 1, y: 1, w: 3, h: 1 })
 		})
-		assertEqual(textFrameOf(presentation.slides[0]).autofit, 'spAutoFit', "fit:'resize' → spAutoFit")
-		const shrink = textFrameOf(presentation.slides[1])
+		assertEqual(textFrameOf(at(presentation.slides, 0)).autofit, 'spAutoFit', "fit:'resize' → spAutoFit")
+		const shrink = textFrameOf(at(presentation.slides, 1))
 		assertEqual(shrink.autofit, 'normAutofit', "fit:'shrink' → normAutofit")
 		assertEqual(shrink.autofitFontScale, null, 'a bare normAutofit bakes no font scale')
-		assertEqual(textFrameOf(presentation.slides[2]).autofit, 'none', 'a bodyPr with no autofit child → none')
+		assertEqual(textFrameOf(at(presentation.slides, 2)).autofit, 'none', 'a bodyPr with no autofit child → none')
 	})
 
 	test('an explicit shrink bakes fontScale and lnSpcReduction as percents', async () => {
@@ -224,7 +224,7 @@ describe('TextFrame.autofit — write→read fidelity', () => {
 				fit: { type: 'shrink', fontScale: 62.5, lnSpcReduction: 20 },
 			})
 		})
-		const tf = textFrameOf(presentation.slides[0])
+		const tf = textFrameOf(at(presentation.slides, 0))
 		assertEqual(tf.autofit, 'normAutofit', 'shrink object → normAutofit')
 		assertEqual(tf.autofitFontScale, 62.5, 'fontScale read as a percent (62500 ÷ 1000)')
 		assertEqual(tf.autofitLineSpaceReduction, 20, 'lnSpcReduction read as a percent (20000 ÷ 1000)')
@@ -245,7 +245,7 @@ describe('Slide.slideNumberPlaceholder — write→read fidelity', () => {
 			// (setSlideNumber() alone puts it only on the master, which this getter scopes out).
 			pres.addSlide().slideNumber = { x: 1, y: '90%', w: 1, h: 0.5 }
 		})
-		const ph = presentation.slides[0].slideNumberPlaceholder
+		const ph = at(presentation.slides, 0).slideNumberPlaceholder
 		assert(ph !== null, 'the sldNum placeholder shape is found')
 		assertEqual(ph.placeholder?.type, 'sldNum', 'it is the slide-number placeholder')
 		assert(ph.text.length >= 0, 'its text frame reads (the slide-number field)')
@@ -255,7 +255,7 @@ describe('Slide.slideNumberPlaceholder — write→read fidelity', () => {
 		const { presentation } = await authorRead((pres) => {
 			pres.addSlide()
 		})
-		assertEqual(presentation.slides[0].slideNumberPlaceholder, null, 'no sldNum placeholder → null')
+		assertEqual(at(presentation.slides, 0).slideNumberPlaceholder, null, 'no sldNum placeholder → null')
 	})
 
 	test.skipIf(!validatorInstalled)('a slide carrying a slide number is schema-valid', async () => {

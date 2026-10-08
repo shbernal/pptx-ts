@@ -32,7 +32,7 @@ import {
 	type TextInheritance,
 	type ThemeContext,
 } from '../../dist/read.js'
-import { assert, assertEqual, defined, expectDefined } from '../helpers.ts'
+import { assert, assertEqual, defined, expectDefined, at } from '../helpers.ts'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
@@ -84,7 +84,7 @@ function drawingEl(xml: string) {
 function autoShape(spXml: string, flatten = ctx()) {
 	const xml = `<p:spTree xmlns:p="${P_NS}" xmlns:a="${A_NS}">${spXml}</p:spTree>`
 	const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
-	const el = spTree.getElementsByTagNameNS(P_NS, 'sp')[0]
+	const el = at(spTree.getElementsByTagNameNS(P_NS, 'sp'), 0)
 	// Only `themeContext()` is exercised by the resolved-fill/line reads.
 	return new AutoShape(el, { themeContext: () => flatten } as Pick<ShapeHost, 'themeContext'> as ShapeHost)
 }
@@ -317,7 +317,7 @@ describe('resolveSlideThemeParts — a broken theme chain degrades, not throws',
 		// Drop the single <Relationship … slideLayout … /> element.
 		zip.file(relsName, rels.replace(/<Relationship\b[^>]*slideLayout[^>]*\/>/, ''))
 		const broken = await zip.generateAsync({ type: 'uint8array' })
-		return (await Presentation.load(broken)).slides[0]
+		return at((await Presentation.load(broken)).slides, 0)
 	}
 
 	test('themeContext resolves to empty maps and null roots when the layout link is gone', async () => {
@@ -335,7 +335,7 @@ describe('resolveSlideThemeParts — a broken theme chain degrades, not throws',
 		const slide = await slideWithNoLayoutRel()
 		const shape = slide.shapes.find((s) => s.hasTextFrame)
 		expectDefined(shape, 'expected the text shape')
-		const run = defined(shape.textFrame).paragraphs[0].runs[0]
+		const run = at(at(defined(shape.textFrame).paragraphs, 0).runs, 0)
 		// The explicit run colour still resolves; the point is nothing throws.
 		assertEqual(defined(run.resolvedColor).hex, '0000FF', 'an explicit run colour survives a broken theme chain')
 	})

@@ -28,6 +28,7 @@ import {
 	defined,
 	expectDefined,
 	partBodies,
+	at,
 } from '../helpers.ts'
 import { openFixture, readFixture } from './corpus.ts'
 
@@ -36,7 +37,7 @@ const DIAGRAM_URI = 'http://schemas.openxmlformats.org/drawingml/2006/diagram'
 /** The SmartArt frame on `mixed.pptx` slide 2 (index 1). */
 async function smartArtFrame() {
 	const presentation = await openFixture('mixed')
-	const slide = presentation.slides[1]
+	const slide = at(presentation.slides, 1)
 	const frame = slide.shapes.find(isGraphicFrame)
 	expectDefined(frame, 'slide 2 of mixed.pptx has a graphic frame')
 	const diagram = defined(frame.diagram, 'the frame on slide 2 of mixed.pptx resolves its diagram')
@@ -50,7 +51,7 @@ async function smartArtFrame() {
  */
 function diagramOn(presentation: Presentation, index = 1) {
 	const frame = defined(
-		presentation.slides[index].shapes.find(isGraphicFrame),
+		at(presentation.slides, index).shapes.find(isGraphicFrame),
 		`slide ${index + 1} has a graphic frame`
 	)
 	return defined(frame.diagram, `the frame on slide ${index + 1} resolves its diagram`)
@@ -64,7 +65,7 @@ function diagramOn(presentation: Presentation, index = 1) {
  */
 async function familyDiagram(slideNumber: number) {
 	const presentation = await openFixture('smartart-families')
-	const frame = presentation.slides[slideNumber - 1].shapes.find(isGraphicFrame)
+	const frame = at(presentation.slides, slideNumber - 1).shapes.find(isGraphicFrame)
 	assert(frame?.diagram, `slide ${slideNumber} of smartart-families.pptx holds a diagram`)
 	return { presentation, diagram: frame.diagram }
 }
@@ -106,8 +107,8 @@ describe('GraphicFrame — diagram host', () => {
 
 	test('a table or chart frame reports no diagram', async () => {
 		const slides = (await openFixture('mixed')).slides
-		const table = slides[6].shapes.find(isGraphicFrame) // slide7: a:tbl
-		const chart = slides[7].shapes.find(isGraphicFrame) // slide8: c:chart
+		const table = at(slides, 6).shapes.find(isGraphicFrame) // slide7: a:tbl
+		const chart = at(slides, 7).shapes.find(isGraphicFrame) // slide8: c:chart
 		for (const label of ['table', 'chart']) {
 			const frame = label === 'table' ? table : chart
 			assert(frame, `slide for the ${label} frame resolves`)
@@ -121,7 +122,7 @@ describe('GraphicFrame — diagram host', () => {
 		// The other half of "the predicate is about the frame": a frame can announce the
 		// diagram uri and carry no reference at all. It must still say what it is.
 		const { frame } = await smartArtFrame()
-		const relIds = frame.element_.getElementsByTagName('dgm:relIds')[0]
+		const relIds = at(frame.element_.getElementsByTagName('dgm:relIds'), 0)
 		defined(relIds.parentNode, 'dgm:relIds sits in its graphicData').removeChild(relIds)
 		assertEqual(frame.hasDiagram, true, 'the uri still names a diagram')
 		assert(frame.diagram === null, 'but there is no data part to reach')
@@ -133,7 +134,7 @@ describe('GraphicFrame — diagram host', () => {
 		const pkg = await OpcPackage.load(await readFixture('mixed'))
 		assertEqual(pkg.removePart('/ppt/diagrams/data1.xml'), true, 'the data part was there to remove')
 		const presentation = await Presentation.load(await pkg.save())
-		const frame = defined(presentation.slides[1].shapes.find(isGraphicFrame), 'slide 2 keeps its graphic frame')
+		const frame = defined(at(presentation.slides, 1).shapes.find(isGraphicFrame), 'slide 2 keeps its graphic frame')
 		assertEqual(frame.hasDiagram, true, 'the frame still reports a diagram host')
 		assert(frame.diagram === null, 'but the accessor is null with no data part to resolve')
 	})
@@ -197,11 +198,13 @@ describe('Diagram — the data model', () => {
 		assertEqual(paragraphs.length, 1, 'the node holds one paragraph')
 		// PowerPoint split this node across five runs on spell-check boundaries (`@err`).
 		assertEqual(
-			paragraphs[0].runs.map((run) => run.text).join(''),
+			at(paragraphs, 0)
+				.runs.map((run) => run.text)
+				.join(''),
 			NODE_TEXT[0],
 			'the runs concatenate to the node text'
 		)
-		assert(paragraphs[0].runs.length > 1, 'and the split survives rather than flattening to one run')
+		assert(at(paragraphs, 0).runs.length > 1, 'and the split survives rather than flattening to one run')
 	})
 
 	test('connections give the points their tree', async () => {
@@ -263,7 +266,7 @@ describe('Diagram — the data model', () => {
 		const { presentation, diagram } = await smartArtFrame()
 		const root = defined(diagram.element_, 'the data part has a root element')
 		for (const name of ['dgm:ptLst', 'dgm:cxnLst', 'dgm:extLst']) {
-			const child = root.getElementsByTagName(name)[0]
+			const child = at(root.getElementsByTagName(name), 0)
 			defined(child.parentNode).removeChild(child)
 		}
 		diagram.markDirty()
@@ -291,8 +294,11 @@ describe('Diagram — the data model', () => {
 		// nothing about. Matching the first `a:ext` rather than the one whose `@uri` is the
 		// diagram extension would resolve the wrong relationship id, or none.
 		const { diagram } = await smartArtFrame()
-		const extLst = defined(diagram.element_, 'the data part has a root element').getElementsByTagName('dgm:extLst')[0]
-		const real = extLst.getElementsByTagName('a:ext')[0]
+		const extLst = at(
+			defined(diagram.element_, 'the data part has a root element').getElementsByTagName('dgm:extLst'),
+			0
+		)
+		const real = at(extLst.getElementsByTagName('a:ext'), 0)
 		const decoy = defined(extLst.ownerDocument).createElementNS(
 			'http://schemas.openxmlformats.org/drawingml/2006/main',
 			'a:ext'
@@ -335,7 +341,7 @@ describe('Diagram — the data model', () => {
 		const saved = await presentation.save()
 		const reopened = diagramOn(await Presentation.load(saved))
 		assert(reopened.text.startsWith('Rewritten node\n'), 'the edit is in the saved data part')
-		assert(!reopened.text.includes(NODE_TEXT[0]), 'and the original node text is gone')
+		assert(!reopened.text.includes(at(NODE_TEXT, 0)), 'and the original node text is gone')
 
 		const drawing = new TextDecoder().decode((await partBodies(saved)).get('ppt/diagrams/drawing1.xml'))
 		assert(!drawing.includes('Rewritten node'), 'the drawing cache did not follow')
@@ -367,10 +373,10 @@ describe('Diagram — the authored tree', () => {
 		)
 		// The assertion that distinguishes srcOrd from document order: `Controllable Inputs` is
 		// the *last* node in `dgm:ptLst` and the *second* child of the first branch.
-		assertEqual(nodes[0].children[1].point.text, NODE_TEXT[10], 'srcOrd wins over document order')
-		assertEqual(nodes[0].level, 0, 'a root is level 0')
-		assertEqual(nodes[0].children[0].level, 1, 'its children are level 1')
-		assert(nodes[0].children[0].parent === nodes[0], 'and point back at it')
+		assertEqual(at(at(nodes, 0).children, 1).point.text, NODE_TEXT[10], 'srcOrd wins over document order')
+		assertEqual(at(nodes, 0).level, 0, 'a root is level 0')
+		assertEqual(at(at(nodes, 0).children, 0).level, 1, 'its children are level 1')
+		assert(at(at(nodes, 0).children, 0).parent === nodes[0], 'and point back at it')
 		assert(nodes[0].parent === null, 'a root has no parent')
 	})
 
@@ -388,7 +394,7 @@ describe('Diagram — the authored tree', () => {
 			].join('\n'),
 			'three levels, with the asst in the tree and typed apart from the nodes'
 		)
-		const asst = diagram.nodes[0].children[0]
+		const asst = at(at(diagram.nodes, 0).children, 0)
 		assertEqual(asst.point.type, 'asst', 'an assistant keeps its own type rather than folding into node')
 		assertEqual(asst.level, 1, 'and sits at the level its parOf edge puts it at')
 	})
@@ -427,7 +433,7 @@ describe('Diagram — the authored tree', () => {
 		// cannot terminate on one. Built by re-pointing a child's parOf edge at its own
 		// descendant, which is the smallest cycle a real data model could acquire.
 		const { diagram } = await familyDiagram(1)
-		const child = diagram.nodes[0].children[1]
+		const child = at(at(diagram.nodes, 0).children, 1)
 		const grandchild = child.children[0]
 		assert(grandchild, 'org-child-1 has the grandchild the cycle is built through')
 		// `parOf` is the schema default, so a real edge carries no `@type` at all — filtering
@@ -452,19 +458,27 @@ describe('DiagramPoint — the link to what is drawn', () => {
 		// orders them *against* document order. A mapping that walked the drawing in document
 		// order would agree on the first branch and be wrong on this one.
 		const { diagram } = await smartArtFrame()
-		const branch = diagram.nodes[0].children
+		const branch = at(diagram.nodes, 0).children
 		const drawn = branch.map((node) => defined(node.point.drawnShape, 'all three children resolve to a drawn shape'))
 		assertEqual(new Set(drawn.map((shape) => shape.modelId)).size, 1, 'and it is one and the same shape')
 		assertEqual(drawn.map((shape) => shape.paragraphIndex).join(','), '0,1,2', 'at consecutive paragraphs')
 		for (const [index, node] of branch.entries()) {
 			assertEqual(
-				drawn[index].textFrame.paragraphs[drawn[index].paragraphIndex].text,
+				at(at(drawn, index).textFrame.paragraphs, at(drawn, index).paragraphIndex).text,
 				node.point.text,
 				`paragraph ${index} draws the node that resolved to it`
 			)
 		}
-		assertEqual(drawn[0].part.partName, '/ppt/diagrams/drawing1.xml', 'bound to the drawing part, not the data part')
-		assertEqual(drawn[0].modelId, branch[0].point.presentationId, 'keyed by the pres point presentationId names')
+		assertEqual(
+			at(drawn, 0).part.partName,
+			'/ppt/diagrams/drawing1.xml',
+			'bound to the drawing part, not the data part'
+		)
+		assertEqual(
+			at(drawn, 0).modelId,
+			at(branch, 0).point.presentationId,
+			'keyed by the pres point presentationId names'
+		)
 		assert(
 			diagram.points.every((point) => point.drawnShape?.modelId !== point.modelId),
 			'and never by the authored point own modelId, which draws nothing'
@@ -496,7 +510,7 @@ describe('DiagramPoint — the link to what is drawn', () => {
 		const presentation = await Presentation.load(await pkg.save())
 		const diagram = diagramOn(presentation)
 		assert(diagram.drawingPart === null, 'the fallback drawing is gone')
-		const node = diagram.nodes[0].point
+		const node = at(diagram.nodes, 0).point
 		assert(node.presentationId !== null, 'the presOf edge still names the pres point it always did')
 		assert(node.drawnShape === null, 'but there is no shape to reach')
 	})
@@ -528,15 +542,15 @@ describe('DiagramPoint.text — re-texting a node, cache and all', () => {
 	test('writes the data model and the drawing cache, and both survive a save', async () => {
 		const { presentation, diagram } = await smartArtFrame()
 		const { diagnostics } = await captureDiagnostics(async () => {
-			diagram.nodes[0].point.text = 'Rewritten node'
+			at(diagram.nodes, 0).point.text = 'Rewritten node'
 		})
 		assertEqual(diagnostics.length, 0, 'a node that resolves needs no diagnostic')
 
 		const saved = await presentation.save()
 		const reopened = diagramOn(await Presentation.load(saved))
-		assertEqual(reopened.nodes[0].point.text, 'Rewritten node', 'the data model holds the new text')
+		assertEqual(at(reopened.nodes, 0).point.text, 'Rewritten node', 'the data model holds the new text')
 		assertEqual(
-			defined(reopened.nodes[0].point.drawnShape).textFrame.paragraphs[0].text,
+			at(defined(at(reopened.nodes, 0).point.drawnShape).textFrame.paragraphs, 0).text,
 			'Rewritten node',
 			'and so does the paragraph the drawing cache draws for it'
 		)
@@ -548,29 +562,29 @@ describe('DiagramPoint.text — re-texting a node, cache and all', () => {
 		// collapses the whole body to one paragraph, which would delete the siblings' text
 		// from the cache while leaving the data model perfectly correct.
 		const { presentation, diagram } = await smartArtFrame()
-		const branch = diagram.nodes[0].children
-		const shared = defined(branch[0].point.drawnShape, 'the first child is drawn').modelId
+		const branch = at(diagram.nodes, 0).children
+		const shared = defined(at(branch, 0).point.drawnShape, 'the first child is drawn').modelId
 		const before = await drawnParagraphs(await (await openFixture('mixed')).save(), shared)
 		assertEqual(before.length, 3, 'one drawn shape, three paragraphs, one per node')
 
-		branch[1].point.text = 'Only the middle one'
+		at(branch, 1).point.text = 'Only the middle one'
 		const saved = await presentation.save()
 		const after = await drawnParagraphs(saved, shared)
 		assertEqual(after.length, 3, 'still three paragraphs afterwards')
 		assertEqual(after[0], before[0], 'the paragraph above the edit is byte-identical')
 		assertEqual(after[2], before[2], 'and so is the one below it')
 		assert(after[1] !== before[1], 'while the edited one changed')
-		assert(after[1].includes('<a:t>Only the middle one</a:t>'), 'to a single run holding the new string')
+		assert(at(after, 1).includes('<a:t>Only the middle one</a:t>'), 'to a single run holding the new string')
 
 		const reopened = await Presentation.load(saved)
-		const drawn = diagramOn(reopened).nodes[0].children.map((node) => defined(node.point.drawnShape))
+		const drawn = at(diagramOn(reopened).nodes, 0).children.map((node) => defined(node.point.drawnShape))
 		assertEqual(drawn.map((shape) => shape.paragraphIndex).join(','), '0,1,2', 'and the three still map as they did')
 	})
 
 	test('marks the data part and the drawing part, and nothing else', async () => {
 		const input = await readFixture('mixed')
 		const presentation = await Presentation.load(input)
-		diagramOn(presentation).nodes[0].point.text = 'Rewritten node'
+		at(diagramOn(presentation).nodes, 0).point.text = 'Rewritten node'
 		const before = await partBodies(input)
 		const after = await partBodies(await presentation.save())
 		assertUnchangedExcept(before, after, ['ppt/diagrams/data1.xml', 'ppt/diagrams/drawing1.xml'])
@@ -588,7 +602,7 @@ describe('DiagramPoint.text — re-texting a node, cache and all', () => {
 					const pkg = await OpcPackage.load(await readFixture('mixed'))
 					pkg.removePart('/ppt/diagrams/drawing1.xml')
 					const presentation = await Presentation.load(await pkg.save())
-					return diagramOn(presentation).nodes[0].point
+					return at(diagramOn(presentation).nodes, 0).point
 				},
 			},
 			{
@@ -610,7 +624,7 @@ describe('DiagramPoint.text — re-texting a node, cache and all', () => {
 			})
 			assertEqual(point.text, 'Mirrored nowhere', `${label}: the data-model edit applies regardless`)
 			assertEqual(diagnostics.length, 1, `${label}: exactly one diagnostic`)
-			assertEqual(diagnostics[0].code, 'diagram/drawing-cache-not-updated', `${label}: naming the condition`)
+			assertEqual(at(diagnostics, 0).code, 'diagram/drawing-cache-not-updated', `${label}: naming the condition`)
 		}
 	})
 
@@ -627,7 +641,7 @@ describe('DiagramPoint.text — re-texting a node, cache and all', () => {
 		})
 		assertEqual(point.text, '', 'nothing was written')
 		assertEqual(diagnostics.length, 1, 'and one diagnostic explains why')
-		assertEqual(diagnostics[0].code, 'diagram/point-has-no-text-body', 'named apart from the cache-mirror one')
+		assertEqual(at(diagnostics, 0).code, 'diagram/point-has-no-text-body', 'named apart from the cache-mirror one')
 	})
 
 	test('a labelled transition re-texts through exactly the same path a node does', async () => {
@@ -646,7 +660,7 @@ describe('DiagramPoint.text — re-texting a node, cache and all', () => {
 		const relabelled = saved.points.find((point) => point.text === 'relabelled arrow')
 		expectDefined(relabelled, 'the data model carries the new label')
 		assertEqual(
-			defined(relabelled.drawnShape).textFrame.paragraphs[0].text,
+			at(defined(relabelled.drawnShape).textFrame.paragraphs, 0).text,
 			'relabelled arrow',
 			'and so does the cache'
 		)
@@ -671,7 +685,7 @@ describe('a hyperlink in the drawing cache resolves (smartart-hyperlink.pptx)', 
 	/** The one diagram of the linked-node fixture. */
 	async function linkedDiagram() {
 		const presentation = await openFixture('smartart-hyperlink')
-		for (const shape of presentation.slides[0].shapes) {
+		for (const shape of at(presentation.slides, 0).shapes) {
 			if (isGraphicFrame(shape) && shape.diagram) return shape.diagram
 		}
 		throw new Error('slide 1 holds no diagram')
@@ -699,7 +713,7 @@ describe('a hyperlink in the drawing cache resolves (smartart-hyperlink.pptx)', 
 		assertEqual(own.length, 1, 'one linked run in the data part')
 		assertEqual(drawn.length, 1, 'and one in the drawing cache')
 		assertEqual(drawn[0], own[0], 'and the two readings agree, url and all')
-		assert(own[0].includes('https://example.invalid/smartart-node'), `the url resolves; got ${own[0]}`)
+		assert(at(own, 0).includes('https://example.invalid/smartart-node'), `the url resolves; got ${own[0]}`)
 	})
 
 	test('an unlinked run reports no link, from either reading', async () => {

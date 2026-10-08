@@ -16,7 +16,18 @@ import type { Element } from '@xmldom/xmldom'
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { Presentation, type AnyShape, type OpcPackage, type Slide } from '../../dist/read.js'
-import { TsPptx, PNG_1X1, bytesEqual, throws, assert, assertEqual, defined, readEntry, caughtSync } from '../helpers.ts'
+import {
+	TsPptx,
+	PNG_1X1,
+	bytesEqual,
+	throws,
+	assert,
+	assertEqual,
+	defined,
+	readEntry,
+	caughtSync,
+	at,
+} from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture } from './corpus.ts'
 import { assertNoDanglingRels } from './opc.ts'
@@ -39,7 +50,7 @@ function cNvPrIds(element: Element) {
 	const live = element.getElementsByTagNameNS(P_NS, 'cNvPr')
 	const out: number[] = []
 	for (let i = 0; i < live.length; i++) {
-		const id = live[i].getAttribute('id')
+		const id = at(live, i).getAttribute('id')
 		if (id != null) out.push(Number(id))
 	}
 	return out
@@ -51,7 +62,7 @@ function geometryTuples(element: Element) {
 	for (const tag of ['off', 'ext', 'chOff', 'chExt']) {
 		const live = element.getElementsByTagNameNS(A_NS, tag)
 		for (let i = 0; i < live.length; i++) {
-			const el = live[i]
+			const el = at(live, i)
 			out.push(
 				`${tag}:${el.getAttribute('x') ?? el.getAttribute('cx')},${el.getAttribute('y') ?? el.getAttribute('cy')}`
 			)
@@ -65,7 +76,7 @@ function gridColWidths(element: Element) {
 	const live = element.getElementsByTagNameNS(A_NS, 'gridCol')
 	const out: number[] = []
 	for (let i = 0; i < live.length; i++) {
-		const w = live[i].getAttribute('w')
+		const w = at(live, i).getAttribute('w')
 		if (w != null) out.push(Number(w))
 	}
 	return out
@@ -90,7 +101,7 @@ function lstStyleLevels(element: Element) {
 	const live = element.getElementsByTagNameNS(A_NS, 'lstStyle')
 	if (live.length === 0) return []
 	const out: string[] = []
-	for (let node = live[0].firstChild; node; node = node.nextSibling) {
+	for (let node = at(live, 0).firstChild; node; node = node.nextSibling) {
 		if (node.nodeType === 1) out.push(defined(node.localName))
 	}
 	return out
@@ -203,13 +214,13 @@ describe('Presentation.importShape', () => {
 	test('lifts a picture onto a foreign host; media copied once, survives a round-trip', async () => {
 		const target = await openFixture('empty') // 16:9, slide[0] holds one autoShape
 		const source = await openFixture('image') // 16:9
-		const targetSlide = target.slides[0]
-		const picIndex = findShapeIndex(source.slides[0], (s) => s.shapeType === 'picture')
+		const targetSlide = at(target.slides, 0)
+		const picIndex = findShapeIndex(at(source.slides, 0), (s) => s.shapeType === 'picture')
 		assert(picIndex >= 0, 'source slide has a picture to lift')
 		const hostMediaBefore = countParts(target.opc, /ppt\/media\//)
 		const hostShapesBefore = targetSlide.shapes.length
 
-		const shape = target.importShape(targetSlide, source.slides[0], picIndex)
+		const shape = target.importShape(targetSlide, at(source.slides, 0), picIndex)
 		assert(shape.shapeType === 'picture', 'returns a Picture proxy')
 		assertEqual(targetSlide.shapes.length, hostShapesBefore + 1, 'one shape was appended to the host slide')
 
@@ -219,30 +230,32 @@ describe('Presentation.importShape', () => {
 
 		const reopened = await Presentation.load(await target.save())
 		assertNoDanglingRels(reopened.opc)
-		const pic = reopened.slides[0].shapes.find((s) => s.shapeType === 'picture')
+		const pic = at(reopened.slides, 0).shapes.find((s) => s.shapeType === 'picture')
 		assert(pic && pic.imagePartName && reopened.opc.part(pic.imagePartName), 'imported picture survives the round-trip')
 	})
 
 	test('lifts a table; cells intact on a host with a different theme', async () => {
 		const target = await openFixture('empty')
 		const source = await openFixture('table')
-		const tableIndex = findShapeIndex(source.slides[0], (s) => s.shapeType === 'graphicFrame' && s.table)
+		const tableIndex = findShapeIndex(at(source.slides, 0), (s) => s.shapeType === 'graphicFrame' && s.table)
 		assert(tableIndex >= 0, 'source slide has a table')
-		const srcFrame = source.slides[0].shapes[tableIndex]
+		const srcFrame = at(at(source.slides, 0).shapes, tableIndex)
 		assert(srcFrame.shapeType === 'graphicFrame', 'source shape at tableIndex is a graphic frame')
 		const srcTable = defined(srcFrame.table, 'the source graphic frame holds a table')
 		const srcRows = srcTable.rowCount
-		const srcFirstCell = srcTable.rows[0].cells[0].text
+		const srcFirstCell = at(at(srcTable.rows, 0).cells, 0).text
 
-		const shape = target.importShape(target.slides[0], source.slides[0], tableIndex)
+		const shape = target.importShape(at(target.slides, 0), at(source.slides, 0), tableIndex)
 		assert(shape.shapeType === 'graphicFrame', 'returns the graphic frame')
 		assert(shape.table, 'the lifted frame still hosts a table')
 		assertEqual(shape.table.rowCount, srcRows, 'row count preserved')
-		assertEqual(shape.table.rows[0].cells[0].text, srcFirstCell, 'first cell text preserved')
+		assertEqual(at(at(shape.table.rows, 0).cells, 0).text, srcFirstCell, 'first cell text preserved')
 
 		const reopened = await Presentation.load(await target.save())
 		assertNoDanglingRels(reopened.opc)
-		const table = reopened.slides[0].shapes.filter((s) => s.shapeType === 'graphicFrame').find((f) => f.table)?.table
+		const table = at(reopened.slides, 0)
+			.shapes.filter((s) => s.shapeType === 'graphicFrame')
+			.find((f) => f.table)?.table
 		assert(table && table.rowCount === srcRows, 'table survives the round-trip')
 	})
 
@@ -253,10 +266,10 @@ describe('Presentation.importShape', () => {
 			s.shapes.some((sh) => sh.shapeType === 'graphicFrame' && sh.chart)
 		)
 		assert(chartSlide >= 0, 'source deck has a chart slide')
-		const chartIndex = findShapeIndex(source.slides[chartSlide], (s) => s.shapeType === 'graphicFrame' && s.chart)
+		const chartIndex = findShapeIndex(at(source.slides, chartSlide), (s) => s.shapeType === 'graphicFrame' && s.chart)
 		const chartsBefore = countParts(target.opc, /\/charts\/chart\d+\.xml$/)
 
-		const shape = target.importShape(target.slides[0], source.slides[chartSlide], chartIndex)
+		const shape = target.importShape(at(target.slides, 0), at(source.slides, chartSlide), chartIndex)
 		assert(shape.shapeType === 'graphicFrame', 'returns the graphic frame')
 		assert(shape.chart, 'the lifted frame still hosts a chart')
 
@@ -271,20 +284,20 @@ describe('Presentation.importShape', () => {
 		const source = await openFixture('mixed')
 		const grpSlide = source.slides.findIndex((s) => s.shapes.some((sh) => sh.shapeType === 'group'))
 		assert(grpSlide >= 0, 'source deck has a group')
-		const grpIndex = findShapeIndex(source.slides[grpSlide], (s) => s.shapeType === 'group')
-		const srcGroup = source.slides[grpSlide].shapes[grpIndex].element_
+		const grpIndex = findShapeIndex(at(source.slides, grpSlide), (s) => s.shapeType === 'group')
+		const srcGroup = at(at(source.slides, grpSlide).shapes, grpIndex).element_
 		const srcIds = new Set(cNvPrIds(srcGroup))
 		const srcGeom = geometryTuples(srcGroup)
 
 		// `copy` keeps the subtree verbatim so geometry is a clean byte-for-byte check.
-		const shape = target.importShape(target.slides[0], source.slides[grpSlide], grpIndex, { theme: 'copy' })
+		const shape = target.importShape(at(target.slides, 0), at(source.slides, grpSlide), grpIndex, { theme: 'copy' })
 		assertEqual(shape.shapeType, 'group', 'returns a GroupShape')
 		const importedIds = cNvPrIds(shape.element_)
 
 		// Every id (group + children) was reassigned away from the source ids and is
 		// unique within the host slide.
 		for (const id of importedIds) assert(!srcIds.has(id), `child id ${id} was reassigned off the source ids`)
-		const hostIds = cNvPrIds(defined(target.slides[0].shapeTree()))
+		const hostIds = cNvPrIds(defined(at(target.slides, 0).shapeTree()))
 		assertEqual(new Set(hostIds).size, hostIds.length, 'all host drawing ids are unique')
 
 		// No rescale: every off/ext/chOff/chExt matches the source verbatim.
@@ -302,43 +315,53 @@ describe('Presentation.importShape', () => {
 		)
 		assert(schemeSlide >= 0, 'source deck has a scheme-coloured autoshape')
 		const schemeIndex = findShapeIndex(
-			source.slides[schemeSlide],
+			at(source.slides, schemeSlide),
 			(s) => s.shapeType === 'autoShape' && schemeClrCount(s.element_) > 0
 		)
-		const sourceSchemeClrs = schemeClrCount(source.slides[schemeSlide].shapes[schemeIndex].element_)
+		const sourceSchemeClrs = schemeClrCount(at(at(source.slides, schemeSlide).shapes, schemeIndex).element_)
 
 		const preserveTarget = await openFixture('mixed')
-		const preserved = preserveTarget.importShape(preserveTarget.slides[0], source.slides[schemeSlide], schemeIndex, {
-			theme: 'preserve',
-		})
+		const preserved = preserveTarget.importShape(
+			at(preserveTarget.slides, 0),
+			at(source.slides, schemeSlide),
+			schemeIndex,
+			{
+				theme: 'preserve',
+			}
+		)
 		assert(schemeClrCount(preserved.element_) < sourceSchemeClrs, 'preserve resolved scheme colours to literals')
 		assert(srgbClrCount(preserved.element_) > 0, 'preserve emitted literal srgbClr')
 
 		const restyleTarget = await openFixture('mixed')
-		const restyled = restyleTarget.importShape(restyleTarget.slides[0], source.slides[schemeSlide], schemeIndex, {
-			theme: 'restyle',
-		})
+		const restyled = restyleTarget.importShape(
+			at(restyleTarget.slides, 0),
+			at(source.slides, schemeSlide),
+			schemeIndex,
+			{
+				theme: 'restyle',
+			}
+		)
 		assertEqual(schemeClrCount(restyled.element_), sourceSchemeClrs, 'restyle left every scheme colour symbolic')
 	})
 
 	test('reassigns the lifted shape id off every host id (no collision)', async () => {
 		const target = await openFixture('empty')
 		const source = await openFixture('image')
-		const hostIdsBefore = new Set(cNvPrIds(defined(target.slides[0].shapeTree())))
-		const picIndex = findShapeIndex(source.slides[0], (s) => s.shapeType === 'picture')
+		const hostIdsBefore = new Set(cNvPrIds(defined(at(target.slides, 0).shapeTree())))
+		const picIndex = findShapeIndex(at(source.slides, 0), (s) => s.shapeType === 'picture')
 
-		const shape = target.importShape(target.slides[0], source.slides[0], picIndex)
+		const shape = target.importShape(at(target.slides, 0), at(source.slides, 0), picIndex)
 		assert(!hostIdsBefore.has(defined(shape.id)), `imported id ${shape.id} differs from every host id`)
-		const hostIds = cNvPrIds(defined(target.slides[0].shapeTree()))
+		const hostIds = cNvPrIds(defined(at(target.slides, 0).shapeTree()))
 		assertEqual(new Set(hostIds).size, hostIds.length, 'all host drawing ids remain unique')
 	})
 
 	test('honours placement overrides and z-order', async () => {
 		const target = await openFixture('empty')
 		const source = await openFixture('image')
-		const picIndex = findShapeIndex(source.slides[0], (s) => s.shapeType === 'picture')
+		const picIndex = findShapeIndex(at(source.slides, 0), (s) => s.shapeType === 'picture')
 
-		const shape = target.importShape(target.slides[0], source.slides[0], picIndex, {
+		const shape = target.importShape(at(target.slides, 0), at(source.slides, 0), picIndex, {
 			left: 100000,
 			top: 200000,
 			width: 300000,
@@ -349,20 +372,32 @@ describe('Presentation.importShape', () => {
 		assertEqual(shape.top, 200000, 'top override applied')
 		assertEqual(shape.width, 300000, 'width override applied')
 		assertEqual(shape.height, 400000, 'height override applied')
-		assertEqual(target.slides[0].shapes[0].id, shape.id, 'at:0 placed the shape backmost (first in document order)')
+		assertEqual(
+			at(at(target.slides, 0).shapes, 0).id,
+			shape.id,
+			'at:0 placed the shape backmost (first in document order)'
+		)
 	})
 
 	test('batch imports several shapes in order, with unique ids', async () => {
 		const target = await openFixture('image')
 		const source = await openFixture('image')
-		const targetSlide = target.slides[0]
+		const targetSlide = at(target.slides, 0)
 		const indices = [0, 1] // picture + autoShape on image slide[0]
 		const before = targetSlide.shapes.length
 
-		const shapes = target.importShapes(targetSlide, source.slides[0], indices)
+		const shapes = target.importShapes(targetSlide, at(source.slides, 0), indices)
 		assertEqual(shapes.length, 2, 'two shapes returned')
-		assertEqual(shapes[0].shapeType, source.slides[0].shapes[0].shapeType, 'first lifted shape matches first index')
-		assertEqual(shapes[1].shapeType, source.slides[0].shapes[1].shapeType, 'second lifted shape matches second index')
+		assertEqual(
+			at(shapes, 0).shapeType,
+			at(at(source.slides, 0).shapes, 0).shapeType,
+			'first lifted shape matches first index'
+		)
+		assertEqual(
+			at(shapes, 1).shapeType,
+			at(at(source.slides, 0).shapes, 1).shapeType,
+			'second lifted shape matches second index'
+		)
 		assertEqual(targetSlide.shapes.length, before + 2, 'both shapes appended')
 		const hostIds = cNvPrIds(defined(targetSlide.shapeTree()))
 		assertEqual(new Set(hostIds).size, hostIds.length, 'all ids unique after the batch')
@@ -374,11 +409,11 @@ describe('Presentation.importShape', () => {
 	test('dedupes shared media across repeated imports from the same source', async () => {
 		const target = await openFixture('empty')
 		const source = await openFixture('image')
-		const picIndex = findShapeIndex(source.slides[0], (s) => s.shapeType === 'picture')
+		const picIndex = findShapeIndex(at(source.slides, 0), (s) => s.shapeType === 'picture')
 		const before = countParts(target.opc, /ppt\/media\//)
 
-		const a = target.importShape(target.slides[0], source.slides[0], picIndex)
-		const b = target.importShape(target.slides[0], source.slides[0], picIndex)
+		const a = target.importShape(at(target.slides, 0), at(source.slides, 0), picIndex)
+		const b = target.importShape(at(target.slides, 0), at(source.slides, 0), picIndex)
 		assert(a.shapeType === 'picture' && b.shapeType === 'picture', 'both imports return pictures')
 
 		// The same source image was copied exactly once (registry dedupe), even though
@@ -391,7 +426,7 @@ describe('Presentation.importShape', () => {
 		const target = await openFixture('empty') // 16:9
 		const source = await openFixture('mixed') // 4:3
 		assert(
-			throws(() => target.importShape(target.slides[0], source.slides[0], 0)),
+			throws(() => target.importShape(at(target.slides, 0), at(source.slides, 0), 0)),
 			'lifting a shape across mismatched slide sizes throws'
 		)
 	})
@@ -400,7 +435,7 @@ describe('Presentation.importShape', () => {
 		const target = await openFixture('empty')
 		const source = await openFixture('image')
 		assert(
-			throws(() => target.importShape(target.slides[0], source.slides[0], 99)),
+			throws(() => target.importShape(at(target.slides, 0), at(source.slides, 0), 99)),
 			'lifting a missing shape throws'
 		)
 	})
@@ -410,7 +445,7 @@ describe('Presentation.importShape', () => {
 		const other = await openFixture('empty')
 		const source = await openFixture('image')
 		assert(
-			throws(() => target.importShape(other.slides[0], source.slides[0], 0)),
+			throws(() => target.importShape(at(other.slides, 0), at(source.slides, 0), 0)),
 			'a target slide not owned by this presentation throws'
 		)
 	})
@@ -418,8 +453,8 @@ describe('Presentation.importShape', () => {
 	test.skipIf(!validatorInstalled)('a deck with a lifted picture stays schema-valid', async () => {
 		const target = await openFixture('empty')
 		const source = await openFixture('image')
-		const picIndex = findShapeIndex(source.slides[0], (s) => s.shapeType === 'picture')
-		target.importShape(target.slides[0], source.slides[0], picIndex)
+		const picIndex = findShapeIndex(at(source.slides, 0), (s) => s.shapeType === 'picture')
+		target.importShape(at(target.slides, 0), at(source.slides, 0), picIndex)
 		const errors = await validateBuf(Buffer.from(await target.save()))
 		assertEqual(errors.length, 0, `validator errors: ${JSON.stringify(errors).slice(0, 2000)}`)
 	})
@@ -427,8 +462,8 @@ describe('Presentation.importShape', () => {
 	test.skipIf(!validatorInstalled)('a deck with a lifted table stays schema-valid', async () => {
 		const target = await openFixture('empty')
 		const source = await openFixture('table')
-		const tableIndex = findShapeIndex(source.slides[0], (s) => s.shapeType === 'graphicFrame' && s.table)
-		target.importShape(target.slides[0], source.slides[0], tableIndex)
+		const tableIndex = findShapeIndex(at(source.slides, 0), (s) => s.shapeType === 'graphicFrame' && s.table)
+		target.importShape(at(target.slides, 0), at(source.slides, 0), tableIndex)
 		const errors = await validateBuf(Buffer.from(await target.save()))
 		assertEqual(errors.length, 0, `validator errors: ${JSON.stringify(errors).slice(0, 2000)}`)
 	})
@@ -439,11 +474,11 @@ describe('Presentation.importShape', () => {
 		const chartSlide = source.slides.findIndex((s) =>
 			s.shapes.some((sh) => sh.shapeType === 'graphicFrame' && sh.chart)
 		)
-		const chartIndex = findShapeIndex(source.slides[chartSlide], (s) => s.shapeType === 'graphicFrame' && s.chart)
-		target.importShape(target.slides[0], source.slides[chartSlide], chartIndex)
+		const chartIndex = findShapeIndex(at(source.slides, chartSlide), (s) => s.shapeType === 'graphicFrame' && s.chart)
+		target.importShape(at(target.slides, 0), at(source.slides, chartSlide), chartIndex)
 		const grpSlide = source.slides.findIndex((s) => s.shapes.some((sh) => sh.shapeType === 'group'))
-		const grpIndex = findShapeIndex(source.slides[grpSlide], (s) => s.shapeType === 'group')
-		target.importShape(target.slides[0], source.slides[grpSlide], grpIndex)
+		const grpIndex = findShapeIndex(at(source.slides, grpSlide), (s) => s.shapeType === 'group')
+		target.importShape(at(target.slides, 0), at(source.slides, grpSlide), grpIndex)
 		const errors = await validateBuf(Buffer.from(await target.save()))
 		assertEqual(errors.length, 0, `validator errors: ${JSON.stringify(errors).slice(0, 2000)}`)
 	})
@@ -453,18 +488,18 @@ describe('Presentation.importShape (placeholder lift)', () => {
 	test('preserve demotes a lifted placeholder to a self-contained plain shape', async () => {
 		const source = await openFixture('mixed') // slide 0 shape 0: ctrTitle placeholder, no own geometry
 		const target = await openFixture('mixed') // host slide 0 already has its OWN ctrTitle placeholder
-		const srcEl = source.slides[0].shapes[0].element_
+		const srcEl = at(at(source.slides, 0).shapes, 0).element_
 		assertEqual(phElements(srcEl).length, 1, 'source shape is a placeholder')
 		assert(!hasXfrm(srcEl), 'source placeholder inherits its geometry (no own a:xfrm)')
 
-		const shape = target.importShape(target.slides[0], source.slides[0], 0, { theme: 'preserve' })
+		const shape = target.importShape(at(target.slides, 0), at(source.slides, 0), 0, { theme: 'preserve' })
 
 		// Demoted: no surviving p:ph, so it cannot re-inherit from the host placeholder…
 		assertEqual(phElements(shape.element_).length, 0, 'lifted placeholder demoted to a plain shape')
 		// …and its inherited geometry was baked before demotion, so it keeps position/size.
 		assert(hasXfrm(shape.element_), 'inherited geometry baked onto the lifted shape')
 		// …and it does not collide with the host's own ctrTitle (host keeps exactly one).
-		const hostPhTypes = phElements(defined(target.slides[0].shapeTree())).map((ph) => ph.getAttribute('type'))
+		const hostPhTypes = phElements(defined(at(target.slides, 0).shapeTree())).map((ph) => ph.getAttribute('type'))
 		assertEqual(
 			hostPhTypes.filter((t) => t === 'ctrTitle').length,
 			1,
@@ -476,12 +511,12 @@ describe('Presentation.importShape (placeholder lift)', () => {
 		const source = await openFixture('layout-placeholder-bodypr') // slide 0 shape 0: title, inherits anchor "b"
 		const target = await openFixture('layout-placeholder-bodypr')
 		assertEqual(
-			defined(source.slides[0].shapes[0].textFrame).resolvedAnchor,
+			defined(at(at(source.slides, 0).shapes, 0).textFrame).resolvedAnchor,
 			'b',
 			'source title inherits a bottom anchor'
 		)
 
-		const shape = target.importShape(target.slides[0], source.slides[0], 0, { theme: 'preserve' })
+		const shape = target.importShape(at(target.slides, 0), at(source.slides, 0), 0, { theme: 'preserve' })
 		const bodyPr = shape.element_.getElementsByTagNameNS(A_NS, 'bodyPr')[0]
 		assert(bodyPr && bodyPr.getAttribute('anchor') === 'b', 'inherited anchor baked onto the lifted shape')
 		assertEqual(phElements(shape.element_).length, 0, 'lifted placeholder demoted')
@@ -491,12 +526,12 @@ describe('Presentation.importShape (placeholder lift)', () => {
 		const source = await openFixture('multi-theme') // slide 1 shape 1: body placeholder, empty own lstStyle
 		const target = await openFixture('multi-theme')
 		assertEqual(
-			lstStyleLevels(source.slides[1].shapes[1].element_).length,
+			lstStyleLevels(at(at(source.slides, 1).shapes, 1).element_).length,
 			0,
 			'source body placeholder defines no list levels of its own'
 		)
 
-		const shape = target.importShape(target.slides[1], source.slides[1], 1, { theme: 'preserve' })
+		const shape = target.importShape(at(target.slides, 1), at(source.slides, 1), 1, { theme: 'preserve' })
 		assert(lstStyleLevels(shape.element_).length > 0, 'inherited list-style levels baked onto the lifted shape')
 		assertEqual(phElements(shape.element_).length, 0, 'lifted placeholder demoted')
 	})
@@ -504,7 +539,7 @@ describe('Presentation.importShape (placeholder lift)', () => {
 	test('preserve leaves an already-anchored placeholder bodyPr untouched (not overwritten by the inherited anchor)', async () => {
 		const source = await Presentation.load(await deckBodyPrOwnAnchor())
 		const target = await openFixture('layout-placeholder-bodypr')
-		const shape = target.importShape(target.slides[0], source.slides[0], 1, { theme: 'preserve' }) // body placeholder, idx 1
+		const shape = target.importShape(at(target.slides, 0), at(source.slides, 0), 1, { theme: 'preserve' }) // body placeholder, idx 1
 		const bodyPr = shape.element_.getElementsByTagNameNS(A_NS, 'bodyPr')[0]
 		assert(bodyPr && bodyPr.getAttribute('anchor') === 't', "the shape's own anchor is kept, not the inherited 'ctr'")
 		assertEqual(phElements(shape.element_).length, 0, 'lifted placeholder demoted')
@@ -513,24 +548,24 @@ describe('Presentation.importShape (placeholder lift)', () => {
 	test('preserve inserts a fresh a:lstStyle when the lifted placeholder txBody carries none', async () => {
 		const source = await Presentation.load(await deckNoLstStyleElement())
 		const target = await openFixture('multi-theme')
-		const before = source.slides[1].shapes[1].element_.getElementsByTagNameNS(A_NS, 'lstStyle').length
+		const before = at(at(source.slides, 1).shapes, 1).element_.getElementsByTagNameNS(A_NS, 'lstStyle').length
 		assertEqual(before, 0, 'the source txBody carries no a:lstStyle element at all')
 
-		const shape = target.importShape(target.slides[1], source.slides[1], 1, { theme: 'preserve' })
+		const shape = target.importShape(at(target.slides, 1), at(source.slides, 1), 1, { theme: 'preserve' })
 		assert(lstStyleLevels(shape.element_).length > 0, 'a fresh a:lstStyle with inherited levels was inserted')
 	})
 
 	test('restyle keeps the placeholder identity (no demotion, so it re-brands)', async () => {
 		const source = await openFixture('mixed')
 		const target = await openFixture('mixed')
-		const shape = target.importShape(target.slides[0], source.slides[0], 0, { theme: 'restyle' })
+		const shape = target.importShape(at(target.slides, 0), at(source.slides, 0), 0, { theme: 'restyle' })
 		assertEqual(phElements(shape.element_).length, 1, 'restyle leaves p:ph intact to re-resolve against the host theme')
 	})
 
 	test.skipIf(!validatorInstalled)('a deck with a lifted+demoted placeholder stays schema-valid', async () => {
 		const source = await openFixture('mixed')
 		const target = await openFixture('mixed')
-		target.importShape(target.slides[0], source.slides[0], 0, { theme: 'preserve' })
+		target.importShape(at(target.slides, 0), at(source.slides, 0), 0, { theme: 'preserve' })
 		const errors = await validateBuf(Buffer.from(await target.save()))
 		assertEqual(errors.length, 0, `validator errors: ${JSON.stringify(errors).slice(0, 2000)}`)
 	})
@@ -545,10 +580,10 @@ describe('Presentation.importShape({ rescale })', () => {
 	test("'fit' scales the lifted shape uniformly and centers the slack", async () => {
 		const target = await openFixture('mixed') // 4:3
 		const source = await openFixture('image') // 16:9
-		const idx = findShapeIndex(source.slides[0], (s) => s.shapeType === 'picture')
-		const src = defined(source.slides[0].shapes[idx].absoluteFrame, 'the source picture has a frame')
+		const idx = findShapeIndex(at(source.slides, 0), (s) => s.shapeType === 'picture')
+		const src = defined(at(at(source.slides, 0).shapes, idx).absoluteFrame, 'the source picture has a frame')
 
-		const shape = target.importShape(target.slides[0], source.slides[0], idx, { rescale: 'fit' })
+		const shape = target.importShape(at(target.slides, 0), at(source.slides, 0), idx, { rescale: 'fit' })
 		near(shape.left, Math.round(src.left * 0.75), 'left scaled by 0.75')
 		near(shape.top, Math.round(src.top * 0.75 + 857250), 'top scaled + centered')
 		near(shape.width, Math.round(src.width * 0.75), 'width scaled by 0.75')
@@ -558,10 +593,10 @@ describe('Presentation.importShape({ rescale })', () => {
 	test("'stretch' scales each axis independently (height holds when only width differs)", async () => {
 		const target = await openFixture('mixed')
 		const source = await openFixture('image')
-		const idx = findShapeIndex(source.slides[0], (s) => s.shapeType === 'picture')
-		const src = defined(source.slides[0].shapes[idx].absoluteFrame, 'the source picture has a frame')
+		const idx = findShapeIndex(at(source.slides, 0), (s) => s.shapeType === 'picture')
+		const src = defined(at(at(source.slides, 0).shapes, idx).absoluteFrame, 'the source picture has a frame')
 
-		const shape = target.importShape(target.slides[0], source.slides[0], idx, { rescale: 'stretch' })
+		const shape = target.importShape(at(target.slides, 0), at(source.slides, 0), idx, { rescale: 'stretch' })
 		near(shape.width, Math.round(src.width * 0.75), 'width scaled by sx (0.75)')
 		near(shape.height, src.height, 'height unchanged (sy = 1.0)')
 		near(shape.top, src.top, 'top unchanged (no centering, sy = 1.0)')
@@ -570,10 +605,10 @@ describe('Presentation.importShape({ rescale })', () => {
 	test('true is an alias for fit', async () => {
 		const target = await openFixture('mixed')
 		const source = await openFixture('image')
-		const idx = findShapeIndex(source.slides[0], (s) => s.shapeType === 'picture')
-		const src = defined(source.slides[0].shapes[idx].absoluteFrame, 'the source picture has a frame')
+		const idx = findShapeIndex(at(source.slides, 0), (s) => s.shapeType === 'picture')
+		const src = defined(at(at(source.slides, 0).shapes, idx).absoluteFrame, 'the source picture has a frame')
 
-		const shape = target.importShape(target.slides[0], source.slides[0], idx, { rescale: true })
+		const shape = target.importShape(at(target.slides, 0), at(source.slides, 0), idx, { rescale: true })
 		near(shape.width, Math.round(src.width * 0.75), 'rescale:true scales like fit')
 		near(shape.top, Math.round(src.top * 0.75 + 857250), 'rescale:true centers like fit')
 	})
@@ -581,9 +616,9 @@ describe('Presentation.importShape({ rescale })', () => {
 	test('explicit left/width overrides win over rescale', async () => {
 		const target = await openFixture('mixed')
 		const source = await openFixture('image')
-		const idx = findShapeIndex(source.slides[0], (s) => s.shapeType === 'picture')
+		const idx = findShapeIndex(at(source.slides, 0), (s) => s.shapeType === 'picture')
 
-		const shape = target.importShape(target.slides[0], source.slides[0], idx, {
+		const shape = target.importShape(at(target.slides, 0), at(source.slides, 0), idx, {
 			rescale: 'fit',
 			left: 123456,
 			width: 654321,
@@ -595,16 +630,16 @@ describe('Presentation.importShape({ rescale })', () => {
 	test('scales a lifted table grid (gridCol@w, tr@h)', async () => {
 		const target = await openFixture('mixed') // 4:3
 		const source = await openFixture('table') // 16:9
-		const idx = findShapeIndex(source.slides[0], (s) => s.shapeType === 'graphicFrame' && s.table)
+		const idx = findShapeIndex(at(source.slides, 0), (s) => s.shapeType === 'graphicFrame' && s.table)
 		assert(idx >= 0, 'source slide has a table')
-		const srcCols = gridColWidths(source.slides[0].shapes[idx].element_)
+		const srcCols = gridColWidths(at(at(source.slides, 0).shapes, idx).element_)
 		assert(srcCols.length > 0, 'source table has grid columns')
 
-		const shape = target.importShape(target.slides[0], source.slides[0], idx, { rescale: 'fit' })
+		const shape = target.importShape(at(target.slides, 0), at(source.slides, 0), idx, { rescale: 'fit' })
 		const gotCols = gridColWidths(shape.element_)
 		assertEqual(gotCols.length, srcCols.length, 'column count preserved')
 		for (let i = 0; i < srcCols.length; i++) {
-			near(gotCols[i], Math.round(srcCols[i] * 0.75), `col ${i} width scaled by 0.75`)
+			near(at(gotCols, i), Math.round(at(srcCols, i) * 0.75), `col ${i} width scaled by 0.75`)
 		}
 	})
 
@@ -612,7 +647,7 @@ describe('Presentation.importShape({ rescale })', () => {
 		const target = await openFixture('mixed')
 		const source = await openFixture('image')
 		assert(
-			throws(() => target.importShape(target.slides[0], source.slides[0], 0)),
+			throws(() => target.importShape(at(target.slides, 0), at(source.slides, 0), 0)),
 			'a size mismatch without rescale throws'
 		)
 	})
@@ -628,45 +663,45 @@ describe('Presentation.importShape({ rescale })', () => {
 		const source = await Presentation.load(await authored.toBytes())
 		for (const partName of [...source.opc.parts.keys()].filter((name) => name.startsWith('/ppt/media/')))
 			source.opc.removePart(partName)
-		const text = findShapeIndex(source.slides[0], (s) => s.shapeType !== 'picture')
-		const picture = findShapeIndex(source.slides[0], (s) => s.shapeType === 'picture')
+		const text = findShapeIndex(at(source.slides, 0), (s) => s.shapeType !== 'picture')
+		const picture = findShapeIndex(at(source.slides, 0), (s) => s.shapeType === 'picture')
 
 		const host = new TsPptx()
 		host.addSlide().addText('host', { x: 1, y: 3, w: 3, h: 1 })
 		const target = await Presentation.load(await host.toBytes())
 		const before = await target.save()
-		const shapeCount = target.slides[0].shapes.length
+		const shapeCount = at(target.slides, 0).shapes.length
 
 		assertEqual(
-			codeOf(() => target.importShapes(target.slides[0], source.slides[0], [text, picture])),
+			codeOf(() => target.importShapes(at(target.slides, 0), at(source.slides, 0), [text, picture])),
 			'package/part-missing',
 			'the missing media refuses the call'
 		)
-		assertEqual(target.slides[0].shapes.length, shapeCount, 'no shape went in')
+		assertEqual(at(target.slides, 0).shapes.length, shapeCount, 'no shape went in')
 		assert(bytesEqual(before, await target.save()), 'and the deck is byte-identical')
 	})
 
 	test('an importShapes position the setters refuse is refused before any shape goes in', async () => {
 		const target = await openFixture('mixed')
 		const source = await openFixture('mixed')
-		assert(source.slides[0].shapes.length > 0, 'the source slide has a shape to import')
+		assert(at(source.slides, 0).shapes.length > 0, 'the source slide has a shape to import')
 		const before = await target.save()
-		const shapeCount = target.slides[0].shapes.length
+		const shapeCount = at(target.slides, 0).shapes.length
 
 		assertEqual(
-			codeOf(() => target.importShapes(target.slides[0], source.slides[0], [0], { width: 0 })),
+			codeOf(() => target.importShapes(at(target.slides, 0), at(source.slides, 0), [0], { width: 0 })),
 			'coord/not-positive',
 			'a zero width is refused'
 		)
-		assertEqual(target.slides[0].shapes.length, shapeCount, 'no shape went in')
+		assertEqual(at(target.slides, 0).shapes.length, shapeCount, 'no shape went in')
 		assert(bytesEqual(before, await target.save()), 'and the deck is byte-identical')
 	})
 
 	test.skipIf(!validatorInstalled)('a rescaled lifted shape stays schema-valid', async () => {
 		const target = await openFixture('mixed')
 		const source = await openFixture('image')
-		const idx = findShapeIndex(source.slides[0], (s) => s.shapeType === 'picture')
-		target.importShape(target.slides[0], source.slides[0], idx, { rescale: 'fit' })
+		const idx = findShapeIndex(at(source.slides, 0), (s) => s.shapeType === 'picture')
+		target.importShape(at(target.slides, 0), at(source.slides, 0), idx, { rescale: 'fit' })
 		const errors = await validateBuf(Buffer.from(await target.save()))
 		assertEqual(errors.length, 0, `validator errors: ${JSON.stringify(errors).slice(0, 2000)}`)
 	})
@@ -682,7 +717,7 @@ describe('Presentation.importShape({ rescale })', () => {
 		// still runs.
 		const source = await Presentation.load(await deckMixedPlaceholderNoTxBody())
 		const target = await openFixture('mixed')
-		const shape = target.importShape(target.slides[0], source.slides[0], 1, { theme: 'preserve' })
+		const shape = target.importShape(at(target.slides, 0), at(source.slides, 0), 1, { theme: 'preserve' })
 		const el = shape.element_
 
 		assertEqual(el.getElementsByTagNameNS(P_NS, 'txBody').length, 0, 'the lifted shape still carries no text body')
@@ -707,8 +742,8 @@ describe('Presentation.importShape({ rescale })', () => {
 		// nothing, which is not the same as inheriting them.
 		const source = await Presentation.load(await deckMixedInheritsNothing())
 		const target = await openFixture('mixed')
-		const orphan = target.importShape(target.slides[0], source.slides[0], 2, { theme: 'preserve' })
-		const title = target.importShape(target.slides[0], source.slides[0], 0, { theme: 'preserve' })
+		const orphan = target.importShape(at(target.slides, 0), at(source.slides, 0), 2, { theme: 'preserve' })
+		const title = target.importShape(at(target.slides, 0), at(source.slides, 0), 0, { theme: 'preserve' })
 
 		for (const [name, shape] of Object.entries({ 'orphan picture placeholder': orphan, ctrTitle: title })) {
 			const el = shape.element_
@@ -730,12 +765,12 @@ describe('Presentation.importShape({ rescale })', () => {
 		// demoted, since it has nothing left to inherit from anywhere.
 		const source = await Presentation.load(await deckMixedSlideNoLayoutRel())
 		const target = await openFixture('mixed')
-		const shape = target.importShape(target.slides[0], source.slides[0], 0, { theme: 'preserve' })
+		const shape = target.importShape(at(target.slides, 0), at(source.slides, 0), 0, { theme: 'preserve' })
 		const el = shape.element_
 
 		assert(!hasXfrm(el), 'no geometry was baked')
 		assertEqual(lstStyleLevels(el).join(','), '', 'no list-style level was merged in')
-		assertEqual(el.getElementsByTagNameNS(A_NS, 'bodyPr')[0].getAttribute('anchor'), null, 'no anchor was baked')
+		assertEqual(at(el.getElementsByTagNameNS(A_NS, 'bodyPr'), 0).getAttribute('anchor'), null, 'no anchor was baked')
 		assertEqual(srgbClrCount(el), 0, 'no run colour was baked')
 		assertEqual(phElements(el).length, 0, 'it was still demoted')
 	})
@@ -746,7 +781,7 @@ describe('Presentation.importShape({ rescale })', () => {
 		// layout defines rather than bailing out because a lower tier is missing.
 		const source = await Presentation.load(await deckMixedLayoutNoMasterRel())
 		const target = await openFixture('mixed')
-		const shape = target.importShape(target.slides[0], source.slides[0], 0, { theme: 'preserve' })
+		const shape = target.importShape(at(target.slides, 0), at(source.slides, 0), 0, { theme: 'preserve' })
 		const el = shape.element_
 
 		assertEqual(lstStyleLevels(el).join(','), 'lvl1pPr', "the layout placeholder's level was merged in")
@@ -761,9 +796,9 @@ describe('Presentation.importShape({ rescale })', () => {
 	test.skipIf(!validatorInstalled)('lifted degenerate placeholders stay schema-valid', async () => {
 		const target = await openFixture('mixed')
 		const noTxBody = await Presentation.load(await deckMixedPlaceholderNoTxBody())
-		target.importShape(target.slides[0], noTxBody.slides[0], 1, { theme: 'preserve' })
+		target.importShape(at(target.slides, 0), at(noTxBody.slides, 0), 1, { theme: 'preserve' })
 		const bare = await Presentation.load(await deckMixedInheritsNothing())
-		target.importShapes(target.slides[0], bare.slides[0], [0, 2], { theme: 'preserve' })
+		target.importShapes(at(target.slides, 0), at(bare.slides, 0), [0, 2], { theme: 'preserve' })
 		// Both sources drop a relationship the spec calls permitted rather than required;
 		// validating them proves that reading rather than asserting it. Run the pair
 		// concurrently — each validateBuf spawns its own validator process.
@@ -778,7 +813,7 @@ describe('Presentation.importShape({ rescale })', () => {
 				`a source with a missing chain relationship: ${JSON.stringify(errors).slice(0, 800)}`
 			)
 		}
-		for (const p of rootless) target.importShape(target.slides[0], p.slides[0], 0, { theme: 'preserve' })
+		for (const p of rootless) target.importShape(at(target.slides, 0), at(p.slides, 0), 0, { theme: 'preserve' })
 		const errors = await validateBuf(Buffer.from(await target.save()))
 		assertEqual(errors.length, 0, `validator errors: ${JSON.stringify(errors).slice(0, 2000)}`)
 	})

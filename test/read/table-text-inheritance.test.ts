@@ -19,14 +19,16 @@
 import { describe, test } from 'vitest'
 
 import type { Run } from '../../dist/read.js'
-import { assertEqual, defined } from '../helpers.ts'
+import { assertEqual, defined, at, take } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 /** The first run of every cell of the table named `name`, row by row. */
 async function cellRuns(name: string) {
-	for (const shape of (await openFixture('table-text-inheritance')).slides[0].shapes) {
+	for (const shape of at((await openFixture('table-text-inheritance')).slides, 0).shapes) {
 		if (shape.name === name && shape.shapeType === 'graphicFrame' && shape.table) {
-			return shape.table.rows.map((row) => row.cells.map((cell) => defined(cell.textFrame).paragraphs[0].runs[0]))
+			return shape.table.rows.map((row) =>
+				row.cells.map((cell) => at(at(defined(cell.textFrame).paragraphs, 0).runs, 0))
+			)
 		}
 	}
 	throw new Error(`no table named ${name}`)
@@ -47,16 +49,16 @@ const BODY = '14 Verdana 7030A0  true'
 
 describe('table cell text inheritance (table-text-inheritance.pptx)', () => {
 	test('the text box control resolves through p:defaultTextStyle', async () => {
-		for (const shape of (await openFixture('table-text-inheritance')).slides[0].shapes) {
+		for (const shape of at((await openFixture('table-text-inheritance')).slides, 0).shapes) {
 			if (shape.name !== 'TextBox' || shape.shapeType !== 'autoShape' || !shape.textFrame) continue
-			assertEqual(resolved(shape.textFrame.paragraphs[0].runs[0]), '28 Courier New C00000  ')
+			assertEqual(resolved(at(at(shape.textFrame.paragraphs, 0).runs, 0)), '28 Courier New C00000  ')
 			return
 		}
 		throw new Error('no text box named TextBox')
 	})
 
 	test('a styled table takes its colour, face and bold from the table style and its size and italic from p:otherStyle', async () => {
-		const [header, body] = await cellRuns('StyledTable')
+		const [header, body] = take(await cellRuns('StyledTable'), 2)
 		for (const run of header) assertEqual(resolved(run), '14 Verdana FFFFFF true true', 'firstRow: lt1, bold')
 		for (const run of body) assertEqual(resolved(run), BODY, 'wholeTbl: dk1')
 	})

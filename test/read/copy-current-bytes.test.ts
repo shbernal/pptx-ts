@@ -10,7 +10,7 @@
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { Presentation, type Slide } from '../../dist/read.js'
-import { assert, assertEqual, defined, readEntry } from '../helpers.ts'
+import { assert, assertEqual, defined, readEntry, at } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 const EDITED = 'EDITED IN SESSION'
@@ -18,7 +18,7 @@ const EDITED = 'EDITED IN SESSION'
 /** `textbox.pptx` with the first text shape on slide 1 rewritten, and not yet saved. */
 async function editedTextbox() {
 	const deck = await openFixture('textbox')
-	defined(deck.slides[0].shapes.find((shape) => shape.hasTextFrame)).text = EDITED
+	defined(at(deck.slides, 0).shapes.find((shape) => shape.hasTextFrame)).text = EDITED
 	return deck
 }
 
@@ -30,8 +30,8 @@ describe('copies carry the part as it is now', () => {
 		const deck = await editedTextbox()
 		const clone = deck.cloneSlide(0)
 		const reopened = await reload(deck)
-		assertEqual(firstText(reopened.slides[0]), EDITED, 'the source slide kept its edit')
-		assertEqual(firstText(reopened.slides[clone.index]), EDITED, 'and the clone carries it')
+		assertEqual(firstText(at(reopened.slides, 0)), EDITED, 'the source slide kept its edit')
+		assertEqual(firstText(at(reopened.slides, clone.index)), EDITED, 'and the clone carries it')
 	})
 
 	test.for(['copy', 'preserve', 'restyle'] as const)(
@@ -41,7 +41,7 @@ describe('copies carry the part as it is now', () => {
 			const target = await openFixture('textbox')
 			const imported = target.importSlide(source, 0, { theme })
 			const reopened = await reload(target)
-			assertEqual(firstText(reopened.slides[imported.index]), EDITED, `the ${theme} import carries the edit`)
+			assertEqual(firstText(at(reopened.slides, imported.index)), EDITED, `the ${theme} import carries the edit`)
 		}
 	)
 
@@ -50,7 +50,7 @@ describe('copies carry the part as it is now', () => {
 		const target = await openFixture('textbox')
 		target.importSlides([{ source, sourceIndex: 0, outputIndex: 0 }])
 		const reopened = await reload(target)
-		assertEqual(firstText(reopened.slides[0]), EDITED, 'the batch import carries the edit')
+		assertEqual(firstText(at(reopened.slides, 0)), EDITED, 'the batch import carries the edit')
 	})
 
 	test('a clone of a preserve-imported slide keeps the colours the import baked in', async () => {
@@ -67,11 +67,11 @@ describe('copies carry the part as it is now', () => {
 	test('cloneSlide copies a shape imported onto the slide this session', async () => {
 		const target = await openFixture('textbox')
 		const source = await openFixture('textbox')
-		const before = target.slides[0].shapes.length
-		target.importShape(target.slides[0], source.slides[0], 0)
+		const before = at(target.slides, 0).shapes.length
+		target.importShape(at(target.slides, 0), at(source.slides, 0), 0)
 		const clone = target.cloneSlide(0)
 		const reopened = await reload(target)
-		assertEqual(reopened.slides[0].shapes.length, before + 1, 'the host slide kept the imported shape')
-		assertEqual(reopened.slides[clone.index].shapes.length, before + 1, 'and so does its clone')
+		assertEqual(at(reopened.slides, 0).shapes.length, before + 1, 'the host slide kept the imported shape')
+		assertEqual(at(reopened.slides, clone.index).shapes.length, before + 1, 'and so does its clone')
 	})
 })

@@ -10,7 +10,7 @@ import { describe, test } from 'vitest'
 import { Presentation, setDiagnosticHandler } from '../../src/read.ts'
 import { CopyPlan } from '../../src/read/api/ops/part-copy.ts'
 import { copyBatch, planSlideImport } from '../../src/read/api/presentation-imports.ts'
-import { assertEqual, caughtSync } from '../helpers.ts'
+import { assertEqual, caughtSync, at } from '../helpers.ts'
 import { fixtureNames, readFixture } from './corpus.ts'
 
 // Rescaling a fixture onto the destination's canvas warns, and warnings are not what this measures.
@@ -49,7 +49,7 @@ describe('an import plan lists exactly the parts the import adds', () => {
 				// ownership scope decide what is copied and what is shared.
 				const indexes = source.slides.length > 0 ? [...source.slides.keys(), 0] : []
 				for (const index of indexes) {
-					const at = `${name}, ${options.theme}, page ${index}`
+					const context = `${name}, ${options.theme}, page ${index}`
 					const partCount = dest.opc.parts.size
 					// A page whose jump link targets a page not yet brought across is refused
 					// (`import/unresolved-slide-link`), so a plan that refuses is half of the claim too:
@@ -57,7 +57,7 @@ describe('an import plan lists exactly the parts the import adds', () => {
 					// Assigned inside the callback, so declared wide: a `null` initializer would narrow it.
 					let plan = null as CopyPlan | null
 					const refusal = caughtSync(() => {
-						plan = planSlideImport(dest, source, source.slides[index], options)
+						plan = planSlideImport(dest, source, at(source.slides, index), options)
 					})
 					const refused = refusal && (refusal.code ?? String(refusal))
 					assertEqual(dest.opc.parts.size, partCount, `${name}: planning added no part`)
@@ -66,8 +66,8 @@ describe('an import plan lists exactly the parts the import adds', () => {
 						const err = caughtSync(() => dest.importSlide(source, index, options))
 						importRefused = err && (err.code ?? String(err))
 					})
-					assertEqual(importRefused, refused, `${at}: the import refuses exactly when its plan does`)
-					assertEqual(plan ? listed(plan) : '[]', JSON.stringify(added), at)
+					assertEqual(importRefused, refused, `${context}: the import refuses exactly when its plan does`)
+					assertEqual(plan ? listed(plan) : '[]', JSON.stringify(added), context)
 				}
 			}
 		}
@@ -89,7 +89,7 @@ describe('an import plan lists exactly the parts the import adds', () => {
 			const plan = new CopyPlan(dest, 'importSlides')
 			copyBatch(
 				dest,
-				requests.map((request) => ({ ...request, sourceSlide: source.slides[request.sourceIndex] })),
+				requests.map((request) => ({ ...request, sourceSlide: at(source.slides, request.sourceIndex) })),
 				plan
 			)
 			const added = addedBy(dest, () => dest.importSlides(requests))

@@ -22,7 +22,7 @@ import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import TsPptx from '../../dist/node.js'
 import { Presentation, type OpcPackage, type Slide } from '../../dist/read.js'
-import { assert, assertEqual, bytesEqual, defined, readEntry, caughtSync } from '../helpers.ts'
+import { assert, assertEqual, bytesEqual, defined, readEntry, caughtSync, at, take } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { openFixture } from './corpus.ts'
 import { assertNoDanglingRels } from './opc.ts'
@@ -61,7 +61,7 @@ function tagTargets(opc: OpcPackage, partName: string) {
  */
 async function sourceWithOwnedNotesPart() {
 	const source = await openFixture('notes-slide-image')
-	const notesPartName = defined(source.slides[0].notesSlide).partName
+	const notesPartName = defined(at(source.slides, 0).notesSlide).partName
 	source.opc.addPart(
 		'/ppt/tags/tag1.xml',
 		TAGS_CONTENT_TYPE,
@@ -243,7 +243,7 @@ describe('Presentation.importSlides', () => {
 			// now the copy itself, run as a plan.
 			const target = await generatedDeck(false)
 			const source = await generatedDeck(false)
-			const rels = source.opc.relationshipsFor(source.slides[0].partName)
+			const rels = source.opc.relationshipsFor(at(source.slides, 0).partName)
 			const layoutRel = [...rels].find((rel) => rel.type === SLIDE_LAYOUT_REL)
 			assert(layoutRel !== undefined, 'the generated page has a layout to snap')
 			source.opc.removePart(rels.resolveTarget(layoutRel.id))
@@ -277,7 +277,7 @@ describe('Presentation.importSlides', () => {
 		const target = await generatedDeck(false)
 		const good = await generatedDeck(false)
 		const broken = await generatedDeck(false)
-		const rels = broken.opc.relationshipsFor(broken.slides[0].partName)
+		const rels = broken.opc.relationshipsFor(at(broken.slides, 0).partName)
 		const layoutRel = [...rels].find((rel) => rel.type === SLIDE_LAYOUT_REL)
 		assert(layoutRel !== undefined, 'the generated page has a layout to snap')
 		broken.opc.removePart(rels.resolveTarget(layoutRel.id))
@@ -305,16 +305,19 @@ describe('Presentation.importSlides', () => {
 
 		// Request 0 asks for the last position, request 1 for the first: sorting by
 		// outputIndex to insert must not reorder what the caller gets back.
-		const [first, second] = target.importSlides([
-			{ source, sourceIndex: 0, outputIndex: 3 },
-			{ source, sourceIndex: 1, outputIndex: 0 },
-		])
+		const [first, second] = take(
+			target.importSlides([
+				{ source, sourceIndex: 0, outputIndex: 3 },
+				{ source, sourceIndex: 1, outputIndex: 0 },
+			]),
+			2
+		)
 		assertEqual(first.index, 3, 'requests[0] landed at its outputIndex 3')
 		assertEqual(second.index, 0, 'requests[1] landed at its outputIndex 0')
 
 		const reopened = await Presentation.load(await target.save())
-		assertEqual(reopened.slides[3].partName, first.partName, 'and the deck agrees about the last page')
-		assertEqual(reopened.slides[0].partName, second.partName, 'and about the first')
+		assertEqual(at(reopened.slides, 3).partName, first.partName, 'and the deck agrees about the last page')
+		assertEqual(at(reopened.slides, 0).partName, second.partName, 'and about the first')
 	})
 
 	test('a source with a different slide size is rejected unless the request rescales', async () => {
@@ -334,12 +337,12 @@ describe('Presentation.importSlides', () => {
 		// 'fit' rescale has to move every offset it finds on the page.
 		const target = await generatedDeck(false)
 		const source = await otherCanvasDeck()
-		const before = offsetsOf(source.slides[0])
+		const before = offsetsOf(at(source.slides, 0))
 		target.importSlides([{ source, sourceIndex: 0, outputIndex: 0, rescale: 'fit' }])
 		// Through a save, so what is checked is what a caller reopens rather than the
 		// in-memory DOM the rescale edited.
 		const reopened = await Presentation.load(await target.save())
-		const after = offsetsOf(reopened.slides[0])
+		const after = offsetsOf(at(reopened.slides, 0))
 		assertEqual(after.length, before.length, 'the same shapes came across')
 		assert(
 			after.some((off, i) => off !== before[i]),
@@ -472,18 +475,21 @@ describe('Presentation.importSlides', () => {
 		const before = target.slides.length
 		const source = await openFixture('mixed')
 
-		const [first, second] = target.importSlides([
-			{ source, sourceIndex: 0, outputIndex: 0 },
-			{ source, sourceIndex: 0, outputIndex: before + 1 },
-		])
+		const [first, second] = take(
+			target.importSlides([
+				{ source, sourceIndex: 0, outputIndex: 0 },
+				{ source, sourceIndex: 0, outputIndex: before + 1 },
+			]),
+			2
+		)
 		assert(first.partName !== second.partName, 'the two requests got parts of their own')
 		assert(first.slideId !== second.slideId, 'and slide ids of their own')
 
 		const reopened = await Presentation.load(await target.save())
 		assertEqual(reopened.slides.length, before + 2, 'both copies joined the deck')
 		assertNoDanglingRels(reopened.opc)
-		assertEqual(reopened.slides[0].partName, first.partName, 'the first copy landed at outputIndex 0')
-		assertEqual(reopened.slides[before + 1].partName, second.partName, 'the second at the end')
+		assertEqual(at(reopened.slides, 0).partName, first.partName, 'the first copy landed at outputIndex 0')
+		assertEqual(at(reopened.slides, before + 1).partName, second.partName, 'the second at the end')
 
 		// Same bytes, same dependencies: the duplicate is a second page, not a
 		// second copy of the subgraph underneath it.
@@ -509,11 +515,14 @@ describe('Presentation.importSlides', () => {
 		const source = await generatedDeck(true)
 		const before = target.slides.length
 
-		const [linkOwner, linkTarget, secondOwner] = target.importSlides([
-			{ source, sourceIndex: 0, outputIndex: before },
-			{ source, sourceIndex: 1, outputIndex: before + 1 },
-			{ source, sourceIndex: 0, outputIndex: before + 2 },
-		])
+		const [linkOwner, linkTarget, secondOwner] = take(
+			target.importSlides([
+				{ source, sourceIndex: 0, outputIndex: before },
+				{ source, sourceIndex: 1, outputIndex: before + 1 },
+				{ source, sourceIndex: 0, outputIndex: before + 2 },
+			]),
+			3
+		)
 		assert(linkOwner.partName !== secondOwner.partName, 'the repeated page got two parts')
 
 		const reopened = await Presentation.load(await target.save())
@@ -536,12 +545,15 @@ describe('Presentation.importSlides', () => {
 		const source = await generatedDeck(true)
 		const before = target.slides.length
 
-		const [ownerA, targetA, ownerB, targetB] = target.importSlides([
-			{ source, sourceIndex: 0, outputIndex: before },
-			{ source, sourceIndex: 1, outputIndex: before + 1 },
-			{ source, sourceIndex: 0, outputIndex: before + 2 },
-			{ source, sourceIndex: 1, outputIndex: before + 3 },
-		])
+		const [ownerA, targetA, ownerB, targetB] = take(
+			target.importSlides([
+				{ source, sourceIndex: 0, outputIndex: before },
+				{ source, sourceIndex: 1, outputIndex: before + 1 },
+				{ source, sourceIndex: 0, outputIndex: before + 2 },
+				{ source, sourceIndex: 1, outputIndex: before + 3 },
+			]),
+			4
+		)
 
 		const reopened = await Presentation.load(await target.save())
 		assertEqual(reopened.slides.length, before + 4, 'four pages joined the deck')
@@ -592,7 +604,10 @@ describe('Presentation.importSlides', () => {
 
 		// Both pages came across under fresh partnames; the first page's slide
 		// link must resolve to the SECOND IMPORTED partname, not into the source.
-		const [importedFirst, importedSecond] = reopened.slides.map((s) => s.partName)
+		const [importedFirst, importedSecond] = take(
+			reopened.slides.map((s) => s.partName),
+			2
+		)
 		const targets = slideLinkTargets(reopened.opc, importedFirst)
 		assertEqual(targets.length, 1, 'the generated jump link survived the import')
 		assertEqual(targets[0], importedSecond, 'the link resolves to the second imported page')
@@ -607,8 +622,8 @@ describe('Presentation.importSlides', () => {
 		const target = await Presentation.load(await targetDeck.write({ outputType: 'uint8array' }))
 		const source = await generatedDeck(true)
 
-		const [linkTarget] = target.importSlides([{ source, sourceIndex: 1, outputIndex: 1 }])
-		const [linkOwner] = target.importSlides([{ source, sourceIndex: 0, outputIndex: 0 }])
+		const [linkTarget] = take(target.importSlides([{ source, sourceIndex: 1, outputIndex: 1 }]), 1)
+		const [linkOwner] = take(target.importSlides([{ source, sourceIndex: 0, outputIndex: 0 }]), 1)
 
 		const reopened = await Presentation.load(await target.save())
 		assertEqual(reopened.slides.length, 3, 'the second batch added exactly its own page')
@@ -637,11 +652,11 @@ describe('Presentation.importSlides', () => {
 		const reopened = await Presentation.load(await target.save())
 		assertNoDanglingRels(reopened.opc)
 		assertEqual(
-			reopened.slides[before].notesText,
+			at(reopened.slides, before).notesText,
 			'Speaker notes so PowerPoint emits the notes slide.',
 			'the opted-in page kept the source notes'
 		)
-		assertEqual(reopened.slides[before + 1].notesText, null, 'the request that did not ask still gets no notes')
+		assertEqual(at(reopened.slides, before + 1).notesText, null, 'the request that did not ask still gets no notes')
 		assertEqual(notesMasters(reopened).length, 1, 'carrying notes into a deck with none installs exactly one master')
 	})
 
@@ -656,16 +671,16 @@ describe('Presentation.importSlides', () => {
 			[...pres.opc.parts.keys()].filter((name) => name.includes('/notesMasters/')).length
 		const mastersBefore = masterParts(target)
 		const source = await openFixture('notes-slide-image')
-		const at = target.slides.length
+		const position = target.slides.length
 
-		target.importSlides([{ source, sourceIndex: 0, outputIndex: at, importNotes: true }])
+		target.importSlides([{ source, sourceIndex: 0, outputIndex: position, importNotes: true }])
 
 		const reopened = await Presentation.load(await target.save())
 		assertNoDanglingRels(reopened.opc)
 		assertEqual(JSON.stringify(notesMasters(reopened)), JSON.stringify([ownMaster]), 'the deck kept its own master')
 		assertEqual(masterParts(reopened), mastersBefore, 'and no second notesMaster part came across')
 		assertEqual(
-			notesMasterOf(reopened, defined(reopened.slides[at].notesSlide).partName),
+			notesMasterOf(reopened, defined(at(reopened.slides, position).notesSlide).partName),
 			ownMaster,
 			'the carried notes bind to the destination master'
 		)
@@ -685,8 +700,8 @@ describe('Presentation.importSlides', () => {
 
 		const reopened = await Presentation.load(await target.save())
 		assertNoDanglingRels(reopened.opc)
-		const first = reopened.slides[before]
-		const second = reopened.slides[before + 1]
+		const first = at(reopened.slides, before)
+		const second = at(reopened.slides, before + 1)
 		assert(first.notesSlide !== null && second.notesSlide !== null, 'both copies came across with notes')
 		assert(first.notesSlide.partName !== second.notesSlide.partName, 'each copy has a notes part of its own')
 		assertEqual(first.notesText, second.notesText, 'and both say what the source page said')
@@ -704,7 +719,7 @@ describe('Presentation.importSlides', () => {
 		// to reach that: the destination has none, so it would be copied.
 		const target = await openFixture('textbox')
 		const broken = await openFixture('notes-slide-image')
-		broken.opc.removePart(defined(notesMasterOf(broken, defined(broken.slides[0].notesSlide).partName)))
+		broken.opc.removePart(defined(notesMasterOf(broken, defined(at(broken.slides, 0).notesSlide).partName)))
 
 		const beforeBytes = await target.save()
 		assertEqual(
@@ -718,7 +733,7 @@ describe('Presentation.importSlides', () => {
 		// very same damaged source imports cleanly.
 		target.importSlides([{ source: broken, sourceIndex: 0, outputIndex: 0 }])
 		assertEqual(target.slides.length, 3, 'the same source imports fine when its notes are not asked for')
-		assertEqual(target.slides[0].notesText, null, 'and the page arrives without notes, as ever')
+		assertEqual(at(target.slides, 0).notesText, null, 'and the page arrives without notes, as ever')
 	})
 
 	test('a destination master spares the source master the dry run would otherwise reject', async () => {
@@ -727,15 +742,15 @@ describe('Presentation.importSlides', () => {
 		// batch the copy would have completed.
 		const target = await openFixture('read-stress') // has a notesMaster
 		const broken = await openFixture('notes-slide-image')
-		broken.opc.removePart(defined(notesMasterOf(broken, defined(broken.slides[0].notesSlide).partName)))
-		const at = target.slides.length
+		broken.opc.removePart(defined(notesMasterOf(broken, defined(at(broken.slides, 0).notesSlide).partName)))
+		const position = target.slides.length
 
-		target.importSlides([{ source: broken, sourceIndex: 0, outputIndex: at, importNotes: true }])
+		target.importSlides([{ source: broken, sourceIndex: 0, outputIndex: position, importNotes: true }])
 
 		const reopened = await Presentation.load(await target.save())
 		assertNoDanglingRels(reopened.opc)
 		assertEqual(
-			reopened.slides[at].notesText,
+			at(reopened.slides, position).notesText,
 			'Speaker notes so PowerPoint emits the notes slide.',
 			'the notes bound to the destination master'
 		)
@@ -748,20 +763,23 @@ describe('Presentation.importSlides', () => {
 		const target = await openFixture('textbox')
 		const first = await openFixture('notes-slide-image')
 		const second = await openFixture('notes-slide-image')
-		second.opc.removePart(defined(notesMasterOf(second, defined(second.slides[0].notesSlide).partName)))
+		second.opc.removePart(defined(notesMasterOf(second, defined(at(second.slides, 0).notesSlide).partName)))
 		assertEqual(notesMasters(target).length, 0, 'the destination starts without a notes master')
 
-		const [a, b] = target.importSlides([
-			{ source: first, sourceIndex: 0, outputIndex: 0, importNotes: true },
-			{ source: second, sourceIndex: 0, outputIndex: 1, importNotes: true },
-		])
+		const [a, b] = take(
+			target.importSlides([
+				{ source: first, sourceIndex: 0, outputIndex: 0, importNotes: true },
+				{ source: second, sourceIndex: 0, outputIndex: 1, importNotes: true },
+			]),
+			2
+		)
 
 		const reopened = await Presentation.load(await target.save())
 		assertNoDanglingRels(reopened.opc)
 		const masters = notesMasters(reopened)
 		assertEqual(masters.length, 1, 'one notes master was installed')
 		const masterOf = (slide: Slide) =>
-			notesMasterOf(reopened, defined(reopened.slides[slide.index].notesSlide).partName)
+			notesMasterOf(reopened, defined(at(reopened.slides, slide.index).notesSlide).partName)
 		assertEqual(masterOf(a), masters[0], 'the first page binds to it')
 		assertEqual(masterOf(b), masters[0], 'and so does the second, whose own master was never read')
 	})

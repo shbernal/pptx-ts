@@ -53,7 +53,7 @@ import {
 	type DeckIr,
 	type IrValue,
 } from '../../dist/script.js'
-import { assert, assertEqual, defined, readEntry } from '../helpers.ts'
+import { assert, assertEqual, defined, readEntry, take, at as atIndex } from '../helpers.ts'
 import { FIXTURES } from './corpus.ts'
 import { at, opt, arrayOf, objectOf } from './ir-path.ts'
 
@@ -105,7 +105,7 @@ function nameOfObject(object: IrValue): IrValue {
 
 /** The single-key tag of an emitted `SlideMasterObject` — `shape`, `text`, `image`, `chart`. */
 function tagOf(object: IrValue | undefined): string {
-	return Object.keys(objectOf(object))[0]
+	return atIndex(Object.keys(objectOf(object)), 0)
 }
 
 function objectsOfLayout(ir: DeckIr, index: number): IrValue[] {
@@ -151,7 +151,7 @@ describe('layout decoration — the IR, read against the deck rather than the co
 		// come across — the write path seeds those onto every slide from the far side, so
 		// re-declaring one here would put an empty ghost on every slide bound to the layout.
 		const presentation = await load('mixed.pptx')
-		const layout = layoutsOf(presentation)[0]
+		const layout = atIndex(layoutsOf(presentation), 0)
 		assertEqual(layout.name, 'Diapositive de titre', 'the fixture layout this test is about')
 
 		const decoration = decorationOf(layout.shapes)
@@ -175,7 +175,7 @@ describe('layout decoration — the IR, read against the deck rather than the co
 		// rotation, flips and child-space scaling — so the oracle is the read model's own frame,
 		// not the converter's arithmetic.
 		const presentation = await load('mixed.pptx')
-		const layout = layoutsOf(presentation)[0]
+		const layout = atIndex(layoutsOf(presentation), 0)
 		const groups = layout.shapes.filter(isGroupShape)
 		assert(groups.length > 0, 'the layout carries at least one group')
 
@@ -212,7 +212,7 @@ describe('layout decoration — the IR, read against the deck rather than the co
 		// output deck from recolouring — the round trip compares two IRs, and a hex on both sides
 		// agrees with itself.
 		const presentation = await load('mixed.pptx')
-		const layout = layoutsOf(presentation)[0]
+		const layout = atIndex(layoutsOf(presentation), 0)
 		// The ten `p:clrMap` slots the write path can name. The other seven degrade to a literal
 		// there anyway, so the converter bakes them deliberately and says so — the leg below.
 		const writable = new Set(['accent1', 'accent2', 'accent3', 'accent4', 'accent5', 'accent6', 'bg1', 'bg2', 'tx1', 'tx2']) // prettier-ignore
@@ -255,7 +255,7 @@ describe('layout decoration — the IR, read against the deck rather than the co
 		const index = layouts.findIndex((layout) => decorationOf(layout.shapes).some((s) => s.shapeType === 'connector'))
 		assert(index >= 0, 'the fixture has a layout with connectors on it')
 
-		const connectors = decorationOf(layouts[index].shapes).filter((shape) => shape.shapeType === 'connector')
+		const connectors = decorationOf(atIndex(layouts, index).shapes).filter((shape) => shape.shapeType === 'connector')
 		const objects = objectsOfLayout(readModelToIr(presentation), index)
 		for (const connector of connectors) {
 			const object = objects.find((entry) => nameOfObject(entry) === connector.name)
@@ -278,7 +278,7 @@ describe('layout decoration — the IR, read against the deck rather than the co
 		assert(index >= 0, 'the fixture has the layout with decorative quote marks on it')
 
 		const objects = objectsOfLayout(readModelToIr(presentation), index)
-		const boxes = decorationOf(layouts[index].shapes)
+		const boxes = decorationOf(atIndex(layouts, index).shapes)
 		assertEqual(objects.length, boxes.length, 'both quote marks are emitted')
 		for (const box of boxes) {
 			const object = objects.find((entry) => nameOfObject(entry) === box.name)
@@ -349,7 +349,7 @@ describe('layout decoration — the emitted script rebuilds it, with no template
 		// once per slide.
 		source.slides.forEach((slide, index) => {
 			const before = slide.shapes.length
-			const after = output.slides[index].shapes.length
+			const after = atIndex(output.slides, index).shapes.length
 			assert(after <= before, `slide ${index + 1} gained no shapes from its layout (${before} → ${after})`)
 		})
 	})
@@ -403,7 +403,7 @@ describe('layout decoration — kinds the fixture corpus does not contain', () =
 
 		const ir = readModelToIr(await Presentation.load(bytes))
 		const master = defined(ir.chrome.masters.find((entry) => entry.props.title === 'Branded'))
-		const [object] = arrayOf(master.props.objects)
+		const [object] = take(arrayOf(master.props.objects), 1)
 		assertEqual(tagOf(object), 'image', 'the layout image is emitted as an image object')
 		assertEqual(nameOfObject(object), 'Wordmark', 'and keeps its name')
 		assert(opt(at(object, 'image', 'data'), '$asset'), 'with its bytes carried as an asset rather than a path')

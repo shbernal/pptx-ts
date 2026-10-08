@@ -18,7 +18,7 @@ import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import { Presentation, isAutoShape, type TransitionInput } from '../../dist/read.js'
 import { canonicalDeckIr, readModelToIr, type CallIr, type DeckIr, type IrValue } from '../../dist/script.js'
-import { PNG_1X1, assert, assertEqual, defined, expectDefined, readEntry } from '../helpers.ts'
+import { PNG_1X1, assert, assertEqual, defined, expectDefined, readEntry, at as atIndex, take } from '../helpers.ts'
 import { authorRead } from './authored.ts'
 import { fixtureNames, fixturePath, freshIr, irFor, readFixture } from './corpus.ts'
 import { at, opt, arrayOf, objectOf } from './ir-path.ts'
@@ -164,7 +164,7 @@ describe('deck IR — geometry', () => {
 					.filter(isAutoShape)
 					.find((candidate) => candidate.name === shape.sourceName)
 			)
-			const [firstPath] = defined(origin.customGeometry).paths
+			const [firstPath] = take(defined(origin.customGeometry).paths, 1)
 			const frame = defined(origin.absoluteFrame)
 			const expected = firstPath.commands
 				.filter((command) => 'x' in command)
@@ -223,8 +223,8 @@ describe('deck IR — geometry', () => {
 		}
 
 		for (const name of ['pic-clip-lines', 'pic-clip-curve']) {
-			const origin = defined(source.slides[0].shapes.find((shape) => shape.name === name))
-			const [path] = defined(origin.customGeometry).paths
+			const origin = defined(atIndex(source.slides, 0).shapes.find((shape) => shape.name === name))
+			const [path] = take(defined(origin.customGeometry).paths, 1)
 			const frame = defined(origin.absoluteFrame)
 			const expected = path.commands
 				.filter((command) => 'x' in command)
@@ -340,7 +340,7 @@ describe('deck IR — groups', () => {
 			for (const child of arrayOf(call.args[0])) {
 				const keys = Object.keys(objectOf(child))
 				assertEqual(keys.length, 1, `${name}: a group child must be a single-key descriptor`)
-				assert(groupChildKeys.has(keys[0]), `${name}: ${keys[0]} is not a GroupChildProps variant`)
+				assert(groupChildKeys.has(atIndex(keys, 0)), `${name}: ${keys[0]} is not a GroupChildProps variant`)
 			}
 		}
 	})
@@ -367,7 +367,7 @@ describe('deck IR — losses the read model cannot see', () => {
 		const ir = await irFor('mixed.pptx')
 		const noted = ir.fidelity.filter((note) => note.construct === 'line.width')
 		assert(noted.length > 0, 'mixed.pptx has shapes styled from the theme line list')
-		assertEqual(noted[0].cause, 'unread', 'the cause is a missing accessor, not a missing write option')
+		assertEqual(atIndex(noted, 0).cause, 'unread', 'the cause is a missing accessor, not a missing write option')
 	})
 
 	test("a stated line cap round-trips, and an inset outline's alignment is declared", async () => {
@@ -385,7 +385,7 @@ describe('deck IR — losses the read model cannot see', () => {
 				line: { color: 'C00000', width: 6, dashType: 'dash', cap: 'round' },
 			})
 		})
-		const shape = defined(presentation.slides[0].shapes.find(isAutoShape))
+		const shape = defined(atIndex(presentation.slides, 0).shapes.find(isAutoShape))
 		assertEqual(shape.lineCap, 'rnd', 'the reader sees the written cap as its raw OOXML token')
 
 		const ir = readModelToIr(presentation)
@@ -464,7 +464,7 @@ describe('deck IR — text autofit', () => {
 				fit: { type: 'shrink', fontScale: 70, lnSpcReduction: 20 },
 			})
 		})
-		const frame = defined(presentation.slides[0].shapes[0].textFrame)
+		const frame = defined(atIndex(atIndex(presentation.slides, 0).shapes, 0).textFrame)
 		assertEqual(frame.autofitFontScale, 70, 'the reader sees the baked scale')
 
 		const ir = readModelToIr(presentation)
@@ -550,9 +550,11 @@ describe('deck IR — the explicit off for text decorations', () => {
 			assert(slideXml.includes(attr), `the write API states ${attr} rather than omitting the attribute`)
 		}
 
-		const runs = defined(presentation.slides[0].shapes[0].textFrame).paragraphs.flatMap((para) => para.runs)
+		const runs = defined(atIndex(atIndex(presentation.slides, 0).shapes, 0).textFrame).paragraphs.flatMap(
+			(para) => para.runs
+		)
 		assertEqual(
-			JSON.stringify([runs[0].underline, runs[1].strike, runs[2].caps]),
+			JSON.stringify([atIndex(runs, 0).underline, atIndex(runs, 1).strike, atIndex(runs, 2).caps]),
 			JSON.stringify(['none', 'noStrike', 'none']),
 			'and the reader sees all three tokens'
 		)
@@ -582,7 +584,10 @@ describe('deck IR — the explicit off for text decorations', () => {
 		const { presentation } = await authorRead((pres) => {
 			pres.addSlide().addText([{ text: 'unstated' }], { x: 0.5, y: 0.5, w: 6, h: 1, objectName: 'copy' })
 		})
-		const run = defined(presentation.slides[0].shapes[0].textFrame).paragraphs[0].runs[0]
+		const run = atIndex(
+			atIndex(defined(atIndex(atIndex(presentation.slides, 0).shapes, 0).textFrame).paragraphs, 0).runs,
+			0
+		)
 		assertEqual(run.underline, null, 'the writer emits no @u for a run that states nothing')
 
 		const options = runOptionsOf(readModelToIr(presentation))[0] ?? {}
@@ -627,7 +632,11 @@ describe('deck IR — slide transitions', () => {
 		// Guard against the false pass: if the prefix did not survive the save, every effect
 		// would read back as base `p` and the drop assertions below would confirm nothing.
 		specs.forEach((spec, index) => {
-			assertEqual(reloaded.slides[index].transition?.namespace, spec.namespace, `${spec.type} keeps its namespace`)
+			assertEqual(
+				atIndex(reloaded.slides, index).transition?.namespace,
+				spec.namespace,
+				`${spec.type} keeps its namespace`
+			)
 		})
 		return readModelToIr(reloaded)
 	}
@@ -639,7 +648,7 @@ describe('deck IR — slide transitions', () => {
 	test('each fixture transition maps to exactly what PowerPoint authored', async () => {
 		const ir = await irFor('slide-transition.pptx')
 		for (const entry of transitionOracle.slides) {
-			const actual = ir.slides[entry.slide - 1].transition
+			const actual = atIndex(ir.slides, entry.slide - 1).transition
 			const expected = entry.decoded
 			assert(actual, `slide ${entry.slide} should carry a transition`)
 			assertEqual(actual.type, expected.type, `slide ${entry.slide} type`)
@@ -662,7 +671,9 @@ describe('deck IR — slide transitions', () => {
 		// exception and is asserted as present: see the module header of from-read/transition.ts.
 		const ir = await irFor('slide-transition.pptx')
 		assertEqual(
-			Object.keys(defined(ir.slides[0].transition)).sort().join(','),
+			Object.keys(defined(atIndex(ir.slides, 0).transition))
+				.sort()
+				.join(','),
 			'speed,type',
 			'a bare transition carries only its type and the speed bucket'
 		)
@@ -674,7 +685,7 @@ describe('deck IR — slide transitions', () => {
 		for (const chunk of chunked(base, 6)) {
 			const ir = await irWithTransitions(chunk)
 			chunk.forEach((spec, index) => {
-				const slide = ir.slides[index]
+				const slide = atIndex(ir.slides, index)
 				assert(slide.transition, `${spec.type} is a base ECMA-376 transition and must not be dropped`)
 				assertEqual(slide.transition.type, spec.type, `${spec.type} keeps its name`)
 				assert(
@@ -693,7 +704,7 @@ describe('deck IR — slide transitions', () => {
 		for (const chunk of chunked(modern, 6)) {
 			const ir = await irWithTransitions(chunk)
 			chunk.forEach((spec, index) => {
-				const slide = ir.slides[index]
+				const slide = atIndex(ir.slides, index)
 				assertEqual(slide.transition, undefined, `${spec.type} has no write-API name and must not be mapped`)
 				const note = ir.fidelity.find((n) => n.slideNumber === slide.number && n.construct === 'slide.transition')
 				assert(note, `p14 ${spec.type} must be declared lost, not dropped silently`)
@@ -710,7 +721,11 @@ describe('deck IR — slide transitions', () => {
 		// name-only filter accepts it and the write path then emits `<p:fade/>`, turning a
 		// modern effect into a base one with no note. Authored here rather than hoped for.
 		const ir = await irWithTransitions([{ type: 'fade', namespace: 'p14', variant: {} }])
-		assertEqual(ir.slides[0].transition, undefined, 'a p14:fade is not the base fade and must not be mapped to it')
+		assertEqual(
+			atIndex(ir.slides, 0).transition,
+			undefined,
+			'a p14:fade is not the base fade and must not be mapped to it'
+		)
 		assert(
 			ir.fidelity.some((n) => n.slideNumber === 1 && n.construct === 'slide.transition'),
 			'and the drop is declared'
@@ -732,7 +747,11 @@ describe('deck IR — slide transitions', () => {
 		assertEqual(second.loop, true, 'a looped start sound records the loop flag')
 		assertEqual(defined(second.data).$asset, first.data?.$asset, 'one shared media part resolves to one asset')
 		assertEqual(ir.assets.length, 1, 'and the deck carries exactly that one asset')
-		assertEqual(ir.assets[0].name, 'audio1.wav', 'named by media kind, so a script does not bind a sound to `image1`')
+		assertEqual(
+			atIndex(ir.assets, 0).name,
+			'audio1.wav',
+			'named by media kind, so a script does not bind a sound to `image1`'
+		)
 
 		// Slide 3: the stop-previous form, which references no part at all.
 		assertEqual(JSON.stringify(third), '{"stopPrevious":true}', 'p:endSnd maps to stopPrevious alone')
@@ -765,8 +784,8 @@ describe('deck IR — picture fills', () => {
 			assertEqual(at(fill, 'image', 'data', '$asset'), 'image1.jpg', 'each resolves to the one shared media part')
 		}
 		assertEqual(ir.assets.length, 1, 'and the part is registered once, not once per cell')
-		assertEqual(ir.assets[0].contentType, 'image/jpeg', "with the package's own content type")
-		assert(ir.assets[0].bytes.length > 0, 'and its bytes')
+		assertEqual(atIndex(ir.assets, 0).contentType, 'image/jpeg', "with the package's own content type")
+		assert(atIndex(ir.assets, 0).bytes.length > 0, 'and its bytes')
 	})
 
 	test('the cells that are not image-filled gain no image fill', async () => {
@@ -788,9 +807,16 @@ describe('deck IR — picture fills', () => {
 		const noted = ir.fidelity.filter((note) => note.construct === 'table.cell.fill.picture.geometry')
 
 		assertEqual(noted.length, 1, 'one note, for the one tiled cell — not one per picture cell')
-		assertEqual(noted[0].disposition, 'approximated', 'the fill survives; its tiling does not')
-		assertEqual(noted[0].cause, 'unwritable', 'the read model sees the a:tile — the write API has no option for it')
-		assert(noted[0].detail.includes('a:tile'), `the note names what was lost, got: ${noted[0].detail}`)
+		assertEqual(atIndex(noted, 0).disposition, 'approximated', 'the fill survives; its tiling does not')
+		assertEqual(
+			atIndex(noted, 0).cause,
+			'unwritable',
+			'the read model sees the a:tile — the write API has no option for it'
+		)
+		assert(
+			atIndex(noted, 0).detail.includes('a:tile'),
+			`the note names what was lost, got: ${atIndex(noted, 0).detail}`
+		)
 		assertEqual(
 			ir.fidelity.filter((note) => note.construct === 'table.cell.fill.picture').length,
 			0,
@@ -826,7 +852,7 @@ describe('deck IR — picture fills', () => {
 		// path's fixed `<a:fillRect/>` cannot express.
 		const noted = ir.fidelity.filter((note) => note.construct === 'fill.picture.geometry')
 		assertEqual(noted.length, 1, "the shape's destination inset is reported")
-		assert(noted[0].detail.includes('a:fillRect'), `and named, got: ${noted[0].detail}`)
+		assert(atIndex(noted, 0).detail.includes('a:fillRect'), `and named, got: ${atIndex(noted, 0).detail}`)
 	})
 
 	test('an image fill authored with transparency carries its alpha', async () => {
@@ -941,7 +967,10 @@ describe('deck IR — picture fills', () => {
 		)
 		const noted = ir.fidelity.filter((note) => note.construct === 'fill.picture.geometry')
 		assertEqual(noted.length, 1, 'the loss is declared')
-		assert(noted[0].detail.includes('a:srcRect'), `and names the source crop, got: ${noted[0].detail}`)
+		assert(
+			atIndex(noted, 0).detail.includes('a:srcRect'),
+			`and names the source crop, got: ${atIndex(noted, 0).detail}`
+		)
 	})
 
 	test('alt text carries as `altText`, on a picture and on a text box', async () => {
@@ -954,7 +983,10 @@ describe('deck IR — picture fills', () => {
 		})
 		const calls = allCalls(readModelToIr(presentation))
 		const image = objectOf(defined(calls.find((call) => call.method === 'addImage')).args[0])
-		const [described, plain] = calls.filter((call) => call.method === 'addText').map((call) => objectOf(call.args[1]))
+		const [described, plain] = take(
+			calls.filter((call) => call.method === 'addText').map((call) => objectOf(call.args[1])),
+			2
+		)
 		assertEqual(image.altText, 'A red square', 'the picture keeps its description')
 		assertEqual(described.altText, 'described text', 'so does the text box')
 		assertEqual('altText' in plain, false, `a shape with no description states none, got ${JSON.stringify(plain)}`)
@@ -1005,7 +1037,10 @@ describe('deck IR — picture fills', () => {
 		)
 		const noted = ir.fidelity.filter((note) => note.construct === 'image.crop')
 		assertEqual(noted.length, 1, 'the loss is declared')
-		assert(noted[0].detail.includes('a:srcRect'), `and names the source crop, got: ${noted[0].detail}`)
+		assert(
+			atIndex(noted, 0).detail.includes('a:srcRect'),
+			`and names the source crop, got: ${atIndex(noted, 0).detail}`
+		)
 	})
 
 	test('a fill whose blip embeds nothing is dropped with a note, not emitted unfilled in silence', async () => {
@@ -1083,7 +1118,7 @@ describe('deck IR — text links, freeform text and fields', () => {
 		})
 		// addText's first argument is its run array.
 		const firstRun = (runs: IrValue) => objectOf(arrayOf(runs)[0])
-		const run = firstRun(readModelToIr(presentation).slides[0].calls[0].args[0])
+		const run = firstRun(atIndex(atIndex(atIndex(readModelToIr(presentation).slides, 0).calls, 0).args, 0))
 		assertEqual(
 			JSON.stringify(at(run.options, 'hyperlink')),
 			'{"slide":2,"tooltip":"Two"}',
@@ -1094,7 +1129,7 @@ describe('deck IR — text links, freeform text and fields', () => {
 		const ir = await irWithPart(buf, 'ppt/slides/slide1.xml', (xml) =>
 			xml.replace('ppaction://hlinksldjump', 'ppaction://hlinkshowjump?jump=nextslide')
 		)
-		const jumped = firstRun(ir.slides[0].calls[0].args[0])
+		const jumped = firstRun(atIndex(atIndex(atIndex(ir.slides, 0).calls, 0).args, 0))
 		assertEqual('hyperlink' in objectOf(jumped.options), false, 'the show jump is not written as a run link')
 		assertEqual(ir.fidelity.filter((note) => note.construct === 'text.hyperlink').length, 1, 'and its loss is declared')
 	})
@@ -1111,7 +1146,7 @@ describe('deck IR — text links, freeform text and fields', () => {
 				points: [{ x: 0, y: 0 }, { x: 3, y: 0 }, { x: 3, y: 2 }, { close: true }],
 			})
 		})
-		const [call] = allCalls(readModelToIr(presentation))
+		const [call] = take(allCalls(readModelToIr(presentation)), 1)
 		assertEqual(call.method, 'addText', 'the freeform keeps its text')
 		assertEqual(
 			arrayOf(call.args[0])
@@ -1264,7 +1299,7 @@ describe('deck IR — slide sourcing', () => {
 		// printer as SmartArt, so the same decision — enumerating only extended charts is what
 		// let both slip.
 		const ir = await irFor('model3d')
-		assertEqual(ir.slides[0].source, 'carried', 'the 3-D model slide is copied rather than transcribed')
+		assertEqual(atIndex(ir.slides, 0).source, 'carried', 'the 3-D model slide is copied rather than transcribed')
 		assert(
 			ir.fidelity.some((note) => note.slideNumber === 1 && note.construct === 'graphicFrame.unknown'),
 			'and the per-shape note names the undecoded frame'

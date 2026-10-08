@@ -18,7 +18,7 @@
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import type { Part } from '../../dist/read.js'
-import { assert, assertEqual, readEntry } from '../helpers.ts'
+import { assert, assertEqual, readEntry, at } from '../helpers.ts'
 import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.ts'
 
 /** The German built-in layout name, split across two lines exactly as PowerPoint ships it. */
@@ -77,7 +77,7 @@ describe('XML attribute whitespace — write→read fidelity', () => {
 
 	test('a hyperlink tooltip round-trips through a:hlinkClick/@tooltip', async () => {
 		const { presentation } = await authorWhitespaceDeck()
-		const hlink = firstElement(presentation.slides[0].part, 'a:hlinkClick')
+		const hlink = firstElement(at(presentation.slides, 0).part, 'a:hlinkClick')
 		assert(hlink, 'the authored hyperlink is present on the slide')
 		assertEqual(hlink.getAttribute('tooltip'), TOOLTIP, 'a:hlinkClick/@tooltip round-trips')
 	})

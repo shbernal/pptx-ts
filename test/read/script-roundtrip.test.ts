@@ -43,7 +43,7 @@ import {
 	type FidelityNote,
 	type IrValue,
 } from '../../dist/script.js'
-import { assert, assertEqual, defined } from '../helpers.ts'
+import { assert, assertEqual, defined, at } from '../helpers.ts'
 import { SNAPSHOTS, fixtureNames, irFor, readFixture } from './corpus.ts'
 
 // The IR is `IrValue`-typed by design, so a perturbation narrows each step of the path it walks
@@ -98,12 +98,12 @@ describe('script round trip — the oracle has teeth', () => {
 		assertEqual(clean.differences.length, 0, 'a deck compared against itself must be identical')
 
 		// Drop one run's bold flag, the smallest change a real regression could be.
-		delete boldRunOptions(after.slides[0].calls.find((call) => call.method === 'addText')?.args[0]).bold
+		delete boldRunOptions(at(after.slides, 0).calls.find((call) => call.method === 'addText')?.args[0]).bold
 
 		const dirty = diffDeckIr(before, after, [])
 		assertEqual(dirty.undeclared.length, 1, 'the dropped flag must be reported, and exactly once')
-		assertEqual(dirty.undeclared[0].field, 'bold', 'reported against the option that changed')
-		assertEqual(dirty.undeclared[0].kind, 'lost', 'and in the direction it changed')
+		assertEqual(at(dirty.undeclared, 0).field, 'bold', 'reported against the option that changed')
+		assertEqual(at(dirty.undeclared, 0).kind, 'lost', 'and in the direction it changed')
 	})
 
 	test('a perturbed transition is caught, which is what putting it in the projection buys', async () => {
@@ -119,11 +119,11 @@ describe('script round trip — the oracle has teeth', () => {
 
 		// Slide 2 is `push` with `dir="d"`: flip the direction only, the smallest change that
 		// still renders differently, and one a whole-value compare would report far too coarsely.
-		record(record(after.slides[1].transition).variant).dir = 'u'
+		record(record(at(after.slides, 1).transition).variant).dir = 'u'
 		const report = diffDeckIr(before, after, [])
 		assertEqual(report.undeclared.length, 1, 'the flipped direction must be reported, and exactly once')
-		assertEqual(report.undeclared[0].field, 'dir', 'reported against the variant attribute that changed')
-		assertEqual(report.undeclared[0].slideNumber, 2, 'and against the slide it changed on')
+		assertEqual(at(report.undeclared, 0).field, 'dir', 'reported against the variant attribute that changed')
+		assertEqual(at(report.undeclared, 0).slideNumber, 2, 'and against the slide it changed on')
 	})
 
 	test('a lost transition sound is reported narrowly enough that only its own note excuses it', async () => {
@@ -135,11 +135,11 @@ describe('script round trip — the oracle has teeth', () => {
 		const ir = readModelToIr(source)
 		const before = canonicalDeckIr(ir)
 		const after = canonicalDeckIr(ir)
-		delete record(after.slides[0].transition).sound
+		delete record(at(after.slides, 0).transition).sound
 
 		const undeclared = diffDeckIr(before, after, []).undeclared
 		assertEqual(undeclared.length, 1, 'the missing sound is one difference')
-		assertEqual(undeclared[0].field, 'sound', 'reported one level inside the transition, not on the transition')
+		assertEqual(at(undeclared, 0).field, 'sound', 'reported one level inside the transition, not on the transition')
 
 		const note = (construct: string): FidelityNote[] => [{ slideNumber: 1, shapeName: null, construct, disposition: 'dropped', cause: 'unsupported', detail: '' }] // prettier-ignore
 		assertEqual(diffDeckIr(before, after, note('slide.transitionSound')).undeclared.length, 0, 'its own note declares it') // prettier-ignore
@@ -154,7 +154,7 @@ describe('script round trip — the oracle has teeth', () => {
 		const ir = await irFor('textbox.pptx')
 		const before = canonicalDeckIr(ir)
 		const after = canonicalDeckIr(ir)
-		const call = defined(after.slides[0].calls.find((c) => c.method === 'addText'))
+		const call = defined(at(after.slides, 0).calls.find((c) => c.method === 'addText'))
 		delete boldRunOptions(call.args[0]).bold
 
 		// `line.width` names a different construct, so it must not cover a lost `bold`.
@@ -185,8 +185,8 @@ describe('script round trip — a note covers a PATH, not a key at any depth', (
 	 * only, so the difference lands on the leaf rather than on the object appearing.
 	 */
 	const perturbLeaf = (before: CanonicalDeck, after: CanonicalDeck, key: string, seed: IrValue, changed: IrValue) => {
-		const call = defined(before.slides[0].calls.find((c) => c.method === 'addText'))
-		const other = defined(after.slides[0].calls.find((c) => c.method === 'addText'))
+		const call = defined(at(before.slides, 0).calls.find((c) => c.method === 'addText'))
+		const other = defined(at(after.slides, 0).calls.find((c) => c.method === 'addText'))
 		record(call.args[1])[key] = seed
 		record(other.args[1])[key] = changed
 		return other.shapeName
@@ -214,7 +214,7 @@ describe('script round trip — a note covers a PATH, not a key at any depth', (
 	/** Strip the source shape name from slide 1's text call on both sides, as an unnamed shape reads. */
 	const unname = (before: CanonicalDeck, after: CanonicalDeck) => {
 		for (const deck of [before, after])
-			defined(deck.slides[0].calls.find((c) => c.method === 'addText')).shapeName = null
+			defined(at(deck.slides, 0).calls.find((c) => c.method === 'addText')).shapeName = null
 	}
 
 	test('a note on an unnamed shape excuses its own difference', async () => {
@@ -239,18 +239,18 @@ describe('script round trip — a note covers a PATH, not a key at any depth', (
 		// slide's own `hidden` flag.
 		const [before, after] = await pair('textbox.pptx')
 		unname(before, after)
-		after.slides[0].hidden = !before.slides[0].hidden
+		at(after.slides, 0).hidden = !at(before.slides, 0).hidden
 		assertEqual(diffDeckIr(before, after, note('shape.hidden', '')).undeclared.length, 1, 'nor is the slide') // prettier-ignore
 	})
 
 	test("the write path's docProps defaults do not excuse a title one level down", async () => {
 		const [before, after] = await pair('textbox.pptx')
-		const call = defined(after.slides[0].calls.find((c) => c.method === 'addText'))
+		const call = defined(at(after.slides, 0).calls.find((c) => c.method === 'addText'))
 		record(call.args[1]).title = 'a title the source never had'
 
 		const report = diffDeckIr(before, after, [])
 		assertEqual(report.undeclared.length, 1, 'an added shape title is not the deck title `props.title` is about')
-		assertEqual(report.undeclared[0].kind, 'added', 'and it is an added difference, the kind the defaults cover')
+		assertEqual(at(report.undeclared, 0).kind, 'added', 'and it is an added difference, the kind the defaults cover')
 	})
 
 	test("the write path's completed border edge colour is a default only when the source stated none", async () => {
@@ -259,7 +259,7 @@ describe('script round trip — a note covers a PATH, not a key at any depth', (
 		// the source did state and the output changed is a real difference.
 		const [before, after] = await pair('table.pptx')
 		const edge = (deck: CanonicalDeck) => {
-			const table = defined(deck.slides[1].calls.find((c) => c.shapeName === 'LabelsVertical'))
+			const table = defined(at(deck.slides, 1).calls.find((c) => c.shapeName === 'LabelsVertical'))
 			const cell = record(list(list(table.args[0])[0])[0])
 			return record(list(record(cell.options).border)[0])
 		}
@@ -299,7 +299,7 @@ describe('script round trip — a note excuses its own construct and nothing bes
 
 	const note = (construct: string, slideNumber: number | null = null, shapeName: string | null = null): FidelityNote => ({ slideNumber, shapeName, construct, disposition: 'dropped', cause: 'unwritable', detail: '' }) // prettier-ignore
 	const call = (deck: CanonicalDeck, shapeName: string, slide = 0) =>
-		defined(deck.slides[slide].calls.find((c) => c.shapeName === shapeName))
+		defined(at(deck.slides, slide).calls.find((c) => c.shapeName === shapeName))
 	/** The options bag of a call: its second argument. */
 	const optionsOf = (deck: CanonicalDeck, shapeName: string) => record(call(deck, shapeName).args[1])
 	/** The first run of a text call. */
@@ -418,7 +418,7 @@ describe('script round trip — a note excuses its own construct and nothing bes
 			title: 'master.name declares the layout name a slide binds to',
 			fixture: 'textbox.pptx',
 			notes: [note('master.name')],
-			perturb: (_, after) => void (after.slides[0].layoutName = 'Renamed'),
+			perturb: (_, after) => void (at(after.slides, 0).layoutName = 'Renamed'),
 			declared: true,
 		},
 		{
@@ -432,28 +432,28 @@ describe('script round trip — a note excuses its own construct and nothing bes
 			title: 'slide.transitionSound declares a sound with other bytes',
 			fixture: 'slide-transition-sound.pptx',
 			notes: [note('slide.transitionSound', 1)],
-			perturb: (_, after) => void (record(record(after.slides[0].transition).sound).data = { $asset: '0:0' }),
+			perturb: (_, after) => void (record(record(at(after.slides, 0).transition).sound).data = { $asset: '0:0' }),
 			declared: true,
 		},
 		{
 			title: 'slide.background declares the slide background',
 			fixture: 'slide-background.pptx',
 			notes: [note('slide.background', 2)],
-			perturb: (_, after) => void (record(after.slides[1].background).color = '123456'),
+			perturb: (_, after) => void (record(at(after.slides, 1).background).color = '123456'),
 			declared: true,
 		},
 		{
 			title: 'slide.layout declares the layout name a slide binds to',
 			fixture: 'textbox.pptx',
 			notes: [note('slide.layout', 1)],
-			perturb: (_, after) => void (after.slides[0].layoutName = 'Renamed'),
+			perturb: (_, after) => void (at(after.slides, 0).layoutName = 'Renamed'),
 			declared: true,
 		},
 		{
 			title: 'notes.formatting declares the speaker notes text',
 			fixture: 'textbox.pptx',
 			notes: [note('notes.formatting', 1)],
-			perturb: (_, after) => void (after.slides[0].notesText = 'changed'),
+			perturb: (_, after) => void (at(after.slides, 0).notesText = 'changed'),
 			declared: true,
 		},
 		{
@@ -574,7 +574,7 @@ describe('script round trip — canonicalisation is an equivalence', () => {
 		fidelity: [],
 		slides: [{ number: 1, source: 'authored', layout: null, hidden: false, calls: [{ method: 'addText', args: [[], options] }] }], // prettier-ignore
 	})
-	const optionsOf = (ir: DeckIr) => canonicalDeckIr(ir).slides[0].calls[0].args[1]
+	const optionsOf = (ir: DeckIr) => at(at(canonicalDeckIr(ir).slides, 0).calls, 0).args[1]
 
 	test('OOXML defaults spelled out compare equal to omitted', () => {
 		assertEqual(JSON.stringify(optionsOf(deck({ bold: false, rotate: 0, flipH: false }))), '{}', 'defaults dropped')

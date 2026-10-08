@@ -10,7 +10,7 @@
 import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
 import { AutoShape, type ShapeHost } from '../../dist/read.js'
-import { assert, assertEqual, defined } from '../helpers.ts'
+import { assert, assertEqual, defined, at } from '../helpers.ts'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
@@ -22,7 +22,7 @@ function shapeIn(spPrInner: string, wrap = (inner: string) => inner) {
 	const sp = `<p:sp><p:nvSpPr><p:cNvPr id="2" name="child"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr>${spPrInner}</p:spPr></p:sp>`
 	const xml = `<p:spTree xmlns:p="${P_NS}" xmlns:a="${A_NS}">${wrap(sp)}</p:spTree>`
 	const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
-	const el = spTree.getElementsByTagNameNS(P_NS, 'sp')[0]
+	const el = at(spTree.getElementsByTagNameNS(P_NS, 'sp'), 0)
 	return new AutoShape(el, {} as ShapeHost)
 }
 

@@ -15,7 +15,7 @@ import {
 	isPicture,
 	type AnyShape,
 } from '../../dist/read.js'
-import { assert, assertEqual, defined, expectDefined } from '../helpers.ts'
+import { assert, assertEqual, defined, expectDefined, at } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 describe('Presentation', () => {
@@ -49,7 +49,7 @@ describe('Presentation', () => {
 
 describe('Slide.shapes', () => {
 	test('builds an AutoShape with a text frame from a text box', async () => {
-		const slide = (await openFixture('textbox')).slides[0]
+		const slide = at((await openFixture('textbox')).slides, 0)
 		const shapes = slide.shapes
 		assert(shapes.length >= 1, 'expected at least one shape')
 		const textShape = shapes.find((shape) => shape.shapeType === 'autoShape' && shape.hasTextFrame)
@@ -61,7 +61,7 @@ describe('Slide.shapes', () => {
 	})
 
 	test('reads geometry in EMU from the shape transform', async () => {
-		const slide = (await openFixture('textbox')).slides[0]
+		const slide = at((await openFixture('textbox')).slides, 0)
 		const shape = slide.shapes.find((shape) => shape.name === 'replaceText')
 		assert(shape, 'expected the replaceText shape')
 		// <a:off x="2068830" y="1794510"/> <a:ext cx="7566660" cy="2616101"/>
@@ -77,7 +77,7 @@ describe('Slide.shapes', () => {
 			.flatMap((slide) => slide.shapes)
 			.filter((shape) => shape.shapeType === 'picture')
 		assert(pictures.length >= 1, 'expected at least one picture')
-		const picture = pictures[0]
+		const picture = at(pictures, 0)
 		assert(picture.imageRelId, 'picture has an embed rel id')
 		const partName = picture.imagePartName
 		assert(partName, 'picture resolves an image partname')
@@ -98,20 +98,20 @@ describe('Slide.shapes', () => {
 
 describe('TextFrame / Paragraph / Run', () => {
 	test('reads runs and character formatting from the textbox fixture', async () => {
-		const slide = (await openFixture('textbox')).slides[0]
+		const slide = at((await openFixture('textbox')).slides, 0)
 		const shape = defined(slide.shapes.find((shape) => shape.name === 'replaceText'))
 		const frame = shape.textFrame
 		expectDefined(frame, 'shape has a text frame')
-		const firstParagraph = frame.paragraphs[0]
+		const firstParagraph = at(frame.paragraphs, 0)
 		const runs = firstParagraph.runs
 		assert(runs.length >= 4, `expected several runs, got ${runs.length}`)
 
 		// First run: <a:rPr sz="2000" i="1"><a:solidFill><a:schemeClr val="accent2"/>…
-		assertEqual(runs[0].text, 'This', 'first run text')
-		assertEqual(runs[0].fontSizePt, 20, 'first run font size (2000 → 20pt)')
-		assertEqual(runs[0].italic, true, 'first run italic')
-		assertEqual(runs[0].schemeColor, 'accent2', 'first run scheme colour')
-		assertEqual(runs[0].color, null, 'first run has no explicit srgb colour')
+		assertEqual(at(runs, 0).text, 'This', 'first run text')
+		assertEqual(at(runs, 0).fontSizePt, 20, 'first run font size (2000 → 20pt)')
+		assertEqual(at(runs, 0).italic, true, 'first run italic')
+		assertEqual(at(runs, 0).schemeColor, 'accent2', 'first run scheme colour')
+		assertEqual(at(runs, 0).color, null, 'first run has no explicit srgb colour')
 
 		// A later bold run: <a:rPr b="1"/><a:t>content</a:t>
 		const boldRun = runs.find((run) => run.bold === true)
@@ -134,8 +134,8 @@ describe('Slide.hidden', () => {
 		// PowerPoint writes when a slide is hidden); slide 1 omits @show entirely.
 		const slides = (await openFixture('hidden')).slides
 		assertEqual(slides.length, 2, 'hidden fixture has two slides')
-		assertEqual(slides[0].hidden, false, 'slide with no @show is shown')
-		assertEqual(slides[1].hidden, true, 'slide with show="0" is hidden')
+		assertEqual(at(slides, 0).hidden, false, 'slide with no @show is shown')
+		assertEqual(at(slides, 1).hidden, true, 'slide with show="0" is hidden')
 	})
 
 	test('a deck with no hidden slides reports every slide as shown', async () => {
@@ -148,7 +148,7 @@ describe('Slide.hidden', () => {
 
 describe('empty deck', () => {
 	test('a slide with no real shapes yields an empty shape list', async () => {
-		const slide = (await openFixture('empty')).slides[0]
+		const slide = at((await openFixture('empty')).slides, 0)
 		// The spTree always has the group's own nv/grpSpPr; those are not shapes.
 		for (const shape of slide.shapes) {
 			assert(
@@ -169,7 +169,7 @@ describe('mixed.pptx — connectors, groups, graphic frames', () => {
 
 	test('reads top-level connectors (p:cxnSp) with resolvable geometry', async () => {
 		// slide6 (index 5) has three connectors directly in its spTree.
-		const slide = (await openFixture('mixed')).slides[5]
+		const slide = at((await openFixture('mixed')).slides, 5)
 		const connectors = slide.shapes.filter((shape) => shape.shapeType === 'connector')
 		assert(connectors.length >= 3, `expected ≥3 top-level connectors, got ${connectors.length}`)
 		for (const connector of connectors) {
@@ -180,7 +180,7 @@ describe('mixed.pptx — connectors, groups, graphic frames', () => {
 
 	test('descends into nested groups; connectors surface only via group traversal', async () => {
 		// slide5 (index 4): connectors live inside groups, not at the top level.
-		const slide = (await openFixture('mixed')).slides[4]
+		const slide = at((await openFixture('mixed')).slides, 4)
 		const topShapes = slide.shapes
 		const groups = topShapes.filter((shape) => shape.shapeType === 'group')
 		assert(groups.length >= 4, `expected ≥4 top-level groups, got ${groups.length}`)
@@ -210,7 +210,7 @@ describe('mixed.pptx — connectors, groups, graphic frames', () => {
 
 	test('distinguishes table, chart, and SmartArt graphic frames', async () => {
 		const slides = (await openFixture('mixed')).slides
-		const frameOn = (index: number) => slides[index].shapes.find((shape) => shape.shapeType === 'graphicFrame')
+		const frameOn = (index: number) => at(slides, index).shapes.find((shape) => shape.shapeType === 'graphicFrame')
 
 		const table = frameOn(6) // slide7: a:tbl
 		assert(table, 'slide7 has a graphic frame')
@@ -281,39 +281,43 @@ describe('proxy identity', () => {
 		}
 
 		freshEachTime('Presentation.slides[]', () => presentation.slides[1])
-		freshEachTime('Slide.shapes[]', () => presentation.slides[1].shapes[0])
+		freshEachTime('Slide.shapes[]', () => at(presentation.slides, 1).shapes[0])
 
-		const textSlide = presentation.slides[0]
+		const textSlide = at(presentation.slides, 0)
 		const titled = textSlide.shapes.find((shape) => shape.hasTextFrame)
 		expectDefined(titled, 'mixed slide1 has a text-bearing shape')
 		freshEachTime('AutoShape.textFrame', () => defined(textSlide.shapes.find((shape) => shape.hasTextFrame)).textFrame)
 		freshEachTime('TextFrame.paragraphs[]', () => defined(titled.textFrame).paragraphs[0])
-		freshEachTime('Paragraph.runs[]', () => defined(titled.textFrame).paragraphs[0].runs[0])
+		freshEachTime('Paragraph.runs[]', () => at(defined(titled.textFrame).paragraphs, 0).runs[0])
 
-		const tableFrame = presentation.slides[6].shapes.filter(isGraphicFrame).find((frame) => frame.hasTable)
+		const tableFrame = at(presentation.slides, 6)
+			.shapes.filter(isGraphicFrame)
+			.find((frame) => frame.hasTable)
 		expectDefined(tableFrame, 'mixed slide7 has a table frame')
 		freshEachTime('GraphicFrame.table', () => tableFrame.table)
 		freshEachTime('Table.rows[]', () => defined(tableFrame.table).rows[0])
-		freshEachTime('TableRow.cells[]', () => defined(tableFrame.table).rows[0].cells[0])
+		freshEachTime('TableRow.cells[]', () => at(defined(tableFrame.table).rows, 0).cells[0])
 
-		const diagramFrame = presentation.slides[1].shapes.filter(isGraphicFrame).find((frame) => frame.hasDiagram)
+		const diagramFrame = at(presentation.slides, 1)
+			.shapes.filter(isGraphicFrame)
+			.find((frame) => frame.hasDiagram)
 		expectDefined(diagramFrame, 'mixed slide2 has a SmartArt frame')
 		freshEachTime('GraphicFrame.diagram', () => diagramFrame.diagram)
 		freshEachTime('Diagram.points[]', () => defined(diagramFrame.diagram).points[0])
 	})
 
 	test('an edit through one proxy is visible through another over the same node', async () => {
-		const slide = (await openFixture('textbox')).slides[0]
+		const slide = at((await openFixture('textbox')).slides, 0)
 		const name = defined(slide.shapes.find((shape) => shape.hasTextFrame)).name
 		const frameOf = () => defined(defined(slide.shapes.find((shape) => shape.name === name)).textFrame)
-		frameOf().paragraphs[0].runs[0].text = 'CHANGED'
-		assertEqual(frameOf().paragraphs[0].runs[0].text, 'CHANGED', 'a second proxy reads the mutated DOM')
+		at(at(frameOf().paragraphs, 0).runs, 0).text = 'CHANGED'
+		assertEqual(at(at(frameOf().paragraphs, 0).runs, 0).text, 'CHANGED', 'a second proxy reads the mutated DOM')
 	})
 })
 
 describe('Slide.text', () => {
 	test('flattens a text box slide, joining paragraphs with newlines', async () => {
-		const slide = (await openFixture('textbox')).slides[0]
+		const slide = at((await openFixture('textbox')).slides, 0)
 		const text = slide.text
 		assert(text.startsWith('This is test content.'), 'starts with the first paragraph text')
 		assert(text.includes('Some colorful Text'), 'includes a later paragraph')
@@ -323,7 +327,7 @@ describe('Slide.text', () => {
 	})
 
 	test('reads table cells row by row (cells tab-joined, rows newline-joined)', async () => {
-		const slide = (await openFixture('table')).slides[0]
+		const slide = at((await openFixture('table')).slides, 0)
 		const text = slide.text
 		assert(text.includes('Header 1\tHeader 2\tHeader 3\tHeader 4'), 'header row cells are tab-joined')
 		assert(text.includes('cell\tcell\tcell\tcell'), 'body row cells are tab-joined')
@@ -333,7 +337,7 @@ describe('Slide.text', () => {
 	test('recurses into groups, surfacing nested shape text', async () => {
 		// mixed slide index 4 lays its bullets out inside grouped shapes; a
 		// non-recursing walk (slide.shapes.map(s => s.text)) would drop them.
-		const slide = (await openFixture('mixed')).slides[4]
+		const slide = at((await openFixture('mixed')).slides, 4)
 		const text = slide.text
 		assert(text.includes('Model Components'), 'top-level heading present')
 		assert(text.includes('Uncontrollable Inputs'), 'text nested inside a group is surfaced')
@@ -342,7 +346,7 @@ describe('Slide.text', () => {
 
 	test('mixes shape text and an embedded table in document order', async () => {
 		// mixed slide index 6 has both prose shapes and a graphicFrame table.
-		const text = (await openFixture('mixed')).slides[6].text
+		const text = at((await openFixture('mixed')).slides, 6).text
 		assert(text.includes('Breakeven analysis'), 'prose shape text present')
 		assert(text.includes('Fixed costs\t200 000 €'), 'embedded table row is tab-joined into the flatten')
 	})
@@ -356,13 +360,13 @@ describe('Slide.text', () => {
 			all.every((text) => typeof text === 'string'),
 			'each slide.text is a string'
 		)
-		assertEqual(deck.slides[0].text, 'Data Modelling using Spreadsheets', 'title slide flattens to its title')
+		assertEqual(at(deck.slides, 0).text, 'Data Modelling using Spreadsheets', 'title slide flattens to its title')
 	})
 })
 
 describe('Slide.notesText', () => {
 	test('reads the notes body placeholder, ignoring sldImg/sldNum placeholders', async () => {
-		const slide = (await openFixture('notes-slide-image')).slides[0]
+		const slide = at((await openFixture('notes-slide-image')).slides, 0)
 		assertEqual(
 			slide.notesText,
 			'Speaker notes so PowerPoint emits the notes slide.',
@@ -372,10 +376,10 @@ describe('Slide.notesText', () => {
 
 	test('returns "" when a notes slide exists but its body is empty', async () => {
 		// mixed's notes slides carry only a slide-number placeholder, no body text.
-		assertEqual((await openFixture('mixed')).slides[0].notesText, '', 'empty notes body flattens to ""')
+		assertEqual(at((await openFixture('mixed')).slides, 0).notesText, '', 'empty notes body flattens to ""')
 	})
 
 	test('returns null when the slide has no notes slide part', async () => {
-		assertEqual((await openFixture('textbox')).slides[0].notesText, null, 'no notesSlide rel → null')
+		assertEqual(at((await openFixture('textbox')).slides, 0).notesText, null, 'no notesSlide rel → null')
 	})
 })

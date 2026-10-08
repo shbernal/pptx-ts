@@ -19,7 +19,7 @@ import {
 	type ShapeHost,
 	type ThemeContext,
 } from '../../dist/read.js'
-import { assertEqual, defined } from '../helpers.ts'
+import { assertEqual, defined, at } from '../helpers.ts'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
@@ -51,14 +51,17 @@ const stubPart = () => ({ markDirty() {} }) as Pick<Part, 'markDirty'> as Part
 function runWith(rPrInner: string, flatten: ThemeContext) {
 	const xml = `<p:txBody xmlns:p="${P_NS}" xmlns:a="${A_NS}"><a:bodyPr/><a:p><a:r>${rPrInner}<a:t>x</a:t></a:r></a:p></p:txBody>`
 	const txBody = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
-	return new TextFrame(txBody, { part: stubPart(), ctx: flatten, rels: null, inherit: null }).paragraphs[0].runs[0]
+	return at(
+		at(new TextFrame(txBody, { part: stubPart(), ctx: flatten, rels: null, inherit: null }).paragraphs, 0).runs,
+		0
+	)
 }
 
 /** An AutoShape over a hand-authored p:sp, resolving against `flatten`. */
 function autoShape(spXml: string, flatten: ThemeContext) {
 	const xml = `<p:spTree xmlns:p="${P_NS}" xmlns:a="${A_NS}">${spXml}</p:spTree>`
 	const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
-	const el = spTree.getElementsByTagNameNS(P_NS, 'sp')[0]
+	const el = at(spTree.getElementsByTagNameNS(P_NS, 'sp'), 0)
 	return new AutoShape(el, { themeContext: () => flatten } as Pick<ShapeHost, 'themeContext'> as ShapeHost)
 }
 

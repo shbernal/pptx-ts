@@ -8,7 +8,7 @@
 import { describe, test } from 'vitest'
 
 import type { Tag } from '../../dist/read.js'
-import { assert, assertEqual } from '../helpers.ts'
+import { assert, assertEqual, at, take } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 /** Render a tag list as "name=val,name=val" for order-preserving equality. */
@@ -24,20 +24,20 @@ describe('Presentation.tags / Slide.tags', () => {
 
 	test('reads a slide’s own tags, resolved through its rel', async () => {
 		const pres = await openFixture('tags')
-		const [slide1] = pres.slides
+		const [slide1] = take(pres.slides, 1)
 		assertEqual(flatten(slide1.tags), 'REGION=EMEA,PRIORITY=high', 'slide 1 tags')
 	})
 
 	test('a tag-free slide reads as []', async () => {
 		const pres = await openFixture('tags')
-		const slide2 = pres.slides[1]
+		const slide2 = at(pres.slides, 1)
 		assert(Array.isArray(slide2.tags), 'tags is an array')
 		assertEqual(slide2.tags.length, 0, 'slide 2 has no tags')
 	})
 
 	test('each tag is a { name, val } string pair', async () => {
 		const pres = await openFixture('tags')
-		for (const t of [...pres.tags, ...pres.slides[0].tags]) {
+		for (const t of [...pres.tags, ...at(pres.slides, 0).tags]) {
 			assert(typeof t.name === 'string' && typeof t.val === 'string', `tag is name/val strings: ${JSON.stringify(t)}`)
 		}
 	})
@@ -46,6 +46,6 @@ describe('Presentation.tags / Slide.tags', () => {
 		// empty.pptx carries no custDataLst on the presentation or its slide.
 		const pres = await openFixture('empty')
 		assertEqual(pres.tags.length, 0, 'no deck tags')
-		assertEqual(pres.slides[0].tags.length, 0, 'no slide tags')
+		assertEqual(at(pres.slides, 0).tags.length, 0, 'no slide tags')
 	})
 })

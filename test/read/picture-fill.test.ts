@@ -28,7 +28,7 @@ import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import { Presentation, type Table, type TableCell } from '../../dist/read.js'
 import { TableStyle } from '../../dist/node.js'
-import { PNG_1X1, assert, assertEqual, defined, readEntry, type TsPptx } from '../helpers.ts'
+import { PNG_1X1, assert, assertEqual, defined, readEntry, type TsPptx, at } from '../helpers.ts'
 import { openFixture, readFixture } from './corpus.ts'
 import {
 	authorRead,
@@ -296,7 +296,7 @@ describe('slide background — the image variant carries the full picture fill',
 		const { presentation } = await authorRead((pres) => {
 			pres.addSlide().background = { data: PNG_1X1 }
 		})
-		const bg = defined(presentation.slides[0].background, 'the slide has a background')
+		const bg = defined(at(presentation.slides, 0).background, 'the slide has a background')
 		assert(bg.type === 'image', 'image background')
 		assertEqual(bg.picture.relId, bg.relId, 'the flat relId still mirrors the picture fill')
 		assertEqual(bg.picture.partName, bg.partName, 'and so does partName')

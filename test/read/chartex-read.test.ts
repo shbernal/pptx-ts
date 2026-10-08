@@ -13,7 +13,7 @@ import { ChartType } from '../../dist/node.js'
 import { describe, test } from 'vitest'
 import { authorRead, firstChartEx, firstShape, schemaErrors, validatorInstalled } from './authored.ts'
 import { isGraphicFrame } from '../../dist/read.js'
-import { assert, assertEqual, defined } from '../helpers.ts'
+import { assert, assertEqual, defined, at } from '../helpers.ts'
 
 describe('ChartEx — write→read fidelity', () => {
 	test('a chartEx frame is surfaced through its mc:AlternateContent wrapper', async () => {
@@ -79,7 +79,7 @@ describe('ChartEx — write→read fidelity', () => {
 				showValue: true,
 			})
 		})
-		const labels = defined(firstChartEx(presentation)).series[0].dataLabels
+		const labels = at(defined(firstChartEx(presentation)).series, 0).dataLabels
 		assert(labels !== null, 'showValue produced a data-label block')
 		assertEqual(labels.value, true, 'the value toggle is on')
 		assertEqual(labels.seriesName, false, 'the series-name toggle is off')
@@ -120,8 +120,8 @@ describe('ChartEx — write→read fidelity', () => {
 		const cx = defined(firstChartEx(presentation))
 		assertEqual(cx.layoutIds.join(','), 'clusteredColumn,paretoLine', 'pareto emits a column + a cumulative line')
 		assertEqual(cx.series.length, 2, 'both series are read')
-		assertEqual(cx.series[0].name, 'Defects', 'the column series is named')
-		assertEqual(cx.series[1].ownerIndex, 0, 'the paretoLine derives its data from series 0 (ownerIdx)')
+		assertEqual(at(cx.series, 0).name, 'Defects', 'the column series is named')
+		assertEqual(at(cx.series, 1).ownerIndex, 0, 'the paretoLine derives its data from series 0 (ownerIdx)')
 		assertEqual(cx.axes.length, 3, 'a primary cat + value axis plus the secondary percentage axis')
 	})
 
@@ -147,7 +147,7 @@ describe('ChartEx — write→read fidelity', () => {
 		assertEqual(cx.layoutId, 'treemap', 'the treemap layout token')
 		// The writer emits levels leaf-first, so the first cx:lvl is the leaf labels.
 		assertEqual(cx.categories.join(','), 'US,CA,DE', 'the leaf level of the category hierarchy reads')
-		assertEqual(cx.series[0].values.join(','), '10,20,30', 'the size values resolve')
+		assertEqual(at(cx.series, 0).values.join(','), '10,20,30', 'the size values resolve')
 		assertEqual(cx.axes.length, 0, 'a hierarchical treemap is genuinely axis-free')
 	})
 

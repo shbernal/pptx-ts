@@ -19,7 +19,7 @@
 
 import { describe, test } from 'vitest'
 import { Presentation, type OpcPackage } from '../../dist/read.js'
-import { assert, assertEqual } from '../helpers.ts'
+import { assert, assertEqual, at, take } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { openFixture } from './corpus.ts'
 import { assertNoDanglingRels } from './opc.ts'
@@ -41,7 +41,7 @@ function targetsByType(opc: OpcPackage, partName: string, typeSuffix: string) {
 function targetByType(opc: OpcPackage, partName: string, typeSuffix: string) {
 	const found = targetsByType(opc, partName, typeSuffix)
 	assertEqual(found.length, 1, `${partName} has exactly one ${typeSuffix} relationship`)
-	return found[0]
+	return at(found, 0)
 }
 
 /** Every internal partname reachable from `partName`, itself excluded. */
@@ -60,7 +60,7 @@ function reachable(opc: OpcPackage, partName: string, seen = new Set<string>()) 
 describe('a page copy owns what the page owned', () => {
 	test('cloneSlide gives the clone its own chart, workbook and user shapes', async () => {
 		const deck = await openFixture('mixed')
-		const source = deck.slides[CHART_PAGE]
+		const source = at(deck.slides, CHART_PAGE)
 		const clone = deck.cloneSlide(CHART_PAGE)
 
 		const reopened = await Presentation.load(await deck.save())
@@ -89,7 +89,7 @@ describe('a page copy owns what the page owned', () => {
 
 	test('cloneSlide gives the clone its own notes slide, wired back to the clone', async () => {
 		const deck = await openFixture('mixed')
-		const source = deck.slides[NOTES_PAGE]
+		const source = at(deck.slides, NOTES_PAGE)
 		const clone = deck.cloneSlide(NOTES_PAGE)
 
 		const reopened = await Presentation.load(await deck.save())
@@ -113,7 +113,7 @@ describe('a page copy owns what the page owned', () => {
 		// The rule is not "copy everything under the page": PowerPoint stores one
 		// image and points every shape that shows it at that copy, and so does this.
 		const deck = await openFixture('image')
-		const source = deck.slides[1]
+		const source = at(deck.slides, 1)
 		const before = [...deck.opc.parts.keys()].filter((name) => name.startsWith('/ppt/media/')).length
 		const clone = deck.cloneSlide(1)
 
@@ -151,10 +151,13 @@ describe('a page copy owns what the page owned', () => {
 	test('importSlides duplicating a chart page copies the chart per requested page', async () => {
 		const target = await openFixture('mixed')
 		const source = await openFixture('mixed')
-		const [first, second] = target.importSlides([
-			{ source, sourceIndex: CHART_PAGE, outputIndex: 0 },
-			{ source, sourceIndex: CHART_PAGE, outputIndex: 1 },
-		])
+		const [first, second] = take(
+			target.importSlides([
+				{ source, sourceIndex: CHART_PAGE, outputIndex: 0 },
+				{ source, sourceIndex: CHART_PAGE, outputIndex: 1 },
+			]),
+			2
+		)
 
 		const reopened = await Presentation.load(await target.save())
 		assertNoDanglingRels(reopened.opc)
@@ -172,10 +175,13 @@ describe('a page copy owns what the page owned', () => {
 		// from one source must not each drag a private layout/master/theme.
 		const target = await openFixture('mixed')
 		const source = await openFixture('mixed')
-		const [a, b] = target.importSlides([
-			{ source, sourceIndex: 2, outputIndex: 0 },
-			{ source, sourceIndex: 3, outputIndex: 1 },
-		])
+		const [a, b] = take(
+			target.importSlides([
+				{ source, sourceIndex: 2, outputIndex: 0 },
+				{ source, sourceIndex: 3, outputIndex: 1 },
+			]),
+			2
+		)
 
 		const reopened = await Presentation.load(await target.save())
 		const layoutA = targetByType(reopened.opc, a.partName, 'slideLayout')
@@ -190,17 +196,17 @@ describe('a page copy owns what the page owned', () => {
 		// shapes. Media stay shared through the batch's rel-id cache either way.
 		const target = await openFixture('mixed')
 		const source = await openFixture('mixed')
-		const chartSlide = source.slides[CHART_PAGE]
+		const chartSlide = at(source.slides, CHART_PAGE)
 		const chartIndex = chartSlide.shapes.findIndex((shape) => shape.shapeType === 'graphicFrame' && shape.chart)
 		assert(chartIndex >= 0, 'the fixture page has a chart shape to carry')
 
-		target.importShape(target.slides[3], chartSlide, chartIndex)
-		target.importShape(target.slides[4], chartSlide, chartIndex)
+		target.importShape(at(target.slides, 3), chartSlide, chartIndex)
+		target.importShape(at(target.slides, 4), chartSlide, chartIndex)
 
 		const reopened = await Presentation.load(await target.save())
 		assertNoDanglingRels(reopened.opc)
-		const first = targetByType(reopened.opc, reopened.slides[3].partName, 'chart')
-		const second = targetByType(reopened.opc, reopened.slides[4].partName, 'chart')
+		const first = targetByType(reopened.opc, at(reopened.slides, 3).partName, 'chart')
+		const second = targetByType(reopened.opc, at(reopened.slides, 4).partName, 'chart')
 		assert(first !== second, 'each carried frame got a chart part of its own')
 	})
 

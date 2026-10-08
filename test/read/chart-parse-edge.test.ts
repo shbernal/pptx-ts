@@ -10,7 +10,7 @@
 
 import { describe, test } from 'vitest'
 import { Chart, Part } from '../../dist/read.js'
-import { assert, assertEqual, defined } from '../helpers.ts'
+import { assert, assertEqual, defined, at } from '../helpers.ts'
 
 const CHART_CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.drawingml.chart+xml'
 const NS =
@@ -98,8 +98,10 @@ describe('Chart read model — title edges', () => {
 describe('ChartSeries read model — name / index / caches', () => {
 	/** A one-group chart whose single `c:ser` is `serInner`; returns that series. */
 	function series(serInner: string) {
-		return chart(`<c:chart><c:plotArea><c:barChart><c:ser>${serInner}</c:ser></c:barChart></c:plotArea></c:chart>`)
-			.series[0]
+		return at(
+			chart(`<c:chart><c:plotArea><c:barChart><c:ser>${serInner}</c:ser></c:barChart></c:plotArea></c:chart>`).series,
+			0
+		)
 	}
 
 	test('index reads c:idx/@val and is null when absent', () => {
@@ -165,11 +167,14 @@ describe('ChartSeries read model — name / index / caches', () => {
 describe('ChartSeries read model — whether a fill is there', () => {
 	/** A one-group chart whose single `c:ser` carries `spPrInner` as its `c:spPr`; returns that series. */
 	function seriesWithSpPr(spPrInner: string) {
-		return chart(
-			`<c:chart><c:plotArea><c:barChart><c:ser><c:idx val="0"/>` +
-				`<c:spPr>${spPrInner}</c:spPr>` +
-				`</c:ser></c:barChart></c:plotArea></c:chart>`
-		).series[0]
+		return at(
+			chart(
+				`<c:chart><c:plotArea><c:barChart><c:ser><c:idx val="0"/>` +
+					`<c:spPr>${spPrInner}</c:spPr>` +
+					`</c:ser></c:barChart></c:plotArea></c:chart>`
+			).series,
+			0
+		)
 	}
 
 	// A fill is there when the element is there, whatever colour form it holds. The check used to
@@ -213,8 +218,11 @@ describe('ChartSeries read model — whether a fill is there', () => {
 		// The regression guard: it is easy to widen the test into reporting a fill for everything.
 		assertEqual(seriesWithSpPr('<a:ln w="12700"/>').fill, null, 'a line-only c:spPr inherits the theme')
 		assertEqual(
-			chart(`<c:chart><c:plotArea><c:barChart><c:ser><c:idx val="0"/></c:ser></c:barChart></c:plotArea></c:chart>`)
-				.series[0].fill,
+			at(
+				chart(`<c:chart><c:plotArea><c:barChart><c:ser><c:idx val="0"/></c:ser></c:barChart></c:plotArea></c:chart>`)
+					.series,
+				0
+			).fill,
 			null,
 			'a series with no c:spPr at all'
 		)

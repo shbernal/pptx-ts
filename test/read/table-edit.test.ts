@@ -18,7 +18,7 @@ import TsPptx from '../../dist/node.js'
 import { Presentation, type Table, type TableCell } from '../../dist/read.js'
 import JSZip from 'jszip'
 import { firstTable } from './authored.ts'
-import { assert, assertEqual, defined, readEntry, caughtSync } from '../helpers.ts'
+import { assert, assertEqual, defined, readEntry, caughtSync, at } from '../helpers.ts'
 
 /** Author a deck, load it for editing, and return the presentation plus its first table. */
 async function editable(build: (pres: TsPptx) => void) {
@@ -96,7 +96,7 @@ function tcPrChildren(xml: string, index = 0) {
 	for (const name of TCPR_SEQUENCE) {
 		flat = flat.replace(new RegExp(`<a:${name}\\b[^>]*>[\\s\\S]*?</a:${name}>`, 'g'), `<a:${name}/>`)
 	}
-	return [...flat.matchAll(/<a:(\w+)[^>]*?\/>/g)].map((m) => m[1]).filter((name) => TCPR_SEQUENCE.includes(name))
+	return [...flat.matchAll(/<a:(\w+)[^>]*?\/>/g)].map((m) => at(m, 1)).filter((name) => TCPR_SEQUENCE.includes(name))
 }
 
 /**
@@ -117,7 +117,7 @@ function assertTcPrOrder(xml: string, index = 0) {
 	const positions = children.map((name) => TCPR_SEQUENCE.indexOf(name))
 	for (let i = 1; i < positions.length; i++) {
 		assert(
-			positions[i] > positions[i - 1],
+			at(positions, i) > at(positions, i - 1),
 			`a:tcPr children are out of CT_TableCellProperties order: ${children.join(',')}`
 		)
 	}
@@ -151,7 +151,7 @@ function assertGridConsistent(table: Table) {
 		for (const [c, cell] of cells.entries()) {
 			if (!cell.isMergeContinuation) {
 				for (let cc = c + 1; cc < c + cell.gridSpan; cc++) {
-					const covered = grid[r][cc]
+					const covered = at(at(grid, r), cc)
 					assert(covered, `(${r},${cc}) exists to cover the gridSpan at (${r},${c})`)
 					assert(covered.isMergeContinuation, `(${r},${cc}) is flagged as covered by (${r},${c})`)
 				}
@@ -164,25 +164,25 @@ function assertGridConsistent(table: Table) {
 			}
 
 			let originRow = r
-			while (originRow > 0 && mergeFlag(grid[originRow][c], 'vMerge')) originRow--
+			while (originRow > 0 && mergeFlag(at(at(grid, originRow), c), 'vMerge')) originRow--
 			let originCol = c
-			while (originCol > 0 && mergeFlag(grid[originRow][originCol], 'hMerge')) originCol--
-			const origin = grid[originRow][originCol]
-			const at = `(${r},${c})`
+			while (originCol > 0 && mergeFlag(at(at(grid, originRow), originCol), 'hMerge')) originCol--
+			const origin = at(at(grid, originRow), originCol)
+			const where = `(${r},${c})`
 			assert(
 				!origin.isMergeContinuation,
-				`${at} resolves to an origin, not to the covered cell (${originRow},${originCol})`
+				`${where} resolves to an origin, not to the covered cell (${originRow},${originCol})`
 			)
 			assert(
 				originRow + origin.rowSpan > r && originCol + origin.gridSpan > c,
-				`${at} lies inside the extent of its origin (${originRow},${originCol})`
+				`${where} lies inside the extent of its origin (${originRow},${originCol})`
 			)
-			assertEqual(mergeFlag(cell, 'hMerge'), c > originCol, `${at} is hMerge exactly when its origin is to its left`)
-			assertEqual(mergeFlag(cell, 'vMerge'), r > originRow, `${at} is vMerge exactly when its origin is above it`)
+			assertEqual(mergeFlag(cell, 'hMerge'), c > originCol, `${where} is hMerge exactly when its origin is to its left`)
+			assertEqual(mergeFlag(cell, 'vMerge'), r > originRow, `${where} is vMerge exactly when its origin is above it`)
 			for (const name of ['gridSpan', 'rowSpan'] as const) {
 				const own = cell.element_.getAttribute(name)
 				if (own !== null && own !== '') {
-					assertEqual(Number(own), origin[name], `${at} repeats its origin's ${name}, if it carries one`)
+					assertEqual(Number(own), origin[name], `${where} repeats its origin's ${name}, if it carries one`)
 				}
 			}
 		}
@@ -307,7 +307,7 @@ describe('structural edits on a merged region, in both forms a merge is written 
 			[0, 1],
 			[1, 0],
 			[1, 1],
-		]) {
+		] as const) {
 			const tc = defined(table.cell(r, c)).element_
 			for (const name of ['gridSpan', 'rowSpan', 'hMerge', 'vMerge']) {
 				assertEqual(tc.getAttribute(name) || null, null, `(${r},${c}) has no ${name}`)
@@ -514,9 +514,9 @@ describe('TableCell setters — fill and borders keep a:tcPr in schema order', (
 
 		const xml = await savedSlide(presentation)
 		const lnTs = [...xml.matchAll(/<a:lnT[\s\S]*?<\/a:lnT>/g)].map((m) => m[0])
-		assert(lnTs[0].includes('<a:schemeClr val="accent1"/>'), 'the token wins; got: ' + lnTs[0])
-		assert(!lnTs[0].includes('srgbClr'), 'and the literal is not also written; got: ' + lnTs[0])
-		assert(lnTs[1].includes('<a:noFill/>'), 'an explicitly suppressed edge; got: ' + lnTs[1])
+		assert(at(lnTs, 0).includes('<a:schemeClr val="accent1"/>'), 'the token wins; got: ' + lnTs[0])
+		assert(!at(lnTs, 0).includes('srgbClr'), 'and the literal is not also written; got: ' + lnTs[0])
+		assert(at(lnTs, 1).includes('<a:noFill/>'), 'an explicitly suppressed edge; got: ' + lnTs[1])
 	})
 
 	test('noFill() and setFillColor(null) are different edits', async () => {
@@ -529,9 +529,9 @@ describe('TableCell setters — fill and borders keep a:tcPr in schema order', (
 		defined(t.cell(1, 0)).setFillColor(null) // back to inheriting
 
 		const tcPrs = tcPrFillOnly(await savedSlide(reloaded))
-		assert(tcPrs[0].includes('<a:noFill/>'), 'the first cell is explicitly transparent; got: ' + tcPrs[0])
-		assert(!tcPrs[3].includes('<a:solidFill>'), 'the second cell has no fill of its own; got: ' + tcPrs[3])
-		assert(!tcPrs[3].includes('<a:noFill/>'), 'and is not explicitly transparent either; got: ' + tcPrs[3])
+		assert(at(tcPrs, 0).includes('<a:noFill/>'), 'the first cell is explicitly transparent; got: ' + tcPrs[0])
+		assert(!at(tcPrs, 3).includes('<a:solidFill>'), 'the second cell has no fill of its own; got: ' + tcPrs[3])
+		assert(!at(tcPrs, 3).includes('<a:noFill/>'), 'and is not explicitly transparent either; got: ' + tcPrs[3])
 	})
 })
 
@@ -543,8 +543,8 @@ describe('Table structural edits — rows', () => {
 		const added = table.addRow()
 		assertEqual(added.heightEmu, 0, 'a new row is auto-height')
 		assertEqual(table.rowCount, 4, 'the row landed')
-		assertEqual(table.rows[3].cells.length, 3, 'with one cell per grid column')
-		assertEqual(table.rows[3].cells[0].text, '', 'and they are empty')
+		assertEqual(at(table.rows, 3).cells.length, 3, 'with one cell per grid column')
+		assertEqual(at(at(table.rows, 3).cells, 0).text, '', 'and they are empty')
 		assertGridConsistent(table)
 
 		table.removeRow(0)

@@ -14,7 +14,7 @@
 import { describe, test } from 'vitest'
 
 import { Presentation, isGraphicFrame, type Slide } from '../../dist/read.js'
-import { assert, assertEqual, defined } from '../helpers.ts'
+import { assert, assertEqual, defined, at, take } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 const TABLES = ['StyledTable', 'NoGridTable', 'NoStyleTable']
@@ -23,7 +23,9 @@ const TABLES = ['StyledTable', 'NoGridTable', 'NoStyleTable']
 function cellRuns(slide: Slide, name: string) {
 	const shape = slide.shapes.filter(isGraphicFrame).find((s) => s.name === name && s.table)
 	assert(shape, `expected a table named ${name}`)
-	return defined(shape.table).rows.map((row) => row.cells.map((cell) => defined(cell.textFrame).paragraphs[0].runs[0]))
+	return defined(shape.table).rows.map((row) =>
+		row.cells.map((cell) => at(at(defined(cell.textFrame).paragraphs, 0).runs, 0))
+	)
 }
 
 /** Save `target` and reopen it at the slide whose partname is `partName`. */
@@ -51,7 +53,7 @@ describe("importSlide({ theme: 'preserve' }) keeps what table cells took from th
 		const imported = target.importSlide(await openFixture('table-text-inheritance'), 0, { theme: 'preserve' })
 		const slide = await reopened(target, imported.partName)
 		for (const name of TABLES) {
-			const [header, ...body] = cellRuns(slide, name)
+			const [header, ...body] = take(cellRuns(slide, name), 1)
 			const headerHex = name === 'StyledTable' ? 'FFFFFF' : '7030A0'
 			for (const run of header) assertEqual(run.resolvedColor?.effectiveHex, headerHex, `${name}: header`)
 			for (const run of body.flat()) assertEqual(run.resolvedColor?.effectiveHex, '7030A0', `${name}: the source dk1`)
@@ -65,8 +67,8 @@ describe("importSlide({ theme: 'preserve' }) keeps what table cells took from th
 		const target = await openFixture('default-text-style')
 		const imported = target.importSlide(await openFixture('table-text-inheritance'), 0, { theme: 'preserve' })
 		const slide = await reopened(target, imported.partName)
-		for (const run of cellRuns(slide, 'StyledTable')[0]) {
-			const rPr = run.element_.getElementsByTagName('a:rPr')[0]
+		for (const run of at(cellRuns(slide, 'StyledTable'), 0)) {
+			const rPr = at(run.element_.getElementsByTagName('a:rPr'), 0)
 			assertEqual(rPr.getAttribute('b'), null, "the table style's bold is left to it")
 			assertEqual(rPr.getAttribute('i'), '1', 'the italic the table style leaves to p:otherStyle is baked')
 		}
@@ -75,13 +77,13 @@ describe("importSlide({ theme: 'preserve' }) keeps what table cells took from th
 	test('a table naming a style the source does not define gets its size, and its weight left alone', async () => {
 		const target = await openFixture('default-text-style')
 		const source = await openFixture('table-text-inheritance')
-		const frame = defined(source.slides[0].shapes.find((s) => s.name === 'NoGridTable'))
-		frame.element_.getElementsByTagName('a:tableStyleId')[0].textContent = '{00000000-0000-0000-0000-000000000000}'
+		const frame = defined(at(source.slides, 0).shapes.find((s) => s.name === 'NoGridTable'))
+		at(frame.element_.getElementsByTagName('a:tableStyleId'), 0).textContent = '{00000000-0000-0000-0000-000000000000}'
 		frame.markDirty()
 		const imported = target.importSlide(source, 0, { theme: 'preserve' })
 		const slide = await reopened(target, imported.partName)
 		for (const run of cellRuns(slide, 'NoGridTable').flat()) {
-			const rPr = run.element_.getElementsByTagName('a:rPr')[0]
+			const rPr = at(run.element_.getElementsByTagName('a:rPr'), 0)
 			assertEqual(rPr.getAttribute('sz'), '1400', 'a table style never states a size')
 			assertEqual(rPr.getAttribute('i'), null, 'what an unknown style states is unknown')
 			assertEqual(rPr.getElementsByTagName('a:solidFill').length, 0, 'and so is its colour')
@@ -91,29 +93,29 @@ describe("importSlide({ theme: 'preserve' }) keeps what table cells took from th
 	test('a cell run that states its own size keeps it', async () => {
 		const target = await openFixture('default-text-style')
 		const source = await openFixture('table-text-inheritance')
-		cellRuns(source.slides[0], 'NoStyleTable')[1][0].fontSizePt = 40
+		at(at(cellRuns(at(source.slides, 0), 'NoStyleTable'), 1), 0).fontSizePt = 40
 		const imported = target.importSlide(source, 0, { theme: 'preserve' })
 		const slide = await reopened(target, imported.partName)
-		assertEqual(cellRuns(slide, 'NoStyleTable')[1][0].resolvedSizePt, 40, 'an own size is not baked over')
+		assertEqual(at(at(cellRuns(slide, 'NoStyleTable'), 1), 0).resolvedSizePt, 40, 'an own size is not baked over')
 	})
 
 	test('a cell run that states its own colour keeps it', async () => {
 		const target = await openFixture('default-text-style')
 		const source = await openFixture('table-text-inheritance')
-		cellRuns(source.slides[0], 'StyledTable')[1][0].color = '00B050'
+		at(at(cellRuns(at(source.slides, 0), 'StyledTable'), 1), 0).color = '00B050'
 		const imported = target.importSlide(source, 0, { theme: 'preserve' })
 		const slide = await reopened(target, imported.partName)
-		const rPr = cellRuns(slide, 'StyledTable')[1][0].element_.getElementsByTagName('a:rPr')[0]
+		const rPr = at(at(at(cellRuns(slide, 'StyledTable'), 1), 0).element_.getElementsByTagName('a:rPr'), 0)
 		assertEqual(rPr.getElementsByTagName('a:solidFill').length, 1, 'no second fill is written')
-		assertEqual(cellRuns(slide, 'StyledTable')[1][0].resolvedColor?.effectiveHex, '00B050')
+		assertEqual(at(at(cellRuns(slide, 'StyledTable'), 1), 0).resolvedColor?.effectiveHex, '00B050')
 	})
 
 	test('importShape bakes a lifted table the same way', async () => {
 		const target = await openFixture('default-text-style')
 		const source = await openFixture('table-text-inheritance')
-		const index = source.slides[0].shapes.findIndex((s) => s.name === 'NoGridTable')
-		target.importShape(target.slides[0], source.slides[0], index, { theme: 'preserve' })
-		const slide = await reopened(target, target.slides[0].partName)
+		const index = at(source.slides, 0).shapes.findIndex((s) => s.name === 'NoGridTable')
+		target.importShape(at(target.slides, 0), at(source.slides, 0), index, { theme: 'preserve' })
+		const slide = await reopened(target, at(target.slides, 0).partName)
 		for (const run of cellRuns(slide, 'NoGridTable').flat()) {
 			assertEqual(run.resolvedSizePt, 14, 'the source 14pt')
 			assertEqual(run.resolvedItalic, true, 'the source italic')

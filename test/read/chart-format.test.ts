@@ -9,7 +9,7 @@
 import { ChartType, type TsPptx } from '../../dist/node.js'
 import { describe, test } from 'vitest'
 import { authorRead, firstChart, schemaErrors, validatorInstalled } from './authored.ts'
-import { assert, assertEqual, defined } from '../helpers.ts'
+import { assert, assertEqual, defined, at } from '../helpers.ts'
 
 /** A bar chart carrying axis / legend / data-label / series-colour formatting. */
 function formattedBar(pres: TsPptx) {
@@ -167,16 +167,17 @@ describe('Chart series appearance — c:ser/c:spPr', () => {
 		const chart = defined(firstChart((await authorRead(formattedBar)).presentation))
 		const series = chart.series
 		assertEqual(series.length, 2, 'two series')
-		assert(series[0].fill, 'first series has a fill')
-		assertEqual(series[0].fill.colorRef.srgb, 'FF0000', 'first series colour from chartColors[0]')
-		assertEqual(series[0].fill.noFill, false, 'a coloured series is not noFill')
-		assertEqual(defined(series[1].fill).colorRef.srgb, '00FF00', 'second series colour from chartColors[1]')
-		assertEqual(series[0].line, null, 'bar series carry no stroke by default')
+		const firstFill = at(series, 0).fill
+		assert(firstFill, 'first series has a fill')
+		assertEqual(firstFill.colorRef.srgb, 'FF0000', 'first series colour from chartColors[0]')
+		assertEqual(firstFill.noFill, false, 'a coloured series is not noFill')
+		assertEqual(defined(at(series, 1).fill).colorRef.srgb, '00FF00', 'second series colour from chartColors[1]')
+		assertEqual(at(series, 0).line, null, 'bar series carry no stroke by default')
 	})
 
 	test('line series read their authored stroke width / dash / colour', async () => {
 		const chart = defined(firstChart((await authorRead(formattedLine)).presentation))
-		const series = chart.series[0]
+		const series = at(chart.series, 0)
 		assert(series.line, 'line series has a stroke')
 		assertEqual(series.line.widthPt, 3, 'authored line width in points')
 		assertEqual(series.line.dash, 'dash', 'authored line dash')

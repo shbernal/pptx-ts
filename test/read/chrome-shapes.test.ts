@@ -33,7 +33,7 @@
 
 import { describe, test } from 'vitest'
 import { Presentation, type SlideLayout, type SlideMaster } from '../../dist/read.js'
-import { assert, assertEqual, defined } from '../helpers.ts'
+import { assert, assertEqual, defined, at } from '../helpers.ts'
 import { authorRead, schemaErrors, validatorInstalled } from './authored.ts'
 import { openFixture } from './corpus.ts'
 
@@ -44,7 +44,7 @@ function decorative(host: SlideMaster | SlideLayout) {
 
 describe('SlideMaster.shapes — PowerPoint-authored master furniture (mixed.pptx)', () => {
 	test('returns the whole spTree, placeholders included, in document order', async () => {
-		const master = (await openFixture('mixed')).masters()[0]
+		const master = at((await openFixture('mixed')).masters(), 0)
 
 		assertEqual(master.shapes.length, 12, 'the master spTree holds twelve shapes')
 		assertEqual(master.placeholders.length, 5, 'five of them carry a p:ph')
@@ -64,7 +64,7 @@ describe('SlideMaster.shapes — PowerPoint-authored master furniture (mixed.ppt
 	})
 
 	test('a master shape carries the paint surface, not only its box', async () => {
-		const master = (await openFixture('mixed')).masters()[0]
+		const master = at((await openFixture('mixed')).masters(), 0)
 		const band = master.shapes.find((shape) => shape.name === 'Rectangle 7')
 		assert(band, 'the master has a "Rectangle 7" bar')
 
@@ -92,7 +92,7 @@ describe('SlideMaster.shapes — PowerPoint-authored master furniture (mixed.ppt
 	})
 
 	test('placeholders is the same tree, filtered — same elements, same ids', async () => {
-		const master = (await openFixture('mixed')).masters()[0]
+		const master = at((await openFixture('mixed')).masters(), 0)
 
 		const fromShapes = master.shapes.filter((shape) => shape.placeholder !== null)
 		assertEqual(
@@ -101,7 +101,7 @@ describe('SlideMaster.shapes — PowerPoint-authored master furniture (mixed.ppt
 			'the placeholder subset of shapes matches placeholders, in the same order'
 		)
 		assert(
-			fromShapes.every((shape, i) => shape.element_ === master.placeholders[i].element_),
+			fromShapes.every((shape, i) => shape.element_ === at(master.placeholders, i).element_),
 			'both views hand out the same live p:sp elements'
 		)
 		assertEqual(
@@ -112,7 +112,7 @@ describe('SlideMaster.shapes — PowerPoint-authored master furniture (mixed.ppt
 	})
 
 	test('shapeByIdDeep finds a master shape by drawing id', async () => {
-		const master = (await openFixture('mixed')).masters()[0]
+		const master = at((await openFixture('mixed')).masters(), 0)
 		assertEqual(master.shapeByIdDeep(1031)?.name, 'Rectangle 7', 'a top-level master shape resolves by id')
 		assertEqual(master.shapeByIdDeep(999999), undefined, 'an id no shape carries resolves to undefined')
 	})
@@ -120,14 +120,14 @@ describe('SlideMaster.shapes — PowerPoint-authored master furniture (mixed.ppt
 
 describe('SlideLayout.shapes — PowerPoint-authored layout furniture', () => {
 	test('a layout group recurses, and its children compose to slide-absolute frames', async () => {
-		const master = (await openFixture('mixed')).masters()[0]
+		const master = at((await openFixture('mixed')).masters(), 0)
 		const title = master.layouts.find((layout) => layout.name === 'Diapositive de titre')
 		assert(title, 'the title layout reads back')
 
 		assertEqual(title.shapes.length, 6, 'the layout spTree holds six shapes')
 		assertEqual(decorative(title).length, 1, 'one of them is a non-placeholder group')
 
-		const group = decorative(title)[0]
+		const group = at(decorative(title), 0)
 		assert(group.shapeType === 'group', `the decoration is a p:grpSp; got ${group.shapeType}`)
 		assertEqual(group.name, 'Group 2', 'the group name')
 		assertEqual(group.shapes.length, 5, 'the group nests five children')
@@ -151,7 +151,7 @@ describe('SlideLayout.shapes — PowerPoint-authored layout furniture', () => {
 		)
 
 		// The deep lookup descends into the layout's groups.
-		assertEqual(title.shapeByIdDeep(group.shapes[0].id)?.name, 'Group 3', 'a nested group resolves by id')
+		assertEqual(title.shapeByIdDeep(at(group.shapes, 0).id)?.name, 'Group 3', 'a nested group resolves by id')
 	})
 
 	test('decorative text on a layout reads its text frame (read-stress.pptx)', async () => {
@@ -172,7 +172,7 @@ describe('SlideLayout.shapes — PowerPoint-authored layout furniture', () => {
 			'“”',
 			'their text — invisible through placeholders — reads back'
 		)
-		assertEqual(marks[0].left, 541870, 'the opening mark keeps its own geometry')
+		assertEqual(at(marks, 0).left, 541870, 'the opening mark keeps its own geometry')
 	})
 })
 
@@ -181,11 +181,11 @@ describe('showMasterSp — whether the master shapes are drawn', () => {
 		for (const [fixture, suppressing] of [
 			['mixed', 'Diapositive de titre'],
 			['read-stress', 'Title Slide'],
-		]) {
+		] as const) {
 			const layouts = (await openFixture(fixture)).masters().flatMap((master) => master.layouts)
 			const hidden = layouts.filter((layout) => !layout.showMasterSp)
 			assertEqual(hidden.length, 1, `${fixture}: exactly one layout sets showMasterSp="0"`)
-			assertEqual(hidden[0].name, suppressing, `${fixture}: it is the title layout`)
+			assertEqual(at(hidden, 0).name, suppressing, `${fixture}: it is the title layout`)
 			assert(
 				layouts.filter((layout) => layout !== hidden[0]).every((layout) => layout.showMasterSp),
 				`${fixture}: every other layout omits the attribute and so reads true`
@@ -205,14 +205,14 @@ describe('showMasterSp — whether the master shapes are drawn', () => {
 
 	test('a slide that sets showMasterSp="0" reads false across a round trip', async () => {
 		const pres = await openFixture('mixed')
-		const slide = pres.slides[0]
+		const slide = at(pres.slides, 0)
 		slide.element_.setAttribute('showMasterSp', '0')
 		slide.markDirty()
 		assertEqual(slide.showMasterSp, false, 'the getter reads the attribute off p:sld')
 
 		const reopened = await Presentation.load(await pres.save())
-		assertEqual(reopened.slides[0].showMasterSp, false, 'and it survives serialization')
-		assertEqual(reopened.slides[1].showMasterSp, true, 'a sibling slide is untouched')
+		assertEqual(at(reopened.slides, 0).showMasterSp, false, 'and it survives serialization')
+		assertEqual(at(reopened.slides, 1).showMasterSp, true, 'a sibling slide is untouched')
 	})
 })
 
@@ -239,34 +239,34 @@ describe('SlideLayout.shapes — write→read fidelity for defineSlideMaster obj
 
 	test('the band and the wordmark come back, and stay out of placeholders', async () => {
 		const { presentation } = await authorBrandedDeck()
-		const layout = presentation.slides[0].layout
+		const layout = at(presentation.slides, 0).layout
 		assert(layout, 'the slide binds to the Branded layout')
 
 		assertEqual(layout.shapes.length, 3, 'all three authored objects are reachable')
 		assertEqual(layout.placeholders.length, 1, 'only the placeholder is in the filtered view')
 
-		const band = layout.shapes[0]
+		const band = at(layout.shapes, 0)
 		assertEqual(band.placeholder, null, 'the band is not a placeholder')
 		assertEqual(band.fillColor, '250F6B', 'its authored fill round-trips')
 		assertEqual(band.resolvedFill?.effectiveHex, '250F6B', 'and resolves to the same literal hex')
 		assertEqual(band.top, 0, 'its top EMU round-trips')
 		assertEqual(band.width, 12188952, 'its width round-trips (13.33in × 914400 EMU)')
 
-		const wordmark = layout.shapes[1]
+		const wordmark = at(layout.shapes, 1)
 		assertEqual(wordmark.text, 'ACME', 'the wordmark text round-trips')
 		assertEqual(wordmark.placeholder, null, 'and it is not a placeholder either')
 
-		assertEqual(layout.shapes[2].placeholder?.type, 'title', 'the third object is the title placeholder')
+		assertEqual(at(layout.shapes, 2).placeholder?.type, 'title', 'the third object is the title placeholder')
 		assertEqual(
-			layout.shapes[2].element_,
-			layout.placeholders[0].element_,
+			at(layout.shapes, 2).element_,
+			at(layout.placeholders, 0).element_,
 			'both views hand out the same placeholder element'
 		)
 	})
 
 	test('the master under an authored deck has an empty tree, and says so', async () => {
 		const { presentation } = await authorBrandedDeck()
-		const master = presentation.slides[0].master
+		const master = at(presentation.slides, 0).master
 		assert(master, 'the slide resolves its master')
 		// `defineSlideMaster` creates a *layout* under the shared master, so an authored
 		// deck puts nothing on the master's own spTree at all. The accessor reports that

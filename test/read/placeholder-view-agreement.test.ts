@@ -12,7 +12,7 @@
 
 import { describe, test } from 'vitest'
 import type { AnyShape, Placeholder } from '../../dist/read.js'
-import { assert, assertEqual, defined } from '../helpers.ts'
+import { assert, assertEqual, defined, at } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 /** The `resolved*` family plus identity and geometry, from whichever view is passed. */
@@ -36,7 +36,7 @@ function readable(view: Placeholder | AnyShape) {
 describe('a placeholder and the same shape read as an AutoShape', () => {
 	test('agree on identity, geometry and every resolved run property', async () => {
 		const presentation = await openFixture('autofit-cjk-wrap')
-		const master = presentation.slides[0].master
+		const master = at(presentation.slides, 0).master
 		assert(master, 'the fixture has a master')
 		assert(master.placeholders.length > 0, 'the master has placeholders')
 
@@ -55,7 +55,7 @@ describe('a placeholder and the same shape read as an AutoShape', () => {
 		// The agreement above would also hold if both views reported `null` for everything, so
 		// this is the half that makes it mean something.
 		const presentation = await openFixture('autofit-cjk-wrap')
-		const master = defined(presentation.slides[0].master, 'the slide reaches its master')
+		const master = defined(at(presentation.slides, 0).master, 'the slide reaches its master')
 		const resolved = master.placeholders
 			.map((ph) => readable(ph))
 			.filter((r) => r.resolvedSizePt !== null || r.resolvedFontFace !== null)

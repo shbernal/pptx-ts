@@ -8,7 +8,7 @@
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
 import { Presentation, type Table } from '../../dist/read.js'
-import { bytesEqual, assert, assertEqual, defined, partBodies, assertUnchangedExcept } from '../helpers.ts'
+import { bytesEqual, assert, assertEqual, defined, partBodies, assertUnchangedExcept, at } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture } from './corpus.ts'
 
@@ -49,12 +49,12 @@ describe('Table read model', () => {
 		assertEqual(table.rowCount, 3, 'row count')
 		assertEqual(table.columnCount, 4, 'column count')
 		assertEqual(table.rows.length, 3, 'rows array length')
-		assertEqual(table.rows[0].cells.length, 4, 'first row cell count')
+		assertEqual(at(table.rows, 0).cells.length, 4, 'first row cell count')
 		assert(
 			table.columnWidths.every((w) => w !== null && w > 0),
 			'each column has a positive width'
 		)
-		assert(defined(table.rows[0].heightEmu) > 0, 'row height resolves')
+		assert(defined(at(table.rows, 0).heightEmu) > 0, 'row height resolves')
 	})
 
 	test('reads cell text and merge metadata', async () => {
@@ -131,22 +131,25 @@ describe('Table cell editing', () => {
 	test('cell.text setter preserves the first run formatting', async () => {
 		const presentation = await openFixture('table')
 		// First-table cells carry sz="1400"; the replacement run should keep it.
-		const before = defined(defined(firstTable(presentation).cell(0, 0)).textFrame).paragraphs[0].runs[0].fontSizePt
+		const before = at(
+			at(defined(defined(firstTable(presentation).cell(0, 0)).textFrame).paragraphs, 0).runs,
+			0
+		).fontSizePt
 		assertEqual(before, 14, 'precondition: cell run is 14pt')
 		defined(firstTable(presentation).cell(0, 0)).text = 'KEEP'
 		const reopened = await Presentation.load(await presentation.save())
-		const run = defined(defined(firstTable(reopened).cell(0, 0)).textFrame).paragraphs[0].runs[0]
+		const run = at(at(defined(defined(firstTable(reopened).cell(0, 0)).textFrame).paragraphs, 0).runs, 0)
 		assertEqual(run.text, 'KEEP', 'text replaced')
 		assertEqual(run.fontSizePt, 14, 'first-run formatting preserved')
 	})
 
 	test('editing a cell via Run setters works (per-run formatting)', async () => {
 		const presentation = await openFixture('table')
-		const run = defined(defined(firstTable(presentation).cell(1, 1)).textFrame).paragraphs[0].runs[0]
+		const run = at(at(defined(defined(firstTable(presentation).cell(1, 1)).textFrame).paragraphs, 0).runs, 0)
 		run.text = 'RUN'
 		run.bold = true
 		const reopened = await Presentation.load(await presentation.save())
-		const reread = defined(defined(firstTable(reopened).cell(1, 1)).textFrame).paragraphs[0].runs[0]
+		const reread = at(at(defined(defined(firstTable(reopened).cell(1, 1)).textFrame).paragraphs, 0).runs, 0)
 		assertEqual(reread.text, 'RUN', 'run text reloads')
 		assertEqual(reread.bold, true, 'run bold reloads')
 	})
@@ -166,7 +169,7 @@ describe('Table cell editing', () => {
 		const presentation = await openFixture('table')
 		const table = firstTable(presentation)
 		defined(table.cell(0, 0)).text = 'A'
-		defined(defined(table.cell(0, 1)).textFrame).paragraphs[0].runs[0].text = 'B'
+		at(at(defined(defined(table.cell(0, 1)).textFrame).paragraphs, 0).runs, 0).text = 'B'
 		const errors = await validateBuf(Buffer.from(await presentation.save()))
 		assertEqual(errors.length, 0, `validator errors: ${JSON.stringify(errors).slice(0, 2000)}`)
 	})
@@ -262,8 +265,8 @@ describe('Table cell styling', () => {
 
 	test('element_ escape hatches expose the underlying a:tbl / a:tr / a:tc nodes', async () => {
 		const table = firstTable(await openFixture('table'))
-		const row = table.rows[0]
-		const cell = row.cells[0]
+		const row = at(table.rows, 0)
+		const cell = at(row.cells, 0)
 		assertEqual(table.element_.nodeName, 'a:tbl', 'table element_ is the a:tbl')
 		assertEqual(row.element_.nodeName, 'a:tr', 'row element_ is the a:tr')
 		assertEqual(cell.element_.nodeName, 'a:tc', 'cell element_ is the a:tc')

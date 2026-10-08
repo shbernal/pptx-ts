@@ -10,15 +10,24 @@ import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import TsPptx, { ShapeType } from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { throws, bytesEqual, assert, assertEqual, partBodies, assertUnchangedExcept, readEntry } from '../helpers.ts'
+import {
+	throws,
+	bytesEqual,
+	assert,
+	assertEqual,
+	partBodies,
+	assertUnchangedExcept,
+	readEntry,
+	at,
+} from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture } from './corpus.ts'
 
 describe('Slide.addTextBox', () => {
 	test('appends a text box that reloads with its text and geometry', async () => {
 		const presentation = await openFixture('empty')
-		const before = presentation.slides[0].shapes.length
-		const box = presentation.slides[0].addTextBox({
+		const before = at(presentation.slides, 0).shapes.length
+		const box = at(presentation.slides, 0).addTextBox({
 			text: 'Hello',
 			left: 914400,
 			top: 457200,
@@ -30,7 +39,7 @@ describe('Slide.addTextBox', () => {
 		assertEqual(box.text, 'Hello', 'returned box reports its text')
 
 		const reopened = await Presentation.load(await presentation.save())
-		const shapes = reopened.slides[0].shapes
+		const shapes = at(reopened.slides, 0).shapes
 		assertEqual(shapes.length, before + 1, 'shape count grew by one')
 		const reloaded = shapes.find((shape) => shape.name === 'MyBox')
 		assert(reloaded, 'added box reloads by name')
@@ -41,7 +50,7 @@ describe('Slide.addTextBox', () => {
 
 	test('allocates a drawing id unique within the slide', async () => {
 		const presentation = await openFixture('textbox')
-		const slide = presentation.slides[0]
+		const slide = at(presentation.slides, 0)
 		const existingIds = new Set(slide.shapes.map((shape) => shape.id))
 		const box = slide.addTextBox({ text: 'x', left: 0, top: 0, width: 100000, height: 100000 })
 		assert(typeof box.id === 'number', 'new box has a numeric id')
@@ -49,7 +58,7 @@ describe('Slide.addTextBox', () => {
 	})
 
 	test('rejects non-positive or non-finite geometry', async () => {
-		const slide = (await openFixture('empty')).slides[0]
+		const slide = at((await openFixture('empty')).slides, 0)
 		const base = { left: 0, top: 0, width: 100000, height: 100000 }
 		assert(
 			throws(() => slide.addTextBox({ ...base, width: 0 })),
@@ -68,7 +77,7 @@ describe('Slide.addTextBox', () => {
 	test('adding a shape leaves every other part byte-identical', async () => {
 		const input = await readFile(fixturePath('empty'))
 		const presentation = await Presentation.load(input)
-		presentation.slides[0].addTextBox({ text: 'x', left: 0, top: 0, width: 100000, height: 100000 })
+		at(presentation.slides, 0).addTextBox({ text: 'x', left: 0, top: 0, width: 100000, height: 100000 })
 		const inputBodies = await partBodies(input)
 		const outputBodies = await partBodies(await presentation.save())
 		const dirty = 'ppt/slides/slide1.xml'
@@ -80,14 +89,14 @@ describe('Slide.addTextBox', () => {
 describe('Shape.delete', () => {
 	test('removes a shape and the removal survives a reload', async () => {
 		const presentation = await openFixture('textbox')
-		const slide = presentation.slides[0]
+		const slide = at(presentation.slides, 0)
 		const before = slide.shapes.length
 		const target = slide.shapes.find((shape) => shape.name === 'replaceText')
 		assert(target, 'precondition: replaceText shape exists')
 		target.delete()
 
 		const reopened = await Presentation.load(await presentation.save())
-		const shapes = reopened.slides[0].shapes
+		const shapes = at(reopened.slides, 0).shapes
 		assertEqual(shapes.length, before - 1, 'shape count shrank by one')
 		assert(!shapes.some((shape) => shape.name === 'replaceText'), 'deleted shape is gone')
 	})
@@ -96,13 +105,13 @@ describe('Shape.delete', () => {
 	// (0x80070570), which is what deleting an animated shape used to save.
 	test('removes the build animations that target the deleted shape', async () => {
 		const presentation = await openFixture('slide-animation-rich')
-		const slide = presentation.slides[0]
+		const slide = at(presentation.slides, 0)
 		assertEqual(slide.animationSpids().join(','), '2,3,4,5', 'precondition: four animated shapes')
 		const target = slide.shapeByIdDeep(3)
 		assert(target, 'precondition: shape 3 exists')
 		target.delete()
 
-		const reopened = (await Presentation.load(await presentation.save())).slides[0]
+		const reopened = at((await Presentation.load(await presentation.save())).slides, 0)
 		assertEqual(reopened.animationSpids().join(','), '2,4,5', 'no build names the deleted shape')
 		assertEqual(reopened.shapes.length, 3, 'the other animated shapes stay')
 	})
@@ -119,7 +128,7 @@ describe('Shape.delete', () => {
 		const slideXmlOf = async (bytes: Uint8Array) => readEntry(await JSZip.loadAsync(bytes), 'ppt/slides/slide1.xml')
 		assert(/<a:stCxn\b/.test(await slideXmlOf(await presentation.save())), 'precondition: the start is bound')
 
-		presentation.slides[0].shapeByName('A')?.delete()
+		at(presentation.slides, 0).shapeByName('A')?.delete()
 		const xml = await slideXmlOf(await presentation.save())
 		assert(!/<a:stCxn\b/.test(xml), 'the binding to the deleted shape is gone')
 		assert(/<a:endCxn id="\d+" idx="1"\/>/.test(xml), 'the binding to the shape that stays is kept')
@@ -134,12 +143,12 @@ describe('Shape.delete', () => {
 		s.addAnimation({ preset: 'fadeIn', objectName: 'Inside' })
 		s.addAnimation({ preset: 'fadeIn', objectName: 'Outside' })
 		const presentation = await Presentation.load(await pptx.write({ outputType: 'uint8array' }))
-		const slide = presentation.slides[0]
+		const slide = at(presentation.slides, 0)
 		const outsideId = slide.shapeByName('Outside')?.id
 		assertEqual(slide.animationSpids().length, 2, 'precondition: one build inside the group, one outside')
 
 		slide.shapeByName('Outer')?.delete()
-		const reopened = (await Presentation.load(await presentation.save())).slides[0]
+		const reopened = at((await Presentation.load(await presentation.save())).slides, 0)
 		assertEqual(reopened.animationSpids().join(','), String(outsideId), 'only the build outside the group is left')
 	})
 })
@@ -147,7 +156,7 @@ describe('Shape.delete', () => {
 describe('schema validity of structural edits', () => {
 	test.skipIf(!validatorInstalled)('add + delete stays schema-valid', async () => {
 		const presentation = await openFixture('textbox')
-		const slide = presentation.slides[0]
+		const slide = at(presentation.slides, 0)
 		slide.addTextBox({ text: 'Added', left: 914400, top: 914400, width: 1828800, height: 685800 })
 		slide.shapes.find((shape) => shape.name === 'replaceText')?.delete()
 		const errors = await validateBuf(Buffer.from(await presentation.save()))

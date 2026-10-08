@@ -35,7 +35,7 @@ import {
 	type IrValue,
 	type PrintStandaloneScriptOptions,
 } from '../../dist/script.js'
-import { assert, assertEqual, defined, readEntry } from '../helpers.ts'
+import { assert, assertEqual, defined, readEntry, at } from '../helpers.ts'
 import { REPO, SCRATCH, SNAPSHOTS, fixtureNames, irFor, readFixture } from './corpus.ts'
 
 /** The `schemeClr` tokens the write path can carry as tokens (`SchemeColor`), for the ladder below. */
@@ -153,7 +153,7 @@ describe('standalone printer — the chrome IR, read against the deck rather tha
 	// therefore come from `ts-pptx/read`'s own accessors.
 	test('the theme IR carries the deck’s colour scheme and font faces', async () => {
 		const presentation = await Presentation.load(await readFixture('theme-colors.pptx'))
-		const theme = presentation.masters()[0].theme
+		const theme = at(presentation.masters(), 0).theme
 		assert(theme !== null, 'the fixture has a theme to compare against')
 
 		const { chrome } = readModelToIr(presentation)
@@ -176,12 +176,12 @@ describe('standalone printer — the chrome IR, read against the deck rather tha
 			assertEqual(master.layoutIndex, index, `master ${index} addresses its own gallery position`)
 			// The title may be deduplicated or whitespace-collapsed, but it always starts from the
 			// source layout's own name.
-			const expected = layouts[index].name.replace(/[\t\r\n]+/g, ' ')
+			const expected = at(layouts, index).name.replace(/[\t\r\n]+/g, ' ')
 			assert(
 				String(master.props.title).startsWith(expected),
 				`master ${index} title ${JSON.stringify(master.props.title)} does not come from ${JSON.stringify(expected)}`
 			)
-			const background = layouts[index].background ?? presentation.masters()[0].background
+			const background = at(layouts, index).background ?? at(presentation.masters(), 0).background
 			if (background?.type === 'solid' && background.colorRef.resolved) {
 				const emitted = master.props.background as Record<string, string> | undefined
 				// The shared colour ladder: a token the write path can name is kept as a token, so the
@@ -217,14 +217,14 @@ describe('standalone printer — the emitted script runs, with no template in re
 	test('a plain deck rebuilds its slides, hidden flag, text and layout gallery', async () => {
 		const { output, report } = await runStandalone(await readFixture('hidden.pptx'))
 		assertEqual(output.slides.length, 2, 'slide count')
-		assertEqual(output.slides[1].hidden, true, 'slide 2 stays hidden')
-		assert(output.slides[0].shapes.length > 0, 'slide 1 has content')
+		assertEqual(at(output.slides, 1).hidden, true, 'slide 2 stays hidden')
+		assert(at(output.slides, 0).shapes.length > 0, 'slide 1 has content')
 		assertEqual(report.undeclared.length, 0, 'no undeclared difference')
 	})
 
 	test('the theme reaches the output deck, not just the script text', async () => {
 		const { ir, output } = await runStandalone(await readFixture('theme-colors.pptx'))
-		const theme = output.masters()[0].theme
+		const theme = at(output.masters(), 0).theme
 		assert(theme !== null, 'the output deck has a theme')
 		for (const [slot, hex] of Object.entries(ir.chrome.theme.colorScheme ?? {})) {
 			assertEqual(
@@ -241,7 +241,7 @@ describe('standalone printer — the emitted script runs, with no template in re
 			const layout = slide.layout
 			if (layout === null) return
 			const master = defined(ir.chrome.masters.find((entry) => entry.layoutIndex === layout.index))
-			assertEqual(outputIr.slides[index].layout?.name, master.props.title, `slide ${slide.number} layout binding`)
+			assertEqual(at(outputIr.slides, index).layout?.name, master.props.title, `slide ${slide.number} layout binding`)
 		})
 	})
 
@@ -289,15 +289,15 @@ describe('standalone printer — cases the fixture corpus does not contain', () 
 			slide.addText('background', { x: 1, y: 1, w: 4, h: 1 })
 		})
 		const { ir, outputIr, report } = await runStandalone(bytes)
-		assertEqual(ir.slides[0].background?.color, 'C00000', 'the source background reaches the IR')
-		assertEqual(outputIr.slides[0].background?.color, 'C00000', 'and the output deck')
+		assertEqual(at(ir.slides, 0).background?.color, 'C00000', 'the source background reaches the IR')
+		assertEqual(at(outputIr.slides, 0).background?.color, 'C00000', 'and the output deck')
 		assertEqual(report.undeclared.length, 0, 'no undeclared difference')
 
 		// The oracle's half of the claim: drop it from the output IR and the diff must say so.
 		// Without this the test above passes just as happily against a printer that emits no
 		// background at all, since nothing would then differ between the two sides.
 		const perturbed = canonicalDeckIr(outputIr)
-		perturbed.slides[0].background = null
+		at(perturbed.slides, 0).background = null
 		const dirty = diffDeckIr(canonicalDeckIr(ir), perturbed, [])
 		assert(
 			dirty.undeclared.some((difference) => difference.field === 'background'),
@@ -324,7 +324,7 @@ describe('standalone printer — cases the fixture corpus does not contain', () 
 		})
 		const { ir, printed, outputIr, report } = await runStandalone(bytes)
 		assert(printed.code.includes("type: 'gradient'"), 'the script spells the gradient out')
-		expect(outputIr.slides[0].background).toEqual(ir.slides[0].background)
+		expect(at(outputIr.slides, 0).background).toEqual(at(ir.slides, 0).background)
 		const banded = (deck: DeckIr) =>
 			deck.chrome.masters.find((master) => master.props.title === 'BANDED')?.props.background as
 				| Record<string, IrValue>
@@ -347,8 +347,8 @@ describe('standalone printer — cases the fixture corpus does not contain', () 
 			})
 		})
 		const ir = readModelToIr(await Presentation.load(bytes))
-		assertEqual(ir.slides[0].source, 'carried', 'the IR marks the slide for copying')
-		assert(ir.slides[0].calls.length > 0, 'and still transcribes it, for a printer that cannot copy')
+		assertEqual(at(ir.slides, 0).source, 'carried', 'the IR marks the slide for copying')
+		assert(at(ir.slides, 0).calls.length > 0, 'and still transcribes it, for a printer that cannot copy')
 
 		const { printed, output, report } = await runStandalone(bytes)
 		assertEqual(report.undeclared.length, 0, 'no undeclared difference')
@@ -360,7 +360,7 @@ describe('standalone printer — cases the fixture corpus does not contain', () 
 			!printed.notes.some((note) => note.construct === 'slide.carried'),
 			'a standalone script copies nothing, so it must not claim the slide was copied'
 		)
-		assert(shapeNames(output.slides[0].shapes).includes('Survivor'), 'the rest of the slide survives')
+		assert(shapeNames(at(output.slides, 0).shapes).includes('Survivor'), 'the rest of the slide survives')
 
 		// The other tier keeps the slide whole, which is the reason the recommendation exists.
 		assert(

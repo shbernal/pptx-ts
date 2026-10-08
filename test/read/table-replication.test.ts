@@ -19,7 +19,7 @@ import { Presentation } from '../../dist/read.js'
 import { readModelToIr, type CallIr, type DeckIr } from '../../dist/script.js'
 import JSZip from 'jszip'
 import { authorRead, authorReadWithFixtureStyles, firstTable } from './authored.ts'
-import { assert, assertEqual, defined } from '../helpers.ts'
+import { assert, assertEqual, defined, at, take } from '../helpers.ts'
 
 /** The IR's single `addTable` call, or a failing assertion. */
 function tableCall(ir: DeckIr) {
@@ -40,7 +40,7 @@ function optionsOf(call: CallIr) {
 
 /** The options of the cell at (`row`, `col`) of an `addTable` call, which must carry some. */
 function cellOptionsOf(call: CallIr, row: number, col: number) {
-	return defined(rowsOf(call)[row][col].options, `cell (${row},${col}) carries options`)
+	return defined(at(at(rowsOf(call), row), col).options, `cell (${row},${col}) carries options`)
 }
 
 /** A fill given as its object form, the only one the mapper emits. */
@@ -92,7 +92,7 @@ describe('table replication — vertical cell text (a:tcPr/@vert)', () => {
 		const call = tableCall(ir)
 		assertEqual(cellOptionsOf(call, 0, 0).textDirection, 'vert270', 'the mapper carries the direction')
 		assert(
-			rowsOf(call)[0][1].options?.textDirection === undefined,
+			at(at(rowsOf(call), 0), 1).options?.textDirection === undefined,
 			'a horizontal cell carries nothing — horz is the schema default'
 		)
 		assert(!constructs(ir).has('table.cell.vert'), 'a writable direction raises no note')
@@ -101,7 +101,7 @@ describe('table replication — vertical cell text (a:tcPr/@vert)', () => {
 		const tcPrs = defined(xml.match(/<a:tcPr[^>]*>/g))
 		assertEqual(tcPrs.length, 2, 'two cells')
 		assert(tcPrs[0].includes('vert="vert270"'), 'the replayed cell is vertical again; got: ' + tcPrs[0])
-		assert(!tcPrs[1].includes('vert='), 'the sibling stays horizontal; got: ' + tcPrs[1])
+		assert(!at(tcPrs, 1).includes('vert='), 'the sibling stays horizontal; got: ' + tcPrs[1])
 	})
 })
 
@@ -241,7 +241,7 @@ describe('table replication — the table background', () => {
 		assert(gradient.kind === 'linear', `kind is linear; got ${gradient.kind}`)
 		assertEqual(gradient.angle, 90, 'the angle needs no conversion — both sides use OOXML degrees')
 		assertEqual(gradient.stops.length, 2, 'both stops')
-		assertEqual(gradient.stops[1].color, '1A2B3C', 'the end stop keeps its colour')
+		assertEqual(at(gradient.stops, 1).color, '1A2B3C', 'the end stop keeps its colour')
 
 		const xml = await replay(call)
 		assert(xml.includes('<a:lin ang="5400000"'), 'the replayed background keeps its angle')
@@ -319,8 +319,8 @@ describe("table replication — a cell's own fill versus the style's banding", (
 		const cells = rowsOf(call)
 		assertEqual(fillProps(cellOptionsOf(call, 0, 0).fill).color, 'FF0000', "the cell's own fill is carried")
 		assertEqual(fillProps(cellOptionsOf(call, 1, 0).fill).color, 'C00000', 'and so is the other one')
-		assert(cells[0][1].options?.fill === undefined, 'a cell with no fill of its own carries none')
-		assert(cells[1][1].options?.fill === undefined, 'even where the style bands it')
+		assert(at(at(cells, 0), 1).options?.fill === undefined, 'a cell with no fill of its own carries none')
+		assert(at(at(cells, 1), 1).options?.fill === undefined, 'even where the style bands it')
 		assert(!constructs(ir).has('table.cell.fill'), 'and nothing is recorded as lost')
 	})
 
@@ -338,7 +338,7 @@ describe("table replication — a cell's own fill versus the style's banding", (
 				hasBandedRows: true,
 			})
 		})
-		const [ghost, inherits] = defined(firstTable(await Presentation.load(buf))).rows[0].cells
+		const [ghost, inherits] = take(at(defined(firstTable(await Presentation.load(buf))).rows, 0).cells, 2)
 		assertEqual(ghost.fillNoFill, true, 'the reader sees the explicit a:noFill')
 		assertEqual(inherits.fillNoFill, false, 'and an inheriting cell is not one')
 		assertEqual(ghost.hasOwnFill, true, 'hasOwnFill reports true for both kinds of own fill…')
@@ -346,7 +346,10 @@ describe("table replication — a cell's own fill versus the style's banding", (
 
 		const call = tableCall(readModelToIr(await Presentation.load(buf)))
 		assertEqual(fillProps(cellOptionsOf(call, 0, 0).fill).type, 'none', 'the IR carries the suppression')
-		assert(rowsOf(call)[0][1].options?.fill === undefined, 'while the inheriting cell is still left to the style')
+		assert(
+			at(at(rowsOf(call), 0), 1).options?.fill === undefined,
+			'while the inheriting cell is still left to the style'
+		)
 
 		// The cell's own fill is the last child of `a:tcPr`, and any edge line carrying its own
 		// `a:noFill` closes with `</a:lnX>` — so the assertion is on position, not on the element
@@ -356,7 +359,7 @@ describe("table replication — a cell's own fill versus the style's banding", (
 		const tcPrs = defined(xml.match(/<a:tcPr[^>]*>[\s\S]*?<\/a:tcPr>/g))
 		assertEqual(tcPrs.length, 2, 'two cells')
 		assert(/<a:noFill\/>\s*<\/a:tcPr>/.test(tcPrs[0]), `the suppressed cell replays its own a:noFill; got: ${tcPrs[0]}`)
-		assert(!/<a:noFill\/>\s*<\/a:tcPr>/.test(tcPrs[1]), `the inheriting cell carries none; got: ${tcPrs[1]}`)
+		assert(!/<a:noFill\/>\s*<\/a:tcPr>/.test(at(tcPrs, 1)), `the inheriting cell carries none; got: ${tcPrs[1]}`)
 	})
 
 	test('a scheme-coloured cell keeps its token rather than the colour it resolves to', async () => {
@@ -399,7 +402,7 @@ describe('table replication — anchorCtr and cell3D', () => {
 
 		const call = tableCall(ir)
 		const first = cellOptionsOf(call, 0, 0)
-		const second = rowsOf(call)[0][1]
+		const second = at(at(rowsOf(call), 0), 1)
 		assertEqual(first.anchorCtr, true, 'anchorCtr carries')
 		assertEqual(first.cell3D?.preset, 'artDeco', 'the bevel preset carries')
 		assertEqual(first.cell3D?.width, 7, 'and its size, in points on both sides')
@@ -411,8 +414,8 @@ describe('table replication — anchorCtr and cell3D', () => {
 
 		const xml = await replay(call)
 		const tags = [...xml.matchAll(/<a:tcPr[^>]*>/g)].map((m) => m[0])
-		assert(tags[0].includes('anchorCtr="1"'), 'the replayed cell is anchor-centred; got: ' + tags[0])
-		assert(!tags[1].includes('anchorCtr'), 'the sibling is not; got: ' + tags[1])
+		assert(at(tags, 0).includes('anchorCtr="1"'), 'the replayed cell is anchor-centred; got: ' + tags[0])
+		assert(!at(tags, 1).includes('anchorCtr'), 'the sibling is not; got: ' + tags[1])
 		assert(xml.includes('<a:bevel w="88900" h="88900" prst="artDeco"/>'), 'the bevel replays in EMU')
 		assert(xml.includes('<a:lightRig rig="threePt" dir="t"/>'), 'and the light rig')
 	})

@@ -52,7 +52,7 @@
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual, readEntry } from '../helpers.ts'
+import { assert, assertEqual, readEntry, at, take } from '../helpers.ts'
 import { authorRead, schemaErrors, validatorInstalled } from './authored.ts'
 import { openFixture } from './corpus.ts'
 
@@ -82,14 +82,14 @@ async function patchedMaster(mutate: (xml: string) => string) {
 
 describe('SlideMaster.background — the master tier of the chain', () => {
 	test("an explicit p:bgPr on the master reads as the master's own solid fill", async () => {
-		const bg = (await open('mixed')).masters()[0].background
+		const bg = at((await open('mixed')).masters(), 0).background
 		assert(bg?.type === 'solid', "mixed.pptx's master authors a solid p:bgPr")
 		assertEqual(bg.source, 'master', 'the source records the master tier, not slide/layout')
 		assertEqual(bg.colorRef.resolved?.effectiveHex, 'FFFFFF', 'the fill colour resolves')
 	})
 
 	test('a p:bgRef on the master keeps its idx and resolves through the theme', async () => {
-		const bg = (await open('theme-colors')).masters()[0].background
+		const bg = at((await open('theme-colors')).masters(), 0).background
 		assert(bg?.type === 'themeRef', 'the Ion master authors a theme-indexed background')
 		assertEqual(bg.source, 'master', 'sourced from the master')
 		assertEqual(bg.idx, 1003, 'the raw bgRef index')
@@ -108,7 +108,7 @@ describe('SlideMaster.background — the master tier of the chain', () => {
 			pres.defineSlideMaster({ title: 'BRANDED', background: { color: 'F1F2F3' } })
 			pres.addSlide({ masterTitle: 'BRANDED' })
 		})
-		const master = presentation.masters()[0]
+		const master = at(presentation.masters(), 0)
 		assertEqual(master.background, null, 'no p:bg on the master → null')
 		// …and the layout that does define one still reads it, so the null above is a
 		// real absence rather than a broken lookup.
@@ -119,13 +119,13 @@ describe('SlideMaster.background — the master tier of the chain', () => {
 
 describe('SlideLayout — inherited tiers', () => {
 	test('a layout defining no background of its own reads null', async () => {
-		const layout = (await open('theme-colors')).masters()[0].layouts[0]
+		const layout = at(at((await open('theme-colors')).masters(), 0).layouts, 0)
 		assertEqual(layout.name, 'Title Slide', 'the first Ion layout')
 		assertEqual(layout.background, null, 'PowerPoint layouts usually inherit the master background')
 	})
 
 	test('a layout resolves its theme through its master', async () => {
-		const layout = (await open('theme-colors')).masters()[0].layouts[0]
+		const layout = at(at((await open('theme-colors')).masters(), 0).layouts, 0)
 		const theme = layout.theme
 		assert(theme, 'layout.theme walks layout → master → theme')
 		assertEqual(theme.name, 'Ion', 'the fixture theme')
@@ -135,14 +135,14 @@ describe('SlideLayout — inherited tiers', () => {
 	test("the import-only layout @type reads PowerPoint's value", async () => {
 		// chrome-read.test.ts pins this as null on an authored deck (the writer emits
 		// none); the imported side is where a real value shows up.
-		const layout = (await open('theme-colors')).masters()[0].layouts[0]
+		const layout = at(at((await open('theme-colors')).masters(), 0).layouts, 0)
 		assertEqual(layout.type, 'title', 'an imported layout carries its @type')
 	})
 })
 
 describe('Placeholder geometry — inherited rather than own', () => {
 	test('a layout placeholder with no own a:xfrm reads null geometry on all four axes', async () => {
-		const layouts = (await open('theme-colors')).masters()[0].layouts
+		const layouts = at((await open('theme-colors')).masters(), 0).layouts
 		const inherited = layouts.flatMap((l) => l.placeholders).find((ph) => ph.type === 'dt')
 		assert(inherited, 'the Ion layouts carry a date placeholder')
 		// It still identifies itself — only the geometry is absent, because PowerPoint
@@ -176,7 +176,7 @@ describe('optional children the fixtures never carry', () => {
 		assertEqual(master.layouts.length, 0, 'no p:sldLayoutIdLst → [], not a throw')
 		// The layout part is still there and still bound to the slide, so the empty
 		// list above is the master declining to enumerate — not the layout going missing.
-		assertEqual(presentation.slides[0].layout?.name, 'DEFAULT', "the slide's own layout rel is unaffected")
+		assertEqual(at(presentation.slides, 0).layout?.name, 'DEFAULT', "the slide's own layout rel is unaffected")
 	})
 
 	test.skipIf(!validatorInstalled)('…and that master is schema-valid', async () => {
@@ -200,8 +200,8 @@ describe('optional children the fixtures never carry', () => {
 		patchedMaster((xml) => xml.replace('</p:spTree>', `${PH_WITHOUT_TXBODY}${PH_WITH_TXBODY}</p:spTree>`))
 
 	test('a placeholder with no p:txBody reads a null textFrame', async () => {
-		const master = (await Presentation.load(await withBodylessPlaceholder())).masters()[0]
-		const [bodyless, prompted] = master.placeholders
+		const master = at((await Presentation.load(await withBodylessPlaceholder())).masters(), 0)
+		const [bodyless, prompted] = take(master.placeholders, 2)
 		assertEqual(master.placeholders.length, 2, 'both spliced placeholders are matched by the p:ph filter')
 		// It is a fully-formed placeholder otherwise — only the text body is absent.
 		assertEqual(bodyless.name, 'Bodyless Placeholder', 'the shape name still reads')

@@ -14,7 +14,7 @@ import { describe, test } from 'vitest'
 import { Presentation, type AnyShape, type Slide } from '../../dist/read.js'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture, readOracle } from './corpus.ts'
-import { partBodies, assertUnchangedExcept, asError, defined, readEntry } from '../helpers.ts'
+import { partBodies, assertUnchangedExcept, asError, defined, readEntry, at, take } from '../helpers.ts'
 
 async function slidePartXml(pptxBytes: Uint8Array, slideNumber: number) {
 	const zip = await JSZip.loadAsync(pptxBytes)
@@ -26,7 +26,7 @@ describe('slide.transition (read)', () => {
 		const oracle = await readOracle('slide-transition')
 		const pres = await openFixture('slide-transition')
 		for (const expected of oracle.slides) {
-			const slide = pres.slides[expected.slide - 1]
+			const slide = at(pres.slides, expected.slide - 1)
 			const info = slide.transition
 			const { decoded } = expected
 			assert.ok(info, `slide ${expected.slide} has a transition`)
@@ -55,14 +55,14 @@ describe('slide.transition (read)', () => {
 describe('slide.transition (write/edit)', () => {
 	test('sets a bare transition when no duration is given', async () => {
 		const pres = await openFixture('slide-transition')
-		pres.slides[0].transition = { type: 'wipe', speed: 'med', variant: { dir: 'u' } }
+		at(pres.slides, 0).transition = { type: 'wipe', speed: 'med', variant: { dir: 'u' } }
 		const saved = await pres.save()
 		const xml = await slidePartXml(saved, 1)
 		assert.ok(!xml.includes('AlternateContent'), 'bare form, no mc:AlternateContent')
 		assert.ok(/<p:transition spd="med"><p:wipe dir="u"\/><\/p:transition>/.test(xml), 'bare wipe XML')
 
 		const reopened = await Presentation.load(saved)
-		const info = defined(reopened.slides[0].transition)
+		const info = defined(at(reopened.slides, 0).transition)
 		assert.equal(info.type, 'wipe')
 		assert.equal(info.speed, 'med')
 		assert.equal(info.durationMs, null)
@@ -71,7 +71,7 @@ describe('slide.transition (write/edit)', () => {
 
 	test('sets the mc:AlternateContent form when durationMs is given', async () => {
 		const pres = await openFixture('slide-transition')
-		pres.slides[2].transition = { type: 'dissolve', durationMs: 2000, speed: 'slow' }
+		at(pres.slides, 2).transition = { type: 'dissolve', durationMs: 2000, speed: 'slow' }
 		const saved = await pres.save()
 		const xml = await slidePartXml(saved, 3)
 		assert.ok(xml.includes('mc:AlternateContent'), 'wrapped form')
@@ -79,7 +79,7 @@ describe('slide.transition (write/edit)', () => {
 		assert.ok(xml.includes('Requires="p14"'), 'Choice requires p14')
 
 		const reopened = await Presentation.load(saved)
-		const info = defined(reopened.slides[2].transition)
+		const info = defined(at(reopened.slides, 2).transition)
 		assert.equal(info.type, 'dissolve')
 		assert.equal(info.durationMs, 2000)
 		assert.equal(info.speed, 'slow')
@@ -87,34 +87,34 @@ describe('slide.transition (write/edit)', () => {
 
 	test('derives a speed bucket from durationMs when speed is omitted', async () => {
 		const pres = await openFixture('slide-transition')
-		pres.slides[0].transition = { type: 'fade', durationMs: 1500 }
+		at(pres.slides, 0).transition = { type: 'fade', durationMs: 1500 }
 		const reopened = await Presentation.load(await pres.save())
-		assert.equal(defined(reopened.slides[0].transition).speed, 'slow')
+		assert.equal(defined(at(reopened.slides, 0).transition).speed, 'slow')
 	})
 
 	test('round-trips advTm / advClick auto-advance', async () => {
 		const pres = await openFixture('slide-transition')
-		pres.slides[0].transition = { type: 'fade', speed: 'med', advanceOnClick: false, advanceAfterMs: 3000 }
+		at(pres.slides, 0).transition = { type: 'fade', speed: 'med', advanceOnClick: false, advanceAfterMs: 3000 }
 		const reopened = await Presentation.load(await pres.save())
-		const info = defined(reopened.slides[0].transition)
+		const info = defined(at(reopened.slides, 0).transition)
 		assert.equal(info.advanceOnClick, false)
 		assert.equal(info.advanceAfterMs, 3000)
 	})
 
 	test('assigning null clears the transition', async () => {
 		const pres = await openFixture('slide-transition')
-		pres.slides[0].transition = null
+		at(pres.slides, 0).transition = null
 		const saved = await pres.save()
 		const xml = await slidePartXml(saved, 1)
 		assert.ok(!xml.includes('<p:transition'), 'no p:transition element remains')
 		const reopened = await Presentation.load(saved)
-		assert.equal(reopened.slides[0].transition, null)
+		assert.equal(at(reopened.slides, 0).transition, null)
 	})
 
 	test('refuses a duration or advance time that is not a number of milliseconds, changing nothing', async () => {
 		// `NaN` and `-5` were written straight into `p14:dur` and `advTm`.
 		const pres = await openFixture('slide-transition')
-		const slide = pres.slides[1]
+		const slide = at(pres.slides, 1)
 		const before = slide.transition
 		for (const times of [
 			{ durationMs: NaN },
@@ -153,14 +153,14 @@ describe('slide.transition (write/edit)', () => {
 		// The setter had no sound field and removed the whole node, so changing only the speed dropped
 		// the sound.
 		const pres = await openFixture('slide-transition-sound')
-		const slide = pres.slides[0]
+		const slide = at(pres.slides, 0)
 		const sound = defined(slide.transition, 'the fixture slide has a transition').sound
 		assert.ok(sound, 'the fixture slide has a sound')
 
 		slide.transition = { ...defined(slide.transition), speed: 'slow' }
 		let reopened = await Presentation.load(await pres.save())
-		assert.deepEqual(defined(reopened.slides[0].transition).sound, sound, 'a spread keeps the sound')
-		assert.equal(defined(reopened.slides[0].transition).speed, 'slow', 'and changes the speed')
+		assert.deepEqual(defined(at(reopened.slides, 0).transition).sound, sound, 'a spread keeps the sound')
+		assert.equal(defined(at(reopened.slides, 0).transition).speed, 'slow', 'and changes the speed')
 
 		assert.throws(
 			() => {
@@ -172,7 +172,7 @@ describe('slide.transition (write/edit)', () => {
 
 		slide.transition = { ...defined(slide.transition), sound: null }
 		reopened = await Presentation.load(await pres.save())
-		assert.equal(defined(reopened.slides[0].transition).sound, null, 'null removes the sound')
+		assert.equal(defined(at(reopened.slides, 0).transition).sound, null, 'null removes the sound')
 	})
 })
 
@@ -180,7 +180,7 @@ describe('slide animations (opaque, spid-aware)', () => {
 	test('hasAnimations + animationSpids on the basic fixture', async () => {
 		const oracle = await readOracle('slide-animation-basic')
 		const pres = await openFixture('slide-animation-basic')
-		const slide = pres.slides[0]
+		const slide = at(pres.slides, 0)
 		assert.equal(slide.hasAnimations, true)
 		assert.deepEqual(slide.animationSpids(), oracle.animationSpids)
 	})
@@ -188,15 +188,15 @@ describe('slide animations (opaque, spid-aware)', () => {
 	test('hasAnimations + animationSpids on the rich fixture', async () => {
 		const oracle = await readOracle('slide-animation-rich')
 		const pres = await openFixture('slide-animation-rich')
-		const slide = pres.slides[0]
+		const slide = at(pres.slides, 0)
 		assert.equal(slide.hasAnimations, true)
 		assert.deepEqual(slide.animationSpids(), oracle.animationSpids)
 	})
 
 	test('an unanimated fixture reports no animations', async () => {
 		const pres = await openFixture('slide-transition')
-		assert.equal(pres.slides[0].hasAnimations, false)
-		assert.deepEqual(pres.slides[0].animationSpids(), [])
+		assert.equal(at(pres.slides, 0).hasAnimations, false)
+		assert.deepEqual(at(pres.slides, 0).animationSpids(), [])
 	})
 
 	test('an untouched animated deck round-trips byte-identically', async () => {
@@ -209,7 +209,7 @@ describe('slide animations (opaque, spid-aware)', () => {
 
 	test('remapAnimationSpids rewrites every spTgt and bldP reference', async () => {
 		const pres = await openFixture('slide-animation-rich')
-		const slide = pres.slides[0]
+		const slide = at(pres.slides, 0)
 		slide.remapAnimationSpids(
 			new Map([
 				[2, 20],
@@ -221,21 +221,21 @@ describe('slide animations (opaque, spid-aware)', () => {
 		assert.deepEqual(slide.animationSpids(), [20, 30, 40, 50])
 		// persists across a save → reopen
 		const reopened = await Presentation.load(await pres.save())
-		assert.deepEqual(reopened.slides[0].animationSpids(), [20, 30, 40, 50])
+		assert.deepEqual(at(reopened.slides, 0).animationSpids(), [20, 30, 40, 50])
 	})
 
 	test('pruneAnimationSpids drops one shape, leaving the others coherent', async () => {
 		const pres = await openFixture('slide-animation-rich')
-		const slide = pres.slides[0]
+		const slide = at(pres.slides, 0)
 		slide.pruneAnimationSpids([3])
 		assert.deepEqual(slide.animationSpids(), [2, 4, 5])
 		const reopened = await Presentation.load(await pres.save())
-		assert.deepEqual(reopened.slides[0].animationSpids(), [2, 4, 5])
+		assert.deepEqual(at(reopened.slides, 0).animationSpids(), [2, 4, 5])
 	})
 
 	test('pruning a click-effect collapses its emptied wrapper', async () => {
 		const pres = await openFixture('slide-animation-rich')
-		const slide = pres.slides[0]
+		const slide = at(pres.slides, 0)
 		slide.pruneAnimationSpids([2])
 		assert.deepEqual(slide.animationSpids(), [3, 4, 5])
 	})
@@ -244,7 +244,7 @@ describe('slide animations (opaque, spid-aware)', () => {
 describe('slide.flattenAnimations (whole-slide flatten pass)', () => {
 	test('strips the whole timing block, leaving every shape in place', async () => {
 		const pres = await openFixture('slide-animation-rich')
-		const slide = pres.slides[0]
+		const slide = at(pres.slides, 0)
 		const shapeCountBefore = slide.shapes.length
 		assert.equal(slide.hasAnimations, true)
 
@@ -257,14 +257,14 @@ describe('slide.flattenAnimations (whole-slide flatten pass)', () => {
 		const saved = await pres.save()
 		assert.ok(!(await slidePartXml(saved, 1)).includes('<p:timing'), 'p:timing gone from the bytes')
 		const reopened = await Presentation.load(saved)
-		assert.equal(reopened.slides[0].hasAnimations, false)
-		assert.equal(reopened.slides[0].shapes.length, shapeCountBefore)
+		assert.equal(at(reopened.slides, 0).hasAnimations, false)
+		assert.equal(at(reopened.slides, 0).shapes.length, shapeCountBefore)
 		if (validatorInstalled) assert.deepEqual(await validateBuf(Buffer.from(saved)), [])
 	})
 
 	test('flattening the basic fixture clears its animations', async () => {
 		const pres = await openFixture('slide-animation-basic')
-		const slide = pres.slides[0]
+		const slide = at(pres.slides, 0)
 		assert.equal(slide.flattenAnimations(), true)
 		assert.equal(slide.hasAnimations, false)
 		assert.deepEqual(slide.animationSpids(), [])
@@ -272,13 +272,13 @@ describe('slide.flattenAnimations (whole-slide flatten pass)', () => {
 
 	test('is a no-op on an unanimated slide and is idempotent', async () => {
 		const pres = await openFixture('slide-transition')
-		const slide = pres.slides[0]
+		const slide = at(pres.slides, 0)
 		assert.equal(slide.hasAnimations, false)
 		assert.equal(slide.flattenAnimations(), false, 'nothing to flatten')
 		// the slide-show transition is untouched by an animation flatten
 		assert.notEqual(slide.transition, null)
 
-		const rich = (await openFixture('slide-animation-rich')).slides[0]
+		const rich = at((await openFixture('slide-animation-rich')).slides, 0)
 		assert.equal(rich.flattenAnimations(), true)
 		assert.equal(rich.flattenAnimations(), false, 'second call is a no-op')
 	})
@@ -292,7 +292,7 @@ describe('slide.flattenAnimations (whole-slide flatten pass)', () => {
 describe('slide-animation-presets (read fixture)', () => {
 	test('hasAnimations + animationSpids match the oracle', async () => {
 		const oracle = await readOracle('slide-animation-presets')
-		const slide = (await openFixture('slide-animation-presets')).slides[0]
+		const slide = at((await openFixture('slide-animation-presets')).slides, 0)
 		assert.equal(slide.hasAnimations, true)
 		assert.deepEqual(slide.animationSpids(), oracle.animationSpids)
 	})
@@ -322,7 +322,7 @@ describe('slide-transition-sound (read fixture)', () => {
 		const oracle = await readOracle('slide-transition-sound')
 		const pres = await openFixture('slide-transition-sound')
 		for (const s of oracle.slides) {
-			const info = pres.slides[s.slide - 1].transition
+			const info = at(pres.slides, s.slide - 1).transition
 			assert.ok(info, `slide ${s.slide} has a transition`)
 			assert.equal(info.type, 'fade', `slide ${s.slide} type`)
 			assert.equal(info.durationMs, 2000, `slide ${s.slide} durationMs`)
@@ -365,8 +365,8 @@ describe('import-animation-merge (read fixture)', () => {
 	test('enumerates spids on both slides per the oracle', async () => {
 		const oracle = await readOracle('import-animation-merge')
 		const pres = await openFixture('import-animation-merge')
-		assert.deepEqual(pres.slides[0].animationSpids(), oracle.source.animationSpids)
-		assert.deepEqual(pres.slides[1].animationSpids(), oracle.merged.animationSpids)
+		assert.deepEqual(at(pres.slides, 0).animationSpids(), oracle.source.animationSpids)
+		assert.deepEqual(at(pres.slides, 1).animationSpids(), oracle.merged.animationSpids)
 	})
 
 	test('the merged slide matches the oracle timing verbatim', async () => {
@@ -379,7 +379,7 @@ describe('import-animation-merge (read fixture)', () => {
 	test('remapAnimationSpids stays coherent across the merged build', async () => {
 		const oracle = await readOracle('import-animation-merge')
 		const pres = await openFixture('import-animation-merge')
-		const slide = pres.slides[1]
+		const slide = at(pres.slides, 1)
 		// Apply the oracle's spid remap (host stays, carried 2->3 simulated as a shift).
 		slide.remapAnimationSpids(
 			new Map([
@@ -389,7 +389,7 @@ describe('import-animation-merge (read fixture)', () => {
 		)
 		assert.deepEqual(slide.animationSpids(), [20, 30])
 		const reopened = await Presentation.load(await pres.save())
-		assert.deepEqual(reopened.slides[1].animationSpids(), [20, 30])
+		assert.deepEqual(at(reopened.slides, 1).animationSpids(), [20, 30])
 		// mergeMap sanity: the carried shape was renumbered to spid 3 on the destination.
 		assert.equal(oracle.mergeMap.carriedShape.mergedSpid, 3)
 	})
@@ -414,17 +414,17 @@ describe('importShape carryAnimation', () => {
 	test('drops animation by default (opt-in only)', async () => {
 		const target = await openFixture('slide-transition')
 		const source = await openFixture('slide-animation-basic')
-		target.importShape(target.slides[0], source.slides[0], 0, { theme: 'copy' })
-		assert.equal(target.slides[0].hasAnimations, false, 'no animation carried without the flag')
+		target.importShape(at(target.slides, 0), at(source.slides, 0), 0, { theme: 'copy' })
+		assert.equal(at(target.slides, 0).hasAnimations, false, 'no animation carried without the flag')
 	})
 
 	test('appends the carried build after the host build, remapped to the new spid', async () => {
 		// Host already animates spids 2..5; the lifted basic shape takes the next id (6).
 		const target = await openFixture('slide-animation-rich')
 		const source = await openFixture('slide-animation-basic')
-		const slide = target.slides[0]
+		const slide = at(target.slides, 0)
 		const newSpid = slide.nextShapeId()
-		target.importShape(slide, source.slides[0], 0, { carryAnimation: true, theme: 'copy' })
+		target.importShape(slide, at(source.slides, 0), 0, { carryAnimation: true, theme: 'copy' })
 
 		assert.deepEqual(slide.animationSpids(), [2, 3, 4, 5, newSpid])
 		const saved = await target.save()
@@ -441,13 +441,13 @@ describe('importShape carryAnimation', () => {
 		const cTnIds = [...xml.matchAll(/<p:cTn id="(\d+)"/g)].map((m) => Number(m[1]))
 		assert.equal(new Set(cTnIds).size, cTnIds.length, 'cTn ids are unique')
 		assertNoDanglingSpids(xml)
-		assert.deepEqual((await Presentation.load(saved)).slides[0].animationSpids(), [2, 3, 4, 5, newSpid])
+		assert.deepEqual(at((await Presentation.load(saved)).slides, 0).animationSpids(), [2, 3, 4, 5, newSpid])
 	})
 
 	/** A shape's `p:cNvPr/@id`. */
 	function shapeId(shape: AnyShape) {
 		const pNs = 'http://schemas.openxmlformats.org/presentationml/2006/main'
-		return Number(shape.element_.getElementsByTagNameNS(pNs, 'cNvPr')[0].getAttribute('id'))
+		return Number(at(shape.element_.getElementsByTagNameNS(pNs, 'cNvPr'), 0).getAttribute('id'))
 	}
 
 	/** How many effect targets in a slide's XML name `spid`. */
@@ -462,9 +462,12 @@ describe('importShape carryAnimation', () => {
 		const sourceXml = await slidePartXml(await readFile(fixturePath('slide-animation-rich')), 1)
 		const source = await openFixture('slide-animation-rich')
 		const target = await openFixture('slide-transition')
-		const slide = target.slides[0]
-		const index = source.slides[0].shapes.findIndex((shape) => shapeId(shape) === 2)
-		const [carried] = target.importShapes(slide, source.slides[0], [index], { carryAnimation: true, theme: 'copy' })
+		const slide = at(target.slides, 0)
+		const index = at(source.slides, 0).shapes.findIndex((shape) => shapeId(shape) === 2)
+		const [carried] = take(
+			target.importShapes(slide, at(source.slides, 0), [index], { carryAnimation: true, theme: 'copy' }),
+			1
+		)
 
 		assert.deepEqual(slide.animationSpids(), [shapeId(carried)], 'only the carried shape is animated')
 		const xml = await slidePartXml(await target.save(), 1)
@@ -478,10 +481,10 @@ describe('importShape carryAnimation', () => {
 		const sourceXml = await slidePartXml(await readFile(fixturePath('slide-animation-rich')), 1)
 		const source = await openFixture('slide-animation-rich')
 		const target = await openFixture('slide-transition')
-		const slide = target.slides[0]
-		const indices = [2, 3].map((id) => source.slides[0].shapes.findIndex((shape) => shapeId(shape) === id))
-		const carried = target.importShapes(slide, source.slides[0], indices, { carryAnimation: true, theme: 'copy' })
-		const [first, second] = carried.map(shapeId)
+		const slide = at(target.slides, 0)
+		const indices = [2, 3].map((id) => at(source.slides, 0).shapes.findIndex((shape) => shapeId(shape) === id))
+		const carried = target.importShapes(slide, at(source.slides, 0), indices, { carryAnimation: true, theme: 'copy' })
+		const [first, second] = take(carried.map(shapeId), 2)
 
 		assert.deepEqual(
 			slide.animationSpids(),
@@ -499,10 +502,10 @@ describe('importShape carryAnimation', () => {
 		// tmRoot/mainSeq/bldLst scaffold and leave the transition intact.
 		const target = await openFixture('slide-transition')
 		const source = await openFixture('slide-animation-basic')
-		const slide = target.slides[0]
+		const slide = at(target.slides, 0)
 		assert.equal(slide.hasAnimations, false)
 		const newSpid = slide.nextShapeId()
-		target.importShape(slide, source.slides[0], 0, { carryAnimation: true, theme: 'copy' })
+		target.importShape(slide, at(source.slides, 0), 0, { carryAnimation: true, theme: 'copy' })
 
 		const saved = await target.save()
 		const xml = await slidePartXml(saved, 1)
@@ -510,7 +513,7 @@ describe('importShape carryAnimation', () => {
 		assert.ok(new RegExp(`<p:bldP spid="${newSpid}" grpId="0"/>`).test(xml), 'carried bldP present')
 		assert.ok(/<\/p:clrMapOvr><p:transition/.test(xml) || /<p:fade\/>/.test(xml), 'transition preserved')
 		assertNoDanglingSpids(xml)
-		assert.equal((await Presentation.load(saved)).slides[0].hasAnimations, true)
+		assert.equal(at((await Presentation.load(saved)).slides, 0).hasAnimations, true)
 	})
 
 	/**
@@ -537,7 +540,7 @@ describe('importShape carryAnimation', () => {
 		for (const name of ['av-media', 'online-video']) {
 			const target = await openFixture(name)
 			const source = await openFixture('slide-animation-basic')
-			const slide = target.slides[0]
+			const slide = at(target.slides, 0)
 			const before = sequencesOf(slide)
 			assert.deepEqual(
 				before.map((seq) => seq.nodeType),
@@ -545,16 +548,16 @@ describe('importShape carryAnimation', () => {
 				`${name}: only a media trigger sequence`
 			)
 			const newSpid = slide.nextShapeId()
-			target.importShape(slide, source.slides[0], 0, { carryAnimation: true, theme: 'copy' })
+			target.importShape(slide, at(source.slides, 0), 0, { carryAnimation: true, theme: 'copy' })
 
 			const after = sequencesOf(slide)
 			const main = after.find((seq) => seq.nodeType === 'mainSeq')
 			assert.ok(main, `${name}: a mainSeq was created`)
 			assert.equal(main.groups.length, 1, `${name}: holding the one carried click step`)
-			assert.ok(main.groups[0].includes(`spid="${newSpid}"`), `${name}: which targets the carried shape`)
+			assert.ok(at(main.groups, 0).includes(`spid="${newSpid}"`), `${name}: which targets the carried shape`)
 			const media = after.filter((seq) => seq.nodeType === 'interactiveSeq')
 			assert.equal(media.length, 1, `${name}: still one media trigger sequence`)
-			assert.deepEqual(media[0].groups, before[0].groups, `${name}: and it is unchanged`)
+			assert.deepEqual(at(media, 0).groups, at(before, 0).groups, `${name}: and it is unchanged`)
 		}
 	})
 
@@ -563,8 +566,8 @@ describe('importShape carryAnimation', () => {
 		// media slide turned its play trigger into a build step on a slide that had no animation.
 		const target = await openFixture('slide-transition')
 		const source = await openFixture('av-media')
-		const slide = target.slides[0]
-		target.importShape(slide, source.slides[0], 0, { carryAnimation: true, theme: 'copy' })
+		const slide = at(target.slides, 0)
+		target.importShape(slide, at(source.slides, 0), 0, { carryAnimation: true, theme: 'copy' })
 		assert.deepEqual(sequencesOf(slide), [], 'no timing sequence was created')
 		assert.equal(slide.hasAnimations, false, 'and the slide still reports no animation')
 	})
@@ -572,7 +575,7 @@ describe('importShape carryAnimation', () => {
 	test.skipIf(!validatorInstalled)('the carried package stays schema-valid', async () => {
 		const target = await openFixture('slide-animation-rich')
 		const source = await openFixture('slide-animation-basic')
-		target.importShape(target.slides[0], source.slides[0], 0, { carryAnimation: true, theme: 'copy' })
+		target.importShape(at(target.slides, 0), at(source.slides, 0), 0, { carryAnimation: true, theme: 'copy' })
 		const errors = await validateBuf(Buffer.from(await target.save()))
 		assert.equal(errors.length, 0, `validator errors: ${JSON.stringify(errors).slice(0, 2000)}`)
 	})

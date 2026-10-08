@@ -21,7 +21,7 @@
 
 import { describe, test } from 'vitest'
 
-import { assert, assertEqual } from '../helpers.ts'
+import { assert, assertEqual, at } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 // Read from ppt/slideMasters/slideMaster1.xml inside placeholder-inherit.pptx.
@@ -30,7 +30,7 @@ const MASTER_BODY = { left: 838200, top: 1825625, width: 10515600, height: 43513
 
 describe('read: placeholder effective geometry', () => {
 	test('a title placeholder with no own a:xfrm resolves through layout to the master geometry', async () => {
-		const slide = (await openFixture('placeholder-inherit')).slides[0]
+		const slide = at((await openFixture('placeholder-inherit')).slides, 0)
 		const title = slide.shapes.find((s) => (s.name ?? '').startsWith('Title'))
 		assert(title, 'expected a title placeholder shape')
 
@@ -50,7 +50,7 @@ describe('read: placeholder effective geometry', () => {
 	})
 
 	test('a body placeholder with no own a:xfrm resolves through layout to the master geometry', async () => {
-		const slide = (await openFixture('placeholder-inherit')).slides[0]
+		const slide = at((await openFixture('placeholder-inherit')).slides, 0)
 		const body = slide.shapes.find((s) => !(s.name ?? '').startsWith('Title') && s.textFrame)
 		assert(body, 'expected a body placeholder shape')
 
@@ -68,7 +68,7 @@ describe('read: placeholder effective geometry', () => {
 
 	test('a shape with its own a:xfrm reports source "own" and does not consult the chain (negative control)', async () => {
 		const presentation = await openFixture('rotation-flip')
-		const shapes = presentation.slides[0].shapes
+		const shapes = at(presentation.slides, 0).shapes
 		const rotated = shapes.find((s) => s.name === 'rotated-45')
 		assert(rotated, 'expected the rotated-45 rect')
 		assert(rotated.left !== null, 'rotated-45 has its own xfrm')

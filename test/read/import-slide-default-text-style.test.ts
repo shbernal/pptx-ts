@@ -11,14 +11,14 @@
 import { describe, test } from 'vitest'
 
 import { Presentation, type Slide } from '../../dist/read.js'
-import { assert, assertEqual, defined } from '../helpers.ts'
+import { assert, assertEqual, defined, at } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 /** The first run of the shape named `name` on `slide`. */
 function runOf(slide: Slide, name: string) {
 	const shape = slide.shapes.find((s) => s.name === name)
 	assert(shape?.textFrame, `expected a text shape named ${name}`)
-	return shape.textFrame.paragraphs[0].runs[0]
+	return at(at(shape.textFrame.paragraphs, 0).runs, 0)
 }
 
 describe("importSlide({ theme: 'preserve' }) keeps what runs took from the source p:defaultTextStyle", () => {
@@ -46,7 +46,7 @@ describe("importSlide({ theme: 'preserve' }) keeps what runs took from the sourc
 	test("a field's baked a:rPr lands before its a:pPr", async () => {
 		const target = await openFixture('table-text-inheritance')
 		const source = await openFixture('default-text-style')
-		const run = runOf(source.slides[0], 'PlainBox').element_
+		const run = runOf(at(source.slides, 0), 'PlainBox').element_
 		const doc = defined(run.ownerDocument)
 		const fld = doc.createElementNS(run.namespaceURI, 'a:fld')
 		fld.setAttribute('id', '{B6F15528-21DE-4FAA-801E-634DDDAF4B2B}')
@@ -56,22 +56,22 @@ describe("importSlide({ theme: 'preserve' }) keeps what runs took from the sourc
 		t.textContent = '1'
 		fld.appendChild(t)
 		defined(run.parentNode).replaceChild(fld, run)
-		defined(source.slides[0].shapes.find((s) => s.name === 'PlainBox')).markDirty()
+		defined(at(source.slides, 0).shapes.find((s) => s.name === 'PlainBox')).markDirty()
 
 		const imported = target.importSlide(source, 0, { theme: 'preserve' })
 		const slide = defined(
 			(await Presentation.load(await target.save())).slides.find((s) => s.partName === imported.partName)
 		)
-		const baked = defined(slide.shapes.find((s) => s.name === 'PlainBox')).element_.getElementsByTagName('a:fld')[0]
+		const baked = at(defined(slide.shapes.find((s) => s.name === 'PlainBox')).element_.getElementsByTagName('a:fld'), 0)
 		const order = [...baked.childNodes].filter((n) => n.nodeType === 1).map((n) => n.nodeName)
 		assertEqual(order.join(' '), 'a:rPr a:pPr a:t', 'CT_TextField order')
-		assertEqual(baked.getElementsByTagName('a:rPr')[0].getAttribute('sz'), '1800', 'the field was baked')
+		assertEqual(at(baked.getElementsByTagName('a:rPr'), 0).getAttribute('sz'), '1800', 'the field was baked')
 	})
 
 	test('a run that states its own size keeps it', async () => {
 		const target = await openFixture('table-text-inheritance')
 		const source = await openFixture('default-text-style')
-		const run = runOf(source.slides[0], 'PlainBox')
+		const run = runOf(at(source.slides, 0), 'PlainBox')
 		run.fontSizePt = 40
 		const imported = target.importSlide(source, 0, { theme: 'preserve' })
 		const slide = defined(

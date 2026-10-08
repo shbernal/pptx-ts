@@ -6,7 +6,7 @@
 
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual } from '../helpers.ts'
+import { assert, assertEqual, at } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 describe('Presentation.embeddedFonts', () => {
@@ -15,7 +15,7 @@ describe('Presentation.embeddedFonts', () => {
 		const fonts = pres.embeddedFonts
 
 		assertEqual(fonts.length, 1, 'one embedded typeface')
-		const font = fonts[0]
+		const font = at(fonts, 0)
 		assertEqual(font.typeface, 'Silkscreen', 'typeface read from p:font/@typeface')
 		assertEqual(font.panose, null, 'no @panose on this entry → null (fixture has none)')
 
@@ -26,8 +26,8 @@ describe('Presentation.embeddedFonts', () => {
 		assert(!('italic' in bySlot) && !('boldItalic' in bySlot), 'only the two authored faces')
 
 		// Faces are ordered by the schema slot order (regular before bold).
-		assertEqual(font.faces[0].slot, 'regular', 'regular first')
-		assertEqual(font.faces[1].slot, 'bold', 'bold second')
+		assertEqual(at(font.faces, 0).slot, 'regular', 'regular first')
+		assertEqual(at(font.faces, 1).slot, 'bold', 'bold second')
 
 		// Each partName resolves to a real .fntdata part in the package.
 		for (const face of font.faces) {
@@ -55,9 +55,9 @@ describe('Presentation.embeddedFonts', () => {
 		const reopened = await Presentation.load(await target.save())
 		const fonts = reopened.embeddedFonts
 		assertEqual(fonts.length, 1, 'carried typeface reads back')
-		assertEqual(fonts[0].typeface, 'Silkscreen', 'typeface survives the carry')
-		assertEqual(fonts[0].faces.length, 2, 'both faces survive')
-		for (const face of fonts[0].faces) {
+		assertEqual(at(fonts, 0).typeface, 'Silkscreen', 'typeface survives the carry')
+		assertEqual(at(fonts, 0).faces.length, 2, 'both faces survive')
+		for (const face of at(fonts, 0).faces) {
 			assert(reopened.opc.part(face.partName), `carried face part resolves (${face.partName})`)
 		}
 	})

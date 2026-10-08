@@ -13,11 +13,11 @@
 
 import { describe, test } from 'vitest'
 
-import { assert, assertEqual } from '../helpers.ts'
+import { assert, assertEqual, at } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 async function pictureNamed(name: string) {
-	const slide = (await openFixture('picture-custgeom')).slides[0]
+	const slide = at((await openFixture('picture-custgeom')).slides, 0)
 	const shape = slide.shapes.find((s) => s.name === name)
 	assert(shape, `expected shape named ${name}`)
 	assertEqual(shape.shapeType, 'picture', `${name} is a picture`)
@@ -55,10 +55,10 @@ describe('Shape.customGeometry on a picture: real PowerPoint XML (picture-custge
 		const geom = pic.customGeometry
 		assert(geom, 'pic-clip-curve has custom geometry')
 		assertEqual(geom.paths.length, 1, 'one a:path')
-		assertEqual(geom.paths[0].w, 2794000, 'path w')
-		assertEqual(geom.paths[0].h, 2066402, 'path h')
+		assertEqual(at(geom.paths, 0).w, 2794000, 'path w')
+		assertEqual(at(geom.paths, 0).h, 2066402, 'path h')
 		assertEqual(
-			JSON.stringify(geom.paths[0].commands),
+			JSON.stringify(at(geom.paths, 0).commands),
 			JSON.stringify([
 				{ cmd: 'moveTo', x: 1492250, y: 2652 },
 				{ cmd: 'cubicBezTo', x1: 2095500, y1: 34402, x2: 2667000, y2: 351902, x: 2794000, y: 986902 },

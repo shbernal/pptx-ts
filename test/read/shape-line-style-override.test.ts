@@ -13,7 +13,7 @@
 import { describe, test } from 'vitest'
 
 import type { Slide } from '../../dist/read.js'
-import { assert, assertEqual, partXml } from '../helpers.ts'
+import { assert, assertEqual, partXml, at } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 /** The theme's accent2, which the lnRef names. */
@@ -41,14 +41,14 @@ function ownLine(xml: string, name: string) {
 
 describe('Shape.resolvedLine under a p:style lnRef (shape-line-style-override.pptx)', () => {
 	test('a shape with no a:ln resolves the style line colour', async () => {
-		const line = shapeNamed((await openFixture('shape-line-style-override')).slides[0], 'StyleOnly').resolvedLine
+		const line = shapeNamed(at((await openFixture('shape-line-style-override')).slides, 0), 'StyleOnly').resolvedLine
 		assert(line, 'the lnRef resolves a colour')
 		assertEqual(line.hex, STYLE_HEX, 'lnRef accent2')
 		assertEqual(line.effectiveHex, STYLE_PAINTED, 'accent2 shaded to 15%')
 	})
 
 	test('an a:ln that states only a width or a dash keeps the style line colour', async () => {
-		const slide = (await openFixture('shape-line-style-override')).slides[0]
+		const slide = at((await openFixture('shape-line-style-override')).slides, 0)
 		assertEqual(shapeNamed(slide, 'WeightOnly').lineWidthPt, 6, 'WeightOnly states its own 6pt width')
 		assertEqual(shapeNamed(slide, 'DashOnly').lineDash, 'dash', 'DashOnly states its own dash')
 		for (const name of ['WeightOnly', 'DashOnly']) {
@@ -60,7 +60,7 @@ describe('Shape.resolvedLine under a p:style lnRef (shape-line-style-override.pp
 	})
 
 	test("an a:ln's own fill wins over the style line", async () => {
-		const line = shapeNamed((await openFixture('shape-line-style-override')).slides[0], 'ColorOnly').resolvedLine
+		const line = shapeNamed(at((await openFixture('shape-line-style-override')).slides, 0), 'ColorOnly').resolvedLine
 		assert(line, 'the own fill resolves')
 		assertEqual(line.effectiveHex, 'FF0000', 'the own red, not the style colour')
 	})

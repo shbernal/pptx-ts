@@ -8,7 +8,7 @@
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
 import { Presentation, type Slide } from '../../dist/read.js'
-import { throws, assert, assertEqual, partBodies, assertUnchangedExcept, defined } from '../helpers.ts'
+import { throws, assert, assertEqual, partBodies, assertUnchangedExcept, defined, at } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture } from './corpus.ts'
 
@@ -26,14 +26,14 @@ describe('Presentation.cloneSlide', () => {
 	test('appends an independent duplicate that reloads with the source content', async () => {
 		const presentation = await openFixture('textbox')
 		const beforeCount = presentation.slides.length
-		const sourceText = defined(presentation.slides[0].shapes.find((s) => s.hasTextFrame)).text
+		const sourceText = defined(at(presentation.slides, 0).shapes.find((s) => s.hasTextFrame)).text
 		const clone = presentation.cloneSlide(0)
 		assertEqual(presentation.slides.length, beforeCount + 1, 'a slide was appended in-memory')
 		assertEqual(clone.index, beforeCount, 'clone is the last slide')
 
 		const reopened = await Presentation.load(await presentation.save())
 		assertEqual(reopened.slides.length, beforeCount + 1, 'slide count grew after reload')
-		const last = reopened.slides[reopened.slides.length - 1]
+		const last = at(reopened.slides, reopened.slides.length - 1)
 		const lastText = last.shapes.find((s) => s.hasTextFrame)?.text
 		assertEqual(lastText, sourceText, 'clone carries the source slide text')
 		// Slide ids are unique.
@@ -44,11 +44,11 @@ describe('Presentation.cloneSlide', () => {
 	test('clone is independent of the source (editing one does not affect the other)', async () => {
 		const presentation = await openFixture('textbox')
 		const clone = presentation.cloneSlide(0)
-		firstTextFrame(clone).paragraphs[0].runs[0].text = 'CLONE ONLY'
+		at(at(firstTextFrame(clone).paragraphs, 0).runs, 0).text = 'CLONE ONLY'
 
 		const reopened = await Presentation.load(await presentation.save())
-		const sourceRun = firstTextFrame(reopened.slides[0]).paragraphs[0].runs[0].text
-		const cloneRun = firstTextFrame(reopened.slides[reopened.slides.length - 1]).paragraphs[0].runs[0].text
+		const sourceRun = at(at(firstTextFrame(at(reopened.slides, 0)).paragraphs, 0).runs, 0).text
+		const cloneRun = at(at(firstTextFrame(at(reopened.slides, reopened.slides.length - 1)).paragraphs, 0).runs, 0).text
 		assertEqual(cloneRun, 'CLONE ONLY', 'edit landed on the clone')
 		assert(sourceRun !== 'CLONE ONLY', 'source slide is untouched by the clone edit')
 	})

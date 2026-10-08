@@ -18,7 +18,7 @@
 import { describe, test } from 'vitest'
 
 import { isGraphicFrame, isPicture, type AnyShape, type Presentation } from '../../dist/read.js'
-import { assert, assertEqual, defined } from '../helpers.ts'
+import { assert, assertEqual, defined, at, take } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 let cached: Promise<Presentation> | undefined
@@ -50,7 +50,7 @@ describe('read-stress.pptx — combined read-model integration', () => {
 		assert(new Set(themeNames).size === 2, `master themes should be distinct, got ${themeNames}`)
 
 		// Each slide resolves to a different master + theme (both masters are used).
-		const [s1, s2] = p.slides
+		const [s1, s2] = take(p.slides, 2)
 		assert(s1.master && s2.master, 'both slides resolve a master')
 		assert(
 			s1.master.partName !== s2.master.partName,
@@ -92,7 +92,7 @@ describe('read-stress.pptx — combined read-model integration', () => {
 
 	test('nested groups: a group inside a group', async () => {
 		const p = await pres()
-		const outer = allShapes(p.slides[0].shapes).find((s) => s.name === 'OuterGroup')
+		const outer = allShapes(at(p.slides, 0).shapes).find((s) => s.name === 'OuterGroup')
 		assert(outer && outer.shapeType === 'group', 'OuterGroup is a group')
 		const inner = outer.shapes.find((s) => s.shapeType === 'group')
 		assert(inner, 'OuterGroup should directly contain a nested group')

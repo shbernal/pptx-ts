@@ -18,7 +18,7 @@ import { readFile } from 'node:fs/promises'
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { Presentation, type OpcPackage, type Part } from '../../dist/read.js'
-import { assert, assertEqual, defined, partXml, readEntry } from '../helpers.ts'
+import { assert, assertEqual, defined, partXml, readEntry, at, take } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture } from './corpus.ts'
 import { resolveSingle } from './opc.ts'
@@ -133,9 +133,13 @@ describe("Presentation.importSlide({ theme: 'restyle' })", () => {
 
 		// The imported slide binds to the first layout of the first master, in id-list order: the
 		// deck's own gallery order, not the order its `.rels` files happen to list parts in.
-		const last = reopened.slides[reopened.slides.length - 1]
+		const last = at(reopened.slides, reopened.slides.length - 1)
 		const layout = resolveSingle(opc, last.partName, SLIDE_LAYOUT_REL)
-		assertEqual(layout, reopened.layouts()[0].partName, 'imported slide binds to the first layout of the first master')
+		assertEqual(
+			layout,
+			at(reopened.layouts(), 0).partName,
+			'imported slide binds to the first layout of the first master'
+		)
 
 		// No dangling internal relationships anywhere in the package.
 		for (const partName of opc.parts.keys()) {
@@ -154,7 +158,7 @@ describe("Presentation.importSlide({ theme: 'restyle' })", () => {
 		const target = await openFixture('mixed')
 		const source = await openFixture('mixed')
 		assert(
-			partText(source.opc.part(source.slides[THEMED_SLIDE_INDEX].partName)).includes('clrMapOvr'),
+			partText(source.opc.part(at(source.slides, THEMED_SLIDE_INDEX).partName)).includes('clrMapOvr'),
 			'precondition: the source slide carries a clrMapOvr'
 		)
 
@@ -182,7 +186,7 @@ describe("Presentation.importSlide({ theme: 'restyle' })", () => {
 		const imported = target.importSlide(source, 0, { theme: 'restyle' }) // slide1: no own p:bg
 		const xml = await partXml(await target.save(), imported.partName)
 
-		const sourceHasNoBg = !/<p:bg>/.test(partText(source.opc.part(source.slides[0].partName)))
+		const sourceHasNoBg = !/<p:bg>/.test(partText(source.opc.part(at(source.slides, 0).partName)))
 		assert(sourceHasNoBg, 'precondition: the source slide defines no own p:bg')
 		assert(!/<p:bg>/.test(xml), 'restyle does not bake an inherited p:bg onto the slide')
 	})
@@ -192,8 +196,8 @@ describe("Presentation.importSlide({ theme: 'restyle' })", () => {
 		// `p:sldMasterIdLst` but appends its relationship, so the deck's first master and the first
 		// master relationship in `presentation.xml.rels` are different parts.
 		const target = await openFixture('empty')
-		const [grafted] = target.importSlideMasters(await openFixture('image'), { primary: true })
-		const first = target.layouts()[0]
+		const [grafted] = take(target.importSlideMasters(await openFixture('image'), { primary: true }), 1)
+		const first = at(target.layouts(), 0)
 		assertEqual(first.masterPartName, grafted.partName, 'the grafted master leads the gallery')
 
 		const imported = target.importSlide(await openFixture('multi-theme'), 0, { theme: 'restyle' })

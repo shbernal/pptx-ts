@@ -9,7 +9,7 @@
 
 import { describe, test } from 'vitest'
 import { applyColorTransforms, type ColorTransform, type Slide } from '../../dist/read.js'
-import { assert, defined } from '../helpers.ts'
+import { assert, defined, at, take } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 /** Parse `RRGGBB` → [r,g,b] 0–255. */
@@ -22,7 +22,7 @@ function channels(hex: string) {
 function assertHexClose(actual: string, expected: string, tol: number, label: string) {
 	const a = channels(actual)
 	const e = channels(expected)
-	const ok = a.every((v, i) => Math.abs(v - e[i]) <= tol)
+	const ok = a.every((v, i) => Math.abs(v - at(e, i)) <= tol)
 	assert(ok, `${label}: expected ~${expected} (±${tol}/channel), got ${actual}`)
 }
 
@@ -45,12 +45,12 @@ const POWERPOINT_ORACLE = [
 	['accent3-shade50', '795F0E'],
 	['accent4-tint40', 'A6CDBC'],
 	['lt2-lm20-lo80', 'FBFBFB'],
-]
+] as const
 
 describe('applyColorTransforms — PowerPoint fixture oracle', () => {
 	for (const [shapeName, expected] of POWERPOINT_ORACLE) {
 		test(shapeName, async () => {
-			const shape = shapeNamed((await openFixture('theme-colors')).slides[0], shapeName)
+			const shape = shapeNamed(at((await openFixture('theme-colors')).slides, 0), shapeName)
 			const { hex: base, transforms } = defined(shape.resolvedFill)
 			const { hex } = applyColorTransforms(base, transforms)
 			assertHexClose(hex, expected, 1, shapeName)
@@ -104,7 +104,7 @@ describe('applyColorTransforms — saturation/hue/alpha modifiers', () => {
 
 	test('satOff raises saturation of a gray toward its hue (red at h=0)', () => {
 		const { hex } = applyColorTransforms('808080', tf(['satOff', 50000]))
-		const [r, g, b] = channels(hex)
+		const [r, g, b] = take(channels(hex), 3)
 		assert(r > g && g === b, `satOff on gray (h=0) tilts red: expected r>g===b, got ${hex}`)
 	})
 

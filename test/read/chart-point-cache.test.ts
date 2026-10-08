@@ -24,7 +24,7 @@ import { ChartType, type CHART_NAME } from '../../dist/node.js'
 import { Presentation, isGraphicFrame } from '../../dist/read.js'
 import { describe, test } from 'vitest'
 import { authorRead } from './authored.ts'
-import { assert, assertEqual, captureDiagnostics, defined } from '../helpers.ts'
+import { assert, assertEqual, captureDiagnostics, defined, at } from '../helpers.ts'
 import { readFixture } from './corpus.ts'
 
 /** Author a chart, rewrite its chart part with `edit`, load the result back and hand it to `read`. */
@@ -45,7 +45,7 @@ async function authorEditRead<T>(
 	const zip = await JSZip.loadAsync(buf)
 	const partName = Object.keys(zip.files).find((n) => /^ppt\/charts\/chart(Ex)?\d+\.xml$/.test(n))
 	assert(partName, `expected a chart part; got ${Object.keys(zip.files).filter((n) => n.includes('charts'))}`)
-	zip.file(partName, edit(await zip.files[partName].async('string')))
+	zip.file(partName, edit(await defined(zip.file(partName)).async('string')))
 	return read(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
 }
 
@@ -79,7 +79,7 @@ describe('Chart point caches are sized by the points that are there', () => {
 				(presentation) => {
 					const chart = firstChartOf(presentation)
 					assert(chart, 'the edited deck still reads as a chart')
-					return { values: chart.series[0].values.length, categories: chart.categories.length }
+					return { values: at(chart.series, 0).values.length, categories: chart.categories.length }
 				}
 			)
 		)
@@ -93,7 +93,7 @@ describe('Chart point caches are sized by the points that are there', () => {
 			authorEditRead(
 				ChartType.bar,
 				(xml) => replaceLast(xml, '<c:pt idx="3">', '<c:pt idx="900000000">'),
-				(presentation) => defined(firstChartOf(presentation)).series[0].values.length
+				(presentation) => at(defined(firstChartOf(presentation)).series, 0).values.length
 			)
 		)
 		// A worksheet has 1,048,576 rows, so a point at index 900,000,000 cannot describe data
@@ -109,7 +109,7 @@ describe('Chart point caches are sized by the points that are there', () => {
 			authorEditRead(
 				ChartType.bar,
 				(xml) => replaceLast(xml, '<c:pt idx="3">', '<c:pt idx="3.5">'),
-				(presentation) => defined(firstChartOf(presentation)).series[0].values
+				(presentation) => at(defined(firstChartOf(presentation)).series, 0).values
 			)
 		)
 		assertEqual(JSON.stringify(last.result), JSON.stringify([10, 20, 30]), 'the fractional last point is dropped')
@@ -119,7 +119,7 @@ describe('Chart point caches are sized by the points that are there', () => {
 			authorEditRead(
 				ChartType.bar,
 				(xml) => replaceLast(xml, '<c:pt idx="0">', '<c:pt idx="0.5">'),
-				(presentation) => defined(firstChartOf(presentation)).series[0].values
+				(presentation) => at(defined(firstChartOf(presentation)).series, 0).values
 			)
 		)
 		assertEqual(
@@ -152,7 +152,7 @@ describe('Chart point caches are sized by the points that are there', () => {
 			authorEditRead(
 				ChartType.bar,
 				(xml) => xml,
-				(presentation) => defined(firstChartOf(presentation)).series[0].values.length
+				(presentation) => at(defined(firstChartOf(presentation)).series, 0).values.length
 			)
 		)
 		assertEqual(result, 4, 'the untouched cache reads its four points')
@@ -168,13 +168,13 @@ describe('The bound holds through the public read entry point', () => {
 	test('a hostile ptCount on a PowerPoint-authored deck survives load + series access', async () => {
 		const zip = await JSZip.loadAsync(await readFixture('bar-chart-data-labels'))
 		const part = 'ppt/charts/chart1.xml'
-		const xml = await zip.files[part].async('string')
+		const xml = await defined(zip.file(part)).async('string')
 		zip.file(part, xml.replace(/<c:ptCount val="\d+"\/>/g, '<c:ptCount val="4294967295"/>'))
 		const { result } = await captureDiagnostics(async () => {
 			const presentation = await Presentation.load(await zip.generateAsync({ type: 'uint8array' }))
 			const chart = firstChartOf(presentation)
 			assert(chart, 'the deck still reads as a chart')
-			return chart.series[0].values.length
+			return at(chart.series, 0).values.length
 		})
 		assert(result > 0 && result < 1000, `the series is sized by its real points, not the claim; got ${result}`)
 	})
