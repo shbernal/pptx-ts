@@ -63,13 +63,13 @@ Each table lists what you see, what causes it, and what to change. The last colu
 
 ## Report a problem
 
-Open an issue at <https://github.com/shbernal/ts-pptx/issues> when no fix above applies, or when [Errors and warnings](errors-and-warnings.md) says the failure is worth reporting. Include the shortest script that reproduces it. Never attach a deck from a real project.
+Open an issue at <https://github.com/shbernal/pptx-ts/issues> when no fix above applies, or when [Errors and warnings](errors-and-warnings.md) says the failure is worth reporting. Include the shortest script that reproduces it. Never attach a deck from a real project.
 
 An `InternalError` means an invariant of the library did not hold. Its message ends with the link to file it:
 
 ```text
 This is a bug in ts-pptx, not in your deck or your code. Please report it:
-https://github.com/shbernal/ts-pptx/issues/new?template=agent-report.yml
+https://github.com/shbernal/pptx-ts/issues/new?template=agent-report.yml
 ```
 
-A check that fails while you work on the repository is covered in [When a check fails](https://github.com/shbernal/ts-pptx/blob/main/docs/contributing/development.md#when-a-check-fails).
+A check that fails while you work on the repository is covered in [When a check fails](https://github.com/shbernal/pptx-ts/blob/main/docs/contributing/development.md#when-a-check-fails).

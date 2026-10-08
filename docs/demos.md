@@ -44,14 +44,14 @@ embedded video and a 3D model in it; it loads its media from disk by path, which
 is not previewed here.
 
 ```bash
-git clone https://github.com/shbernal/ts-pptx
+git clone https://github.com/shbernal/pptx-ts
 cd ts-pptx && pnpm install
 pnpm demos:build                    # both decks
 pnpm demos:build quarterly-review   # just this one
 ```
 
 Decks land in `demos/showcases/output/`. See
-[the demos README](https://github.com/shbernal/ts-pptx/blob/main/demos/README.md) for
+[the demos README](https://github.com/shbernal/pptx-ts/blob/main/demos/README.md) for
 what else is in there.
 
 To build a deck of your own, start with [Your first deck](getting-started/first-deck.md).

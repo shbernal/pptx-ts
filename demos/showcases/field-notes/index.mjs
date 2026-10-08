@@ -639,7 +639,7 @@ function addColophon(pptx) {
 					color: BRAND.amber,
 					fontSize: 12,
 					bold: true,
-					hyperlink: { url: 'https://github.com/shbernal/ts-pptx', tooltip: 'ts-pptx on GitHub' },
+					hyperlink: { url: 'https://github.com/shbernal/pptx-ts', tooltip: 'ts-pptx on GitHub' },
 				},
 			},
 			{ text: '  ·  regenerate this deck with  ', options: { color: BRAND.ash, fontSize: 12 } },

@@ -6,7 +6,7 @@
 		"url": "https://github.com/shbernal/"
 	},
 	"description": "Create PowerPoint presentations (.pptx) from TypeScript and modern JavaScript",
-	"homepage": "https://shbernal.github.io/ts-pptx/",
+	"homepage": "https://shbernal.github.io/pptx-ts/",
 	"license": "MIT",
 	"packageManager": "pnpm@12.3.4",
 	"type": "module",
@@ -226,7 +226,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/shbernal/ts-pptx.git"
+		"url": "git+https://github.com/shbernal/pptx-ts.git"
 	},
 	"keywords": [
 		"pptx",
@@ -239,6 +239,6 @@
 		"html"
 	],
 	"bugs": {
-		"url": "https://github.com/shbernal/ts-pptx/issues"
+		"url": "https://github.com/shbernal/pptx-ts/issues"
 	}
 }

@@ -3,7 +3,7 @@
 [![npm](https://img.shields.io/npm/v/pptx-ts)](https://www.npmjs.com/package/pptx-ts)
 [![weekly downloads](https://img.shields.io/npm/dw/pptx-ts.svg?label=npm%20downloads&logo=npm)](https://www.npmjs.com/package/pptx-ts)
 [![total downloads](https://img.shields.io/npm/dt/pptx-ts.svg?label=npm%20total%20downloads&logo=npm)](https://www.npmjs.com/package/pptx-ts)
-[![CI](https://github.com/shbernal/ts-pptx/actions/workflows/ci.yml/badge.svg)](https://github.com/shbernal/ts-pptx/actions/workflows/ci.yml)
+[![CI](https://github.com/shbernal/pptx-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/shbernal/pptx-ts/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 **Write a program, get a PowerPoint file.**
@@ -130,7 +130,7 @@ PptxGenJS](docs/comparison-syntax.md).
 ## Documentation
 
 The documentation site, with the generated API reference, is at
-**<https://shbernal.github.io/ts-pptx/>**. The [demos page](https://shbernal.github.io/ts-pptx/demos)
+**<https://shbernal.github.io/pptx-ts/>**. The [demos page](https://shbernal.github.io/pptx-ts/demos)
 builds a quarterly review deck in your browser and previews the slides.
 
 - Start with the [Introduction](docs/getting-started/introduction.md),
@@ -144,7 +144,7 @@ builds a quarterly review deck in your browser and previews the slides.
 
 ## Something wrong, or missing?
 
-Open an issue: <https://github.com/shbernal/ts-pptx/issues>. Errors the library knows
+Open an issue: <https://github.com/shbernal/pptx-ts/issues>. Errors the library knows
 are its own fault print that link themselves.
 
 If an agent writes most of your code, install the `ts-pptx-upstream` skill that ships inside

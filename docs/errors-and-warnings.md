@@ -89,7 +89,7 @@ try {
 makeXmlSlideRel: no slide at index 3
 
 This is a bug in ts-pptx, not in your deck or your code. Please report it:
-https://github.com/shbernal/ts-pptx/issues/new?template=agent-report.yml
+https://github.com/shbernal/pptx-ts/issues/new?template=agent-report.yml
 ```
 
 The constructor adds the notice, so every `InternalError` carries it. No other class changes its message. The notice is still message text, so do not assert on it.
@@ -108,9 +108,9 @@ The project's bar is output that opens cleanly in Microsoft PowerPoint. It appli
 | a diagnostic | it fires when it should not, stays silent when it should fire, or carries the wrong code |
 | no error | PowerPoint repairs or misrenders the output, or a read and write round trip loses a construct |
 
-Open an issue from the [new-issue chooser](https://github.com/shbernal/ts-pptx/issues/new/choose). Issues are public, so describe your project's need without its data.
+Open an issue from the [new-issue chooser](https://github.com/shbernal/pptx-ts/issues/new/choose). Issues are public, so describe your project's need without its data.
 
-The package ships the `ts-pptx-upstream` skill in its `skills` directory, and `npx skills add shbernal/ts-pptx` installs it. The skill walks through triage, reducing the failure to a script that builds its own deck, and filing the issue.
+The package ships the `ts-pptx-upstream` skill in its `skills` directory, and `npx skills add shbernal/pptx-ts` installs it. The skill walks through triage, reducing the failure to a script that builds its own deck, and filing the issue.
 
 ### The originating failure is kept on `cause`
 
@@ -204,5 +204,5 @@ The record keeps one entry per distinct message until you clear it, and most of 
 
 - [Core concepts](getting-started/concepts.md)
 - [Troubleshooting](troubleshooting.md)
-- [Errors and diagnostics](https://github.com/shbernal/ts-pptx/blob/main/docs/contributing/development.md#errors-and-diagnostics), for adding a throw or warning site to the library
+- [Errors and diagnostics](https://github.com/shbernal/pptx-ts/blob/main/docs/contributing/development.md#errors-and-diagnostics), for adding a throw or warning site to the library
 - API reference: [`TsPptxError`](reference/api/index/classes/TsPptxError.md), [`TsPptxCode`](reference/api/index/type-aliases/TsPptxCode.md), [`ErrorCode`](reference/api/index/type-aliases/ErrorCode.md), [`Diagnostic`](reference/api/index/interfaces/Diagnostic.md), [`DiagnosticCode`](reference/api/index/type-aliases/DiagnosticCode.md), [`setDiagnosticHandler`](reference/api/index/functions/setDiagnosticHandler.md), [`resetDiagnosticState`](reference/api/index/functions/resetDiagnosticState.md)

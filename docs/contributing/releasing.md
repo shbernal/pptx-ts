@@ -18,7 +18,7 @@ stages that copy: the `name` differs, the README gains a banner naming `pptx-ts`
 block is dropped. You never bump, tag or stage the alias by hand.
 
 `.github/workflows/publish.yml` publishes both, when a GitHub Release is published. The
-[`release-publish` skill](https://github.com/shbernal/ts-pptx/blob/main/.agents/skills/release-publish/SKILL.md)
+[`release-publish` skill](https://github.com/shbernal/pptx-ts/blob/main/.agents/skills/release-publish/SKILL.md)
 has the commands for each step. This page says why the steps are shaped the way they are.
 
 ## The release
@@ -42,10 +42,10 @@ flowchart TD
 ## Prerequisites
 
 - Each name, `pptx-ts` and `@shbernal/ts-pptx`, has its own trusted publisher on npm, because npm
-  exchanges the OIDC token per package. Both name repository `shbernal/ts-pptx`, workflow
+  exchanges the OIDC token per package. Both name repository `shbernal/pptx-ts`, workflow
   `publish.yml`, environment `npm-publish`, and the action `npm publish`.
 - The GitHub environment `npm-publish` exists.
-- `package.json#repository.url` points at `shbernal/ts-pptx`.
+- `package.json#repository.url` points at `shbernal/pptx-ts`.
 - No `NPM_TOKEN` secret. The workflow authenticates through OIDC with `id-token: write`, and passes
   `--provenance` so provenance stays required if npm's default changes.
 
@@ -109,7 +109,7 @@ The local gate runs before this command, so the tag lands on a commit that alrea
 
 ## What the workflow checks
 
-- It runs only in `shbernal/ts-pptx`.
+- It runs only in `shbernal/pptx-ts`.
 - Its `gate` job calls `ci.yml` through `workflow_call`, and `publish` needs `gate`, so every CI leg
   passes first. [What gates a release](testing.md#what-gates-a-release) lists them.
 - `GITHUB_REF_TYPE` must be `tag`, so a manual dispatch from a branch fails.
@@ -125,7 +125,7 @@ Publishing two names is not atomic. The canonical publish can succeed and the al
 leaves the version on npm under `pptx-ts` only. Re-dispatch the workflow on the same tag:
 
 ```bash
-gh workflow run publish.yml --repo shbernal/ts-pptx --ref vX.Y.Z
+gh workflow run publish.yml --repo shbernal/pptx-ts --ref vX.Y.Z
 ```
 
 The guard passes because one name still lacks the version, the `pptx-ts` step skips, and the alias
@@ -137,7 +137,7 @@ never the release that already went out. The selected ref must be the tag, not `
 Comment on each issue the release closes with the version that carries the fix:
 
 ```bash
-gh issue comment <N> --repo shbernal/ts-pptx --body "Released in X.Y.Z."
+gh issue comment <N> --repo shbernal/pptx-ts --body "Released in X.Y.Z."
 ```
 
 Issues here close when the fix merges, and merged-but-unreleased can last weeks. A consumer who

@@ -3,7 +3,7 @@ name: charcheck-upstream
 description: Report a charcheck bug, a silent miss, or a wrong `--fix` rewrite to its GitHub tracker from a project that depends on it. Use when charcheck passes a file you know holds a banned character, when it flags a region its scope claims not to read, when `--fix` changes prose you did not want changed, when it crashes on a file valid for its language, when a finding's line or column does not point at the character, and above all whenever you are about to add an `exclude` glob, write a suppression comment, or drop a rule to `raw` so that charcheck stops reporting something. Filing the bug is the fix; the suppression is the stopgap.
 metadata:
   # Local addition, not upstream's. Everything under .agents/skills/ carries this so that
-  # `npx skills add shbernal/ts-pptx` does not offer it to a ts-pptx consumer: this skill
+  # `npx skills add shbernal/pptx-ts` does not offer it to a ts-pptx consumer: this skill
   # is about *charcheck's* tracker, and a consumer of ts-pptx need not depend on charcheck
   # at all. `npx skills update charcheck-upstream` overwrites the file wholesale, so
   # re-apply these three lines after every refresh.

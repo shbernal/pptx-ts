@@ -169,7 +169,7 @@ Either way the order is:
    `.agents/skills/powerpoint-fixture-authoring/scripts/verify-powerpoint-fixture.ps1`, which
    runs the same way.
 2. Record provenance and SHA-256 in
-   [test/read/fixtures/README.md](https://github.com/shbernal/ts-pptx/blob/main/test/read/fixtures/README.md).
+   [test/read/fixtures/README.md](https://github.com/shbernal/pptx-ts/blob/main/test/read/fixtures/README.md).
 3. Wire the test to the fixture: through the read harness for a read accessor, or a
    `test/schema-cases.js` comparison for a write-side oracle.
 4. Implement last.

@@ -128,7 +128,7 @@ defineRegressionSuite('Error taxonomy', [
 
 			assert(internal.message.startsWith('no slide at index 3'), 'the invariant that broke leads')
 			assert(
-				internal.message.includes('https://github.com/shbernal/ts-pptx/issues/new'),
+				internal.message.includes('https://github.com/shbernal/pptx-ts/issues/new'),
 				'the message points at the tracker: ' + internal.message
 			)
 			assertEqual(internal.code, 'slide/rel-index-out-of-range', 'the code is untouched by the notice')

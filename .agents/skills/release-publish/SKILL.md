@@ -2,7 +2,7 @@
 name: release-publish
 description: Use to cut and publish a new ts-pptx version (any "do a release", "minor/major/patch release", "publish vX.Y.Z", "ship a release" request in this repo). Encodes the exact release flow: the comparison refresh, the CHANGELOG, the `pnpm version` bump that writes the other two version files and tags, and the GitHub Release that triggers CI. IMPORTANT: publishing to npm is done by CI (trusted publishing), never by running `npm publish` locally. Do not run `npm publish`, `npm login`, or `npm token` for a release.
 metadata:
-  # For working *on* ts-pptx, not *with* it. `npx skills add shbernal/ts-pptx` walks
+  # For working *on* ts-pptx, not *with* it. `npx skills add shbernal/pptx-ts` walks
   # .claude/skills/ (a symlink to this tree) as well as the published skills/, and this flag
   # is what keeps it out of the menu a consumer sees. Set INSTALL_INTERNAL_SKILLS=1 to install
   # it anyway.
@@ -76,7 +76,7 @@ above it:
 ```
 ## [Unreleased]
 
-## [X.Y.Z](https://github.com/shbernal/ts-pptx/releases/tag/vX.Y.Z) - YYYY-MM-DD
+## [X.Y.Z](https://github.com/shbernal/pptx-ts/releases/tag/vX.Y.Z) - YYYY-MM-DD
 
 ### Fixed
 - ...
@@ -140,7 +140,7 @@ gh release create vX.Y.Z --title vX.Y.Z --notes-file <path/to/notes.md>
 
 - <the changelog bullet(s) for this version>
 
-**Full changelog:** https://github.com/shbernal/ts-pptx/blob/vX.Y.Z/CHANGELOG.md
+**Full changelog:** https://github.com/shbernal/pptx-ts/blob/vX.Y.Z/CHANGELOG.md
 ```
 
 ### 8. Watch the publish run
@@ -158,13 +158,13 @@ as skipped means that name already had the version, which is the expected shape 
 ```bash
 npm view pptx-ts@X.Y.Z version dist-tags --json
 npm view @shbernal/ts-pptx@X.Y.Z version dist-tags --json
-gh release view vX.Y.Z --repo shbernal/ts-pptx
+gh release view vX.Y.Z --repo shbernal/pptx-ts
 ```
 
 Comment on every issue the release closes (the CHANGELOG entry cites them):
 
 ```bash
-gh issue comment <N> --repo shbernal/ts-pptx --body "Released in X.Y.Z."
+gh issue comment <N> --repo shbernal/pptx-ts --body "Released in X.Y.Z."
 ```
 
 After a major release, open an issue on `pptx-html` asking for a matching release. Do not hold the
@@ -180,7 +180,7 @@ release for it.
   tag. The guard passes because the alias still lacks the version, and the `pptx-ts` step skips.
 
   ```bash
-  gh workflow run publish.yml --repo shbernal/ts-pptx --ref vX.Y.Z
+  gh workflow run publish.yml --repo shbernal/pptx-ts --ref vX.Y.Z
   ```
 
 - **A transient failure**: the same `gh workflow run` command re-runs the workflow from the tag.

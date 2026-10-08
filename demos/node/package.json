@@ -8,13 +8,13 @@
 	},
 	"type": "module",
 	"description": "Streaming a generated deck from a Node HTTP server",
-	"homepage": "https://github.com/shbernal/ts-pptx#readme",
+	"homepage": "https://github.com/shbernal/pptx-ts#readme",
 	"scripts": {
 		"demo-stream": "node demo_stream.js"
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/shbernal/ts-pptx.git"
+		"url": "git+https://github.com/shbernal/pptx-ts.git"
 	},
 	"license": "MIT",
 	"dependencies": {

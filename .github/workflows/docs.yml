@@ -53,7 +53,7 @@ jobs:
 
   deploy:
     name: Deploy docs
-    if: github.event_name != 'pull_request' && github.repository == 'shbernal/ts-pptx'
+    if: github.event_name != 'pull_request' && github.repository == 'shbernal/pptx-ts'
     needs: build
     runs-on: ubuntu-latest
     environment:

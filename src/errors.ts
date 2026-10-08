@@ -150,7 +150,7 @@ export class MediaError extends TsPptxError {
  */
 const REPORT_NOTICE =
 	'This is a bug in ts-pptx, not in your deck or your code. Please report it:\n' +
-	'https://github.com/shbernal/ts-pptx/issues/new?template=agent-report.yml'
+	'https://github.com/shbernal/pptx-ts/issues/new?template=agent-report.yml'
 
 /**
  * An invariant the library maintains itself did not hold.

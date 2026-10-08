@@ -69,7 +69,7 @@ function samePath(a, b) {
 /**
  * True when this package is being built as somebody's dependency rather than developed here.
  *
- * `npm i github:shbernal/ts-pptx#<sha>` runs `prepare` — this script included — inside a
+ * `npm i github:shbernal/pptx-ts#<sha>` runs `prepare` — this script included — inside a
  * throwaway clone under the package manager's cache, and the devDependencies npm installs in
  * order to run `prepare` put lefthook on disk there. So the "no lefthook, nothing to do" exit
  * in `install()` does *not* cover that case, and what happens instead is at best pointless

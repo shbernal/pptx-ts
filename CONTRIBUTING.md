@@ -80,7 +80,7 @@ a test suite.
 
 - `demos/showcases` builds the two flagship decks from one command.
 - `demos/node` exercises Node.js ESM generation and stream output.
-- The [demos page](https://shbernal.github.io/ts-pptx/demos) builds the quarterly
+- The [demos page](https://shbernal.github.io/pptx-ts/demos) builds the quarterly
   review deck in a browser.
 
 ## Scope
@@ -100,7 +100,7 @@ scope statement and suggested testing approaches.
 ## Reporting bugs and proposing changes
 
 GitHub issues are the only tracker; there is no local ledger. The
-[new-issue chooser](https://github.com/shbernal/ts-pptx/issues/new/choose) offers three
+[new-issue chooser](https://github.com/shbernal/pptx-ts/issues/new/choose) offers three
 forms, from `.github/ISSUE_TEMPLATE/`:
 
 - **Bug or fidelity limit**: wrong output, a repair prompt, a regression, or a
@@ -162,7 +162,7 @@ ships inside the package, so it is already on disk:
 # completes unattended, which is how an agent will be running it.
 npx skills add ./node_modules/pptx-ts -s '*' -a claude-code -a codex -a universal -y
 
-npx skills add shbernal/ts-pptx   # same flags, straight from the repo instead of node_modules
+npx skills add shbernal/pptx-ts   # same flags, straight from the repo instead of node_modules
 ```
 
 Drop the flags for an interactive prompt if you are at a terminal yourself. Reaching
@@ -190,10 +190,10 @@ Any commit is installable directly from GitHub, without waiting for a release. T
 how you try a fix before it ships:
 
 ```bash
-pnpm add github:shbernal/ts-pptx#<commit-sha>
+pnpm add github:shbernal/pptx-ts#<commit-sha>
 ```
 
-`main` (`github:shbernal/ts-pptx`) works too, but pin the sha: a branch spec
+`main` (`github:shbernal/pptx-ts`) works too, but pin the sha: a branch spec
 re-resolves to whatever is at the head of it when the lockfile is next written.
 
 `dist/` is not committed, so this builds the package on install: your package manager

@@ -7,7 +7,7 @@ by `pnpm run check:package`. See
 [docs/contributing/testing.md](../docs/contributing/testing.md#what-the-demos-verify) for why it works that way.
 
 If you only want to *see* a deck, you do not need any of this: the
-[demos page](https://shbernal.github.io/ts-pptx/demos) builds one in your browser and shows
+[demos page](https://shbernal.github.io/pptx-ts/demos) builds one in your browser and shows
 you the slides.
 
 ## Build the showcase decks

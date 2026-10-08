@@ -59,7 +59,7 @@ function readApiSidebar(): DefaultTheme.SidebarItem[] | undefined {
 const apiSidebar = readApiSidebar()
 
 export default defineConfig({
-	base: process.env.VITEPRESS_BASE ?? '/ts-pptx/',
+	base: process.env.VITEPRESS_BASE ?? '/pptx-ts/',
 	cleanUrls: true,
 	description: docsConfig.description,
 	lang: 'en-US',
@@ -74,7 +74,7 @@ export default defineConfig({
 			{ text: 'Guide', link: '/getting-started/introduction' },
 			{ text: 'Demos', link: '/demos' },
 			{ text: 'API', link: '/reference/api/' },
-			{ text: 'GitHub', link: 'https://github.com/shbernal/ts-pptx' },
+			{ text: 'GitHub', link: 'https://github.com/shbernal/pptx-ts' },
 		],
 		search: {
 			provider: 'local',

@@ -517,7 +517,7 @@ export type InternalErrorCode =
  * Microsoft PowerPoint", and it reads in both directions. An `InvalidOptionErrorCode` is worth
  * reporting only if the deck it refused is one PowerPoint can express.
  *
- * `npx skills add shbernal/ts-pptx` installs the skill that walks through filing one.
+ * `npx skills add shbernal/pptx-ts` installs the skill that walks through filing one.
  */
 export type ErrorCode =
 	| InvalidOptionErrorCode

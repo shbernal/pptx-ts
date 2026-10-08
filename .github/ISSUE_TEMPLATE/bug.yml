@@ -17,7 +17,7 @@ body:
 
         - Confirm the problem still happens on the **latest release**.
         - ts-pptx is **ESM, Node-first**. CommonJS and IIFE/global browser bundles are not supported and reports about them will be closed.
-        - If this is a security problem, **stop** — do not file it publicly. See [SECURITY.md](https://github.com/shbernal/ts-pptx/blob/main/SECURITY.md).
+        - If this is a security problem, **stop** — do not file it publicly. See [SECURITY.md](https://github.com/shbernal/pptx-ts/blob/main/SECURITY.md).
         - If a downstream consumer prompted this, describe the need **anonymously**: no consumer name, deck or client names, or file paths from its tree.
 
   - type: dropdown
@@ -61,7 +61,7 @@ body:
     id: construct-key
     attributes:
       label: Construct key
-      description: If the gap surfaces as a conversion fidelity note, its key — e.g. `table.rowAuto`. See [pptx-to-script](https://shbernal.github.io/ts-pptx/reference/pptx-to-script).
+      description: If the gap surfaces as a conversion fidelity note, its key — e.g. `table.rowAuto`. See [pptx-to-script](https://shbernal.github.io/pptx-ts/reference/pptx-to-script).
       placeholder: table.rowAuto
     validations:
       required: false

@@ -169,7 +169,7 @@ command, and you were going to need it anyway once the fix shipped.
 Then the tracker:
 
 ```bash
-gh issue list --repo shbernal/ts-pptx --state all --limit 20 --search "<distinctive phrase>"
+gh issue list --repo shbernal/pptx-ts --state all --limit 20 --search "<distinctive phrase>"
 ```
 
 Search the error `code` (`table/invalid-border`, `oxml/node-has-no-document`), the
@@ -204,11 +204,11 @@ If none fits, file a blank issue rather than bending one of them. Blank issues a
 enabled deliberately.
 
 `gh` defaults to the *current* repository, which here is the consumer's, not ts-pptx's.
-Always pass `--repo shbernal/ts-pptx` explicitly, or you will file the bug into the wrong
+Always pass `--repo shbernal/pptx-ts` explicitly, or you will file the bug into the wrong
 tracker.
 
 ```bash
-gh issue create --repo shbernal/ts-pptx \
+gh issue create --repo shbernal/pptx-ts \
   --title "<InternalError|reads|writes|round-trip|types>: <one specific symptom>" \
   --label agent-reported \
   --body-file <a path your repo ignores>/ts-pptx-report.md
@@ -272,7 +272,7 @@ which means re-reading the issue and re-deriving the reproduction someone alread
 Write the comment so that verifying the fix is running one line:
 
 ```ts
-// Workaround for ts-pptx#<N>: https://github.com/shbernal/ts-pptx/issues/<N>
+// Workaround for ts-pptx#<N>: https://github.com/shbernal/pptx-ts/issues/<N>
 //
 // <what the library does instead, as an observable: the XML it emits, the value the
 //  accessor returns, the option it ignores.>
@@ -294,13 +294,13 @@ fix.
 
 ```bash
 npm view pptx-ts version                          # what is out
-gh issue list --repo shbernal/ts-pptx --state closed --limit 30
+gh issue list --repo shbernal/pptx-ts --state closed --limit 30
 rg 'ts-pptx#'                                     # every stopgap here
 ```
 
 **A closed issue is not a released fix.** A fix can sit merged and unreleased for weeks,
 so check the published version, never the issue state. The repository's
-[`CHANGELOG.md`](https://github.com/shbernal/ts-pptx/blob/main/CHANGELOG.md) and the
+[`CHANGELOG.md`](https://github.com/shbernal/pptx-ts/blob/main/CHANGELOG.md) and the
 GitHub release notes name the issue numbers each version closes. Bump the pin, reinstall,
 and refresh the installed skill in the same commit. Then, per stopgap:
 
@@ -323,7 +323,7 @@ and refresh the installed skill in the same commit. Then, per stopgap:
 
 Print the assembled report and this URL, and ask the user to paste it in:
 
-<https://github.com/shbernal/ts-pptx/issues/new?template=agent-report.yml>
+<https://github.com/shbernal/pptx-ts/issues/new?template=agent-report.yml>
 
 ## Keeping this skill current
 

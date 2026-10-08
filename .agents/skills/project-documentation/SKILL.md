@@ -2,7 +2,7 @@
 name: project-documentation
 description: Use when creating, updating, or reviewing README, docs, AGENTS.md, CLI docs, config docs, architecture docs, troubleshooting docs, or behavior-linked documentation in this repository.
 metadata:
-  # For working *on* ts-pptx, not *with* it. `npx skills add shbernal/ts-pptx` walks
+  # For working *on* ts-pptx, not *with* it. `npx skills add shbernal/pptx-ts` walks
   # .claude/skills/ (a symlink to this tree) as well as the published skills/, and this flag
   # is what keeps it out of the menu a consumer sees. Set INSTALL_INTERNAL_SKILLS=1 to install
   # it anyway.
@@ -75,7 +75,7 @@ built-in table style"). How the render evidence was obtained belongs in
   `llms-full.txt` and the generated doc index leave them out. `docs:list` still lists
   them, marked as repository-only.
 - A page the site serves links to one by its GitHub URL,
-  `https://github.com/shbernal/ts-pptx/blob/main/docs/contributing/<page>.md`, never
+  `https://github.com/shbernal/pptx-ts/blob/main/docs/contributing/<page>.md`, never
   relatively: the relative link is a dead link in the site. `docs:check` rejects it.
 - A repository-only page links relatively to any page under `docs/`, which GitHub
   resolves. It never links a site route like `/reading/`, which GitHub does not.

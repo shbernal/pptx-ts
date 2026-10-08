@@ -119,7 +119,7 @@ export async function stale(root = ROOT) {
  * Run the `build` script through whichever package manager is running this script.
  *
  * Not a hardcoded `pnpm`, because of `prepare`. This repo is a pnpm repo, but a consumer's
- * `npm i github:shbernal/ts-pptx#<sha>` runs `prepare` in *their* toolchain — and `pnpm` is
+ * `npm i github:shbernal/pptx-ts#<sha>` runs `prepare` in *their* toolchain — and `pnpm` is
  * declared here only as `packageManager`, never installed as a dependency, so `run()` finds
  * no local bin and falls through to a `pnpm.cmd` shim that a plain-npm consumer does not
  * have. `npm_execpath` is set by npm, pnpm and yarn alike and points at the JS entry of the
@@ -154,7 +154,7 @@ Options:
 	// It exists for the `prepare` script, which runs in two unrelated places. In this repo it
 	// runs on every install, where rebuilding a *stale* dist/ would be wrong — `pnpm run build`
 	// and `pnpm run watch` would then build twice, and every other script already front-loads
-	// its own unconditional `ensure-dist`. In a consumer's `npm i github:shbernal/ts-pptx#<sha>`
+	// its own unconditional `ensure-dist`. In a consumer's `npm i github:shbernal/pptx-ts#<sha>`
 	// it is the only build that will ever run: `dist/` is gitignored, so the checkout npm packs
 	// has no build output at all unless `prepare` produces one. Absent means build; stale is
 	// somebody else's question.

@@ -27,13 +27,13 @@ body:
         reproduction" field below is the one that decides whether this gets fixed.
 
         Two other forms may fit better:
-        [bug](https://github.com/shbernal/ts-pptx/issues/new?template=bug.yml) for wrong
+        [bug](https://github.com/shbernal/pptx-ts/issues/new?template=bug.yml) for wrong
         output or a repair prompt found while working *on* a deck, and
-        [api-gap](https://github.com/shbernal/ts-pptx/issues/new?template=api-gap.yml) for
+        [api-gap](https://github.com/shbernal/pptx-ts/issues/new?template=api-gap.yml) for
         OOXML the API cannot reach. If none fits, a blank issue is fine.
 
         The `ts-pptx-upstream` skill walks through all of this:
-        `npx skills add shbernal/ts-pptx --skill ts-pptx-upstream`
+        `npx skills add shbernal/pptx-ts --skill ts-pptx-upstream`
 
   - type: input
     id: version-ts-pptx
@@ -134,7 +134,7 @@ body:
     id: construct-key
     attributes:
       label: Construct key
-      description: If the gap surfaces as a conversion fidelity note, its key — e.g. `table.rowAuto`. See [pptx-to-script](https://shbernal.github.io/ts-pptx/reference/pptx-to-script).
+      description: If the gap surfaces as a conversion fidelity note, its key — e.g. `table.rowAuto`. See [pptx-to-script](https://shbernal.github.io/pptx-ts/reference/pptx-to-script).
       placeholder: table.rowAuto
     validations:
       required: false

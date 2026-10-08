@@ -929,7 +929,7 @@
 	},
 	"health": {
 		"ts-pptx": {
-			"repo": "shbernal/ts-pptx",
+			"repo": "shbernal/pptx-ts",
 			"defaultBranch": "master",
 			"lastDefaultBranchCommit": "2026-09-15",
 			"stars": 2,

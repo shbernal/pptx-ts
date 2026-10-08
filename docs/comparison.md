@@ -137,7 +137,7 @@ measure history as much as merit.
 
 |  | ts-pptx | pptxgenjs |
 |---|---|---|
-| Repository | [shbernal/ts-pptx](https://github.com/shbernal/ts-pptx) | [gitbrent/PptxGenJS](https://github.com/gitbrent/PptxGenJS) |
+| Repository | [shbernal/pptx-ts](https://github.com/shbernal/pptx-ts) | [gitbrent/PptxGenJS](https://github.com/gitbrent/PptxGenJS) |
 | Default branch | `master` | `master` |
 | Last commit on the default branch | 2026-09-15 | 2025-06-26 |
 | Last npm publish | 2026-08-29 | 2025-06-26 |

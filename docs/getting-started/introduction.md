@@ -88,7 +88,7 @@ are welcome but tend to wait:
 | Other office suites | Files that open cleanly in desktop PowerPoint | Breakage that appears only after another application round-trips a file this library wrote correctly |
 
 The full statement is the
-[scope page](https://github.com/shbernal/ts-pptx/blob/main/docs/contributing/scope-and-policy.md#out-of-active-scope-contributions-welcome)
+[scope page](https://github.com/shbernal/pptx-ts/blob/main/docs/contributing/scope-and-policy.md#out-of-active-scope-contributions-welcome)
 in the repository.
 
 ## Next

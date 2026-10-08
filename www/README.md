@@ -35,7 +35,7 @@ is a one-line re-export of `www/theme`. That shim is the entire cost of the boun
 ## Working on it
 
 ```bash
-pnpm run docs:dev       # the whole site, hot-reloaded, at http://localhost:5173/ts-pptx/
+pnpm run docs:dev       # the whole site, hot-reloaded, at http://localhost:5173/pptx-ts/
 pnpm run docs:build     # what CI publishes; runs docs:check on both sides of it
 pnpm run typecheck:site # tsc over www/**/*.ts and docs/.vitepress/**
 ```

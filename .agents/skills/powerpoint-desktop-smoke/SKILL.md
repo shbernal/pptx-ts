@@ -2,7 +2,7 @@
 name: powerpoint-desktop-smoke
 description: Use when you need to confirm that ts-pptx-generated .pptx output actually opens in desktop Microsoft PowerPoint (the project's supported bar), to catch OOXML corruption (0x80070570) the Node test suite cannot see, or to bisect which feature emits a package PowerPoint rejects. Runs from any OS with a PowerPoint transport: the worker VM on Linux, or local PowerPoint on Windows. Good as a pre-release smoke check after any change to emitted OOXML.
 metadata:
-  # For working *on* ts-pptx, not *with* it. `npx skills add shbernal/ts-pptx` walks
+  # For working *on* ts-pptx, not *with* it. `npx skills add shbernal/pptx-ts` walks
   # .claude/skills/ (a symlink to this tree) as well as the published skills/, and this flag
   # is what keeps it out of the menu a consumer sees. Set INSTALL_INTERNAL_SKILLS=1 to install
   # it anyway.

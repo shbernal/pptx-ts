@@ -283,7 +283,7 @@ for (const difference of report.undeclared) {
 
 [`canonicalDeckIr()`](api/script/functions/canonicalDeckIr.md) removes values that mean the same as their absence in OOXML, such as `bold: false`, and compares media by content. `report.added` lists values the write path states where the source inherited one. `diffDeckIr` accepts a fixed set of those write-path defaults and reports any other as undeclared.
 
-A difference no note covers is a converter defect. In a clone of the repository, `pnpm run script:roundtrip -- --dir <path>` runs the check over a folder of decks. The [testing guide](https://github.com/shbernal/ts-pptx/blob/main/docs/contributing/testing.md#converter-and-read-coverage-harnesses) lists its options.
+A difference no note covers is a converter defect. In a clone of the repository, `pnpm run script:roundtrip -- --dir <path>` runs the check over a folder of decks. The [testing guide](https://github.com/shbernal/pptx-ts/blob/main/docs/contributing/testing.md#converter-and-read-coverage-harnesses) lists its options.
 
 ### What a clean run does not prove
 
@@ -319,4 +319,4 @@ The script resolves every path against its own location.
 - [Read and edit a deck](../reading/read-and-edit.md): the read model the converter starts from.
 - [Read object model](read-object-model.md): every accessor the converter reads.
 - API reference: [`script`](api/script/README.md), [`readModelToIr`](api/script/functions/readModelToIr.md), [`printScript`](api/script/functions/printScript.md), [`printStandaloneScript`](api/script/functions/printStandaloneScript.md), [`diffDeckIr`](api/script/functions/diffDeckIr.md), [`canonicalDeckIr`](api/script/functions/canonicalDeckIr.md), [`FidelityNote`](api/script/interfaces/FidelityNote.md), [`PrintedScript`](api/script/interfaces/PrintedScript.md).
-- [Architecture](https://github.com/shbernal/ts-pptx/blob/main/docs/contributing/architecture.md): how `src/script/` is built and why.
+- [Architecture](https://github.com/shbernal/pptx-ts/blob/main/docs/contributing/architecture.md): how `src/script/` is built and why.

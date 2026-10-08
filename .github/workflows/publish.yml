@@ -17,12 +17,12 @@ jobs:
   # The full CI gate, run as-is rather than transcribed. Publishing waits on it.
   gate:
     name: CI gate
-    if: github.repository == 'shbernal/ts-pptx'
+    if: github.repository == 'shbernal/pptx-ts'
     uses: ./.github/workflows/ci.yml
 
   publish:
     name: Publish package
-    if: github.repository == 'shbernal/ts-pptx'
+    if: github.repository == 'shbernal/pptx-ts'
     needs: gate
     runs-on: ubuntu-latest
     environment: npm-publish
