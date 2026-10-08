@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest'
 import { makeXmlMaster, makeXmlMasterRel } from '../../../src/gen/slide/master.ts'
 import { composeFamilies } from '../../../src/families/shared.ts'
 import { ALL_CONSTRUCT_FAMILIES } from '../../../src/entry-families.ts'
+import type { SlideLayoutInternal } from '../../../src/types/internal.ts'
 
 // The master's `<p:sldLayoutId r:id>` values name relationships its `.rels` part declares, and the
 // two parts are written by different functions. `makeXmlMaster` derived the ids as
@@ -14,7 +15,7 @@ const RENDERERS = composeFamilies(ALL_CONSTRUCT_FAMILIES).renderers
 const LAYOUT = { name: 'test', width: 9144000, height: 6858000 }
 
 /** A part as `presentation.ts` constructs one, with `extra` on top. */
-const part = (extra) => ({
+const part = <T extends object>(extra: T) => ({
 	_presLayout: LAYOUT,
 	_rels: [],
 	_relsChart: [],
@@ -24,23 +25,24 @@ const part = (extra) => ({
 	...extra,
 })
 
-const layouts = [
+const layouts: SlideLayoutInternal[] = [
 	part({ _name: 'First', _margin: [0.5, 0.5, 0.5, 0.5], _slide: null, _slideNum: 1000 }),
 	part({ _name: 'Second', _margin: [0.5, 0.5, 0.5, 0.5], _slide: null, _slideNum: 1001 }),
 ]
 
 /** One attribute of an element's open tag, in any attribute order. */
-const attrOf = (tag, name) => new RegExp(`\\s${name}="([^"]*)"`).exec(tag)?.[1]
+const attrOf = (tag: string, name: string) => new RegExp(`\\s${name}="([^"]*)"`).exec(tag)?.[1]
 
 /** The ids the rels part gives the layouts, in document order. */
-const layoutIdsInRels = (xml) =>
+const layoutIdsInRels = (xml: string) =>
 	[...xml.matchAll(/<Relationship\s[^>]*>/g)]
 		.map(([tag]) => tag)
 		.filter((tag) => attrOf(tag, 'Type')?.endsWith('/slideLayout'))
 		.map((tag) => attrOf(tag, 'Id'))
 
 /** The ids the master part names on its layout list, in document order. */
-const layoutIdsInMaster = (xml) => [...xml.matchAll(/<p:sldLayoutId\s[^>]*>/g)].map(([tag]) => attrOf(tag, 'r:id'))
+const layoutIdsInMaster = (xml: string) =>
+	[...xml.matchAll(/<p:sldLayoutId\s[^>]*>/g)].map(([tag]) => attrOf(tag, 'r:id'))
 
 describe('the master names its layouts by the ids its relationships part gives them', () => {
 	test('with no relationship of its own', () => {

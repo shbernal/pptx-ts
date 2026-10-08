@@ -11,6 +11,8 @@ import {
 	xmlAttributes,
 	xmlOpeningTags,
 } from '../../helpers.ts'
+import type JSZip from 'jszip'
+import type TsPptx from '../../../dist/node.js'
 
 // The *definition* side of `slide.addComment()` (`gen/define/comment.ts`), as distinct from
 // `comments-xml.test.mjs`, which byte-pins the emitters given already-normalized `SlideComment`
@@ -39,8 +41,8 @@ import {
 // contributes nothing to the reported numbers — see the header there.
 
 /** Build, capturing library warnings (`log.ts` routes every one through `console.warn`). */
-async function buildCapturingWarnings(buildFn) {
-	const warnings = []
+async function buildCapturingWarnings(buildFn: (pres: TsPptx) => unknown) {
+	const warnings: string[] = []
 	setDiagnosticHandler((d) => warnings.push(d.message))
 	try {
 		const result = await build(buildFn)
@@ -50,11 +52,10 @@ async function buildCapturingWarnings(buildFn) {
 	}
 }
 
-/** @param {string} tag @returns {Record<string, string>} */
-const attrs = (tag) => /** @type {Record<string, string>} */ (xmlAttributes(tag))
+const attrs = (tag: string): Record<string, string> => xmlAttributes(tag)
 
 /** Assert the package carries no trace of a comment: no parts, no rels target, no content type. */
-function assertNoComments(zip, contentTypes) {
+function assertNoComments(zip: JSZip, contentTypes: string) {
 	const entries = listEntries(zip).filter((name) => /^ppt\/(comments\/|commentAuthors\.xml)/.test(name))
 	assertEqual(entries.length, 0, `expected no comment parts; got ${JSON.stringify(entries)}`)
 	const overrides = contentTypeOverrideParts(contentTypes).filter((part) => part !== undefined && /comment/i.test(part))
@@ -62,12 +63,12 @@ function assertNoComments(zip, contentTypes) {
 }
 
 /** Every `<p:cmAuthor>` in the deck-wide registry, as an attribute map. */
-async function commentAuthors(zip) {
+async function commentAuthors(zip: JSZip) {
 	return selfClosingTags(await readEntry(zip, 'ppt/commentAuthors.xml'), 'p:cmAuthor').map(attrs)
 }
 
 /** Every `<p:cm>` on slide 1, as an attribute map (the element wraps `p:pos`/`p:text`). */
-async function commentsOnSlide1(zip) {
+async function commentsOnSlide1(zip: JSZip) {
 	return xmlOpeningTags(await readEntry(zip, 'ppt/comments/comment1.xml'), 'p:cm').map(attrs)
 }
 
@@ -81,7 +82,9 @@ defineRegressionSuite('Comment definition', [
 		fn: async () => {
 			const { zip, warnings } = await buildCapturingWarnings((p) => {
 				const s = p.addSlide()
+				// @ts-expect-error options are required; an untyped caller can omit them
 				s.addComment(undefined)
+				// @ts-expect-error `author` is required; an untyped caller can omit it
 				s.addComment({ text: 'no author at all' })
 				s.addComment({ author: '   ', text: 'whitespace author' })
 			})
@@ -101,6 +104,7 @@ defineRegressionSuite('Comment definition', [
 		fn: async () => {
 			const { zip, warnings } = await buildCapturingWarnings((p) => {
 				const s = p.addSlide()
+				// @ts-expect-error `text` is required; an untyped caller can omit it
 				s.addComment({ author: 'Ada Lovelace' })
 				s.addComment({ author: 'Ada Lovelace', text: '' })
 			})

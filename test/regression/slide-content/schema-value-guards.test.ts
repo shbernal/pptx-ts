@@ -1,11 +1,13 @@
 import { ChartType } from '../../../dist/node.js'
+import type TsPptx from '../../../dist/node.js'
+import type JSZip from 'jszip'
 import { defineRegressionSuite, build, readEntry, assert, captureDiagnostics, caught } from '../../helpers.ts'
 
 const SLIDE_XML = 'ppt/slides/slide1.xml'
 const MASTER_XML = 'ppt/slideMasters/slideMaster1.xml'
 
 /** The `ppt/charts/chartN.xml` a one-chart deck emits. */
-async function chartXml(zip) {
+async function chartXml(zip: JSZip) {
 	return readEntry(zip, 'ppt/charts/chart1.xml')
 }
 
@@ -193,7 +195,7 @@ defineRegressionSuite('Schema value guards', [
 		// follows. It used to collapse the glow to `rad="0"` without a word.
 		name: 'a NaN glow size is refused rather than writing rad="NaN" or collapsing to zero',
 		fn: async () => {
-			const glowy = (p) => {
+			const glowy = (p: TsPptx) => {
 				p.addSlide().addText('glowy', { x: 1, y: 1, w: 4, h: 1, glow: { size: Number.NaN, color: 'FFFF00' } })
 			}
 			const code = (await caught(() => build(glowy)))?.code ?? null
@@ -258,7 +260,7 @@ defineRegressionSuite('Schema value guards', [
 		name: 'firstSlideNum refuses a value that is not an integer',
 		fn: async () => {
 			for (const value of [NaN, 1.5, Infinity]) {
-				const numbered = (p) => {
+				const numbered = (p: TsPptx) => {
 					p.firstSlideNum = value
 				}
 				const code = (await caught(() => build(numbered)))?.code ?? null

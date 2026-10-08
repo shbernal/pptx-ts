@@ -14,17 +14,17 @@ import {
 } from '../../helpers.ts'
 
 /** A package's entry by name, from a written deck. */
-async function entryOf(pres, name) {
+async function entryOf(pres: TsPptx, name: string) {
 	return readEntry(await JSZip.loadAsync(await pres.toBytes()), name)
 }
 
 /** The `code` `fn` throws, or `null`. */
-function codeOf(fn) {
+function codeOf(fn: () => unknown) {
 	return caughtSync(fn)?.code ?? null
 }
 
-const NOTES_XML = (n) => `ppt/notesSlides/notesSlide${n}.xml`
-const NOTES_RELS = (n) => `ppt/notesSlides/_rels/notesSlide${n}.xml.rels`
+const NOTES_XML = (n: number) => `ppt/notesSlides/notesSlide${n}.xml`
+const NOTES_RELS = (n: number) => `ppt/notesSlides/_rels/notesSlide${n}.xml.rels`
 const HYPERLINK_REL_TYPE = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink'
 
 defineRegressionSuite('Speaker notes hyperlinks & rich runs', [
@@ -110,7 +110,7 @@ defineRegressionSuite('Speaker notes hyperlinks & rich runs', [
 	{
 		name: 'notes hyperlink `slide` target is ignored (url-only support)',
 		fn: async () => {
-			const warnings = []
+			const warnings: string[] = []
 			setDiagnosticHandler((d) => warnings.push(d.message))
 			try {
 				const { zip } = await build((p) => {

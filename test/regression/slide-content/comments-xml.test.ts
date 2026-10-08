@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { makeXmlCommentAuthors, makeXmlComments, resolveCommentAuthors } from '../../../src/gen/slide/comments.ts'
+import type { ResolvedCommentAuthor, SlideComment } from '../../../src/types/index.ts'
+import type { PresSlideInternal } from '../../../src/types/internal.ts'
 
 // Characterization tests for comments XML that the byte-identity harness CANNOT see — the demo
 // deck has no comments, so `<p:cmAuthor>`/`<p:cm>` carry ZERO baseline parts. schema-cases.ts
@@ -17,16 +19,28 @@ import { makeXmlCommentAuthors, makeXmlComments, resolveCommentAuthors } from '.
 // below, which is exactly what this file is for. See test/regression/comment-definition.test.ts for
 // the definer's side, which does go through the public builder.
 
-const author = (over = {}) => ({ id: 0, name: 'Ada Lovelace', initials: 'AL', lastIdx: 1, clrIdx: 0, ...over })
-const comment = (over = {}) => ({ author: 'Ada Lovelace', initials: 'AL', text: 'x', x: 1, y: 0.5, ...over })
+const author = (over: Partial<ResolvedCommentAuthor> = {}): ResolvedCommentAuthor => ({
+	id: 0,
+	name: 'Ada Lovelace',
+	initials: 'AL',
+	lastIdx: 1,
+	clrIdx: 0,
+	...over,
+})
+const comment = (over: Partial<SlideComment> = {}): SlideComment => ({
+	author: 'Ada Lovelace',
+	initials: 'AL',
+	text: 'x',
+	x: 1,
+	y: 0.5,
+	...over,
+})
 /**
  * A slide stub carrying only the field these emitters read. Cast because the
  * emitters declare the full internal slide shape, of which `_comments` is the
  * only part reachable from here.
- * @param {any[]} comments
- * @returns {any}
  */
-const slideWith = (comments) => ({ _comments: comments })
+const slideWith = (comments: SlideComment[]) => ({ _comments: comments }) as PresSlideInternal
 
 describe('makeXmlCommentAuthors', () => {
 	test('cmAuthor attribute order: id, name, initials, lastIdx, clrIdx', () => {

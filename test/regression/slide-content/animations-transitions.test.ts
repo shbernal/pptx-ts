@@ -1,6 +1,4 @@
-/** @import { PresetEffect, TransitionProps } from '../../../dist/node.js' */
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import type { DiagnosticCode, PresetEffect, TransitionProps } from '../../../dist/node.js'
 import JSZip from 'jszip'
 import { fixturePath, readOracle } from '../../read/corpus.ts'
 import {
@@ -22,19 +20,17 @@ import {
 // PowerPoint-authored XML verbatim, so these assert byte-equality against the
 // PowerPoint oracles in test/read/fixtures (slide-transition / slide-animation-*).
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
-function timingOf(xml) {
+function timingOf(xml: string) {
 	const m = xml.match(/<p:timing>[\s\S]*<\/p:timing>/)
 	return m ? m[0] : null
 }
 
-function transitionOf(xml) {
+function transitionOf(xml: string) {
 	const m = xml.match(/<p:transition[\s\S]*?<\/p:transition>|<mc:AlternateContent[\s\S]*?<\/mc:AlternateContent>/)
 	return m ? m[0] : null
 }
 
-function sndAcOf(xml) {
+function sndAcOf(xml: string) {
 	const m = xml.match(/<p:sndAc>[\s\S]*?<\/p:sndAc>/)
 	return m ? m[0] : null
 }
@@ -42,7 +38,7 @@ function sndAcOf(xml) {
 // TsPptx numbers slide rels by its own deterministic scheme (media first), so an
 // embedded sound's rId differs from PowerPoint's authored value; normalize for the
 // structural comparison (internal consistency is asserted separately).
-function normRid(s) {
+function normRid(s: string | null | undefined) {
 	return s == null ? s : s.replace(/rId\d+/g, 'rId#')
 }
 
@@ -51,8 +47,7 @@ defineRegressionSuite('Slide transitions (write)', [
 		name: 'emits each PowerPoint transition form byte-for-byte (bare + mc:AlternateContent)',
 		fn: async () => {
 			const oracle = await readOracle('slide-transition')
-			/** @type {TransitionProps[]} */
-			const inputs = [
+			const inputs: TransitionProps[] = [
 				{ type: 'fade' },
 				{ type: 'push', durationMs: 1250, speed: 'slow', variant: { dir: 'd' } },
 				{ type: 'wipe', speed: 'med', variant: { dir: 'u' } },
@@ -100,8 +95,7 @@ defineRegressionSuite('Preset build animations (write)', [
 		name: 'emits every preset (incl. appear/wipe/spin/flyOut) byte-for-byte',
 		fn: async () => {
 			const oracle = await readOracle('slide-animation-presets')
-			/** @type {PresetEffect[]} */
-			const order = ['fadeIn', 'flyIn', 'appear', 'wipe', 'grow', 'spin', 'fadeOut', 'flyOut']
+			const order: PresetEffect[] = ['fadeIn', 'flyIn', 'appear', 'wipe', 'grow', 'spin', 'fadeOut', 'flyOut']
 			const names = [
 				'entr-fadeIn',
 				'entr-flyIn',
@@ -194,7 +188,7 @@ defineRegressionSuite('Preset build animations (write)', [
 		name: 'resolves an objectName containing XML metacharacters (top-level and group child)',
 		fn: async () => {
 			const names = ['Q&A', 'R&D', 'Risk <high> "1" \'2\'\ttabbed\nwrapped']
-			const warnings = []
+			const warnings: string[] = []
 			setDiagnosticHandler((d) => warnings.push(d.message))
 			let xml
 			try {
@@ -215,7 +209,7 @@ defineRegressionSuite('Preset build animations (write)', [
 			assert(timingOf(xml) !== null, 'expected a <p:timing> tree for the resolved effects')
 			// Match each animation against the id the writer actually emitted for that name, decoding the
 			// emitted attribute rather than re-deriving the escaping (which is what the fix is about).
-			const decode = (s) =>
+			const decode = (s: string) =>
 				s
 					.replace(/&#9;/g, '\t')
 					.replace(/&#10;/g, '\n')
@@ -243,7 +237,7 @@ defineRegressionSuite('Preset build animations (write)', [
 		// objectName, leaving no <p:timing> and no dangling spid. The index used to go unvalidated.
 		name: 'drops an out-of-range shapeIndex with a warning (no dangling spid)',
 		fn: async () => {
-			const warnings = []
+			const warnings: string[] = []
 			setDiagnosticHandler((d) => warnings.push(d.message))
 			let xml
 			try {
@@ -268,7 +262,7 @@ defineRegressionSuite('Preset build animations (write)', [
 		// emitter has no template for an unknown one, so the effect drops, and it must say so.
 		name: 'drops an unknown preset with a warning, before resolving its target',
 		fn: async () => {
-			const codes = []
+			const codes: DiagnosticCode[] = []
 			setDiagnosticHandler((d) => codes.push(d.code))
 			let xml
 			try {
@@ -487,7 +481,7 @@ defineRegressionSuite('Transition sounds (write)', [
 		// registration and wrote its sound against the first slide's id: here, its picture.
 		name: 'one transition object on two slides wires each slide’s sound to an audio relationship of its own, on every write',
 		fn: async () => {
-			const transition = /** @type {const} */ ({ type: 'fade', sound: { data: SOUND_WAV, name: 'ding.wav' } })
+			const transition = { type: 'fade', sound: { data: SOUND_WAV, name: 'ding.wav' } } as const
 			const before = JSON.stringify(transition)
 			const pres = new TsPptx()
 			pres.addSlide().transition = transition
