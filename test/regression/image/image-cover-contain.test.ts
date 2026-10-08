@@ -1,3 +1,4 @@
+import type { ImageProps } from '../../../dist/node.js'
 import { PNG_1X1, defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 // `cover`/`contain` crop the *source* bitmap, so the emitted `<a:srcRect>` must be derived
@@ -8,7 +9,7 @@ import { PNG_1X1, defineRegressionSuite, build, readEntry, assert } from '../../
 // Synthesize a PNG header carrying an arbitrary intrinsic w×h. getImageSizeFromBase64 reads only
 // the IHDR dimension bytes (width@16 / height@20, big-endian), so a 24-byte header is enough to
 // exercise the natural-ratio crop math with exact, self-documenting dimensions.
-function pngOf(w, h) {
+function pngOf(w: number, h: number) {
 	const b = Buffer.alloc(24)
 	b.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a], 0)
 	b.writeUInt32BE(13, 8)
@@ -18,11 +19,14 @@ function pngOf(w, h) {
 	return 'image/png;base64,' + b.toString('base64')
 }
 
+/** A parsed `<a:srcRect>`, in 1000ths of a percent. */
+type SrcRect = { l: number; r: number; t: number; b: number }
+
 // A srcRect is PowerPoint-valid only if the cropped source keeps positive area: l+r and t+b must
 // each stay below 100% (100000). Negative edges (outset/letterbox) are legal. Out-of-range values
 // are exactly what triggered the repair dialog, so every case asserts this invariant.
-function assertValidSrcRect(r, label) {
-	for (const k of ['l', 'r', 't', 'b']) {
+function assertValidSrcRect(r: SrcRect, label: string) {
+	for (const k of ['l', 'r', 't', 'b'] as const) {
 		assert(Number.isInteger(r[k]), `${label}: srcRect ${k} must be a finite integer; got ${r[k]}`)
 	}
 	assert(r.l + r.r < 1e5, `${label}: l+r must keep positive source width (<100000); got ${r.l}+${r.r}`)
@@ -39,7 +43,7 @@ const RASTER_4x2 = {
 	jpeg: 'image/jpeg;base64,/9j/wAARCAACAAQDAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
 }
 
-async function srcRectFor(opts) {
+async function srcRectFor(opts: ImageProps): Promise<SrcRect> {
 	const { zip } = await build((p) => {
 		const s = p.addSlide()
 		s.addImage(opts)

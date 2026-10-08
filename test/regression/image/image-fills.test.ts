@@ -1,8 +1,5 @@
-/** @import { TableRow } from '../../../dist/node.js' */
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import JSZip from 'jszip'
-import { ShapeType } from '../../../dist/node.js'
+import { ShapeType, type TableRow } from '../../../dist/node.js'
 import { readFixture } from '../../read/corpus.ts'
 import {
 	PNG_1X1,
@@ -20,29 +17,27 @@ import {
 	assertRejects,
 } from '../../helpers.ts'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
 /** Read a slide's XML straight out of a PowerPoint-authored fixture package. */
-async function fixtureSlideXml(name, n = 1) {
+async function fixtureSlideXml(name: string, n = 1) {
 	const buf = await readFixture(name)
 	const zip = await JSZip.loadAsync(buf)
 	return readEntry(zip, `ppt/slides/slide${n}.xml`)
 }
 
 /** Collapse inter-tag whitespace so an indented oracle and our compact output compare alike. */
-function squash(xml) {
+function squash(xml: string) {
 	return xml.replace(/>\s+</g, '><')
 }
 
 /** Every `<a:tcPr>…</a:tcPr>` (or self-closed `<a:tcPr/>`) in document order. */
-function tcPrBlocks(xml) {
+function tcPrBlocks(xml: string): string[] {
 	return squash(xml).match(/<a:tcPr(?:\s[^>]*)?\/>|<a:tcPr(?:\s[^>]*)?>[\s\S]*?<\/a:tcPr>/g) || []
 }
 
 // 1x1 transparent PNG (data URI). Used to exercise the picture-fill (`<a:blipFill>`) path
 
-async function captureWarnings(fn) {
-	const warnings = []
+async function captureWarnings(fn: () => Promise<unknown>) {
+	const warnings: string[] = []
 	setDiagnosticHandler((d) => warnings.push(d.message))
 	try {
 		await fn()
@@ -224,7 +219,7 @@ defineRegressionSuite('Image (blip) fills', [
 	{
 		name: 'image fill with neither path nor data warns and falls back (no blipFill)',
 		fn: async () => {
-			let zip
+			let zip: JSZip | undefined
 			const warnings = await captureWarnings(async () => {
 				;({ zip } = await build((p) => {
 					const s = p.addSlide()
@@ -235,14 +230,14 @@ defineRegressionSuite('Image (blip) fills', [
 				warnings.some((w) => w.includes('image fill requires')),
 				`expected a warning; got ${JSON.stringify(warnings)}`
 			)
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
+			const xml = await readEntry(defined(zip), 'ppt/slides/slide1.xml')
 			assertNotIncludes(xml, '<a:blipFill', 'no blip fill when image source is missing')
 		},
 	},
 	{
 		name: 'SVG image fill is rejected with a warning (raster only)',
 		fn: async () => {
-			let zip
+			let zip: JSZip | undefined
 			const warnings = await captureWarnings(async () => {
 				;({ zip } = await build((p) => {
 					const s = p.addSlide()
@@ -259,7 +254,7 @@ defineRegressionSuite('Image (blip) fills', [
 				warnings.some((w) => w.includes('SVG image fills are not supported')),
 				`expected an SVG warning; got ${JSON.stringify(warnings)}`
 			)
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
+			const xml = await readEntry(defined(zip), 'ppt/slides/slide1.xml')
 			assertNotIncludes(xml, '<a:blipFill', 'no blip fill for unsupported SVG source')
 		},
 	},
@@ -432,8 +427,7 @@ defineRegressionSuite('Table cell image (blip) fills', [
 			// Registration runs after the auto-pager has shredded the rows, mirroring
 			// `createHyperlinkRels` — otherwise every relationship would pile onto slide 1
 			// and the overflow slides would emit a dangling `r:embed`.
-			/** @type {TableRow[]} */
-			const rows = Array.from({ length: 60 }, (_, i) => [
+			const rows: TableRow[] = Array.from({ length: 60 }, (_, i) => [
 				{ text: `row ${i}`, options: { fill: { type: 'image', image: { data: PNG_1X1 } } } },
 			])
 			const { zip } = await build((p) => {
@@ -454,7 +448,7 @@ defineRegressionSuite('Table cell image (blip) fills', [
 	{
 		name: 'a cell image fill with neither path nor data warns and emits no blipFill',
 		fn: async () => {
-			let zip
+			let zip: JSZip | undefined
 			const warnings = await captureWarnings(async () => {
 				;({ zip } = await build((p) => {
 					p.addSlide().addTable([[{ text: 'a', options: { fill: { type: 'image', image: {} } } }]], {
@@ -469,7 +463,7 @@ defineRegressionSuite('Table cell image (blip) fills', [
 				warnings.some((w) => w.includes('image fill requires')),
 				`expected a warning; got ${JSON.stringify(warnings)}`
 			)
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
+			const xml = await readEntry(defined(zip), 'ppt/slides/slide1.xml')
 			assertNotIncludes(xml, '<a:blipFill', 'no blip fill when the cell image source is missing')
 			assertNotIncludes(xml, 'r:embed', 'and no dangling relationship reference')
 		},
@@ -477,7 +471,7 @@ defineRegressionSuite('Table cell image (blip) fills', [
 	{
 		name: 'an SVG cell image fill is rejected with a warning (raster only)',
 		fn: async () => {
-			let zip
+			let zip: JSZip | undefined
 			const warnings = await captureWarnings(async () => {
 				;({ zip } = await build((p) => {
 					p.addSlide().addTable(
@@ -490,7 +484,7 @@ defineRegressionSuite('Table cell image (blip) fills', [
 				warnings.some((w) => w.includes('SVG image fills are not supported')),
 				`expected an SVG warning; got ${JSON.stringify(warnings)}`
 			)
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
+			const xml = await readEntry(defined(zip), 'ppt/slides/slide1.xml')
 			assertNotIncludes(xml, '<a:blipFill', 'no blip fill for unsupported SVG cell source')
 		},
 	},

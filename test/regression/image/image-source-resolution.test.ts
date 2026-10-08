@@ -8,6 +8,7 @@
 // suite imports its tables: they are internal, and what they decide is asserted through the package
 // in the cases below.
 
+import type JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { decodeBase64ToBytes, hasBase64Header } from '../../../src/media/base64.ts'
 import { dataUriMediaType, imageExtensionForSource } from '../../../src/media/content-type.ts'
@@ -28,15 +29,14 @@ import {
 const METAFILE = 'AQAAAGwAAAAAAAAAAAAAAA=='
 
 /** The package's media parts, by name, with their bytes. */
-async function mediaParts(zip) {
+async function mediaParts(zip: JSZip) {
 	const names = listEntries(zip).filter((name) => name.startsWith('ppt/media/'))
 	return Promise.all(names.map(async (name) => ({ name, bytes: await defined(zip.file(name)).async('uint8array') })))
 }
 
 describe('dataUriMediaType', () => {
 	test('reads the whole media type, with or without the data: scheme', () => {
-		/** @type {Array<[string, string | null]>} */
-		const cases = [
+		const cases: Array<[string, string | null]> = [
 			['data:image/x-emf;base64,AA', 'image/x-emf'],
 			['image/x-wmf;base64,AA', 'image/x-wmf'],
 			['data:image/svg+xml;base64,AA', 'image/svg+xml'],
@@ -51,8 +51,7 @@ describe('dataUriMediaType', () => {
 	})
 
 	test('names an image part by the registry extension, and by the subtype when the registry has no row', () => {
-		/** @type {Array<[string, string, string]>} */
-		const cases = [
+		const cases: Array<[string, string, string]> = [
 			['', 'data:image/x-emf;base64,AA', 'emf'],
 			['', 'data:image/x-wmf;base64,AA', 'wmf'],
 			['', 'data:image/svg+xml;base64,AA', 'svg'],
@@ -179,8 +178,7 @@ describe('image sources through the definers', () => {
 		// Both used to register first and validate last: the image's media part and relationship, and
 		// the first run's link, stayed on the slide with nothing to use them.
 		const conflicting = { url: 'https://refused.example', slide: 1 }
-		/** @type {string[]} */
-		const refusals = []
+		const refusals: string[] = []
 		const { zip } = await build((p) => {
 			const slide = p.addSlide()
 			const attempts = [

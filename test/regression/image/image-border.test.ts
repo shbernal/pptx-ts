@@ -14,7 +14,7 @@ import { PNG_1X1, defineRegressionSuite, build, readEntry, assert, assertEqual, 
 import { Presentation } from '../../../dist/read.js'
 
 /** The `<a:ln …>` opening tag inside the slide's one `p:pic`, or `null`. */
-function pictureLine(xml) {
+function pictureLine(xml: string) {
 	const pic = /<p:pic>[\s\S]*?<\/p:pic>/.exec(xml)
 	return pic ? (/<a:ln[^>]*>/.exec(pic[0])?.[0] ?? null) : null
 }

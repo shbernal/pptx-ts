@@ -1,3 +1,4 @@
+import type JSZip from 'jszip'
 import { PNG_1X1 as PNG_A, defineRegressionSuite, build, readEntry, listEntries, assert } from '../../helpers.ts'
 
 // Identical base64 `data:` images added to a slide previously embedded one media part PER
@@ -9,12 +10,12 @@ import { PNG_1X1 as PNG_A, defineRegressionSuite, build, readEntry, listEntries,
 const PNG_B =
 	'image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
 
-function countMedia(zip) {
+function countMedia(zip: JSZip) {
 	// JSZip also lists the `ppt/media/` directory itself as an entry — exclude it.
 	return listEntries(zip).filter((p) => p.startsWith('ppt/media/') && !p.endsWith('/')).length
 }
 
-function countPics(xml) {
+function countPics(xml: string) {
 	return (xml.match(/<p:pic>/g) || []).length
 }
 

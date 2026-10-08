@@ -8,16 +8,15 @@
 import { describe, test } from 'vitest'
 import { fitSrcRectPercents, getImageSizeFromBytes } from '../../../src/media/image-size.ts'
 import { Presentation } from '../../../dist/read.js'
+import type TsPptx from '../../../dist/node.js'
 import { EMU_PER_INCH } from '../../../dist/node.js'
 import { assert, assertEqual, build, captureDiagnostics, caughtSync, slideXml, defined } from '../../helpers.ts'
 
 /**
  * A PNG header carrying an arbitrary intrinsic size. The size reader looks at the IHDR dimensions
  * only, so 24 bytes are enough.
- * @param {number} w
- * @param {number} h
  */
-function pngBytes(w, h) {
+function pngBytes(w: number, h: number) {
 	const b = Buffer.alloc(24)
 	b.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a], 0)
 	b.writeUInt32BE(13, 8)
@@ -26,10 +25,10 @@ function pngBytes(w, h) {
 	b.writeUInt32BE(h, 20)
 	return b
 }
-const pngData = (w, h) => 'image/png;base64,' + pngBytes(w, h).toString('base64')
+const pngData = (w: number, h: number) => 'image/png;base64,' + pngBytes(w, h).toString('base64')
 
 /** The picture's own `<a:off>`/`<a:ext>`, scoped to `<p:pic>` past the slide's group frame. */
-function pictureFrame(xml) {
+function pictureFrame(xml: string) {
 	const pic = xml.split('<p:pic>')[1]
 	assert(pic, 'expected a <p:pic>; got: ' + xml)
 	const m = /<a:off x="(-?\d+)" y="(-?\d+)"\s*\/>\s*<a:ext cx="(\d+)" cy="(\d+)"\s*\/>/.exec(pic)
@@ -65,7 +64,7 @@ describe('image geometry', () => {
 	})
 
 	test('cover and contain on a zero-size box write a plain stretch rather than NaN', async () => {
-		for (const type of /** @type {const} */ (['cover', 'contain'])) {
+		for (const type of ['cover', 'contain'] as const) {
 			const { result } = await captureDiagnostics(() =>
 				slideXml((p) => p.addSlide().addImage({ data: pngData(32, 32), x: 1, y: 1, w: 0, h: 0, sizing: { type } }))
 			)
@@ -76,7 +75,7 @@ describe('image geometry', () => {
 	})
 
 	test('an SVG size is read from width and height, not from an attribute whose name ends in them', async () => {
-		const size = (svg) => JSON.stringify(getImageSizeFromBytes(new TextEncoder().encode(svg)))
+		const size = (svg: string) => JSON.stringify(getImageSizeFromBytes(new TextEncoder().encode(svg)))
 		const expected = JSON.stringify({ w: 200, h: 100 })
 		assertEqual(
 			size('<svg xmlns="http://www.w3.org/2000/svg" stroke-width="2" width="200" height="100"/>'),
@@ -117,7 +116,7 @@ describe('image geometry', () => {
 	test('a table and an image with a null axis both take it from the placeholder', async () => {
 		// The image treated `null` as unstated and the table did not: a table with `x: null` landed at
 		// the half-inch default rather than the placeholder's 3in.
-		const withPlaceholder = (p) =>
+		const withPlaceholder = (p: TsPptx) =>
 			p.defineSlideMaster({
 				title: 'M',
 				objects: [{ placeholder: { options: { name: 'body', type: 'body', x: 3, y: 1, w: 4, h: 2 }, text: '' } }],

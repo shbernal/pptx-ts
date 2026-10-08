@@ -1,6 +1,7 @@
 import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import type JSZip from 'jszip'
 
 import { PNG_1X1, defineRegressionSuite, build, readEntry, listEntries, assert, defined } from '../../helpers.ts'
 
@@ -9,8 +10,8 @@ const SVG_MARKUP =
 
 const IMG_BROKEN_PREFIX = 'iVBORw0KGgoAAAANSUhEUgAAAGQ'
 
-const svgEntry = (zip) => listEntries(zip).find((name) => name.startsWith('ppt/media/') && name.endsWith('.svg'))
-const pngEntry = (zip) => listEntries(zip).find((name) => name.startsWith('ppt/media/') && name.endsWith('.png'))
+const svgEntry = (zip: JSZip) => listEntries(zip).find((name) => name.startsWith('ppt/media/') && name.endsWith('.svg'))
+const pngEntry = (zip: JSZip) => listEntries(zip).find((name) => name.startsWith('ppt/media/') && name.endsWith('.png'))
 
 defineRegressionSuite('Image svg source', [
 	{

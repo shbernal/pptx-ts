@@ -1,6 +1,7 @@
 import { writeFileSync, mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import type { ImageProps } from '../../../dist/node.js'
 import { PNG_1X1, defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
 
 // addImage() previously fell back to a 1in x 1in square whenever `w`/`h` were omitted, which
@@ -114,7 +115,7 @@ const JPEG_NO_SOF =
 // for a data image, the 1in fallback applies (same as SVG).
 const UNKNOWN_24B = 'image/png;base64,' + Buffer.from(Array.from({ length: 24 }, (_, i) => i)).toString('base64')
 
-async function extFor(opts) {
+async function extFor(opts: ImageProps) {
 	const { zip } = await build((p) => {
 		const s = p.addSlide()
 		s.addImage(opts)

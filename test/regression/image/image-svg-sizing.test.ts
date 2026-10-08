@@ -7,7 +7,7 @@ import {
 	assertEqual,
 	captureDiagnostics,
 } from '../../helpers.ts'
-import { EMU_PER_INCH } from '../../../dist/node.js'
+import { EMU_PER_INCH, type ImageProps } from '../../../dist/node.js'
 
 // A square SVG (1:1) — its intrinsic aspect must come from width/height or viewBox,
 // never from the displayed box. Placed in a wide box with sizing:'contain' it should
@@ -22,17 +22,17 @@ const WIDE_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100">
 // Neither width/height nor viewBox: nothing to measure, so nothing to place aspect-correctly.
 const UNMEASURABLE_SVG = '<svg xmlns="http://www.w3.org/2000/svg"><rect width="10" height="10"/></svg>'
 
-function srcRectAttrs(xml) {
+function srcRectAttrs(xml: string) {
 	const m = /<a:srcRect\b([^/]*)\/>/.exec(xml)
 	if (!m) return null
-	const attrs = {}
+	const attrs: Record<string, number> = {}
 	for (const a of m[1].matchAll(/(\w+)="(-?\d+)"/g)) attrs[a[1]] = parseInt(a[2], 10)
 	return attrs
 }
 
 /** The picture's displayed extent (`<a:ext>`), in EMU. Scoped to `<p:pic>`: the slide's own
  *  `<p:grpSpPr>` carries an `<a:ext cx="0" cy="0"/>` that would otherwise match first. */
-function pictureExtent(xml) {
+function pictureExtent(xml: string) {
 	const pic = xml.split('<p:pic>')[1]
 	assert(pic, 'expected a <p:pic>; got: ' + xml)
 	const m = /<a:ext cx="(\d+)" cy="(\d+)"\s*\/>/.exec(pic)
@@ -40,7 +40,7 @@ function pictureExtent(xml) {
 	return { cx: parseInt(m[1], 10), cy: parseInt(m[2], 10) }
 }
 
-async function slideXmlFor(opts) {
+async function slideXmlFor(opts: ImageProps) {
 	const { zip } = await build((p) => {
 		const s = p.addSlide()
 		s.addImage(opts)

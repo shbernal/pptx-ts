@@ -1,14 +1,15 @@
-import { PNG_1X1, defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
+import type { ImageProps } from '../../../dist/node.js'
+import { PNG_1X1, defineRegressionSuite, build, readEntry, assert, asError, type ThrownError } from '../../helpers.ts'
 
-async function expectCropError(sizingOpts, expectedFragment) {
-	let err
+async function expectCropError(sizingOpts: NonNullable<ImageProps['sizing']>, expectedFragment: string) {
+	let err: ThrownError | undefined
 	try {
 		await build((p) => {
 			const s = p.addSlide()
 			s.addImage({ data: PNG_1X1, x: 1, y: 1, w: 4, h: 3, sizing: sizingOpts })
 		})
 	} catch (e) {
-		err = e
+		err = asError(e)
 	}
 	assert(err, 'expected build to throw for out-of-bounds crop')
 	const msg = String(err?.message || err)

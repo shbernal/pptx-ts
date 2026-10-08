@@ -1,3 +1,4 @@
+import type { ImageProps } from '../../../dist/node.js'
 import {
 	PNG_1X1,
 	assert,
@@ -16,7 +17,7 @@ import {
 //      in gen-objects.ts, so no srcRect was emitted at all — yet the package stayed schema-valid);
 //   2. the inset percentages must serialize in 1000ths of a percent (ST_Percentage: 100% = 100000).
 
-async function srcRectFor(opts) {
+async function srcRectFor(opts: ImageProps) {
 	const { zip } = await build((p) => {
 		const s = p.addSlide()
 		s.addImage(opts)
@@ -55,7 +56,7 @@ defineRegressionSuite('Image explicit crop (srcRect percentage insets)', [
 		// crop wins over sizing (mutually exclusive) and warns.
 		name: 'crop overrides sizing and warns',
 		fn: async () => {
-			const warnings = []
+			const warnings: string[] = []
 			setDiagnosticHandler((d) => warnings.push(d.message))
 			try {
 				const r = await srcRectFor({
