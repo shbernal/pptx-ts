@@ -13,7 +13,7 @@ import { assert, assertEqual, bytesEqual, caughtSync, readEntry } from '../helpe
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { openFixture, readFixture } from './corpus.ts'
 
-async function entries(pptxBytes) {
+async function entries(pptxBytes: Uint8Array) {
 	const zip = await JSZip.loadAsync(pptxBytes)
 	return zip
 }
@@ -86,8 +86,7 @@ describe('Presentation.importSlide({ embedFonts })', () => {
 	// embedTrueTypeFonts when it saves, so carried fonts lasted one save without it.
 	test('marks the destination as embedding fonts', async () => {
 		const target = await openFixture('empty')
-		const presentationXml = async (/** @type {Uint8Array} */ bytes) =>
-			readEntry(await entries(bytes), 'ppt/presentation.xml')
+		const presentationXml = async (bytes: Uint8Array) => readEntry(await entries(bytes), 'ppt/presentation.xml')
 		assert(!/embedTrueTypeFonts/.test(await presentationXml(await target.save())), 'precondition: no flag')
 		target.importSlide(await openFixture('embedded-fonts'), 0, { embedFonts: true })
 		assert(
@@ -143,8 +142,7 @@ describe('an embedded font face whose r:id names no relationship', () => {
 		assertEqual(font.faces.map((face) => face.slot).join(','), 'bold', 'the dangling regular face is skipped')
 	})
 
-	/** @type {Record<string, (target: any, source: any) => unknown>} */
-	const imports = {
+	const imports: Record<string, (target: Presentation, source: Presentation) => unknown> = {
 		importSlide: (target, source) => target.importSlide(source, 0, { embedFonts: true }),
 		importSlides: (target, source) =>
 			target.importSlides([{ source, sourceIndex: 0, outputIndex: 0, embedFonts: true }]),

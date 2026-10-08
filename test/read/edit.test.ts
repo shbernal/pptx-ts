@@ -13,28 +13,33 @@ import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture } from './corpus.ts'
 
 /** Open a fixture, mutate it via `edit`, then reopen the saved bytes. */
-async function editAndReopen(name, edit) {
+async function editAndReopen(name: string, edit: (presentation: Presentation) => unknown) {
 	const presentation = await openFixture(name)
 	await edit(presentation)
 	const saved = await presentation.save()
 	return { presentation, saved, reopened: await Presentation.load(saved) }
 }
 
-function replaceTextShape(presentation) {
-	return presentation.slides[0].shapes.find((shape) => shape.name === 'replaceText')
+function replaceTextShape(presentation: Presentation) {
+	return defined(presentation.slides[0].shapes.find((shape) => shape.name === 'replaceText'))
+}
+
+/** The text frame of the `replaceText` shape on slide 1. */
+function replaceTextFrame(presentation: Presentation) {
+	return defined(replaceTextShape(presentation).textFrame)
 }
 
 describe('Run text editing', () => {
 	test('run.text mutates the a:t node and survives a reload', async () => {
 		const { reopened } = await editAndReopen('textbox', (presentation) => {
-			replaceTextShape(presentation).textFrame.paragraphs[0].runs[0].text = 'CHANGED'
+			replaceTextFrame(presentation).paragraphs[0].runs[0].text = 'CHANGED'
 		})
-		assertEqual(replaceTextShape(reopened).textFrame.paragraphs[0].runs[0].text, 'CHANGED', 'edited run text reloads')
+		assertEqual(replaceTextFrame(reopened).paragraphs[0].runs[0].text, 'CHANGED', 'edited run text reloads')
 	})
 
 	test('whitespace-significant text gets xml:space="preserve"', async () => {
 		const { saved } = await editAndReopen('textbox', (presentation) => {
-			replaceTextShape(presentation).textFrame.paragraphs[0].runs[0].text = '  spaced  '
+			replaceTextFrame(presentation).paragraphs[0].runs[0].text = '  spaced  '
 		})
 		const slideXml = new TextDecoder().decode((await partBodies(saved)).get('ppt/slides/slide1.xml'))
 		assert(slideXml.includes('xml:space="preserve"'), 'preserve attr present')
@@ -44,7 +49,7 @@ describe('Run text editing', () => {
 	test('editing one slide leaves every other part byte-identical', async () => {
 		const input = await readFile(fixturePath('textbox'))
 		const presentation = await Presentation.load(input)
-		replaceTextShape(presentation).textFrame.paragraphs[0].runs[0].text = 'CHANGED'
+		replaceTextFrame(presentation).paragraphs[0].runs[0].text = 'CHANGED'
 		const inputBodies = await partBodies(input)
 		const outputBodies = await partBodies(await presentation.save())
 		const dirty = 'ppt/slides/slide1.xml'
@@ -56,13 +61,13 @@ describe('Run text editing', () => {
 describe('Run font properties', () => {
 	test('sets size, bold, font, and explicit colour; clears the prior scheme colour', async () => {
 		const { reopened } = await editAndReopen('textbox', (presentation) => {
-			const run = replaceTextShape(presentation).textFrame.paragraphs[0].runs[0]
+			const run = replaceTextFrame(presentation).paragraphs[0].runs[0]
 			run.fontSizePt = 32
 			run.bold = true
 			run.fontName = 'Georgia'
 			run.color = 'FF0000' // run[0] starts with a schemeClr fill; this must replace it
 		})
-		const run = replaceTextShape(reopened).textFrame.paragraphs[0].runs[0]
+		const run = replaceTextFrame(reopened).paragraphs[0].runs[0]
 		assertEqual(run.fontSizePt, 32, 'font size reloads (3200 → 32pt)')
 		assertEqual(run.bold, true, 'bold reloads')
 		assertEqual(run.fontName, 'Georgia', 'font name reloads')
@@ -74,36 +79,36 @@ describe('Run font properties', () => {
 	test('setting a boolean prop to null removes it (back to inherited)', async () => {
 		// run[0] is italic; clearing it should drop the @i attribute, not set i="0".
 		const { saved, reopened } = await editAndReopen('textbox', (presentation) => {
-			replaceTextShape(presentation).textFrame.paragraphs[0].runs[0].italic = null
+			replaceTextFrame(presentation).paragraphs[0].runs[0].italic = null
 		})
-		assertEqual(replaceTextShape(reopened).textFrame.paragraphs[0].runs[0].italic, null, 'italic now inherited')
+		assertEqual(replaceTextFrame(reopened).paragraphs[0].runs[0].italic, null, 'italic now inherited')
 		const slideXml = new TextDecoder().decode((await partBodies(saved)).get('ppt/slides/slide1.xml'))
 		assert(!/<a:rPr[^>]*\bi="0"/.test(slideXml), 'must not emit i="0"; the attribute is removed')
 	})
 
 	test('creates an a:rPr when a plain run gains a property', async () => {
 		const { reopened } = await editAndReopen('textbox', (presentation) => {
-			const plain = replaceTextShape(presentation).textFrame.paragraphs[0].runs.find((run) => run.text === ' is test')
+			const plain = defined(replaceTextFrame(presentation).paragraphs[0].runs.find((run) => run.text === ' is test'))
 			assertEqual(plain.bold, null, 'precondition: plain run has no rPr/@b')
 			plain.bold = true
 		})
-		const plain = replaceTextShape(reopened).textFrame.paragraphs[0].runs.find((run) => run.text === ' is test')
+		const plain = replaceTextFrame(reopened).paragraphs[0].runs.find((run) => run.text === ' is test')
 		assert(plain, 'the " is test" run still exists')
 		assertEqual(plain.bold, true, 'bold persisted via a freshly created rPr')
 	})
 
 	test('schemeColor setter replaces an explicit srgb fill', async () => {
 		const { reopened } = await editAndReopen('textbox', (presentation) => {
-			const run = replaceTextShape(presentation).textFrame.paragraphs[0].runs[0]
+			const run = replaceTextFrame(presentation).paragraphs[0].runs[0]
 			run.schemeColor = 'accent4'
 		})
-		const run = replaceTextShape(reopened).textFrame.paragraphs[0].runs[0]
+		const run = replaceTextFrame(reopened).paragraphs[0].runs[0]
 		assertEqual(run.schemeColor, 'accent4', 'scheme colour reloads')
 		assertEqual(run.color, null, 'no explicit srgb colour remains')
 	})
 
 	test('rejects a non-positive font size and a malformed colour', async () => {
-		const run = replaceTextShape(await openFixture('textbox')).textFrame.paragraphs[0].runs[0]
+		const run = replaceTextFrame(await openFixture('textbox')).paragraphs[0].runs[0]
 		assert(
 			throws(() => (run.fontSizePt = 0)),
 			'fontSizePt = 0 should throw'
@@ -161,9 +166,9 @@ describe('Shape geometry editing', () => {
 
 	test('sets geometry on a graphic frame (p:xfrm)', async () => {
 		const { reopened } = await editAndReopen('table', (presentation) => {
-			const frame = presentation.slides
-				.flatMap((slide) => slide.shapes)
-				.find((shape) => shape.shapeType === 'graphicFrame')
+			const frame = defined(
+				presentation.slides.flatMap((slide) => slide.shapes).find((shape) => shape.shapeType === 'graphicFrame')
+			)
 			frame.left = 1000000
 			frame.width = 5000000
 		})
@@ -215,7 +220,7 @@ describe('schema validity of edited packages', () => {
 			const shape = replaceTextShape(presentation)
 			shape.left = 914400
 			shape.width = 1828800
-			const run = shape.textFrame.paragraphs[0].runs[0]
+			const run = defined(shape.textFrame).paragraphs[0].runs[0]
 			run.text = 'Edited'
 			run.fontSizePt = 28
 			run.bold = true

@@ -18,20 +18,20 @@
 // than degrading to null the way the old top-level-only `slide.shapeById` did.
 
 import { ShapeType } from '../../dist/node.js'
-import { isConnector } from '../../dist/read.js'
+import { isConnector, type Presentation } from '../../dist/read.js'
 import { describe, test } from 'vitest'
 import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.ts'
 import { assert, assertEqual } from '../helpers.ts'
 
 /** The single connector on any slide of `presentation`. */
-function connectorOf(presentation) {
+function connectorOf(presentation: Presentation) {
 	const cxn = firstShape(presentation, (s) => s.shapeType === 'connector')
 	assert(cxn !== null && isConnector(cxn), 'the authored connector is read back')
 	return cxn
 }
 
 /** The rect autoShape named `name`. */
-function rectNamed(presentation, name) {
+function rectNamed(presentation: Presentation, name: string) {
 	const rect = firstShape(presentation, (s) => s.shapeType === 'autoShape' && s.name === name)
 	assert(rect, `the authored rect "${name}" is read back`)
 	return rect

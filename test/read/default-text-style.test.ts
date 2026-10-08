@@ -16,19 +16,16 @@
 // schemeClr tx1, latin +mn-lt; the theme (default Office) has minorFont "Aptos",
 // clrMap tx1->dk1 (windowText = 000000) and the direct slot lt1 = window (FFFFFF).
 
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, test } from 'vitest'
+import type { Slide } from '../../dist/read.js'
 
-import { assert, assertEqual } from '../helpers.ts'
+import { assert, assertEqual, defined } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
-function runOf(slide, shapeName) {
+function runOf(slide: Slide, shapeName: string) {
 	const shape = slide.shapes.find((s) => s.name === shapeName)
 	assert(shape, `expected a shape named ${shapeName}`)
-	return shape.textFrame.paragraphs[0].runs[0]
+	return defined(shape.textFrame).paragraphs[0].runs[0]
 }
 
 describe('p:defaultTextStyle is the run-resolution fallback (default-text-style.pptx)', () => {

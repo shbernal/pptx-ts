@@ -10,8 +10,8 @@
 
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
-import { ChartType } from '../../dist/node.js'
-import { Presentation, isGraphicFrame } from '../../dist/read.js'
+import TsPptx, { ChartType } from '../../dist/node.js'
+import { Presentation, isGraphicFrame, type GraphicFrame } from '../../dist/read.js'
 import { authorRead } from './authored.ts'
 import { bytesEqual, assert, assertEqual, defined, partBodies } from '../helpers.ts'
 import { fixturePath } from './corpus.ts'
@@ -21,13 +21,13 @@ import { fixturePath } from './corpus.ts'
  * only through `element_`), save, and report both the saved bytes and which part
  * bodies came back differing from the input.
  */
-async function saveAfterBytes(input, mutate) {
+async function saveAfterBytes(input: Uint8Array, mutate: (presentation: Presentation) => unknown) {
 	const presentation = await Presentation.load(input)
 	await mutate(presentation)
 	const saved = await presentation.save()
 	const inputBodies = await partBodies(input)
 	const outputBodies = await partBodies(saved)
-	const changed = []
+	const changed: string[] = []
 	for (const [name, body] of inputBodies) {
 		const after = outputBodies.get(name)
 		if (!after || !bytesEqual(body, after)) changed.push(name)
@@ -36,7 +36,7 @@ async function saveAfterBytes(input, mutate) {
 }
 
 /** {@link saveAfterBytes} against a `fixtures/<name>.pptx` on disk. */
-async function saveAfter(fixture, mutate) {
+async function saveAfter(fixture: string, mutate: (presentation: Presentation) => unknown) {
 	return saveAfterBytes(await readFile(fixturePath(fixture)), mutate)
 }
 
@@ -45,26 +45,34 @@ async function saveAfter(fixture, mutate) {
  * for the read models no checked-in fixture exercises (chartEx, master/layout
  * chrome, notes placeholders).
  */
-async function saveAfterAuthored(build, mutate) {
+async function saveAfterAuthored(
+	build: Parameters<typeof authorRead>[0],
+	mutate: (presentation: Presentation) => unknown
+) {
 	const { buf } = await authorRead(build)
 	return saveAfterBytes(buf, mutate)
 }
 
 const SLIDE1 = 'ppt/slides/slide1.xml'
 
-/** The first `graphicFrame` on any slide whose `pick` yields a model, or null. */
-function firstFramed(presentation, pick) {
+/** The model `pick` yields from the first `graphicFrame` on any slide that has one; fails when none does. */
+function firstFramed<T>(presentation: Presentation, pick: (shape: GraphicFrame) => T | null | undefined): T {
 	for (const shape of presentation.slides.flatMap((slide) => slide.shapes)) {
 		if (shape.shapeType !== 'graphicFrame') continue
 		const model = pick(shape)
 		if (model) return model
 	}
-	return null
+	throw new Error('no graphic frame on any slide yields the model')
 }
 
 /** The `textbox` fixture's first shape with a text frame. */
-function textShape(presentation) {
-	return presentation.slides[0].shapes.find((shape) => shape.textFrame)
+function textShape(presentation: Presentation) {
+	return defined(presentation.slides[0].shapes.find((shape) => shape.textFrame))
+}
+
+/** The text frame of {@link textShape}. */
+function textFrameOf(presentation: Presentation) {
+	return defined(textShape(presentation).textFrame)
 }
 
 describe('element_ without markDirty()', () => {
@@ -110,7 +118,7 @@ describe('element_ with markDirty()', () => {
 
 	test('TextFrame/Paragraph/Run each expose a markDirty() reaching the same part', async () => {
 		const { saved, changed } = await saveAfter('textbox', (presentation) => {
-			const frame = textShape(presentation).textFrame
+			const frame = textFrameOf(presentation)
 			const paragraph = frame.paragraphs[0]
 			const run = paragraph.runs[0]
 			// Reach the run's `a:t` through the hatch, then mark from the *run* —
@@ -121,11 +129,7 @@ describe('element_ with markDirty()', () => {
 		})
 		assertEqual(changed.join(), SLIDE1, 'only the owning slide part should be reserialized')
 		const reopened = await Presentation.load(saved)
-		assertEqual(
-			textShape(reopened).textFrame.paragraphs[0].runs[0].text,
-			'HATCHED',
-			'the marked edit reaches the output'
-		)
+		assertEqual(textFrameOf(reopened).paragraphs[0].runs[0].text, 'HATCHED', 'the marked edit reaches the output')
 	})
 
 	// The outer rungs of the same ladder. Asserting `typeof x.markDirty === 'function'`
@@ -133,7 +137,7 @@ describe('element_ with markDirty()', () => {
 	// which is the property the contract actually promises.
 	test('TextFrame.markDirty() reaches the slide part from the outer rung', async () => {
 		const { saved, changed } = await saveAfter('textbox', (presentation) => {
-			const frame = textShape(presentation).textFrame
+			const frame = textFrameOf(presentation)
 			frame.element_.getElementsByTagName('a:t')[0].textContent = 'FROM-FRAME'
 			frame.markDirty()
 		})
@@ -141,26 +145,18 @@ describe('element_ with markDirty()', () => {
 		const reopened = await Presentation.load(saved)
 		// The fixture's frame holds several runs; the hatch edited the first `a:t`,
 		// so assert that run rather than the flattened whole-frame text.
-		assertEqual(
-			textShape(reopened).textFrame.paragraphs[0].runs[0].text,
-			'FROM-FRAME',
-			'the marked edit reaches the output'
-		)
+		assertEqual(textFrameOf(reopened).paragraphs[0].runs[0].text, 'FROM-FRAME', 'the marked edit reaches the output')
 	})
 
 	test('Paragraph.markDirty() reaches the slide part from the middle rung', async () => {
 		const { saved, changed } = await saveAfter('textbox', (presentation) => {
-			const paragraph = textShape(presentation).textFrame.paragraphs[0]
+			const paragraph = textFrameOf(presentation).paragraphs[0]
 			paragraph.element_.getElementsByTagName('a:t')[0].textContent = 'FROM-PARA'
 			paragraph.markDirty()
 		})
 		assertEqual(changed.join(), SLIDE1, 'only the owning slide part should be reserialized')
 		const reopened = await Presentation.load(saved)
-		assertEqual(
-			textShape(reopened).textFrame.paragraphs[0].runs[0].text,
-			'FROM-PARA',
-			'the marked edit reaches the output'
-		)
+		assertEqual(textFrameOf(reopened).paragraphs[0].runs[0].text, 'FROM-PARA', 'the marked edit reaches the output')
 	})
 
 	test('Table/TableRow/TableCell each expose a markDirty() reaching the same part', async () => {
@@ -209,7 +205,7 @@ describe('element_ with markDirty()', () => {
 	test('Chart.markDirty() reserializes the chart part, not the slide', async () => {
 		const { changed } = await saveAfter('bar-chart-data-labels', (presentation) => {
 			const chart = firstFramed(presentation, (shape) => shape.chart)
-			chart.element_.setAttribute('xmlns:tspptx', 'urn:test')
+			defined(chart.element_).setAttribute('xmlns:tspptx', 'urn:test')
 			chart.markDirty()
 		})
 		assertEqual(changed.length, 1, 'exactly one part should be reserialized')
@@ -248,7 +244,7 @@ describe('element_ with markDirty()', () => {
 // chartEx has no checked-in fixture — the writer emits every `cx:` piece, so these
 // author a waterfall in memory and round-trip the writer's own bytes (the same
 // harness test/read/chartex-read.test.js uses for the getters).
-function authorWaterfall(pres) {
+function authorWaterfall(pres: TsPptx) {
 	pres.addSlide().addChart([{ name: 'Cash Flow', labels: ['Start', 'Q1', 'End'], values: [100, 40, 190] }], {
 		type: ChartType.waterfall,
 		x: 1,
@@ -259,7 +255,7 @@ function authorWaterfall(pres) {
 }
 
 /** The chartEx part a `changed` list is expected to hold exactly one of. */
-function assertOneChartPart(changed) {
+function assertOneChartPart(changed: string[]) {
 	assertEqual(changed.length, 1, `exactly one part should be reserialized, got ${changed.join() || '(none)'}`)
 	assert(changed[0].startsWith('ppt/charts/'), `expected a chart part, got ${changed[0]}`)
 }
@@ -268,7 +264,7 @@ describe('chartEx element_ / markDirty()', () => {
 	test('a chartEx edit through element_ is dropped without markDirty()', async () => {
 		const { changed } = await saveAfterAuthored(authorWaterfall, (presentation) => {
 			const cx = firstFramed(presentation, (shape) => shape.chartEx)
-			cx.element_.setAttribute('xmlns:tspptx', 'urn:test')
+			defined(cx.element_).setAttribute('xmlns:tspptx', 'urn:test')
 		})
 		assertEqual(changed.length, 0, 'no part should be reserialized without markDirty()')
 	})
@@ -276,7 +272,7 @@ describe('chartEx element_ / markDirty()', () => {
 	test('ChartEx.markDirty() reserializes the chartEx part, not the slide', async () => {
 		const { changed } = await saveAfterAuthored(authorWaterfall, (presentation) => {
 			const cx = firstFramed(presentation, (shape) => shape.chartEx)
-			cx.element_.setAttribute('xmlns:tspptx', 'urn:test')
+			defined(cx.element_).setAttribute('xmlns:tspptx', 'urn:test')
 			cx.markDirty()
 		})
 		assertOneChartPart(changed)
@@ -317,7 +313,7 @@ describe('chartEx element_ / markDirty()', () => {
 
 describe('shared-chrome and notes element_ / markDirty()', () => {
 	/** A deck with a defined master (so master/layout placeholders exist) and notes. */
-	function authorChrome(pres) {
+	function authorChrome(pres: TsPptx) {
 		pres.theme = { headFontFace: 'Georgia' }
 		pres.defineSlideMaster({ title: 'BRANDED', slideNumber: { x: 0.5, y: 7.0 } })
 		pres.addSlide({ masterTitle: 'BRANDED' }).addNotes('a note')
@@ -325,7 +321,7 @@ describe('shared-chrome and notes element_ / markDirty()', () => {
 
 	test('Placeholder.markDirty() reserializes the owning master part', async () => {
 		const { saved, changed } = await saveAfterAuthored(authorChrome, (presentation) => {
-			const sldNum = presentation.slides[0].master.placeholders.find((ph) => ph.type === 'sldNum')
+			const sldNum = defined(presentation.slides[0].master).placeholders.find((ph) => ph.type === 'sldNum')
 			assert(sldNum, 'the master has a slide-number placeholder')
 			assert(sldNum.idx !== undefined, 'the placeholder exposes its p:ph idx')
 			assert(typeof sldNum.id === 'number' || sldNum.id === null, 'the placeholder exposes its drawing id')
@@ -343,7 +339,7 @@ describe('shared-chrome and notes element_ / markDirty()', () => {
 		const { saved, changed } = await saveAfterAuthored(authorChrome, (presentation) => {
 			const theme = presentation.slides[0].theme
 			assert(theme, 'the slide resolves its theme')
-			theme.element_.setAttribute('name', 'Hatched Theme')
+			defined(theme.element_).setAttribute('name', 'Hatched Theme')
 			theme.markDirty()
 		})
 		assertEqual(changed.length, 1, `exactly one part should be reserialized, got ${changed.join()}`)
@@ -354,7 +350,7 @@ describe('shared-chrome and notes element_ / markDirty()', () => {
 
 	test('NotesPlaceholder.markDirty() reserializes the owning notes-slide part', async () => {
 		const { saved, changed } = await saveAfterAuthored(authorChrome, (presentation) => {
-			const body = presentation.slides[0].notesSlide.body
+			const body = defined(presentation.slides[0].notesSlide).body
 			assert(body, 'the notes slide has a body placeholder')
 			assert(typeof body.name === 'string', 'the notes placeholder exposes its shape name')
 			assert(typeof body.id === 'number' || body.id === null, 'the notes placeholder exposes its drawing id')
@@ -381,7 +377,7 @@ describe('shared-chrome and notes element_ / markDirty()', () => {
 		assertEqual(changed.join(), 'ppt/tableStyles.xml', 'only the style part is reserialized, not the slide')
 		const reopened = await Presentation.load(saved)
 		assertEqual(
-			firstFramed(reopened, (shape) => shape.table).resolvedStyle.name,
+			defined(firstFramed(reopened, (shape) => shape.table).resolvedStyle).name,
 			'Hatched Style',
 			'the marked edit reaches the output'
 		)
@@ -390,16 +386,16 @@ describe('shared-chrome and notes element_ / markDirty()', () => {
 
 describe('diagram element_ / markDirty()', () => {
 	/** The `mixed` fixture's SmartArt diagram (slide 2). */
-	const diagramOf = (presentation) => firstFramed(presentation, (shape) => shape.diagram)
+	const diagramOf = (presentation: Presentation) => firstFramed(presentation, (shape) => shape.diagram)
 
 	/** The diagram data part a `changed` list is expected to hold exactly one of. */
-	function assertOnlyDataPart(changed) {
+	function assertOnlyDataPart(changed: string[]) {
 		assertEqual(changed.join(), 'ppt/diagrams/data1.xml', 'only the diagram data part is reserialized')
 	}
 
 	test('a diagram edit through element_ is dropped without markDirty()', async () => {
 		const { changed } = await saveAfter('mixed', (presentation) => {
-			diagramOf(presentation).element_.setAttribute('xmlns:tspptx', 'urn:test')
+			defined(diagramOf(presentation).element_).setAttribute('xmlns:tspptx', 'urn:test')
 		})
 		assertEqual(changed.length, 0, 'no part should be reserialized without markDirty()')
 	})
@@ -407,7 +403,7 @@ describe('diagram element_ / markDirty()', () => {
 	test('Diagram.markDirty() reserializes the data part, not the slide', async () => {
 		const { changed } = await saveAfter('mixed', (presentation) => {
 			const diagram = diagramOf(presentation)
-			diagram.element_.setAttribute('xmlns:tspptx', 'urn:test')
+			defined(diagram.element_).setAttribute('xmlns:tspptx', 'urn:test')
 			diagram.markDirty()
 		})
 		assertOnlyDataPart(changed)
@@ -419,7 +415,7 @@ describe('diagram element_ / markDirty()', () => {
 		// attribute rather than a marker one, so the read side proves it landed.
 		const { saved, changed } = await saveAfter('mixed', (presentation) => {
 			const diagram = diagramOf(presentation)
-			const point = diagram.points.find((candidate) => candidate.type === 'node')
+			const point = defined(diagram.points.find((candidate) => candidate.type === 'node'))
 			assertEqual(point.placeholderText, null, 'a filled node names no prompt string before the edit')
 			const prSet = point.element_.getElementsByTagName('dgm:prSet')[0]
 			prSet.setAttribute('phldrT', '[Hatched]')
@@ -427,7 +423,7 @@ describe('diagram element_ / markDirty()', () => {
 		})
 		assertOnlyDataPart(changed)
 		const reopened = await Presentation.load(saved)
-		const point = diagramOf(reopened).points.find((candidate) => candidate.type === 'node')
+		const point = defined(diagramOf(reopened).points.find((candidate) => candidate.type === 'node'))
 		assertEqual(point.placeholderText, '[Hatched]', 'the marked edit reaches the output')
 		assertEqual(point.isPlaceholder, false, 'a prompt string alone does not make the node a placeholder')
 	})

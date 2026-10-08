@@ -22,7 +22,12 @@
 import { readFileSync } from 'node:fs'
 import { unzipSync } from 'fflate'
 import { describe, test, expect } from 'vitest'
-import { measureLayout, WIDTH_SAFETY_FACTOR, HEIGHT_SAFETY_FACTOR } from '../../src/measure/text-fit.ts'
+import {
+	measureLayout,
+	WIDTH_SAFETY_FACTOR,
+	HEIGHT_SAFETY_FACTOR,
+	type MetricsResolver,
+} from '../../src/measure/text-fit.ts'
 import { collectUncoveredCodepoints, FontMetricsRegistry } from '../../src/measure/font-metrics.ts'
 import { oracleMetrics } from './font-oracle.ts'
 import { fixturePath, readOracle } from './corpus.ts'
@@ -31,12 +36,28 @@ import { defined, expectDefined } from '../helpers.ts'
 const EMU_PER_PT = 12700
 const DECK = 'autofit-cjk-wrap'
 
-const oracle = await readOracle(DECK)
+/** One box of `autofit-cjk-wrap.oracle.json`, as `author-cjk-wrap.ps1` records it. */
+interface CjkCase {
+	id: string
+	text: string
+	fontFace: string
+	sizePt: number
+	boxWidthPt: number
+	insetLeftPt: number
+	insetRightPt: number
+	insetTopPt: number
+	insetBottomPt: number
+	bakedHeightPt: number
+	lineCount: number
+	lineWidthsPt: number[]
+}
+
+const oracle: { fontFace: string; cases: CjkCase[] } = await readOracle(DECK)
 
 const metrics = await oracleMetrics({ family: oracle.fontFace })
 const registry = new FontMetricsRegistry()
 if (metrics) registry.set(oracle.fontFace, metrics)
-const resolve = (run) => registry.get(run.fontFace, !!run.bold, !!run.italic)
+const resolve: MetricsResolver = (run) => registry.get(run.fontFace, !!run.bold, !!run.italic)
 
 describe('CJK oracle: the sidecar still describes the committed deck', () => {
 	// One slide, one box per case, each named after its case id.
@@ -78,7 +99,7 @@ describe(`CJK oracle: the wrap model reproduces PowerPoint's line breaking`, () 
 	// and charges its default advance. Those cases still carry the break evidence in
 	// `lines` — PowerPoint split both runs mid-run — but their *widths* come from a
 	// font this model never saw, so the arithmetic cannot be reproduced here.
-	const covered = (text) => [...text].every((ch) => metrics.hasCodepoint(ch.codePointAt(0)))
+	const covered = (text: string) => [...text].every((ch) => metrics.hasCodepoint(defined(ch.codePointAt(0))))
 
 	for (const c of oracle.cases) {
 		test(`${c.id}: ${c.lineCount} line(s)`, (ctx) => {
@@ -114,7 +135,7 @@ describe(`CJK oracle: the wrap model reproduces PowerPoint's line breaking`, () 
 	// Pinned so it cannot change silently, in either direction: if kinsoku is ever
 	// implemented this fails and the doc caveat comes out with it.
 	test('known gap: no kinsoku, so the widest line is narrower than PowerPoint hangs it', () => {
-		const c = oracle.cases.find((x) => x.id === 'cjk__kinsoku_hanging_comma')
+		const c = defined(oracle.cases.find((x) => x.id === 'cjk__kinsoku_hanging_comma'))
 		const paragraphs = [{ runs: [{ text: c.text, sizePt: c.sizePt, fontFace: c.fontFace }] }]
 		const innerWidthPt = c.boxWidthPt - c.insetLeftPt - c.insetRightPt
 		const layout = defined(measureLayout(paragraphs, innerWidthPt, resolve, 100, 0, WIDTH_SAFETY_FACTOR))

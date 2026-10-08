@@ -7,15 +7,16 @@
 // own. `importShape` renumbered a lifted subtree but left a connector binding inside it naming the
 // old id, which on the host names a different shape.
 
+import type { Element } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
-import { assert, assertEqual } from '../helpers.ts'
+import { assert, assertEqual, defined } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
 
 /** Every `p:cNvPr/@id` under `root`, in document order. */
-function drawingIds(root) {
+function drawingIds(root: Element) {
 	return [...root.getElementsByTagNameNS(P_NS, 'cNvPr')].map((el) => el.getAttribute('id'))
 }
 
@@ -23,7 +24,7 @@ function drawingIds(root) {
  * Every connector binding under `root`, in document order, as the name of the shape inside `root`
  * its id names, or `null` when the id names nothing inside `root`.
  */
-function bindingTargets(root) {
+function bindingTargets(root: Element) {
 	const nameById = new Map(
 		[...root.getElementsByTagNameNS(P_NS, 'cNvPr')].map((el) => [el.getAttribute('id'), el.getAttribute('name')])
 	)
@@ -38,9 +39,9 @@ describe('drawing ids across carried and imported shapes', () => {
 		async (name) => {
 			const target = await openFixture('empty')
 			const source = await openFixture(name)
-			const ownIds = drawingIds(source.slides[0].part.dom.documentElement)
+			const ownIds = drawingIds(defined(source.slides[0].part.dom.documentElement))
 			const imported = target.importSlide(source, 0, { theme: 'preserve', carryMasterGraphics: true })
-			const ids = drawingIds(imported.part.dom.documentElement)
+			const ids = drawingIds(defined(imported.part.dom.documentElement))
 			assert(ids.length > ownIds.length, `decorations were carried onto the slide (${ids.length} ids, ${ownIds.length} of its own)`) // prettier-ignore
 			const repeated = [...new Set(ids.filter((id, i) => ids.indexOf(id) !== i))]
 			assertEqual(repeated.join(','), '', 'no drawing id is used twice')

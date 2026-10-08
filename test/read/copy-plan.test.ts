@@ -16,26 +16,26 @@ import { fixtureNames, readFixture } from './corpus.ts'
 // Rescaling a fixture onto the destination's canvas warns, and warnings are not what this measures.
 setDiagnosticHandler(() => {})
 
-const MODES = /** @type {const} */ ([
+const MODES = [
 	{ theme: 'copy', importNotes: true, rescale: 'fit' },
 	{ theme: 'preserve', importNotes: true, carryMasterGraphics: true, rescale: 'fit' },
 	{ theme: 'restyle', importNotes: true, carryMasterGraphics: true, rescale: 'fit' },
-])
+] as const
 
 /** Two destinations: another deck, and a template of the source itself, where reuse applies. */
-async function destinations(bytes) {
+async function destinations(bytes: Uint8Array) {
 	return [await Presentation.load(await readFixture('mixed')), await Presentation.fromTemplate(bytes)]
 }
 
 /** Run `apply` and return the partnames it added to `deck`, in the order it added them. */
-function addedBy(deck, apply) {
+function addedBy(deck: Presentation, apply: () => void) {
 	const before = new Set(deck.opc.parts.keys())
 	apply()
 	return [...deck.opc.parts.keys()].filter((name) => !before.has(name))
 }
 
 /** The partnames a plan lists, as one comparable string. */
-function listed(plan) {
+function listed(plan: CopyPlan) {
 	return JSON.stringify(plan.parts.map((part) => part.partName))
 }
 
@@ -54,15 +54,14 @@ describe('an import plan lists exactly the parts the import adds', () => {
 					// A page whose jump link targets a page not yet brought across is refused
 					// (`import/unresolved-slide-link`), so a plan that refuses is half of the claim too:
 					// the import it stands for must refuse the same way and add nothing.
-					/** @type {CopyPlan | null} */
-					let plan = null
+					// Assigned inside the callback, so declared wide: a `null` initializer would narrow it.
+					let plan = null as CopyPlan | null
 					const refusal = caughtSync(() => {
 						plan = planSlideImport(dest, source, source.slides[index], options)
 					})
 					const refused = refusal && (refusal.code ?? String(refusal))
 					assertEqual(dest.opc.parts.size, partCount, `${name}: planning added no part`)
-					/** @type {string | null} */
-					let importRefused = null
+					let importRefused = null as string | null
 					const added = addedBy(dest, () => {
 						const err = caughtSync(() => dest.importSlide(source, index, options))
 						importRefused = err && (err.code ?? String(err))
@@ -85,7 +84,7 @@ describe('an import plan lists exactly the parts the import adds', () => {
 				sourceIndex,
 				outputIndex: base + j,
 				importNotes: j % 2 === 0,
-				rescale: /** @type {const} */ ('fit'),
+				rescale: 'fit' as const,
 			}))
 			const plan = new CopyPlan(dest, 'importSlides')
 			copyBatch(

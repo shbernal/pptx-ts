@@ -7,16 +7,13 @@
 
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
-import { Presentation } from '../../dist/read.js'
+import { Presentation, type Slide } from '../../dist/read.js'
 import { throws, assert, assertEqual, partBodies, assertUnchangedExcept, defined } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture } from './corpus.ts'
 
-/**
- * The text frame of the first shape on `slide` that has one.
- * @param {import('../../dist/read.js').Slide} slide
- */
-function firstTextFrame(slide) {
+/** The text frame of the first shape on `slide` that has one. */
+function firstTextFrame(slide: Slide) {
 	return defined(
 		defined(
 			slide.shapes.find((s) => s.hasTextFrame),

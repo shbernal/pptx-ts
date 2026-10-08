@@ -7,21 +7,19 @@
 // PowerPoint-authored deck. Expected effective colours were read back from
 // PowerPoint COM (`Shape.Fill.ForeColor.RGB`) after opening the saved fixture.
 
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, test } from 'vitest'
-import { applyColorTransforms } from '../../dist/read.js'
+import { applyColorTransforms, type ColorTransform, type Slide } from '../../dist/read.js'
 import { assert, defined } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 /** Parse `RRGGBB` → [r,g,b] 0–255. */
-function channels(hex) {
+function channels(hex: string) {
 	const h = hex.startsWith('#') ? hex.slice(1) : hex
 	return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)]
 }
 
 /** Assert two 6-hex colours match within ±tol per channel. */
-function assertHexClose(actual, expected, tol, label) {
+function assertHexClose(actual: string, expected: string, tol: number, label: string) {
 	const a = channels(actual)
 	const e = channels(expected)
 	const ok = a.every((v, i) => Math.abs(v - e[i]) <= tol)
@@ -29,13 +27,11 @@ function assertHexClose(actual, expected, tol, label) {
 }
 
 /** `[name, valuePerMille]` pairs → the read-model transform shape. */
-function tf(...pairs) {
+function tf(...pairs: [name: string, value: number][]): ColorTransform[] {
 	return pairs.map(([name, value]) => ({ name, value: String(value) }))
 }
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
-function shapeNamed(slide, name) {
+function shapeNamed(slide: Slide, name: string) {
 	const shape = slide.shapes.find((s) => s.name === name)
 	assert(shape, `expected shape named ${name}`)
 	return shape
@@ -55,7 +51,7 @@ describe('applyColorTransforms — PowerPoint fixture oracle', () => {
 	for (const [shapeName, expected] of POWERPOINT_ORACLE) {
 		test(shapeName, async () => {
 			const shape = shapeNamed((await openFixture('theme-colors')).slides[0], shapeName)
-			const { hex: base, transforms } = shape.resolvedFill
+			const { hex: base, transforms } = defined(shape.resolvedFill)
 			const { hex } = applyColorTransforms(base, transforms)
 			assertHexClose(hex, expected, 1, shapeName)
 		})

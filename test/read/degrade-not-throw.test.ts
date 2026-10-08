@@ -14,21 +14,18 @@ const SLIDE_RELS_PATH = 'ppt/slides/_rels/slide1.xml.rels'
 const PNG =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
 
-/**
- * The one picture on slide 1, narrowed off the shape union.
- * @param {import('../../dist/read.js').Presentation} pres
- */
-function onlyPicture(pres) {
+/** The one picture on slide 1, narrowed off the shape union. */
+function onlyPicture(pres: Presentation) {
 	const shape = pres.slides[0].shapes[0]
 	assert(shape?.shapeType === 'picture', `expected a picture; got ${shape?.shapeType}`)
 	return shape
 }
 
-/**
- * Author a one-picture deck, rewrite its slide part and rels, and load the result.
- * @param {{ editSlide?: (xml: string) => string, editRels?: (xml: string) => string }} [edits]
- */
-async function pictureDeck({ editSlide, editRels } = {}) {
+/** Author a one-picture deck, rewrite its slide part and rels, and load the result. */
+async function pictureDeck({
+	editSlide,
+	editRels,
+}: { editSlide?: (xml: string) => string; editRels?: (xml: string) => string } = {}) {
 	const pres = new TsPptx()
 	pres.addSlide().addImage({ data: PNG, x: 1, y: 1, w: 1, h: 1 })
 	const zip = await JSZip.loadAsync(await pres.toBytes())
@@ -40,11 +37,8 @@ async function pictureDeck({ editSlide, editRels } = {}) {
 /**
  * Apply `edit` to one zip entry in place, refusing a rewrite that changes nothing — a
  * `String.replace` that silently matched nothing would leave the case asserting on a CLEAN deck.
- * @param {JSZip} zip
- * @param {string} path
- * @param {(xml: string) => string} edit
  */
-async function rewrite(zip, path, edit) {
+async function rewrite(zip: JSZip, path: string, edit: (xml: string) => string) {
 	const entry = zip.file(path)
 	assert(entry, `no ${path} in the authored package`)
 	const before = await entry.async('string')
@@ -152,11 +146,8 @@ describe('A p:spTree/p:extLst is the tree own child, not a shape', () => {
 })
 
 describe('One reading per fact', () => {
-	/**
-	 * Author a one-table deck, rewrite its slide XML, and return the loaded cell (0, 0).
-	 * @param {(xml: string) => string} edit
-	 */
-	async function cellFrom(edit) {
+	/** Author a one-table deck, rewrite its slide XML, and return the loaded cell (0, 0). */
+	async function cellFrom(edit: (xml: string) => string) {
 		const pres = new TsPptx()
 		pres.addSlide().addTable([[{ text: 'a' }, { text: 'b' }]], { x: 1, y: 1, w: 6 })
 		const zip = await JSZip.loadAsync(await pres.toBytes())

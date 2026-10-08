@@ -8,7 +8,7 @@ import { assertEqual } from '../helpers.ts'
 import { authorRead, schemaErrors, validatorInstalled } from './authored.ts'
 
 const EMU_PER_INCH = 914400
-const inchToEmu = (inches) => Math.round(inches * EMU_PER_INCH)
+const inchToEmu = (inches: number) => Math.round(inches * EMU_PER_INCH)
 
 describe('Slide.comments + Presentation.commentAuthors', () => {
 	test('reads each comment and resolves its author through the registry', async () => {

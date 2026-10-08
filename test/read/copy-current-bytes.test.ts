@@ -9,7 +9,7 @@
 
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
-import { Presentation } from '../../dist/read.js'
+import { Presentation, type Slide } from '../../dist/read.js'
 import { assert, assertEqual, defined, readEntry } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
@@ -22,8 +22,8 @@ async function editedTextbox() {
 	return deck
 }
 
-const reload = async (deck) => Presentation.load(await deck.save())
-const firstText = (slide) => slide.shapes.find((shape) => shape.hasTextFrame)?.text
+const reload = async (deck: Presentation) => Presentation.load(await deck.save())
+const firstText = (slide: Slide) => slide.shapes.find((shape) => shape.hasTextFrame)?.text
 
 describe('copies carry the part as it is now', () => {
 	test('cloneSlide copies an edit made earlier in the session', async () => {
@@ -34,7 +34,7 @@ describe('copies carry the part as it is now', () => {
 		assertEqual(firstText(reopened.slides[clone.index]), EDITED, 'and the clone carries it')
 	})
 
-	test.for(/** @type {const} */ (['copy', 'preserve', 'restyle']))(
+	test.for(['copy', 'preserve', 'restyle'] as const)(
 		'importSlide in %s mode copies an edited source slide',
 		async (theme) => {
 			const source = await editedTextbox()

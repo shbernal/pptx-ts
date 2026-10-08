@@ -12,27 +12,24 @@
 //   the outer rect = 3 lnTo) — pins multi-contour single-path traversal.
 // - preset-rect: <a:prstGeom prst="rect"> — the negative case (customGeometry === null).
 
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, test } from 'vitest'
+import type { CustomGeometryPath, Slide } from '../../dist/read.js'
 
 import { assert, assertEqual } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 async function openCustgeom() {
 	return openFixture('custgeom')
 }
 
-function shapeNamed(slide, name) {
+function shapeNamed(slide: Slide, name: string) {
 	const shape = slide.shapes.find((s) => s.name === name)
 	assert(shape, `expected shape named ${name}`)
 	return shape
 }
 
 /** Assert a path's viewport attrs and ordered commands against recorded literals. */
-function assertPath(actual, expected) {
+function assertPath(actual: CustomGeometryPath, expected: CustomGeometryPath) {
 	assertEqual(actual.w, expected.w, 'path w')
 	assertEqual(actual.h, expected.h, 'path h')
 	assertEqual(actual.fill, expected.fill, 'path fill')

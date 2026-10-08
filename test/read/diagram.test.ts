@@ -11,12 +11,20 @@
 // `Slide.text` is therefore asserted here too, not only the new getters.
 
 import { describe, test } from 'vitest'
-import { OpcPackage, Presentation, isGraphicFrame } from '../../dist/read.js'
+import {
+	OpcPackage,
+	Presentation,
+	isGraphicFrame,
+	type DiagramNode,
+	type DiagramPointType,
+	type TextFrame,
+} from '../../dist/read.js'
 import {
 	assert,
 	assertEqual,
 	assertUnchangedExcept,
 	captureDiagnostics,
+	caughtSync,
 	defined,
 	expectDefined,
 	partBodies,
@@ -38,10 +46,9 @@ async function smartArtFrame() {
 /**
  * The diagram on one slide of a loaded deck, for a deck reopened after an edit.
  *
- * @param {import('../../dist/read.js').Presentation} presentation
- * @param {number} [index] 0-based slide index; slide 2 holds the SmartArt in `mixed.pptx`
+ * @param index 0-based slide index; slide 2 holds the SmartArt in `mixed.pptx`
  */
-function diagramOn(presentation, index = 1) {
+function diagramOn(presentation: Presentation, index = 1) {
 	const frame = defined(
 		presentation.slides[index].shapes.find(isGraphicFrame),
 		`slide ${index + 1} has a graphic frame`
@@ -53,9 +60,9 @@ function diagramOn(presentation, index = 1) {
  * One diagram of `smartart-families.pptx`, the four-family fixture: slide 1 `orgChart1`
  * (multi-level, with an `asst`), 2 `process1` (labelled arrows), 3 `cycle2`, 4 `pList1`.
  *
- * @param {number} slideNumber 1-based
+ * @param slideNumber 1-based
  */
-async function familyDiagram(slideNumber) {
+async function familyDiagram(slideNumber: number) {
 	const presentation = await openFixture('smartart-families')
 	const frame = presentation.slides[slideNumber - 1].shapes.find(isGraphicFrame)
 	assert(frame?.diagram, `slide ${slideNumber} of smartart-families.pptx holds a diagram`)
@@ -63,7 +70,7 @@ async function familyDiagram(slideNumber) {
 }
 
 /** A node tree as `level:text` lines, so a whole shape asserts as one string. */
-function outline(nodes, depth = 0) {
+function outline(nodes: readonly DiagramNode[], depth = 0): string[] {
 	return nodes.flatMap((node) => [
 		`${'  '.repeat(depth)}${node.point.type}:${node.point.text}`,
 		...outline(node.children, depth + 1),
@@ -136,7 +143,7 @@ describe('Diagram — the data model', () => {
 	test('exposes every point in document order, typed', async () => {
 		const { diagram } = await smartArtFrame()
 		const points = diagram.points
-		const byType = {}
+		const byType: Partial<Record<DiagramPointType, number>> = {}
 		for (const point of points) byType[point.type] = (byType[point.type] ?? 0) + 1
 		// A saved hList1 with eleven nodes: one doc root, a parTrans/sibTrans pair per edge,
 		// and the layout engine's own presentation points.
@@ -433,13 +440,7 @@ describe('Diagram — the authored tree', () => {
 			repointed++
 		}
 		assertEqual(repointed, 1, 'exactly one parOf edge was re-pointed into the cycle')
-		/** @type {{ code?: unknown } | null} */
-		let raised = null
-		try {
-			void diagram.nodes
-		} catch (error) {
-			raised = /** @type {{ code?: unknown }} */ (error)
-		}
+		const raised = caughtSync(() => diagram.nodes)
 		expectDefined(raised, 'walking a cyclic parOf graph raises rather than hanging')
 		assertEqual(raised.code, 'diagram/parent-edge-cycle', 'and names the condition')
 	})
@@ -503,11 +504,11 @@ describe('DiagramPoint — the link to what is drawn', () => {
 
 describe('DiagramPoint.text — re-texting a node, cache and all', () => {
 	/** The `<a:t>` payloads of a saved drawing part, in document order. */
-	async function drawnStrings(saved) {
+	async function drawnStrings(saved: Uint8Array) {
 		return [...(await drawingXml(saved)).matchAll(/<a:t>([\s\S]*?)<\/a:t>/g)].map((match) => match[1])
 	}
 
-	async function drawingXml(saved) {
+	async function drawingXml(saved: Uint8Array) {
 		return new TextDecoder().decode((await partBodies(saved)).get('ppt/diagrams/drawing1.xml'))
 	}
 
@@ -516,7 +517,7 @@ describe('DiagramPoint.text — re-texting a node, cache and all', () => {
 	 * identity rather than as equal text. A `dsp:sp` never nests, so scanning to the first
 	 * close tag is exact.
 	 */
-	async function drawnParagraphs(saved, modelId) {
+	async function drawnParagraphs(saved: Uint8Array, modelId: string) {
 		const xml = await drawingXml(saved)
 		const start = xml.indexOf(`<dsp:sp modelId="${modelId}"`)
 		assert(start >= 0, `the drawing part holds a dsp:sp for ${modelId}`)
@@ -677,10 +678,10 @@ describe('a hyperlink in the drawing cache resolves (smartart-hyperlink.pptx)', 
 	}
 
 	/** Every run of `frame` that carries a link, as `text -> url (relId)`. */
-	const linkedRuns = (frame) =>
-		(frame?.paragraphs.flatMap((paragraph) => paragraph.runs) ?? [])
-			.filter((run) => run.hyperlink)
-			.map((run) => `${run.text} -> ${run.hyperlink.url} (${run.hyperlink.relId})`)
+	const linkedRuns = (frame: TextFrame | null | undefined) =>
+		(frame?.paragraphs.flatMap((paragraph) => paragraph.runs) ?? []).flatMap(({ text, hyperlink }) =>
+			hyperlink ? [`${text} -> ${hyperlink.url} (${hyperlink.relId})`] : []
+		)
 
 	test('the two readings of one linked run agree', async () => {
 		// A diagram stores its text twice, in the data part and in the drawing cache, and the two
