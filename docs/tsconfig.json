@@ -38,6 +38,6 @@
 		".vitepress/**/*.mts",
 		"../www/**/*.ts",
 		"../www/**/*.d.ts",
-		"../test/regression/www/mermaid-fence.test.js"
+		"../test/regression/www/mermaid-fence.test.ts"
 	]
 }

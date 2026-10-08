@@ -20,5 +20,8 @@
 		"noPropertyAccessFromIndexSignature": false,
 		"noUncheckedIndexedAccess": false
 	},
-	"include": ["test/**/*.ts"]
+	"include": ["test/**/*.ts"],
+	// Typechecked by `docs/tsconfig.json`: it loads VitePress, whose declarations only compile
+	// under `skipLibCheck`, and this project keeps full lib checking.
+	"exclude": ["test/regression/www/mermaid-fence.test.ts"]
 }
