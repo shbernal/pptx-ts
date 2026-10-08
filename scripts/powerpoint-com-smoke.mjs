@@ -38,11 +38,12 @@
  *     shape at the bound, exported to PNG and compared pixel for pixel. Each pair carries a
  *     third, in-range slide that must paint *differently*, so a run that rendered nothing
  *     fails instead of satisfying every equality.
- * Point it at any deck with `--file` to run only the corruption-open check.
+ * Point it at existing decks with `--file` to run only the corruption-open check on each.
  *
  *   node scripts/powerpoint-com-smoke.mjs                 # nav + custGeom + OLE + prstGeom + 3D-model checks
  *   node scripts/powerpoint-com-smoke.mjs --keep          # ...and keep the generated .pptx files
  *   node scripts/powerpoint-com-smoke.mjs --file deck.pptx # corruption-open check on an existing deck
+ *   node scripts/powerpoint-com-smoke.mjs --file out/*.pptx # ...on every deck the glob names
  *
  * Each deck runs as one PowerPoint job (`powerpoint/client.mjs`): the deck and its VBScript go
  * in, the script's stdout and any PNG it exported come back. With `TSPPTX_POWERPOINT_URL` set the
@@ -94,10 +95,12 @@ const USAGE = `PowerPoint COM smoke: open generated decks in desktop PowerPoint,
   pnpm run test:com
   pnpm run test:com -- --keep
   pnpm run test:com -- --file path/to/deck.pptx
+  pnpm run test:com -- --file demos/showcases/output/*.pptx
 
 Options:
-  --keep          leave the generated decks on disk for inspection
-  --file <path>   open an existing deck instead of generating the corpus
+  --keep             leave the generated decks on disk for inspection
+  --file <path> ...  open existing decks instead of generating the corpus; every path after
+                     --file counts, so a shell glob works
   -h, --help      show this message
 
 Environment:
@@ -106,12 +109,18 @@ Environment:
   TSPPTX_POWERPOINT_TOKEN   the worker's token
 The last two fall back to tools/powerpoint-vm/.env.`
 
-const { values } = parseCliOrExit(process.argv.slice(2), {
+const { values, positionals } = parseCliOrExit(process.argv.slice(2), {
 	usage: USAGE,
-	options: { keep: { type: 'boolean', default: false }, file: { type: 'string' } },
+	options: { keep: { type: 'boolean', default: false }, file: { type: 'string', multiple: true } },
+	allowPositionals: true,
 })
 const KEEP = values.keep
-const EXISTING_FILE = values.file ?? null
+/** @type {string[]} */
+const EXISTING_FILES = [...(values.file ?? []), ...positionals]
+if (positionals.length && !values.file) {
+	console.error(`Unexpected argument: ${positionals[0]}. Name existing decks after --file.\n\n${USAGE}`)
+	process.exit(2)
+}
 
 /** Where a job puts the deck and its script. Returned files are named relative to it. */
 const JOB_DIR = 'com-smoke'
@@ -460,17 +469,24 @@ async function main() {
 	/** @type {Spec[]} */
 	const specs = []
 
-	if (EXISTING_FILE) {
-		// Corruption-open check only — no read-back verifier for an arbitrary deck.
-		const fileSpec = {
-			label: 'file',
-			file: path.resolve(EXISTING_FILE),
-			generated: false,
-			buildVbs: /** @param {string} deckName */ (deckName) => vbsOpenHeader(deckName) + vbsFooter(),
-			verify: () => [],
+	if (EXISTING_FILES.length) {
+		// Corruption-open check only — no read-back verifier for an arbitrary deck. The label
+		// names the deck in every message, and becomes its file name inside the job.
+		const labels = new Set()
+		for (const existing of EXISTING_FILES) {
+			const stem = path.basename(existing, path.extname(existing)).replace(/[^\w.-]/g, '_')
+			let label = stem
+			for (let n = 2; labels.has(label); n++) label = `${stem}-${n}`
+			labels.add(label)
+			specs.push({
+				label,
+				file: path.resolve(existing),
+				generated: false,
+				buildVbs: /** @param {string} deckName */ (deckName) => vbsOpenHeader(deckName) + vbsFooter(),
+				verify: () => [],
+			})
+			console.log(`Using deck [${label}]: ${path.resolve(existing)}`)
 		}
-		specs.push(fileSpec)
-		console.log('Using deck: ' + fileSpec.file)
 	} else {
 		const navFile = await generateNavDeck()
 		console.log('Generated nav deck: ' + navFile)

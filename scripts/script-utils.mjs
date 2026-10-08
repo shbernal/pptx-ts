@@ -172,6 +172,9 @@ export class CliExit extends Error {
  * `options` is `parseArgs`'s own option map (`{type: 'string'|'boolean', short?, default?}`
  * per flag). It is typed loosely here rather than with `ParseArgsOptionConfig`, which
  * `@types/node` does not export; the shape is `parseArgs`'s to validate at runtime anyway.
+ *
+ * A leading `--` is dropped. `pnpm run <script> -- --flag` forwards the `--` itself, and
+ * `parseArgs` would read everything after it as positionals, so `--flag` would never parse.
  * @param {string[]} argv arguments, already sliced past the script name
  * @param {{options: Record<string, any>, usage: string, allowPositionals?: boolean}} config
  * @returns {{values: Record<string, any>, positionals: string[]}}
@@ -184,7 +187,8 @@ export function parseCli(argv, { options, usage, allowPositionals = false }) {
 	/** @type {{values: Record<string, any>, positionals: string[]}} */
 	let parsed
 	try {
-		parsed = parseArgs({ args: argv, options: withHelp, allowPositionals })
+		const args = argv[0] === '--' ? argv.slice(1) : argv
+		parsed = parseArgs({ args, options: withHelp, allowPositionals })
 	} catch (error) {
 		console.error(error instanceof Error ? error.message : String(error))
 		console.error('\n' + usage)

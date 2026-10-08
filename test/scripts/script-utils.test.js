@@ -59,6 +59,12 @@ describe('parseCli', () => {
 		expect(parseCli(['extra'], { options: OPTIONS, usage: 'u', allowPositionals: true }).positionals).toEqual(['extra'])
 		restore()
 	})
+
+	test('drops the leading -- that pnpm run forwards, and only a leading one', () => {
+		expect(parse(['--', '--dir', 'decks']).values).toMatchObject({ dir: 'decks' })
+		const config = { options: OPTIONS, usage: 'u', allowPositionals: true }
+		expect(parseCli(['recipe.ps1', '--', '--dir', 'x'], config).positionals).toEqual(['recipe.ps1', '--dir', 'x'])
+	})
 })
 
 // Node realpaths the main module's URL and leaves `argv[1]` as typed. Comparing the two
