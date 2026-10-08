@@ -30,6 +30,7 @@ Each cell comes from `package.json`, `lefthook.yml` or a workflow under `.github
 | `typecheck:site` | ✓ | ✓ | ✓ | | ✓ | `static` | every change, through `verify` |
 | `raw-xml:check` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
 | `ooxml-literals:check` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
+| `test-imports:check` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
 | `path-refs:check` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
 | `docs:api` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
 | `docs:check` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
@@ -77,7 +78,8 @@ pnpm run check:package  # what CI's package job runs
 ```
 
 - `check:core` is the one list of cheap checks: the four typechecks, `raw-xml:check`,
-  `ooxml-literals:check`, `path-refs:check`, `docs:api`, `docs:check` and `comparison:check`.
+  `ooxml-literals:check`, `test-imports:check`, `path-refs:check`, `docs:api`, `docs:check` and
+  `comparison:check`.
   `docs:api` regenerates the API reference, so `docs:check` validates current pages.
 - `verify` is `ensure-dist`, `check:core` and `test`. `check:static` is `lint`, `lint:chars`,
   `format:check` and `check:core`.
@@ -224,8 +226,8 @@ pnpm exec vitest run test/regression -t "content type default"     # by test nam
 
 ## Test suites
 
-`pnpm test` is `vitest run` with no target list. Vitest discovers every `test/**/*.test.js`
-file, so a new file runs with no list to edit. It excludes `test/browser/**`, which belongs to
+`pnpm test` is `vitest run` with no target list. Vitest discovers every `test/**/*.test.js` and
+`test/**/*.test.ts` file, so a new file runs with no list to edit. It excludes `test/browser/**`, which belongs to
 Playwright.
 
 A documentation-only change needs no test, unless it changes a claim about the package, the
@@ -260,6 +262,30 @@ Two mechanisms replace the guarantee isolation gave:
   file keep source order, which `captureDiagnostics()` and the warn-capturing schema fixtures
   rely on.
 
+### TypeScript and JavaScript tests
+
+The suite is moving from JavaScript to TypeScript, and the two typecheck at different settings
+while both exist. `typecheck:test` runs both projects:
+
+- `tsconfig.test.json` (`typecheck:test:ts`) covers `test/**/*.ts` at `src/`'s strictness,
+  except `noPropertyAccessFromIndexSignature`, which is house style, and
+  `noUncheckedIndexedAccess`, which waits until no JavaScript test is left. An unused binding
+  fails the check, because in a test it is usually a stale assertion. Prefix one with `_` when
+  it is deliberate.
+- `tsconfig.test-js.json` (`typecheck:test:js`) covers the remaining `.js` and `.mjs` files with
+  implicit `any`, unused bindings and unchecked index access allowed. A `.ts` test may import a
+  `.js` helper; the helper is checked here, not at the stricter settings.
+
+Write a new test in TypeScript. Vitest runs `.ts` with no build step, and Playwright accepts a
+`.spec.ts` under every project's prefix.
+
+The scripts under `test/read/fixtures/authoring/` are not tests. They run directly with `node`,
+so they follow the `scripts/` convention: JSDoc-annotated `.mjs`, checked by
+`tsconfig.scripts.json` with `noImplicitAny`.
+
+A test imports the package from `dist/`, never from `src/`; see
+[Test import gate](#test-import-gate).
+
 ### Regression suite layout
 
 Regression tests live in `test/regression/`, one directory per subject: `chart/`, `table/`,
@@ -274,7 +300,8 @@ happy-dom.
   asserts on. No tooling keys on the directory, so a file can move freely.
 - Paths inside a suite are relative to its directory, for example `../../helpers.js` and
   `../../../dist/node.js`.
-- Every Vitest file is `*.test.js`. The Playwright specs in `test/browser/` are `*.spec.mjs`.
+- A Vitest file is `*.test.ts` or `*.test.js`. The Playwright specs in `test/browser/` are
+  `*.spec.ts` or `*.spec.mjs`.
 
 Each regression file calls `defineRegressionSuite(suiteName, cases)` from `test/helpers.js`,
 with exactly two arguments. Put legacy provenance in the suite name, as in
@@ -639,6 +666,24 @@ gate fails on such a literal outside `src/ooxml/` unless `scripts/ooxml-literal-
 names it in that file with a reason. A fact that exactly one module reads or writes can stay
 beside that module, with an entry. An entry whose literal is gone from its file fails too. The
 gate reuses the raw-XML ratchet's AST scan and exemptions.
+
+## Test import gate
+
+```bash
+pnpm run test-imports:check                # in verify and check:static
+node scripts/test-import-gate.mjs --list   # every src/ reference under test/, with line numbers
+```
+
+The suite tests what ships: the export map, the bundled code and the emitted `.d.ts`, so a test
+imports from `dist/`. A test that reaches into `src/` proves something about a module no consumer
+loads, and a type borrowed from there can drift from the published one unnoticed. The gate fails
+on any quoted relative `src/` path in a file under `test/`, whether a static import, a dynamic
+`import()` or a JSDoc type import.
+
+A unit test of an internal with no public surface may import `src/`. `ALLOWED` in
+`scripts/test-import-gate.mjs` lists those files by path without extension, so renaming one to
+`.ts` keeps its entry. An entry whose file no longer names `src/` fails too, so the list only
+shrinks.
 
 ## Path-citation gate
 

@@ -103,16 +103,17 @@ export default defineConfig({
 	// "everything not yet invented" — the first spec added under a third prefix would have
 	// run a second time against the demo's baseURL and failed for a reason having nothing to
 	// do with what it tests. A positive match makes the pairing between a spec's name and
-	// its fixture explicit, and makes adding a prefix a visible edit here.
+	// its fixture explicit, and makes adding a prefix a visible edit here. Each accepts both
+	// `.spec.mjs` and `.spec.ts` while the specs move to TypeScript.
 	projects: [
 		{
 			name: 'demo',
-			testMatch: ['deck-*.spec.mjs', 'cross-runtime-*.spec.mjs'],
+			testMatch: ['deck-*.spec.{mjs,ts}', 'cross-runtime-*.spec.{mjs,ts}'],
 			use: { ...devices['Desktop Chrome'], baseURL: BASE_URL },
 		},
 		{
 			name: 'runtime-adapter',
-			testMatch: ['adapter-*.spec.mjs'],
+			testMatch: ['adapter-*.spec.{mjs,ts}'],
 			use: { ...devices['Desktop Chrome'], baseURL: HARNESS_URL },
 		},
 		{
@@ -120,7 +121,7 @@ export default defineConfig({
 			// two are kept apart so neither fixture's DOM has anything in it the other put
 			// there. See test/browser/harness/table.mjs.
 			name: 'html-table',
-			testMatch: ['table-*.spec.mjs'],
+			testMatch: ['table-*.spec.{mjs,ts}'],
 			use: { ...devices['Desktop Chrome'], baseURL: HARNESS_URL },
 		},
 	],

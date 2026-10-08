@@ -392,7 +392,7 @@
 			// zero here, and oxlint — unlike the preset-based setup this replaces — lets
 			// them stay on without dragging the `no-unsafe-*` family along. Keeping them is
 			// the one place this swap tightens the gate rather than reproducing it.
-			"files": ["scripts/**/*.mjs", "test/**/*.mjs", "test/**/*.js"],
+			"files": ["scripts/**/*.mjs", "test/**/*.mjs", "test/**/*.js", "test/**/*.ts"],
 			"env": {
 				"node": true,
 				"es2024": true,
@@ -489,7 +489,7 @@
 			// are serialized and evaluated in the page. Those reach `window` and nothing
 			// else here grants more, deliberately: a reference to `document` or `fetch`
 			// outside an evaluate callback would be a mistake worth catching.
-			"files": ["test/browser/**/*.mjs"],
+			"files": ["test/browser/**/*.mjs", "test/browser/**/*.ts"],
 			"globals": {
 				"window": "readonly",
 			},

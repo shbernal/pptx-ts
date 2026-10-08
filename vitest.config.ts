@@ -112,9 +112,9 @@ const maxWorkers = resolveMaxWorkers()
 export default defineConfig({
 	test: {
 		// `test/browser/**` belongs to Playwright (`playwright.config.ts`, `pnpm run
-		// test:browser`), not to Vitest. Its specs are named `*.spec.mjs`, which Vitest's
-		// default `include` matches, so without this it would collect them and fail on
-		// `@playwright/test`'s fixtures. Excluded by directory rather than by filename so
+		// test:browser`), not to Vitest. Its specs are named `*.spec.mjs` or `*.spec.ts`,
+		// which Vitest's default `include` matches, so without this it would collect them and
+		// fail on `@playwright/test`'s fixtures. Excluded by directory rather than by filename so
 		// the two harnesses never race for a file on the strength of what it is called.
 		// `.claude/**` holds agent worktrees, whole checkouts of other branches whose tests
 		// would run against this tree's `dist/` and fail on what that branch never built.

@@ -72,6 +72,7 @@ are in every aggregate the repo has.
 | `powerpoint-com-smoke.mjs` | Gate | Opens decks in desktop PowerPoint over COM, each as one PowerPoint job | manual (`test:com`): Windows with PowerPoint, or any OS through the worker |
 | `pptx-parts.mjs` | Library | Explode/diff `.pptx` packages | — |
 | `ooxml-literal-gate.mjs` | Gate | Schema URI and content-type literals outside `src/ooxml/` vs `ooxml-literal-allowlist.json`, each with its reason | `check:core` |
+| `test-import-gate.mjs` | Gate | Relative `src/` imports under `test/` vs the files allowed to unit-test an internal; the suite otherwise imports `dist/` | `check:core` |
 | `ratchet-utils.mjs` | Library | Budget mechanics the two size gates share: headroom, slack, verdict, budget file and stale-key check | — |
 | `raw-xml-ratchet.mjs` | Gate | Hand-built XML per file vs `raw-xml-budget.json` | `check:core` |
 | `read-blindness-census.mjs` | Diagnostic | Which OOXML the read model never looks at | manual (`read:census`) |

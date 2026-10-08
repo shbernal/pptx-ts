@@ -6,26 +6,19 @@
 		"noEmit": true,
 		"types": ["node"],
 		"allowJs": true,
-		"checkJs": true,
+		// A `.ts` test may import a helper still written in `.js`; that file is checked by
+		// `tsconfig.test-js.json` at its own settings, not here.
+		"checkJs": false,
 		"allowImportingTsExtensions": true,
 		"incremental": true,
 		"tsBuildInfoFile": ".tmp/tsconfig.test.tsbuildinfo",
-		// The test suite is plain ESM (`.js`/`.mjs`) run through Vitest, checked against the
-		// package's public types. Null-safety is on, `exactOptionalPropertyTypes` with it, as in
-		// `src/`: a test narrows a nullable read with `expectDefined`/`defined` from
-		// `test/helpers.js`, which fail as an assertion rather than a later `TypeError`.
-		//
-		// What stays relaxed is the strictness that only pays for annotated `.ts` sources:
-		// implicit `any` params/vars, index-signature property access, unused locals/params
-		// (tests routinely bind for clarity or destructure a subset), and unchecked index access.
-		"noImplicitAny": false,
+		// The `.ts` tests are held to `src/`'s strictness with two exceptions.
+		// `noPropertyAccessFromIndexSignature` is house style, not correctness, and tests read
+		// a lot of `Record<string, …>` fixture data. `noUncheckedIndexedAccess` is off until
+		// the whole suite is TypeScript. The unused-binding checks stay on: an unused binding
+		// in a test is usually a stale assertion. Prefix one with `_` when it is deliberate.
 		"noPropertyAccessFromIndexSignature": false,
-		"noUnusedLocals": false,
-		"noUnusedParameters": false,
 		"noUncheckedIndexedAccess": false
 	},
-	"include": ["test/**/*.js", "test/**/*.mjs"],
-	// Typechecked by `docs/tsconfig.json`: it loads VitePress, whose declarations only compile
-	// under `skipLibCheck`, and this project keeps full lib checking.
-	"exclude": ["test/regression/www/mermaid-fence.test.js"]
+	"include": ["test/**/*.ts"]
 }
