@@ -216,10 +216,10 @@ export function htmlBorderToProps(widthStr: string, colorStr: string): BorderPro
  *
  * A fully transparent color (`alpha === 0`) also returns `undefined`: it states the absence of
  * a color, and pptx has no way to say "transparent" in a solid fill.
- * @param {string} value - computed CSS color, e.g. `"rgb(255, 0, 0)"` or `"#ff0000"`
+ * @param {string | null | undefined} value - computed CSS color, e.g. `"rgb(255, 0, 0)"` or `"#ff0000"`; nullish reads as absent
  * @returns {string | undefined} six-digit uppercase hex, or `undefined` when unparseable
  */
-export function cssColorToHex(value: string): string | undefined {
+export function cssColorToHex(value: string | null | undefined): string | undefined {
 	const raw = String(value ?? '').trim()
 
 	const rgbMatch = /^rgba?\(([^)]*)\)$/i.exec(raw)
@@ -284,10 +284,10 @@ const CSS_LENGTH = /^\s*(-?(?:\d+\.?\d*|\.\d+))\s*(px|%)?\s*$/i
  * turned into an absolute length here. (Percentages *are* usable as a proportional column
  * basis; that is {@link parseCssWidthBasis}'s job, not this one's.) Callers decide what a
  * `NaN` means for them.
- * @param {string} value - computed CSS value, e.g. `"1.5px"`
+ * @param {string | null | undefined} value - computed CSS value, e.g. `"1.5px"`; nullish reads as absent
  * @returns {number} magnitude in px, or `NaN` when the value is not an absolute px length
  */
-export function parseCssPx(value: string): number {
+export function parseCssPx(value: string | null | undefined): number {
 	const match = CSS_LENGTH.exec(String(value ?? ''))
 	if (!match || match[2] === '%') return NaN
 	return Number(match[1])
