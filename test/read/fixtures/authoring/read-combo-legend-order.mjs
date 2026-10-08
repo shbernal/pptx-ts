@@ -18,11 +18,18 @@ const outDir = new URL('../../../../.tmp/combo-legend-order/', import.meta.url)
 const dir = path.normalize(outDir.pathname.replace(/^\//, ''))
 
 /** The two colours `probe-combo-legend-order.mjs` paints the first- and second-given subcharts. */
+/** @typedef {readonly [number, number, number]} Rgb */
+/** @type {Rgb} */
 const FIRST = [0xff, 0x00, 0x00]
+/** @type {Rgb} */
 const SECOND = [0x00, 0x00, 0xff]
 
 /** A tolerance, because PowerPoint antialiases a swatch's edges but not its middle. */
 const NEAR = 24
+/**
+ * @param {Rgb} rgb
+ * @param {Rgb} want
+ */
 const matches = (rgb, want) =>
 	Math.abs(rgb[0] - want[0]) <= NEAR && Math.abs(rgb[1] - want[1]) <= NEAR && Math.abs(rgb[2] - want[2]) <= NEAR
 
@@ -32,6 +39,8 @@ const matches = (rgb, want) =>
  * Counted rather than found on the first hit: a stray antialiased pixel is not a swatch, so a
  * column has to hold a few of them to count. Without that the answer came back as whichever
  * colour's plot line happened to dip lowest.
+ * @param {ReturnType<typeof decodePng>} img
+ * @param {Rgb} want
  */
 function leftmostInLegend(img, want, band = 0.18, minRun = 3) {
 	const from = Math.floor(img.h * (1 - band))

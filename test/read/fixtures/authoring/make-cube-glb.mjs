@@ -83,6 +83,10 @@ header.write('glTF', 0, 'ascii')
 header.writeUInt32LE(2, 4)
 header.writeUInt32LE(12 + 8 + jsonChunk.length + 8 + binChunk.length, 8)
 
+/**
+ * @param {Buffer} data
+ * @param {string} type the 4-byte chunk type
+ */
 function chunk(data, type) {
 	const head = Buffer.alloc(8)
 	head.writeUInt32LE(data.length, 0)

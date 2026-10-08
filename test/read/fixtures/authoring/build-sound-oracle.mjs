@@ -12,7 +12,7 @@ const bytes = await readFile(resolve(FIX, 'slide-transition-sound.pptx'))
 const sha256 = createHash('sha256').update(bytes).digest('hex')
 const zip = await JSZip.loadAsync(bytes)
 
-const sha = (b) => createHash('sha256').update(b).digest('hex')
+const sha = (/** @type {Buffer} */ b) => createHash('sha256').update(b).digest('hex')
 const audioBytes = await zipPart(zip, 'ppt/media/audio1.wav').async('nodebuffer')
 
 const slides = []

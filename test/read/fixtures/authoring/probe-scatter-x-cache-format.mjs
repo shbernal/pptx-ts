@@ -42,16 +42,20 @@ const foundChartPart = Object.keys((await JSZip.loadAsync(base)).files).find((f)
 if (!foundChartPart) throw new Error('the probe deck has no chart part')
 const chartPart = foundChartPart
 
+/**
+ * @param {string} name
+ * @param {(xml: string) => string} [edit] the patch; absent for the bytes as written
+ */
 async function variant(name, edit) {
 	const zip = await JSZip.loadAsync(base)
 	const before = await zipPart(zip, chartPart).async('string')
-	const after = edit(before)
+	const after = edit ? edit(before) : before
 	if (edit && after === before) throw new Error(`${name}: the patch changed nothing`)
 	zip.file(chartPart, after)
 	fs.writeFileSync(new URL(`${name}.pptx`, outDir), await zip.generateAsync({ type: 'nodebuffer' }))
 	console.log('wrote', name, 'X cache', /<c:xVal>[\s\S]*?<c:formatCode>([^<]*)</.exec(after)?.[1])
 }
-await variant('as-written', (xml) => xml)
+await variant('as-written')
 await variant('cache-patched', (xml) =>
 	xml.replace(/(<c:xVal>[\s\S]*?<c:formatCode>)[^<]*(<\/c:formatCode>)/, '$10.00$2')
 )

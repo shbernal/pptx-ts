@@ -18,6 +18,21 @@ import { unzipSync, strFromU8 } from 'fflate'
 import { DOMParser, MIME_TYPE, onErrorStopParsing } from '@xmldom/xmldom'
 import { parseCliOrExit, ROOT } from '../../../../scripts/script-utils.mjs'
 
+/** @import { Document, Element } from '@xmldom/xmldom' */
+/** @import { Case, Manifest, Para, Run } from './gen-cases.mjs' */
+
+/**
+ * What PowerPoint baked into one case-id shape.
+ * @typedef {{
+ *   offXEmu: number | null, offYEmu: number | null, extCxEmu: number | null, extCyEmu: number | null,
+ *   autofit: string, fontScale: number | null, lnSpcReduction: number | null,
+ *   bodyWrap: string | null, bodyAnchor: string | null,
+ *   lInsEmu: number | null, tInsEmu: number | null, rInsEmu: number | null, bInsEmu: number | null,
+ *   resolvedTypeface: string | null, runSizeHundredths: number | null
+ * }} ShapeRecord
+ * @typedef {{ hEmu: number, hPt: number, wPt: number }} LoMeasure the fields kept from a `<deck>.lo.json` entry
+ */
+
 // This script lives in test/read/fixtures/authoring/, so the fixtures dir is its parent.
 const FIX = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -39,12 +54,14 @@ const LO_DIR = values['lo-dir'] ?? resolve(ROOT, '.tmp')
 
 // The two namespaces this script reads. `@xmldom/xmldom` is already a runtime
 // dependency of the library, so no parser is pulled in for this script alone.
+/** @type {Record<string, string>} */
 const NS = {
 	a: 'http://schemas.openxmlformats.org/drawingml/2006/main',
 	p: 'http://schemas.openxmlformats.org/presentationml/2006/main',
 }
 const ELEMENT_NODE = 1
 
+/** @param {string} qname */
 function splitQName(qname) {
 	const colon = qname.indexOf(':')
 	const uri = NS[qname.slice(0, colon)]
@@ -58,36 +75,54 @@ function splitQName(qname) {
  * Deliberately not `getElementsByTagNameNS`, which searches descendants: every
  * lookup below is a child step (`p:spPr` → `a:xfrm` → `a:off`), and a descendant
  * search would happily match an `a:off` belonging to some nested subtree.
+ * @param {Element | null} parent
+ * @param {string} qname
+ * @returns {Element | null}
  */
 function child(parent, qname) {
 	if (!parent) return null
 	const { uri, local } = splitQName(qname)
 	for (let node = parent.firstChild; node; node = node.nextSibling)
-		if (node.nodeType === ELEMENT_NODE && node.localName === local && node.namespaceURI === uri) return node
+		if (node.nodeType === ELEMENT_NODE && node.localName === local && node.namespaceURI === uri)
+			return /** @type {Element} */ (node)
 	return null
 }
 
-/** Every descendant element matching a prefixed qname, in document order. */
+/**
+ * Every descendant element matching a prefixed qname, in document order.
+ * @param {Document | Element} root
+ * @param {string} qname
+ */
 function descendants(root, qname) {
 	const { uri, local } = splitQName(qname)
 	const list = root.getElementsByTagNameNS(uri, local)
 	const out = []
-	for (let i = 0; i < list.length; i++) out.push(list[i])
+	for (let i = 0; i < list.length; i++) {
+		const element = list[i]
+		if (element) out.push(element)
+	}
 	return out
 }
 
-/** An unprefixed attribute value, or `null` when the element or attribute is absent. */
+/**
+ * An unprefixed attribute value, or `null` when the element or attribute is absent.
+ * @param {Element | null} element
+ * @param {string} name
+ */
 function attr(element, name) {
 	if (!element || !element.hasAttribute(name)) return null
 	return element.getAttribute(name)
 }
 
+/** @param {string | null} v */
 function int(v) {
 	return v == null ? null : parseInt(v, 10)
 }
 
+/** @param {string} xml */
 function readSlideShapes(xml) {
 	const doc = new DOMParser({ onError: onErrorStopParsing }).parseFromString(xml, MIME_TYPE.XML_TEXT)
+	/** @type {Record<string, ShapeRecord>} */
 	const byName = {}
 	// Shapes nest (a group's children are `p:sp` too), so this one lookup is a
 	// descendant search — the field reads below are all child steps.
@@ -125,11 +160,13 @@ function readSlideShapes(xml) {
 	return byName
 }
 
+/** @param {string} pptxPath */
 function readDeck(pptxPath) {
 	const zip = unzipSync(readFileSync(pptxPath))
 	const slideNames = Object.keys(zip)
 		.filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n))
 		.sort((a, b) => parseInt(a.match(/(\d+)/)?.[1] ?? '0', 10) - parseInt(b.match(/(\d+)/)?.[1] ?? '0', 10))
+	/** @type {Record<string, ShapeRecord>} */
 	const out = {}
 	for (const n of slideNames) {
 		const data = zip[n]
@@ -139,9 +176,10 @@ function readDeck(pptxPath) {
 }
 
 // Flatten a case's primary inputs for the table (full case kept under `case`).
+/** @param {Case} c */
 function caseInputs(c) {
-	const firstRun = c.paragraphs?.[0]?.runs?.[0] ?? {}
-	const firstPara = c.paragraphs?.[0] ?? {}
+	const firstRun = c.paragraphs?.[0]?.runs?.[0] ?? /** @type {Partial<Run>} */ ({})
+	const firstPara = c.paragraphs?.[0] ?? /** @type {Partial<Para>} */ ({})
 	return {
 		kind: c.kind,
 		font: firstRun.font ?? null,
@@ -174,9 +212,11 @@ function main() {
 	// without the (uncommitted) <deck>.lo.json files does not clobber it. The LO
 	// measurement is a Windows+LibreOffice step (the sibling measure-lo.py).
 	const outPath = resolve(FIX, 'autofit-calibration.json')
+	/** @type {Record<string, LoMeasure>} */
 	const priorLo = {}
 	if (existsSync(outPath)) {
 		try {
+			/** @type {{ decks?: { cases?: { id: string, libreoffice?: LoMeasure | null }[] }[] }} */
 			const prev = JSON.parse(readFileSync(outPath, 'utf8'))
 			for (const d of prev.decks ?? []) for (const c of d.cases ?? []) if (c.libreoffice) priorLo[c.id] = c.libreoffice
 		} catch {
@@ -186,6 +226,7 @@ function main() {
 	const decks = []
 	for (const mf of manifests.sort()) {
 		const deckName = mf.replace(/\.cases\.json$/, '')
+		/** @type {Manifest} */
 		const spec = JSON.parse(readFileSync(resolve(FIX, mf), 'utf8'))
 		const pptx = resolve(FIX, `${deckName}.pptx`)
 		if (!existsSync(pptx)) {
@@ -194,6 +235,7 @@ function main() {
 		}
 		const pp = readDeck(pptx)
 		const loPath = resolve(LO_DIR, `${deckName}.lo.json`)
+		/** @type {Record<string, LoMeasure> | null} */
 		const lo = existsSync(loPath) ? JSON.parse(readFileSync(loPath, 'utf8')) : null
 		const records = spec.cases.map((c) => {
 			const ppOut = pp[c.id] ?? null

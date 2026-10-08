@@ -34,6 +34,7 @@
 	// no project's `include` at all — never typechecked by anything.
 	"include": [
 		"scripts/**/*.mjs",
+		"test/read/fixtures/authoring/*.mjs",
 		"vitest.config.ts",
 		"tsdown.config.ts",
 		"tsdown.dev.config.ts",

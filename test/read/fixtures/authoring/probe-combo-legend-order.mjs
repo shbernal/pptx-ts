@@ -44,6 +44,8 @@
 import fs from 'node:fs'
 import TsPptx, { ChartType } from '../../../../dist/node.js'
 
+/** @import { ChartMulti, ChartOpts } from '../../../../dist/node.js' */
+
 const outDir = new URL('../../../../.tmp/combo-legend-order/', import.meta.url)
 fs.rmSync(outDir, { recursive: true, force: true })
 fs.mkdirSync(outDir, { recursive: true })
@@ -51,9 +53,24 @@ fs.mkdirSync(outDir, { recursive: true })
 const labels = ['P', 'Q', 'R']
 const secondary = { secondaryValAxis: true, secondaryCatAxis: true }
 const axes = { valAxes: [{}, {}], catAxes: [{}, { catAxisHidden: true }] }
+/** @param {...string} names */
 const series = (...names) => names.map((name, i) => ({ name, labels, values: [1 + i, 2 + i, 3 + i] }))
+/**
+ * @param {string[]} names
+ * @param {ChartOpts} [options]
+ * @returns {ChartMulti}
+ */
 const bar = (names, options = {}) => ({ type: ChartType.bar, data: series(...names), options })
+/**
+ * @param {string[]} names
+ * @param {ChartOpts} [options]
+ * @returns {ChartMulti}
+ */
 const line = (names, options = {}) => ({ type: ChartType.line, data: series(...names), options })
+/**
+ * @param {ChartOpts} [options]
+ * @returns {ChartMulti}
+ */
 const scatter = (options = {}) => ({
 	type: ChartType.scatter,
 	data: [
@@ -66,6 +83,7 @@ const scatter = (options = {}) => ({
 /**
  * The six chart types a combo can hold, each as a one-series subchart whose series is painted
  * `color`. One series apiece keeps the swatch-to-type mapping unambiguous.
+ * @satisfies {Record<string, (name: string, color: string, options: ChartOpts) => ChartMulti>}
  */
 const ONE_SERIES = {
 	bar: (name, color, options) => ({
@@ -107,11 +125,14 @@ const ONE_SERIES = {
 }
 
 /** The colour each position in the *given* order is painted, so a swatch names its subchart. */
-const COLORS = ['FF0000', '0000FF']
+const COLORS = /** @type {const} */ (['FF0000', '0000FF'])
 
-const TYPES = Object.keys(ONE_SERIES)
+/** @typedef {keyof typeof ONE_SERIES} SeriesType */
+
+const TYPES = /** @type {SeriesType[]} */ (Object.keys(ONE_SERIES))
 
 /** Every ordered pair of distinct types: the rank is not assumed symmetric until it is measured. */
+/** @type {[SeriesType, SeriesType][]} */
 const pairs = []
 for (const first of TYPES) {
 	for (const second of TYPES) {
@@ -119,6 +140,7 @@ for (const first of TYPES) {
 	}
 }
 
+/** @type {Record<string, { types: ChartMulti[], secondaryAxes: boolean }>} */
 const decks = {
 	'same-axis-line-bar': { types: [line(['A']), bar(['B', 'C'])], secondaryAxes: false },
 	'same-axis-bar-line': { types: [bar(['B', 'C']), line(['A'])], secondaryAxes: false },

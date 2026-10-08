@@ -29,10 +29,41 @@ const LC = 'abcdefghijklmnopqrstuvwxyz'
 const UC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 const DG = '0123456789'
 
+/**
+ * The manifest shape, which extract-autofit-calibration.mjs reads back.
+ * @typedef {{ l: number, r: number, t: number, b: number }} Insets
+ * @typedef {{ bold?: boolean, italic?: boolean, charSpacingPts?: number }} RunOptions
+ * @typedef {{ text: string, font: string, sizePt: number, bold: boolean, italic: boolean, charSpacingPts?: number }} Run
+ * @typedef {{ lineSpacingPct?: number, lineSpacingPts?: number, spaceBeforePts?: number, spaceAfterPts?: number }} ParaOptions
+ * @typedef {ParaOptions & { runs: Run[] }} Para
+ * @typedef {{
+ *   id: string, kind: string, slide: number, xPt: number, yPt: number | undefined, wPt: number, hPt: number,
+ *   wrap: boolean, anchor: string, insetsPt: Insets, paragraphs: Para[], note?: string
+ * }} Case
+ * @typedef {Partial<Omit<Case, 'id' | 'slide'>>} CaseOverrides
+ * @typedef {{ run?: RunOptions, para?: ParaOptions }} OneRunOptions
+ * @typedef {{
+ *   deck: string, slideWidthPt: number, slideHeightPt: number, fontsRequired: string[], notes: string, cases: Case[]
+ * }} Manifest
+ */
+
+/**
+ * @param {string} text
+ * @param {string} font
+ * @param {number} sizePt
+ * @param {RunOptions} [o]
+ * @returns {Run}
+ */
 const run = (text, font, sizePt, o = {}) => ({ text, font, sizePt, bold: !!o.bold, italic: !!o.italic, ...o })
+/**
+ * @param {Run | Run[]} runs
+ * @param {ParaOptions} [o]
+ * @returns {Para}
+ */
 const para = (runs, o = {}) => ({ runs: Array.isArray(runs) ? runs : [runs], ...o })
 
 function deck1() {
+	/** @type {Case[]} */
 	const cases = []
 	let slide = 0
 	for (const f of FONTS) {
@@ -58,6 +89,7 @@ function deck1() {
 			}
 			// --- advance-width slide: lowercase / uppercase / digits, AutoSizeNone fixed boxes ---
 			slide++
+			/** @type {[string, string][]} */
 			const strs = [
 				['lc', LC],
 				['uc', UC],
@@ -94,7 +126,7 @@ function deck1() {
 
 // ---- Deck 2: shrink (normAutofit) calibration ----
 const SENT = 'The quick brown fox jumps over the lazy dog. '
-const overflow = (n) => SENT.repeat(n).trim()
+const overflow = (/** @type {number} */ n) => SENT.repeat(n).trim()
 const IN = 72 // pt per inch
 const BOLDABLE = [
 	{ face: 'Aptos', slug: 'aptos' },
@@ -104,8 +136,13 @@ const BOLDABLE = [
 ]
 
 function deck2() {
+	/** @type {Case[]} */
 	const cases = []
 	let slide = 0
+	/**
+	 * @param {string} id
+	 * @param {CaseOverrides} o
+	 */
 	const add = (id, o) => {
 		slide++
 		cases.push({
@@ -123,6 +160,12 @@ function deck2() {
 			...o,
 		})
 	}
+	/**
+	 * @param {string} text
+	 * @param {string} face
+	 * @param {number} size
+	 * @param {OneRunOptions} [o]
+	 */
 	const oneRun = (text, face, size, o = {}) => [
 		para(run(text, face, size, o.run || {}), o.para || { lineSpacingPct: 100 }),
 	]
@@ -213,9 +256,14 @@ function deck2() {
 
 // ---- Deck 3: resize (spAutoFit / baked cy) calibration ----
 function deck3() {
+	/** @type {Case[]} */
 	const cases = []
 	let slide = 0
 	const three = [METRIC_WORD, METRIC_WORD, METRIC_WORD].join('\n')
+	/**
+	 * @param {string} id
+	 * @param {CaseOverrides} o
+	 */
 	const mk = (id, o) => {
 		slide++
 		cases.push({
@@ -233,6 +281,12 @@ function deck3() {
 			...o,
 		})
 	}
+	/**
+	 * @param {string} text
+	 * @param {string} face
+	 * @param {number} size
+	 * @param {OneRunOptions} [o]
+	 */
 	const oneRun = (text, face, size, o = {}) => [
 		para(run(text, face, size, o.run || {}), o.para || { lineSpacingPct: 100 }),
 	]
@@ -277,9 +331,14 @@ function deck3() {
 
 // ---- Deck 4: edge cases (Aptos) most likely to break the simulator ----
 function deck4() {
+	/** @type {Case[]} */
 	const cases = []
 	let slide = 0
 	const LONGTOKEN = 'Supercalifragilisticexpialidociousantidisestablishmentarianism'
+	/**
+	 * @param {string} id
+	 * @param {CaseOverrides} o
+	 */
 	const push = (id, o) => {
 		slide++
 		cases.push({
@@ -297,6 +356,10 @@ function deck4() {
 			...o,
 		})
 	}
+	/**
+	 * @param {string} text
+	 * @param {OneRunOptions} [o]
+	 */
 	const oneRun = (text, o = {}) => [para(run(text, 'Aptos', 18, o.run || {}), o.para || { lineSpacingPct: 100 })]
 
 	// over-long single token, no break opportunity -> character wrap vs width overflow
@@ -409,7 +472,7 @@ if (unknown.length) {
 }
 const names = positionals.length ? positionals : Object.keys(decks)
 for (const name of names) {
-	const spec = decks[name]()
+	const spec = decks[/** @type {keyof typeof decks} */ (name)]()
 	const out = resolve(FIX, `${name}.cases.json`)
 	writeFileSync(out, JSON.stringify(spec, null, 2) + '\n')
 	console.log(`wrote ${out} (${spec.cases.length} cases)`)

@@ -31,16 +31,23 @@ const DRAWING_EXT_URI = 'http://schemas.microsoft.com/office/drawing/2008/diagra
 const decks = process.argv.slice(2)
 if (decks.length === 0) decks.push(resolve(FIX, 'smartart-families.pptx'), resolve(FIX, 'mixed.pptx'))
 
-/** `<a:t>` payloads of one element, in document order — good enough to identify a string. */
+/**
+ * `<a:t>` payloads of one element, in document order — good enough to identify a string.
+ * @param {string} xml
+ */
 function textOf(xml) {
-	return [...xml.matchAll(/<a:t>([\s\S]*?)<\/a:t>/g)].map((m) => decode(m[1])).join('')
+	return [...xml.matchAll(/<a:t>([\s\S]*?)<\/a:t>/g)].map((m) => decode(/** @type {string} */ (m[1]))).join('')
 }
 
-/** One entry per `<a:p>`, so a body's paragraphs can be indexed by `destOrd`. */
+/**
+ * One entry per `<a:p>`, so a body's paragraphs can be indexed by `destOrd`.
+ * @param {string} xml
+ */
 function paragraphsOf(xml) {
 	return [...xml.matchAll(/<a:p>([\s\S]*?)<\/a:p>|<a:p\/>/g)].map((m) => textOf(m[1] ?? ''))
 }
 
+/** @param {string} s */
 function decode(s) {
 	return s
 		.replaceAll('&lt;', '<')
@@ -50,8 +57,13 @@ function decode(s) {
 		.replaceAll('&amp;', '&')
 }
 
-/** Every `<tag …>…</tag>` (or self-closed) at any depth, as raw substrings. */
+/**
+ * Every `<tag …>…</tag>` (or self-closed) at any depth, as raw substrings.
+ * @param {string} xml
+ * @param {string} tag
+ */
 function elements(xml, tag) {
+	/** @type {string[]} */
 	const out = []
 	const open = new RegExp(`<${tag}(\\s[^>]*?)?(/)?>`, 'g')
 	for (let m = open.exec(xml); m; m = open.exec(xml)) {
@@ -68,25 +80,39 @@ function elements(xml, tag) {
 	return out
 }
 
+/**
+ * @param {string} xml
+ * @param {string} name
+ */
 function attrOf(xml, name) {
 	const m = xml.match(new RegExp(`\\s${name}="([^"]*)"`))
-	return m ? decode(m[1]) : null
+	return m ? decode(/** @type {string} */ (m[1])) : null
 }
 
+/**
+ * @param {JSZip} zip
+ * @param {string} partName
+ * @returns {Promise<Record<string, string>>}
+ */
 async function relationships(zip, partName) {
 	const dir = partName.slice(0, partName.lastIndexOf('/'))
 	const base = partName.slice(partName.lastIndexOf('/') + 1)
 	const file = zip.file(`${dir}/_rels/${base}.rels`)
 	if (!file) return {}
 	const xml = await file.async('string')
+	/** @type {Record<string, string>} */
 	const map = {}
 	for (const rel of elements(xml, 'Relationship')) {
+		const id = attrOf(rel, 'Id')
 		const target = attrOf(rel, 'Target')
-		map[attrOf(rel, 'Id')] = target.startsWith('/') ? target.slice(1) : normalize(`${dir}/${target}`)
+		if (id === null || target === null)
+			throw new Error(`a Relationship in ${dir}/_rels/${base}.rels lacks Id or Target`)
+		map[id] = target.startsWith('/') ? target.slice(1) : normalize(`${dir}/${target}`)
 	}
 	return map
 }
 
+/** @param {string} path */
 function normalize(path) {
 	const out = []
 	for (const seg of path.split('/')) {
@@ -100,7 +126,10 @@ function normalize(path) {
 /** @param {string} partName */
 const slideNumber = (partName) => Number(mustMatch(partName, /\d+/, `a number in ${partName}`)[0])
 
-/** Every diagram in the deck, as `{ slide, dataPart, drawingPart }`. */
+/**
+ * Every diagram in the deck, as `{ slide, dataPart, drawingPart }`.
+ * @param {JSZip} zip
+ */
 async function diagrams(zip) {
 	const found = []
 	const slideNames = Object.keys(zip.files)
@@ -110,7 +139,9 @@ async function diagrams(zip) {
 		const xml = await zipPart(zip, slideName).async('string')
 		const rels = await relationships(zip, slideName)
 		for (const relIds of elements(xml, 'dgm:relIds')) {
-			const dataPart = rels[attrOf(relIds, 'r:dm')]
+			const dmId = attrOf(relIds, 'r:dm')
+			const dataPart = dmId === null ? undefined : rels[dmId]
+			if (dataPart === undefined) throw new Error(`${slideName}: a dgm:relIds r:dm names no relationship`)
 			const dataXml = await zipPart(zip, dataPart).async('string')
 			found.push({
 				slide: slideNumber(slideName),
@@ -129,6 +160,8 @@ async function diagrams(zip) {
  * slide with two diagrams still resolves each to its own cache. The relationship id belongs
  * to the part holding the *frame*, not to the data part — a data part has no `_rels` at all.
  * Same route `Diagram.drawingPart` takes in `src/read/api/diagram.ts`.
+ * @param {string} dataXml
+ * @param {Record<string, string>} frameRels
  */
 function drawingPartOf(dataXml, frameRels) {
 	for (const ext of elements(dataXml, 'a:ext')) {
@@ -139,6 +172,12 @@ function drawingPartOf(dataXml, frameRels) {
 	return null
 }
 
+/**
+ * @type {{
+ *   deck: string, slide: number, layoutId: string | null,
+ *   point: { modelId: string | null, type: string, text: string }, reason: string
+ * }[]}
+ */
 const failures = []
 let probed = 0
 
@@ -160,18 +199,21 @@ for (const deck of decks) {
 		// `presName` is the layout engine's own label for what a pres point draws (`rootText`,
 		// `rootConnector`, `sibTrans`, …). It is the readable half of the mapping: it says which
 		// of a node's several presentations is the one with the words in it.
+		/** @type {Map<string | null, string | null>} */
 		const presNames = new Map()
 		for (const xml of elements(diagram.dataXml, 'dgm:pt')) {
 			if (attrOf(xml, 'type') !== 'pres') continue
 			presNames.set(attrOf(xml, 'modelId'), attrOf(xml, 'presName'))
 		}
 
+		/** @type {Map<string | null, { destId: string | null, destOrd: number, sourceOrd: number }[]>} */
 		const presOf = new Map()
 		for (const cxn of elements(diagram.dataXml, 'dgm:cxn')) {
 			if (attrOf(cxn, 'type') !== 'presOf') continue
 			const src = attrOf(cxn, 'srcId')
-			if (!presOf.has(src)) presOf.set(src, [])
-			presOf.get(src).push({
+			let list = presOf.get(src)
+			if (!list) presOf.set(src, (list = []))
+			list.push({
 				destId: attrOf(cxn, 'destId'),
 				destOrd: Number(attrOf(cxn, 'destOrd') ?? 0),
 				sourceOrd: Number(attrOf(cxn, 'srcOrd') ?? 0),
@@ -181,6 +223,7 @@ for (const deck of decks) {
 
 		// A `dsp:sp` with no `dsp:txBody` at all is a drawn shape that cannot hold text —
 		// a connector, or a picture frame. Distinct from one whose body is empty.
+		/** @type {Map<string | null, string[] | null>} */
 		const shapes = new Map()
 		if (diagram.drawingPart) {
 			const drawingXml = await zipPart(zip, diagram.drawingPart).async('string')
@@ -190,6 +233,7 @@ for (const deck of decks) {
 			}
 		}
 
+		/** @type {Record<string, number>} */
 		const counts = {}
 		for (const p of points) counts[p.type] = (counts[p.type] ?? 0) + 1
 		console.log(`\n--- slide ${diagram.slide}  ${diagram.dataPart} -> ${diagram.drawingPart ?? '(no drawing part)'}`)
@@ -199,8 +243,10 @@ for (const deck of decks) {
 		for (const point of points) {
 			if (point.type === 'pres' || point.type === 'doc') continue
 			probed++
-			const cxns = presOf.get(point.modelId) ?? []
-			const label = `${point.type.padEnd(8)} ${point.modelId.slice(0, 9)}… ${JSON.stringify(point.text).padEnd(10)}`
+			const modelId = point.modelId
+			if (modelId === null) throw new Error(`${deck}: a ${point.type} dgm:pt has no modelId`)
+			const cxns = presOf.get(modelId) ?? []
+			const label = `${point.type.padEnd(8)} ${modelId.slice(0, 9)}… ${JSON.stringify(point.text).padEnd(10)}`
 
 			// Every presentation of the point, in `srcOrd` order — the org-chart box and the
 			// connector under it are two presentations of one node, and only the first has text.

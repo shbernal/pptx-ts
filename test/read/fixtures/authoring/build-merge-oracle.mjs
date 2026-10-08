@@ -12,6 +12,13 @@ const bytes = await readFile(resolve(FIX, 'import-animation-merge.pptx'))
 const sha256 = createHash('sha256').update(bytes).digest('hex')
 const zip = await JSZip.loadAsync(bytes)
 
+/**
+ * The balanced `<tag>` element of `s` that opens at `startIdx`.
+ * @param {string} s
+ * @param {number} startIdx
+ * @param {string} tag
+ * @returns {string}
+ */
 function elementAt(s, startIdx, tag) {
 	let i = startIdx
 	let depth = 0
@@ -33,10 +40,13 @@ function elementAt(s, startIdx, tag) {
 	throw new Error('unbalanced ' + tag)
 }
 
+/** @param {number} n */
 async function slideModel(n) {
 	const xml = await zipPart(zip, `ppt/slides/slide${n}.xml`).async('string')
+	/** @type {Record<string, string>} */
 	const shapeIds = {}
-	for (const m of xml.matchAll(/<p:cNvPr id="(\d+)" name="([^"]*)"/g)) shapeIds[m[1]] = m[2]
+	for (const m of xml.matchAll(/<p:cNvPr id="(\d+)" name="([^"]*)"/g))
+		shapeIds[/** @type {string} */ (m[1])] = /** @type {string} */ (m[2])
 	const timingXml = mustMatch(xml, /<p:timing>[\s\S]*<\/p:timing>/, 'p:timing')[0]
 	const bldLstXml = mustMatch(timingXml, /<p:bldLst>[\s\S]*<\/p:bldLst>/, 'p:bldLst')[0]
 	const animationSpids = [...bldLstXml.matchAll(/<p:bldP spid="(\d+)"/g)].map((x) => Number(x[1]))
@@ -45,7 +55,7 @@ async function slideModel(n) {
 		/<p:cTn id="\d+" presetID="(\d+)" presetClass="(entr|emph|exit)" presetSubtype="(\d+)" fill="hold" grpId="0" nodeType="(\w+)">/g
 	for (const m of timingXml.matchAll(re)) {
 		const cTnFull = elementAt(timingXml, m.index, 'p:cTn')
-		const spid = Number(cTnFull.match(/<p:spTgt spid="(\d+)"/)[1])
+		const spid = Number(mustMatch(cTnFull, /<p:spTgt spid="(\d+)"/, 'a p:spTgt in a p:cTn')[1])
 		effects.push({
 			presetID: Number(m[1]),
 			presetClass: m[2],

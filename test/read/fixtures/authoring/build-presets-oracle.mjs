@@ -18,10 +18,18 @@ const slideXml = await zipPart(zip, 'ppt/slides/slide1.xml').async('string')
 const timingXml = mustMatch(slideXml, /<p:timing>[\s\S]*<\/p:timing>/, 'p:timing')[0]
 
 // --- shapeIds: id -> name from each <p:cNvPr id=".." name=".."> on a top-level sp ---
+/** @type {Record<string, string>} */
 const shapeIds = {}
-for (const m of slideXml.matchAll(/<p:cNvPr id="(\d+)" name="([^"]*)"/g)) shapeIds[m[1]] = m[2]
+for (const m of slideXml.matchAll(/<p:cNvPr id="(\d+)" name="([^"]*)"/g))
+	shapeIds[/** @type {string} */ (m[1])] = /** @type {string} */ (m[2])
 
 // --- balanced <p:cTn ...> ... </p:cTn> extractor ---
+/**
+ * @param {string} s
+ * @param {number} startIdx
+ * @param {string} tag
+ * @returns {string}
+ */
 function elementAt(s, startIdx, tag) {
 	// startIdx points at '<tag'
 	let i = startIdx
@@ -49,6 +57,10 @@ function elementAt(s, startIdx, tag) {
 	throw new Error('unbalanced ' + tag)
 }
 
+/**
+ * @param {string} elXml
+ * @param {string} tag
+ */
 function innerOf(elXml, tag) {
 	const open = elXml.indexOf(`<${tag}`)
 	const full = elementAt(elXml, open, tag)
@@ -58,6 +70,7 @@ function innerOf(elXml, tag) {
 }
 
 // --- per-preset effect nodes: every <p:cTn ... presetID=...> ---
+/** @type {Record<string, string>} */
 const presetByName = {
 	'entr-fadeIn': 'fadeIn',
 	'entr-flyIn': 'flyIn',
@@ -70,15 +83,17 @@ const presetByName = {
 }
 
 const effects = []
+/** @type {Record<string, { key: object, effectParXml: string, behaviorsXml: string, bldPXml: string }>} */
 const presetTemplates = {}
 const cTnOpenRe =
 	/<p:cTn id="\d+" presetID="(\d+)" presetClass="(entr|emph|exit)" presetSubtype="(\d+)" fill="hold" grpId="0" nodeType="(\w+)">/g
 for (const m of timingXml.matchAll(cTnOpenRe)) {
 	const cTnFull = elementAt(timingXml, m.index, 'p:cTn')
-	const spid = cTnFull.match(/<p:spTgt spid="(\d+)"/)[1]
+	const spid = /** @type {string} */ (mustMatch(cTnFull, /<p:spTgt spid="(\d+)"/, 'a p:spTgt in a p:cTn')[1])
 	const childTnLst = innerOf(cTnFull, 'p:childTnLst')
 	const shapeName = shapeIds[spid]
-	const presetName = presetByName[shapeName]
+	const presetName = shapeName === undefined ? undefined : presetByName[shapeName]
+	if (presetName === undefined) throw new Error(`shape ${spid} (${shapeName}) names no preset in presetByName`)
 	const key = { presetID: Number(m[1]), presetClass: m[2], presetSubtype: Number(m[3]), nodeType: m[4] }
 	effects.push({ ...key, grpId: 0, spid: Number(spid), shapeName, presetName })
 	presetTemplates[presetName] = {

@@ -9,10 +9,15 @@ import { mustMatch } from './oracle-utils.mjs'
 const HERE = dirname(fileURLToPath(import.meta.url))
 const FIX = resolve(HERE, '..')
 
+/** @param {string} path */
 function load(path) {
 	const bytes = readFileSync(path)
 	const zip = unzipSync(bytes)
-	const txt = (p) => strFromU8(zip[p])
+	const txt = (/** @type {string} */ p) => {
+		const part = zip[p]
+		if (!part) throw new Error(`${path} has no ${p}`)
+		return strFromU8(part)
+	}
 	const sha256 = createHash('sha256').update(bytes).digest('hex')
 	const app = txt('docProps/app.xml')
 	const application = (app.match(/<Application>([^<]*)<\/Application>/) || [])[1] ?? null
@@ -21,33 +26,41 @@ function load(path) {
 }
 
 // Ordered slide parts via presentation.xml sldIdLst -> rels.
+/** @param {(part: string) => string} txt */
 function slideOrder(txt) {
 	const pres = txt('ppt/presentation.xml')
 	const rels = txt('ppt/_rels/presentation.xml.rels')
+	/** @type {Record<string, string>} */
 	const relMap = {}
-	for (const m of rels.matchAll(/<Relationship\b[^>]*Id="([^"]+)"[^>]*Target="([^"]+)"[^>]*\/?>/g)) relMap[m[1]] = m[2]
+	for (const m of rels.matchAll(/<Relationship\b[^>]*Id="([^"]+)"[^>]*Target="([^"]+)"[^>]*\/?>/g))
+		relMap[/** @type {string} */ (m[1])] = /** @type {string} */ (m[2])
 	const order = []
-	for (const m of pres.match(/<p:sldIdLst>([\s\S]*?)<\/p:sldIdLst>/)[1].matchAll(/r:id="([^"]+)"/g)) {
-		let t = relMap[m[1]]
+	const sldIdLst = /** @type {string} */ (mustMatch(pres, /<p:sldIdLst>([\s\S]*?)<\/p:sldIdLst>/, 'p:sldIdLst')[1])
+	for (const m of sldIdLst.matchAll(/r:id="([^"]+)"/g)) {
+		let t = relMap[/** @type {string} */ (m[1])]
+		if (t === undefined) throw new Error(`presentation.xml.rels has no target for ${m[1]}`)
 		if (!t.startsWith('ppt/')) t = 'ppt/' + t.replace(/^\/?/, '')
 		order.push(t)
 	}
 	return order
 }
 
+/** @param {string} tx */
 function decodeTransition(tx) {
 	const open = tx.match(/<p:transition\b([^>]*?)\/?>/)
-	const attrs = open ? open[1] : ''
-	const at = (k) => (attrs.match(new RegExp('\\b' + k + '="([^"]+)"')) || [])[1] ?? null
+	const attrs = open ? /** @type {string} */ (open[1]) : ''
+	const at = (/** @type {string} */ k) => (attrs.match(new RegExp('\\b' + k + '="([^"]+)"')) || [])[1] ?? null
 	const body = tx.replace(/^<p:transition\b[^>]*?>/, '').replace(/<\/p:transition>\s*$/, '')
 	const child = body.match(/<(?:([\w]+):)?([\w]+)\b([^>]*?)\/?>/)
 	let element = null,
 		ns = 'p'
+	/** @type {Record<string, string>} */
 	const variant = {}
 	if (child) {
 		ns = child[1] || 'p'
 		element = child[2]
-		for (const a of (child[3] || '').matchAll(/([\w:]+)="([^"]*)"/g)) variant[a[1]] = a[2]
+		for (const a of (child[3] || '').matchAll(/([\w:]+)="([^"]*)"/g))
+			variant[/** @type {string} */ (a[1])] = /** @type {string} */ (a[2])
 	}
 	return {
 		element,
@@ -60,6 +73,9 @@ function decodeTransition(tx) {
 	}
 }
 
+/** @typedef {ReturnType<typeof decodeTransition>} DecodedTransition */
+
+/** @param {string} xml */
 function extractTransitionRegion(xml) {
 	let m = xml.match(/<mc:AlternateContent\b[\s\S]*?<\/mc:AlternateContent>/)
 	if (m) return { xml: m[0], wrapped: true }
@@ -68,6 +84,7 @@ function extractTransitionRegion(xml) {
 	return null
 }
 
+/** @param {string} s */
 function firstTransition(s) {
 	const m = s.match(/<p:transition\b[\s\S]*?<\/p:transition>|<p:transition\b[^>]*\/>/)
 	return m ? m[0] : null
@@ -80,6 +97,13 @@ function buildTransition() {
 	const slides = order.map((part, i) => {
 		const xml = f.txt(part)
 		const region = extractTransitionRegion(xml)
+		/**
+		 * @type {{
+		 *   slide: number, part: string, wrapped: boolean, transitionXml: string | null,
+		 *   requires?: string | null, choice?: DecodedTransition | null, fallback?: DecodedTransition | null,
+		 *   decoded?: object
+		 * }}
+		 */
 		const out = {
 			slide: i + 1,
 			part: part.replace('ppt/slides/', ''),
@@ -90,9 +114,9 @@ function buildTransition() {
 		if (region.wrapped) {
 			const ch = region.xml.match(/<mc:Choice\b[^>]*Requires="([^"]+)"[\s\S]*?>([\s\S]*?)<\/mc:Choice>/)
 			const fb = region.xml.match(/<mc:Fallback>([\s\S]*?)<\/mc:Fallback>/)
-			const choiceTx = ch ? firstTransition(ch[2]) : null
-			const fbTx = fb ? firstTransition(fb[1]) : null
-			out.requires = ch ? ch[1] : null
+			const choiceTx = ch ? firstTransition(/** @type {string} */ (ch[2])) : null
+			const fbTx = fb ? firstTransition(/** @type {string} */ (fb[1])) : null
+			out.requires = ch ? /** @type {string} */ (ch[1]) : null
 			out.choice = choiceTx ? decodeTransition(choiceTx) : null
 			out.fallback = fbTx ? decodeTransition(fbTx) : null
 		} else {
@@ -100,6 +124,7 @@ function buildTransition() {
 			out.choice = null
 		}
 		const d = out.choice ?? out.fallback
+		if (!d) throw new Error(`${part}: its transition region holds no decodable p:transition`)
 		out.decoded = {
 			type: d.element,
 			ns: d.ns,
@@ -116,6 +141,7 @@ function buildTransition() {
 	})
 
 	// Full probed PpEntryEffect -> element table (write-side preset table).
+	/** @type {{ entryEffect: number, element?: string | null, ns?: string | null, variant?: Record<string, string> }[]} */
 	const probe = JSON.parse(readFileSync(resolve(HERE, 'entryeffect-table.json'), 'utf8'))
 	const entryEffectTable = probe
 		.filter((r) => r.element != null)
@@ -165,18 +191,23 @@ function buildTransition() {
 }
 
 // ---------- animation oracle (basic + rich) ----------
+/** @param {string} xml */
 function shapeNames(xml) {
+	/** @type {Record<string, string>} */
 	const map = {}
-	for (const m of xml.matchAll(/<p:cNvPr id="(\d+)" name="([^"]*)"/g)) map[m[1]] = m[2]
+	for (const m of xml.matchAll(/<p:cNvPr id="(\d+)" name="([^"]*)"/g))
+		map[/** @type {string} */ (m[1])] = /** @type {string} */ (m[2])
 	return map
 }
+/** @param {string} timing */
 function effects(timing) {
 	const rows = []
 	const re = /<p:cTn id="\d+"([^>]*presetClass="[^"]*"[^>]*)>([\s\S]*?)<p:spTgt spid="(\d+)"/g
+	/** @type {RegExpExecArray | null} */
 	let m
 	while ((m = re.exec(timing))) {
-		const a = m[1]
-		const g = (k) => (a.match(new RegExp(k + '="([^"]*)"')) || [])[1]
+		const a = /** @type {string} */ (m[1])
+		const g = (/** @type {string} */ k) => (a.match(new RegExp(k + '="([^"]*)"')) || [])[1]
 		rows.push({
 			presetID: Number(g('presetID')),
 			presetClass: g('presetClass'),
@@ -188,6 +219,10 @@ function effects(timing) {
 	}
 	return rows
 }
+/**
+ * @param {string} deck the fixture's basename
+ * @param {string} noteHead the oracle's `notes`
+ */
 function buildAnimation(deck, noteHead) {
 	const f = load(`${FIX}/${deck}.pptx`)
 	const xml = f.txt('ppt/slides/slide1.xml')
