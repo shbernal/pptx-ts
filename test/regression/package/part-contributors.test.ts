@@ -13,7 +13,7 @@
 // the contributor list are not on the public surface.
 import { afterAll, beforeAll, describe, test, vi } from 'vitest'
 import TsPptx from '../../../src/node.ts'
-import { buildPackageParts } from '../../../src/package/assemble.ts'
+import { buildPackageParts, type PackageSource } from '../../../src/package/assemble.ts'
 import { composeFamilies } from '../../../src/families/shared.ts'
 import { ALL_CONSTRUCT_FAMILIES } from '../../../src/entry-families.ts'
 import { chartContributor } from '../../../src/package/parts/chart.ts'
@@ -46,12 +46,13 @@ function textDeck() {
  * The slice of deck state the packager reads. `Presentation` assembles this privately with the
  * full contributor list; here the list is the variable under test.
  */
-function sourceWith(pres, partContributors) {
+function sourceWith(pres: TsPptx, partContributors: PackageSource['partContributors']): PackageSource {
+	// Element access reaches the private members, still type-checked.
 	return {
-		runtime: pres._runtime,
-		presentation: pres.internalPresentation,
-		customProperties: pres._customProperties,
-		fontMetrics: pres._fontMetrics,
+		runtime: pres['_runtime'],
+		presentation: pres['internalPresentation'],
+		customProperties: pres['_customProperties'],
+		fontMetrics: pres['_fontMetrics'],
 		renderers: composed.renderers,
 		partContributors,
 	}
@@ -74,17 +75,17 @@ afterAll(() => {
 // latin1, so every byte round-trips to one code point and the comparison is byte-exact even
 // through the compressed embedded workbooks.
 const decoder = new TextDecoder('latin1')
-function decode(bytes) {
+function decode(bytes: Uint8Array) {
 	return decoder.decode(bytes)
 }
 
 /** Build a deck through the seam and return its parts as `path -> text`, in emission order. */
-async function partsOf(makePres, partContributors) {
+async function partsOf(makePres: () => TsPptx, partContributors: PackageSource['partContributors']) {
 	const parts = await buildPackageParts(sourceWith(makePres(), partContributors), {})
 	return new Map(parts.map((part) => [part.path, decode(part.data)]))
 }
 
-function assertSameParts(a, b, label) {
+function assertSameParts(a: Map<string, string>, b: Map<string, string>, label: string) {
 	assertEqual(JSON.stringify([...a.keys()]), JSON.stringify([...b.keys()]), `${label}: part paths or their order`)
 	for (const [path, text] of a) {
 		assert(b.get(path) === text, `${label}: ${path} differs`)
@@ -119,7 +120,7 @@ describe('part contributors', () => {
 			ALL_PART_CONTRIBUTORS.filter((contributor) => contributor !== chartContributor)
 		)
 
-		const isChartPart = (path) => path.startsWith('ppt/charts/') || path.startsWith('ppt/embeddings/')
+		const isChartPart = (path: string) => path.startsWith('ppt/charts/') || path.startsWith('ppt/embeddings/')
 		const dropped = [...full.keys()].filter((path) => !without.has(path))
 		assert(dropped.length > 0, 'the rich deck should have produced chart parts to drop')
 		assertEqual(
@@ -139,7 +140,7 @@ describe('part contributors', () => {
 			if (path === '[Content_Types].xml') continue
 			assert(full.get(path) === text, `${path} should not depend on the chart contributor`)
 		}
-		const entriesOf = (xml) => (xml ?? '').match(/<(?:Default|Override)\b[^>]*\/>/g) ?? []
+		const entriesOf = (xml: string | undefined) => (xml ?? '').match(/<(?:Default|Override)\b[^>]*\/>/g) ?? []
 		const kept = new Set(entriesOf(without.get('[Content_Types].xml')))
 		const lost = entriesOf(full.get('[Content_Types].xml')).filter((entry) => !kept.has(entry))
 		assert(lost.length > 0, 'expected the chart content-type entries to be gone')

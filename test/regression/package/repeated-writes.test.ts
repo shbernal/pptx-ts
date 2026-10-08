@@ -1,8 +1,8 @@
-import TsPptx, { ShapeType } from '../../../dist/node.js'
+import TsPptx, { ShapeType, type ShadowProps } from '../../../dist/node.js'
 import JSZip from 'jszip'
 import { defineRegressionSuite, assert } from '../../helpers.ts'
 
-async function buildOnce(pres) {
+async function buildOnce(pres: TsPptx) {
 	const buf = await pres.toBytes()
 	const zip = await JSZip.loadAsync(buf)
 	const entry = zip.file('ppt/slides/slide1.xml')
@@ -16,9 +16,14 @@ defineRegressionSuite('Repeated presentation writes [legacy bug-04]', [
 		fn: async () => {
 			const pres = new TsPptx()
 			const slide = pres.addSlide()
-			/** The caller's own `ShadowProps`; the writer normalizes a COPY and leaves this one alone.
-			 * @type {import('../../../dist/node.js').ShadowProps & { _alpha?: number }} */
-			const shadow = { type: 'outer', blur: 6, offset: 2, color: '000000', transparency: 85 }
+			// The caller's own `ShadowProps`; the writer normalizes a COPY and leaves this one alone.
+			const shadow: ShadowProps & { _alpha?: number } = {
+				type: 'outer',
+				blur: 6,
+				offset: 2,
+				color: '000000',
+				transparency: 85,
+			}
 			slide.addShape(ShapeType.rect, { x: 1, y: 1, w: 4, h: 2, shadow })
 
 			const xml1 = await buildOnce(pres)
@@ -36,9 +41,14 @@ defineRegressionSuite('Repeated presentation writes [legacy bug-04]', [
 		fn: async () => {
 			const pres = new TsPptx()
 			const slide = pres.addSlide()
-			/** The caller's own `ShadowProps`; the writer normalizes a COPY and leaves this one alone.
-			 * @type {import('../../../dist/node.js').ShadowProps & { _alpha?: number }} */
-			const shadow = { type: 'outer', blur: 6, offset: 2, color: '000000', transparency: 85 }
+			// The caller's own `ShadowProps`; the writer normalizes a COPY and leaves this one alone.
+			const shadow: ShadowProps & { _alpha?: number } = {
+				type: 'outer',
+				blur: 6,
+				offset: 2,
+				color: '000000',
+				transparency: 85,
+			}
 			slide.addShape(ShapeType.rect, { x: 1, y: 1, w: 4, h: 2, shadow })
 
 			await buildOnce(pres)
@@ -59,9 +69,14 @@ defineRegressionSuite('Repeated presentation writes [legacy bug-04]', [
 			// 1x1 transparent PNG, base64
 			const png =
 				'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkAAIAAAoAAv/lxKUAAAAASUVORK5CYII='
-			/** The caller's own `ShadowProps`; the writer normalizes a COPY and leaves this one alone.
-			 * @type {import('../../../dist/node.js').ShadowProps & { _alpha?: number }} */
-			const shadow = { type: 'outer', blur: 6, offset: 2, color: '000000', transparency: 85 }
+			// The caller's own `ShadowProps`; the writer normalizes a COPY and leaves this one alone.
+			const shadow: ShadowProps & { _alpha?: number } = {
+				type: 'outer',
+				blur: 6,
+				offset: 2,
+				color: '000000',
+				transparency: 85,
+			}
 			slide.addImage({ data: png, x: 1, y: 1, w: 1, h: 1, shadow })
 
 			const xml1 = await buildOnce(pres)

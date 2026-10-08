@@ -17,7 +17,7 @@ function makePres() {
 }
 
 /** First two bytes of `bytes` are the ZIP local-file-header magic "PK". */
-function isZipBytes(bytes) {
+function isZipBytes(bytes: ArrayLike<number>) {
 	return bytes[0] === PK_MAGIC[0] && bytes[1] === PK_MAGIC[1]
 }
 

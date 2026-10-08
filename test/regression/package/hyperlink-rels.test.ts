@@ -7,7 +7,12 @@ import {
 	assertEqual,
 	assertIncludes,
 	caught,
+	defined,
 } from '../../helpers.ts'
+import type JSZip from 'jszip'
+import type { TableCellProps, TsPptx } from '../../../dist/node.js'
+
+type BuildFn = (pres: TsPptx) => unknown
 
 // `createHyperlinkRels` walks the text/table-cell tree and mints one slide relationship per
 // hyperlink, stamping the resolved `_rId` back onto the hyperlink so the emitter can write
@@ -27,10 +32,10 @@ import {
 // array of them, and both recursive calls are guarded by `Array.isArray`. Unreachable by
 // construction per docs/contributing/testing.md, so left red rather than fenced.
 
-const relsPath = (n) => `ppt/slides/_rels/slide${n}.xml.rels`
+const relsPath = (n: number) => `ppt/slides/_rels/slide${n}.xml.rels`
 
 /** Slide numbers present in the package, in order. */
-function slideNumbers(zip) {
+function slideNumbers(zip: JSZip) {
 	return listEntries(zip)
 		.map((f) => /^ppt\/slides\/slide(\d+)\.xml$/.exec(f))
 		.filter((m) => m !== null)
@@ -39,7 +44,7 @@ function slideNumbers(zip) {
 }
 
 /** `[{ id, type, target }]` for one slide's relationship part, in document order. */
-function relationships(xml) {
+function relationships(xml: string) {
 	return [...xml.matchAll(/<Relationship Id="([^"]+)" Type="([^"]+)" Target="([^"]+)"/g)].map((m) => ({
 		id: m[1],
 		type: m[2].split('/').pop(),
@@ -54,7 +59,7 @@ const PNG =
  * Slide `n` declares each rel id once, and its `a:hlinkClick` runs resolve to hyperlink rels whose
  * targets are exactly `expected`.
  */
-async function assertLinksResolve(zip, n, expected) {
+async function assertLinksResolve(zip: JSZip, n: number, expected: string[]) {
 	const rels = relationships(await readEntry(zip, relsPath(n)))
 	const ids = rels.map((r) => r.id)
 	assertEqual(ids.length, new Set(ids).size, `slide ${n} declares a duplicate relationship id: ${ids.join(',')}`)
@@ -75,7 +80,7 @@ async function assertLinksResolve(zip, n, expected) {
  * mint a rel for a malformed hyperlink and says nothing; the throw from the emitter is the whole
  * report, so that is all there is to capture.
  */
-function failedBuild(buildFn) {
+function failedBuild(buildFn: BuildFn) {
 	return caught(() => build(buildFn))
 }
 
@@ -149,8 +154,7 @@ defineRegressionSuite('Hyperlink relationship registration', [
 			// keeps its `Target`, an internal jump stores the target slide number instead.
 			// Annotated because the header row would otherwise fix the element type to
 			// "cell that has `options`", which the plain body cells pushed below do not match.
-			/** @type {Array<Array<{ text: string, options?: import('../../../dist/node.js').TableCellProps }>>} */
-			const rows = [
+			const rows: { text: string; options?: TableCellProps }[][] = [
 				[
 					{ text: 'Docs', options: { hyperlink: { url: 'https://header.example.com' } } },
 					{ text: 'Home', options: { hyperlink: { slide: 1 } } },
@@ -211,8 +215,9 @@ defineRegressionSuite('Hyperlink relationship registration', [
 			// The image is load-bearing: it takes rId1 on slide 1, which is what pushes the header
 			// hyperlink to rId2. Without it the carried id and the running count agree and nothing
 			// can collide. See the annotation note on the repeated-header case above.
-			/** @type {Array<Array<{ text: string, options?: import('../../../dist/node.js').TableCellProps }>>} */
-			const rows = [[{ text: 'H1', options: { hyperlink: { url: 'https://header.example.com' } } }, { text: 'H2' }]]
+			const rows: { text: string; options?: TableCellProps }[][] = [
+				[{ text: 'H1', options: { hyperlink: { url: 'https://header.example.com' } } }, { text: 'H2' }],
+			]
 			for (let i = 0; i < 30; i++) {
 				rows.push([
 					i === 20 ? { text: 'body', options: { hyperlink: { url: 'https://body.example.com' } } } : { text: `A${i}` },
@@ -316,6 +321,7 @@ defineRegressionSuite('Hyperlink relationship registration', [
 			// `hyperlink: 'https://…'` is the shape people reach for first. Registration refuses it when
 			// the text is added, by the same rules the run emitter applies when it is written.
 			const error = await failedBuild((p) => {
+				// @ts-expect-error a hyperlink is an object, never a bare URL string
 				p.addSlide().addText('link', { x: 1, y: 1, w: 4, h: 0.5, hyperlink: 'https://not-an-object.example.com' })
 			})
 
@@ -343,7 +349,7 @@ defineRegressionSuite('Hyperlink relationship registration', [
 		name: 'a hyperlink stating both url and slide is refused on a shape, an image, a run and a table cell',
 		fn: async () => {
 			const both = { url: 'https://both.example.com', slide: 1 }
-			const authors = {
+			const authors: Record<string, BuildFn> = {
 				shape: (p) => p.addSlide().addShape('rect', { x: 1, y: 1, w: 2, h: 1, hyperlink: both }),
 				image: (p) => p.addSlide().addImage({ data: PNG, x: 1, y: 1, w: 1, h: 1, hyperlink: both }),
 				run: (p) =>
@@ -364,7 +370,7 @@ defineRegressionSuite('Hyperlink relationship registration', [
 		fn: async () => {
 			for (const slide of [-1, 0, 1.5]) {
 				const link = { slide }
-				const authors = {
+				const authors: Record<string, BuildFn> = {
 					shape: (p) => p.addSlide().addShape('rect', { x: 1, y: 1, w: 2, h: 1, hyperlink: link }),
 					image: (p) => p.addSlide().addImage({ data: PNG, x: 1, y: 1, w: 1, h: 1, hyperlink: link }),
 					run: (p) =>
@@ -384,21 +390,18 @@ defineRegressionSuite('Hyperlink relationship registration', [
 		// deck is serialized, by a write and by `extractSlides` alike.
 		name: 'a slide link past the last slide is refused when the deck is written or extracted, and the last slide is not',
 		fn: async () => {
-			const author = (p, slide) => {
+			const author = (p: TsPptx, slide: number) => {
 				p.addSlide().addText('next', { x: 1, y: 1, w: 2, h: 1, hyperlink: { slide } })
 				p.addSlide()
 			}
-			let deck
+			let deck: TsPptx | undefined
 			const error = await failedBuild((p) => {
 				author(p, 3)
 				deck = p
 			})
 			assertEqual(error?.code, 'slide/link-past-last-slide', 'the write')
 			assertEqual(error?.constructor.name, 'InvalidOptionError', 'the write blames the caller')
-			const extracted = await deck.extractSlides().then(
-				() => undefined,
-				(err) => err
-			)
+			const extracted = await caught(() => defined(deck, 'the deck the failed build authored').extractSlides())
 			assertEqual(extracted?.code, 'slide/link-past-last-slide', 'extractSlides')
 
 			const { pres, zip } = await build((p) => author(p, 2))
@@ -418,7 +421,7 @@ defineRegressionSuite('Hyperlink relationship registration', [
 		// number reached the package unchecked as well.
 		name: 'a slide link on a layout object resolves to the slide part, and is bounds-checked',
 		fn: async () => {
-			const author = (p, slide) => {
+			const author = (p: TsPptx, slide: number) => {
 				p.defineSlideMaster({
 					title: 'linking',
 					objects: [{ text: { text: 'go', options: { x: 1, y: 1, w: 2, h: 1, hyperlink: { slide } } } }],
@@ -429,7 +432,7 @@ defineRegressionSuite('Hyperlink relationship registration', [
 
 			const { zip } = await build((p) => author(p, 2))
 			const layoutRels = listEntries(zip).filter((name) => name.startsWith('ppt/slideLayouts/_rels/'))
-			const targets = []
+			const targets: { name: string; target: string }[] = []
 			for (const name of layoutRels)
 				for (const rel of relationships(await readEntry(zip, name)))
 					if (rel.type === 'slide') targets.push({ name, target: rel.target })
@@ -471,11 +474,12 @@ defineRegressionSuite('Hyperlink relationship registration', [
 	{
 		name: 'a malformed image or shape hyperlink is refused like a run one',
 		fn: async () => {
-			const cases = [
+			const cases: { label: string; code: string; buildFn: BuildFn }[] = [
 				{
 					label: 'image, not an object',
 					code: 'hyperlink/not-an-object',
 					buildFn: (p) =>
+						// @ts-expect-error a hyperlink is an object, never a bare URL string
 						p.addSlide().addImage({ data: PNG, x: 1, y: 1, w: 1, h: 1, hyperlink: 'https://image.example.com' }),
 				},
 				{
@@ -487,6 +491,7 @@ defineRegressionSuite('Hyperlink relationship registration', [
 					label: 'shape, not an object',
 					code: 'hyperlink/not-an-object',
 					buildFn: (p) =>
+						// @ts-expect-error a hyperlink is an object, never a bare URL string
 						p.addSlide().addShape('rect', { x: 1, y: 1, w: 2, h: 1, hyperlink: 'https://shape.example.com' }),
 				},
 			]

@@ -10,15 +10,16 @@
 // come from `p:sldSz@type` (`screen4x3`, `screen16x9`, `screen16x10`), `Widescreen` is what it
 // calls 13.333in x 7.5in from the dimensions alone, and anything else is `Custom`.
 
+import type { TsPptx } from '../../../dist/node.js'
 import { defineRegressionSuite, build, readEntry, assert, assertEqual, defined } from '../../helpers.ts'
 
 /** `docProps/app.xml` for a deck at `layout`, with `hidden` slide numbers hidden. */
-async function appXml(buildFn) {
+async function appXml(buildFn: (pres: TsPptx) => unknown) {
 	const { zip } = await build(buildFn)
 	return readEntry(zip, 'docProps/app.xml')
 }
 
-const textOf = (xml, tag) => new RegExp(`<${tag}>(.*?)</${tag}>`).exec(xml)?.[1] ?? null
+const textOf = (xml: string, tag: string) => new RegExp(`<${tag}>(.*?)</${tag}>`).exec(xml)?.[1] ?? null
 
 defineRegressionSuite('app.xml extended properties', [
 	{
@@ -66,7 +67,7 @@ defineRegressionSuite('app.xml extended properties', [
 	{
 		name: 'a custom layout at a standard size takes that size type, and any other none',
 		fn: async () => {
-			const sldSzOf = async (width, height) => {
+			const sldSzOf = async (width: number, height: number) => {
 				const { zip } = await build((p) => {
 					p.defineLayout({ name: 'Mine', width, height })
 					p.layout = 'Mine'

@@ -67,7 +67,7 @@ const AUDIO_CONTENT_TYPES = [
 ]
 
 /** One deck carrying one media item per row of `table`; returns its `[Content_Types].xml`. */
-async function buildMediaDeck(type, table) {
+async function buildMediaDeck(type: 'audio' | 'video', table: string[][]) {
 	const { zip } = await build((p) => {
 		const s = p.addSlide()
 		table.forEach(([extn], idx) => {
@@ -82,7 +82,7 @@ async function buildMediaDeck(type, table) {
 const CHART_FREE_MEDIA_DEFAULTS = ['jpeg', 'jpg', 'svg', 'gif', 'm4v', 'mp4', 'vml', 'xlsx']
 const EMPTY_DECK_MEDIA_DEFAULTS = ['png', ...CHART_FREE_MEDIA_DEFAULTS]
 
-function assertNoDefaults(xml, extensions) {
+function assertNoDefaults(xml: string, extensions: string[]) {
 	for (const extension of extensions) assertNoContentTypeDefault(xml, extension)
 }
 

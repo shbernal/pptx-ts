@@ -30,14 +30,14 @@ const ILLEGAL_XML_CHARS = new RegExp(
 	)
 )
 
-let regular
+let regular: Uint8Array
 
 beforeAll(async () => {
 	regular = new Uint8Array(await readFile(path.join(FIXTURES, 'fonts', 'Silkscreen-Regular.ttf')))
 })
 
 /** `ppt/presentation.xml` of a deck with one embedded face under `typeface`. */
-async function presentationXml(typeface) {
+async function presentationXml(typeface: string) {
 	const pres = new TsPptx()
 	await pres.embedFont({ data: regular, typeface })
 	pres.addSlide().addText('hi', { x: 1, y: 1, w: 4, h: 1, fontFace: typeface })

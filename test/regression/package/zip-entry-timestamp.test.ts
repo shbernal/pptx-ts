@@ -22,10 +22,8 @@ const NODE_ENTRY = pathToFileURL(
 /**
  * Write a one-slide deck under `tz` and return the first entry's local-header time and date bytes
  * (offsets 10 to 13), as hex.
- * @param {string} tz
- * @returns {string}
  */
-function headerTimeAndDate(tz) {
+function headerTimeAndDate(tz: string): string {
 	const script = [
 		`const { default: TsPptx } = await import(${JSON.stringify(NODE_ENTRY)})`,
 		'const pres = new TsPptx()',

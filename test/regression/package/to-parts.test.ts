@@ -20,7 +20,7 @@ function makePres() {
 // docProps/core.xml carries `new Date()` dcterms timestamps; blank them so a build straddling a
 // clock tick doesn't make byte-equality flaky. Every other part is deterministic for this deck.
 const decoder = new TextDecoder()
-function stripCoreTimestamps(bytes) {
+function stripCoreTimestamps(bytes: Uint8Array) {
 	return decoder
 		.decode(bytes)
 		.replace(/(<dcterms:(?:created|modified)[^>]*>)[^<]*(<\/dcterms:(?:created|modified)>)/g, '$1$2')
@@ -31,7 +31,7 @@ describe('toParts()', () => {
 		const parts = await makePres().toParts()
 
 		// Independent oracle: unzip a real write() output with JSZip (not the fflate write path).
-		const buf = /** @type {Uint8Array} */ (await makePres().write({ outputType: 'uint8array' }))
+		const buf = (await makePres().write({ outputType: 'uint8array' })) as Uint8Array
 		const zip = await JSZip.loadAsync(buf)
 		// JSZip preserves central-directory order, which is the write path's insertion order.
 		const zipPaths = Object.keys(zip.files).filter((p) => !zip.files[p].dir)

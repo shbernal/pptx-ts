@@ -8,9 +8,9 @@ import { PNG_1X1_DATA_URI, defineRegressionSuite, assert } from '../../helpers.t
 
 // Compression method of each ZIP local file header (offset 8 after PK\x03\x04):
 // 0 = STORE, 8 = DEFLATE.
-function localHeaderMethods(buf) {
+function localHeaderMethods(buf: Uint8Array) {
 	const bytes = new Uint8Array(buf)
-	const methods = []
+	const methods: number[] = []
 	for (let i = 0; i + 10 < bytes.length; i++) {
 		if (bytes[i] === 0x50 && bytes[i + 1] === 0x4b && bytes[i + 2] === 0x03 && bytes[i + 3] === 0x04) {
 			methods.push(bytes[i + 8] | (bytes[i + 9] << 8))
@@ -22,10 +22,10 @@ function localHeaderMethods(buf) {
 
 // Map of each ZIP entry name -> compression method, parsed from local file
 // headers (filename length at offset 26, extra length at 28, name at 30).
-function localHeaderEntries(buf) {
+function localHeaderEntries(buf: Uint8Array) {
 	const bytes = new Uint8Array(buf)
 	const dec = new TextDecoder()
-	const entries = []
+	const entries: { name: string; method: number }[] = []
 	for (let i = 0; i + 30 < bytes.length; i++) {
 		if (bytes[i] === 0x50 && bytes[i + 1] === 0x4b && bytes[i + 2] === 0x03 && bytes[i + 3] === 0x04) {
 			const method = bytes[i + 8] | (bytes[i + 9] << 8)
@@ -83,7 +83,7 @@ defineRegressionSuite('ZIP package compression default', [
 		name: 'write() with a typed output honors compression (previously ignored)',
 		fn: async () => {
 			const pres = await buildPres()
-			const buf = await pres.write({ outputType: 'nodebuffer' })
+			const buf = (await pres.write({ outputType: 'nodebuffer' })) as Buffer
 			const methods = localHeaderMethods(buf)
 			assert(
 				methods.some((m) => m === 8),

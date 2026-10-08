@@ -14,9 +14,9 @@ const PNG_DATA =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP8z8DwHwAFAAH/Re1ZlAAAAABJRU5ErkJggg=='
 
 /** `Extension` of every `Default`, and `PartName` of every `Override`, in `[Content_Types].xml`. */
-function declarations(xml) {
-	const attr = (tag, name) => new RegExp(`${name}="([^"]*)"`).exec(tag)?.[1] ?? ''
-	const tags = (name) => xml.match(new RegExp(`<${name}\\b[^>]*/>`, 'g')) || []
+function declarations(xml: string) {
+	const attr = (tag: string, name: string) => new RegExp(`${name}="([^"]*)"`).exec(tag)?.[1] ?? ''
+	const tags = (name: string) => xml.match(new RegExp(`<${name}\\b[^>]*/>`, 'g')) || []
 	return {
 		defaults: new Set(tags('Default').map((tag) => attr(tag, 'Extension').toLowerCase())),
 		overrides: tags('Override').map((tag) => attr(tag, 'PartName')),
@@ -89,7 +89,7 @@ defineRegressionSuite('package parts and their content-type declarations agree',
 			// bug that produces one is a second enumeration writing the same name.
 			const { zip } = await everyPartKind()
 			const { overrides } = declarations(await readEntry(zip, '[Content_Types].xml'))
-			const seen = new Set()
+			const seen = new Set<string>()
 			const repeated = overrides.filter((partName) => (seen.has(partName) ? true : (seen.add(partName), false)))
 			assertEqual(repeated.length, 0, `part names declared more than once: ${repeated.join(', ')}`)
 		},

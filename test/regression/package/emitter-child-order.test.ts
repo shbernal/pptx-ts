@@ -17,17 +17,19 @@
 // with no published entry point, and the assertion is about the table itself.
 
 import { describe, test } from 'vitest'
-import { DOMParser } from '@xmldom/xmldom'
+import { DOMParser, type Node } from '@xmldom/xmldom'
 import JSZip from 'jszip'
 import { CHILD_SEQUENCES } from '../../../src/ooxml/sequence.ts'
 import { TsPptx, ChartType } from '../../../dist/node.js'
 import { assert, readEntry } from '../../helpers.ts'
 
+type Sequence = (typeof CHILD_SEQUENCES)[string]
+
 const PNG_DATA =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP8z8DwHwAFAAH/Re1ZlAAAAABJRU5ErkJggg=='
 
 /** Flatten a declared sequence into slots: a choice group's members all occupy one slot. */
-function slotsOf(sequence) {
+function slotsOf(sequence: Sequence) {
 	return sequence.map((step) => (typeof step === 'string' ? [step] : [...step]))
 }
 
@@ -37,7 +39,7 @@ function slotsOf(sequence) {
  * Walks the declared slots forward, never back: a child that matches an earlier slot than one
  * already passed is out of order, and a child in no slot at all is not a member of the type.
  */
-function outOfOrder(children, sequence) {
+function outOfOrder(children: string[], sequence: Sequence) {
 	const slots = slotsOf(sequence)
 	let at = 0
 	for (const [index, child] of children.entries()) {
@@ -51,15 +53,15 @@ function outOfOrder(children, sequence) {
 }
 
 /** Every element in `xml` whose name the sequence table covers, with its child element names. */
-function coveredElements(xml) {
+function coveredElements(xml: string) {
 	const doc = new DOMParser().parseFromString(xml, 'text/xml')
-	const found = []
-	const visit = (node) => {
+	const found: { name: string; children: string[]; sequence: Sequence }[] = []
+	const visit = (node: Node) => {
 		for (let child = node.firstChild; child; child = child.nextSibling) {
 			if (child.nodeType !== 1) continue
 			const sequence = CHILD_SEQUENCES[child.nodeName]
 			if (sequence) {
-				const names = []
+				const names: string[] = []
 				for (let sub = child.firstChild; sub; sub = sub.nextSibling) {
 					if (sub.nodeType === 1) names.push(sub.nodeName)
 				}
