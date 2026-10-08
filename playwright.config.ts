@@ -54,7 +54,7 @@ const HOST = '127.0.0.1'
 // The published site's own base (`docs/.vitepress/config.mts`), which `vitepress preview`
 // honours — the site is NOT at `/`. The demos page is a route under it, so the baseURL is
 // the site root and the spec navigates to `./demos`.
-const BASE_URL = `http://${HOST}:${PORT}/ts-pptx/`
+const BASE_URL = `http://${HOST}:${PORT}/pptx-ts/`
 
 // The harness page sits at its real repo path, so the relative `../../../dist/browser.js`
 // inside `harness.mjs` is the same specifier on disk and over HTTP — one path that both
