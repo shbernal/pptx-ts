@@ -1,5 +1,5 @@
 // The Node runtime adapter's http/fetch branches (src/runtime/node.ts): loading a
-// font or an image from an `http(s)://` source. The sibling node-runtime.test.mjs
+// font or an image from an `http(s)://` source. The sibling node-runtime.test.ts
 // covers only the filesystem paths and error, leaving the fetch branches — the
 // weakest spot in the tree (25% branch) — untouched because they need the network.
 //

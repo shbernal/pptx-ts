@@ -6,7 +6,7 @@
  * that gate — these assertions are the only thing standing between a refactor of
  * `drawingml/math.ts` and a silent change to the equation envelope.
  *
- * Imports `src/` directly (precedent: `xml-el-builder.test.mjs`); contributes no dist coverage.
+ * Imports `src/` directly (precedent: `xml-el-builder.test.ts`); contributes no dist coverage.
  */
 import { describe, expect, test } from 'vitest'
 import { genXmlMathParagraph, genXmlInlineMath } from '../../../src/gen/drawingml/math.ts'

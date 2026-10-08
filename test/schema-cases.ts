@@ -1,6 +1,6 @@
 // Schema-validation fixtures — a DATA MODULE, not a runnable test file.
 //
-// This exports a flat `[{ name, fn }, …]` array that `schema-validation.test.mjs`
+// This exports a flat `[{ name, fn }, …]` array that `schema-validation.test.js`
 // imports and wraps in `test()` calls. It has no `test()`/`describe()` of its own,
 // so it is deliberately named `schema-cases.ts` (not `*.test.ts`) to keep vitest's
 // discovery from treating it as a suite. Run the fixtures with: pnpm run test:schema

@@ -11,9 +11,9 @@
 //   - `buildFitParagraphs` always fills `lineSpacingPct` / `spaceBeforePts` / `spaceAfterPts`,
 //     so the defaults for an omitted field are only exercised by a hand-built paragraph.
 //
-// The sibling `text-fit.test.mjs` covers the same functions from `src/`, which proves the
+// The sibling `text-fit.test.ts` covers the same functions from `src/`, which proves the
 // behavior but leaves the shipped bundle unmeasured; this drives the built artifact.
-// `measured-fit-dist.test.mjs` covers everything reachable from a deck.
+// `measured-fit-dist.test.ts` covers everything reachable from a deck.
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, test, expect, beforeAll } from 'vitest'

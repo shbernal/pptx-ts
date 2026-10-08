@@ -15,7 +15,7 @@ import type JSZip from 'jszip'
 import type TsPptx from '../../../dist/node.js'
 
 // The *definition* side of `slide.addComment()` (`gen/define/comment.ts`), as distinct from
-// `comments-xml.test.mjs`, which byte-pins the emitters given already-normalized `SlideComment`
+// `comments-xml.test.ts`, which byte-pins the emitters given already-normalized `SlideComment`
 // records. Everything here goes through the public builder, because that is the only way to reach
 // the normalization the definer does: trimming and validating the author, deriving initials from a
 // display name, and refusing — with a warning, never an exception — a comment that has no author
@@ -37,7 +37,7 @@ import type TsPptx from '../../../dist/node.js'
 //
 // A related note for whoever measures next: `gen/slide/comments.ts` shows five red branches too,
 // and they are the same kind of defensive fallback (`slides || []`, `_comments || []`, `?? 0`, and
-// the `!m` skip). `comments-xml.test.mjs` does exercise them, but it imports from `src/`, so it
+// the `!m` skip). `comments-xml.test.ts` does exercise them, but it imports from `src/`, so it
 // contributes nothing to the reported numbers — see the header there.
 
 /** Build, capturing library warnings (`log.ts` routes every one through `console.warn`). */

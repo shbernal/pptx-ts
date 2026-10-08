@@ -1,6 +1,6 @@
 // Unit tests for the write-side XML element builder (`src/gen/oxml/el.ts`).
 //
-// Imports the source directly (precedent: font-heuristic.test.mjs) because the
+// Imports the source directly (precedent: font-heuristic.test.ts) because the
 // builder is an internal substrate not re-exported from any dist entry point.
 // It still earns dist coverage indirectly via the emitters built on it.
 //
