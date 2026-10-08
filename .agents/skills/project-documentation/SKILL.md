@@ -2,20 +2,14 @@
 name: project-documentation
 description: Use when creating, updating, or reviewing README, docs, AGENTS.md, CLI docs, config docs, architecture docs, troubleshooting docs, or behavior-linked documentation in this repository.
 metadata:
-  # For working *on* ts-pptx, not *with* it. `npx skills add shbernal/pptx-ts` walks
-  # .claude/skills/ (a symlink to this tree) as well as the published skills/, and this flag
-  # is what keeps it out of the menu a consumer sees. Set INSTALL_INTERNAL_SKILLS=1 to install
-  # it anyway.
   internal: true
 ---
 
 # Project Documentation
 
-Use this skill for documentation work in this repository.
-
 ## Workflow
 
-1. Run `pnpm run docs:list` when available.
+1. Run `pnpm run docs:list`.
 2. Read the docs whose `read_when` hints match the task.
 3. Inspect source, tests, package scripts, CLI help, config schemas, and current
    docs before making behavior-sensitive claims.
@@ -24,8 +18,7 @@ Use this skill for documentation work in this repository.
 5. Use `pnpm run docs:new -- <slug> --title "..." --summary "..."`
    for new pages.
 6. Update `docs/docs.json` when a page should be discoverable in navigation.
-7. Run `pnpm run docs:check` before handoff so generated API docs are refreshed
-   before scaffold validation.
+7. Run `pnpm run docs:check` before handoff.
 
 ## Page Rules
 
@@ -50,14 +43,8 @@ Node's own ESM interop, and a browser reaching it through a bundler or an ESM CD
 
 ## Source-Backed Claims
 
-- CLI docs come from implementation, help output, package scripts, and tests.
-- Config docs come from schemas, defaults, parser code, and generated metadata.
-- API docs come from exported types, handlers, and tests.
-- Architecture docs come from current module boundaries.
-- Dependency behavior comes from upstream docs/source/types.
-
-Separate current behavior, planned behavior, and TODOs. Do not invent behavior
-to make a page feel complete.
+Back every behavior claim with source, tests, help output or schemas, and keep current
+behavior apart from planned behavior. Do not invent behavior to make a page feel complete.
 
 A finding that PowerPoint never paints a construct goes in the page the feature's own
 workflow sends a contributor to, not in an issue: nobody reads the tracker before

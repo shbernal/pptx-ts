@@ -2,73 +2,36 @@
 name: powerpoint-fixture-authoring
 description: Use when creating, replacing, verifying, or documenting real Microsoft PowerPoint-authored .pptx fixtures in this ts-pptx repository, especially for read-model or OOXML bugs that need desktop PowerPoint output rather than ts-pptx-generated packages.
 metadata:
-  # For working *on* ts-pptx, not *with* it. `npx skills add shbernal/pptx-ts` walks
-  # .claude/skills/ (a symlink to this tree) as well as the published skills/, and this flag
-  # is what keeps it out of the menu a consumer sees. Set INSTALL_INTERNAL_SKILLS=1 to install
-  # it anyway.
   internal: true
 ---
 
 # PowerPoint fixture authoring
 
-Use this skill to create reference `.pptx` fixtures authored by desktop
-Microsoft PowerPoint. These fixtures are evidence for how PowerPoint writes
-OOXML; do not generate them with ts-pptx.
-
-PowerPoint runs on Windows, but you need not. `pnpm ppt:run` sends a recipe to
-the PowerPoint worker when `TSPPTX_POWERPOINT_URL` is set (on Linux, the VM in
-`tools/powerpoint-vm/`, whose `.env` sets it; `pnpm ppt:health` confirms it
-answers) and otherwise runs it on this Windows machine's PowerPoint. Either way
-the files the recipe wrote land back in the working tree. With neither, stop and
-open the fixture issue AGENTS.md describes.
+Reference fixtures are evidence for how PowerPoint writes OOXML, so never generate them with
+ts-pptx. `pnpm ppt:run` sends a recipe to the worker when `TSPPTX_POWERPOINT_URL` is set (the
+VM in `tools/powerpoint-vm/`; `pnpm ppt:health` confirms it answers) and otherwise runs it on
+this Windows machine's PowerPoint. With neither, stop and open the fixture issue AGENTS.md
+describes.
 
 ## Workflow
 
-1. Work from the repo root and inspect `git status --short`.
-2. Locate an existing fixture under `test/read/fixtures/` before replacing it. If the user asks to replace it, delete only that exact
-   path.
-3. Put curated fixtures in `test/read/fixtures/` unless the user specifies
-   another target. Exploration decks that are not becoming fixtures do not
-   belong in the working tree at all — keep them outside the repo.
-4. Author the deck with desktop PowerPoint COM. Write the recipe straight into
-   `test/read/fixtures/authoring/author-<name>.ps1` and run it:
+1. Fixtures live in `test/read/fixtures/`. Replace an existing one only when asked, and delete
+   only that path. Keep exploration decks out of the repo.
+2. Write the recipe as `test/read/fixtures/authoring/author-<name>.ps1` from the start; it is
+   the fixture's provenance and is committed with it. That directory's `README.md` has the
+   path convention, `--with`, and the sidecar formatter step.
 
    ```sh
-   pnpm ppt:run test/read/fixtures/authoring/author-<name>.ps1
-   pnpm ppt:run test/read/fixtures/authoring/author-<name>.ps1 -- -Param value   # recipe arguments
+   pnpm ppt:run test/read/fixtures/authoring/author-<name>.ps1 [-- -Param value]
    ```
 
-   The recipe is the fixture's provenance, so it lives there from the start and is
-   committed with the fixture. A recipe left in gitignored `.tmp/` is lost on the next
-   clean checkout, and the fixture becomes unreproducible. That directory's
-   `README.md` has the path-resolution convention (`$PSScriptRoot`-relative, never
-   absolute), what a job carries (`--with` for anything else), and the formatter
-   step for regenerated sidecars. On Windows without a worker, `ppt:run` runs the
-   recipe locally; calling it directly with `& '<recipe>.ps1'` in PowerShell 7 also
-   works. Do **not** invoke `powershell.exe -ExecutionPolicy Bypass ...`: the flag
-   trips the sandbox's "Security Weaken" classifier and the call is denied.
-5. Keep the fixture minimal and explicit:
-   - set slide size deliberately;
-   - name important shapes/groups with stable names;
-   - use visible labels only when they help future inspection;
-   - avoid external assets unless the bug requires them;
-   - prefer deterministic coordinates, colors, rotations, and flips.
-6. Save with real PowerPoint using `Presentation.SaveAs()`, set
-   `Presentation.Saved = $true`, close the presentation, quit PowerPoint,
-   release COM objects, and verify no `POWERPNT` process remains.
-7. Verify the saved package:
-   - open it once through PowerPoint COM with no repair prompt;
-   - inspect `docProps/app.xml` for `Microsoft Office PowerPoint` and
-     `AppVersion`;
-   - inspect the relevant slide XML for the OOXML construct being pinned
-     (use `scripts/dump-slide-xml.ps1`, below — don't re-author a throwaway
-     dump script);
-   - compute SHA-256.
-8. Update `test/read/fixtures/README.md` with provenance, hash, purpose, and
-   the desktop PowerPoint check date. `ppt:run` prints the provenance line with
-   the PowerPoint build, which `docProps/app.xml` does not record.
-9. Commit only the fixture and directly related documentation when asked to
-   commit. Leave unrelated dirty state untouched.
+   Do not use `powershell.exe -ExecutionPolicy Bypass`; the sandbox denies it.
+3. Keep the deck minimal: deliberate slide size, stable shape names, deterministic geometry and
+   colors, no external assets unless the bug needs them.
+4. Verify with the helpers below: no repair prompt, `docProps/app.xml` names PowerPoint, the
+   slide XML holds the construct being pinned, and a SHA-256.
+5. Record provenance, hash, purpose and check date in `test/read/fixtures/README.md`. Take the
+   PowerPoint build from the line `ppt:run` prints.
 
 ## COM authoring pattern
 
@@ -110,10 +73,6 @@ finally {
 }
 ```
 
-Do not chase a lingering `POWERPNT` by killing a hard-coded PID — the
-snapshot/reap above (and the same logic in the verify helper) handles it
-deterministically without touching a user's open PowerPoint.
-
 For grouped shape fixtures, create the child shapes first, group by shape names,
 then set transforms on the returned group. PowerPoint writes group transforms
 under `p:grpSpPr/a:xfrm`, for example `rot`, `flipH`, and `flipV`.
@@ -124,14 +83,9 @@ Build a single freeform with `BuildFreeform`/`AddNodes`/`ConvertToShape` (each
 `AddNodes` appends one segment; `msoSegmentLine`=0, `msoSegmentCurve`=1 takes
 control1/control2/end). Return-to-start closes the path → `a:close`.
 
-For a hole or a boolean combination, use PowerPoint's **Merge Shapes** rather
-than the COM `ShapeRange.MergeShapes(...)` method — that method's enum argument
-fails under PowerShell COM late-binding (both 5.1 and 7): the direct call throws
-`Exception setting "MergeShapes": Cannot convert ... to Object` and a reflection
-`InvokeMember` throws `DISP_E_TYPEMISMATCH`. Drive the ribbon command instead:
-open the deck **with a window** (`Presentations.Open(path, msoFalse, msoFalse,
-msoTrue)`), select the shapes, and call `ExecuteMso`, which takes a plain string
-and needs no enum marshalling:
+For a hole or a boolean, `ShapeRange.MergeShapes(...)` fails under PowerShell late binding.
+Open the deck with a window (`Presentations.Open(path, 0, 0, -1)`), select the shapes, and run
+the ribbon command:
 
 ```powershell
 $base.Select($true)     # msoTrue: replace selection
@@ -141,54 +95,31 @@ $merged = $pp.ActiveWindow.Selection.ShapeRange.Item(1)
 $merged.Name = '...'    # name the merged result
 ```
 
-(This same `ExecuteMso`-on-a-selection pattern is the fallback for any COM method
-whose enum/optional args refuse to late-bind in PowerShell.)
+The same `ExecuteMso`-on-a-selection pattern is the fallback for any COM method whose
+enum arguments refuse to late-bind.
 
-**`custGeom` output gotchas — verified 2026-06-21, note in the README so the next
-author doesn't re-discover them:**
-
-- `BuildFreeform` emits exactly one `a:path` per freeform.
-- Merge Shapes (Union / Combine / Subtract, **even of disjoint shapes**)
-  consolidates everything into a **single** `a:path` with multiple
-  `moveTo`…`close` contours — desktop PowerPoint never writes more than one
-  `a:path` per `custGeom`. A genuine multi-`a:path` `a:pathLst` is therefore **not
-  authorable** via any built-in PowerPoint operation; it is schema-legal but only
-  arises from other producers (e.g. SVG import) and remains unverified here.
+`BuildFreeform` emits one `a:path`, and Merge Shapes (even of disjoint shapes) folds
+everything into one `a:path` with several contours. PowerPoint never writes a multi-`a:path`
+`custGeom`, so that construct is not authorable here.
 
 ## Autofit bake-on-save (`normAutofit` / `spAutoFit`)
 
-PowerPoint bakes autofit results into the saved XML **non-interactively** (no
-manual editing in the UI) — but only with the right COM sequence. **Verified
-2026-06-21** while authoring the `autofit-*` calibration decks:
+PowerPoint bakes autofit into the saved XML only with this sequence:
 
-- **Pin the box first, set `AutoSize` last.** `AddTextbox`'s height argument is
-  ignored, so explicitly: `TextFrame2.AutoSize = msoAutoSizeNone`, set
-  `Shape.Width`/`Shape.Height`, add the text, **then** set `AutoSize`. With the
-  box pinned small at that moment:
-  - `msoAutoSizeTextToFitShape` (shrink) bakes
-    `<a:normAutofit fontScale="…" lnSpcReduction="…"/>` and keeps `ext` pinned;
-  - `msoAutoSizeShapeToFitText` (resize) bakes `<a:spAutoFit/>` and a fitted
-    `ext.cy`.
-- **The trigger is the box being pinned small when `AutoSize` is applied — not
-  "before vs after text" per se.** An earlier theory ("set AutoSize before
-  text") was wrong: a box that has already grown tall bakes only a bare
-  `<a:normAutofit/>` with no scale. Pin → text → AutoSize-last is what bakes a
-  real `fontScale`.
-- **Two-pass text build.** A trailing empty paragraph is **not** enumerable via
-  `TextRange.Paragraphs()` until the whole text exists — `Paragraphs($i+1,1)`
-  throws an "index out of bounds" COM error. So: pass 1 inserts every
-  paragraph's text and formats non-empty runs inline; pass 2 (once
-  `Paragraphs().Count` is final) does paragraph-level formatting and the run
-  font for empty paragraphs. See `test/read/fixtures/authoring/author-deck.ps1` for a
-  complete parameterized engine.
+- Set `TextFrame2.AutoSize = msoAutoSizeNone`, pin `Width`/`Height` (`AddTextbox` ignores its
+  height), add the text, and set `AutoSize` **last**. Shrink then bakes
+  `<a:normAutofit fontScale lnSpcReduction/>`; resize bakes `<a:spAutoFit/>` with a fitted
+  `ext.cy`. A box that has already grown bakes a bare `<a:normAutofit/>`.
+- A trailing empty paragraph is not enumerable until all text exists, so insert text in one
+  pass and apply paragraph formatting in a second.
 
-## Font-presence guard (substitution is invisible in the XML)
+`test/read/fixtures/authoring/author-deck.ps1` is the full parameterized engine.
 
-**PowerPoint writes `latin@typeface="X"` into the run XML even when font `X` is
-not installed** — it substitutes only at render time. So asserting the typeface
-in the saved OOXML does **not** prove the font was actually used; a fixture can
-silently carry the wrong metrics. Verify **host-side via GDI** instead — the
-resolved face must equal the requested name:
+## Font-presence guard
+
+PowerPoint writes `latin@typeface="X"` even when `X` is not installed and substitutes only at
+render time, so the XML proves nothing about metrics. Before any font-sensitive fixture, check
+in a fresh process that GDI resolves each face to itself:
 
 ```powershell
 Add-Type -AssemblyName System.Drawing
@@ -198,38 +129,13 @@ foreach ($face in 'Aptos','Aptos SemiBold','Calibri','Tahoma','Arial') {
 }
 ```
 
-Run this as a hard precondition before authoring any font-sensitive fixture
-(and re-run in a **fresh** process after installing a font — a prior process's
-"ready" can't be trusted). `test/read/fixtures/authoring/readiness-guard.ps1` and the guard
-block in `test/read/fixtures/authoring/author-deck.ps1` are the worked examples.
+`test/read/fixtures/authoring/readiness-guard.ps1` is the worked example.
 
-### Provisioning fonts / LibreOffice without elevation
-
-The worker VM installs Aptos for GDI when it is provisioned
-(`tools/powerpoint-vm/oem/install-fonts.ps1`), so the guard passes there. On
-another Windows machine, both are installable with **no admin** when a fixture
-needs them. Verified 2026-06-21:
-
-- **Per-user font install (no elevation):** copy the `.ttf`s into
-  `%LOCALAPPDATA%\Microsoft\Windows\Fonts` and register each under
-  `HKCU:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts`; GDI resolves them
-  in a fresh process. Office **cloud fonts** (e.g. Aptos) are already on disk in
-  `%LOCALAPPDATA%\Microsoft\FontCache\4\CloudFonts\<Family>\` but with numeric
-  names and no extension and **only visible to Office apps**, not GDI — picking
-  the font in the PowerPoint dropdown is *not* enough. Identify each cached file
-  by its OpenType `name` table (family/face), then per-user install the faces
-  you need.
-- **LibreOffice without elevation:** winget's package is a machine-scoped MSI
-  that triggers UAC. Instead do an **administrative extract** into a user dir:
-  `msiexec /a <msi> /qn TARGETDIR=%LOCALAPPDATA%\Programs\LibreOffice`. That
-  yields a runnable `program\soffice.exe` (confirmed headless conversion works)
-  with no admin. Verify the MSI's SHA-256 against winget's published hash first.
-
-LibreOffice is useful here as an independent cross-measure: its `program\
-python.exe` + `pyuno` can open a deck (LibreOffice recomputes `spAutoFit` on
-load) and read each shape's fitted size via UNO — a second opinion on
-PowerPoint's baked metrics. See `test/read/fixtures/authoring/measure-lo.py` for the UNO
-bootstrap.
+The worker VM installs the needed fonts (`tools/powerpoint-vm/oem/install-fonts.ps1`). On
+another Windows machine, install a font per user (copy to `%LOCALAPPDATA%\Microsoft\Windows\Fonts`
+and register under `HKCU:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts`). Office cloud
+fonts are visible only to Office, not GDI. `test/read/fixtures/authoring/measure-lo.py` reads
+LibreOffice's fitted sizes over UNO as a second opinion.
 
 ## Helpers
 

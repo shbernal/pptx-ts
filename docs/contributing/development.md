@@ -37,7 +37,9 @@ the hooks.
   job runner: the worker that runs COM jobs on Windows, and the client that `test:com` and
   `ppt:run` send jobs through.
 - `skills/`: the `ts-pptx-upstream` skill, which ships in the package. Skills for working on this
-  repository are under `.agents/skills/`.
+  repository are under `.agents/skills/`. Each sets `metadata.internal: true`, which keeps
+  `npx skills add shbernal/pptx-ts` from offering it to a consumer (it walks `.claude/skills/`,
+  a symlink to that tree). `INSTALL_INTERNAL_SKILLS=1` installs them anyway.
 - `tools/api-docs/`: TypeDoc with a pinned TypeScript 6. The root compiler is TypeScript 7, which
   ships no JavaScript compiler API. TypeDoc needs that API, and so does
   `scripts/raw-xml-ratchet.mjs`, through the `typescript-6` alias in the root devDependencies.
@@ -206,7 +208,8 @@ plot builders still receive an ordinary bag.
   file type added to one goes into the other in the same commit.
 - `lint:chars` runs charcheck, which rejects the em dash and the horizontal bar in the prose that
   `charcheck.config.js` names. `lint:chars:fix` rewrites findings, where you can read the diff
-  first. When the gate itself looks wrong, use the `charcheck-upstream` skill in `.agents/skills/`.
+  first. When the gate itself looks wrong, file it upstream rather than adding an `exclude`;
+  `node node_modules/charcheck/dist/cli.js --report-issue` prints each rule as it resolved.
 
 ## OOXML changes
 

@@ -2,20 +2,14 @@
 name: powerpoint-desktop-smoke
 description: Use when you need to confirm that ts-pptx-generated .pptx output actually opens in desktop Microsoft PowerPoint (the project's supported bar), to catch OOXML corruption (0x80070570) the Node test suite cannot see, or to bisect which feature emits a package PowerPoint rejects. Runs from any OS with a PowerPoint transport: the worker VM on Linux, or local PowerPoint on Windows. Good as a pre-release smoke check after any change to emitted OOXML.
 metadata:
-  # For working *on* ts-pptx, not *with* it. `npx skills add shbernal/pptx-ts` walks
-  # .claude/skills/ (a symlink to this tree) as well as the published skills/, and this flag
-  # is what keeps it out of the menu a consumer sees. Set INSTALL_INTERNAL_SKILLS=1 to install
-  # it anyway.
   internal: true
 ---
 
 # PowerPoint desktop smoke test
 
-AGENTS.md defines the project's supported bar as **"output opens cleanly in Microsoft
-PowerPoint."** CI is Node-only and cannot check that. Opening generated `.pptx` files in real
-PowerPoint is the only thing that catches structural corruption (duplicate `cNvPr` ids,
-dangling relationship or `spid` references, bad content types) that produces valid-looking
-XML the test suite passes but PowerPoint refuses.
+CI cannot open a deck in PowerPoint, and only PowerPoint catches structural corruption the
+suite passes: duplicate `cNvPr` ids, dangling relationship or `spid` references, bad content
+types.
 
 **Failure signals** from `Presentations.Open`:
 - `0x80070570` (ERROR_FILE_CORRUPT): "The file or directory is corrupted and unreadable."
@@ -24,8 +18,7 @@ XML the test suite passes but PowerPoint refuses.
   worker force-quits PowerPoint after a timed-out or failed job, so the next deck starts
   clean.
 
-Use this for the two out-of-suite failure modes. Do NOT use it to chase third-party
-office-suite interop quirks (WPS round-trips, etc.), which AGENTS.md puts out of scope.
+Do not use it to chase third-party office-suite interop quirks, which are out of scope.
 
 ## Prerequisites
 
@@ -46,19 +39,15 @@ With neither, `test:com` reports SKIP. Under `TSPPTX_COM_SMOKE=required` that is
    `Field_Notes_Four_Cities.pptx` (images, media, a 3D model, picture effects). Between
    them they reach most of the emitter. `pnpm demos:build quarterly-review` builds one.
 
-   The showcases are decks, not a feature matrix. There is no per-feature generator to
-   ask for a single construct. For that, write a focused deck (step 3).
+   For a single construct, write a focused deck (step 3).
 
 2. **Open the decks in PowerPoint.**
    ```
    pnpm run test:com --file demos/showcases/output/*.pptx
    ```
-   Each deck goes to PowerPoint as its own job, and the run prints `opened OK` or the
-   `OPEN_ERR` code per deck and exits non-zero if any deck fails. A deck that fails to open
-   is retried once, since a PowerPoint still starting up can fail the first attempt. Use
-   it the same way on any single deck. `pnpm run test:com` with no arguments runs the
-   generated corpus instead, which adds read-back and pixel checks for navigation, custom
-   geometry connection sites, OLE, preset adjustments and 3D models.
+   It prints `opened OK` or the `OPEN_ERR` code per deck (retrying a failed open once) and
+   exits non-zero on any failure. With no arguments it runs the generated corpus, which adds
+   read-back and pixel checks.
 
 3. **Bisect a failure.** If a showcase fails, narrow it with a minimal repro **written
    inside `demos/showcases/`** (so the `pptx-ts` workspace dependency resolves)
@@ -73,21 +62,13 @@ With neither, `test:com` reports SKIP. Under `TSPPTX_COM_SMOKE=required` that is
      no shape id or no relationship. Cross-check `ppt/slides/_rels/slideN.xml.rels`.
    - **Missing or incorrect `[Content_Types].xml` default** for a media extension.
 
-   A `.pptx` is a zip: `unzip -o deck.pptx -d <fresh dir>` (or `Expand-Archive` after
-   renaming to `.zip` on Windows) gives you the parts.
-
-5. **Fix, rebuild, and re-open** to confirm the pass. Add a regression test that reproduces
-   the structural defect at the XML level (e.g. assert `cNvPr` ids are unique, or that a
-   timing `spid` resolves to its own shape) so CI guards the class going forward. The
-   PowerPoint check itself does not run in CI.
+5. **Fix and re-open.** Add a regression test that asserts the defect at the XML level, since
+   CI does not run the PowerPoint check.
 
 ## Notes
 
-- The emitter uses `index + 2` (the slide-object index) for every shape's `<p:cNvPr>` id
-  and for animation/media `spid` targets. Any id computed from a *different* space (a
-  relationship id, a running counter) risks colliding or desyncing, a frequent source of
-  0x80070570. When touching id/`spid` emission, smoke-test a slide that **mixes media with
-  text/shapes**, not a single-object slide (where the two id spaces coincide and the bug
-  hides).
-- To author *reference* fixtures from real PowerPoint (rather than smoke-test ts-pptx
-  output), use the `powerpoint-fixture-authoring` skill instead.
+- Every `<p:cNvPr>` id and every forward reference to one (`spid`, `a:stCxn`) comes from one
+  allocator, `collectSlideShapeIds`. An id derived any other way (a relationship id, a local
+  counter) is a frequent source of 0x80070570. When touching id emission, smoke-test a slide
+  that mixes media, groups and plain shapes, where the id spaces would diverge.
+- To author reference fixtures from real PowerPoint, use `powerpoint-fixture-authoring`.
