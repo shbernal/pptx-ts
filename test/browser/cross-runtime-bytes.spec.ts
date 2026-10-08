@@ -3,7 +3,7 @@ import path from 'node:path'
 import { expect, test } from '@playwright/test'
 import { diffParts, explodePackage, listParts, loadShowcase } from '../../scripts/pptx-parts.mjs'
 import { ROOT } from '../../scripts/script-utils.mjs'
-import { buildDeckInBrowser } from './helpers.mjs'
+import { buildDeckInBrowser } from './helpers.ts'
 
 /**
  * Cross-runtime byte identity — the assertion this lane exists for.

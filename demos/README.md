@@ -6,7 +6,7 @@ CI never builds a demo, and a broken demo fails no gate. The published package i
 by `pnpm run check:package`. See
 [docs/contributing/testing.md](../docs/contributing/testing.md#what-the-demos-verify) for why it works that way.
 
-If you only want to *see* a deck, you do not need any of this: the
+If you only want to _see_ a deck, you do not need any of this: the
 [demos page](https://shbernal.github.io/pptx-ts/demos) builds one in your browser and shows
 you the slides.
 
@@ -22,8 +22,8 @@ it rebuilds `dist/` first only if it is stale.
 
 ## What is here
 
-| Directory    | What it is                                                              |
-| ------------ | ----------------------------------------------------------------------- |
+| Directory    | What it is                                                               |
+| ------------ | ------------------------------------------------------------------------ |
 | `showcases/` | The two flagship decks. Start here. [README](showcases/README.md)        |
 | `common/`    | Shared images and media. **Also read by the test suite**, see below.     |
 | `node/`      | Streaming a generated deck from an HTTP server. [README](node/README.md) |
@@ -37,14 +37,14 @@ demos used to be, and it made them useless as showcases and unconvincing as test
 ## `common/` is not demo-only, so check before deleting from it
 
 Nothing under `demos/` is a gate, but `demos/common/images/` is not covered by that: three
-of the files in it are read by suites that *are*, and by an authoring script that produces a
+of the files in it are read by suites that _are_, and by an authoring script that produces a
 read fixture.
 
-| Asset              | Read by                                                                        |
-| ------------------ | ------------------------------------------------------------------------------ |
-| `cc_logo.jpg`      | four `test/regression/` suites, and `test/read/fixtures/authoring/author-table-cell-image-fill.ps1` |
-| `logo_square.png`  | the browser lane, both sides (`test/browser/helpers.mjs`, `test/browser/harness/harness.mjs`) |
-| `lock-green.svg`   | the same two, plus `test/regression/text/text-definition.test.ts`               |
+| Asset             | Read by                                                                                             |
+| ----------------- | --------------------------------------------------------------------------------------------------- |
+| `cc_logo.jpg`     | four `test/regression/` suites, and `test/read/fixtures/authoring/author-table-cell-image-fill.ps1` |
+| `logo_square.png` | the browser lane, both sides (`test/browser/helpers.ts`, `test/browser/harness/harness.mjs`)        |
+| `lock-green.svg`  | the same two, plus `test/regression/text/text-definition.test.ts`                                   |
 
 The directory was pruned hard once, on the rule "no showcase deck references it". The
 unused half went with it: thirty-odd images and nine media files. These three survive that

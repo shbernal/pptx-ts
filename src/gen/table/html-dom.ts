@@ -17,7 +17,7 @@
  * `dist/html-dom-*.js` chunk, and those globs are gone from `vitest.config.ts` entirely. It
  * is covered code now — against happy-dom by the Node suite
  * (test/regression/html/html-to-slides-node.test.ts) and, for the measured width basis that no
- * Node DOM can produce, in a real Chromium (test/browser/table-widths.spec.mjs).
+ * Node DOM can produce, in a real Chromium (test/browser/table-widths.spec.ts).
  */
 
 import { SlideObjectType } from '../../enums.js'
@@ -377,7 +377,7 @@ export function parseCssWidthBasis(values: readonly string[]): number[] {
  * padding and border widths, which the DOMs that reach arm 2 need not resolve either (a `%`
  * padding computes to nothing usable without layout), so it would converge the two only
  * sometimes — and it would collapse the one discriminator the browser lane has, turning
- * `table-widths.spec.mjs` back into a test that passes whether or not the measured arm ran.
+ * `table-widths.spec.ts` back into a test that passes whether or not the measured arm ran.
  * A caller who needs both runtimes to agree on a column states it with `data-pptx-width`.
  * @param {readonly number[]} measured - per-column `offsetWidth`
  * @param {readonly number[]} cssWidths - per-column CSS width basis (`[]` when unusable)

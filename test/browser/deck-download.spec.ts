@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import JSZip from 'jszip'
-import { buildDeckInBrowser, defined } from './helpers.mjs'
+import { buildDeckInBrowser, defined } from './helpers.ts'
 
 /**
  * The browser can build a deck at all.

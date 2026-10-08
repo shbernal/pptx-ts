@@ -64,9 +64,9 @@ const HARNESS_URL = `http://${HOST}:${HARNESS_PORT}/test/browser/harness/`
 export default defineConfig({
 	testDir: './test/browser',
 	// Empties `.tmp/browser-coverage/` so what the collector leaves there is exactly what
-	// this run executed — see test/browser/coverage-setup.mjs for why a narrowed run makes
+	// this run executed — see test/browser/coverage-setup.ts for why a narrowed run makes
 	// that worth doing at the start rather than at merge time.
-	globalSetup: './test/browser/coverage-setup.mjs',
+	globalSetup: './test/browser/coverage-setup.ts',
 	// Under `.tmp/` (gitignored) with the rest of this repo's generated artifacts, rather
 	// than Playwright's default `test-results/` at the root, which nothing ignores.
 	outputDir: './.tmp/playwright',
@@ -103,17 +103,16 @@ export default defineConfig({
 	// "everything not yet invented" — the first spec added under a third prefix would have
 	// run a second time against the demo's baseURL and failed for a reason having nothing to
 	// do with what it tests. A positive match makes the pairing between a spec's name and
-	// its fixture explicit, and makes adding a prefix a visible edit here. Each accepts both
-	// `.spec.mjs` and `.spec.ts` while the specs move to TypeScript.
+	// its fixture explicit, and makes adding a prefix a visible edit here.
 	projects: [
 		{
 			name: 'demo',
-			testMatch: ['deck-*.spec.{mjs,ts}', 'cross-runtime-*.spec.{mjs,ts}'],
+			testMatch: ['deck-*.spec.ts', 'cross-runtime-*.spec.ts'],
 			use: { ...devices['Desktop Chrome'], baseURL: BASE_URL },
 		},
 		{
 			name: 'runtime-adapter',
-			testMatch: ['adapter-*.spec.{mjs,ts}'],
+			testMatch: ['adapter-*.spec.ts'],
 			use: { ...devices['Desktop Chrome'], baseURL: HARNESS_URL },
 		},
 		{
@@ -121,7 +120,7 @@ export default defineConfig({
 			// two are kept apart so neither fixture's DOM has anything in it the other put
 			// there. See test/browser/harness/table.mjs.
 			name: 'html-table',
-			testMatch: ['table-*.spec.{mjs,ts}'],
+			testMatch: ['table-*.spec.ts'],
 			use: { ...devices['Desktop Chrome'], baseURL: HARNESS_URL },
 		},
 	],

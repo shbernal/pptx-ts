@@ -5,7 +5,7 @@
  * comparison. Two callers now assert "these two .pptx packages are the same bytes":
  *
  *   - `scripts/byte-identity.mjs` — same runtime, before vs after a refactor.
- *   - `test/browser/cross-runtime-bytes.spec.mjs` — same commit, Node vs a real browser.
+ *   - `test/browser/cross-runtime-bytes.spec.ts` — same commit, Node vs a real browser.
  *
  * They must agree on what "the same" means, and in particular on the normalizer list:
  * a second, hand-rolled comparison would drift, and the way it drifts is silent — one

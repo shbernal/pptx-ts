@@ -1,10 +1,11 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import type { Page } from '@playwright/test'
 import { explodePackage } from '../../scripts/pptx-parts.mjs'
 import { ROOT } from '../../scripts/script-utils.mjs'
 import { AUTOPAGE_ROWS } from './harness/table-fixture.mjs'
-import { expect, test } from './fixtures.mjs'
-import { buildTableInHarness, buildTableInNode, openTableHarness, packageBytes } from './helpers.mjs'
+import { expect, test } from './fixtures.ts'
+import { built, buildTableInHarness, buildTableInNode, openTableHarness, packageBytes } from './helpers.ts'
 
 /**
  * The headless-browser `tableToSlides` auto-paging repro — upstream gitbrent/PptxGenJS#1200.
@@ -39,7 +40,7 @@ import { buildTableInHarness, buildTableInNode, openTableHarness, packageBytes }
 const OUT_ROOT = path.join(ROOT, '.tmp', 'browser-table', 'autoPage')
 
 /** Slide parts of an exploded package, in slide order. */
-const slideParts = (dir) =>
+const slideParts = (dir: string): string[] =>
 	fs
 		.readdirSync(path.join(dir, 'ppt', 'slides'), { withFileTypes: true })
 		.filter((entry) => entry.isFile() && /^slide\d+\.xml$/.test(entry.name))
@@ -48,17 +49,16 @@ const slideParts = (dir) =>
 		.map((name) => fs.readFileSync(path.join(dir, 'ppt', 'slides', name), 'utf8'))
 
 /** `<a:tr>` count per slide — how many rows the pager put on each page. */
-const rowsPerSlide = (dir) => slideParts(dir).map((xml) => (xml.match(/<a:tr /g) || []).length)
+const rowsPerSlide = (dir: string): number[] => slideParts(dir).map((xml) => (xml.match(/<a:tr /g) || []).length)
 
 /** Every `R<n>` key cell, in emission order across the whole deck. */
-const keyCells = (dir) =>
+const keyCells = (dir: string): string[] =>
 	slideParts(dir)
 		.flatMap((xml) => [...xml.matchAll(/<a:t>([^<]*)<\/a:t>/g)].map((match) => match[1]))
 		.filter((text) => /^R\d+$/.test(text))
 
-async function explodeBrowserBuild(page) {
-	const outcome = await buildTableInHarness(page, 'autoPage')
-	expect(outcome.ok, `the harness failed to convert the autoPage table: ${outcome.message}`).toBe(true)
+async function explodeBrowserBuild(page: Page): Promise<string> {
+	const outcome = built(await buildTableInHarness(page, 'autoPage'), 'the harness failed to convert the autoPage table')
 	return await explodePackage(packageBytes(outcome.base64), path.join(OUT_ROOT, 'browser'))
 }
 
@@ -101,7 +101,7 @@ test('the page budget is the same in Chromium as on a DOM that renders nothing',
 
 	// This is the assertion that places the defect, and it is the reason the report moved out of
 	// the browser bucket rather than deeper into it. The two runtimes size the *columns*
-	// differently — Chromium measures, happy-dom falls back, which is what table-widths.spec.mjs
+	// differently — Chromium measures, happy-dom falls back, which is what table-widths.spec.ts
 	// pins — but the cells are short enough that no column width makes them wrap, so the vertical
 	// arithmetic has the same inputs on both sides. It therefore has to reach the same answer, and
 	// a report of rows running off the bottom is not a report about a rendered page.

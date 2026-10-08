@@ -1,23 +1,78 @@
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
-import { expect } from '@playwright/test'
+import { expect, type Page } from '@playwright/test'
 import { ROOT } from '../../scripts/script-utils.mjs'
 import { buildDeckBase64 } from './harness/decks.mjs'
+
+/** The `write` options a harness deck build passes through. */
+export interface HarnessWriteOptions {
+	onMediaError?: 'throw' | 'placeholder'
+}
+
+/** A diagnostic the build raised, flattened to plain data by `harness/harness.mjs`. */
+export interface HarnessDiagnostic {
+	code: string
+	message: string
+}
+
+/**
+ * What `harness/harness.mjs`'s `build` resolves to: errors come back as data, because a
+ * rejection crossing `page.evaluate` loses its class and `code`.
+ */
+export type HarnessOutcome = (
+	| { ok: true; base64: string }
+	| { ok: false; name: string; code: string; message: string; causeCode: string; causeMessage: string }
+) & { diagnostics: HarnessDiagnostic[] }
+
+/** What `harness/table.mjs`'s `build` resolves to, flattened for the same reason. */
+export type TableOutcome = { ok: true; base64: string } | { ok: false; code: string; message: string }
+
+/**
+ * The globals the two harness pages install. Declared optional because each page sets only
+ * its own, and only once its module has loaded; the page callbacks below read them with `?.`
+ * and the Node side asserts the result is present.
+ */
+declare global {
+	interface Window {
+		harness?: {
+			assets: Record<string, string>
+			build(name: string, options?: HarnessWriteOptions): Promise<HarnessOutcome>
+			bytes(): Promise<{ constructorName: string; isView: boolean; prefix: number[] }>
+			download(name: string): Promise<string>
+		}
+		tableHarness?: {
+			bases(scenario: string): { measured: number[]; css: string[] }
+			build(scenario: string): Promise<TableOutcome>
+		}
+		harnessError?: string
+	}
+}
 
 /**
  * `value`, narrowed past `null` and `undefined`, failing the spec through Playwright's
  * `expect` when it is absent. The Playwright counterpart of `defined` in `test/helpers.ts`,
  * which asserts through Vitest and so cannot be imported here.
  *
- * @template T
- * @param {T} value
- * @param {string} [message]
- * @returns {NonNullable<T>}
  */
-export function defined(value, message) {
+export function defined<T>(value: T, message?: string): NonNullable<T> {
 	expect(value, message).toBeDefined()
 	expect(value, message).not.toBeNull()
-	return /** @type {NonNullable<T>} */ (value)
+	return value as NonNullable<T>
+}
+
+/**
+ * The successful arm of a harness outcome, failing the spec with `context` and the page's
+ * own error message otherwise.
+ */
+export function built<T extends HarnessOutcome | TableOutcome>(outcome: T, context: string): Extract<T, { ok: true }> {
+	expect(outcome.ok, `${context}: ${'message' in outcome ? outcome.message : ''}`).toBe(true)
+	return outcome as Extract<T, { ok: true }>
+}
+
+/** The failed arm of a harness outcome, failing the spec if the build succeeded. */
+export function failed<T extends HarnessOutcome | TableOutcome>(outcome: T): Extract<T, { ok: false }> {
+	expect(outcome.ok).toBe(false)
+	return outcome as Extract<T, { ok: false }>
 }
 
 /**
@@ -34,7 +89,7 @@ export function defined(value, message) {
  * `getByRole('alert')` would report a broken *preview* as a failed *build*. The two
  * failures have nothing to do with each other and must not be able to masquerade.
  */
-export async function buildDeckInBrowser(page) {
+export async function buildDeckInBrowser(page: Page): Promise<{ bytes: Uint8Array; fileName: string }> {
 	await page.goto('./demos')
 
 	const download = page.getByRole('group', { name: 'Download' })
@@ -81,10 +136,10 @@ export const NODE_ASSETS = {
 }
 
 /** Load the harness page and fail with the page's own reason if it did not come up. */
-export async function openHarness(page) {
+export async function openHarness(page: Page): Promise<void> {
 	await page.goto('./')
-	await page.waitForFunction(() => !!window['harness'] || !!window['harnessError'])
-	const failure = await page.evaluate(() => window['harnessError'])
+	await page.waitForFunction(() => !!window.harness || !!window.harnessError)
+	const failure = await page.evaluate(() => window.harnessError)
 	// The likeliest cause by far is `dist/browser.js` (or a chunk it reaches) acquiring an
 	// import the browser cannot resolve — a bare specifier missing from the page's import
 	// map, or a `node:*` builtin. Both are findings about the shipped package, so they are
@@ -94,22 +149,26 @@ export async function openHarness(page) {
 
 /**
  * Build one deck from `harness/decks.mjs` in the page.
- * @param {{ onMediaError?: 'throw' | 'placeholder' }} [options] passed to `write`
- * @returns the harness's flattened outcome — `{ok:true, base64, diagnostics}` or
- *   `{ok:false, code, …, diagnostics}`.
+ * @param options passed to `write`
+ * @returns the harness's flattened outcome; narrow it with `built` or `failed`.
  */
-export async function buildDeckInHarness(page, deck, options = {}) {
-	return await page.evaluate(([name, opts]) => window['harness'].build(name, opts), [deck, options])
+export async function buildDeckInHarness(
+	page: Page,
+	deck: string,
+	options: HarnessWriteOptions = {}
+): Promise<HarnessOutcome> {
+	const outcome = await page.evaluate(([name, opts]) => window.harness?.build(name, opts), [deck, options] as const)
+	return defined(outcome, 'the adapter harness is not loaded; call openHarness first')
 }
 
 /** Build the same deck in Node, against `dist/node.js`, for the comparison. */
-export async function buildDeckInNode(deck, options = {}) {
+export async function buildDeckInNode(deck: string, options: HarnessWriteOptions = {}): Promise<string> {
 	const { default: TsPptx } = await import('../../dist/node.js')
 	return await buildDeckBase64(new TsPptx(), deck, NODE_ASSETS, options)
 }
 
 /** Decode a package the harness returned as base64. */
-export function packageBytes(base64) {
+export function packageBytes(base64: string): Uint8Array {
 	return new Uint8Array(Buffer.from(base64, 'base64'))
 }
 
@@ -122,27 +181,23 @@ export function packageBytes(base64) {
  * `tableToSlides` reads a non-zero `offsetWidth`. See `harness/table.mjs` for why the two
  * fixtures are not one.
  */
-export async function openTableHarness(page) {
+export async function openTableHarness(page: Page): Promise<void> {
 	await page.goto('./table.html')
-	await page.waitForFunction(() => !!window['tableHarness'] || !!window['harnessError'])
-	const failure = await page.evaluate(() => window['harnessError'])
+	await page.waitForFunction(() => !!window.tableHarness || !!window.harnessError)
+	const failure = await page.evaluate(() => window.harnessError)
 	if (failure) throw new Error('the rendered-table harness failed to load: ' + failure)
 }
 
-/**
- * The two width bases the live page reports for one fixture.
- * @returns {Promise<{measured: number[], css: string[]}>}
- */
-export async function tableBases(page, scenario) {
-	return await page.evaluate((name) => window['tableHarness'].bases(name), scenario)
+/** The two width bases the live page reports for one fixture. */
+export async function tableBases(page: Page, scenario: string): Promise<{ measured: number[]; css: string[] }> {
+	const bases = await page.evaluate((name) => window.tableHarness?.bases(name), scenario)
+	return defined(bases, 'the rendered-table harness is not loaded; call openTableHarness first')
 }
 
-/**
- * Convert one fixture table in the page.
- * @returns the harness's flattened outcome — `{ok:true, base64}` or `{ok:false, code, message}`.
- */
-export async function buildTableInHarness(page, scenario) {
-	return await page.evaluate((name) => window['tableHarness'].build(name), scenario)
+/** Convert one fixture table in the page. Narrow the outcome with `built` or `failed`. */
+export async function buildTableInHarness(page: Page, scenario: string): Promise<TableOutcome> {
+	const outcome = await page.evaluate((name) => window.tableHarness?.build(name), scenario)
+	return defined(outcome, 'the rendered-table harness is not loaded; call openTableHarness first')
 }
 
 /**
@@ -152,7 +207,7 @@ export async function buildTableInHarness(page, scenario) {
  * point of building here too is that `offsetWidth` is `0` for every cell — so the widths
  * come from the *other* basis. That contrast is the assertion, not an incidental detail.
  */
-export async function buildTableInNode(scenario) {
+export async function buildTableInNode(scenario: string): Promise<string> {
 	const { Window } = await import('happy-dom')
 	const { tableToSlides } = await import('../../dist/html.js')
 	const { default: TsPptx } = await import('../../dist/node.js')
@@ -164,5 +219,5 @@ export async function buildTableInNode(scenario) {
 	const table = win.document.getElementById(TABLE_ID)
 	if (!table) throw new Error(`fixture "${scenario}" rendered no #${TABLE_ID}`)
 	tableToSlides(pres, table)
-	return /** @type {string} */ (await pres.write({ outputType: 'base64' }))
+	return (await pres.write({ outputType: 'base64' })) as string
 }

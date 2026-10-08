@@ -143,7 +143,7 @@ export const TABLE_HTML = {
 	 * width can make them wrap. That last one is what gives the spec its oracle — every row is the
 	 * same height, so every page with the same usable height must hold the same number of them,
 	 * and no rendered-page measurement is needed to say a page took one too many. See
-	 * test/browser/table-autopage.spec.mjs.
+	 * test/browser/table-autopage.spec.ts.
 	 */
 	autoPage: autoPageMarkup(),
 }

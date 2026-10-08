@@ -24,7 +24,7 @@ import { defineRegressionSuite, build, listEntries, readEntry, assert, assertEqu
 // identical rows fit an identical space. Before the fix: 10, then 11, 11, 11.
 //
 // This is the DOM-free repro the dismissal asked for, and it makes the same case in the
-// browser (test/browser/table-autopage.spec.mjs) a confirmation rather than the evidence.
+// browser (test/browser/table-autopage.spec.ts) a confirmation rather than the evidence.
 
 /** Enough rows to fill several pages, all identical so every page's budget is comparable. */
 function uniformRows(count: number, margin: number) {

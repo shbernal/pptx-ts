@@ -78,7 +78,7 @@ async function build(name, options = {}) {
  *
  * The site's demos page already drives that path, but through a Vite bundle. Doing it here
  * too is what lets one coverage measurement over `dist/browser.js` account for all four
- * adapter functions (see adapter-coverage.spec.mjs); without it `writeFile` would be
+ * adapter functions (see adapter-coverage.spec.ts); without it `writeFile` would be
  * covered in a fixture where the file is not loaded as a file at all.
  *
  * @param {string} name a key of `DECKS` in ./decks.mjs

@@ -2,8 +2,16 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { diffParts, explodePackage, listParts } from '../../scripts/pptx-parts.mjs'
 import { ROOT } from '../../scripts/script-utils.mjs'
-import { expect, test } from './fixtures.mjs'
-import { buildDeckInHarness, buildDeckInNode, NODE_ASSETS, openHarness, packageBytes } from './helpers.mjs'
+import { expect, test } from './fixtures.ts'
+import {
+	built,
+	buildDeckInHarness,
+	failed,
+	buildDeckInNode,
+	NODE_ASSETS,
+	openHarness,
+	packageBytes,
+} from './helpers.ts'
 
 /**
  * `loadFontData` (src/runtime/browser.ts) in a real browser.
@@ -27,8 +35,7 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('loadFontData: a font fetched over HTTP measures and embeds exactly as one read off disk', async ({ page }) => {
-	const browser = await buildDeckInHarness(page, 'fonts')
-	expect(browser.ok, `the harness failed to build the "fonts" deck: ${browser.message}`).toBe(true)
+	const browser = built(await buildDeckInHarness(page, 'fonts'), 'the harness failed to build the "fonts" deck')
 	const nodeBase64 = await buildDeckInNode('fonts')
 
 	const nodeDir = await explodePackage(packageBytes(nodeBase64), path.join(OUT_ROOT, 'fonts', 'node'))
@@ -55,8 +62,7 @@ test('loadFontData: a font fetched over HTTP measures and embeds exactly as one 
 })
 
 test('loadFontData: a 404 font URL rejects with the adapter code', async ({ page }) => {
-	const outcome = await buildDeckInHarness(page, 'missingFont')
-	expect(outcome.ok).toBe(false)
+	const outcome = failed(await buildDeckInHarness(page, 'missingFont'))
 	// `registerFontMetrics` fails where it is called, not at export, so there is no
 	// pipeline wrapper here — the adapter's own error is the one that surfaces.
 	expect(outcome.code).toBe('font/fetch-failed')

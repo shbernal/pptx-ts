@@ -1,6 +1,6 @@
 import { DECKS } from './harness/decks.mjs'
-import { expect, test } from './fixtures.mjs'
-import { buildDeckInHarness, openHarness } from './helpers.mjs'
+import { type CoverageEntries, expect, test } from './fixtures.ts'
+import { buildDeckInHarness, defined, openHarness } from './helpers.ts'
 
 /**
  * The browser lane's own coverage gate.
@@ -62,12 +62,12 @@ const ADAPTER_FUNCTIONS = ['createBrowserRuntime', 'fetchFontBytes', 'loadMedia'
  * reaches the repo's headline figures the same way everything else in the lane does, through
  * `scripts/coverage-merge.mjs`. The scope line has not moved: what `html-table` proves is
  * that a measurement is taken and honoured, not that the browser's layout is correct — see
- * test/browser/table-widths.spec.mjs.
+ * test/browser/table-widths.spec.ts.
  */
 const MIN_EXECUTED_PCT = 90
 
 /** V8 reports uncovered spans as ranges with `count === 0`; everything else ran. */
-function executedPct(entry) {
+function executedPct(entry: CoverageEntries[number]): number {
 	const uncovered = entry.functions.flatMap((fn) => fn.ranges.filter((range) => range.count === 0))
 	// Ranges nest (a function's body encloses its own dead arms), so union them by
 	// walking sorted starts rather than summing — otherwise a dead arm inside a dead
@@ -81,7 +81,7 @@ function executedPct(entry) {
 			cursor = range.endOffset
 		}
 	}
-	const total = entry.source.length
+	const total = defined(entry.source, 'V8 reported no source for dist/browser.js').length
 	return ((total - unreached) / total) * 100
 }
 
@@ -89,7 +89,7 @@ test('every RuntimeAdapter function runs, and dist/browser.js stays above its co
 	page,
 	jsCoverage,
 }) => {
-	// `jsCoverage` (test/browser/fixtures.mjs) started collection before this body ran, so
+	// `jsCoverage` (test/browser/fixtures.ts) started collection before this body ran, so
 	// the harness page's own load is measured rather than being the one thing that is not.
 	await openHarness(page)
 
@@ -97,18 +97,20 @@ test('every RuntimeAdapter function runs, and dist/browser.js stays above its co
 	// that a sibling spec drops. Failures are outcomes here, not throws — the specs next
 	// door assert *which* failure each one is; this only needs the code to have run.
 	for (const deck of Object.keys(DECKS)) await buildDeckInHarness(page, deck)
-	const bytes = await page.evaluate(() => window['harness'].bytes())
+	const bytes = await page.evaluate(() => window.harness?.bytes())
 	expect(bytes).toEqual({ constructorName: 'Uint8Array', isView: true, prefix: [0x50, 0x4b] })
 
 	const downloadPromise = page.waitForEvent('download')
-	await page.evaluate(() => window['harness'].download('fonts'))
+	await page.evaluate(() => window.harness?.download('fonts'))
 	await downloadPromise
 
 	// The fixture caches this, so its own teardown writes these same entries out for the
 	// merge instead of collecting a second, empty round.
 	const entries = await jsCoverage.stop()
-	const entry = entries.find((script) => script.url.endsWith('/dist/browser.js'))
-	expect(entry, `no coverage entry for dist/browser.js; got:\n  ${entries.map((e) => e.url).join('\n  ')}`).toBeTruthy()
+	const entry = defined(
+		entries.find((script) => script.url.endsWith('/dist/browser.js')),
+		`no coverage entry for dist/browser.js; got:\n  ${entries.map((e) => e.url).join('\n  ')}`
+	)
 
 	// Across every dist entry, not just `dist/browser.js` — one adapter member is a shared
 	// implementation the bundler puts in a common chunk. See ADAPTER_FUNCTIONS.

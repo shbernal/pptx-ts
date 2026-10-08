@@ -301,7 +301,8 @@ happy-dom.
 - Paths inside a suite are relative to its directory, for example `../../helpers.ts` and
   `../../../dist/node.js`.
 - A Vitest file is `*.test.ts` or `*.test.js`. The Playwright specs in `test/browser/` are
-  `*.spec.ts` or `*.spec.mjs`.
+  `*.spec.ts`; the pages they drive under `test/browser/harness/` stay `.mjs`, since the
+  browser loads them unbundled.
 
 Each regression file calls `defineRegressionSuite(suiteName, cases)` from `test/helpers.ts`,
 with exactly two arguments. Put legacy provenance in the suite name, as in
@@ -320,7 +321,7 @@ Prefer public API deck generation plus focused package and XML assertions:
 - Narrow a nullable value with `expectDefined(x)`, or `defined(x)` inside an expression. The test
   project typechecks with `strictNullChecks`, and both helpers fail as an assertion where a bare
   dereference would fail as a `TypeError`. A Playwright spec imports `defined` from
-  `test/browser/helpers.mjs` instead, since `test/helpers.ts` asserts through Vitest.
+  `test/browser/helpers.ts` instead, since `test/helpers.ts` asserts through Vitest.
 - Assert a failure without a hand-rolled `try`/`catch`: a catch variable is `unknown`. Use
   `assertRejects()` to match the message, `caught()` or `caughtSync()` to get the thrown
   `Error` back (or `null`) and check its `code`, class or `cause`, or Vitest's `toThrow()`.
@@ -824,7 +825,7 @@ It is not in `verify`, because it spawns seven validations per fixture and asser
 | Oracle | Run by | Proves | Blind to | In CI |
 | --- | --- | --- | --- | --- |
 | Schema validator | `test:schema`, and schema cases across `test` | Modelled markup conforms at `Microsoft365` and relationships resolve | `mc:Choice` content, unmodelled extensions, whether PowerPoint opens or paints the deck | yes, `test` |
-| Byte identity | `byte-identity:check`; `cross-runtime-bytes.spec.mjs` in `test:browser` | A refactor changed no emitted byte; the browser builds the same bytes as Node | Parts no showcase or gate deck emits, such as OLE objects; whether the bytes are right | only the browser comparison, in `browser` |
+| Byte identity | `byte-identity:check`; `cross-runtime-bytes.spec.ts` in `test:browser` | A refactor changed no emitted byte; the browser builds the same bytes as Node | Parts no showcase or gate deck emits, such as OLE objects; whether the bytes are right | only the browser comparison, in `browser` |
 | COM read-back | `test:com` | PowerPoint opens the deck without a repair prompt, and resolves actions, connector sites and OLE `ProgID`s | What is painted; markup PowerPoint regenerates on open | no |
 | PNG export from PowerPoint | the `model3d` and preset-geometry legs of `test:com`, or `Slide.Export` by hand | What PowerPoint paints | Markup PowerPoint regenerates on open, such as the SmartArt drawing cache | no |
 | LibreOffice render | `test:lo` | Stored content is painted by an independent renderer, and which strings it draws | Layout fidelity; differences only a raster shows, such as `a:buClr` | yes, `render-oracle` |
@@ -1127,7 +1128,7 @@ them. These tests run all four adapter functions in Chromium. They are in neithe
 aggregate, because they need a Chromium download and the surface changes rarely. CI runs them in
 the `browser` job.
 
-`playwright.config.ts` holds the configuration, and the specs are `test/browser/*.spec.mjs`.
+`playwright.config.ts` holds the configuration, and the specs are `test/browser/*.spec.ts`.
 Vitest excludes `test/browser/**` by directory, so neither runner collects the other's files.
 
 > **Run them through `pnpm run test:browser`, not `pnpm exec playwright test`.** Only the package
@@ -1158,16 +1159,16 @@ documents.
 
 | Spec | Project | Claim |
 |---|---|---|
-| `deck-download.spec.mjs` | demo | the object-URL download is a real OPC package: read back with **jszip**, an implementation independent of the `fflate` the library writes with |
-| `cross-runtime-bytes.spec.mjs` | demo | the browser-built deck is **byte-identical** to the Node-built one, part for part |
-| `adapter-media.spec.mjs` | runtime-adapter | `loadMedia` and `createSvgPngPreview`: a fetched raster image lands as the same bytes Node reads off disk *and* as the source file's; the `<canvas>` rasterizer emits a real PNG where Node stubs a placeholder; 404, undecodable-SVG and zero-dimension-SVG each fail with the right code |
-| `adapter-fonts.spec.mjs` | runtime-adapter | `loadFontData`: a font fetched over HTTP bakes the same `fontScale` and embeds the same `/ppt/fonts/` bytes as one read off disk; a 404 rejects with `font/fetch-failed` |
-| `adapter-coverage.spec.mjs` | runtime-adapter | all four adapter functions ran, and `dist/browser.js`'s executed share stayed above its floor |
-| `table-widths.spec.mjs` | html-table | `tableToSlides` against a table a browser laid out: the **measured** arm of `pickColWidthBasis` drives the emitted grid, `data-pptx-width` still wins outright (including divided across a `colspan`), and Node falls back to the CSS basis on the same markup, a *different* proportion, not a coarser one, because the two bases measure different boxes |
-| `table-autopage.spec.mjs` | html-table | a table too tall for one slide pages with **one row budget on every page**, carries every row across exactly once, and reaches the *same* pagination in Chromium as on a DOM that renders nothing |
+| `deck-download.spec.ts` | demo | the object-URL download is a real OPC package: read back with **jszip**, an implementation independent of the `fflate` the library writes with |
+| `cross-runtime-bytes.spec.ts` | demo | the browser-built deck is **byte-identical** to the Node-built one, part for part |
+| `adapter-media.spec.ts` | runtime-adapter | `loadMedia` and `createSvgPngPreview`: a fetched raster image lands as the same bytes Node reads off disk *and* as the source file's; the `<canvas>` rasterizer emits a real PNG where Node stubs a placeholder; 404, undecodable-SVG and zero-dimension-SVG each fail with the right code |
+| `adapter-fonts.spec.ts` | runtime-adapter | `loadFontData`: a font fetched over HTTP bakes the same `fontScale` and embeds the same `/ppt/fonts/` bytes as one read off disk; a 404 rejects with `font/fetch-failed` |
+| `adapter-coverage.spec.ts` | runtime-adapter | all four adapter functions ran, and `dist/browser.js`'s executed share stayed above its floor |
+| `table-widths.spec.ts` | html-table | `tableToSlides` against a table a browser laid out: the **measured** arm of `pickColWidthBasis` drives the emitted grid, `data-pptx-width` still wins outright (including divided across a `colspan`), and Node falls back to the CSS basis on the same markup, a *different* proportion, not a coarser one, because the two bases measure different boxes |
+| `table-autopage.spec.ts` | html-table | a table too tall for one slide pages with **one row budget on every page**, carries every row across exactly once, and reaches the *same* pagination in Chromium as on a DOM that renders nothing |
 
 Before accepting a report as a layout report, ask what the browser actually supplies to the code
-path. `table-autopage.spec.mjs` is the example. Its cross-runtime assertion shows that the
+path. `table-autopage.spec.ts` is the example. Its cross-runtime assertion shows that the
 pagination does not depend on a rendered page, and the regression behind it is guarded without a
 DOM in `test/regression/table/table-autopage-continuation-budget.test.ts`.
 
@@ -1175,7 +1176,7 @@ The adapter specs build their decks from `test/browser/harness/decks.mjs`, once 
 once in Node, from one definition. Two copies would make a divergence in the fixture read as a
 divergence in the runtime.
 
-`cross-runtime-bytes.spec.mjs` compares the deck the site's demos page builds with the one
+`cross-runtime-bytes.spec.ts` compares the deck the site's demos page builds with the one
 `pnpm demos:build quarterly-review` builds from the same showcase module. `src/zip.ts` pins
 `FIXED_MTIME`, so one diff shows that every serializer, the zip writer, part ordering and
 relationship numbering are runtime-invariant. A runtime-dependent code path anywhere in
@@ -1188,20 +1189,20 @@ difference the other rejects. The normalized values are `core.xml` timestamps an
 
 ### Coverage from the browser tests
 
-- `adapter-coverage.spec.mjs` asserts on Chromium's V8 coverage of `dist/browser.js` across every
+- `adapter-coverage.spec.ts` asserts on Chromium's V8 coverage of `dist/browser.js` across every
   harness scenario. Every adapter function must be entered, which catches a function losing its
   only test. The file's executed share must stay above `MIN_EXECUTED_PCT`, which catches a
   function still entered whose arms are not. A merged percentage can express neither. The spec
   names the arms that keep the share below 100, both unreachable in a working browser.
 - Every spec in the `runtime-adapter` and `html-table` projects writes raw V8 coverage to
-  `.tmp/browser-coverage/` through the auto-use fixture in `test/browser/fixtures.mjs`, so a new
+  `.tmp/browser-coverage/` through the auto-use fixture in `test/browser/fixtures.ts`, so a new
   spec contributes by existing. `scripts/coverage-merge.mjs` folds it into the Node report; see
   [Merged coverage](#merged-coverage).
 
 ### What the browser tests do not cover
 
 - **Live-DOM layout fidelity.** `html-table` asserts that a real `offsetWidth` is taken and
-  honoured proportionally. `table-autopage.spec.mjs` asserts that pages of identical rows get
+  honoured proportionally. `table-autopage.spec.ts` asserts that pages of identical rows get
   identical row budgets. Neither asserts that Chromium's numbers are the right numbers, that an
   estimated row height matches what PowerPoint draws, or that another engine agrees. Layout
   fidelity has no oracle and is out of active scope ([project target](scope-and-policy.md)). A
@@ -1215,7 +1216,7 @@ Chromium only, by decision. The adapter uses `fetch`, `FileReader`, `<canvas>`, 
 `<a download>`, where engines are not known to disagree, and no divergence has been reported
 against this package. A Firefox and WebKit matrix would triple the job to answer a question
 nobody has asked. Add an engine for a reported difference, or for a new adapter function that
-touches an API with a real cross-engine history. `adapter-coverage.spec.mjs` is Chromium-only
+touches an API with a real cross-engine history. `adapter-coverage.spec.ts` is Chromium-only
 because `page.coverage` is a CDP feature, which follows from this decision.
 
 ### The one expected difference between the runtimes

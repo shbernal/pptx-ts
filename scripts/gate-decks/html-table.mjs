@@ -16,7 +16,7 @@
  * fallback bases rather than from measurement. That is not a limitation of the fixture — it is
  * the Node path this deck is here to freeze, and it is deterministic in a way a real browser's
  * font metrics would not be. The measured basis has its own coverage in Chromium
- * (`test/browser/table-widths.spec.mjs`), where byte-identity cannot follow.
+ * (`test/browser/table-widths.spec.ts`), where byte-identity cannot follow.
  *
  * One table per slide. What each is here to reach:
  *

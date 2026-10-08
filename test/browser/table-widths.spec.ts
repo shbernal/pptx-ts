@@ -1,9 +1,10 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import type { Page } from '@playwright/test'
 import { explodePackage } from '../../scripts/pptx-parts.mjs'
 import { ROOT } from '../../scripts/script-utils.mjs'
-import { expect, test } from './fixtures.mjs'
-import { buildTableInHarness, buildTableInNode, openTableHarness, packageBytes, tableBases } from './helpers.mjs'
+import { expect, test } from './fixtures.ts'
+import { built, buildTableInHarness, buildTableInNode, openTableHarness, packageBytes, tableBases } from './helpers.ts'
 
 /**
  * `tableToSlides` against a table a browser actually laid out.
@@ -35,21 +36,24 @@ const OUT_ROOT = path.join(ROOT, '.tmp', 'browser-table')
 const ONE_IN_EMU = 914400
 
 /** Proportions relative to the first column — the only thing a basis determines. */
-const ratios = (widths) => widths.map((width) => width / widths[0])
+const ratios = (widths: number[]): number[] => widths.map((width) => width / widths[0])
 
 /** `<a:gridCol w="…"/>`, in column order. The same read the Node table suites make. */
-const gridColWidths = (xml) => [...xml.matchAll(/<a:gridCol w="(\d+)"\/>/g)].map((match) => Number(match[1]))
+const gridColWidths = (xml: string): number[] =>
+	[...xml.matchAll(/<a:gridCol w="(\d+)"\/>/g)].map((match) => Number(match[1]))
 
 /**
  * Build one fixture in the page and return its emitted grid.
  *
  * The package is exploded to `.tmp/` rather than parsed in memory, for the same reason
- * adapter-media.spec.mjs does it: on a failure the tree is what makes the emitted XML
+ * adapter-media.spec.ts does it: on a failure the tree is what makes the emitted XML
  * readable without re-running the lane.
  */
-async function browserGrid(page, scenario) {
-	const outcome = await buildTableInHarness(page, scenario)
-	expect(outcome.ok, `the harness failed to convert the "${scenario}" table: ${outcome.message}`).toBe(true)
+async function browserGrid(page: Page, scenario: string): Promise<number[]> {
+	const outcome = built(
+		await buildTableInHarness(page, scenario),
+		`the harness failed to convert the "${scenario}" table`
+	)
 	const dir = await explodePackage(packageBytes(outcome.base64), path.join(OUT_ROOT, scenario, 'browser'))
 	return gridColWidths(fs.readFileSync(path.join(dir, 'ppt', 'slides', 'slide1.xml'), 'utf8'))
 }
@@ -157,7 +161,7 @@ test('cross-runtime: the same table falls back to the CSS basis on Node and is m
 	// computed CSS widths — a different box, hence different proportions rather than
 	// coarser ones, which is exactly what the two `ratios` below pin. Asserting its shape
 	// is what stops it quietly becoming a
-	// different disagreement — the same discipline adapter-media.spec.mjs applies to the
+	// different disagreement — the same discipline adapter-media.spec.ts applies to the
 	// SVG placeholder.
 	expect(nodeCols).toHaveLength(2)
 	expect(browserCols).toHaveLength(2)

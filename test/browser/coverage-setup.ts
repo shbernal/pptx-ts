@@ -1,5 +1,5 @@
 import fs from 'node:fs'
-import { BROWSER_COVERAGE_DIR } from './fixtures.mjs'
+import { BROWSER_COVERAGE_DIR } from './fixtures.ts'
 
 /**
  * Playwright `globalSetup`: empty `.tmp/browser-coverage/` before the lane runs.
@@ -15,6 +15,6 @@ import { BROWSER_COVERAGE_DIR } from './fixtures.mjs'
  * produces the data: whatever is in the directory afterwards is exactly what this
  * invocation of Playwright executed.
  */
-export default function clearBrowserCoverage() {
+export default function clearBrowserCoverage(): void {
 	fs.rmSync(BROWSER_COVERAGE_DIR, { recursive: true, force: true })
 }

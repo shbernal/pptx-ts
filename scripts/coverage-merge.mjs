@@ -17,7 +17,7 @@
  * Inputs, both of which must already exist:
  *
  *   - `coverage/coverage-final.json` — `pnpm run test:coverage`
- *   - `.tmp/browser-coverage/*.json` — `pnpm run test:browser` (test/browser/fixtures.mjs)
+ *   - `.tmp/browser-coverage/*.json` — `pnpm run test:browser` (test/browser/fixtures.ts)
  *
  * ## Why this can be merged at all
  *

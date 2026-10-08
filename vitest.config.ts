@@ -112,7 +112,7 @@ const maxWorkers = resolveMaxWorkers()
 export default defineConfig({
 	test: {
 		// `test/browser/**` belongs to Playwright (`playwright.config.ts`, `pnpm run
-		// test:browser`), not to Vitest. Its specs are named `*.spec.mjs` or `*.spec.ts`,
+		// test:browser`), not to Vitest. Its specs are named `*.spec.ts`,
 		// which Vitest's default `include` matches, so without this it would collect them and
 		// fail on `@playwright/test`'s fixtures. Excluded by directory rather than by filename so
 		// the two harnesses never race for a file on the strength of what it is called.
@@ -184,7 +184,7 @@ export default defineConfig({
 			// `dist/browser.js` used to be excluded here, with `dist/browser-*.js`
 			// alongside it, on the grounds that the browser entry and its runtime adapter
 			// "cannot run headless". Both are gone as of the browser lane: the adapter is
-			// exercised in a real Chromium (test/browser/adapter-*.spec.mjs), and the
+			// exercised in a real Chromium (test/browser/adapter-*.spec.ts), and the
 			// premise was false in a second way — tsdown bundles `src/runtime/browser.ts`
 			// *into* `dist/browser.js`, so `dist/browser-*.js` never matched anything.
 			//

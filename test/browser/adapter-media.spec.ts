@@ -2,8 +2,18 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { diffParts, explodePackage, listParts } from '../../scripts/pptx-parts.mjs'
 import { ROOT } from '../../scripts/script-utils.mjs'
-import { expect, test } from './fixtures.mjs'
-import { buildDeckInHarness, buildDeckInNode, defined, NODE_ASSETS, openHarness, packageBytes } from './helpers.mjs'
+import { expect, test } from './fixtures.ts'
+import type { Page } from '@playwright/test'
+import {
+	built,
+	buildDeckInHarness,
+	buildDeckInNode,
+	defined,
+	failed,
+	NODE_ASSETS,
+	openHarness,
+	packageBytes,
+} from './helpers.ts'
 
 /**
  * `loadMedia` and `createSvgPngPreview` (src/runtime/browser.ts) in a real browser.
@@ -24,9 +34,8 @@ import { buildDeckInHarness, buildDeckInNode, defined, NODE_ASSETS, openHarness,
 const OUT_ROOT = path.join(ROOT, '.tmp', 'browser-adapter')
 
 /** Explode both packages of one deck into `.tmp/` and hand back the two directories. */
-async function bothRuntimes(page, deck) {
-	const browser = await buildDeckInHarness(page, deck)
-	expect(browser.ok, `the harness failed to build the "${deck}" deck: ${browser.message}`).toBe(true)
+async function bothRuntimes(page: Page, deck: string): Promise<{ nodeDir: string; browserDir: string }> {
+	const browser = built(await buildDeckInHarness(page, deck), `the harness failed to build the "${deck}" deck`)
 	const nodeBase64 = await buildDeckInNode(deck)
 
 	// Left on disk deliberately: on a failure the two exploded trees are what makes a
@@ -38,7 +47,7 @@ async function bothRuntimes(page, deck) {
 }
 
 /** The media parts of an exploded package, sorted. */
-const mediaParts = (dir) => listParts(dir).filter((part) => part.startsWith('ppt/media/'))
+const mediaParts = (dir: string): string[] => listParts(dir).filter((part) => part.startsWith('ppt/media/'))
 
 test.beforeEach(async ({ page }) => {
 	await openHarness(page)
@@ -96,8 +105,7 @@ test('createSvgPngPreview: the browser rasterizes the PNG fallback Node can only
 })
 
 test('loadMedia: a 404 fails the export with the adapter code, not a bare fetch error', async ({ page }) => {
-	const outcome = await buildDeckInHarness(page, 'missingImage')
-	expect(outcome.ok).toBe(false)
+	const outcome = failed(await buildDeckInHarness(page, 'missingImage'))
 	// The pipeline wraps the loader failure so the message names the asset; the adapter's
 	// own code survives as the cause. Both halves are the API, so both are asserted.
 	expect(outcome.code).toBe('media/load-failed')
@@ -112,8 +120,7 @@ for (const deck of ['brokenSvg', 'brokenSvgData']) {
 	test(`createSvgPngPreview: an undecodable SVG (${deck}) fails the export under the default policy`, async ({
 		page,
 	}) => {
-		const outcome = await buildDeckInHarness(page, deck)
-		expect(outcome.ok).toBe(false)
+		const outcome = failed(await buildDeckInHarness(page, deck))
 		// `image.onerror`: the bytes are there, so this is the decode arm, not the network one.
 		expect(outcome.code).toBe('media/svg-preview-failed')
 		expect(outcome.diagnostics).toEqual([])
@@ -122,8 +129,10 @@ for (const deck of ['brokenSvg', 'brokenSvgData']) {
 	test(`createSvgPngPreview: an undecodable SVG (${deck}) keeps its bytes under 'placeholder' and warns`, async ({
 		page,
 	}) => {
-		const outcome = await buildDeckInHarness(page, deck, { onMediaError: 'placeholder' })
-		expect(outcome.ok, `the export must resolve: ${outcome.message}`).toBe(true)
+		const outcome = built(
+			await buildDeckInHarness(page, deck, { onMediaError: 'placeholder' }),
+			'the export must resolve'
+		)
 		expect(outcome.diagnostics.map((diagnostic) => diagnostic.code)).toEqual(['media/svg-preview-failed'])
 
 		// Only the PNG fallback is the placeholder, and Node, which cannot rasterize at all, writes
@@ -139,8 +148,7 @@ for (const deck of ['brokenSvg', 'brokenSvgData']) {
 }
 
 test('createSvgPngPreview: a zero-dimension SVG is caught by the h/w guard', async ({ page }) => {
-	const outcome = await buildDeckInHarness(page, 'zeroSizeSvg')
-	expect(outcome.ok).toBe(false)
+	const outcome = failed(await buildDeckInHarness(page, 'zeroSizeSvg'))
 	expect(outcome.code).toBe('media/svg-preview-failed')
 	// Distinguishes this arm from the `onerror` one above: same code, different reason,
 	// and the reason is what says the guard fired instead of the decode failing.
