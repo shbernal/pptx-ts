@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, assert, defined } from '../../helpers.js'
 
 defineRegressionSuite('Text formatting [legacy bug-01]', [
 	{
@@ -74,7 +74,7 @@ defineRegressionSuite('Text formatting [legacy bug-01]', [
 				)
 			})
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			const body = xml.match(/<p:txBody>[\s\S]*?<\/p:txBody>/)[0]
+			const body = defined(xml.match(/<p:txBody>[\s\S]*?<\/p:txBody>/))[0]
 			const paragraphs = body.match(/<a:p>[\s\S]*?<\/a:p>/g) || []
 			// 3 newline-delimited lines => exactly 3 paragraphs
 			assert(paragraphs.length === 3, 'expected 3 paragraphs, got ' + paragraphs.length)
@@ -106,7 +106,7 @@ defineRegressionSuite('Text formatting [legacy bug-01]', [
 				s.addText('line1\n\nline3', { x: 1, y: 1, w: 4, h: 2 })
 			})
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			const body = xml.match(/<p:txBody>[\s\S]*?<\/p:txBody>/)[0]
+			const body = defined(xml.match(/<p:txBody>[\s\S]*?<\/p:txBody>/))[0]
 			const paragraphs = body.match(/<a:p>[\s\S]*?<\/a:p>/g) || []
 			assert(paragraphs.length === 3, 'expected 3 paragraphs (incl. blank middle), got ' + paragraphs.length)
 			const text = (p) => (p.match(/<a:t>[^<]*<\/a:t>/g) || []).map((t) => t.replace(/<\/?a:t>/g, '')).join('')

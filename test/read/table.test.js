@@ -72,8 +72,7 @@ describe('Table read model', () => {
 		const tables = presentation.slides
 			.flatMap((slide) => slide.shapes)
 			.filter((shape) => shape.shapeType === 'graphicFrame')
-			.filter((frame) => frame.table)
-			.map((frame) => frame.table)
+			.flatMap((frame) => (frame.table ? [frame.table] : []))
 		assert(tables.length >= 2, `expected ≥2 tables, got ${tables.length}`)
 		assert(
 			tables.some((table) => table.bandedRows),
@@ -94,8 +93,7 @@ describe('Table read model', () => {
 		const tables = presentation.slides
 			.flatMap((slide) => slide.shapes)
 			.filter((shape) => shape.shapeType === 'graphicFrame')
-			.filter((frame) => frame.table)
-			.map((frame) => frame.table)
+			.flatMap((frame) => (frame.table ? [frame.table] : []))
 		const all = tables.find((table) => table.lastColumnFooter)
 		assert(all, `expected a table with every look flag; got ${tables.length} table(s)`)
 		for (const flag of [

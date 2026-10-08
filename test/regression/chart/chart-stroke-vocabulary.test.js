@@ -1,5 +1,5 @@
 import TsPptx, { ChartType, SchemeColor } from '../../../dist/node.js'
-import { defineRegressionSuite, build, assertEqual, assertIncludes, assertNotIncludes } from '../../helpers.js'
+import { defineRegressionSuite, build, assertEqual, assertIncludes, assertNotIncludes, defined } from '../../helpers.js'
 import { chartXml } from './chart-parts.js'
 
 // A chart stroke used to be spelled three ways the rest of the library did not know: `size`
@@ -169,7 +169,7 @@ defineRegressionSuite('Chart stroke vocabulary', [
 					errorBars: { color: 'FF0000', width: 2, dashType: 'sysDash', cap: 'round', transparency: 30 },
 				},
 			])
-			const bars = xml.match(/<c:errBars>[^]*?<\/c:errBars>/)[0]
+			const bars = defined(xml.match(/<c:errBars>[^]*?<\/c:errBars>/))[0]
 			assertIncludes(bars, 'w="25400"', 'width reaches a:ln@w')
 			assertIncludes(bars, 'cap="rnd"', 'the cap reaches a:ln@cap')
 			assertIncludes(bars, '<a:prstDash val="sysDash"/>', 'the dash reaches a:prstDash')
@@ -184,7 +184,7 @@ defineRegressionSuite('Chart stroke vocabulary', [
 			const xml = await chartFor({ type: ChartType.bar }, [
 				{ name: 'S1', labels: ['A', 'B'], values: [1, 2], errorBars: { dashType: 'dot' } },
 			])
-			const bars = xml.match(/<c:errBars>[^]*?<\/c:errBars>/)[0]
+			const bars = defined(xml.match(/<c:errBars>[^]*?<\/c:errBars>/))[0]
 			assertIncludes(bars, '<a:prstDash val="dot"/>', 'the dash is emitted')
 			assertNotIncludes(bars, '<a:solidFill>', 'and no colour is invented for it')
 		},

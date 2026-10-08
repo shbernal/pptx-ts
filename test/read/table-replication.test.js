@@ -13,7 +13,7 @@ import { Presentation } from '../../dist/read.js'
 import { readModelToIr } from '../../dist/script.js'
 import JSZip from 'jszip'
 import { authorRead, authorReadWithFixtureStyles, firstTable } from './authored.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined } from '../helpers.js'
 
 /** The IR's single `addTable` call, or a failing assertion. */
 function tableCall(ir) {
@@ -33,7 +33,7 @@ async function replay(call) {
 	pres.addSlide().addTable(call.args[0], call.args[1])
 	const buf = /** @type {Uint8Array} */ (await pres.toBytes())
 	const zip = await JSZip.loadAsync(buf)
-	return zip.file('ppt/slides/slide1.xml').async('string')
+	return defined(zip.file('ppt/slides/slide1.xml')).async('string')
 }
 
 /** Author `build`, read it back, and convert to the deck IR. */
@@ -71,7 +71,7 @@ describe('table replication — vertical cell text (a:tcPr/@vert)', () => {
 		assert(!constructs(ir).has('table.cell.vert'), 'a writable direction raises no note')
 
 		const xml = await replay(call)
-		const tcPrs = xml.match(/<a:tcPr[^>]*>/g)
+		const tcPrs = defined(xml.match(/<a:tcPr[^>]*>/g))
 		assertEqual(tcPrs.length, 2, 'two cells')
 		assert(tcPrs[0].includes('vert="vert270"'), 'the replayed cell is vertical again; got: ' + tcPrs[0])
 		assert(!tcPrs[1].includes('vert='), 'the sibling stays horizontal; got: ' + tcPrs[1])
@@ -184,7 +184,7 @@ describe('table replication — the table background', () => {
 		}
 
 		const xml = await replay(call)
-		const tblPr = xml.match(/<a:tblPr(?:\/>|[^>]*>[\s\S]*?<\/a:tblPr>)/)[0]
+		const tblPr = defined(xml.match(/<a:tblPr(?:\/>|[^>]*>[\s\S]*?<\/a:tblPr>)/))[0]
 		assert(tblPr.includes('val="F2F2F2"'), 'the replayed background is on a:tblPr again; got: ' + tblPr)
 	})
 
@@ -323,7 +323,7 @@ describe("table replication — a cell's own fill versus the style's banding", (
 		// being present somewhere. A styled table authoring no border emits no edges at all,
 		// which is why the anchor is the closing tag rather than the last edge.
 		const xml = await replay(call)
-		const tcPrs = xml.match(/<a:tcPr[^>]*>[\s\S]*?<\/a:tcPr>/g)
+		const tcPrs = defined(xml.match(/<a:tcPr[^>]*>[\s\S]*?<\/a:tcPr>/g))
 		assertEqual(tcPrs.length, 2, 'two cells')
 		assert(/<a:noFill\/>\s*<\/a:tcPr>/.test(tcPrs[0]), `the suppressed cell replays its own a:noFill; got: ${tcPrs[0]}`)
 		assert(!/<a:noFill\/>\s*<\/a:tcPr>/.test(tcPrs[1]), `the inheriting cell carries none; got: ${tcPrs[1]}`)

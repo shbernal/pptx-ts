@@ -19,7 +19,7 @@ import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
 import { AutoShape } from '../../dist/read.js'
 import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined, expectDefined } from '../helpers.js'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
@@ -39,7 +39,7 @@ function ctx() {
 /** An `AutoShape` over a hand-authored `p:sp` body, resolving against a theme stub. */
 function sp(spPrInner) {
 	const xml = `<p:spTree xmlns:p="${P_NS}" xmlns:a="${A_NS}"><p:sp>${spPrInner}</p:sp></p:spTree>`
-	const spTree = new DOMParser().parseFromString(xml, 'text/xml').documentElement
+	const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 	const el = spTree.getElementsByTagNameNS(P_NS, 'sp')[0]
 	return new AutoShape(el, /** @type {any} */ ({ themeContext: () => ctx() }))
 }
@@ -113,6 +113,7 @@ describe('Shape.shadow — outer drop shadow reads', () => {
 		const hsl = sp(
 			`<p:spPr><a:effectLst><a:outerShdw><a:hslClr hue="0" sat="100000" lum="50000"/></a:outerShdw></a:effectLst></p:spPr>`
 		).shadow
+		expectDefined(hsl, 'an hslClr outerShdw surfaces a shadow')
 		assertEqual(hsl.colorRef.resolved?.effectiveHex, 'FF0000', 'an hslClr shadow resolves too')
 	})
 
@@ -127,18 +128,20 @@ describe('Shape.lineEnds — connector arrowheads', () => {
 		const ends = sp(
 			`<p:spPr><a:ln w="19050"><a:headEnd type="triangle" w="med" len="lg"/><a:tailEnd type="oval"/></a:ln></p:spPr>`
 		).lineEnds
-		assert(ends, 'a line with arrowheads surfaces lineEnds')
-		assertEqual(ends.head.type, 'triangle', 'head type')
-		assertEqual(ends.head.width, 'med', 'head width')
-		assertEqual(ends.head.length, 'lg', 'head length')
-		assertEqual(ends.tail.type, 'oval', 'tail type')
-		assertEqual(ends.tail.width, null, 'tail has no explicit width → null')
-		assertEqual(ends.tail.length, null, 'tail has no explicit length → null')
+		expectDefined(ends, 'a line with arrowheads surfaces lineEnds')
+		const head = defined(ends.head, 'the headEnd reads')
+		const tail = defined(ends.tail, 'the tailEnd reads')
+		assertEqual(head.type, 'triangle', 'head type')
+		assertEqual(head.width, 'med', 'head width')
+		assertEqual(head.length, 'lg', 'head length')
+		assertEqual(tail.type, 'oval', 'tail type')
+		assertEqual(tail.width, null, 'tail has no explicit width → null')
+		assertEqual(tail.length, null, 'tail has no explicit length → null')
 	})
 
 	test('a headEnd with no @type defaults its type to none', () => {
-		const ends = sp(`<p:spPr><a:ln w="12700"><a:headEnd/></a:ln></p:spPr>`).lineEnds
-		assertEqual(ends.head.type, 'none', 'a bare headEnd reads type "none"')
+		const ends = defined(sp(`<p:spPr><a:ln w="12700"><a:headEnd/></a:ln></p:spPr>`).lineEnds)
+		assertEqual(defined(ends.head).type, 'none', 'a bare headEnd reads type "none"')
 		assertEqual(ends.tail, null, 'no tailEnd → null tail')
 	})
 
@@ -243,7 +246,7 @@ describe('Shape.reflection / Shape.softEdge — read-only effects', () => {
 		assertEqual(refl.fadeAngleDeg, 90, 'fadeDir 5400000 (60000ths) → 90°')
 		assertEqual(refl.startAlpha, 0.5, 'stA 50000 → 0.5')
 		assertEqual(refl.startPos, 0, 'stPos 0 → 0')
-		assert(Math.abs(refl.endAlpha - 0.003) < 1e-9, `endA 300 → 0.003, got ${refl.endAlpha}`)
+		assert(Math.abs(defined(refl.endAlpha) - 0.003) < 1e-9, `endA 300 → 0.003, got ${refl.endAlpha}`)
 		assertEqual(refl.endPos, 0.55, 'endPos 55000 → 0.55')
 	})
 
@@ -257,12 +260,12 @@ describe('Shape.reflection / Shape.softEdge — read-only effects', () => {
 
 	test('softEdge decodes its feather radius; a bare softEdge reads radius 0', () => {
 		assertEqual(
-			sp(`<p:spPr><a:effectLst><a:softEdge rad="38100"/></a:effectLst></p:spPr>`).softEdge.radiusPt,
+			defined(sp(`<p:spPr><a:effectLst><a:softEdge rad="38100"/></a:effectLst></p:spPr>`).softEdge).radiusPt,
 			3,
 			'rad 38100 EMU → 3pt'
 		)
 		assertEqual(
-			sp(`<p:spPr><a:effectLst><a:softEdge/></a:effectLst></p:spPr>`).softEdge.radiusPt,
+			defined(sp(`<p:spPr><a:effectLst><a:softEdge/></a:effectLst></p:spPr>`).softEdge).radiusPt,
 			0,
 			'a softEdge with no @rad → 0pt'
 		)
@@ -295,6 +298,7 @@ describe('Shape.patternFill — preset hatch reads', () => {
 			`<p:spPr><a:pattFill prst="pct50"><a:fgClr><a:schemeClr val="accent1"/></a:fgClr>` +
 				`<a:bgClr><a:srgbClr val="FFFFFF"/></a:bgClr></a:pattFill></p:spPr>`
 		).patternFill
+		expectDefined(pat, 'a pattFill surfaces a pattern fill')
 		assertEqual(pat.foreground.scheme, 'accent1', 'the foreground token is surfaced')
 		assertEqual(pat.background.scheme, null, 'a literal background has no token')
 		assertEqual(pat.background.resolved?.effectiveHex, 'FFFFFF', 'and resolves as before')

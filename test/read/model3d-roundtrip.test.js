@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, test } from 'vitest'
 import TsPptx from '../../dist/node.js'
 import { Presentation, OpcPackage } from '../../dist/read.js'
-import { bytesEqual, assert, assertEqual, partBodies } from '../helpers.js'
+import { bytesEqual, assert, assertEqual, defined, partBodies } from '../helpers.js'
 import { validateBuf, validatorInstalled } from '../validator.js'
 import { FIXTURES, fixturePath } from './corpus.js'
 
@@ -128,14 +128,14 @@ describe('3D model: PowerPoint-authored fixture', () => {
 		// Both rels came along, and both resolve to real parts.
 		const relsXml = text(after, `ppt/slides/_rels/${slide.partName.split('/').pop()}.rels`)
 		const rels = relTypes(relsXml)
-		const modelRid = /<am3d:model3d r:embed="(rId\d+)"/.exec(body)[1]
-		const previewRid = /<am3d:blip r:embed="(rId\d+)"/.exec(body)[1]
+		const modelRid = defined(/<am3d:model3d r:embed="(rId\d+)"/.exec(body))[1]
+		const previewRid = defined(/<am3d:blip r:embed="(rId\d+)"/.exec(body))[1]
 		assertEqual(rels.get(modelRid), MODEL3D_REL, 'the model3d rel survives the import')
 		assertEqual(rels.get(previewRid), IMAGE_REL, 'the preview image rel survives the import')
 		for (const rid of [modelRid, previewRid]) {
 			const target_ = /<Relationship\b[^>]*\bId="(?:rId\d+)"[^>]*\/>/g
 			const match = [...relsXml.matchAll(target_)].find((m) => m[0].includes(`Id="${rid}"`))
-			const rel = /\bTarget="([^"]+)"/.exec(match[0])[1].replace('../', 'ppt/')
+			const rel = defined(/\bTarget="([^"]+)"/.exec(defined(match)[0]))[1].replace('../', 'ppt/')
 			assert(after.has(rel), `${rid} resolves to a real part (${rel})`)
 		}
 
@@ -181,12 +181,12 @@ describe('3D model: ts-pptx-authored', () => {
 		const body = text(bodies, 'ppt/slides/slide1.xml')
 		const rels = relTypes(text(bodies, 'ppt/slides/_rels/slide1.xml.rels'))
 
-		const modelRid = /<am3d:model3d r:embed="(rId\d+)"/.exec(body)[1]
-		const previewRid = /<am3d:blip r:embed="(rId\d+)"/.exec(body)[1]
+		const modelRid = defined(/<am3d:model3d r:embed="(rId\d+)"/.exec(body))[1]
+		const previewRid = defined(/<am3d:blip r:embed="(rId\d+)"/.exec(body))[1]
 		assertEqual(rels.get(modelRid), MODEL3D_REL, 'the payload rel uses the MS 2017/06 model3d type')
 		assertEqual(rels.get(previewRid), IMAGE_REL, 'the preview rel is an ordinary image rel')
 		assertEqual(
-			/<mc:Fallback>[\s\S]*?<a:blip r:embed="(rId\d+)"/.exec(body)[1],
+			defined(/<mc:Fallback>[\s\S]*?<a:blip r:embed="(rId\d+)"/.exec(body))[1],
 			previewRid,
 			'the fallback picture reuses the preview rel'
 		)

@@ -39,7 +39,7 @@ import {
 	printStandaloneScript,
 	readModelToIr,
 } from '../../dist/script.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined } from '../helpers.js'
 import { SNAPSHOTS, fixtureNames, irFor, readFixture } from './corpus.js'
 
 // The whole-corpus round trip itself is NOT here. It is `pnpm run script:roundtrip:all`
@@ -129,7 +129,7 @@ describe('script round trip — the oracle has teeth', () => {
 		const ir = await irFor('textbox.pptx')
 		const before = canonicalDeckIr(ir)
 		const after = canonicalDeckIr(ir)
-		const call = after.slides[0].calls.find((c) => c.method === 'addText')
+		const call = defined(after.slides[0].calls.find((c) => c.method === 'addText'))
 		const bold = /** @type {any[]} */ (call.args[0]).find((item) => item.options?.bold === true)
 		delete bold.options.bold
 
@@ -223,7 +223,7 @@ describe('script round trip — a note covers a PATH, not a key at any depth', (
 
 	test("the write path's docProps defaults do not excuse a title one level down", async () => {
 		const [before, after] = await pair('textbox.pptx')
-		const call = after.slides[0].calls.find((c) => c.method === 'addText')
+		const call = defined(after.slides[0].calls.find((c) => c.method === 'addText'))
 		const options = /** @type {any} */ (call.args[1])
 		options.title = 'a title the source never had'
 

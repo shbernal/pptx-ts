@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { getExcelColName } from '../../../src/gen/chart/data-refs.ts'
-import { build, readEntry, listEntries } from '../../helpers.js'
+import { build, readEntry, listEntries, expectDefined } from '../../helpers.js'
 
 // Worksheet column names are bijective base 26: A to Z, AA to ZZ, AAA to XFD. The conversion used
 // to handle two letters at most, so column 703 came out as `undefinedA`, and a chart with that many
@@ -34,7 +34,7 @@ describe('worksheet column names', () => {
 		const data = Array.from({ length: 703 }, (_, i) => ({ name: `S${i + 1}`, labels: ['a'], values: [i] }))
 		const { zip } = await build((p) => p.addSlide().addChart(data, { type: 'bar', x: 1, y: 1, w: 8, h: 4 }))
 		const chartPart = listEntries(zip).find((name) => /^ppt\/charts\/chart\d+\.xml$/.test(name))
-		expect(chartPart).toBeDefined()
+		expectDefined(chartPart)
 		const xml = await readEntry(zip, chartPart)
 		expect(xml).not.toContain('undefined')
 		expect(xml).toContain('Sheet1!$AAA$1')

@@ -29,6 +29,7 @@ describe('readFileAsBytes when node:fs is unavailable (browser build)', () => {
 
 	test('a string path throws a Node-required error, not the opaque zip error', async () => {
 		const { readZip } = await import('../../dist/zip.js')
+		/** @type {Error | null} */
 		let error = null
 		try {
 			await readZip('/any/deck.pptx')

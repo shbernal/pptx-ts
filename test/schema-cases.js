@@ -1875,7 +1875,7 @@ export default [
 			await expectNoSchemaErrors(buf, 'chart-metadata-extlst')
 			// Chart part names are assigned per-presentation at write time; locate the single
 			// chart part by pattern rather than hard-coding the index.
-			const chartPath = listEntries(zip).find((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))
+			const chartPath = defined(listEntries(zip).find((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f)))
 			const chartXml = await readEntry(zip, chartPath)
 			const extLst = firstXmlBlock(chartXml, 'c:extLst', 'chartSpace extLst')
 			assertIncludes(extLst, '<c:ext uri="{094A432E-1F6C-499B-95B8-B57DC9536949}">', 'vendor ext uri')
@@ -1902,7 +1902,7 @@ export default [
 					h: 3,
 				})
 			})
-			const chartPath = listEntries(zip).find((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))
+			const chartPath = defined(listEntries(zip).find((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f)))
 			const chartXml = await readEntry(zip, chartPath)
 			assert(!chartXml.includes('<c:extLst>'), 'no extLst when metadata absent')
 		},
@@ -2260,7 +2260,7 @@ export default [
 			})
 			// Chart part names are assigned per-presentation at write time; locate the single
 			// chart part by pattern rather than hard-coding the index.
-			const chartPath = Object.keys(zip.files).find((p) => /^ppt\/charts\/chart\d+\.xml$/.test(p))
+			const chartPath = defined(Object.keys(zip.files).find((p) => /^ppt\/charts\/chart\d+\.xml$/.test(p)))
 			const chartXml = await readEntry(zip, chartPath)
 			assertIncludes(
 				chartXml,
@@ -2735,7 +2735,7 @@ export default [
 				console.warn = origWarn
 			}
 			await expectNoSchemaErrors(buf, 'line-chart-transparent-marker')
-			const chartPath = listEntries(zip).find((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))
+			const chartPath = defined(listEntries(zip).find((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f)))
 			assert(chartPath, 'chart part not found: ' + listEntries(zip).join(', '))
 			const chartXml = await readEntry(zip, chartPath)
 			const ser = firstXmlBlock(chartXml, 'c:ser', 'line series')

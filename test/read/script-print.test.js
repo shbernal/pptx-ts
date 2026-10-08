@@ -23,7 +23,7 @@ import { promisify } from 'node:util'
 import { describe, test } from 'vitest'
 import { Presentation, isGraphicFrame } from '../../dist/read.js'
 import { printScript, printStandaloneScript, readModelToIr } from '../../dist/script.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined } from '../helpers.js'
 import { authorRead } from './authored.js'
 import { REPO, SCRATCH, fixtureNames, irFor, readFixture } from './corpus.js'
 
@@ -197,8 +197,8 @@ describe('script printer — the emitted script runs', () => {
 		assert(frame?.hasDiagram, 'the copied slide still holds its SmartArt frame')
 		const source = await Presentation.load(await readFixture('mixed.pptx'))
 		assertEqual(
-			frame.diagram.text,
-			source.slides[1].shapes.find(isGraphicFrame).diagram.text,
+			defined(frame.diagram).text,
+			defined(defined(source.slides[1].shapes.find(isGraphicFrame)).diagram).text,
 			'with every node string intact'
 		)
 
@@ -261,7 +261,7 @@ describe('script printer — the emitted script runs', () => {
 			// would have made the file unparseable) and it renders them as real line breaks,
 			// which is what a `.pptx` can actually hold. Everything else must survive verbatim.
 			const expected = hostile.replaceAll('\u2028', '\n').replaceAll('\u2029', '\n')
-			assertEqual(output.slides[0].shapes[0].textFrame.text, expected, 'text survived the round trip')
+			assertEqual(defined(output.slides[0].shapes[0].textFrame).text, expected, 'text survived the round trip')
 		} finally {
 			await rm(dir, { recursive: true, force: true })
 		}

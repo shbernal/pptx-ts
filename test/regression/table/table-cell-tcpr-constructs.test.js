@@ -1,4 +1,12 @@
-import { defineRegressionSuite, build, readEntry, captureDiagnostics, assert, assertEqual } from '../../helpers.js'
+import {
+	defineRegressionSuite,
+	build,
+	readEntry,
+	captureDiagnostics,
+	assert,
+	assertEqual,
+	defined,
+} from '../../helpers.js'
 
 // The three `a:tcPr` constructs that had no write surface: the two diagonals
 // (`a:lnTlToBr` / `a:lnBlToTr`), `@anchorCtr`, and `a:cell3D`.
@@ -124,7 +132,7 @@ defineRegressionSuite('Table cell a:tcPr constructs', [
 
 			const xml = await readEntry(result.zip, 'ppt/slides/slide1.xml')
 			assertEqual((xml.match(/<a:lnTlToBr/g) || []).length, 1, 'exactly one diagonal across the merged region')
-			const covered = xml.match(/<a:tc hMerge="1"[\s\S]*?<\/a:tc>/)[0]
+			const covered = defined(xml.match(/<a:tc hMerge="1"[\s\S]*?<\/a:tc>/))[0]
 			assert(covered.includes('<a:lnL'), 'the covered cell still inherits the edges')
 			assert(!covered.includes('<a:lnTlToBr'), 'but not the diagonal; got: ' + covered)
 		},

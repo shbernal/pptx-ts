@@ -14,7 +14,7 @@ import JSZip from 'jszip'
 import { Presentation } from '../../dist/read.js'
 import { readModelToIr } from '../../dist/script.js'
 import { ChartType } from '../../dist/node.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined, readEntry } from '../helpers.js'
 import { authorRead } from './authored.js'
 import { readFixture } from './corpus.js'
 
@@ -48,7 +48,7 @@ async function irWithChartXml(buf, rewrite) {
 	const zip = await JSZip.loadAsync(buf)
 	for (const name of Object.keys(zip.files)) {
 		if (!/^ppt\/charts\/chart\d+\.xml$/.test(name)) continue
-		zip.file(name, rewrite(await zip.file(name).async('string')))
+		zip.file(name, rewrite(await readEntry(zip, name)))
 	}
 	const reopened = await Presentation.load(await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' }))
 	return readModelToIr(reopened)
@@ -121,8 +121,9 @@ describe('the chart mapper declares what it cannot carry', () => {
 		const { buf } = await chartDeck(ChartType.line)
 		const ir = await irWithChartXml(buf, (xml) => xml.replace('<c:pt idx="1"><c:v>2</c:v></c:pt>', ''))
 		assert(constructs(ir).includes('chart.blanks'), 'the blank is noted; got ' + JSON.stringify(constructs(ir)))
-		const call = ir.slides[0].calls.find((c) => c.method === 'addChart')
-		const values = call.args[0][0].values
+		const call = defined(ir.slides[0].calls.find((c) => c.method === 'addChart'))
+		// `args` is IrValue[]; the first argument of addChart is its series array.
+		const values = /** @type {{ values: unknown[] }[]} */ (call.args[0])[0].values
 		assertEqual(values[1], 0, 'and the gap reads as a zero: ' + JSON.stringify(values))
 	})
 

@@ -23,7 +23,7 @@ import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import TsPptx from '../../dist/node.js'
 import { Presentation, TextFrame, AutoShape, resolveColorElement } from '../../dist/read.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined, expectDefined } from '../helpers.js'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
@@ -45,7 +45,7 @@ function ctx(overrides = {}) {
 /** Parse hand-authored `p:txBody` inner XML into a `p:txBody` element. */
 function txBodyEl(inner) {
 	const xml = `<p:txBody xmlns:p="${P_NS}" xmlns:a="${A_NS}"><a:bodyPr/>${inner}</p:txBody>`
-	return new DOMParser().parseFromString(xml, 'text/xml').documentElement
+	return defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 }
 
 /** A placeholder `TextFrame` over `inner`, resolving against `flatten`. */
@@ -66,14 +66,15 @@ function firstRun(frame) {
 /** @returns {import('@xmldom/xmldom').Element} the wrapper's sole child — callers pass exactly one element. */
 function drawingEl(xml) {
 	return /** @type {import('@xmldom/xmldom').Element} */ (
-		new DOMParser().parseFromString(`<a:w xmlns:a="${A_NS}">${xml}</a:w>`, 'text/xml').documentElement.firstChild
+		defined(new DOMParser().parseFromString(`<a:w xmlns:a="${A_NS}">${xml}</a:w>`, 'text/xml').documentElement)
+			.firstChild
 	)
 }
 
 /** An `AutoShape` over hand-authored `p:sp` XML, resolving against `flatten`. */
 function autoShape(spXml, flatten = ctx()) {
 	const xml = `<p:spTree xmlns:p="${P_NS}" xmlns:a="${A_NS}">${spXml}</p:spTree>`
-	const spTree = new DOMParser().parseFromString(xml, 'text/xml').documentElement
+	const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 	const el = spTree.getElementsByTagNameNS(P_NS, 'sp')[0]
 	// Only `themeContext()` is exercised by the resolved-fill/line reads.
 	return new AutoShape(el, /** @type {any} */ ({ themeContext: () => flatten }))
@@ -252,9 +253,12 @@ describe('inherited run size / face / bold / italic — the two upper tiers', ()
 
 describe('resolveColorElement — alpha and unresolvable edges', () => {
 	test('an a:alpha transform surfaces a 0–1 alpha alongside the effective hex', () => {
-		const resolved = resolveColorElement(drawingEl(`<a:srgbClr val="FF0000"><a:alpha val="50000"/></a:srgbClr>`), ctx())
+		const resolved = defined(
+			resolveColorElement(drawingEl(`<a:srgbClr val="FF0000"><a:alpha val="50000"/></a:srgbClr>`), ctx())
+		)
 		assertEqual(resolved.hex, 'FF0000', 'base hex is the srgb value')
-		assert(Math.abs(resolved.alpha - 0.5) < 1e-9, `alpha 50000 (thousandths of a %) → 0.5, got ${resolved.alpha}`)
+		const alpha = defined(resolved.alpha, 'an a:alpha transform surfaces an alpha')
+		assert(Math.abs(alpha - 0.5) < 1e-9, `alpha 50000 (thousandths of a %) → 0.5, got ${alpha}`)
 	})
 
 	test('an unmapped schemeClr (empty colour maps) resolves to null', () => {
@@ -300,7 +304,7 @@ describe('resolveSlideThemeParts — a broken theme chain degrades, not throws',
 		pptx.addSlide().addText('hi', { x: 1, y: 1, w: 4, h: 1, color: '0000FF' })
 		const zip = await JSZip.loadAsync(await pptx.toBytes())
 		const relsName = 'ppt/slides/_rels/slide1.xml.rels'
-		const rels = await zip.file(relsName).async('string')
+		const rels = await defined(zip.file(relsName)).async('string')
 		// Drop the single <Relationship … slideLayout … /> element.
 		zip.file(relsName, rels.replace(/<Relationship\b[^>]*slideLayout[^>]*\/>/, ''))
 		const broken = await zip.generateAsync({ type: 'uint8array' })
@@ -321,9 +325,9 @@ describe('resolveSlideThemeParts — a broken theme chain degrades, not throws',
 	test('a run on a chain-less slide still reads (resolution degrades to a raw value)', async () => {
 		const slide = await slideWithNoLayoutRel()
 		const shape = slide.shapes.find((s) => s.hasTextFrame)
-		assert(shape, 'expected the text shape')
-		const run = shape.textFrame.paragraphs[0].runs[0]
+		expectDefined(shape, 'expected the text shape')
+		const run = defined(shape.textFrame).paragraphs[0].runs[0]
 		// The explicit run colour still resolves; the point is nothing throws.
-		assertEqual(run.resolvedColor.hex, '0000FF', 'an explicit run colour survives a broken theme chain')
+		assertEqual(defined(run.resolvedColor).hex, '0000FF', 'an explicit run colour survives a broken theme chain')
 	})
 })

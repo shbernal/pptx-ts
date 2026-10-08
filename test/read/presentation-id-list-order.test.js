@@ -23,7 +23,7 @@
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { assert } from '../helpers.js'
+import { assert, readEntry } from '../helpers.js'
 import { readFixture } from './corpus.js'
 
 /** Element children of `presentation.xml`'s root, in document order, as qnames. */
@@ -46,7 +46,7 @@ async function deckWithSmartTagsAndNoMasterIdLst() {
 	const zip = await JSZip.loadAsync(await readFixture('empty'))
 
 	const presName = 'ppt/presentation.xml'
-	const xml = (await zip.file(presName).async('string'))
+	const xml = (await readEntry(zip, presName))
 		.replace('<p:sldMasterIdLst><p:sldMasterId id="2147483648" r:id="rId1"/></p:sldMasterIdLst>', '')
 		.replace('<p:sldIdLst><p:sldId id="256" r:id="rId2"/></p:sldIdLst>', '')
 		.replace('<p:sldSz cx="12192000" cy="6858000"/>', '')
@@ -59,7 +59,7 @@ async function deckWithSmartTagsAndNoMasterIdLst() {
 	const relsName = 'ppt/_rels/presentation.xml.rels'
 	zip.file(
 		relsName,
-		(await zip.file(relsName).async('string')).replace(
+		(await readEntry(zip, relsName)).replace(
 			'</Relationships>',
 			'<Relationship Id="rId7" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/tags" Target="tags/tag1.xml"/></Relationships>'
 		)
@@ -70,7 +70,7 @@ async function deckWithSmartTagsAndNoMasterIdLst() {
 	)
 	zip.file(
 		'[Content_Types].xml',
-		(await zip.file('[Content_Types].xml').async('string')).replace(
+		(await readEntry(zip, '[Content_Types].xml')).replace(
 			'</Types>',
 			'<Override PartName="/ppt/tags/tag1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.tags+xml"/></Types>'
 		)

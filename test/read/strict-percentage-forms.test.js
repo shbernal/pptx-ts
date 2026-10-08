@@ -15,7 +15,7 @@ import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import TsPptx from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined, readEntry } from '../helpers.js'
 
 const SLIDE_PATH = 'ppt/slides/slide1.xml'
 
@@ -37,13 +37,13 @@ async function frameFrom(edit) {
 	})
 	const zip = await JSZip.loadAsync(await pres.toBytes())
 	if (edit) {
-		const before = await zip.file(SLIDE_PATH).async('string')
+		const before = await readEntry(zip, SLIDE_PATH)
 		const after = edit(before)
 		assert(after !== before, 'the rewrite must actually change the slide XML')
 		zip.file(SLIDE_PATH, after)
 	}
 	const presentation = await Presentation.load(await zip.generateAsync({ type: 'nodebuffer' }))
-	return presentation.slides[0].shapes[0].textFrame
+	return defined(presentation.slides[0].shapes[0].textFrame, 'the authored text box has a text frame')
 }
 
 /** Add a `baseline` attribute to the run properties, in whichever lexical form. */

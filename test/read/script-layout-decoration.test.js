@@ -44,7 +44,7 @@ import {
 	readModelToIr,
 	LAYOUT_NOTE_PREFIX,
 } from '../../dist/script.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined, readEntry } from '../helpers.js'
 import { FIXTURES } from './corpus.js'
 
 const run = promisify(execFile)
@@ -381,7 +381,7 @@ describe('layout decoration — kinds the fixture corpus does not contain', () =
 		})
 
 		const ir = readModelToIr(await Presentation.load(bytes))
-		const master = ir.chrome.masters.find((entry) => entry.props.title === 'Branded')
+		const master = defined(ir.chrome.masters.find((entry) => entry.props.title === 'Branded'))
 		const [object] = /** @type {any[]} */ (master.props.objects)
 		assertEqual(tagOf(object), 'image', 'the layout image is emitted as an image object')
 		assertEqual(nameOfObject(object), 'Wordmark', 'and keeps its name')
@@ -412,7 +412,7 @@ describe('layout decoration — kinds the fixture corpus does not contain', () =
 		})
 
 		const ir = readModelToIr(await Presentation.load(bytes))
-		const master = ir.chrome.masters.find((entry) => entry.props.title === 'Dashboard')
+		const master = defined(ir.chrome.masters.find((entry) => entry.props.title === 'Dashboard'))
 		const [object] = /** @type {any[]} */ (master.props.objects)
 		assertEqual(tagOf(object), 'chart', 'the layout chart is emitted as a chart object')
 		assertEqual(object.chart.type, 'bar', 'with the type lifted back out of the addChart options')
@@ -440,11 +440,11 @@ describe('layout decoration — kinds the fixture corpus does not contain', () =
 		})
 
 		const zip = await JSZip.loadAsync(bytes)
-		const slideXml = await zip.file('ppt/slides/slide1.xml').async('string')
+		const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
 		const frame = /<p:graphicFrame>[\s\S]*?<\/p:graphicFrame>/.exec(slideXml)
 		assert(frame, 'the authored slide holds the table as a graphic frame')
 		const layoutPath = 'ppt/slideLayouts/slideLayout2.xml'
-		const layoutXml = await zip.file(layoutPath).async('string')
+		const layoutXml = await readEntry(zip, layoutPath)
 		assert(layoutXml.includes('Tabular'), 'slideLayout2 is the layout defineSlideMaster created')
 		zip.file(layoutPath, layoutXml.replace('</p:spTree>', `${frame[0]}</p:spTree>`))
 		zip.file('ppt/slides/slide1.xml', slideXml.replace(frame[0], ''))
@@ -458,7 +458,7 @@ describe('layout decoration — kinds the fixture corpus does not contain', () =
 		)
 
 		const ir = readModelToIr(presentation)
-		const master = ir.chrome.masters.find((entry) => entry.props.title === 'Tabular')
+		const master = defined(ir.chrome.masters.find((entry) => entry.props.title === 'Tabular'))
 		assertEqual(master.props.objects, undefined, 'the table produced no object')
 		assert(
 			ir.fidelity.some((note) => note.construct === `${LAYOUT_NOTE_PREFIX}decoration` && note.shapeName === 'Grid'),

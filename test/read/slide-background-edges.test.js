@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url'
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined, readEntry } from '../helpers.js'
 import { authorRead } from './authored.js'
 import { openFixture } from './corpus.js'
 
@@ -37,11 +37,12 @@ async function backgroundFrom(bgXml) {
 		pres.addSlide()
 	})
 	const zip = await JSZip.loadAsync(buf)
-	const slideXml = await zip.file('ppt/slides/slide1.xml').async('string')
+	const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
 	assert(!slideXml.includes('<p:bg'), 'the authored slide carries no p:bg of its own to collide with')
 	zip.file('ppt/slides/slide1.xml', slideXml.replace(/(<p:cSld[^>]*>)/, `$1${bgXml}`))
 	const patched = await zip.generateAsync({ type: 'uint8array' })
-	return (await Presentation.load(patched)).slides[0].background
+	// Every case splices a p:bg onto the slide, so the chain always stops there.
+	return defined((await Presentation.load(patched)).slides[0].background, 'the spliced p:bg reads a background')
 }
 
 describe('slide background — imported-only p:bg variants', () => {

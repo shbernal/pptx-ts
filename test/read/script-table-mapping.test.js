@@ -9,7 +9,7 @@ import JSZip from 'jszip'
 import TsPptx from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
 import { readModelToIr } from '../../dist/script.js'
-import { assert, assertEqual, captureDiagnostics } from '../helpers.js'
+import { assert, assertEqual, captureDiagnostics, readEntry } from '../helpers.js'
 import { authorRead } from './authored.js'
 
 /** Apply `rewrite` to every slide part of `buf`, reload, and convert. */
@@ -17,7 +17,7 @@ async function irWithSlideXml(buf, rewrite) {
 	const zip = await JSZip.loadAsync(buf)
 	for (const name of Object.keys(zip.files)) {
 		if (!/^ppt\/slides\/slide\d+\.xml$/.test(name)) continue
-		zip.file(name, rewrite(await zip.file(name).async('string')))
+		zip.file(name, rewrite(await readEntry(zip, name)))
 	}
 	const reopened = await Presentation.load(await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' }))
 	return readModelToIr(reopened)
@@ -83,7 +83,7 @@ describe('table mapper: row heights', () => {
 			return pres.toBytes()
 		})
 		assert(!codes.includes('table/invalid-row-height'), `the replay accepts the row; got ${JSON.stringify(codes)}`)
-		const slide = await (await JSZip.loadAsync(bytes)).file('ppt/slides/slide1.xml').async('string')
+		const slide = await readEntry(await JSZip.loadAsync(bytes), 'ppt/slides/slide1.xml')
 		const heights = [...slide.matchAll(/<a:tr h="(\d+)">/g)].map((m) => Number(m[1]))
 		// The unpinned row takes an even share of the 1.5in table: 0.5in, the same as its neighbours.
 		assertEqual(JSON.stringify(heights), JSON.stringify([457200, 457200, 457200]), 'every row is 0.5in')

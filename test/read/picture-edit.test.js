@@ -17,6 +17,8 @@ import {
 	assertUnchangedExcept,
 	bytesEqual,
 	captureDiagnostics,
+	defined,
+	expectDefined,
 	partBodies,
 	throws,
 } from '../helpers.js'
@@ -134,39 +136,44 @@ describe('Picture.setImage', () => {
 		const presentation = await openFixture('image')
 		const slide = presentation.slides[0]
 		const picture = slide.shapes.find((shape) => shape.shapeType === 'picture')
-		assert(picture, 'fixture slide 1 has a picture')
+		expectDefined(picture, 'fixture slide 1 has a picture')
 
 		const oldRelId = picture.imageRelId
 		const oldPartName = picture.imagePartName
-		assert(oldPartName, 'picture resolves its original media part')
-		const oldBytes = Uint8Array.from(presentation.opc.part(oldPartName).serialize())
+		expectDefined(oldPartName, 'picture resolves its original media part')
+		const oldBytes = Uint8Array.from(defined(presentation.opc.part(oldPartName)).serialize())
 
 		picture.setImage(PNG_1X1, { contentType: 'image/png' })
 		assert(picture.imageRelId && picture.imageRelId !== oldRelId, 'blip repointed to a fresh rel id')
 
 		const saved = await presentation.save()
 		const reopened = await Presentation.load(saved)
-		const reloaded = reopened.slides[0].shapes.find((shape) => shape.shapeType === 'picture')
+		const reloaded = defined(reopened.slides[0].shapes.find((shape) => shape.shapeType === 'picture'))
 
 		const newPartName = reloaded.imagePartName
-		assert(
-			newPartName && newPartName.startsWith('/ppt/media/') && newPartName.endsWith('.png'),
-			`new image partname: ${newPartName}`
-		)
+		expectDefined(newPartName, 'the reloaded picture resolves its media part')
+		assert(newPartName.startsWith('/ppt/media/') && newPartName.endsWith('.png'), `new image partname: ${newPartName}`)
 		assert(newPartName !== oldPartName, 'blip points at a different media part than before')
-		assert(bytesEqual(reopened.opc.part(newPartName).serialize(), PNG_1X1), 'new media part holds the supplied bytes')
+		assert(
+			bytesEqual(defined(reopened.opc.part(newPartName)).serialize(), PNG_1X1),
+			'new media part holds the supplied bytes'
+		)
 		assertEqual(reopened.opc.contentTypes.contentTypeFor(newPartName), 'image/png', 'new media content type registered')
 
 		// Copy-on-write fidelity: the original media part survives byte-identical.
-		assert(bytesEqual(reopened.opc.part(oldPartName).serialize(), oldBytes), 'original media part is untouched')
+		assert(
+			bytesEqual(defined(reopened.opc.part(oldPartName)).serialize(), oldBytes),
+			'original media part is untouched'
+		)
 	})
 
 	test('defaults the media extension from the content type', async () => {
 		const presentation = await openFixture('image')
-		const picture = presentation.slides[0].shapes.find((shape) => shape.shapeType === 'picture')
+		const picture = defined(presentation.slides[0].shapes.find((shape) => shape.shapeType === 'picture'))
 		picture.setImage(PNG_1X1, { contentType: 'image/gif' })
 		const partName = picture.imagePartName
-		assert(partName && partName.endsWith('.gif'), `extension derived from content type: ${partName}`)
+		expectDefined(partName, 'the picture resolves its media part')
+		assert(partName.endsWith('.gif'), `extension derived from content type: ${partName}`)
 		assertEqual(presentation.opc.contentTypes.contentTypeFor(partName), 'image/gif', 'gif content type registered')
 	})
 
@@ -175,7 +182,7 @@ describe('Picture.setImage', () => {
 	// that no longer fits. A quarter of this module was unreached and all of it was here.
 	test("fit 'stretch' drops the inherited crop", async () => {
 		const presentation = await openFixture('image')
-		const picture = presentation.slides[0].shapes.find((shape) => shape.shapeType === 'picture')
+		const picture = defined(presentation.slides[0].shapes.find((shape) => shape.shapeType === 'picture'))
 		// Give it a crop to drop, through the same accessor a caller would.
 		picture.setImage(PNG_1X1, { contentType: 'image/png', fit: 'cover' })
 		assert(/<a:srcRect\b/.test(picture.element_.toString()), 'cover leaves a crop behind')
@@ -189,7 +196,7 @@ describe('Picture.setImage', () => {
 		// `contain` fits the whole image and letterboxes the tall one. Which axis carries the
 		// inset is the whole content of the fit decision.
 		const presentation = await openFixture('image')
-		const picture = presentation.slides[0].shapes.find((shape) => shape.shapeType === 'picture')
+		const picture = defined(presentation.slides[0].shapes.find((shape) => shape.shapeType === 'picture'))
 		picture.width = 914400
 		picture.height = 914400
 
@@ -210,7 +217,7 @@ describe('Picture.setImage', () => {
 	test('an unmeasurable image leaves the crop alone and says so', async () => {
 		// The warn-rather-than-degrade arm: the alternative is a silently stretched picture.
 		const presentation = await openFixture('image')
-		const picture = presentation.slides[0].shapes.find((shape) => shape.shapeType === 'picture')
+		const picture = defined(presentation.slides[0].shapes.find((shape) => shape.shapeType === 'picture'))
 		const { codes } = await captureDiagnostics(() => {
 			picture.setImage(new Uint8Array([1, 2, 3, 4]), { contentType: 'image/png', fit: 'cover' })
 		})
@@ -223,11 +230,11 @@ describe('Picture.setImage', () => {
 
 	test('fit needs a frame extent, and says which picture has none', async () => {
 		const presentation = await openFixture('image')
-		const picture = presentation.slides[0].shapes.find((shape) => shape.shapeType === 'picture')
+		const picture = defined(presentation.slides[0].shapes.find((shape) => shape.shapeType === 'picture'))
 		// Drop the transform: a picture inheriting its box from a placeholder has no `a:ext` to
 		// measure the crop against, and guessing one would be a crop nobody asked for.
 		const xfrm = picture.element_.getElementsByTagName('a:xfrm')[0]
-		xfrm.parentNode.removeChild(xfrm)
+		defined(xfrm.parentNode).removeChild(xfrm)
 		await assertRejects(
 			() => picture.setImage(PNG_1X1, { contentType: 'image/png', fit: 'contain' }),
 			/needs a frame extent/,
@@ -236,7 +243,9 @@ describe('Picture.setImage', () => {
 	})
 
 	test('throws when no content type is supplied', async () => {
-		const picture = (await openFixture('image')).slides[0].shapes.find((shape) => shape.shapeType === 'picture')
+		const picture = defined(
+			(await openFixture('image')).slides[0].shapes.find((shape) => shape.shapeType === 'picture')
+		)
 		assert(
 			throws(() => picture.setImage(PNG_1X1, { contentType: '' })),
 			'empty content type should throw'
@@ -254,15 +263,15 @@ describe('Picture.setImage', () => {
 		assert(sharedRelId, 'fixture slide 2 has two pictures sharing one image rel')
 
 		const shared = pictures.filter((pic) => pic.imageRelId === sharedRelId)
-		const sharedPartName = shared[0].imagePartName
-		const sharedBytes = Uint8Array.from(presentation.opc.part(sharedPartName).serialize())
+		const sharedPartName = defined(shared[0].imagePartName, 'the shared picture resolves its media part')
+		const sharedBytes = Uint8Array.from(defined(presentation.opc.part(sharedPartName)).serialize())
 
 		shared[0].setImage(PNG_1X1, { contentType: 'image/png' })
 
 		assert(shared[1].imageRelId === sharedRelId, 'the sibling picture still points at the shared rel')
 		assertEqual(shared[1].imagePartName, sharedPartName, 'the sibling still resolves the original media part')
 		assert(
-			bytesEqual(presentation.opc.part(sharedPartName).serialize(), sharedBytes),
+			bytesEqual(defined(presentation.opc.part(sharedPartName)).serialize(), sharedBytes),
 			'the shared media part bytes are unchanged'
 		)
 	})
@@ -272,18 +281,19 @@ describe('Picture.setImage', () => {
 		const pictures = presentation.slides[1].shapes.filter((shape) => shape.shapeType === 'picture')
 		const [first, second] = pictures
 		assert(first && second && first.imageRelId !== second.imageRelId, 'two pictures with distinct rels')
+		const targetRelId = defined(second.imageRelId, 'the second picture embeds an image')
 
 		const before = presentation.opc.parts.size
-		first.imageRelId = second.imageRelId
+		first.imageRelId = targetRelId
 		assertEqual(first.imageRelId, second.imageRelId, 'blip repointed to the chosen rel id')
 		assertEqual(presentation.opc.parts.size, before, 'no media part added by the rel-id setter')
 	})
 
 	test.skipIf(!validatorInstalled)('a deck with a swapped image stays schema-valid', async () => {
 		const presentation = await openFixture('image')
-		presentation.slides[0].shapes
-			.find((shape) => shape.shapeType === 'picture')
-			.setImage(PNG_1X1, { contentType: 'image/png' })
+		defined(presentation.slides[0].shapes.find((shape) => shape.shapeType === 'picture')).setImage(PNG_1X1, {
+			contentType: 'image/png',
+		})
 		const errors = await validateBuf(Buffer.from(await presentation.save()))
 		assertEqual(errors.length, 0, `validator errors: ${JSON.stringify(errors).slice(0, 2000)}`)
 	})

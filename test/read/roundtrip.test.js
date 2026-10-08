@@ -7,7 +7,15 @@
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { ContentTypes, OpcPackage, Relationships, resolveRelativePartName, relsPartNameFor } from '../../dist/read.js'
-import { assert, assertEqual, assertRejects, assertUnchangedExcept, bytesEqual, partBodies } from '../helpers.js'
+import {
+	assert,
+	assertEqual,
+	assertRejects,
+	assertUnchangedExcept,
+	bytesEqual,
+	defined,
+	partBodies,
+} from '../helpers.js'
 import { validateBuf, validatorInstalled } from '../validator.js'
 import { fixtureNames, readFixture } from './corpus.js'
 
@@ -172,7 +180,7 @@ describe('dirty path: mutate one slide, save', () => {
 	test('the edit survives a reload', async () => {
 		const { pkg, slide } = await mutateFirstTextRun()
 		const reloaded = await OpcPackage.load(await pkg.save())
-		const xml = new TextDecoder().decode(reloaded.part(slide.partName).serialize())
+		const xml = new TextDecoder().decode(defined(reloaded.part(slide.partName)).serialize())
 		assert(xml.includes('EDITED BY ROUNDTRIP TEST'), 'mutated text should be present after reload')
 		assert(xml.startsWith('<?xml'), 'dirty part should keep an XML declaration')
 	})
@@ -198,7 +206,7 @@ describe('partname and overlay units', () => {
 	test('removePart takes the relationships with it, so a part re-added under the name starts with none', async () => {
 		const pkg = await OpcPackage.load(await readFixture('image'))
 		const partName = '/ppt/slides/slide1.xml'
-		const part = pkg.part(partName)
+		const part = defined(pkg.part(partName))
 		const before = [...pkg.relationshipsFor(partName)]
 		assert(before.length > 0, 'the slide has relationships to lose')
 
@@ -252,7 +260,7 @@ describe('partname and overlay units', () => {
 			'</Relationships>'
 		const relationships = Relationships.parse(xml, '/ppt/slides/slide1.xml')
 		assertEqual(relationships.resolveTarget('rId1'), '/ppt/slideLayouts/slideLayout1.xml', 'relative target')
-		assertEqual(relationships.get('rId2').targetMode, 'External', 'external mode')
+		assertEqual(defined(relationships.get('rId2')).targetMode, 'External', 'external mode')
 		await assertRejects(() => relationships.resolveTarget('rId2'), /External/, 'resolveTarget on an External rel')
 		const reparsed = Relationships.parse(relationships.serialize(), '/ppt/slides/slide1.xml')
 		assertEqual(reparsed.resolveTarget('rId1'), '/ppt/slideLayouts/slideLayout1.xml', 'serialize round-trips')

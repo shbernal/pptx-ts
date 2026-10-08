@@ -20,7 +20,7 @@ import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
 import { TableStyle } from '../../dist/node.js'
-import { PNG_1X1, assert, assertEqual } from '../helpers.js'
+import { PNG_1X1, assert, assertEqual, defined, readEntry } from '../helpers.js'
 import { authorRead, authorReadWithFixtureStyles, firstTable } from './authored.js'
 
 /** Apply `rewrite` to every slide part of `buf` and reload the result. */
@@ -28,7 +28,7 @@ async function reloadWithSlideXml(buf, rewrite) {
 	const zip = await JSZip.loadAsync(buf)
 	for (const name of Object.keys(zip.files)) {
 		if (!/^ppt\/slides\/slide\d+\.xml$/.test(name)) continue
-		zip.file(name, rewrite(await zip.file(name).async('string')))
+		zip.file(name, rewrite(await readEntry(zip, name)))
 	}
 	return Presentation.load(await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' }))
 }
@@ -103,8 +103,8 @@ describe('a:ST_Percentage spelled with a literal %', () => {
 			assert(/<a:srcRect l="\d+"/.test(xml), 'the authored deck writes the fixed-point form')
 			return xml.replace(/<a:srcRect l="\d+"/, '<a:srcRect l="10%"')
 		})
-		const picture = reopened.slides[0].shapes.find((shape) => shape.shapeType === 'picture')
-		assertEqual(picture.crop.left, 0.1, 'l="10%" is a tenth of the source width')
+		const picture = defined(reopened.slides[0].shapes.find((shape) => shape.shapeType === 'picture'))
+		assertEqual(defined(picture.crop, 'the picture reads a crop').left, 0.1, 'l="10%" is a tenth of the source width')
 	})
 
 	test('gradient stop positions read a:gs/@pos="50%"', async () => {
@@ -113,8 +113,8 @@ describe('a:ST_Percentage spelled with a literal %', () => {
 			assert(xml.includes('pos="50000"'), 'the authored deck writes the fixed-point form')
 			return xml.replaceAll('pos="50000"', 'pos="50%"')
 		})
-		const shape = reopened.slides[0].shapes.find((s) => s.gradientFill)
-		const positions = shape.gradientFill.stops.map((stop) => stop.position)
+		const gradientFill = defined(reopened.slides[0].shapes.find((s) => s.gradientFill)?.gradientFill)
+		const positions = gradientFill.stops.map((stop) => stop.position)
 		assert(positions.includes(0.5), `a 50% stop reads as 0.5, got ${JSON.stringify(positions)}`)
 	})
 })

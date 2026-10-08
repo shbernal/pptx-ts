@@ -8,6 +8,7 @@ import {
 	readEntry,
 	assert,
 	assertEqual,
+	defined,
 } from '../../helpers.js'
 
 // Group shapes: slide.addGroup() wraps child objects in a PowerPoint group (<p:grpSp>) with an
@@ -119,8 +120,11 @@ defineRegressionSuite('Group shapes', [
 				'expected three group xfrms with chOff/chExt (root + outer + nested); got: ' + xml
 			)
 			xfrms.forEach((frag) => {
-				const m = frag.match(
-					/<a:off x="(\d+)" y="(\d+)"\/><a:ext cx="(\d+)" cy="(\d+)"\/><a:chOff x="(\d+)" y="(\d+)"\/><a:chExt cx="(\d+)" cy="(\d+)"\/>/
+				const m = defined(
+					frag.match(
+						/<a:off x="(\d+)" y="(\d+)"\/><a:ext cx="(\d+)" cy="(\d+)"\/><a:chOff x="(\d+)" y="(\d+)"\/><a:chExt cx="(\d+)" cy="(\d+)"\/>/
+					),
+					'an xfrm with off, ext, chOff and chExt'
 				)
 				assert(
 					m[1] === m[5] && m[2] === m[6] && m[3] === m[7] && m[4] === m[8],
@@ -624,7 +628,7 @@ defineRegressionSuite('Group shapes', [
 			})
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 			assert((xml.match(/<p:grpSp>/g) || []).length === 1, 'expected exactly one <p:grpSp>; got: ' + xml)
-			const grp = xml.match(/<p:grpSp>[\s\S]*?<\/p:grpSp>/)[0]
+			const grp = defined(xml.match(/<p:grpSp>[\s\S]*?<\/p:grpSp>/))[0]
 			assert(/name="Branding"/.test(grp), 'expected the group objectName; got: ' + grp)
 			assert(
 				/name="Box"/.test(grp) && /name="Caption"/.test(grp),
@@ -687,7 +691,7 @@ defineRegressionSuite('Group shapes', [
 				s.groupObjects(['Inner', 'Label'], { objectName: 'Outer' })
 			})
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			const outer = xml.match(/<p:grpSp>[\s\S]*<\/p:grpSp>/)[0]
+			const outer = defined(xml.match(/<p:grpSp>[\s\S]*<\/p:grpSp>/))[0]
 			assert(
 				(xml.match(/<p:grpSp>/g) || []).length === 2,
 				'expected the outer group to wrap the inner one; got: ' + xml
@@ -799,7 +803,7 @@ defineRegressionSuite('Group shapes', [
 			})
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 			assert((xml.match(/<p:grpSp>/g) || []).length === 1, 'expected exactly one <p:grpSp>; got: ' + xml)
-			const grp = xml.match(/<p:grpSp>[\s\S]*?<\/p:grpSp>/)[0]
+			const grp = defined(xml.match(/<p:grpSp>[\s\S]*?<\/p:grpSp>/))[0]
 			assert(/name="R&amp;D"/.test(grp), 'expected the escaped group objectName; got: ' + grp)
 			assert(/name="Q&amp;A"/.test(grp), 'expected the `&` member inside the group; got: ' + grp)
 			assert(

@@ -96,6 +96,7 @@ describe('readZip input matrix', () => {
 
 describe('readZip error branches report a specific message', () => {
 	test('corrupt bytes throw "Not a valid ZIP archive" with the decode cause attached', async () => {
+		/** @type {Error | null} */
 		let error = null
 		try {
 			await readZip(new Uint8Array([1, 2, 3, 4, 5]))
@@ -108,6 +109,7 @@ describe('readZip error branches report a specific message', () => {
 	})
 
 	test('unsupported input type names the accepted shapes', async () => {
+		/** @type {Error | null} */
 		let error = null
 		try {
 			// A bare number is none of the accepted input shapes (negative test — cast past ZipInput).
@@ -125,6 +127,7 @@ describe('readZip error branches report a specific message', () => {
 
 	test('a missing filesystem path names the path and is not misreported as a corrupt archive', async () => {
 		const dir = mkdtempSync(join(tmpdir(), 'pptx-zip-input-'))
+		/** @type {Error | null} */
 		let error = null
 		try {
 			await readZip(join(dir, 'does-not-exist.pptx'))
@@ -165,6 +168,7 @@ describe('OpcPackage.load over the same input surface', () => {
 		const zip = new JSZip()
 		zip.file('hello.txt', 'not an OPC package')
 		const notOpc = await zip.generateAsync({ type: 'uint8array' })
+		/** @type {Error | null} */
 		let error = null
 		try {
 			await OpcPackage.load(notOpc)

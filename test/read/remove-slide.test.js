@@ -20,6 +20,8 @@ import {
 	assertEqual,
 	partBodies,
 	assertUnchangedExcept,
+	defined,
+	readEntry,
 } from '../helpers.js'
 import { validateBuf, validatorInstalled } from '../validator.js'
 import { fixturePath, openFixture } from './corpus.js'
@@ -120,7 +122,7 @@ describe('Presentation.removeSlide', () => {
 		// does not, and the removed slide's comment part is the last thing pointing at the registry.
 		const comment = 'ppt/comments/modernComment_101_3BFDAB96.xml'
 		const zip = await JSZip.loadAsync(await readFile(fixturePath('modern-comments')))
-		const presRels = await zip.file('ppt/_rels/presentation.xml.rels').async('string')
+		const presRels = await readEntry(zip, 'ppt/_rels/presentation.xml.rels')
 		const withoutAuthors = presRels.replace(/<Relationship [^>]*relationships\/authors"[^>]*\/>/, '')
 		assert(withoutAuthors !== presRels, 'the presentation names the author registry to begin with')
 		zip.file('ppt/_rels/presentation.xml.rels', withoutAuthors)
@@ -154,7 +156,7 @@ describe('Presentation.removeSlide', () => {
 		assertNoDanglingRels(reopened.opc)
 		const slideRels = [...reopened.opc.relationshipsFor(linking)].filter((rel) => rel.type.endsWith('/slide'))
 		assertEqual(slideRels.length, 0, 'the jump link relationship is gone')
-		const xml = new TextDecoder().decode(reopened.opc.part(linking).serialize())
+		const xml = new TextDecoder().decode(defined(reopened.opc.part(linking)).serialize())
 		assert(!xml.includes('hlinkClick'), 'and so is every link element that named it')
 		assertEqual(reopened.slides[0].shapes[0].text, 'back', 'the text that carried the link stays')
 	})
@@ -164,12 +166,15 @@ describe('Presentation.removeSlide', () => {
 		// (slide-jump-link-target-deleted.pptx). The entry planted here names a relationship of its
 		// own, which then has nothing left to name it and goes too, with nothing to warn about.
 		const zip = await JSZip.loadAsync(await readFile(fixturePath('mixed')))
-		const presXml = await zip.file('ppt/presentation.xml').async('string')
-		const presRels = await zip.file('ppt/_rels/presentation.xml.rels').async('string')
-		const firstSlideRel = /<p:sldId [^>]*r:id="(rId\d+)"/.exec(presXml)[1]
-		const target = new RegExp(
-			`Id="${firstSlideRel}"[^>]*Target="([^"]+)"|Target="([^"]+)"[^>]*Id="${firstSlideRel}"`
-		).exec(presRels)
+		const presXml = await readEntry(zip, 'ppt/presentation.xml')
+		const presRels = await readEntry(zip, 'ppt/_rels/presentation.xml.rels')
+		const firstSlideRel = defined(/<p:sldId [^>]*r:id="(rId\d+)"/.exec(presXml))[1]
+		const target = defined(
+			new RegExp(`Id="${firstSlideRel}"[^>]*Target="([^"]+)"|Target="([^"]+)"[^>]*Id="${firstSlideRel}"`).exec(
+				presRels
+			),
+			'the first slide has a presentation relationship'
+		)
 		const slideTarget = target[1] ?? target[2]
 		zip.file(
 			'ppt/_rels/presentation.xml.rels',
@@ -190,7 +195,7 @@ describe('Presentation.removeSlide', () => {
 		const { codes } = await captureDiagnostics(() => deck.removeSlide(0))
 		assertEqual(codes.join(), '', 'no warning')
 		assert(!deck.opc.relationshipsFor('/ppt/presentation.xml').get('rIdShow1'), 'the entry’s relationship is gone')
-		const xml = new TextDecoder().decode(deck.opc.part('/ppt/presentation.xml').serialize())
+		const xml = new TextDecoder().decode(defined(deck.opc.part('/ppt/presentation.xml')).serialize())
 		assert(xml.includes('<p:custShow name="Show"'), 'the show stays')
 		assert(!xml.includes('rIdShow1'), 'and no longer lists the removed slide')
 		assertNoDanglingRels((await Presentation.load(await deck.save())).opc)

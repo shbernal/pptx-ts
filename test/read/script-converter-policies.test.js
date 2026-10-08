@@ -12,7 +12,7 @@ import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import { Presentation } from '../../dist/read.js'
 import { readModelToIr } from '../../dist/script.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined, readEntry } from '../helpers.js'
 import { authorRead } from './authored.js'
 
 /** Apply `rewrite` to every slide part of `buf`, reload, and convert. */
@@ -20,7 +20,7 @@ async function irWithSlideXml(buf, rewrite) {
 	const zip = await JSZip.loadAsync(buf)
 	for (const name of Object.keys(zip.files)) {
 		if (!/^ppt\/slides\/slide\d+\.xml$/.test(name)) continue
-		zip.file(name, rewrite(await zip.file(name).async('string')))
+		zip.file(name, rewrite(await readEntry(zip, name)))
 	}
 	const reopened = await Presentation.load(await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' }))
 	return readModelToIr(reopened)
@@ -261,7 +261,7 @@ describe('a graphic frame with no absolute frame is mapped like a shape', () => 
 		// A group whose `a:chExt` is zero: the child coordinate space has no scale, so nothing
 		// downstream can compose a slide-absolute frame out of it.
 		const ir = await irWithSlideXml(buf, (xml) => {
-			const frame = /<p:graphicFrame>[\s\S]*?<\/p:graphicFrame>/.exec(xml)[0]
+			const frame = defined(/<p:graphicFrame>[\s\S]*?<\/p:graphicFrame>/.exec(xml))[0]
 			const group =
 				'<p:grpSp><p:nvGrpSpPr><p:cNvPr id="99" name="Grp"/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>' +
 				'<p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="1000" cy="1000"/>' +
@@ -294,7 +294,7 @@ describe('a graphic frame with no absolute frame is mapped like a shape', () => 
 			})
 		})
 		const ir = await irWithSlideXml(buf, (xml) => {
-			const shape = /<p:sp>[\s\S]*?<\/p:sp>/.exec(xml)[0]
+			const shape = defined(/<p:sp>[\s\S]*?<\/p:sp>/.exec(xml))[0]
 			const doubled = shape.replace(/<a:path w="(\d+)" h="(\d+)"/, (_, w, h) => `<a:path w="${w * 2}" h="${h * 2}"`)
 			const group =
 				'<p:grpSp><p:nvGrpSpPr><p:cNvPr id="99" name="Grp"/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>' +
@@ -370,7 +370,7 @@ describe('a fully opaque source emits no transparency key', () => {
 		const ir = await irWithSlideXml(buf, (xml) =>
 			xml.replaceAll('val="accent1"', 'val="dk1"').replaceAll('<a:alpha val="60000"/>', '<a:alpha val="100000"/>')
 		)
-		const shape = ir.slides[0].calls.find((call) => call.method === 'addShape')
+		const shape = defined(ir.slides[0].calls.find((call) => call.method === 'addShape'))
 		const fill = /** @type {Record<string, unknown>} */ (/** @type {Record<string, unknown>} */ (shape.args[1]).fill)
 		// `dk1` resolves through the theme's colour map to the dark-1 slot, not to the caller's hex.
 		assert(fill.color !== 'dk1', `the token was baked; got ${String(fill.color)}`)
@@ -476,7 +476,7 @@ describe('an `xsd:boolean` attribute is parsed, not compared to `1`', () => {
 			pres.addSlide().addText('boxed', { x: 1, y: 1, w: 3, h: 1, isTextBox: true })
 		})
 		const ir = await irWithSlideXml(buf, (xml) => xml.replaceAll('txBox="1"', 'txBox="true"'))
-		const text = ir.slides[0].calls.find((call) => call.method === 'addText')
+		const text = defined(ir.slides[0].calls.find((call) => call.method === 'addText'))
 		assertEqual(
 			/** @type {Record<string, unknown>} */ (text.args[1]).isTextBox,
 			true,

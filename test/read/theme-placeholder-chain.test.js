@@ -11,7 +11,7 @@
 import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
 import { TextFrame } from '../../dist/read.js'
-import { assertEqual } from '../helpers.js'
+import { assertEqual, defined } from '../helpers.js'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
@@ -19,7 +19,7 @@ const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
 const stubPart = () => ({ markDirty() {} })
 
 function parse(xml) {
-	return new DOMParser().parseFromString(xml, 'text/xml').documentElement
+	return defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 }
 
 /** A layout/master root (`p:sldLayout` / `p:sldMaster`) wrapping shape-tree XML. */
@@ -63,6 +63,11 @@ function phRun(flatten, ph = { type: 'body', idx: '0' }) {
 	}).paragraphs[0].runs[0]
 }
 
+/** The hex the first run's colour resolves to; failing when it resolves to none. */
+function phHex(flatten, ph = { type: 'body', idx: '0' }) {
+	return defined(phRun(flatten, ph).resolvedColor, 'a resolved colour').hex
+}
+
 function ctx(overrides) {
 	return {
 		clrMap: new Map(),
@@ -78,12 +83,12 @@ function ctx(overrides) {
 describe('placeholderInheritedFill — tier selection', () => {
 	test('the layout placeholder lstStyle is the first tier', () => {
 		const layoutRoot = root('sldLayout', phSp('body', '0', { lstStyle: lvl1Fill('AA0000') }))
-		assertEqual(phRun(ctx({ layoutRoot })).resolvedColor.hex, 'AA0000', 'colour comes from the layout placeholder')
+		assertEqual(phHex(ctx({ layoutRoot })), 'AA0000', 'colour comes from the layout placeholder')
 	})
 
 	test('the master placeholder lstStyle is used when the layout defines none', () => {
 		const masterRoot = root('sldMaster', phSp('body', '0', { lstStyle: lvl1Fill('00AA00') }))
-		assertEqual(phRun(ctx({ masterRoot })).resolvedColor.hex, '00AA00', 'colour comes from the master placeholder')
+		assertEqual(phHex(ctx({ masterRoot })), '00AA00', 'colour comes from the master placeholder')
 	})
 
 	test('the master p:txStyles category style is the final tier', () => {
@@ -92,11 +97,7 @@ describe('placeholderInheritedFill — tier selection', () => {
 			'',
 			`<p:txStyles><p:titleStyle>${lvl1Fill('0000AA')}</p:titleStyle></p:txStyles>`
 		)
-		assertEqual(
-			phRun(ctx({ masterRoot }), { type: 'title', idx: '0' }).resolvedColor.hex,
-			'0000AA',
-			'title runs read titleStyle'
-		)
+		assertEqual(phHex(ctx({ masterRoot }), { type: 'title', idx: '0' }), '0000AA', 'title runs read titleStyle')
 	})
 
 	test("an 'other'-category placeholder (e.g. ftr) reads p:otherStyle", () => {
@@ -104,11 +105,7 @@ describe('placeholderInheritedFill — tier selection', () => {
 			'',
 			`<p:txStyles><p:otherStyle>${lvl1Fill('AA00AA')}</p:otherStyle></p:txStyles>`
 		)
-		assertEqual(
-			phRun(ctx({ masterRoot }), { type: 'ftr', idx: '0' }).resolvedColor.hex,
-			'AA00AA',
-			'ftr → other category'
-		)
+		assertEqual(phHex(ctx({ masterRoot }), { type: 'ftr', idx: '0' }), 'AA00AA', 'ftr → other category')
 	})
 })
 
@@ -116,17 +113,13 @@ describe('findPlaceholder — idx / category fall-backs', () => {
 	test('a same-idx placeholder of a different category is the idx fall-back', () => {
 		// Run is body/idx0; the layout only has a title/idx0 placeholder → idx match.
 		const layoutRoot = root('sldLayout', phSp('title', '0', { lstStyle: lvl1Fill('123456') }))
-		assertEqual(phRun(ctx({ layoutRoot })).resolvedColor.hex, '123456', 'falls back to the same-idx placeholder')
+		assertEqual(phHex(ctx({ layoutRoot })), '123456', 'falls back to the same-idx placeholder')
 	})
 
 	test('a same-category placeholder at a different idx is the category fall-back', () => {
 		// Run is body/idx5; the layout only has a body/idx0 placeholder → category match.
 		const layoutRoot = root('sldLayout', phSp('body', '0', { lstStyle: lvl1Fill('654321') }))
-		assertEqual(
-			phRun(ctx({ layoutRoot }), { type: 'body', idx: '5' }).resolvedColor.hex,
-			'654321',
-			'falls back on category'
-		)
+		assertEqual(phHex(ctx({ layoutRoot }), { type: 'body', idx: '5' }), '654321', 'falls back on category')
 	})
 })
 

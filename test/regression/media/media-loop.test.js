@@ -154,7 +154,7 @@ defineRegressionSuite('Media looping', [
 			})
 
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assert(xml.match(/<p:timing>/g).length === 1, 'expected exactly one <p:timing> tree')
+			assert((xml.match(/<p:timing>/g) || []).length === 1, 'expected exactly one <p:timing> tree')
 			assert((xml.match(/<p:video>/g) || []).length === 2, 'expected two <p:video> media nodes')
 		},
 	},

@@ -12,7 +12,7 @@
 import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
 import { Relationships, TextFrame } from '../../dist/read.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined } from '../helpers.js'
 import { authorRead } from './authored.js'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
@@ -34,7 +34,7 @@ const bareText = (part = stubPart(), rels = null) => ({ part, ctx: emptyTheme(),
 /** A TextFrame over hand-authored p:txBody inner XML. */
 function frame(inner) {
 	const xml = `<p:txBody xmlns:p="${P_NS}" xmlns:a="${A_NS}"><a:bodyPr/>${inner}</p:txBody>`
-	const txBody = new DOMParser().parseFromString(xml, 'text/xml').documentElement
+	const txBody = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 	return new TextFrame(txBody, bareText())
 }
 
@@ -109,7 +109,7 @@ describe('Run character-property setters', () => {
 			},
 		}
 		const xml = `<p:txBody xmlns:p="${P_NS}" xmlns:a="${A_NS}"><a:bodyPr/><a:p><a:r><a:rPr b="1"/><a:t>x</a:t></a:r></a:p></p:txBody>`
-		const txBody = new DOMParser().parseFromString(xml, 'text/xml').documentElement
+		const txBody = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 		const r = new TextFrame(txBody, bareText(part)).paragraphs[0].runs[0]
 		r.color = null
 		r.schemeColor = null
@@ -141,13 +141,13 @@ describe('Run.resolvedColor with a fill of its own that is not solid', () => {
 		const { presentation } = await authorRead((pres) => {
 			pres.addSlide().addText('run', { x: 1, y: 1, w: 3, h: 1, color: '336699' })
 		})
-		const run = presentation.slides[0].shapes[0].textFrame.paragraphs[0].runs[0]
+		const run = defined(presentation.slides[0].shapes[0].textFrame).paragraphs[0].runs[0]
 		const rPr = run.element_.getElementsByTagNameNS(A_NS, 'rPr')[0]
 		for (const child of Array.from(rPr.childNodes)) {
 			if (child.nodeName === 'a:solidFill') rPr.removeChild(child)
 		}
 		assert(run.resolvedColor !== null, 'with no fill of its own the run inherits a colour')
-		rPr.insertBefore(rPr.ownerDocument.createElementNS(A_NS, 'a:noFill'), rPr.firstChild)
+		rPr.insertBefore(defined(rPr.ownerDocument).createElementNS(A_NS, 'a:noFill'), rPr.firstChild)
 		assertEqual(run.resolvedColor, null, 'with a:noFill it reports none')
 	})
 })
@@ -289,10 +289,12 @@ describe('TextFrame.text setter + resolvedAnchor + element_', () => {
 	})
 
 	test('resolvedAnchor returns the own bodyPr anchor, else null with no placeholder', () => {
-		const withAnchor = new DOMParser().parseFromString(
-			`<p:txBody xmlns:p="${P_NS}" xmlns:a="${A_NS}"><a:bodyPr anchor="ctr"/><a:p/></p:txBody>`,
-			'text/xml'
-		).documentElement
+		const withAnchor = defined(
+			new DOMParser().parseFromString(
+				`<p:txBody xmlns:p="${P_NS}" xmlns:a="${A_NS}"><a:bodyPr anchor="ctr"/><a:p/></p:txBody>`,
+				'text/xml'
+			).documentElement
+		)
 		const f = new TextFrame(withAnchor, bareText())
 		assertEqual(f.resolvedAnchor, 'ctr', 'own bodyPr @anchor wins')
 		assertEqual(frame(`<a:p/>`).resolvedAnchor, null, 'no own anchor and no placeholder → null')

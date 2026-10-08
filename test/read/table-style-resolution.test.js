@@ -16,10 +16,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 async function tables() {
 	const pres = await openFixture('table-styles')
-	return pres.slides[0].shapes
-		.filter(isGraphicFrame)
-		.filter((s) => s.table)
-		.map((s) => s.table)
+	return pres.slides[0].shapes.filter(isGraphicFrame).flatMap((s) => (s.table ? [s.table] : []))
 }
 
 function fillHex(table, row, col) {

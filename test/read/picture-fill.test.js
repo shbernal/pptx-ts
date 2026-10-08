@@ -30,7 +30,7 @@ import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import { Presentation } from '../../dist/read.js'
 import { TableStyle } from '../../dist/node.js'
-import { PNG_1X1, assert, assertEqual } from '../helpers.js'
+import { PNG_1X1, assert, assertEqual, defined, readEntry } from '../helpers.js'
 import { openFixture, readFixture } from './corpus.js'
 import {
 	authorRead,
@@ -144,7 +144,7 @@ describe('TableCell.pictureFill — a:tcPr/a:blipFill (PowerPoint oracle)', () =
 async function unwrappedFallbackShape() {
 	const buf = await readFixture('math-omml')
 	const zip = await JSZip.loadAsync(buf)
-	const slideXml = await zip.file('ppt/slides/slide1.xml').async('string')
+	const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
 	const unwrapped = slideXml.replace(
 		/<mc:AlternateContent[^>]*>[\s\S]*?<mc:Fallback>([\s\S]*?)<\/mc:Fallback><\/mc:AlternateContent>/,
 		'$1'
@@ -218,7 +218,7 @@ describe('AutoShape.pictureFill — p:spPr/a:blipFill (PowerPoint oracle)', () =
 			pres.addSlide().addText('img', { x: 1, y: 1, w: 3, h: 1, fill: { type: 'image', image: { data: PNG_1X1 } } })
 		})
 		const zip = await JSZip.loadAsync(buf)
-		const slideXml = await zip.file('ppt/slides/slide1.xml').async('string')
+		const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
 		zip.file('ppt/slides/slide1.xml', slideXml.replace(/<a:blip r:embed="rId\d+"/, '<a:blip r:embed="rIdNope"'))
 		const presentation = await Presentation.load(await zip.generateAsync({ type: 'uint8array' }))
 		const fill = firstShape(presentation, (s) => s.shapeType === 'autoShape').pictureFill
@@ -295,7 +295,7 @@ describe('slide background — the image variant carries the full picture fill',
 		const { presentation } = await authorRead((pres) => {
 			pres.addSlide().background = { data: PNG_1X1 }
 		})
-		const bg = presentation.slides[0].background
+		const bg = defined(presentation.slides[0].background, 'the slide has a background')
 		assert(bg.type === 'image', 'image background')
 		assertEqual(bg.picture.relId, bg.relId, 'the flat relId still mirrors the picture fill')
 		assertEqual(bg.picture.partName, bg.partName, 'and so does partName')

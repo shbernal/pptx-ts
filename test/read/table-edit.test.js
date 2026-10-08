@@ -18,7 +18,7 @@ import TsPptx from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
 import JSZip from 'jszip'
 import { firstTable } from './authored.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined, readEntry } from '../helpers.js'
 
 /** Author a deck, load it for editing, and return the presentation plus its first table. */
 async function editable(build) {
@@ -56,7 +56,7 @@ function codeOfThrow(fn) {
 /** Save the edited deck and return its slide part. */
 async function savedSlide(presentation) {
 	const zip = await JSZip.loadAsync(await presentation.save())
-	return zip.file('ppt/slides/slide1.xml').async('string')
+	return readEntry(zip, 'ppt/slides/slide1.xml')
 }
 
 /** A plain 3x3 table with no styling to get in the way. */
@@ -388,7 +388,7 @@ describe('TableCell setters — a:tcPr attributes', () => {
 		cell.setAnchorCtr(true)
 
 		let xml = await savedSlide(presentation)
-		const tag = xml.match(/<a:tcPr[^>]*>/)[0]
+		const tag = defined(xml.match(/<a:tcPr[^>]*>/))[0]
 		for (const expected of ['anchor="ctr"', 'vert="vert270"', 'horzOverflow="overflow"', 'anchorCtr="1"']) {
 			assert(tag.includes(expected), `expected ${expected}; got: ` + tag)
 		}
@@ -405,7 +405,7 @@ describe('TableCell setters — a:tcPr attributes', () => {
 		back.setVerticalText(null)
 		back.setAnchorCtr(false)
 		xml = await savedSlide(reloaded)
-		const cleared = xml.match(/<a:tcPr[^>]*>/)[0]
+		const cleared = defined(xml.match(/<a:tcPr[^>]*>/))[0]
 		for (const gone of ['anchor=', 'vert=', 'anchorCtr=']) {
 			assert(!cleared.includes(gone), `expected ${gone} removed; got: ` + cleared)
 		}
@@ -432,7 +432,7 @@ describe('TableCell setters — a:tcPr attributes', () => {
 		table.cell(0, 0).setMarginsEmu({ left: 0, top: 12700 })
 
 		const xml = await savedSlide(presentation)
-		let tag = xml.match(/<a:tcPr[^>]*>/)[0]
+		let tag = defined(xml.match(/<a:tcPr[^>]*>/))[0]
 		assert(tag.includes('marL="0"'), 'the left inset is flush; got: ' + tag)
 		assert(tag.includes('marT="12700"'), 'the top inset is set; got: ' + tag)
 		// Untouched sides keep the writer's own values rather than being reset.
@@ -440,7 +440,7 @@ describe('TableCell setters — a:tcPr attributes', () => {
 
 		const { presentation: reloaded, table: reloadedTable } = await reload(presentation)
 		reloadedTable.cell(0, 0).setMarginsEmu({ left: null })
-		tag = (await savedSlide(reloaded)).match(/<a:tcPr[^>]*>/)[0]
+		tag = defined((await savedSlide(reloaded)).match(/<a:tcPr[^>]*>/))[0]
 		assert(!tag.includes('marL='), 'a null side removes the attribute; got: ' + tag)
 	})
 
@@ -486,7 +486,7 @@ describe('TableCell setters — fill and borders keep a:tcPr in schema order', (
 		table.cell(0, 0).setBorder('left', { widthPt: 3, color: '#336699', dash: 'sysDot' })
 
 		let xml = await savedSlide(presentation)
-		const lnL = xml.match(/<a:lnL[\s\S]*?<\/a:lnL>/)[0]
+		const lnL = defined(xml.match(/<a:lnL[\s\S]*?<\/a:lnL>/))[0]
 		assert(lnL.includes('w="38100"'), '3pt is 38100 EMU; got: ' + lnL)
 		assert(lnL.includes('<a:srgbClr val="336699"/>'), 'the colour is normalized past the #; got: ' + lnL)
 		assert(lnL.includes('<a:prstDash val="sysDot"/>'), 'the dash is written; got: ' + lnL)
@@ -498,7 +498,7 @@ describe('TableCell setters — fill and borders keep a:tcPr in schema order', (
 
 		cell.setBorder('left', null)
 		xml = await savedSlide(reloaded)
-		const firstCell = xml.match(/<a:tc[ >][\s\S]*?<\/a:tc>/)[0]
+		const firstCell = defined(xml.match(/<a:tc[ >][\s\S]*?<\/a:tc>/))[0]
 		assert(!firstCell.includes('<a:lnL'), 'null removes the element entirely; got: ' + firstCell)
 	})
 
@@ -629,7 +629,7 @@ describe('Table structural edits — columns', () => {
 		const xml = await savedSlide(presentation)
 		assertEqual((xml.match(/<a:gridCol\b/g) || []).length, 4, 'the saved grid agrees')
 		// The pair that must stay in step: one a:tc per gridCol, per row.
-		for (const tr of xml.match(/<a:tr\b[\s\S]*?<\/a:tr>/g)) {
+		for (const tr of defined(xml.match(/<a:tr\b[\s\S]*?<\/a:tr>/g))) {
 			assertEqual((tr.match(/<a:tc[ >]/g) || []).length, 4, 'every row has four cells')
 		}
 	})
@@ -642,7 +642,7 @@ describe('Table structural edits — columns', () => {
 		assertGridConsistent(table)
 
 		const xml = await savedSlide(presentation)
-		for (const tr of xml.match(/<a:tr\b[\s\S]*?<\/a:tr>/g)) {
+		for (const tr of defined(xml.match(/<a:tr\b[\s\S]*?<\/a:tr>/g))) {
 			assertEqual((tr.match(/<a:tc[ >]/g) || []).length, 2, 'every row lost a cell')
 		}
 	})

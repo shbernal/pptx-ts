@@ -14,12 +14,19 @@
 
 import { describe, test } from 'vitest'
 
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined } from '../helpers.js'
 import { openFixture } from './corpus.js'
 
 const SPAN_ATTRIBUTES = ['rowSpan', 'gridSpan', 'hMerge', 'vMerge']
 
 /** The table on slide `index` of the fixture, read fresh. */
+/**
+ * @param {import('../../dist/read.js').Table} table
+ * @param {number} row
+ * @param {number} column
+ */
+const cellAt = (table, row, column) => defined(table.cell(row, column), `cell (${row},${column})`)
+
 async function tableOn(index) {
 	for (const shape of (await openFixture('table-merge-encoding')).slides[index].shapes) {
 		if (shape.shapeType === 'graphicFrame' && shape.table) return shape.table
@@ -78,29 +85,29 @@ describe('Table.mergeCells keeps the text of the cells it covers', () => {
 		// PowerPoint's own Merge Cells, and it is what this reproduces. Merging used to empty the
 		// covered cells outright, so the three texts other than the origin's were destroyed.
 		const powerPoint = await tableOn(0)
-		const expected = powerPoint.cell(0, 0).text
+		const expected = cellAt(powerPoint, 0, 0).text
 		assertEqual(expected, '1,1\n1,2\n2,1\n2,2', 'the fixture is what this test thinks it is')
 
 		const table = await tableOn(0)
 		table.unmergeCell(0, 0)
 		// Unmerging does not put the text back -- it never left the origin -- so the covered cells
 		// are re-filled to reconstruct the pre-merge table before merging again.
-		assertEqual(table.cell(0, 0).text, expected, 'unmerging leaves the origin holding all four')
-		table.cell(0, 0).text = '1,1'
-		table.cell(0, 1).text = '1,2'
-		table.cell(1, 0).text = '2,1'
-		table.cell(1, 1).text = '2,2'
+		assertEqual(cellAt(table, 0, 0).text, expected, 'unmerging leaves the origin holding all four')
+		cellAt(table, 0, 0).text = '1,1'
+		cellAt(table, 0, 1).text = '1,2'
+		cellAt(table, 1, 0).text = '2,1'
+		cellAt(table, 1, 1).text = '2,2'
 
 		table.mergeCells(0, 0, 1, 1)
-		assertEqual(table.cell(0, 0).text, expected, 'merging gathers them back in the same order')
+		assertEqual(cellAt(table, 0, 0).text, expected, 'merging gathers them back in the same order')
 		for (const [r, c] of [
 			[0, 1],
 			[1, 0],
 			[1, 1],
 		]) {
-			assertEqual(table.cell(r, c).text, '', `the covered cell (${r},${c}) is emptied`)
+			assertEqual(cellAt(table, r, c).text, '', `the covered cell (${r},${c}) is emptied`)
 		}
-		assertEqual(table.cell(2, 0).text, '3,1', 'a cell outside the rectangle is untouched')
+		assertEqual(cellAt(table, 2, 0).text, '3,1', 'a cell outside the rectangle is untouched')
 	})
 
 	test('an empty covered cell adds no paragraph, and formatting comes with the text', async () => {
@@ -109,14 +116,14 @@ describe('Table.mergeCells keeps the text of the cells it covers', () => {
 		// nothing rather than a blank line, and a bold, coloured run keeps both.
 		const table = await tableOn(0)
 		table.unmergeCell(0, 0)
-		table.cell(0, 0).text = 'origin'
-		table.cell(0, 1).text = ''
-		table.cell(1, 0).text = 'tail'
-		table.cell(1, 1).text = ''
+		cellAt(table, 0, 0).text = 'origin'
+		cellAt(table, 0, 1).text = ''
+		cellAt(table, 1, 0).text = 'tail'
+		cellAt(table, 1, 1).text = ''
 
 		table.mergeCells(0, 0, 1, 1)
-		assertEqual(table.cell(0, 0).text, 'origin\ntail', 'the two empty cells add nothing')
-		const runs = table.cell(0, 0).textFrame.paragraphs.flatMap((paragraph) => paragraph.runs)
+		assertEqual(cellAt(table, 0, 0).text, 'origin\ntail', 'the two empty cells add nothing')
+		const runs = defined(cellAt(table, 0, 0).textFrame).paragraphs.flatMap((paragraph) => paragraph.runs)
 		assertEqual(runs.length, 2, 'two runs, one per non-empty cell')
 	})
 })

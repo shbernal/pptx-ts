@@ -11,7 +11,7 @@
 import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
 import { presetColorHex, resolveColorElement } from '../../dist/read.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined, expectDefined } from '../helpers.js'
 
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
 
@@ -220,7 +220,7 @@ const CTX = { clrMap: new Map(), clrScheme: new Map(), fmtScheme: null, fontSche
 /** Parse one DrawingML colour element from source and resolve it against an empty theme. */
 function resolve(xml) {
 	const doc = new DOMParser().parseFromString(`<a:wrap xmlns:a="${A_NS}">${xml}</a:wrap>`, 'text/xml')
-	const [el] = doc.documentElement.getElementsByTagNameNS(A_NS, '*')
+	const [el] = defined(doc.documentElement).getElementsByTagNameNS(A_NS, '*')
 	return resolveColorElement(el ?? null, CTX)
 }
 
@@ -229,7 +229,7 @@ describe('presetColorHex -- the ST_PresetColorVal table', () => {
 		assertEqual(PRESET_COLOR_VAL.length, 190, 'the pinned enumeration is the whole of ST_PresetColorVal')
 		const unresolved = PRESET_COLOR_VAL.filter((name) => presetColorHex(name) === null)
 		assertEqual(unresolved.join(', '), '', 'every preset name resolves to a hex')
-		const malformed = PRESET_COLOR_VAL.filter((name) => !/^[0-9A-F]{6}$/.test(presetColorHex(name)))
+		const malformed = PRESET_COLOR_VAL.filter((name) => !/^[0-9A-F]{6}$/.test(presetColorHex(name) ?? ''))
 		assertEqual(malformed.join(', '), '', 'every resolved value is 6 upper-case hex digits')
 	})
 
@@ -291,27 +291,28 @@ describe('resolveColorElement -- the colour models beyond srgb/scheme/sys', () =
 		// The transform children ride along exactly as they do for a scheme colour, which is what
 		// lets the theme-preserving flatten path re-emit them.
 		const shaded = resolve(`<a:prstClr val="black"><a:alpha val="40000"/></a:prstClr>`)
-		assert(shaded, 'a preset colour with a transform resolves')
-		assert(Math.abs(shaded.alpha - 0.4) < 1e-9, `alpha 40000 -> 0.4, got ${shaded.alpha}`)
+		expectDefined(shaded, 'a preset colour with a transform resolves')
+		const alpha = defined(shaded.alpha, 'the alpha transform is read')
+		assert(Math.abs(alpha - 0.4) < 1e-9, `alpha 40000 -> 0.4, got ${shaded.alpha}`)
 	})
 
 	test('a:hslClr resolves through the same sRGB-HSL conversion the transforms use', () => {
 		// Hue 0, saturation 100%, luminance 50% is pure red -- the check that the three units are
 		// read as 60000ths of a degree and two thousandths-of-a-percent, not as anything else.
-		assertEqual(resolve(`<a:hslClr hue="0" sat="100000" lum="50000"/>`).hex, 'FF0000', 'H0 S100 L50 is red')
+		assertEqual(defined(resolve(`<a:hslClr hue="0" sat="100000" lum="50000"/>`)).hex, 'FF0000', 'H0 S100 L50 is red')
 		assertEqual(
-			resolve(`<a:hslClr hue="7200000" sat="100000" lum="50000"/>`).hex,
+			defined(resolve(`<a:hslClr hue="7200000" sat="100000" lum="50000"/>`)).hex,
 			'00FF00',
 			'hue 7200000/60000 = 120 degrees is green'
 		)
-		assertEqual(resolve(`<a:hslClr hue="0" sat="0" lum="0"/>`).hex, '000000', 'no luminance is black')
-		assertEqual(resolve(`<a:hslClr hue="0" sat="0" lum="100000"/>`).hex, 'FFFFFF', 'full luminance is white')
+		assertEqual(defined(resolve(`<a:hslClr hue="0" sat="0" lum="0"/>`)).hex, '000000', 'no luminance is black')
+		assertEqual(defined(resolve(`<a:hslClr hue="0" sat="0" lum="100000"/>`)).hex, 'FFFFFF', 'full luminance is white')
 	})
 
 	// `a:ST_Percentage` is a union in Transitional: the integer form Office writes and a
 	// `%`-suffixed decimal string. Reading only the first dropped a schema-legal value silently.
 	test('the percent-suffixed spelling of ST_Percentage is read too', () => {
-		assertEqual(resolve(`<a:hslClr hue="0" sat="100%" lum="50%"/>`).hex, 'FF0000', 'sat/lum as 100% / 50%')
+		assertEqual(defined(resolve(`<a:hslClr hue="0" sat="100%" lum="50%"/>`)).hex, 'FF0000', 'sat/lum as 100% / 50%')
 	})
 
 	// Deliberate, and pinned so it reads as a decision rather than an oversight: the schema

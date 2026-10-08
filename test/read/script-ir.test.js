@@ -18,7 +18,7 @@ import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import { Presentation, isAutoShape } from '../../dist/read.js'
 import { canonicalDeckIr, readModelToIr } from '../../dist/script.js'
-import { PNG_1X1, assert, assertEqual } from '../helpers.js'
+import { PNG_1X1, assert, assertEqual, defined, expectDefined, readEntry } from '../helpers.js'
 import { authorRead } from './authored.js'
 import { fixtureNames, fixturePath, freshIr, irFor, readFixture } from './corpus.js'
 
@@ -148,12 +148,14 @@ describe('deck IR — geometry', () => {
 		assert(shapes.length > 0, 'custgeom.pptx should produce custGeom shapes')
 
 		for (const shape of shapes) {
-			const origin = source.slides
-				.flatMap((slide) => slide.shapes)
-				.filter(isAutoShape)
-				.find((candidate) => candidate.name === shape.sourceName)
-			const [firstPath] = origin.customGeometry.paths
-			const frame = origin.absoluteFrame
+			const origin = defined(
+				source.slides
+					.flatMap((slide) => slide.shapes)
+					.filter(isAutoShape)
+					.find((candidate) => candidate.name === shape.sourceName)
+			)
+			const [firstPath] = defined(origin.customGeometry).paths
+			const frame = defined(origin.absoluteFrame)
 			const expected = firstPath.commands
 				.filter((command) => 'x' in command)
 				.map((command) => Math.round((command.x * frame.width) / firstPath.w))
@@ -171,12 +173,14 @@ describe('deck IR — geometry', () => {
 		// 1 and a version that skipped scaling entirely would still pass. Halving the
 		// viewport through the documented raw hatch produces the case that tells them apart.
 		const deck = await Presentation.load(await readFixture('custgeom.pptx'))
-		const shape = deck.slides
-			.flatMap((slide) => slide.shapes)
-			.filter(isAutoShape)
-			.find((candidate) => candidate.customGeometry)
+		const shape = defined(
+			deck.slides
+				.flatMap((slide) => slide.shapes)
+				.filter(isAutoShape)
+				.find((candidate) => candidate.customGeometry)
+		)
 		const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
-		const pathEl = shape.element_.getElementsByTagNameNS(A_NS, 'path').item(0)
+		const pathEl = defined(shape.element_.getElementsByTagNameNS(A_NS, 'path').item(0))
 		const original = Number(pathEl.getAttribute('w'))
 		pathEl.setAttribute('w', String(original * 2))
 		shape.markDirty()
@@ -209,9 +213,9 @@ describe('deck IR — geometry', () => {
 		}
 
 		for (const name of ['pic-clip-lines', 'pic-clip-curve']) {
-			const origin = source.slides[0].shapes.find((shape) => shape.name === name)
-			const [path] = origin.customGeometry.paths
-			const frame = origin.absoluteFrame
+			const origin = defined(source.slides[0].shapes.find((shape) => shape.name === name))
+			const [path] = defined(origin.customGeometry).paths
+			const frame = defined(origin.absoluteFrame)
 			const expected = path.commands
 				.filter((command) => 'x' in command)
 				.map((command) => Math.round((command.x * frame.width) / path.w))
@@ -274,17 +278,17 @@ describe('deck IR — connectors', () => {
 
 	async function connectorEndpoints({ flipH, flipV }) {
 		const deck = await Presentation.load(await readFixture('mixed.pptx'))
-		const shape = deck.slides
-			.flatMap((slide) => slide.shapes)
-			.find((candidate) => candidate.constructor.name === 'Connector')
-		const xfrm = shape.element_.getElementsByTagNameNS(A_NS, 'xfrm').item(0)
+		const shape = defined(
+			deck.slides.flatMap((slide) => slide.shapes).find((candidate) => candidate.constructor.name === 'Connector')
+		)
+		const xfrm = defined(shape.element_.getElementsByTagNameNS(A_NS, 'xfrm').item(0))
 		if (flipH) xfrm.setAttribute('flipH', '1')
 		else xfrm.removeAttribute('flipH')
 		if (flipV) xfrm.setAttribute('flipV', '1')
 		else xfrm.removeAttribute('flipV')
 		shape.markDirty()
 
-		const frame = shape.absoluteFrame
+		const frame = defined(shape.absoluteFrame)
 		const ir = readModelToIr(await Presentation.load(await deck.save()))
 		const call = allCalls(ir).find((candidate) => candidate.sourceName === shape.name)
 		const at = (key) => Number(String(call.args[0][key]).replace('emu', ''))
@@ -371,7 +375,7 @@ describe('deck IR — losses the read model cannot see', () => {
 				line: { color: 'C00000', width: 6, dashType: 'dash', cap: 'round' },
 			})
 		})
-		const shape = presentation.slides[0].shapes.find(isAutoShape)
+		const shape = defined(presentation.slides[0].shapes.find(isAutoShape))
 		assertEqual(shape.lineCap, 'rnd', 'the reader sees the written cap as its raw OOXML token')
 
 		const ir = readModelToIr(presentation)
@@ -395,7 +399,7 @@ describe('deck IR — losses the read model cannot see', () => {
 		})
 		const irWith = async (algn) => {
 			const zip = await JSZip.loadAsync(buf)
-			const slideXml = await zip.file('ppt/slides/slide1.xml').async('string')
+			const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
 			const patched = slideXml.replace(/<a:ln w="76200"/, `<a:ln w="76200" algn="${algn}"`)
 			assert(patched !== slideXml, 'the outline was found and given an @algn')
 			zip.file('ppt/slides/slide1.xml', patched)
@@ -450,7 +454,7 @@ describe('deck IR — text autofit', () => {
 				fit: { type: 'shrink', fontScale: 70, lnSpcReduction: 20 },
 			})
 		})
-		const frame = presentation.slides[0].shapes[0].textFrame
+		const frame = defined(presentation.slides[0].shapes[0].textFrame)
 		assertEqual(frame.autofitFontScale, 70, 'the reader sees the baked scale')
 
 		const ir = readModelToIr(presentation)
@@ -489,7 +493,7 @@ describe('deck IR — text autofit', () => {
 			})
 		})
 		const zip = await JSZip.loadAsync(buf)
-		const slideXml = await zip.file('ppt/slides/slide1.xml').async('string')
+		const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
 		const patched = slideXml.replace('fontScale="70000"', 'fontScale="250000"')
 		assert(patched !== slideXml, 'the baked scale was found and pushed out of range')
 		zip.file('ppt/slides/slide1.xml', patched)
@@ -533,12 +537,12 @@ describe('deck IR — the explicit off for text decorations', () => {
 			)
 		})
 
-		const slideXml = await (await JSZip.loadAsync(buf)).file('ppt/slides/slide1.xml').async('string')
+		const slideXml = await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml')
 		for (const attr of ['u="none"', 'strike="noStrike"', 'cap="none"']) {
 			assert(slideXml.includes(attr), `the write API states ${attr} rather than omitting the attribute`)
 		}
 
-		const runs = presentation.slides[0].shapes[0].textFrame.paragraphs.flatMap((para) => para.runs)
+		const runs = defined(presentation.slides[0].shapes[0].textFrame).paragraphs.flatMap((para) => para.runs)
 		assertEqual(
 			JSON.stringify([runs[0].underline, runs[1].strike, runs[2].caps]),
 			JSON.stringify(['none', 'noStrike', 'none']),
@@ -566,7 +570,7 @@ describe('deck IR — the explicit off for text decorations', () => {
 		const { presentation } = await authorRead((pres) => {
 			pres.addSlide().addText([{ text: 'unstated' }], { x: 0.5, y: 0.5, w: 6, h: 1, objectName: 'copy' })
 		})
-		const run = presentation.slides[0].shapes[0].textFrame.paragraphs[0].runs[0]
+		const run = defined(presentation.slides[0].shapes[0].textFrame).paragraphs[0].runs[0]
 		assertEqual(run.underline, null, 'the writer emits no @u for a run that states nothing')
 
 		const options = runOptionsOf(readModelToIr(presentation))[0] ?? {}
@@ -646,7 +650,7 @@ describe('deck IR — slide transitions', () => {
 		// exception and is asserted as present: see the module header of from-read/transition.ts.
 		const ir = await irFor('slide-transition.pptx')
 		assertEqual(
-			Object.keys(ir.slides[0].transition).sort().join(','),
+			Object.keys(defined(ir.slides[0].transition)).sort().join(','),
 			'speed,type',
 			'a bare transition carries only its type and the speed bucket'
 		)
@@ -703,7 +707,9 @@ describe('deck IR — slide transitions', () => {
 
 	test('a transition sound maps in both of its OOXML forms, bytes included', async () => {
 		const ir = await irFor('slide-transition-sound.pptx')
-		const [first, second, third] = ir.slides.map((slide) => slide.transition.sound)
+		const [first, second, third] = ir.slides.map((slide) => defined(slide.transition).sound)
+		expectDefined(first)
+		expectDefined(second)
 
 		// Slides 1 and 2: an embedded start sound, resolved through the slide's own r:embed to
 		// the audio part's bytes. PowerPoint dedups identical sound bytes across slides, so both
@@ -712,7 +718,7 @@ describe('deck IR — slide transitions', () => {
 		assertEqual(first.name, 'ding.wav', 'the display name survives')
 		assertEqual(first.loop, undefined, 'loop is absent at its false default')
 		assertEqual(second.loop, true, 'a looped start sound records the loop flag')
-		assertEqual(second.data.$asset, first.data.$asset, 'one shared media part resolves to one asset')
+		assertEqual(defined(second.data).$asset, first.data?.$asset, 'one shared media part resolves to one asset')
 		assertEqual(ir.assets.length, 1, 'and the deck carries exactly that one asset')
 		assertEqual(ir.assets[0].name, 'audio1.wav', 'named by media kind, so a script does not bind a sound to `image1`')
 
@@ -785,7 +791,7 @@ describe('deck IR — picture fills', () => {
 		// is under test.
 		const buf = await readFixture('math-omml.pptx')
 		const zip = await JSZip.loadAsync(buf)
-		const slideXml = await zip.file('ppt/slides/slide1.xml').async('string')
+		const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
 		const unwrapped = slideXml.replace(
 			/<mc:AlternateContent[^>]*>[\s\S]*?<mc:Fallback>([\s\S]*?)<\/mc:Fallback><\/mc:AlternateContent>/,
 			'$1'
@@ -881,7 +887,7 @@ describe('deck IR — picture fills', () => {
 			})
 		})
 		const zip = await JSZip.loadAsync(buf)
-		const slideXml = await zip.file('ppt/slides/slide1.xml').async('string')
+		const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
 		const bled = slideXml.replace('<a:srcRect l="0" t="25000" r="0" b="25000"/>', '<a:srcRect t="-25000" b="25000"/>')
 		assert(bled !== slideXml, 'the authored srcRect was found and made negative')
 		zip.file('ppt/slides/slide1.xml', bled)
@@ -939,7 +945,7 @@ describe('deck IR — picture fills', () => {
 		// PowerPoint writes a negative inset for a fit crop. Passed through, it put `{ l: -5 }` in
 		// the IR with no note, and the printed script threw at `addImage`.
 		const zip = await JSZip.loadAsync(buf)
-		const slideXml = await zip.file('ppt/slides/slide1.xml').async('string')
+		const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
 		const bled = slideXml.replace(/<a:srcRect[^>]*\/>/, '<a:srcRect l="-5000"/>')
 		assert(bled !== slideXml, 'the authored srcRect was found and made negative')
 		zip.file('ppt/slides/slide1.xml', bled)
@@ -960,7 +966,7 @@ describe('deck IR — picture fills', () => {
 			pres.addSlide().addText('img', { x: 1, y: 1, w: 3, h: 1, fill: { type: 'image', image: { data: PNG_1X1 } } })
 		})
 		const zip = await JSZip.loadAsync(buf)
-		const slideXml = await zip.file('ppt/slides/slide1.xml').async('string')
+		const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
 		zip.file('ppt/slides/slide1.xml', slideXml.replace(/<a:blip r:embed="rId\d+"/, '<a:blip r:embed="rIdNope"'))
 		const ir = readModelToIr(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
 
@@ -985,7 +991,7 @@ describe('deck IR — picture fills', () => {
 			slide.addImage({ data: SVG_SQUARE, x: 5, y: 1, w: 1, h: 1 })
 		})
 		const zip = await JSZip.loadAsync(buf)
-		const slideXml = await zip.file('ppt/slides/slide1.xml').async('string')
+		const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
 		const svgRid = /<asvg:svgBlip[^>]*r:embed="(rId\d+)"/.exec(slideXml)?.[1]
 		assert(svgRid, 'the SVG picture wrote an asvg:svgBlip')
 		// The shape is added first, so the first `<a:blip>` on the slide is its fill's.
@@ -1010,7 +1016,7 @@ describe('deck IR — text links, freeform text and fields', () => {
 	/** Load `buf` with `rewrite` applied to one part, as a fresh IR. */
 	async function irWithPart(buf, partName, rewrite) {
 		const zip = await JSZip.loadAsync(buf)
-		const xml = await zip.file(partName).async('string')
+		const xml = await readEntry(zip, partName)
 		const next = rewrite(xml)
 		assert(next !== xml, `the rewrite of ${partName} applied`)
 		zip.file(partName, next)
@@ -1028,7 +1034,10 @@ describe('deck IR — text links, freeform text and fields', () => {
 			})
 			pres.addSlide().addText('two', { x: 1, y: 1, w: 3, h: 1 })
 		})
-		const run = readModelToIr(presentation).slides[0].calls[0].args[0][0]
+		// `args` is IrValue[]; addText's first argument is its run array.
+		/** @param {import('../../dist/script.js').IrValue} runs */
+		const firstRun = (runs) => /** @type {{ options: Record<string, unknown> }[]} */ (runs)[0]
+		const run = firstRun(readModelToIr(presentation).slides[0].calls[0].args[0])
 		assertEqual(
 			JSON.stringify(run.options.hyperlink),
 			'{"slide":2,"tooltip":"Two"}',
@@ -1039,7 +1048,7 @@ describe('deck IR — text links, freeform text and fields', () => {
 		const ir = await irWithPart(buf, 'ppt/slides/slide1.xml', (xml) =>
 			xml.replace('ppaction://hlinksldjump', 'ppaction://hlinkshowjump?jump=nextslide')
 		)
-		const jumped = ir.slides[0].calls[0].args[0][0]
+		const jumped = firstRun(ir.slides[0].calls[0].args[0])
 		assertEqual('hyperlink' in jumped.options, false, 'the show jump is not written as a run link')
 		assertEqual(ir.fidelity.filter((note) => note.construct === 'text.hyperlink').length, 1, 'and its loss is declared')
 	})
@@ -1102,7 +1111,7 @@ describe('deck IR — connector strokes and grouped connectors', () => {
 		const zip = await JSZip.loadAsync(await readFixture('mixed.pptx'))
 		let count = 0
 		for (const name of Object.keys(zip.files).filter((entry) => /^ppt\/slides\/slide\d+\.xml$/.test(entry))) {
-			const xml = await zip.file(name).async('string')
+			const xml = await readEntry(zip, name)
 			zip.file(
 				name,
 				xml.replace(/<p:cxnSp>[\s\S]*?<\/p:cxnSp>/g, (cxn) => {
@@ -1186,7 +1195,7 @@ describe('deck IR — slide sourcing', () => {
 		// `authored` and the printer transcribed it — dropping the diagram, which is the whole
 		// message of the slide, while the emitted script claimed to describe it.
 		const ir = await irFor('mixed')
-		const slide = ir.slides.find((candidate) => candidate.number === 2)
+		const slide = defined(ir.slides.find((candidate) => candidate.number === 2))
 		assertEqual(slide.source, 'carried', 'the SmartArt slide is copied from the source package')
 		assert(
 			ir.fidelity.some((note) => note.slideNumber === 2 && note.construct === 'diagram.all'),
@@ -1212,7 +1221,7 @@ describe('deck IR — slide sourcing', () => {
 		// `hasUnwritableContent` recurses for exactly this. Built by wrapping the SmartArt frame
 		// of `mixed.pptx` slide 2 in a group, since no fixture ships one that way.
 		const zip = await JSZip.loadAsync(await readFixture('mixed.pptx'))
-		const slideXml = await zip.file('ppt/slides/slide2.xml').async('string')
+		const slideXml = await readEntry(zip, 'ppt/slides/slide2.xml')
 		const frame = /<p:graphicFrame>[\s\S]*?<\/p:graphicFrame>/.exec(slideXml)
 		assert(frame, 'slide 2 holds the graphic frame to wrap')
 		const box = '<a:off x="0" y="0"/><a:ext cx="9144000" cy="6858000"/>'
@@ -1228,7 +1237,7 @@ describe('deck IR — slide sourcing', () => {
 			)
 		)
 		const ir = readModelToIr(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
-		const slide = ir.slides.find((candidate) => candidate.number === 2)
+		const slide = defined(ir.slides.find((candidate) => candidate.number === 2))
 		assertEqual(slide.source, 'carried', 'a diagram one level down still forces the copy')
 	})
 })

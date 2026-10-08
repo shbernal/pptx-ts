@@ -11,7 +11,7 @@
 // answers were being computed twice with nothing keeping them in step.
 
 import { describe, test } from 'vitest'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined } from '../helpers.js'
 import { openFixture } from './corpus.js'
 
 /** The `resolved*` family plus identity and geometry, from whichever view is passed. */
@@ -54,7 +54,7 @@ describe('a placeholder and the same shape read as an AutoShape', () => {
 		// The agreement above would also hold if both views reported `null` for everything, so
 		// this is the half that makes it mean something.
 		const presentation = await openFixture('autofit-cjk-wrap')
-		const master = presentation.slides[0].master
+		const master = defined(presentation.slides[0].master, 'the slide reaches its master')
 		const resolved = master.placeholders
 			.map((ph) => readable(ph))
 			.filter((r) => r.resolvedSizePt !== null || r.resolvedFontFace !== null)

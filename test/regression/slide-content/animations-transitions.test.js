@@ -13,6 +13,7 @@ import {
 	readEntry,
 	setDiagnosticHandler,
 	slideXml,
+	defined,
 } from '../../helpers.js'
 
 // Write-side slide transitions and preset build animations
@@ -357,7 +358,7 @@ defineRegressionSuite('Transition sounds (write)', [
 			})
 			const xml1 = await readEntry(zip, 'ppt/slides/slide1.xml')
 			const rels1 = await readEntry(zip, 'ppt/slides/_rels/slide1.xml.rels')
-			const embedRid = xml1.match(/<p:snd r:embed="(rId\d+)"/)[1]
+			const embedRid = defined(xml1.match(/<p:snd r:embed="(rId\d+)"/))[1]
 			// The r:embed points at a real ECMA audio relationship to an embedded media part.
 			const relMatch = rels1.match(
 				new RegExp(`<Relationship Id="${embedRid}"[^>]*relationships/audio[^>]*Target="([^"]+)"`)

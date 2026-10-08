@@ -6,6 +6,7 @@ import {
 	captureDiagnostics,
 	assert,
 	assertEqual,
+	expectDefined,
 } from '../../helpers.js'
 import { TableStyle } from '../../../dist/node.js'
 
@@ -166,9 +167,11 @@ defineRegressionSuite('Table styling: built-in styles and the direct-formatting 
 			const { slide } = await tableParts({ hasHeader: false, bold: true }, [
 				[{ text: 'A', options: { bold: false } }, { text: 'B' }],
 			])
-			const runs = slide.match(/<a:rPr[^>]*(?:\/>|>[\s\S]*?<\/a:rPr>)/g) || []
-			assert(!/\bb="1"/.test(runs[0]), 'the cell said not bold; got: ' + runs[0])
-			assert(/\bb="1"/.test(runs[1]), 'and the cell that said nothing still inherits; got: ' + runs[1])
+			const [first, second] = slide.match(/<a:rPr[^>]*(?:\/>|>[\s\S]*?<\/a:rPr>)/g) || []
+			expectDefined(first, 'the first cell has a run')
+			expectDefined(second, 'the second cell has a run')
+			assert(!/\bb="1"/.test(first), 'the cell said not bold; got: ' + first)
+			assert(/\bb="1"/.test(second), 'and the cell that said nothing still inherits; got: ' + second)
 		},
 	},
 	{

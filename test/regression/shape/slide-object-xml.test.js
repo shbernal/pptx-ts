@@ -8,6 +8,7 @@ import { ALL_CONSTRUCT_FAMILIES } from '../../../src/entry-families.ts'
 const ALL_OBJECT_RENDERERS = composeFamilies(ALL_CONSTRUCT_FAMILIES).renderers
 import { SlideObjectType } from '../../../src/enums.ts'
 import { InternalError } from '../../../src/errors.ts'
+import { defined } from '../../helpers.js'
 
 // Characterization tests for slide-object XML that the byte-identity harness CANNOT see. The demo
 // deck emits ZERO parts containing `<a:duotone>`, `<a:stCxn>`, `mc:AlternateContent`,
@@ -410,7 +411,7 @@ describe('renderer table', () => {
 	// the shape families it writes. A table with a family missing is what a presentation composed
 	// without that family writes with; these drive the walk directly rather than through a
 	// composition, so the partial case is stated rather than arranged.
-	const textOnly = { [SlideObjectType.text]: ALL_OBJECT_RENDERERS[SlideObjectType.text] }
+	const textOnly = { [SlideObjectType.text]: defined(ALL_OBJECT_RENDERERS[SlideObjectType.text]) }
 
 	test('the full family list renders every shape kind', () => {
 		// A composed table is partial by construction, so its completeness is no longer something the

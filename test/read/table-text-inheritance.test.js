@@ -18,14 +18,14 @@
 
 import { describe, test } from 'vitest'
 
-import { assertEqual } from '../helpers.js'
+import { assertEqual, defined } from '../helpers.js'
 import { openFixture } from './corpus.js'
 
 /** The first run of every cell of the table named `name`, row by row. */
 async function cellRuns(name) {
 	for (const shape of (await openFixture('table-text-inheritance')).slides[0].shapes) {
 		if (shape.name === name && shape.shapeType === 'graphicFrame' && shape.table) {
-			return shape.table.rows.map((row) => row.cells.map((cell) => cell.textFrame.paragraphs[0].runs[0]))
+			return shape.table.rows.map((row) => row.cells.map((cell) => defined(cell.textFrame).paragraphs[0].runs[0]))
 		}
 	}
 	throw new Error(`no table named ${name}`)

@@ -11,7 +11,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, test } from 'vitest'
 
-import { assert, assertEqual, assertRejects } from '../helpers.js'
+import { assert, assertEqual, assertRejects, defined, expectDefined } from '../helpers.js'
 import { authorRead, schemaErrors, validatorInstalled } from './authored.js'
 import { openFixture } from './corpus.js'
 
@@ -70,7 +70,11 @@ describe('Slide misc read/edit edges', () => {
 	test('addTextBox preserves significant leading/trailing whitespace', async () => {
 		const slide = (await openFixture('empty')).slides[0]
 		const box = slide.addTextBox({ text: '  padded  ', ...GEOM })
-		assertEqual(box.textFrame.paragraphs[0].runs[0].text, '  padded  ', 'the whitespace text is written verbatim')
+		assertEqual(
+			defined(box.textFrame).paragraphs[0].runs[0].text,
+			'  padded  ',
+			'the whitespace text is written verbatim'
+		)
 	})
 
 	test('placeholder() skips non-AutoShape shapes when scanning', async () => {
@@ -90,7 +94,7 @@ describe('Slide misc read/edit edges', () => {
 	test('addTextBox with no text writes an empty paragraph', async () => {
 		const slide = (await openFixture('empty')).slides[0]
 		const box = slide.addTextBox(GEOM)
-		assertEqual(box.textFrame.paragraphs[0].text, '', 'an empty text box has an empty first paragraph')
+		assertEqual(defined(box.textFrame).paragraphs[0].text, '', 'an empty text box has an empty first paragraph')
 	})
 
 	test('notesText reads the notes body when a notes slide is attached', async () => {
@@ -130,7 +134,7 @@ describe('Slide.background — write→read fidelity', () => {
 				},
 			}
 		})
-		const bg = presentation.slides[0].background
+		const bg = defined(presentation.slides[0].background)
 		assert(bg.type === 'gradient', 'gradient background')
 		assertEqual(bg.source, 'slide', 'authored on the slide')
 		assertEqual(bg.gradient.kind, 'linear', 'linear gradient')
@@ -145,7 +149,7 @@ describe('Slide.background — write→read fidelity', () => {
 			const slide = pres.addSlide()
 			slide.background = { data: PNG_1PX }
 		})
-		const bg = presentation.slides[0].background
+		const bg = defined(presentation.slides[0].background)
 		assert(bg.type === 'image', 'image background')
 		assertEqual(bg.source, 'slide', 'authored on the slide')
 		assert(bg.relId != null, 'the blip rel id is read')
@@ -160,7 +164,7 @@ describe('Slide.background — write→read fidelity', () => {
 			pres.addSlide() // no background set → falls through to the default layout's p:bg
 		})
 		const bg = presentation.slides[0].background
-		assert(bg !== null, 'the effective background is inherited, not null')
+		expectDefined(bg, 'the effective background is inherited, not null')
 		assert(bg.type === 'themeRef', 'the default layout background is a theme-indexed p:bgRef')
 		assertEqual(bg.source, 'layout', 'inherited from the layout, not the slide')
 		assertEqual(bg.idx, 1001, 'the default background matrix index')
@@ -170,7 +174,7 @@ describe('Slide.background — write→read fidelity', () => {
 		const { presentation } = await authorRead((pres) => {
 			pres.addSlide() // inherits the default layout's p:bgRef idx=1001
 		})
-		const bg = presentation.slides[0].background
+		const bg = defined(presentation.slides[0].background)
 		assert(bg.type === 'themeRef', 'theme-indexed background')
 		assertEqual(bg.idx, 1001, 'raw idx kept for fidelity')
 		// idx 1001 → bgFillStyleLst entry 1 = <a:solidFill><a:schemeClr val="phClr"/></a:solidFill>;

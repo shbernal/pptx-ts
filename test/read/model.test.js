@@ -7,7 +7,7 @@
 
 import { describe, test } from 'vitest'
 import { Presentation, isAutoShape, isConnector, isGraphicFrame, isGroupShape, isPicture } from '../../dist/read.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined, expectDefined } from '../helpers.js'
 import { openFixture } from './corpus.js'
 
 describe('Presentation', () => {
@@ -91,9 +91,9 @@ describe('Slide.shapes', () => {
 describe('TextFrame / Paragraph / Run', () => {
 	test('reads runs and character formatting from the textbox fixture', async () => {
 		const slide = (await openFixture('textbox')).slides[0]
-		const shape = slide.shapes.find((shape) => shape.name === 'replaceText')
+		const shape = defined(slide.shapes.find((shape) => shape.name === 'replaceText'))
 		const frame = shape.textFrame
-		assert(frame, 'shape has a text frame')
+		expectDefined(frame, 'shape has a text frame')
 		const firstParagraph = frame.paragraphs[0]
 		const runs = firstParagraph.runs
 		assert(runs.length >= 4, `expected several runs, got ${runs.length}`)
@@ -278,32 +278,29 @@ describe('proxy identity', () => {
 
 		const textSlide = presentation.slides[0]
 		const titled = textSlide.shapes.find((shape) => shape.hasTextFrame)
-		assert(titled, 'mixed slide1 has a text-bearing shape')
-		freshEachTime('AutoShape.textFrame', () => textSlide.shapes.find((shape) => shape.hasTextFrame).textFrame)
-		freshEachTime('TextFrame.paragraphs[]', () => titled.textFrame.paragraphs[0])
-		freshEachTime('Paragraph.runs[]', () => titled.textFrame.paragraphs[0].runs[0])
+		expectDefined(titled, 'mixed slide1 has a text-bearing shape')
+		freshEachTime('AutoShape.textFrame', () => defined(textSlide.shapes.find((shape) => shape.hasTextFrame)).textFrame)
+		freshEachTime('TextFrame.paragraphs[]', () => defined(titled.textFrame).paragraphs[0])
+		freshEachTime('Paragraph.runs[]', () => defined(titled.textFrame).paragraphs[0].runs[0])
 
 		const tableFrame = presentation.slides[6].shapes.filter(isGraphicFrame).find((frame) => frame.hasTable)
-		assert(tableFrame, 'mixed slide7 has a table frame')
+		expectDefined(tableFrame, 'mixed slide7 has a table frame')
 		freshEachTime('GraphicFrame.table', () => tableFrame.table)
-		freshEachTime('Table.rows[]', () => tableFrame.table.rows[0])
-		freshEachTime('TableRow.cells[]', () => tableFrame.table.rows[0].cells[0])
+		freshEachTime('Table.rows[]', () => defined(tableFrame.table).rows[0])
+		freshEachTime('TableRow.cells[]', () => defined(tableFrame.table).rows[0].cells[0])
 
 		const diagramFrame = presentation.slides[1].shapes.filter(isGraphicFrame).find((frame) => frame.hasDiagram)
-		assert(diagramFrame, 'mixed slide2 has a SmartArt frame')
+		expectDefined(diagramFrame, 'mixed slide2 has a SmartArt frame')
 		freshEachTime('GraphicFrame.diagram', () => diagramFrame.diagram)
-		freshEachTime('Diagram.points[]', () => diagramFrame.diagram.points[0])
+		freshEachTime('Diagram.points[]', () => defined(diagramFrame.diagram).points[0])
 	})
 
 	test('an edit through one proxy is visible through another over the same node', async () => {
 		const slide = (await openFixture('textbox')).slides[0]
-		const name = slide.shapes.find((shape) => shape.hasTextFrame).name
-		slide.shapes.find((shape) => shape.name === name).textFrame.paragraphs[0].runs[0].text = 'CHANGED'
-		assertEqual(
-			slide.shapes.find((shape) => shape.name === name).textFrame.paragraphs[0].runs[0].text,
-			'CHANGED',
-			'a second proxy reads the mutated DOM'
-		)
+		const name = defined(slide.shapes.find((shape) => shape.hasTextFrame)).name
+		const frameOf = () => defined(defined(slide.shapes.find((shape) => shape.name === name)).textFrame)
+		frameOf().paragraphs[0].runs[0].text = 'CHANGED'
+		assertEqual(frameOf().paragraphs[0].runs[0].text, 'CHANGED', 'a second proxy reads the mutated DOM')
 	})
 })
 

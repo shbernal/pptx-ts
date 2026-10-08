@@ -10,7 +10,7 @@ import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import TsPptx, { ShapeType } from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { throws, bytesEqual, assert, assertEqual, partBodies, assertUnchangedExcept } from '../helpers.js'
+import { throws, bytesEqual, assert, assertEqual, partBodies, assertUnchangedExcept, readEntry } from '../helpers.js'
 import { validateBuf, validatorInstalled } from '../validator.js'
 import { fixturePath, openFixture } from './corpus.js'
 
@@ -117,7 +117,7 @@ describe('Shape.delete', () => {
 		s.addConnector({ x1: 3, y1: 1.5, x2: 6, y2: 3.5, startShape: 'A', startShapeIdx: 3, endShape: 'B', endShapeIdx: 1 })
 		const presentation = await Presentation.load(await pptx.write({ outputType: 'uint8array' }))
 		const slideXmlOf = async (/** @type {Uint8Array} */ bytes) =>
-			(await JSZip.loadAsync(bytes)).file('ppt/slides/slide1.xml').async('string')
+			readEntry(await JSZip.loadAsync(bytes), 'ppt/slides/slide1.xml')
 		assert(/<a:stCxn\b/.test(await slideXmlOf(await presentation.save())), 'precondition: the start is bound')
 
 		presentation.slides[0].shapeByName('A')?.delete()

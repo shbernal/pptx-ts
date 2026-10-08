@@ -9,7 +9,7 @@
 import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
 import { AutoShape } from '../../dist/read.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined } from '../helpers.js'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
@@ -17,7 +17,7 @@ const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
 /** An `AutoShape` over a hand-authored `p:sp` body (geometry reads need no theme). */
 function sp(spPrInner) {
 	const xml = `<p:spTree xmlns:p="${P_NS}" xmlns:a="${A_NS}"><p:sp>${spPrInner}</p:sp></p:spTree>`
-	const spTree = new DOMParser().parseFromString(xml, 'text/xml').documentElement
+	const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 	const el = spTree.getElementsByTagNameNS(P_NS, 'sp')[0]
 	return new AutoShape(el, /** @type {any} */ ({}))
 }

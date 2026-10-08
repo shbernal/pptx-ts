@@ -12,7 +12,7 @@
 import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
 import { TextFrame, AutoShape, resolveColorElement } from '../../dist/read.js'
-import { assertEqual } from '../helpers.js'
+import { assertEqual, defined } from '../helpers.js'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
@@ -33,7 +33,8 @@ function ctx(overrides = {}) {
 /** @returns {import('@xmldom/xmldom').Element} the wrapper's sole child — callers pass exactly one element. */
 function drawingEl(xml) {
 	return /** @type {import('@xmldom/xmldom').Element} */ (
-		new DOMParser().parseFromString(`<a:w xmlns:a="${A_NS}">${xml}</a:w>`, 'text/xml').documentElement.firstChild
+		defined(new DOMParser().parseFromString(`<a:w xmlns:a="${A_NS}">${xml}</a:w>`, 'text/xml').documentElement)
+			.firstChild
 	)
 }
 
@@ -42,7 +43,7 @@ const stubPart = () => ({ markDirty() {} })
 /** The first run of a synthetic single-run TextFrame resolving against `flatten`. */
 function runWith(rPrInner, flatten) {
 	const xml = `<p:txBody xmlns:p="${P_NS}" xmlns:a="${A_NS}"><a:bodyPr/><a:p><a:r>${rPrInner}<a:t>x</a:t></a:r></a:p></p:txBody>`
-	const txBody = new DOMParser().parseFromString(xml, 'text/xml').documentElement
+	const txBody = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 	return new TextFrame(txBody, { part: /** @type {any} */ (stubPart()), ctx: flatten, rels: null, inherit: null })
 		.paragraphs[0].runs[0]
 }
@@ -50,7 +51,7 @@ function runWith(rPrInner, flatten) {
 /** An AutoShape over a hand-authored p:sp, resolving against `flatten`. */
 function autoShape(spXml, flatten) {
 	const xml = `<p:spTree xmlns:p="${P_NS}" xmlns:a="${A_NS}">${spXml}</p:spTree>`
-	const spTree = new DOMParser().parseFromString(xml, 'text/xml').documentElement
+	const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 	const el = spTree.getElementsByTagNameNS(P_NS, 'sp')[0]
 	return new AutoShape(el, /** @type {any} */ ({ themeContext: () => flatten }))
 }
@@ -58,12 +59,12 @@ function autoShape(spXml, flatten) {
 describe('resolveColor — colour models', () => {
 	test('sysClr resolves via @lastClr, falling back to @val', () => {
 		assertEqual(
-			resolveColorElement(drawingEl(`<a:sysClr val="windowText" lastClr="AABBCC"/>`), ctx()).hex,
+			defined(resolveColorElement(drawingEl(`<a:sysClr val="windowText" lastClr="AABBCC"/>`), ctx())).hex,
 			'AABBCC',
 			'lastClr wins'
 		)
 		assertEqual(
-			resolveColorElement(drawingEl(`<a:sysClr val="808080"/>`), ctx()).hex,
+			defined(resolveColorElement(drawingEl(`<a:sysClr val="808080"/>`), ctx())).hex,
 			'808080',
 			'val is the fallback when no lastClr'
 		)
@@ -71,12 +72,16 @@ describe('resolveColor — colour models', () => {
 
 	test('schemeClr resolves through the clrMap → clrScheme indirection', () => {
 		const c = ctx({ clrMap: new Map([['tx1', 'dk1']]), clrScheme: new Map([['dk1', '111111']]) })
-		assertEqual(resolveColorElement(drawingEl(`<a:schemeClr val="tx1"/>`), c).hex, '111111', 'tx1 → dk1 → hex')
+		assertEqual(defined(resolveColorElement(drawingEl(`<a:schemeClr val="tx1"/>`), c)).hex, '111111', 'tx1 → dk1 → hex')
 	})
 
 	test('a direct-slot scheme token (dk1/lt1/dk2/lt2) bypasses the clrMap', () => {
 		const c = ctx({ clrScheme: new Map([['lt2', 'EEEEEE']]) })
-		assertEqual(resolveColorElement(drawingEl(`<a:schemeClr val="lt2"/>`), c).hex, 'EEEEEE', 'lt2 is a direct slot')
+		assertEqual(
+			defined(resolveColorElement(drawingEl(`<a:schemeClr val="lt2"/>`), c)).hex,
+			'EEEEEE',
+			'lt2 is a direct slot'
+		)
 	})
 
 	test('a phClr placeholder token resolves to null (it is filled in by a styleRef)', () => {
@@ -127,7 +132,7 @@ describe('styleRef fill/line — phClr substitution + bgFillStyleLst', () => {
 			`<p:sp><p:style><a:fillRef idx="1"><a:srgbClr val="FF0000"/></a:fillRef></p:style><p:spPr/></p:sp>`,
 			ctx({ fmtScheme })
 		)
-		assertEqual(shape.resolvedFill.hex, 'FF0000', 'the ref colour fills in the phClr slot')
+		assertEqual(defined(shape.resolvedFill).hex, 'FF0000', 'the ref colour fills in the phClr slot')
 	})
 
 	test('a fillRef idx >= 1000 selects the bgFillStyleLst', () => {
@@ -140,7 +145,7 @@ describe('styleRef fill/line — phClr substitution + bgFillStyleLst', () => {
 			`<p:sp><p:style><a:fillRef idx="1001"><a:srgbClr val="00FF00"/></a:fillRef></p:style><p:spPr/></p:sp>`,
 			ctx({ fmtScheme })
 		)
-		assertEqual(shape.resolvedFill.hex, '00FF00', 'idx 1001 → bgFillStyleLst entry 1, phClr filled')
+		assertEqual(defined(shape.resolvedFill).hex, '00FF00', 'idx 1001 → bgFillStyleLst entry 1, phClr filled')
 	})
 
 	test('a lnRef resolves the style-matrix line colour', () => {
@@ -153,6 +158,6 @@ describe('styleRef fill/line — phClr substitution + bgFillStyleLst', () => {
 			`<p:sp><p:style><a:lnRef idx="1"><a:srgbClr val="0000FF"/></a:lnRef></p:style><p:spPr/></p:sp>`,
 			ctx({ fmtScheme })
 		)
-		assertEqual(shape.resolvedLine.hex, '0000FF', 'the lnRef colour fills the phClr in the lnStyleLst entry')
+		assertEqual(defined(shape.resolvedLine).hex, '0000FF', 'the lnRef colour fills the phClr in the lnStyleLst entry')
 	})
 })

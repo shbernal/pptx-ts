@@ -1,4 +1,4 @@
-import { defineRegressionSuite, build, readEntry, listEntries, assert } from '../../helpers.js'
+import { defineRegressionSuite, build, readEntry, listEntries, assert, defined } from '../../helpers.js'
 
 defineRegressionSuite('Slide master content types [legacy bug-02]', [
 	{
@@ -22,7 +22,7 @@ defineRegressionSuite('Slide master content types [legacy bug-02]', [
 					' master parts'
 			)
 			for (const m of overrideMatches) {
-				const target = m.match(/PartName="([^"]+)"/)[1].replace(/^\//, '')
+				const target = defined(m.match(/PartName="([^"]+)"/))[1].replace(/^\//, '')
 				assert(masterFiles.includes(target), 'phantom Override: ' + target + ' is in Content_Types but not in archive')
 			}
 		},

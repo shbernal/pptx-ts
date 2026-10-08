@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url'
 import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
 import { Picture } from '../../dist/read.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined } from '../helpers.js'
 import { openFixture } from './corpus.js'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
@@ -39,7 +39,7 @@ function named(slide, name) {
 /** Wrap a standalone `<p:pic>…</p:pic>` string in a Picture with a stand-in slide. */
 function pictureFromXml(innerXml) {
 	const xml = `<p:spTree xmlns:p="${P_NS}" xmlns:a="${A_NS}">${innerXml}</p:spTree>`
-	const spTree = new DOMParser().parseFromString(xml, 'text/xml').documentElement
+	const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 	const el = spTree.getElementsByTagNameNS(P_NS, 'pic')[0]
 	// Stand-in slide: none of the accessors under test reach through to it.
 	return new Picture(el, /** @type {any} */ ({}))

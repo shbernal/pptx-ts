@@ -14,7 +14,7 @@ import JSZip from 'jszip'
 import ts from 'typescript-6'
 import { Presentation } from '../../dist/read.js'
 import { printScript, printStandaloneScript, readModelToIr } from '../../dist/script.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, readEntry } from '../helpers.js'
 import { authorRead } from './authored.js'
 import { readFixture } from './corpus.js'
 
@@ -41,7 +41,7 @@ async function hostileDeck() {
 		const isLayout = /^ppt\/slideLayouts\/slideLayout\d+\.xml$/.test(name)
 		const isSlide = /^ppt\/slides\/slide\d+\.xml$/.test(name)
 		if (!isLayout && !isSlide) continue
-		let xml = await zip.file(name).async('string')
+		let xml = await readEntry(zip, name)
 		if (isLayout) {
 			xml = xml.replace(/<p:cSld name="Layout[AB]">/, () => {
 				layoutRenames++
@@ -145,7 +145,7 @@ async function evaluateBindings(code) {
 describe('a content type in the deck does not become code in the printed script', () => {
 	test('one outside the media-type grammar reaches the IR as application/octet-stream', async () => {
 		const zip = await JSZip.loadAsync(await readFixture('image.pptx'))
-		const types = await zip.file('[Content_Types].xml').async('string')
+		const types = await readEntry(zip, '[Content_Types].xml')
 		const hostile = types.replace('ContentType="image/png"', `ContentType="${PAYLOAD}"`)
 		assert(hostile !== types, 'the PNG default is rewritten')
 		zip.file('[Content_Types].xml', hostile)

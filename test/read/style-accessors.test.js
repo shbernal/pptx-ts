@@ -16,7 +16,7 @@ import TsPptx, { ShapeType } from '../../dist/node.js'
 import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
 import { Presentation, AutoShape, GroupShape, Picture } from '../../dist/read.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined } from '../helpers.js'
 import { openFixture } from './corpus.js'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
@@ -31,7 +31,7 @@ const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
  */
 function shapeFromXml(Kind, local, innerXml) {
 	const xml = `<p:spTree xmlns:p="${P_NS}" xmlns:a="${A_NS}">${innerXml}</p:spTree>`
-	const spTree = new DOMParser().parseFromString(xml, 'text/xml').documentElement
+	const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 	const el = spTree.getElementsByTagNameNS(P_NS, local)[0]
 	if (!el) throw new Error(`no <p:${local}> in the supplied XML`)
 	// A stand-in slide whose theme maps nothing: a literal colour resolves to itself, a token to nothing.
@@ -263,7 +263,7 @@ describe('GradientStop colorRef.resolved — the transform list survives the rea
 	// round-trip cannot produce one either.
 	const spGrad = (spPr, clrScheme) => {
 		const xml = `<p:spTree xmlns:p="${P_NS}" xmlns:a="${A_NS}"><p:sp>${spPr}</p:sp></p:spTree>`
-		const spTree = new DOMParser().parseFromString(xml, 'text/xml').documentElement
+		const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 		const el = spTree.getElementsByTagNameNS(P_NS, 'sp')[0]
 		// `bg2` is a MAP token: clrMap sends it to a clrScheme slot (`lt2` in a stock
 		// master), and only then does the scheme hold the literal.
@@ -282,7 +282,7 @@ describe('GradientStop colorRef.resolved — the transform list survives the rea
 				'</a:gsLst><a:lin ang="0"/></a:gradFill></p:spPr>',
 			[['lt2', '1E5155']]
 		)
-		const stop = shape.gradientStops[0]
+		const stop = defined(shape.gradientStops)[0]
 		assertEqual(stop.colorRef.scheme, 'bg2', 'the raw token is still reported')
 		assert(stop.colorRef.resolved, 'the stop now carries a full ResolvedColor')
 		assertEqual(stop.colorRef.resolved.hex, '1E5155', 'base hex is the theme colour before any transform')
@@ -311,13 +311,14 @@ describe('GradientStop colorRef.resolved — the transform list survives the rea
 				'<a:gs pos="100000"><a:hslClr hue="0" sat="0%" lum="100%"/></a:gs>' +
 				'</a:gsLst></a:gradFill></p:spPr>'
 		)
-		const [preset, sys, hsl] = shape.gradientStops
+		const [preset, sys, hsl] = defined(shape.gradientStops)
 
 		assertEqual(preset.colorRef.preset, 'cornflowerBlue', 'the raw prstClr name is reported')
 		assertEqual(preset.colorRef.srgb, null, 'a preset stop states no srgb colour')
 		assertEqual(preset.colorRef.scheme, null, 'nor a scheme token')
-		assertEqual(preset.colorRef.resolved.hex, '6495ED', 'cornflowerBlue resolves through the ECMA preset table')
-		assertEqual(preset.colorRef.resolved.transforms.length, 1, 'and its transform child survives')
+		const presetResolved = defined(preset.colorRef.resolved, 'cornflowerBlue resolves')
+		assertEqual(presetResolved.hex, '6495ED', 'cornflowerBlue resolves through the ECMA preset table')
+		assertEqual(presetResolved.transforms.length, 1, 'and its transform child survives')
 
 		// sysClr and hslClr have no raw field of their own: they are reported through
 		// colorRef.resolved alone, which is stated on the interface rather than inferred.
@@ -330,7 +331,7 @@ describe('GradientStop colorRef.resolved — the transform list survives the rea
 		// With no clrScheme entry the token cannot be made literal. Reporting `null`
 		// keeps "could not see it" distinct from "there was nothing to see".
 		const shape = spGrad('<p:spPr><a:gradFill><a:gsLst>' + MASTER_STOP + '</a:gsLst></a:gradFill></p:spPr>', [])
-		const stop = shape.gradientStops[0]
+		const stop = defined(shape.gradientStops)[0]
 		assertEqual(stop.colorRef.resolved, null, 'an unmapped token yields no resolved colour')
 		assertEqual(stop.colorRef.scheme, 'bg2', 'while the token it could not resolve is still reported')
 	})
@@ -408,7 +409,7 @@ describe('Shape line dash / explicit no-line reads (off-fixture)', () => {
 	// without a theme, so a minimal themeContext stub is enough off-fixture.
 	const spGrad = (spPr) => {
 		const xml = `<p:spTree xmlns:p="${P_NS}" xmlns:a="${A_NS}"><p:sp>${spPr}</p:sp></p:spTree>`
-		const spTree = new DOMParser().parseFromString(xml, 'text/xml').documentElement
+		const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 		const el = spTree.getElementsByTagNameNS(P_NS, 'sp')[0]
 		// Minimal slide fake: only themeContext is exercised by these unit reads.
 		return new AutoShape(el, /** @type {any} */ ({ themeContext: () => ({}) }))
@@ -756,8 +757,10 @@ describe('Group-child absolute geometry (absoluteFrame)', () => {
 			pres.addSlide().addShape(ShapeType.rect, { x: 1, y: 1, w: 3, h: 1, fill: { color: 'CCCCCC' } })
 			return Presentation.load(await pres.toBytes())
 		})()
-		const shape = presentation.slides[0].shapes.find((s) => s.shapeType === 'autoShape' && s.presetGeometry === 'rect')
-		const frame = shape.absoluteFrame
+		const shape = defined(
+			presentation.slides[0].shapes.find((s) => s.shapeType === 'autoShape' && s.presetGeometry === 'rect')
+		)
+		const frame = defined(shape.absoluteFrame)
 		assertEqual(frame.left, shape.left, 'an ungrouped shape: absolute left == own left')
 		assertEqual(frame.top, shape.top, 'an ungrouped shape: absolute top == own top')
 		assertEqual(frame.width, shape.width, 'an ungrouped shape: absolute width == own width')
@@ -776,7 +779,7 @@ describe('Group-child absolute geometry (absoluteFrame)', () => {
 		assert(groups.length > 0, 'expected groups on slide5')
 		const child = groups.flatMap((g) => g.shapes).find((s) => s.top === 3155688 && s.absoluteFrame)
 		assert(child, 'expected a (non-degenerate) group child at raw top 3155688')
-		const frame = child.absoluteFrame
+		const frame = defined(child.absoluteFrame)
 		assertEqual(frame.top, 3301445, 'the child top shifts by the group offset (3155688 → 3301445)')
 		assertEqual(frame.left, child.left, 'this group does not shift x (off.x == chOff.x)')
 		assertEqual(frame.width, child.width, 'ext == chExt, so width is unscaled')
@@ -916,7 +919,7 @@ describe('Per-shape rotation / flip (rotation, flipH, flipV)', () => {
 		const flipped = shapes.find((s) => s.name === 'flipped-h')
 		assert(rotated, 'expected the rotated-45 rect')
 		assert(flipped, 'expected the flipped-h rect')
-		assert(Math.abs(rotated.rotation - 45) < EPS, `rotated-45 reads 45°, got ${rotated.rotation}`)
+		assert(Math.abs(defined(rotated.rotation) - 45) < EPS, `rotated-45 reads 45°, got ${rotated.rotation}`)
 		assertEqual(rotated.flipH, false, 'rotated-45 is not horizontally flipped')
 		assertEqual(rotated.flipV, false, 'rotated-45 is not vertically flipped')
 		assertEqual(flipped.flipH, true, 'flipped-h reads flipH true')

@@ -26,7 +26,7 @@ import { describe, expect, test } from 'vitest'
 import TsPptx, { ChartType, SchemeColor } from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
 import { canonicalDeckIr, diffDeckIr, printScript, printStandaloneScript, readModelToIr } from '../../dist/script.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined, readEntry } from '../helpers.js'
 import { REPO, SCRATCH, SNAPSHOTS, fixtureNames, irFor, readFixture } from './corpus.js'
 
 /** The `schemeClr` tokens the write path can carry as tokens (`SchemeColor`), for the ladder below. */
@@ -128,8 +128,9 @@ describe('standalone printer — corpus invariants', () => {
 		const titles = ir.chrome.masters.map((master) => master.props.title)
 		assertEqual(new Set(titles).size, titles.length, `${name}: duplicate master titles ${titles.join(', ')}`)
 		for (const slide of ir.slides) {
-			if (slide.layout === null) continue
-			const master = ir.chrome.masters.find((entry) => entry.layoutIndex === slide.layout.index)
+			const layout = slide.layout
+			if (layout === null) continue
+			const master = ir.chrome.masters.find((entry) => entry.layoutIndex === layout.index)
 			assert(master !== undefined, `${name}: slide ${slide.number} binds to a layout with no master`)
 		}
 	})
@@ -223,8 +224,9 @@ describe('standalone printer — the emitted script runs, with no template in re
 	test('each slide binds to the master its source layout became', async () => {
 		const { ir, outputIr } = await runStandalone(await readFixture('mixed.pptx'))
 		ir.slides.forEach((slide, index) => {
-			if (slide.layout === null) return
-			const master = ir.chrome.masters.find((entry) => entry.layoutIndex === slide.layout.index)
+			const layout = slide.layout
+			if (layout === null) return
+			const master = defined(ir.chrome.masters.find((entry) => entry.layoutIndex === layout.index))
 			assertEqual(outputIr.slides[index].layout?.name, master.props.title, `slide ${slide.number} layout binding`)
 		})
 	})
@@ -457,7 +459,7 @@ describe('standalone printer — picture crop', () => {
 				})
 			})
 		)
-		const slideXml = await zip.file('ppt/slides/slide1.xml').async('string')
+		const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
 		const bled = slideXml.replace(/<a:srcRect[^>]*\/>/, '<a:srcRect l="-5000"/>')
 		assert(bled !== slideXml, 'the authored srcRect was found and made negative')
 		zip.file('ppt/slides/slide1.xml', bled)

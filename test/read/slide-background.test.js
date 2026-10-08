@@ -17,7 +17,7 @@ import JSZip from 'jszip'
 import { describe, expect, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
 import { readModelToIr } from '../../dist/script.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined, readEntry } from '../helpers.js'
 import { authorRead } from './authored.js'
 import { irFor, openFixture } from './corpus.js'
 
@@ -66,11 +66,11 @@ describe('the converter carries a slide-scoped background instead of dropping it
 		const ir = await irFor(FIXTURE)
 		const background = ir.slides[0].background
 		assert(background, 'slide 1 keeps its own background')
-		assert(
+		const data = defined(
 			background.data,
 			`a slide-scoped picture background reaches BackgroundIr.data (got ${JSON.stringify(background)})`
 		)
-		const asset = ir.assets.find((a) => a.name === background.data.$asset)
+		const asset = ir.assets.find((a) => a.name === data.$asset)
 		assert(asset, 'the referenced asset is registered, so the emitted script can carry the bytes')
 		assertEqual(asset.contentType, 'image/png', 'with the source part’s content type')
 	})
@@ -127,7 +127,7 @@ describe('the converter carries a slide-scoped background instead of dropping it
 			pptx.addSlide()
 		})
 		const zip = await JSZip.loadAsync(buf)
-		const slideXml = await zip.file('ppt/slides/slide1.xml').async('string')
+		const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
 		// The write path's theme holds a gradient in the third `bgFillStyleLst` slot.
 		const bg = '<p:bg><p:bgRef idx="1003"><a:schemeClr val="accent1"/></p:bgRef></p:bg>'
 		zip.file('ppt/slides/slide1.xml', slideXml.replace(/(<p:cSld[^>]*>)/, `$1${bg}`))
@@ -136,8 +136,11 @@ describe('the converter carries a slide-scoped background instead of dropping it
 
 		const ir = readModelToIr(pres)
 		assertEqual(ir.slides[0].background?.type, 'gradient', 'the gradient it resolves to is carried')
-		const note = ir.fidelity.find((n) => n.construct === 'slide.background')
-		assertEqual(note?.disposition, 'flattened', 'and the reference itself is noted as flattened')
+		const note = defined(
+			ir.fidelity.find((n) => n.construct === 'slide.background'),
+			'a slide.background note'
+		)
+		assertEqual(note.disposition, 'flattened', 'and the reference itself is noted as flattened')
 		assert(note.detail.includes('gradient it currently resolves to'), `the note names the fill (got ${note.detail})`)
 	})
 

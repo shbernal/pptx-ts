@@ -13,7 +13,7 @@ import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import { Presentation } from '../../dist/read.js'
 import { authorRead, firstTable, schemaErrors, validatorInstalled } from './authored.js'
-import { assert, assertEqual } from '../helpers.js'
+import { assert, assertEqual, defined, readEntry } from '../helpers.js'
 
 /** A one-cell table carrying every new `a:tcPr` construct at once. */
 function decoratedTable(pres) {
@@ -145,7 +145,7 @@ describe('TableCell.id / .headerIds — a:tc/@id and a:tcPr/a:headers', () => {
 			)
 		})
 		const zip = await JSZip.loadAsync(buf)
-		let xml = await zip.file('ppt/slides/slide1.xml').async('string')
+		let xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 
 		// The nine `<a:tc …>` in document order; header cells are 1, 2, 3 and 6.
 		const ids = { 1: 'HeaderA', 2: 'HeaderB', 3: 'HeaderC', 6: 'HeaderD' }
@@ -200,8 +200,11 @@ describe('TableCell.textFrame carries the owning part-s relationships', () => {
 		const cellRun = firstTable(presentation).cell(0, 0).textFrame.paragraphs[0].runs[0]
 		assertEqual(cellRun.hyperlink.url, URL, 'the cell run resolves its url')
 
-		const box = presentation.slides[0].shapes.find((shape) => shape.shapeType === 'autoShape' && shape.textFrame)
-		const boxRun = box.textFrame.paragraphs[0].runs[0]
-		assertEqual(cellRun.hyperlink.url, boxRun.hyperlink.url, 'both runs on the slide agree')
+		const box = defined(
+			presentation.slides[0].shapes.find((shape) => shape.shapeType === 'autoShape' && shape.textFrame),
+			'the text box'
+		)
+		const boxRun = defined(box.textFrame).paragraphs[0].runs[0]
+		assertEqual(cellRun.hyperlink.url, defined(boxRun.hyperlink).url, 'both runs on the slide agree')
 	})
 })
