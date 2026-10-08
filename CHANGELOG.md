@@ -17,6 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `string | null` and the lookups only `number` or `string`. At run time `shapeById(null)` also
   matched the first shape whose `p:cNvPr` has no `@id`; it now returns `undefined`. No migration
   is needed.
+- **`Slide.newAutoPagedSlides` is typed as always present.** The interface declared it optional,
+  though every slide carries the list, empty until an auto-paging table spills. Under
+  `strictNullChecks` the documented `for (const made of slide.newAutoPagedSlides)` did not compile.
+  Code that guarded with `?.` or `?? []` still works; a class implementing `Slide` itself now has to
+  provide the property.
 
 - **The default branch is now `main`, renamed from `master`.** The library is unchanged. A
   dependency on `github:shbernal/ts-pptx#master` should switch to `#main`, or better, to a pinned

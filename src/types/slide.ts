@@ -187,7 +187,7 @@ export interface Slide {
 	 * slide.addTable(rows, { autoPage: true })
 	 * for (const made of slide.newAutoPagedSlides) made.addText('continued', { x: 0.5, y: 0.2 })
 	 */
-	readonly newAutoPagedSlides?: Slide[]
+	readonly newAutoPagedSlides: Slide[]
 
 	/**
 	 * Slide-show transition played when advancing to this slide (`p:transition`).
