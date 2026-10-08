@@ -13,19 +13,19 @@
 // table.test.js instead.
 
 import { describe, test } from 'vitest'
-import { TableStyle } from '../../dist/node.js'
+import { TableStyle, type BorderProps, type TableRow, type TsPptx } from '../../dist/node.js'
 import { authorRead, firstTable, schemaErrors, validatorInstalled } from './authored.ts'
 import { assert, assertEqual, defined } from '../helpers.ts'
 
 /** A 2×2 table whose top-left cell carries a full four-side border set. */
-function borderedTable(pres) {
-	const border = [
+function borderedTable(pres: TsPptx) {
+	const border: [BorderProps, BorderProps, BorderProps, BorderProps] = [
 		{ type: 'solid', color: 'FF0000', width: 3 }, // top
 		{ type: 'dash', color: '00FF00', width: 1 }, // right
 		{ type: 'solid', color: '0000FF', width: 2 }, // bottom
 		{ type: 'none' }, // left (suppressed)
 	]
-	const rows = [
+	const rows: TableRow[] = [
 		[{ text: 'A', options: { border } }, { text: 'B' }],
 		[{ text: 'C' }, { text: 'D' }],
 	]
@@ -91,7 +91,7 @@ describe('TableCell.borders — a:tcPr/a:lnL|lnR|lnT|lnB', () => {
 			defined(firstTable(await authorRead(borderedTable).then((r) => r.presentation))).cell(1, 1)
 		).borders
 		assert(borders, 'even an unstyled cell carries an authored border set')
-		for (const side of ['left', 'right', 'top', 'bottom']) {
+		for (const side of ['left', 'right', 'top', 'bottom'] as const) {
 			const edge = borders[side]
 			assert(edge, `${side} edge is present`)
 			assertEqual(edge.noFill, true, `${side} edge reads noFill`)

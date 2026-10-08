@@ -15,16 +15,16 @@
 
 import { describe, test } from 'vitest'
 import TsPptx from '../../dist/node.js'
-import { Presentation } from '../../dist/read.js'
+import { Presentation, type Table, type TableCell } from '../../dist/read.js'
 import JSZip from 'jszip'
 import { firstTable } from './authored.ts'
 import { assert, assertEqual, defined, readEntry, caughtSync } from '../helpers.ts'
 
 /** Author a deck, load it for editing, and return the presentation plus its first table. */
-async function editable(build) {
+async function editable(build: (pres: TsPptx) => void) {
 	const pres = new TsPptx()
 	build(pres)
-	const buf = /** @type {Uint8Array} */ (await pres.toBytes())
+	const buf = await pres.toBytes()
 	const presentation = await Presentation.load(buf)
 	const table = firstTable(presentation)
 	assert(table, 'the authored table is found')
@@ -32,7 +32,7 @@ async function editable(build) {
 }
 
 /** Reload a presentation from its own saved bytes, and return it with its first table. */
-async function reload(presentation) {
+async function reload(presentation: Presentation) {
 	const reloaded = await Presentation.load(await presentation.save())
 	return { presentation: reloaded, table: defined(firstTable(reloaded), 'the reloaded table is found') }
 }
@@ -44,20 +44,20 @@ async function reload(presentation) {
  * not, so a message assertion breaks on any wording improvement. Returns `null` when nothing
  * threw, which fails the comparison with a legible diff rather than a bare `false`.
  */
-function codeOfThrow(fn) {
+function codeOfThrow(fn: () => unknown) {
 	const err = caughtSync(fn)
 	if (err === null) return null
 	return err.code ?? `(threw without a code: ${err.message})`
 }
 
 /** Save the edited deck and return its slide part. */
-async function savedSlide(presentation) {
+async function savedSlide(presentation: Presentation) {
 	const zip = await JSZip.loadAsync(await presentation.save())
 	return readEntry(zip, 'ppt/slides/slide1.xml')
 }
 
 /** A plain 3x3 table with no styling to get in the way. */
-function plainTable(p) {
+function plainTable(p: TsPptx) {
 	p.addSlide().addTable(
 		[
 			[{ text: 'A1' }, { text: 'B1' }, { text: 'C1' }],
@@ -88,7 +88,7 @@ const TCPR_SEQUENCE = [
 ]
 
 /** The direct element children of the first `a:tcPr`, in document order. */
-function tcPrChildren(xml, index = 0) {
+function tcPrChildren(xml: string, index = 0) {
 	const blocks = xml.match(/<a:tcPr(?:\/>|[^>]*>[\s\S]*?<\/a:tcPr>)/g) || []
 	const block = blocks[index]
 	assert(block, `expected an a:tcPr at index ${index}; got: ` + xml)
@@ -105,14 +105,14 @@ function tcPrChildren(xml, index = 0) {
  * Every border wraps its own `a:noFill` or `a:solidFill` for its stroke, so asking "does
  * this cell have a noFill" of the raw block answers about the borders, not the cell.
  */
-function tcPrFillOnly(xml) {
+function tcPrFillOnly(xml: string) {
 	return (xml.match(/<a:tcPr(?:\/>|[^>]*>[\s\S]*?<\/a:tcPr>)/g) || []).map((block) =>
 		block.replace(/<a:ln(?:L|R|T|B|TlToBr|BlToTr)\b[\s\S]*?<\/a:ln(?:L|R|T|B|TlToBr|BlToTr)>/g, '')
 	)
 }
 
 /** Assert `a:tcPr`'s children are a subsequence of the schema order. */
-function assertTcPrOrder(xml, index = 0) {
+function assertTcPrOrder(xml: string, index = 0) {
 	const children = tcPrChildren(xml, index)
 	const positions = children.map((name) => TCPR_SEQUENCE.indexOf(name))
 	for (let i = 1; i < positions.length; i++) {
@@ -125,7 +125,7 @@ function assertTcPrOrder(xml, index = 0) {
 }
 
 /** Whether a cell sets the merge flag `name` (`hMerge` or `vMerge`). */
-function mergeFlag(cell, name) {
+function mergeFlag(cell: TableCell, name: 'hMerge' | 'vMerge') {
 	const value = cell.element_.getAttribute(name)
 	return value === '1' || value === 'true'
 }
@@ -141,7 +141,7 @@ function mergeFlag(cell, name) {
  * `mergeCells` repeat spans on covered cells, another producer may not, so both forms pass and
  * neither is required.
  */
-function assertGridConsistent(table) {
+function assertGridConsistent(table: Table) {
 	const colCount = table.columnCount
 	const grid = table.rows.map((row) => row.cells)
 	for (const [r, cells] of grid.entries()) {
@@ -179,7 +179,7 @@ function assertGridConsistent(table) {
 			)
 			assertEqual(mergeFlag(cell, 'hMerge'), c > originCol, `${at} is hMerge exactly when its origin is to its left`)
 			assertEqual(mergeFlag(cell, 'vMerge'), r > originRow, `${at} is vMerge exactly when its origin is above it`)
-			for (const name of ['gridSpan', 'rowSpan']) {
+			for (const name of ['gridSpan', 'rowSpan'] as const) {
 				const own = cell.element_.getAttribute(name)
 				if (own !== null && own !== '') {
 					assertEqual(Number(own), origin[name], `${at} repeats its origin's ${name}, if it carries one`)
@@ -190,7 +190,7 @@ function assertGridConsistent(table) {
 }
 
 /** A 3x3 table whose top-left 2x2 is merged by the writer, which repeats the spans on covered cells. */
-function writerMergedTable(p) {
+function writerMergedTable(p: TsPptx) {
 	p.addSlide().addTable(
 		[
 			[{ text: 'X', options: { rowspan: 2, colspan: 2 } }, { text: 'C1' }],
@@ -205,7 +205,7 @@ function writerMergedTable(p) {
  * A writer merge with the spans taken off its covered cells: the form a producer that does not
  * repeat them writes. Nothing in this library writes it any more, and an edit still has to take it.
  */
-function stripCoveredSpans(table) {
+function stripCoveredSpans(table: Table) {
 	for (const row of table.rows) {
 		for (const cell of row.cells) {
 			if (!cell.isMergeContinuation) continue
@@ -217,14 +217,14 @@ function stripCoveredSpans(table) {
 }
 
 /** The forms a 2x2 merge at the top-left of a 3x3 table reaches an edit in. */
-const MERGE_FORMS = [
+const MERGE_FORMS: { form: string; build: (p: TsPptx) => void; merge: (table: Table) => void }[] = [
 	{ form: 'the writer', build: writerMergedTable, merge: () => {} },
 	{ form: 'mergeCells', build: plainTable, merge: (table) => table.mergeCells(0, 0, 1, 1) },
 	{ form: 'a producer that repeats no spans', build: writerMergedTable, merge: stripCoveredSpans },
 ]
 
 /** Every structural edit, at every position relative to the merge. */
-const STRUCTURAL_EDITS = [
+const STRUCTURAL_EDITS: { edit: string; apply: (table: Table) => void }[] = [
 	{ edit: 'addRow(0)', apply: (table) => table.addRow(0) },
 	{ edit: 'addRow(1)', apply: (table) => table.addRow(1) },
 	{ edit: 'addRow(2)', apply: (table) => table.addRow(2) },
@@ -654,7 +654,14 @@ describe('Table structural edits — columns', () => {
 
 	test('inserting through a horizontal merge widens it', async () => {
 		const { table } = await editable((p) => {
-			p.addSlide().addTable([[{ text: 'wide', options: { colspan: 3 } }], ['A2', 'B2', 'C2']], { x: 1, y: 1, w: 9 })
+			p.addSlide().addTable(
+				[[{ text: 'wide', options: { colspan: 3 } }], [{ text: 'A2' }, { text: 'B2' }, { text: 'C2' }]],
+				{
+					x: 1,
+					y: 1,
+					w: 9,
+				}
+			)
 		})
 		assertEqual(defined(table.cell(0, 0)).gridSpan, 3, 'the span starts at 3')
 
@@ -666,7 +673,14 @@ describe('Table structural edits — columns', () => {
 
 	test('removing a column inside a merge narrows it and keeps the content', async () => {
 		const { table } = await editable((p) => {
-			p.addSlide().addTable([[{ text: 'wide', options: { colspan: 3 } }], ['A2', 'B2', 'C2']], { x: 1, y: 1, w: 9 })
+			p.addSlide().addTable(
+				[[{ text: 'wide', options: { colspan: 3 } }], [{ text: 'A2' }, { text: 'B2' }, { text: 'C2' }]],
+				{
+					x: 1,
+					y: 1,
+					w: 9,
+				}
+			)
 		})
 
 		table.removeColumn(1)

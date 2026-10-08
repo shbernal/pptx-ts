@@ -8,36 +8,63 @@
 // looking option the writer ignores would still fail here.
 
 import { describe, test } from 'vitest'
-import TsPptx, { TableStyle } from '../../dist/node.js'
+import TsPptx, {
+	TableStyle,
+	type FillOption,
+	type ShapeFillProps,
+	type TableProps,
+	type TableRow,
+} from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { readModelToIr } from '../../dist/script.js'
+import { readModelToIr, type CallIr, type DeckIr } from '../../dist/script.js'
 import JSZip from 'jszip'
 import { authorRead, authorReadWithFixtureStyles, firstTable } from './authored.ts'
 import { assert, assertEqual, defined } from '../helpers.ts'
 
 /** The IR's single `addTable` call, or a failing assertion. */
-function tableCall(ir) {
+function tableCall(ir: DeckIr) {
 	const call = ir.slides.flatMap((slide) => slide.calls).find((c) => c.method === 'addTable')
 	assert(call, 'the IR carries an addTable call')
 	return call
 }
 
+/** An `addTable` call's rows, as the write API takes them. */
+function rowsOf(call: CallIr) {
+	return call.args[0] as TableRow[]
+}
+
+/** An `addTable` call's table options, as the write API takes them. */
+function optionsOf(call: CallIr) {
+	return call.args[1] as TableProps
+}
+
+/** The options of the cell at (`row`, `col`) of an `addTable` call, which must carry some. */
+function cellOptionsOf(call: CallIr, row: number, col: number) {
+	return defined(rowsOf(call)[row][col].options, `cell (${row},${col}) carries options`)
+}
+
+/** A fill given as its object form, the only one the mapper emits. */
+function fillProps(fill: FillOption | undefined): ShapeFillProps {
+	assert(typeof fill === 'object', 'the fill is carried as an object; got: ' + JSON.stringify(fill))
+	return fill
+}
+
 /** Note constructs recorded anywhere in the deck. */
-function constructs(ir) {
+function constructs(ir: DeckIr) {
 	return new Set(ir.fidelity.map((note) => note.construct))
 }
 
 /** Replay an IR `addTable` call through the write API and return the slide part. */
-async function replay(call) {
+async function replay(call: CallIr) {
 	const pres = new TsPptx()
-	pres.addSlide().addTable(call.args[0], call.args[1])
-	const buf = /** @type {Uint8Array} */ (await pres.toBytes())
+	pres.addSlide().addTable(rowsOf(call), optionsOf(call))
+	const buf = await pres.toBytes()
 	const zip = await JSZip.loadAsync(buf)
 	return defined(zip.file('ppt/slides/slide1.xml')).async('string')
 }
 
 /** Author `build`, read it back, and convert to the deck IR. */
-async function irFor(build) {
+async function irFor(build: (pres: TsPptx) => unknown) {
 	const { buf } = await authorRead(build)
 	return readModelToIr(await Presentation.load(buf))
 }
@@ -47,7 +74,7 @@ async function irFor(build) {
  * `MEDIUM_STYLE_2_ACCENT_1` resolves a style that really does band its rows. The write API
  * cannot define one — see `authorReadWithFixtureStyles`.
  */
-async function irForStyled(build) {
+async function irForStyled(build: (pres: TsPptx) => unknown) {
 	const { buf } = await authorReadWithFixtureStyles(build)
 	return readModelToIr(await Presentation.load(buf))
 }
@@ -63,9 +90,9 @@ describe('table replication — vertical cell text (a:tcPr/@vert)', () => {
 		})
 
 		const call = tableCall(ir)
-		assertEqual(call.args[0][0][0].options.textDirection, 'vert270', 'the mapper carries the direction')
+		assertEqual(cellOptionsOf(call, 0, 0).textDirection, 'vert270', 'the mapper carries the direction')
 		assert(
-			call.args[0][0][1].options?.textDirection === undefined,
+			rowsOf(call)[0][1].options?.textDirection === undefined,
 			'a horizontal cell carries nothing — horz is the schema default'
 		)
 		assert(!constructs(ir).has('table.cell.vert'), 'a writable direction raises no note')
@@ -83,7 +110,7 @@ describe('table replication — cell border dash presets', () => {
 		// The write API is the only authoring surface here, so the dashes it can emit are the
 		// dashes this leg can prove; `dashType` now spans the whole ST_PresetLineDashVal set,
 		// which is the point.
-		const dashes = ['lgDashDot', 'sysDot', 'dot', 'lgDash']
+		const dashes = ['lgDashDot', 'sysDot', 'dot', 'lgDash'] as const
 		const ir = await irFor((pres) => {
 			pres.addSlide().addTable(
 				[
@@ -98,10 +125,10 @@ describe('table replication — cell border dash presets', () => {
 
 		const call = tableCall(ir)
 		for (const [idx, dash] of dashes.entries()) {
-			const border = call.args[0][0][idx].options.border
+			const border = cellOptionsOf(call, 0, idx).border
 			assert(Array.isArray(border), `cell ${idx} carries a four-side border tuple`)
 			for (const side of border) {
-				assertEqual(side.dashType, dash, `cell ${idx} keeps ${dash} on every side`)
+				assertEqual(side?.dashType, dash, `cell ${idx} keeps ${dash} on every side`)
 			}
 		}
 
@@ -135,11 +162,11 @@ describe('table replication — cell border dash presets', () => {
 		})
 
 		const call = tableCall(ir)
-		const diagonal = call.args[0][0][0].options.diagonal
+		const diagonal = cellOptionsOf(call, 0, 0).diagonal
 		assert(diagonal, 'the mapper carries a diagonal object separate from the edge tuple')
-		assertEqual(diagonal.tlToBr.color, 'C00000', '╲ colour')
-		assertEqual(diagonal.tlToBr.width, 2, '╲ width')
-		assertEqual(diagonal.blToTr.dashType, 'lgDashDot', '╱ keeps its exact dash')
+		assertEqual(diagonal.tlToBr?.color, 'C00000', '╲ colour')
+		assertEqual(diagonal.tlToBr?.width, 2, '╲ width')
+		assertEqual(diagonal.blToTr?.dashType, 'lgDashDot', '╱ keeps its exact dash')
 		assert(!constructs(ir).has('table.cell.borders.diagonal'), 'the old drop note is gone')
 
 		const xml = await replay(call)
@@ -156,10 +183,11 @@ describe('table replication — cell border dash presets', () => {
 			})
 		})
 
-		const border = tableCall(ir).args[0][0][0].options.border
+		const border = cellOptionsOf(tableCall(ir), 0, 0).border
+		assert(Array.isArray(border), 'the cell carries a four-side border tuple')
 		for (const side of border) {
-			assert(side.dashType === undefined, 'a solid rule carries no dashType; got: ' + JSON.stringify(side))
-			assertEqual(side.type, 'solid', 'it is still reported as solid')
+			assert(side?.dashType === undefined, 'a solid rule carries no dashType; got: ' + JSON.stringify(side))
+			assertEqual(side?.type, 'solid', 'it is still reported as solid')
 		}
 	})
 })
@@ -169,17 +197,17 @@ describe('table replication — the table background', () => {
 		const ir = await irFor((pres) => {
 			pres.addSlide().addTable(
 				[
-					['A', 'B'],
-					['C', 'D'],
+					[{ text: 'A' }, { text: 'B' }],
+					[{ text: 'C' }, { text: 'D' }],
 				],
 				{ x: 1, y: 1, w: 8, tableFill: { color: 'F2F2F2' } }
 			)
 		})
 
 		const call = tableCall(ir)
-		assertEqual(call.args[1].tableFill.color, 'F2F2F2', 'the background maps to tableFill')
-		assert(call.args[1].fill === undefined, 'and not to `fill`, which would stamp it onto every cell')
-		for (const cell of call.args[0].flat()) {
+		assertEqual(fillProps(optionsOf(call).tableFill).color, 'F2F2F2', 'the background maps to tableFill')
+		assert(optionsOf(call).fill === undefined, 'and not to `fill`, which would stamp it onto every cell')
+		for (const cell of rowsOf(call).flat()) {
 			assert(cell.options?.fill === undefined, 'no cell picks up the background as its own fill')
 		}
 
@@ -190,7 +218,7 @@ describe('table replication — the table background', () => {
 
 	test('a gradient background round-trips with its stops and angle', async () => {
 		const ir = await irFor((pres) => {
-			pres.addSlide().addTable([['A']], {
+			pres.addSlide().addTable([[{ text: 'A' }]], {
 				x: 1,
 				y: 1,
 				w: 4,
@@ -209,8 +237,8 @@ describe('table replication — the table background', () => {
 		})
 
 		const call = tableCall(ir)
-		const gradient = call.args[1].tableFill.gradient
-		assertEqual(gradient.kind, 'linear', 'kind')
+		const gradient = defined(fillProps(optionsOf(call).tableFill).gradient)
+		assert(gradient.kind === 'linear', `kind is linear; got ${gradient.kind}`)
 		assertEqual(gradient.angle, 90, 'the angle needs no conversion — both sides use OOXML degrees')
 		assertEqual(gradient.stops.length, 2, 'both stops')
 		assertEqual(gradient.stops[1].color, '1A2B3C', 'the end stop keeps its colour')
@@ -258,12 +286,13 @@ describe('table replication — non-solid cell fills', () => {
 		})
 
 		const call = tableCall(ir)
-		const [grad, hatch] = call.args[0][0]
-		assertEqual(grad.options.fill.type, 'gradient', 'the gradient cell keeps its type')
-		assertEqual(grad.options.fill.gradient.stops.length, 2, 'and its stops')
-		assertEqual(hatch.options.fill.type, 'pattern', 'the pattern cell keeps its type')
-		assertEqual(hatch.options.fill.pattern.preset, 'diagCross', 'and its preset')
-		assertEqual(hatch.options.fill.pattern.fgColor, '1A2B3C', 'and its foreground')
+		const grad = fillProps(cellOptionsOf(call, 0, 0).fill)
+		const hatch = fillProps(cellOptionsOf(call, 0, 1).fill)
+		assertEqual(grad.type, 'gradient', 'the gradient cell keeps its type')
+		assertEqual(grad.gradient?.stops.length, 2, 'and its stops')
+		assertEqual(hatch.type, 'pattern', 'the pattern cell keeps its type')
+		assertEqual(hatch.pattern?.preset, 'diagCross', 'and its preset')
+		assertEqual(hatch.pattern?.fgColor, '1A2B3C', 'and its foreground')
 
 		const xml = await replay(call)
 		assert(xml.includes('<a:gradFill'), 'the gradient cell replays as a gradient')
@@ -286,9 +315,10 @@ describe("table replication — a cell's own fill versus the style's banding", (
 			)
 		})
 
-		const cells = tableCall(ir).args[0]
-		assertEqual(cells[0][0].options.fill.color, 'FF0000', "the cell's own fill is carried")
-		assertEqual(cells[1][0].options.fill.color, 'C00000', 'and so is the other one')
+		const call = tableCall(ir)
+		const cells = rowsOf(call)
+		assertEqual(fillProps(cellOptionsOf(call, 0, 0).fill).color, 'FF0000', "the cell's own fill is carried")
+		assertEqual(fillProps(cellOptionsOf(call, 1, 0).fill).color, 'C00000', 'and so is the other one')
 		assert(cells[0][1].options?.fill === undefined, 'a cell with no fill of its own carries none')
 		assert(cells[1][1].options?.fill === undefined, 'even where the style bands it')
 		assert(!constructs(ir).has('table.cell.fill'), 'and nothing is recorded as lost')
@@ -315,8 +345,8 @@ describe("table replication — a cell's own fill versus the style's banding", (
 		assertEqual(ghost.resolvedFill, null, '…and every colour accessor reports null, as it does for an inherited fill')
 
 		const call = tableCall(readModelToIr(await Presentation.load(buf)))
-		assertEqual(call.args[0][0][0].options.fill.type, 'none', 'the IR carries the suppression')
-		assert(call.args[0][0][1].options?.fill === undefined, 'while the inheriting cell is still left to the style')
+		assertEqual(fillProps(cellOptionsOf(call, 0, 0).fill).type, 'none', 'the IR carries the suppression')
+		assert(rowsOf(call)[0][1].options?.fill === undefined, 'while the inheriting cell is still left to the style')
 
 		// The cell's own fill is the last child of `a:tcPr`, and any edge line carrying its own
 		// `a:noFill` closes with `</a:lnX>` — so the assertion is on position, not on the element
@@ -334,7 +364,7 @@ describe("table replication — a cell's own fill versus the style's banding", (
 			pres.addSlide().addTable([[{ text: 'A', options: { fill: { color: 'accent2' } } }]], { x: 1, y: 1, w: 4 })
 		})
 		assertEqual(
-			tableCall(ir).args[0][0][0].options.fill.color,
+			fillProps(cellOptionsOf(tableCall(ir), 0, 0).fill).color,
 			'accent2',
 			'the token survives, so the copy tracks its theme'
 		)
@@ -368,11 +398,12 @@ describe('table replication — anchorCtr and cell3D', () => {
 		})
 
 		const call = tableCall(ir)
-		const [first, second] = call.args[0][0]
-		assertEqual(first.options.anchorCtr, true, 'anchorCtr carries')
-		assertEqual(first.options.cell3D.preset, 'artDeco', 'the bevel preset carries')
-		assertEqual(first.options.cell3D.width, 7, 'and its size, in points on both sides')
-		assertEqual(first.options.cell3D.lightRig.rig, 'threePt', 'and the light rig')
+		const first = cellOptionsOf(call, 0, 0)
+		const second = rowsOf(call)[0][1]
+		assertEqual(first.anchorCtr, true, 'anchorCtr carries')
+		assertEqual(first.cell3D?.preset, 'artDeco', 'the bevel preset carries')
+		assertEqual(first.cell3D?.width, 7, 'and its size, in points on both sides')
+		assertEqual(first.cell3D?.lightRig?.rig, 'threePt', 'and the light rig')
 		// `false` is the schema default, so an unset cell must carry nothing rather than an
 		// explicit false — otherwise every plain cell in a replica grows an attribute.
 		assert(second.options?.anchorCtr === undefined, 'an unset cell carries no anchorCtr')
@@ -443,17 +474,18 @@ describe('table replication — every new construct at once', () => {
 		assertEqual(raised.join(','), '', 'no table construct is reported as lost')
 
 		const call = tableCall(ir)
-		const options = call.args[0][0][0].options
+		const options = cellOptionsOf(call, 0, 0)
 		assertEqual(options.anchorCtr, true, 'anchorCtr')
 		assertEqual(options.textDirection, 'vert270', 'textDirection')
 		assertEqual(options.horzOverflow, 'overflow', 'horzOverflow')
 		assertEqual(options.valign, 'middle', 'valign')
-		assertEqual(options.cell3D.preset, 'artDeco', 'cell3D')
-		assertEqual(options.diagonal.blToTr.dashType, 'sysDashDotDot', 'the diagonal keeps its exact dash')
-		assertEqual(options.border[0].dashType, 'lgDashDot', 'and so does the top edge')
-		assertEqual(options.border[3].type, 'none', 'a suppressed edge stays suppressed')
-		assertEqual(options.fill.color, 'FFEECC', "the cell's own fill")
-		assertEqual(call.args[1].tableFill.color, 'F2F2F2', 'and the table background, separately')
+		assertEqual(options.cell3D?.preset, 'artDeco', 'cell3D')
+		assertEqual(options.diagonal?.blToTr?.dashType, 'sysDashDotDot', 'the diagonal keeps its exact dash')
+		assert(Array.isArray(options.border), 'the edges are a four-side tuple')
+		assertEqual(options.border[0]?.dashType, 'lgDashDot', 'and so does the top edge')
+		assertEqual(options.border[3]?.type, 'none', 'a suppressed edge stays suppressed')
+		assertEqual(fillProps(options.fill).color, 'FFEECC', "the cell's own fill")
+		assertEqual(fillProps(optionsOf(call).tableFill).color, 'F2F2F2', 'and the table background, separately')
 
 		// Replaying must produce the same constructs again — the point of a round trip is that
 		// it closes, not merely that the first hop reads.

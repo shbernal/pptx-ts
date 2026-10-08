@@ -5,21 +5,17 @@
 // `table-styles.pptx` fixture (three tables, each a distinct built-in style, all
 // cells with an empty `<a:tcPr/>`, `firstRow` + `bandRow` on).
 
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, test } from 'vitest'
-import { isGraphicFrame } from '../../dist/read.js'
+import { isGraphicFrame, type Table } from '../../dist/read.js'
 import { assert, assertEqual } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 async function tables() {
 	const pres = await openFixture('table-styles')
 	return pres.slides[0].shapes.filter(isGraphicFrame).flatMap((s) => (s.table ? [s.table] : []))
 }
 
-function fillHex(table, row, col) {
+function fillHex(table: Table, row: number, col: number) {
 	return table.cell(row, col)?.resolvedFill?.effectiveHex ?? null
 }
 

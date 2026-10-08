@@ -11,12 +11,13 @@
 
 import { describe, test } from 'vitest'
 import JSZip from 'jszip'
+import type TsPptx from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
 import { authorRead, firstTable, schemaErrors, validatorInstalled } from './authored.ts'
 import { assert, assertEqual, defined, readEntry } from '../helpers.ts'
 
 /** A one-cell table carrying every new `a:tcPr` construct at once. */
-function decoratedTable(pres) {
+function decoratedTable(pres: TsPptx) {
 	pres.addSlide().addTable(
 		[
 			[
@@ -148,14 +149,14 @@ describe('TableCell.id / .headerIds — a:tc/@id and a:tcPr/a:headers', () => {
 		let xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 
 		// The nine `<a:tc …>` in document order; header cells are 1, 2, 3 and 6.
-		const ids = { 1: 'HeaderA', 2: 'HeaderB', 3: 'HeaderC', 6: 'HeaderD' }
+		const ids: Record<number, string> = { 1: 'HeaderA', 2: 'HeaderB', 3: 'HeaderC', 6: 'HeaderD' }
 		let tcIndex = -1
 		xml = xml.replace(/<a:tc[ >]/g, (match) => {
 			tcIndex++
 			return ids[tcIndex] ? `<a:tc id="${ids[tcIndex]}"${match.endsWith('>') ? '>' : ' '}` : match
 		})
 		// `a:headers` is the LAST child of the sequence, so it appends just before the close.
-		const headers = { 4: ['HeaderA', 'HeaderC'], 5: ['HeaderB', 'HeaderC'] }
+		const headers: Record<number, string[]> = { 4: ['HeaderA', 'HeaderC'], 5: ['HeaderB', 'HeaderC'] }
 		let prIndex = -1
 		xml = xml.replace(/<\/a:tcPr>/g, (match) => {
 			prIndex++

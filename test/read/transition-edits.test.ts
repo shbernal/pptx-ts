@@ -18,7 +18,7 @@ const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const SLIDE_CT = 'application/vnd.openxmlformats-officedocument.presentationml.slide+xml'
 
 /** A synthetic read-model Slide over a hand-authored `p:sld` body (shape tree is empty). */
-function slide(bodyXml) {
+function slide(bodyXml: string) {
 	const xml = `<p:sld xmlns:p="${P_NS}"><p:cSld><p:spTree/></p:cSld>${bodyXml}</p:sld>`
 	const part = new Part('/ppt/slides/slide1.xml', SLIDE_CT, new TextEncoder().encode(xml))
 	// @ts-expect-error a stand-in deck: the edits under test never reach the presentation
@@ -79,7 +79,7 @@ describe('parseTransition — AlternateContent forms', () => {
 
 describe('prefixFor — modern type namespaces', () => {
 	/** A transition whose type element is `<localName …decl spokes="8"/>`. */
-	const typedSlide = (opening) => slide(`<p:transition><${opening} spokes="8"/></p:transition>`)
+	const typedSlide = (opening: string) => slide(`<p:transition><${opening} spokes="8"/></p:transition>`)
 
 	test('a p15 type element reports the p15 prefix, with the xmlns declaration excluded from the variant', () => {
 		const info = defined(

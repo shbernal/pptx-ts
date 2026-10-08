@@ -10,35 +10,34 @@
 
 import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
-import { TextFrame } from '../../dist/read.js'
-/** @import { Part } from '../../dist/read.js' */
+import { TextFrame, type Part, type PlaceholderRef, type ThemeContext } from '../../dist/read.js'
 import { assertEqual, defined } from '../helpers.ts'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
 
-const stubPart = () => /** @type {Part} */ ({ markDirty() {} })
+const stubPart = () => ({ markDirty() {} }) as Pick<Part, 'markDirty'> as Part
 
-function parse(xml) {
+function parse(xml: string) {
 	return defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 }
 
 /** A layout/master root (`p:sldLayout` / `p:sldMaster`) wrapping shape-tree XML. */
-function root(local, spTreeXml) {
+function root(local: string, spTreeXml: string) {
 	return parse(
 		`<p:${local} xmlns:p="${P_NS}" xmlns:a="${A_NS}"><p:cSld><p:spTree>${spTreeXml}</p:spTree></p:cSld>${''}</p:${local}>`
 	)
 }
 
 /** A master root with a `p:txStyles` block appended after the shape tree. */
-function masterWithTxStyles(spTreeXml, txStylesXml) {
+function masterWithTxStyles(spTreeXml: string, txStylesXml: string) {
 	return parse(
 		`<p:sldMaster xmlns:p="${P_NS}" xmlns:a="${A_NS}"><p:cSld><p:spTree>${spTreeXml}</p:spTree></p:cSld>${txStylesXml}</p:sldMaster>`
 	)
 }
 
 /** A placeholder shape carrying an a:lstStyle (and optional a:bodyPr) in its txBody. */
-function phSp(type, idx, { lstStyle = '', bodyPr = '<a:bodyPr/>' } = {}) {
+function phSp(type: string | null, idx: string, { lstStyle = '', bodyPr = '<a:bodyPr/>' } = {}) {
 	const phAttrs = `${type === null ? '' : `type="${type}" `}idx="${idx}"`
 	return (
 		`<p:sp><p:nvSpPr><p:cNvPr id="2" name="ph"/><p:cNvSpPr/><p:nvPr><p:ph ${phAttrs}/></p:nvPr></p:nvSpPr>` +
@@ -47,12 +46,12 @@ function phSp(type, idx, { lstStyle = '', bodyPr = '<a:bodyPr/>' } = {}) {
 }
 
 /** A lvl1 defRPr solidFill lstStyle fragment. */
-const lvl1Fill = (hex) =>
+const lvl1Fill = (hex: string) =>
 	`<a:lvl1pPr><a:defRPr><a:solidFill><a:srgbClr val="${hex}"/></a:solidFill></a:defRPr></a:lvl1pPr>`
-const lvl1Size = (sz) => `<a:lvl1pPr><a:defRPr sz="${sz}"/></a:lvl1pPr>`
+const lvl1Size = (sz: string) => `<a:lvl1pPr><a:defRPr sz="${sz}"/></a:lvl1pPr>`
 
 /** The first run of a placeholder TextFrame resolving against `flatten`. */
-function phRun(flatten, ph = { type: 'body', idx: '0' }) {
+function phRun(flatten: ThemeContext, ph: PlaceholderRef = { type: 'body', idx: '0' }) {
 	const txBody = parse(
 		`<p:txBody xmlns:p="${P_NS}" xmlns:a="${A_NS}"><a:bodyPr/><a:p><a:r><a:t>x</a:t></a:r></a:p></p:txBody>`
 	)
@@ -65,11 +64,11 @@ function phRun(flatten, ph = { type: 'body', idx: '0' }) {
 }
 
 /** The hex the first run's colour resolves to; failing when it resolves to none. */
-function phHex(flatten, ph = { type: 'body', idx: '0' }) {
+function phHex(flatten: ThemeContext, ph: PlaceholderRef = { type: 'body', idx: '0' }) {
 	return defined(phRun(flatten, ph).resolvedColor, 'a resolved colour').hex
 }
 
-function ctx(overrides) {
+function ctx(overrides: Partial<ThemeContext>): ThemeContext {
 	return {
 		clrMap: new Map(),
 		clrScheme: new Map(),

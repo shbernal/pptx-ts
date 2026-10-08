@@ -5,17 +5,14 @@
 // empty-owner → [] case. There is no writer for tags, so a fixture is the only
 // source (unlike the document-properties round-trip).
 
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, test } from 'vitest'
 
+import type { Tag } from '../../dist/read.js'
 import { assert, assertEqual } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
 /** Render a tag list as "name=val,name=val" for order-preserving equality. */
-function flatten(tags) {
+function flatten(tags: readonly Tag[]) {
 	return tags.map((t) => `${t.name}=${t.val}`).join(',')
 }
 

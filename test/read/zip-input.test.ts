@@ -15,7 +15,7 @@ import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { readZip } from '../../dist/zip.js'
 import { OpcPackage } from '../../dist/read.js'
-import { build, assert, assertEqual, caught, assertRejects } from '../helpers.ts'
+import { build, assert, assertEqual, caught, assertRejects, defined } from '../helpers.ts'
 
 // One real .pptx worth of bytes, shared across the input-shape cases so each
 // branch is proven to decode identical content to the same part set.
@@ -30,11 +30,11 @@ function bytes() {
 	return Uint8Array.from(buf)
 }
 
-function assertDecodesDeck(entries, label) {
+function assertDecodesDeck(entries: Map<string, Uint8Array>, label: string) {
 	assert(entries instanceof Map, `${label}: readZip returns a Map`)
 	assert(entries.has(CONTENT_TYPES_PATH), `${label}: [Content_Types].xml present`)
 	assert(entries.has(SLIDE_PATH), `${label}: slide part present`)
-	assert(entries.get(SLIDE_PATH).length > 0, `${label}: slide part has bytes`)
+	assert(defined(entries.get(SLIDE_PATH)).length > 0, `${label}: slide part has bytes`)
 }
 
 describe('readZip input matrix', () => {

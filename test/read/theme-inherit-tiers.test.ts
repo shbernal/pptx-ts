@@ -18,12 +18,20 @@
 // uses. `resolveColorElement` is likewise exported and gets its own direct edge
 // tests (alpha, unresolvable).
 
-import { DOMParser } from '@xmldom/xmldom'
+import { DOMParser, type Element } from '@xmldom/xmldom'
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import TsPptx from '../../dist/node.js'
-import { Presentation, TextFrame, AutoShape, resolveColorElement } from '../../dist/read.js'
-/** @import { Part, ShapeHost } from '../../dist/read.js' */
+import {
+	Presentation,
+	TextFrame,
+	AutoShape,
+	resolveColorElement,
+	type Part,
+	type ShapeHost,
+	type TextInheritance,
+	type ThemeContext,
+} from '../../dist/read.js'
 import { assert, assertEqual, defined, expectDefined } from '../helpers.ts'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
@@ -31,7 +39,7 @@ const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
 
 /** A minimal ThemeContext: empty colour maps resolve `a:srgbClr` literally, and
  *  no layout/master roots means the bottom (placeholder-chain) tier finds nothing. */
-function ctx(overrides = {}) {
+function ctx(overrides: Partial<ThemeContext> = {}): ThemeContext {
 	return {
 		clrMap: new Map(),
 		clrScheme: new Map(),
@@ -44,41 +52,41 @@ function ctx(overrides = {}) {
 }
 
 /** Parse hand-authored `p:txBody` inner XML into a `p:txBody` element. */
-function txBodyEl(inner) {
+function txBodyEl(inner: string) {
 	const xml = `<p:txBody xmlns:p="${P_NS}" xmlns:a="${A_NS}"><a:bodyPr/>${inner}</p:txBody>`
 	return defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 }
 
 /** A placeholder `TextFrame` over `inner`, resolving against `flatten`. */
-function placeholderFrame(inner, flatten = ctx()) {
-	const inherit = { ph: { type: 'body', idx: '0' }, fontRef: null }
+function placeholderFrame(inner: string, flatten = ctx()) {
+	const inherit: TextInheritance = { ph: { type: 'body', idx: '0' }, fontRef: null }
 	// The read-side `resolved*` getters never touch `part`; a stand-in is enough.
-	return new TextFrame(txBodyEl(inner), { part: /** @type {Part} */ ({}), ctx: flatten, rels: null, inherit })
+	return new TextFrame(txBodyEl(inner), { part: {} as Part, ctx: flatten, rels: null, inherit })
 }
 
 /** First run of the first paragraph. */
-function firstRun(frame) {
+function firstRun(frame: TextFrame) {
 	const run = frame.paragraphs[0]?.runs[0]
 	assert(run, 'expected a run')
 	return run
 }
 
-/** Parse a single DrawingML element (`<a:srgbClr .../>`, `<a:fmtScheme>…`, etc.). */
-/** @returns {import('@xmldom/xmldom').Element} the wrapper's sole child — callers pass exactly one element. */
-function drawingEl(xml) {
-	return /** @type {import('@xmldom/xmldom').Element} */ (
-		defined(new DOMParser().parseFromString(`<a:w xmlns:a="${A_NS}">${xml}</a:w>`, 'text/xml').documentElement)
-			.firstChild
-	)
+/**
+ * Parse a single DrawingML element (`<a:srgbClr .../>`, `<a:fmtScheme>…`, etc.).
+ * @returns the wrapper's sole child — callers pass exactly one element.
+ */
+function drawingEl(xml: string) {
+	return defined(new DOMParser().parseFromString(`<a:w xmlns:a="${A_NS}">${xml}</a:w>`, 'text/xml').documentElement)
+		.firstChild as Element
 }
 
 /** An `AutoShape` over hand-authored `p:sp` XML, resolving against `flatten`. */
-function autoShape(spXml, flatten = ctx()) {
+function autoShape(spXml: string, flatten = ctx()) {
 	const xml = `<p:spTree xmlns:p="${P_NS}" xmlns:a="${A_NS}">${spXml}</p:spTree>`
 	const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 	const el = spTree.getElementsByTagNameNS(P_NS, 'sp')[0]
 	// Only `themeContext()` is exercised by the resolved-fill/line reads.
-	return new AutoShape(el, /** @type {ShapeHost} */ ({ themeContext: () => flatten }))
+	return new AutoShape(el, { themeContext: () => flatten } as Pick<ShapeHost, 'themeContext'> as ShapeHost)
 }
 
 describe('resolveInheritedRunColor — the two upper tiers', () => {
@@ -92,7 +100,7 @@ describe('resolveInheritedRunColor — the two upper tiers', () => {
 			)
 		)
 		assertEqual(run.color, null, 'the run itself sets no colour')
-		assertEqual(run.resolvedColor.hex, '12AB34', 'inherits the paragraph defRPr solidFill (tier 1)')
+		assertEqual(defined(run.resolvedColor).hex, '12AB34', 'inherits the paragraph defRPr solidFill (tier 1)')
 	})
 
 	test('tier 2: with no paragraph defRPr, a run inherits the text body a:lstStyle level fill', () => {
@@ -102,7 +110,7 @@ describe('resolveInheritedRunColor — the two upper tiers', () => {
 					`<a:p><a:r><a:t>x</a:t></a:r></a:p>`
 			)
 		)
-		assertEqual(run.resolvedColor.hex, '0055AA', 'inherits the slide lstStyle lvl1 fill (tier 2)')
+		assertEqual(defined(run.resolvedColor).hex, '0055AA', 'inherits the slide lstStyle lvl1 fill (tier 2)')
 	})
 
 	test('tier 1 wins over tier 2 when both define a colour', () => {
@@ -113,7 +121,7 @@ describe('resolveInheritedRunColor — the two upper tiers', () => {
 					`<a:r><a:t>x</a:t></a:r></a:p>`
 			)
 		)
-		assertEqual(run.resolvedColor.hex, '12AB34', 'the paragraph defRPr (tier 1) governs over the lstStyle')
+		assertEqual(defined(run.resolvedColor).hex, '12AB34', 'the paragraph defRPr (tier 1) governs over the lstStyle')
 	})
 
 	test('nothing in the chain defines a colour → resolvedColor is null', () => {
@@ -236,7 +244,7 @@ describe('inherited run size / face / bold / italic — the two upper tiers', ()
 		// `resolvedItalic` degrades to `null` like `resolvedBold`, rather than being an
 		// absent accessor — which is the whole defect issue #27 reported.
 		const frame = new TextFrame(txBodyEl(`<a:p><a:pPr><a:defRPr b="1" i="1"/></a:pPr><a:r><a:t>x</a:t></a:r></a:p>`), {
-			part: /** @type {Part} */ ({}),
+			part: {} as Part,
 			ctx: ctx(),
 			rels: null,
 			inherit: null,

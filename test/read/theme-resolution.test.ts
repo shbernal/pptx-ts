@@ -9,16 +9,22 @@
 // Shape.resolvedLine getters over a synthetic TextFrame / AutoShape carrying a
 // hand-authored fontScheme / fmtScheme in its theme context.
 
-import { DOMParser } from '@xmldom/xmldom'
+import { DOMParser, type Element } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
-import { TextFrame, AutoShape, resolveColorElement } from '../../dist/read.js'
-/** @import { Part, ShapeHost } from '../../dist/read.js' */
+import {
+	TextFrame,
+	AutoShape,
+	resolveColorElement,
+	type Part,
+	type ShapeHost,
+	type ThemeContext,
+} from '../../dist/read.js'
 import { assertEqual, defined } from '../helpers.ts'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
 
-function ctx(overrides = {}) {
+function ctx(overrides: Partial<ThemeContext> = {}): ThemeContext {
 	return {
 		clrMap: new Map(),
 		clrScheme: new Map(),
@@ -30,30 +36,30 @@ function ctx(overrides = {}) {
 	}
 }
 
-/** Parse a single DrawingML element (`<a:srgbClr/>`, `<a:fontScheme>…`, `<a:fmtScheme>…`). */
-/** @returns {import('@xmldom/xmldom').Element} the wrapper's sole child — callers pass exactly one element. */
-function drawingEl(xml) {
-	return /** @type {import('@xmldom/xmldom').Element} */ (
-		defined(new DOMParser().parseFromString(`<a:w xmlns:a="${A_NS}">${xml}</a:w>`, 'text/xml').documentElement)
-			.firstChild
-	)
+/**
+ * Parse a single DrawingML element (`<a:srgbClr/>`, `<a:fontScheme>…`, `<a:fmtScheme>…`).
+ * @returns the wrapper's sole child — callers pass exactly one element.
+ */
+function drawingEl(xml: string) {
+	return defined(new DOMParser().parseFromString(`<a:w xmlns:a="${A_NS}">${xml}</a:w>`, 'text/xml').documentElement)
+		.firstChild as Element
 }
 
-const stubPart = () => /** @type {Part} */ ({ markDirty() {} })
+const stubPart = () => ({ markDirty() {} }) as Pick<Part, 'markDirty'> as Part
 
 /** The first run of a synthetic single-run TextFrame resolving against `flatten`. */
-function runWith(rPrInner, flatten) {
+function runWith(rPrInner: string, flatten: ThemeContext) {
 	const xml = `<p:txBody xmlns:p="${P_NS}" xmlns:a="${A_NS}"><a:bodyPr/><a:p><a:r>${rPrInner}<a:t>x</a:t></a:r></a:p></p:txBody>`
 	const txBody = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 	return new TextFrame(txBody, { part: stubPart(), ctx: flatten, rels: null, inherit: null }).paragraphs[0].runs[0]
 }
 
 /** An AutoShape over a hand-authored p:sp, resolving against `flatten`. */
-function autoShape(spXml, flatten) {
+function autoShape(spXml: string, flatten: ThemeContext) {
 	const xml = `<p:spTree xmlns:p="${P_NS}" xmlns:a="${A_NS}">${spXml}</p:spTree>`
 	const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 	const el = spTree.getElementsByTagNameNS(P_NS, 'sp')[0]
-	return new AutoShape(el, /** @type {ShapeHost} */ ({ themeContext: () => flatten }))
+	return new AutoShape(el, { themeContext: () => flatten } as Pick<ShapeHost, 'themeContext'> as ShapeHost)
 }
 
 describe('resolveColor — colour models', () => {
@@ -100,7 +106,7 @@ describe('resolveThemeFont — +mj/+mn tokens across script slots', () => {
 			`<a:minorFont><a:latin typeface="Verdana"/><a:ea typeface="MS Mincho"/></a:minorFont>` +
 			`</a:fontScheme>`
 	)
-	const face = (typeface, flatten) =>
+	const face = (typeface: string, flatten: ThemeContext) =>
 		runWith(`<a:rPr><a:latin typeface="${typeface}"/></a:rPr>`, flatten).resolvedFontFace
 
 	test('minor/ea and major/cs and minor/lt tokens resolve to their scheme faces', () => {

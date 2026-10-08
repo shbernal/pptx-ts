@@ -11,7 +11,14 @@
 
 import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
-import { Relationships, TextFrame } from '../../dist/read.js'
+import {
+	Relationships,
+	TextFrame,
+	type BulletDetail,
+	type Part,
+	type TextContext,
+	type ThemeContext,
+} from '../../dist/read.js'
 import { assert, assertEqual, caughtSync, defined } from '../helpers.ts'
 import { authorRead } from './authored.ts'
 
@@ -21,25 +28,28 @@ const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
 const stubPart = () => ({ markDirty() {} })
 
 /** A theme with no colours, fonts or roots: a scheme token resolves to nothing, a literal to itself. */
-const emptyTheme = () => ({ clrMap: new Map(), clrScheme: new Map(), fmtScheme: null })
+const emptyTheme = (): ThemeContext => ({ clrMap: new Map(), clrScheme: new Map(), fmtScheme: null })
 
 /**
  * The context a hand-built frame is read against: a part (a stub absorbs markDirty), the empty
  * theme, the given relationships, and no inheritance.
- * @param {any} [part]
- * @param {any} [rels]
  */
-const bareText = (part = stubPart(), rels = null) => ({ part, ctx: emptyTheme(), rels, inherit: null })
+const bareText = (part: Pick<Part, 'markDirty'> = stubPart(), rels: Relationships | null = null): TextContext => ({
+	part: part as Part,
+	ctx: emptyTheme(),
+	rels,
+	inherit: null,
+})
 
 /** A TextFrame over hand-authored p:txBody inner XML. */
-function frame(inner) {
+function frame(inner: string) {
 	const xml = `<p:txBody xmlns:p="${P_NS}" xmlns:a="${A_NS}"><a:bodyPr/>${inner}</p:txBody>`
 	const txBody = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
 	return new TextFrame(txBody, bareText())
 }
 
 /** The first run of a single-paragraph frame. */
-function run(runInner) {
+function run(runInner: string) {
 	return frame(`<a:p>${runInner}</a:p>`).paragraphs[0].runs[0]
 }
 
@@ -73,7 +83,7 @@ describe('Run character-property setters', () => {
 		const r = run(
 			`<a:r><a:rPr u="sng"><a:solidFill><a:schemeClr val="accent1"/></a:solidFill></a:rPr><a:t>x</a:t></a:r>`
 		)
-		const codeOf = (/** @type {() => void} */ fn) => caughtSync(fn)?.code ?? null
+		const codeOf = (fn: () => void) => caughtSync(fn)?.code ?? null
 		assertEqual(
 			codeOf(() => {
 				r.underline = 'wavy-nonsense'
@@ -164,17 +174,15 @@ describe('Run getter edges on text that inherits through nothing', () => {
 describe('Paragraph getter edges', () => {
 	/**
 	 * The bullet of a single-paragraph frame, narrowed to the expected kind.
-	 * `assert` is not an assertion signature, so a plain check would leave the
-	 * union unnarrowed and every field access a type error.
-	 * @template {import('../../dist/read.js').BulletDetail['kind']} K
-	 * @param {string} pPr - the `a:pPr` inner XML
-	 * @param {K} kind - the kind the bullet is expected to have
-	 * @returns {Extract<import('../../dist/read.js').BulletDetail, { kind: K }>}
+	 * Comparing against a generic `kind` does not narrow the union, so the cast
+	 * states what the check above it proved.
+	 * @param pPr - the `a:pPr` inner XML
+	 * @param kind - the kind the bullet is expected to have
 	 */
-	function bulletOf(pPr, kind) {
+	function bulletOf<K extends BulletDetail['kind']>(pPr: string, kind: K): Extract<BulletDetail, { kind: K }> {
 		const bullet = frame(`<a:p><a:pPr>${pPr}</a:pPr><a:r><a:t>x</a:t></a:r></a:p>`).paragraphs[0].bulletDetail
 		if (bullet?.kind !== kind) throw new Error(`expected a ${kind} bullet, got ${JSON.stringify(bullet)}`)
-		return /** @type {Extract<import('../../dist/read.js').BulletDetail, { kind: K }>} */ (bullet)
+		return bullet as Extract<BulletDetail, { kind: K }>
 	}
 
 	test('bulletDetail distinguishes buNone, buChar, buAutoNum and buBlip', () => {
@@ -206,7 +214,7 @@ describe('Paragraph getter edges', () => {
 		rels.addWithId('rId10', IMAGE_REL, '../media/image1.png')
 
 		/** The picture bullet of a paragraph whose `a:buBlip` embeds `relId`, read against `rels`. */
-		const bulletImage = (relId) => {
+		const bulletImage = (relId: string) => {
 			const xml =
 				`<p:txBody xmlns:p="${P_NS}" xmlns:a="${A_NS}" xmlns:r="${R_NS}"><a:bodyPr/>` +
 				`<a:p><a:pPr><a:buBlip><a:blip r:embed="${relId}"/></a:buBlip></a:pPr><a:r><a:t>x</a:t></a:r></a:p></p:txBody>`

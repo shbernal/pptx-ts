@@ -14,20 +14,17 @@
 
 import { describe, test } from 'vitest'
 
+import type { Table } from '../../dist/read.js'
 import { assert, assertEqual, defined } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 const SPAN_ATTRIBUTES = ['rowSpan', 'gridSpan', 'hMerge', 'vMerge']
 
-/** The table on slide `index` of the fixture, read fresh. */
-/**
- * @param {import('../../dist/read.js').Table} table
- * @param {number} row
- * @param {number} column
- */
-const cellAt = (table, row, column) => defined(table.cell(row, column), `cell (${row},${column})`)
+const cellAt = (table: Table, row: number, column: number) =>
+	defined(table.cell(row, column), `cell (${row},${column})`)
 
-async function tableOn(index) {
+/** The table on slide `index` of the fixture, read fresh. */
+async function tableOn(index: number) {
 	for (const shape of (await openFixture('table-merge-encoding')).slides[index].shapes) {
 		if (shape.shapeType === 'graphicFrame' && shape.table) return shape.table
 	}
@@ -35,7 +32,7 @@ async function tableOn(index) {
 }
 
 /** Every cell's span attributes, row by row, as `name=value` in a fixed order. */
-function spanGrid(table) {
+function spanGrid(table: Table) {
 	return table.rows.map((row) =>
 		row.cells.map((cell) =>
 			SPAN_ATTRIBUTES.filter((name) => cell.element_.getAttribute(name))

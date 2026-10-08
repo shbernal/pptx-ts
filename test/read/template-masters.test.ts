@@ -21,7 +21,7 @@ const PRESENTATION_MAIN_CT = 'application/vnd.openxmlformats-officedocument.pres
 const TEMPLATE_MAIN_CT = 'application/vnd.openxmlformats-officedocument.presentationml.template.main+xml'
 
 /** True for parts that are shared deck chrome (master/layout/theme). */
-function isChromePart(name) {
+function isChromePart(name: string) {
 	return /^ppt\/(slideMasters|slideLayouts|theme)\//.test(name)
 }
 

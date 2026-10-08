@@ -7,27 +7,26 @@
 
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
-import { Presentation } from '../../dist/read.js'
-import { bytesEqual, assert, assertEqual, partBodies, assertUnchangedExcept } from '../helpers.ts'
+import { Presentation, type Table } from '../../dist/read.js'
+import { bytesEqual, assert, assertEqual, defined, partBodies, assertUnchangedExcept } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture } from './corpus.ts'
 
 /** First table on any slide of the fixture. */
-function firstTable(presentation) {
+function firstTable(presentation: Presentation): Table {
 	for (const slide of presentation.slides) {
 		for (const shape of slide.shapes) {
 			if (shape.shapeType === 'graphicFrame' && shape.table) return shape.table
 		}
 	}
-	return null
+	throw new Error('expected a table on some slide of the fixture')
 }
 
 /** All tables on any slide of the fixture, in document order. */
-function allTables(presentation) {
+function allTables(presentation: Presentation): Table[] {
 	return presentation.slides
 		.flatMap((slide) => slide.shapes)
-		.filter((shape) => shape.shapeType === 'graphicFrame' && shape.table)
-		.map((shape) => shape.table)
+		.flatMap((shape) => (shape.shapeType === 'graphicFrame' && shape.table ? [shape.table] : []))
 }
 
 /**
@@ -35,8 +34,11 @@ function allTables(presentation) {
  * explicit `a:tcPr/a:solidFill` of `accent3` with `lumMod`/`lumOff`, so it is the
  * one table that exercises the cell-fill accessors.
  */
-function formattedTable(presentation) {
-	return allTables(presentation).find((table) => table.cell(0, 0)?.fillSchemeColor === 'accent3') ?? null
+function formattedTable(presentation: Presentation) {
+	return defined(
+		allTables(presentation).find((table) => table.cell(0, 0)?.fillSchemeColor === 'accent3'),
+		'expected the formatted table'
+	)
 }
 
 describe('Table read model', () => {
@@ -49,15 +51,15 @@ describe('Table read model', () => {
 		assertEqual(table.rows.length, 3, 'rows array length')
 		assertEqual(table.rows[0].cells.length, 4, 'first row cell count')
 		assert(
-			table.columnWidths.every((w) => w > 0),
+			table.columnWidths.every((w) => w !== null && w > 0),
 			'each column has a positive width'
 		)
-		assert(table.rows[0].heightEmu > 0, 'row height resolves')
+		assert(defined(table.rows[0].heightEmu) > 0, 'row height resolves')
 	})
 
 	test('reads cell text and merge metadata', async () => {
 		const table = firstTable(await openFixture('table'))
-		const cell = table.cell(0, 0)
+		const cell = defined(table.cell(0, 0))
 		assert(cell, 'cell (0,0) exists')
 		assertEqual(cell.text, 'cell', 'cell text')
 		assertEqual(cell.gridSpan, 1, 'default gridSpan is 1')
@@ -103,7 +105,7 @@ describe('Table read model', () => {
 			'bandedColumns',
 			'firstColumnHeader',
 			'lastColumnFooter',
-		]) {
+		] as const) {
 			assertEqual(all[flag], true, `${flag} is on`)
 		}
 
@@ -121,30 +123,30 @@ describe('Table read model', () => {
 describe('Table cell editing', () => {
 	test('cell.text setter replaces text and survives a reload', async () => {
 		const presentation = await openFixture('table')
-		firstTable(presentation).cell(0, 0).text = 'EDITED'
+		defined(firstTable(presentation).cell(0, 0)).text = 'EDITED'
 		const reopened = await Presentation.load(await presentation.save())
-		assertEqual(firstTable(reopened).cell(0, 0).text, 'EDITED', 'edited cell text reloads')
+		assertEqual(defined(firstTable(reopened).cell(0, 0)).text, 'EDITED', 'edited cell text reloads')
 	})
 
 	test('cell.text setter preserves the first run formatting', async () => {
 		const presentation = await openFixture('table')
 		// First-table cells carry sz="1400"; the replacement run should keep it.
-		const before = firstTable(presentation).cell(0, 0).textFrame.paragraphs[0].runs[0].fontSizePt
+		const before = defined(defined(firstTable(presentation).cell(0, 0)).textFrame).paragraphs[0].runs[0].fontSizePt
 		assertEqual(before, 14, 'precondition: cell run is 14pt')
-		firstTable(presentation).cell(0, 0).text = 'KEEP'
+		defined(firstTable(presentation).cell(0, 0)).text = 'KEEP'
 		const reopened = await Presentation.load(await presentation.save())
-		const run = firstTable(reopened).cell(0, 0).textFrame.paragraphs[0].runs[0]
+		const run = defined(defined(firstTable(reopened).cell(0, 0)).textFrame).paragraphs[0].runs[0]
 		assertEqual(run.text, 'KEEP', 'text replaced')
 		assertEqual(run.fontSizePt, 14, 'first-run formatting preserved')
 	})
 
 	test('editing a cell via Run setters works (per-run formatting)', async () => {
 		const presentation = await openFixture('table')
-		const run = firstTable(presentation).cell(1, 1).textFrame.paragraphs[0].runs[0]
+		const run = defined(defined(firstTable(presentation).cell(1, 1)).textFrame).paragraphs[0].runs[0]
 		run.text = 'RUN'
 		run.bold = true
 		const reopened = await Presentation.load(await presentation.save())
-		const reread = firstTable(reopened).cell(1, 1).textFrame.paragraphs[0].runs[0]
+		const reread = defined(defined(firstTable(reopened).cell(1, 1)).textFrame).paragraphs[0].runs[0]
 		assertEqual(reread.text, 'RUN', 'run text reloads')
 		assertEqual(reread.bold, true, 'run bold reloads')
 	})
@@ -152,7 +154,7 @@ describe('Table cell editing', () => {
 	test('editing a cell leaves every other part byte-identical', async () => {
 		const input = await readFile(fixturePath('table'))
 		const presentation = await Presentation.load(input)
-		firstTable(presentation).cell(0, 0).text = 'EDITED'
+		defined(firstTable(presentation).cell(0, 0)).text = 'EDITED'
 		const inputBodies = await partBodies(input)
 		const outputBodies = await partBodies(await presentation.save())
 		const dirty = 'ppt/slides/slide1.xml'
@@ -163,8 +165,8 @@ describe('Table cell editing', () => {
 	test.skipIf(!validatorInstalled)('an edited table stays schema-valid', async () => {
 		const presentation = await openFixture('table')
 		const table = firstTable(presentation)
-		table.cell(0, 0).text = 'A'
-		table.cell(0, 1).textFrame.paragraphs[0].runs[0].text = 'B'
+		defined(table.cell(0, 0)).text = 'A'
+		defined(defined(table.cell(0, 1)).textFrame).paragraphs[0].runs[0].text = 'B'
 		const errors = await validateBuf(Buffer.from(await presentation.save()))
 		assertEqual(errors.length, 0, `validator errors: ${JSON.stringify(errors).slice(0, 2000)}`)
 	})
@@ -176,7 +178,7 @@ describe('Table cell styling', () => {
 	// Populated `verticalText`/`anchor`/`marginsEmu` paths need a PowerPoint-authored
 	// fixture; `table-cell-style.pptx` is it — see the suite below.
 	test('resolvedFill resolves a scheme fill through the theme, applying lum transforms', async () => {
-		const cell = formattedTable(await openFixture('table')).cell(0, 0)
+		const cell = defined(formattedTable(await openFixture('table')).cell(0, 0))
 		const fill = cell.resolvedFill
 		assert(fill, 'formatted cell has a resolved fill')
 		assertEqual(fill.hex, 'A5A5A5', 'base accent3 hex')
@@ -188,13 +190,17 @@ describe('Table cell styling', () => {
 	})
 
 	test('fillSchemeColor exposes the raw scheme token', async () => {
-		assertEqual(formattedTable(await openFixture('table')).cell(0, 0).fillSchemeColor, 'accent3', 'raw scheme token')
+		assertEqual(
+			defined(formattedTable(await openFixture('table')).cell(0, 0)).fillSchemeColor,
+			'accent3',
+			'raw scheme token'
+		)
 	})
 
 	test('a cell with no own fill inherits the table style graph, but exposes no own scheme token', async () => {
 		// TableDefault's cells have no a:tcPr fill; the table is Medium Style 2 - Accent 1
 		// with banded rows, so its body cells shade from the style's band1H/band2H parts.
-		const cell = firstTable(await openFixture('table')).cell(0, 0)
+		const cell = defined(firstTable(await openFixture('table')).cell(0, 0))
 		assertEqual(cell.fillSchemeColor, null, 'fillSchemeColor reads only the own fill -> null')
 		// Row 0 of a banded, header-less table is the first body band (band1H); the resolved
 		// hex matches what PowerPoint renders (verified via COM against this fixture).
@@ -209,13 +215,13 @@ describe('Table cell styling', () => {
 		)
 		assert(noStyle, 'fixture has a "No Style, No Grid" table')
 		assert(noStyle.resolvedStyle, 'that style still resolves in tableStyles.xml')
-		assertEqual(noStyle.cell(0, 0).resolvedFill, null, 'a fill-less style yields no resolved cell fill')
+		assertEqual(defined(noStyle.cell(0, 0)).resolvedFill, null, 'a fill-less style yields no resolved cell fill')
 	})
 
 	test('verticalText / anchor / marginsEmu are null when the cell sets none', async () => {
 		// No a:tcPr in the fixture carries @vert, @anchor, or @marL/@marR/@marT/@marB,
 		// so every cell exercises the unset (null) branch of these accessors.
-		const cell = firstTable(await openFixture('table')).cell(0, 0)
+		const cell = defined(firstTable(await openFixture('table')).cell(0, 0))
 		assertEqual(cell.verticalText, null, 'no @vert -> null')
 		assertEqual(cell.anchor, null, 'no @anchor -> null')
 		assertEqual(cell.marginsEmu, null, 'no tcPr margins -> null')
@@ -225,8 +231,12 @@ describe('Table cell styling', () => {
 		// The fixture's cells carry no a:lnL/lnR/lnT/lnB, so both border-getter null
 		// branches are exercised: the plain first-table cell has no a:tcPr at all,
 		// and the formatted cell has an a:tcPr (a solid fill) but no border child.
-		assertEqual(firstTable(await openFixture('table')).cell(0, 0).borders, null, 'no a:tcPr -> null borders')
-		assertEqual(formattedTable(await openFixture('table')).cell(0, 0).borders, null, 'a:tcPr without a border -> null')
+		assertEqual(defined(firstTable(await openFixture('table')).cell(0, 0)).borders, null, 'no a:tcPr -> null borders')
+		assertEqual(
+			defined(formattedTable(await openFixture('table')).cell(0, 0)).borders,
+			null,
+			'a:tcPr without a border -> null'
+		)
 	})
 
 	test('a PowerPoint-authored border keeps its colour transform list, not just the flattened hex', async () => {
@@ -237,7 +247,7 @@ describe('Table cell styling', () => {
 		// consumer re-author the same rule against a different theme.
 		const labels = allTables(await openFixture('table')).find((t) => t.cell(0, 0)?.borders?.bottom)
 		assert(labels, 'fixture has a table whose cells carry PowerPoint-authored borders')
-		const bottom = labels.cell(0, 0).borders.bottom
+		const bottom = defined(defined(defined(labels.cell(0, 0)).borders).bottom)
 		assertEqual(bottom.colorRef.scheme, 'bg1', 'the raw token is still reported')
 		assert(bottom.colorRef.resolved, 'the border now carries a full ResolvedColor')
 		assertEqual(bottom.colorRef.resolved.hex, 'FFFFFF', 'base hex is bg1 before the transform')
@@ -270,21 +280,21 @@ describe('Table cell styling (populated a:tcPr paths)', () => {
 	// The isolation lets each test assert the populated value AND that the other
 	// two accessors stay null on the same cell.
 	test('verticalText reports the a:tcPr @vert token (and leaves anchor/margins null)', async () => {
-		const cell = firstTable(await openFixture('table-cell-style')).cell(0, 0)
+		const cell = defined(firstTable(await openFixture('table-cell-style')).cell(0, 0))
 		assertEqual(cell.verticalText, 'vert270', 'populated @vert')
 		assertEqual(cell.anchor, null, 'no @anchor on the vert cell')
 		assertEqual(cell.marginsEmu, null, 'no tcPr margins on the vert cell')
 	})
 
 	test('anchor reports the a:tcPr @anchor token (and leaves vert/margins null)', async () => {
-		const cell = firstTable(await openFixture('table-cell-style')).cell(0, 1)
+		const cell = defined(firstTable(await openFixture('table-cell-style')).cell(0, 1))
 		assertEqual(cell.anchor, 'b', 'populated @anchor')
 		assertEqual(cell.verticalText, null, 'no @vert on the anchor cell')
 		assertEqual(cell.marginsEmu, null, 'no tcPr margins on the anchor cell')
 	})
 
 	test('marginsEmu reports all four a:tcPr insets in EMU (and leaves vert/anchor null)', async () => {
-		const cell = firstTable(await openFixture('table-cell-style')).cell(1, 0)
+		const cell = defined(firstTable(await openFixture('table-cell-style')).cell(1, 0))
 		const m = cell.marginsEmu
 		assert(m, 'populated marginsEmu object')
 		assertEqual(m.left, 228600, 'marL EMU')
@@ -296,7 +306,7 @@ describe('Table cell styling (populated a:tcPr paths)', () => {
 	})
 
 	test('a bare a:tcPr cell reports null for vert / anchor / margins', async () => {
-		const cell = firstTable(await openFixture('table-cell-style')).cell(1, 1)
+		const cell = defined(firstTable(await openFixture('table-cell-style')).cell(1, 1))
 		assertEqual(cell.verticalText, null, 'no @vert -> null')
 		assertEqual(cell.anchor, null, 'no @anchor -> null')
 		assertEqual(cell.marginsEmu, null, 'no tcPr margins -> null')
@@ -318,14 +328,14 @@ describe('Table cell horzOverflow', () => {
 	// There is deliberately no explicit-`clip` cell. `clip` is the schema default and
 	// PowerPoint strips it on save, so a PowerPoint-authored one cannot exist.
 	test('horzOverflow reports the a:tcPr @horzOverflow token', async () => {
-		const cell = firstTable(await openFixture('table-cell-horzoverflow')).cell(0, 0)
+		const cell = defined(firstTable(await openFixture('table-cell-horzoverflow')).cell(0, 0))
 		assertEqual(cell.horzOverflow, 'overflow', 'populated @horzOverflow')
 		assertEqual(cell.verticalText, null, 'no @vert on the overflow cell')
 		assertEqual(cell.anchor, null, 'no @anchor on the overflow cell')
 	})
 
 	test('a cell without @horzOverflow reports null', async () => {
-		const cell = firstTable(await openFixture('table-cell-horzoverflow')).cell(0, 1)
+		const cell = defined(firstTable(await openFixture('table-cell-horzoverflow')).cell(0, 1))
 		assertEqual(cell.horzOverflow, null, 'no @horzOverflow -> null')
 	})
 
