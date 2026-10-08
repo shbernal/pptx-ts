@@ -54,7 +54,7 @@ class carries every family whatever the program calls.
 The [comparison page](comparison.md) reports 98.6 KiB for a hello world. That is a separate
 measurement, of a different program, taken with the rest of the comparison on its snapshot date. The
 figures here come from the repository's size gate and follow the current build; the
-[testing guide](https://github.com/shbernal/ts-pptx/blob/master/docs/contributing/testing.md#size-gates)
+[testing guide](https://github.com/shbernal/ts-pptx/blob/main/docs/contributing/testing.md#size-gates)
 describes how both are measured.
 
 ## The core tier

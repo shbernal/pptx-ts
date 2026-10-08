@@ -301,7 +301,7 @@ Chinese and Japanese text breaks between any two characters and Korean text brea
 | `'resize'` never changes the width | a `wrap: false` line wider than the box runs past its edge |
 | The theme font is not resolved | text with no `fontFace` is not measured |
 
-The model and its calibration against PowerPoint-authored decks are described in the [design notes](https://github.com/shbernal/ts-pptx/blob/master/docs/contributing/design/text-fit.md).
+The model and its calibration against PowerPoint-authored decks are described in the [design notes](https://github.com/shbernal/ts-pptx/blob/main/docs/contributing/design/text-fit.md).
 
 ## Reading it back
 

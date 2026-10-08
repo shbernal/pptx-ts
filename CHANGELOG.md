@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The default branch is now `main`, renamed from `master`.** The library is unchanged. A
+  dependency on `github:shbernal/ts-pptx#master` should switch to `#main`, or better, to a pinned
+  commit sha. GitHub redirects old `blob/master/` links, and the repository's own links now point
+  at `main`.
+
 ## [4.0.1] - 2026-09-21
 
 ### Fixed

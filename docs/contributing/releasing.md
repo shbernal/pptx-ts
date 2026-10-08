@@ -18,7 +18,7 @@ stages that copy: the `name` differs, the README gains a banner naming `pptx-ts`
 block is dropped. You never bump, tag or stage the alias by hand.
 
 `.github/workflows/publish.yml` publishes both, when a GitHub Release is published. The
-[`release-publish` skill](https://github.com/shbernal/ts-pptx/blob/master/.agents/skills/release-publish/SKILL.md)
+[`release-publish` skill](https://github.com/shbernal/ts-pptx/blob/main/.agents/skills/release-publish/SKILL.md)
 has the commands for each step. This page says why the steps are shaped the way they are.
 
 ## The release

@@ -178,7 +178,7 @@ how you try a fix before it ships:
 pnpm add github:shbernal/ts-pptx#<commit-sha>
 ```
 
-`master` (`github:shbernal/ts-pptx`) works too, but pin the sha: a branch spec
+`main` (`github:shbernal/ts-pptx`) works too, but pin the sha: a branch spec
 re-resolves to whatever is at the head of it when the lockfile is next written.
 
 `dist/` is not committed, so this builds the package on install: your package manager

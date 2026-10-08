@@ -163,7 +163,7 @@ fixture has to contain, and leave the feature unimplemented until it lands. Then
 1. Author the fixture with the `powerpoint-fixture-authoring` skill, and verify it with
    `.agents/skills/powerpoint-fixture-authoring/scripts/verify-powerpoint-fixture.ps1`.
 2. Record provenance and SHA-256 in
-   [test/read/fixtures/README.md](https://github.com/shbernal/ts-pptx/blob/master/test/read/fixtures/README.md).
+   [test/read/fixtures/README.md](https://github.com/shbernal/ts-pptx/blob/main/test/read/fixtures/README.md).
 3. Wire the test to the fixture: through the read harness for a read accessor, or a
    `test/schema-cases.js` comparison for a write-side oracle.
 4. Implement last.

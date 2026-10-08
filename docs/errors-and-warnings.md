@@ -204,5 +204,5 @@ The record keeps one entry per distinct message until you clear it, and most of 
 
 - [Core concepts](getting-started/concepts.md)
 - [Troubleshooting](troubleshooting.md)
-- [Errors and diagnostics](https://github.com/shbernal/ts-pptx/blob/master/docs/contributing/development.md#errors-and-diagnostics), for adding a throw or warning site to the library
+- [Errors and diagnostics](https://github.com/shbernal/ts-pptx/blob/main/docs/contributing/development.md#errors-and-diagnostics), for adding a throw or warning site to the library
 - API reference: [`TsPptxError`](reference/api/index/classes/TsPptxError.md), [`TsPptxCode`](reference/api/index/type-aliases/TsPptxCode.md), [`ErrorCode`](reference/api/index/type-aliases/ErrorCode.md), [`Diagnostic`](reference/api/index/interfaces/Diagnostic.md), [`DiagnosticCode`](reference/api/index/type-aliases/DiagnosticCode.md), [`setDiagnosticHandler`](reference/api/index/functions/setDiagnosticHandler.md), [`resetDiagnosticState`](reference/api/index/functions/resetDiagnosticState.md)

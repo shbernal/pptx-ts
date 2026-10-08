@@ -129,7 +129,7 @@ repeat catches prose that arrived through `--no-verify`, a merge or a rebase.
 
 ```mermaid
 flowchart LR
-  subgraph ci["ci.yml: pull requests, pushes to master, workflow_call"]
+  subgraph ci["ci.yml: pull requests, pushes to main, workflow_call"]
     static["static<br/>check:static"]
     test["test, Node 24.x and 26.x<br/>24.x: test:coverage, script:roundtrip:all<br/>26.x: test"]
     fonts["font-oracles, windows-latest<br/>test:oracles"]
@@ -156,7 +156,7 @@ flowchart LR
   its own error instead of inside a suite.
 - `coverage` needs `test` and `browser`. It downloads the Node report and the browser job's raw
   coverage together with the `dist/` that job ran, then runs `coverage:gate`.
-- `docs.yml` builds the site on every pull request and deploys it from `master`. `check:static`
+- `docs.yml` builds the site on every pull request and deploys it from `main`. `check:static`
   validates the docs sources without building the site, so a fault only the built site shows
   fails in `docs.yml` or `browser`, not in `static`.
 

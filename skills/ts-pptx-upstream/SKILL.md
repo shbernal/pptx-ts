@@ -300,7 +300,7 @@ rg 'ts-pptx#'                                     # every stopgap here
 
 **A closed issue is not a released fix.** A fix can sit merged and unreleased for weeks,
 so check the published version, never the issue state. The repository's
-[`CHANGELOG.md`](https://github.com/shbernal/ts-pptx/blob/master/CHANGELOG.md) and the
+[`CHANGELOG.md`](https://github.com/shbernal/ts-pptx/blob/main/CHANGELOG.md) and the
 GitHub release notes name the issue numbers each version closes. Bump the pin, reinstall,
 and refresh the installed skill in the same commit. Then, per stopgap:
 

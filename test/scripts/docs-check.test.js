@@ -52,7 +52,7 @@ describe('links that leave the docs tree', () => {
 	})
 
 	test('the absolute URL is how those files are meant to be linked', () => {
-		expect(check('See [the fixtures](https://github.com/o/r/blob/master/test/read/fixtures/README.md).')).toEqual([])
+		expect(check('See [the fixtures](https://github.com/o/r/blob/main/test/read/fixtures/README.md).')).toEqual([])
 	})
 })
 
@@ -130,7 +130,7 @@ describe('anchors', () => {
 	test('a repository-only page is read on GitHub, so its links use GitHub slugs', () => {
 		mkdirSync(path.join(docsDir, 'contributing'), { recursive: true })
 		const rel = 'contributing/anchors-reader.md'
-		const options = { repoOnly: ['contributing'], blobBase: 'https://github.com/o/r/blob/master/' }
+		const options = { repoOnly: ['contributing'], blobBase: 'https://github.com/o/r/blob/main/' }
 		writeFileSync(path.join(docsDir, rel), 'See [runs](../guide/anchors.md#checkcore-runs).')
 		expect(checkLinks(docsDir, rel, routes, options)).toEqual([])
 		writeFileSync(path.join(docsDir, rel), 'See [runs](../guide/anchors.md#check-core-runs).')
@@ -142,7 +142,7 @@ describe('anchors', () => {
 // links in different places: a served page's relative link to one is a dead link in the site,
 // and a repository-only page's site route is a dead link on GitHub.
 describe('the repository-only tree', () => {
-	const repoOnly = { repoOnly: ['contributing'], blobBase: 'https://github.com/o/r/blob/master/' }
+	const repoOnly = { repoOnly: ['contributing'], blobBase: 'https://github.com/o/r/blob/main/' }
 
 	beforeAll(() => {
 		mkdirSync(path.join(docsDir, 'contributing'), { recursive: true })
@@ -159,13 +159,13 @@ describe('the repository-only tree', () => {
 		const errors = checkAt('page.md', 'See [testing](./contributing/testing.md#suites).')
 		expect(errors).toHaveLength(1)
 		expect(errors[0]).toMatch(/repository-only/)
-		expect(errors[0]).toContain('https://github.com/o/r/blob/master/docs/contributing/testing.md#suites')
+		expect(errors[0]).toContain('https://github.com/o/r/blob/main/docs/contributing/testing.md#suites')
 	})
 
 	test('the GitHub URL is how a served page links one', () => {
-		expect(
-			checkAt('page.md', 'See [testing](https://github.com/o/r/blob/master/docs/contributing/testing.md).')
-		).toEqual([])
+		expect(checkAt('page.md', 'See [testing](https://github.com/o/r/blob/main/docs/contributing/testing.md).')).toEqual(
+			[]
+		)
 	})
 
 	test('a repository-only page links relatively to any page, served or not', () => {

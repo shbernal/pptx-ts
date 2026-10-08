@@ -4,7 +4,7 @@ on:
   pull_request:
   push:
     branches:
-      - master
+      - main
   # Exposed as a reusable workflow so `publish.yml` can run this exact gate
   # instead of keeping its own hand-copied transcript of it. The two had already
   # drifted — publish had lost `typecheck:test` and diverged on the pack command.

@@ -228,11 +228,11 @@ function githubSlug(docsDir) {
  * The prefix a file on the default branch is browsed at on GitHub, which is where a
  * repository-only page is read and so how a served page has to link one.
  * @param {string} docsDir - absolute path to the docs directory
- * @returns {string | null} `https://github.com/<owner>/<repo>/blob/master/`
+ * @returns {string | null} `https://github.com/<owner>/<repo>/blob/main/`
  */
 export function githubBlobBase(docsDir) {
 	const slug = githubSlug(docsDir)
-	return slug ? `https://github.com/${slug[1]}/${slug[2]}/blob/master/` : null
+	return slug ? `https://github.com/${slug[1]}/${slug[2]}/blob/main/` : null
 }
 
 /**

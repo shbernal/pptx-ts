@@ -72,4 +72,4 @@ This is a bug in ts-pptx, not in your deck or your code. Please report it:
 https://github.com/shbernal/ts-pptx/issues/new?template=agent-report.yml
 ```
 
-A check that fails while you work on the repository is covered in [When a check fails](https://github.com/shbernal/ts-pptx/blob/master/docs/contributing/development.md#when-a-check-fails).
+A check that fails while you work on the repository is covered in [When a check fails](https://github.com/shbernal/ts-pptx/blob/main/docs/contributing/development.md#when-a-check-fails).

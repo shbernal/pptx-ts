@@ -120,7 +120,7 @@ commit are separate steps, so the version files can end up ahead of the commit.
 ### 6. Push
 
 ```bash
-git push origin master
+git push origin main
 git push origin vX.Y.Z
 ```
 
@@ -174,7 +174,7 @@ release for it.
 
 - **Tag and version mismatch, or both names already published**: the tag and `package.json`
   disagree, or the version was reused. Fix the version, re-tag, and cut a new Release.
-- **A CI gate failed**: fix on `master`, then bump to the next patch and release that. Prefer a
+- **A CI gate failed**: fix on `main`, then bump to the next patch and release that. Prefer a
   fresh patch over force-moving a tag that has been pushed.
 - **The canonical publish succeeded and the alias failed**: re-dispatch the workflow on the same
   tag. The guard passes because the alias still lacks the version, and the `pptx-ts` step skips.

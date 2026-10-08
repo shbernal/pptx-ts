@@ -34,6 +34,6 @@ security defect in the OOXML this library itself emits.
 
 ## Supported versions
 
-This project ships from `master` and releases roll forward; fixes land in the
+This project ships from `main` and releases roll forward; fixes land in the
 next release rather than being backported. Please verify against the latest
 published version before reporting.

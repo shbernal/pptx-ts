@@ -14,28 +14,28 @@ Report wrong output, a repair prompt or a missing accessor through the
 [new-issue chooser](https://github.com/shbernal/ts-pptx/issues/new/choose).
 [Errors and warnings](errors-and-warnings.md#which-failures-are-worth-reporting) says which failures are worth a report.
 Security issues go through
-[SECURITY.md](https://github.com/shbernal/ts-pptx/blob/master/SECURITY.md), never a public issue.
+[SECURITY.md](https://github.com/shbernal/ts-pptx/blob/main/SECURITY.md), never a public issue.
 
-[CONTRIBUTING.md](https://github.com/shbernal/ts-pptx/blob/master/CONTRIBUTING.md) covers setting
+[CONTRIBUTING.md](https://github.com/shbernal/ts-pptx/blob/main/CONTRIBUTING.md) covers setting
 up the repository, the git hooks, the scope it is maintained for, reporting a bug or promoting a
 downstream need, and installing an unreleased commit.
 
 The documentation for working on the repository is read on GitHub:
 
-- [Development guide](https://github.com/shbernal/ts-pptx/blob/master/docs/contributing/development.md):
+- [Development guide](https://github.com/shbernal/ts-pptx/blob/main/docs/contributing/development.md):
   setup, source layout, generated outputs, and contribution rules.
-- [Testing guide](https://github.com/shbernal/ts-pptx/blob/master/docs/contributing/testing.md):
+- [Testing guide](https://github.com/shbernal/ts-pptx/blob/main/docs/contributing/testing.md):
   the gate matrix, git hooks and CI jobs, the test suites, coverage, schema validation, and the
   oracles behind a PowerPoint claim.
-- [Architecture](https://github.com/shbernal/ts-pptx/blob/master/docs/contributing/architecture.md):
+- [Architecture](https://github.com/shbernal/ts-pptx/blob/main/docs/contributing/architecture.md):
   how the library is structured and where each responsibility lives.
-- [Scope and design policy](https://github.com/shbernal/ts-pptx/blob/master/docs/contributing/scope-and-policy.md):
+- [Scope and design policy](https://github.com/shbernal/ts-pptx/blob/main/docs/contributing/scope-and-policy.md):
   what the library leaves out on purpose, the areas outside active development, and the rule for
   escape hatches.
-- [OOXML agent context](https://github.com/shbernal/ts-pptx/blob/master/docs/contributing/ooxml.md):
+- [OOXML agent context](https://github.com/shbernal/ts-pptx/blob/main/docs/contributing/ooxml.md):
   where to look up OOXML and PowerPoint behavior before changing emitted XML, and what counts as
   evidence for a change.
-- [Release workflow](https://github.com/shbernal/ts-pptx/blob/master/docs/contributing/releasing.md):
+- [Release workflow](https://github.com/shbernal/ts-pptx/blob/main/docs/contributing/releasing.md):
   how a release reaches npm under both package names, and how to finish a half-published one.
-- [Design pages](https://github.com/shbernal/ts-pptx/tree/master/docs/contributing/design): how
+- [Design pages](https://github.com/shbernal/ts-pptx/tree/main/docs/contributing/design): how
   animations, embedded fonts, embedded objects, fills and measured text fit are written and read.

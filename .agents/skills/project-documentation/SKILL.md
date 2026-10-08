@@ -75,7 +75,7 @@ built-in table style"). How the render evidence was obtained belongs in
   `llms-full.txt` and the generated doc index leave them out. `docs:list` still lists
   them, marked as repository-only.
 - A page the site serves links to one by its GitHub URL,
-  `https://github.com/shbernal/ts-pptx/blob/master/docs/contributing/<page>.md`, never
+  `https://github.com/shbernal/ts-pptx/blob/main/docs/contributing/<page>.md`, never
   relatively: the relative link is a dead link in the site. `docs:check` rejects it.
 - A repository-only page links relatively to any page under `docs/`, which GitHub
   resolves. It never links a site route like `/reading/`, which GitHub does not.

@@ -21,7 +21,7 @@ pnpm install
 ```
 
 `pnpm install` runs `prepare`, which installs the git hooks and builds `dist/` when it is missing.
-[CONTRIBUTING.md](https://github.com/shbernal/ts-pptx/blob/master/CONTRIBUTING.md#git-hooks) lists
+[CONTRIBUTING.md](https://github.com/shbernal/ts-pptx/blob/main/CONTRIBUTING.md#git-hooks) lists
 the hooks.
 
 ## Repository layout
@@ -231,7 +231,7 @@ pnpm --dir demos/node run demo-stream   # streams a deck over HTTP
 
 The browser version of the quarterly review deck is the site's demos page, which
 `pnpm run docs:dev` serves.
-[demos/README.md](https://github.com/shbernal/ts-pptx/blob/master/demos/README.md) says what each
+[demos/README.md](https://github.com/shbernal/ts-pptx/blob/main/demos/README.md) says what each
 demo is for.
 
 ## Site changes
@@ -242,7 +242,7 @@ page, the docs and the demos page. It spans two trees:
 - `docs/` is content: markdown under the frontmatter schema, navigated from `docs.json` and
   validated by `docs:check`.
 - `www/` is the code that renders it: the VitePress theme, its stylesheet and the Vue components a
-  page mounts. See [www/README.md](https://github.com/shbernal/ts-pptx/blob/master/www/README.md).
+  page mounts. See [www/README.md](https://github.com/shbernal/ts-pptx/blob/main/www/README.md).
 
 VitePress looks for a theme only at `<root>/.vitepress/theme`, so `docs/.vitepress/theme/index.ts`
 is a one-line re-export of `www/theme`.
@@ -260,7 +260,7 @@ pnpm run typecheck:site # tsc over www/**/*.ts and docs/.vitepress/**
 the docs gates, but the site does not build them. People read them on GitHub.
 
 - A served page links to one by its GitHub URL,
-  `https://github.com/shbernal/ts-pptx/blob/master/docs/contributing/<page>.md`. `docs:check`
+  `https://github.com/shbernal/ts-pptx/blob/main/docs/contributing/<page>.md`. `docs:check`
   rejects a relative link, which would be dead on the site.
 - A repository-only page links relatively to any page under `docs/`, and by GitHub URL to a file
   outside `docs/`. It never links a site route such as `/reading/`, which GitHub cannot resolve.
