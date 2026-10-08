@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url'
-import { createMarkdownRenderer } from 'vitepress'
+import { createMarkdownRenderer, type MarkdownRenderer } from 'vitepress'
 import { beforeAll, describe, expect, it } from 'vitest'
 import siteConfig from '../../../docs/.vitepress/config.mts'
 import { snippetHash } from '../../../www/live/fence.ts'
@@ -9,14 +9,13 @@ import { declaresSlide, LIVE_COMPONENT, liveFenceInfo, liveFences, wrapSnippet }
  * `ts live` fences, through the site's own markdown configuration.
  *
  * The renderer is VitePress's, built from `docs/.vitepress/config.mts`, so the wiring is
- * asserted with the rule, as `mermaid-fence.test.js` does for diagrams. Running the fences
- * is `live-examples.test.js`; drawing them needs a browser and is not covered here.
+ * asserted with the rule, as `mermaid-fence.test.ts` does for diagrams. Running the fences
+ * is `live-examples.test.ts`; drawing them needs a browser and is not covered here.
  */
 
 const docsDir = fileURLToPath(new URL('../../../docs/', import.meta.url))
 
-/** @type {import('vitepress').MarkdownRenderer} */
-let md
+let md: MarkdownRenderer
 
 beforeAll(async () => {
 	md = await createMarkdownRenderer(docsDir, siteConfig.markdown, '/')
@@ -24,13 +23,13 @@ beforeAll(async () => {
 
 /**
  * Render a page and return its HTML and the script blocks VitePress will compile with it.
- * @param {string} src
  */
-function renderPage(src) {
-	/** @type {any} */
-	const env = { relativePath: 'guide/page.md' }
+function renderPage(src: string): { html: string; scripts: string[] } {
+	const env: { relativePath: string; sfcBlocks?: { scripts: Array<{ content: string }> } } = {
+		relativePath: 'guide/page.md',
+	}
 	const html = md.render(src, env)
-	return { html, scripts: env.sfcBlocks.scripts.map((/** @type {{ content: string }} */ b) => b.content) }
+	return { html, scripts: (env.sfcBlocks?.scripts ?? []).map((b) => b.content) }
 }
 
 const BODY = 'slide.addText("hi", { x: 1, y: 1, w: 2, h: 1 })\n'

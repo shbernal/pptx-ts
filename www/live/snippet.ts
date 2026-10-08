@@ -2,7 +2,7 @@
  * Live examples: what a ` ```ts live ` fence is, and what its body becomes.
  *
  * Shared by the site, which compiles each fence into a module the page imports, and by
- * `test/regression/www/live-examples.test.js`, which runs every fence in Node and validates
+ * `test/regression/www/live-examples.test.ts`, which runs every fence in Node and validates
  * the deck it builds. One definition of both, so the page and the test cannot disagree
  * about which fences are live or what a fence's body has in scope.
  *

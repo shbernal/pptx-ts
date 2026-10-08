@@ -1165,7 +1165,7 @@ documents.
 |---|---|---|
 | `deck-download.spec.ts` | demo | the object-URL download is a real OPC package: read back with **jszip**, an implementation independent of the `fflate` the library writes with |
 | `cross-runtime-bytes.spec.ts` | demo | each browser-built showcase is **byte-identical** to the Node-built one, part for part, media included |
-| `deck-live-examples.spec.mjs` | demo | every live example on a docs page paints the slide its code builds, its download is that deck, and a page without one loads none of the machinery |
+| `deck-live-examples.spec.ts` | demo | every live example on a docs page paints the slide its code builds, its download is that deck, and a page without one loads none of the machinery |
 | `adapter-media.spec.ts` | runtime-adapter | `loadMedia` and `createSvgPngPreview`: a fetched raster image lands as the same bytes Node reads off disk *and* as the source file's; the `<canvas>` rasterizer emits a real PNG where Node stubs a placeholder; 404, undecodable-SVG and zero-dimension-SVG each fail with the right code |
 | `adapter-fonts.spec.ts` | runtime-adapter | `loadFontData`: a font fetched over HTTP bakes the same `fontScale` and embeds the same `/ppt/fonts/` bytes as one read off disk; a 404 rejects with `font/fetch-failed` |
 | `adapter-coverage.spec.ts` | runtime-adapter | all four adapter functions ran, and `dist/browser.js`'s executed share stayed above its floor |

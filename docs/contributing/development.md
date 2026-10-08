@@ -290,7 +290,7 @@ only `pptx`, so the deck has no empty slide in front of it.
 Mark a snippet live only when it is a whole call; leave a bare option object as a plain `ts`
 fence.
 
-`test/regression/www/live-examples.test.js` runs every live fence in Node and fails on a throw,
+`test/regression/www/live-examples.test.ts` runs every live fence in Node and fails on a throw,
 a warning or a package the validator rejects, so a live example cannot rot unnoticed. What it
 cannot see is how the slide looks: `pptx-html` draws the preview, and where it cannot carry a
 construct the example says so under the slide. Look at the page under `pnpm run docs:dev`.

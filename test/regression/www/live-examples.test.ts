@@ -3,8 +3,8 @@ import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { describe, expect, test } from 'vitest'
 import { liveFences, wrapSnippet } from '../../../www/live/snippet.ts'
-import { captureDiagnostics, TsPptx } from '../../helpers.js'
-import { validateBuf, validatorInstalled } from '../../validator.js'
+import { captureDiagnostics, TsPptx } from '../../helpers.ts'
+import { validateBuf, validatorInstalled } from '../../validator.ts'
 
 /**
  * Every `ts live` fence on the site runs, and builds a deck that is schema-valid.
@@ -21,8 +21,7 @@ const DOCS = path.join(REPO, 'docs')
 const OUT = path.join(REPO, '.tmp', 'live-examples')
 const SKIP = new Set([path.join(DOCS, 'contributing'), path.join(DOCS, 'reference', 'api')])
 
-/** @param {string} dir @returns {string[]} */
-function pages(dir) {
+function pages(dir: string): string[] {
 	return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
 		const full = path.join(dir, entry.name)
 		if (entry.name.startsWith('.') || SKIP.has(full)) return []
@@ -41,6 +40,12 @@ const examples = pages(DOCS).flatMap((file) =>
 
 mkdirSync(OUT, { recursive: true })
 
+/** What `wrapSnippet` compiles a fence into. */
+interface LiveModule {
+	ownsSlide: boolean
+	default: (pptx: TsPptx, slide?: ReturnType<TsPptx['addSlide']>) => Promise<void>
+}
+
 describe('live examples', () => {
 	test('the site has some, so an empty scan cannot pass for a green one', () => {
 		expect(examples.length).toBeGreaterThan(0)
@@ -49,7 +54,7 @@ describe('live examples', () => {
 	for (const example of examples) {
 		test(`${example.page}:${example.line} builds a valid deck without a warning`, async () => {
 			writeFileSync(example.module, wrapSnippet(example.code))
-			const snippet = await import(pathToFileURL(example.module).href)
+			const snippet = (await import(pathToFileURL(example.module).href)) as LiveModule
 
 			// Serialization inside the capture too: some warnings (a clamped gradient centre) are
 			// raised while the package is written, not when the option is passed.

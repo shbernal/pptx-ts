@@ -1,11 +1,12 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Browser } from '@playwright/test'
 import JSZip from 'jszip'
+import { defined } from './helpers.ts'
 
 /**
  * Live examples on a docs page: each `ts live` fence paints the slide its code builds, and
  * its download is that deck.
  *
- * Node already runs every fence and validates the package (`live-examples.test.js`). What
+ * Node already runs every fence and validates the package (`live-examples.test.ts`). What
  * only a browser shows is the site half: the fence compiled into a module the page imports,
  * the component waking up when it scrolls into view, and the renderer painting the result.
  */
@@ -58,15 +59,12 @@ test('a page without a live example loads none of the machinery', async ({ brows
 /**
  * Every URL a fresh context requests while loading `path`, so one page's cache cannot hide
  * another's requests.
- * @param {import('@playwright/test').Browser} browser
- * @param {string} path
  */
-async function requestsOn(browser, path) {
-	const context = await browser.newContext({ baseURL: test.info().project.use.baseURL })
+async function requestsOn(browser: Browser, path: string): Promise<string[]> {
+	const context = await browser.newContext({ baseURL: defined(test.info().project.use.baseURL) })
 	try {
 		const page = await context.newPage()
-		/** @type {string[]} */
-		const requested = []
+		const requested: string[] = []
 		page.on('request', (request) => requested.push(request.url()))
 		await page.goto(path)
 		await page.waitForLoadState('networkidle')
@@ -76,9 +74,8 @@ async function requestsOn(browser, path) {
 	}
 }
 
-/** @param {NodeJS.ReadableStream} stream */
-async function readAll(stream) {
-	const chunks = []
-	for await (const chunk of stream) chunks.push(chunk)
+async function readAll(stream: NodeJS.ReadableStream): Promise<Buffer> {
+	const chunks: Buffer[] = []
+	for await (const chunk of stream) chunks.push(Buffer.from(chunk))
 	return Buffer.concat(chunks)
 }

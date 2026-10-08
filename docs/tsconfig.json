@@ -39,6 +39,6 @@
 		"../www/**/*.ts",
 		"../www/**/*.d.ts",
 		"../test/regression/www/mermaid-fence.test.ts",
-		"../test/regression/www/live-fence.test.js"
+		"../test/regression/www/live-fence.test.ts"
 	]
 }
