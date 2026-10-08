@@ -9,7 +9,7 @@ import { describe, test } from 'vitest'
 import { fitSrcRectPercents, getImageSizeFromBytes } from '../../../src/media/image-size.ts'
 import { Presentation } from '../../../dist/read.js'
 import { EMU_PER_INCH } from '../../../dist/node.js'
-import { assert, assertEqual, build, captureDiagnostics, readEntry } from '../../helpers.js'
+import { assert, assertEqual, build, captureDiagnostics, slideXml } from '../../helpers.js'
 
 /**
  * A PNG header carrying an arbitrary intrinsic size. The size reader looks at the IHDR dimensions
@@ -35,11 +35,6 @@ function pictureFrame(xml) {
 	const m = /<a:off x="(-?\d+)" y="(-?\d+)"\s*\/>\s*<a:ext cx="(\d+)" cy="(\d+)"\s*\/>/.exec(pic)
 	assert(m, 'expected the picture frame; got: ' + pic)
 	return { x: Number(m[1]), y: Number(m[2]), cx: Number(m[3]), cy: Number(m[4]) }
-}
-
-async function slideXml(author, n = 1) {
-	const { zip } = await build(author)
-	return readEntry(zip, `ppt/slides/slide${n}.xml`)
 }
 
 describe('image geometry', () => {

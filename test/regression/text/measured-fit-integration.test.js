@@ -12,15 +12,11 @@
 // rejects it, and on Windows, where there is no `fc-match` to answer at all.
 import { readFileSync } from 'node:fs'
 import { describe, test, expect } from 'vitest'
-import JSZip from 'jszip'
 import TsPptx from '../../../dist/node.js'
+import { partXml } from '../../helpers.js'
 import { resolveGenuineFontFile } from '../../read/font-oracle.js'
 
-async function slide1Xml(pres) {
-	const buf = await pres.toBytes()
-	const zip = await JSZip.loadAsync(buf)
-	return zip.file('ppt/slides/slide1.xml').async('string')
-}
+const SLIDE1 = 'ppt/slides/slide1.xml'
 
 const EMU_PER_IN = 914400
 const EMU_PER_PT = 12700
@@ -53,7 +49,7 @@ describe("measured fit: fit:'shrink' integration", () => {
 		const pres = new TsPptx()
 		const slide = pres.addSlide()
 		slide.addText(OVERFLOW, { x: 1, y: 1, w: 3, h: 1, fontFace: 'Aptos', fontSize: 18, fit: 'shrink' })
-		const xml = await slide1Xml(pres)
+		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		expect(xml).toContain('<a:normAutofit/>')
 		expect(xml).not.toContain('fontScale')
 	})
@@ -72,7 +68,7 @@ describe("measured fit: fit:'shrink' integration", () => {
 
 		const slide = pres.addSlide()
 		slide.addText(OVERFLOW, { x: 1, y: 1, w: 3, h: 1, fontFace: 'Aptos', fontSize: 18, fit: 'shrink' })
-		const xml = await slide1Xml(pres)
+		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		expect(xml).toContain('<a:normAutofit/>') // …but the export bakes the bare flag
 		expect(xml).not.toContain('fontScale')
 	})
@@ -85,7 +81,7 @@ describe("measured fit: fit:'shrink' integration", () => {
 		await pres.registerFontMetrics(FACE, FACE_FILE)
 		const slide = pres.addSlide()
 		slide.addText(OVERFLOW, { x: 1, y: 1, w: 3, h: 1, fontFace: 'Helvetica', fontSize: 18, fit: 'shrink' })
-		const xml = await slide1Xml(pres)
+		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		expect(xml).toContain('fontScale')
 		expect(xml).not.toContain('<a:normAutofit/>') // bare flag replaced by the baked (heuristic) scale
 	})
@@ -96,7 +92,7 @@ describe("measured fit: fit:'shrink' integration", () => {
 		const slide = pres.addSlide()
 		// No fontFace → we cannot know which face the theme resolves to, so no heuristic.
 		slide.addText(OVERFLOW, { x: 1, y: 1, w: 3, h: 1, fontSize: 18, fit: 'shrink' })
-		const xml = await slide1Xml(pres)
+		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		expect(xml).toContain('<a:normAutofit/>')
 		expect(xml).not.toContain('fontScale')
 	})
@@ -106,7 +102,7 @@ describe("measured fit: fit:'shrink' integration", () => {
 		await pres.registerFontMetrics(FACE, FACE_FILE)
 		const slide = pres.addSlide()
 		slide.addText(OVERFLOW, { x: 1, y: 1, w: 3, h: 1, fontFace: FACE, fontSize: 18, fit: 'shrink' })
-		const xml = await slide1Xml(pres)
+		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		const m = xml.match(/<a:normAutofit fontScale="(\d+)"/)
 		expect(m).not.toBeNull()
 		const scale = Number(m[1])
@@ -124,7 +120,7 @@ describe("measured fit: fit:'shrink' integration", () => {
 		// (2in): the single line fits the height and only the horizontal check catches it.
 		const ONE_LINE = 'This single line is deliberately far too wide to ever fit the narrow box'
 		slide.addText(ONE_LINE, { x: 1, y: 1, w: 2, h: 2, fontFace: FACE, fontSize: 28, fit: 'shrink', wrap: false })
-		const xml = await slide1Xml(pres)
+		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		expect(xml).toContain('wrap="none"') // it is genuinely a non-wrapping frame
 		const m = xml.match(/<a:normAutofit fontScale="(\d+)"/)
 		expect(m).not.toBeNull() // before the fix this was a bare <a:normAutofit/>
@@ -140,7 +136,7 @@ describe("measured fit: fit:'shrink' integration", () => {
 		await pres.registerFontMetrics(FACE, FACE_FILE)
 		const slide = pres.addSlide()
 		slide.addText('Hi', { x: 1, y: 1, w: 6, h: 3, fontFace: FACE, fontSize: 18, fit: 'shrink' })
-		const xml = await slide1Xml(pres)
+		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		expect(xml).toContain('<a:normAutofit/>')
 		expect(xml).not.toContain('fontScale')
 	})
@@ -150,7 +146,7 @@ describe("measured fit: fit:'shrink' integration", () => {
 		await pres.registerFontMetrics(FACE, new Uint8Array(readFileSync(FACE_FILE)))
 		const slide = pres.addSlide()
 		slide.addText(OVERFLOW, { x: 1, y: 1, w: 3, h: 1, fontFace: FACE, fontSize: 18, fit: 'shrink' })
-		const xml = await slide1Xml(pres)
+		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		expect(xml).toMatch(/<a:normAutofit fontScale="\d+"/)
 	})
 })
@@ -160,7 +156,7 @@ describe("measured fit: fit:'resize' integration", () => {
 		const pres = new TsPptx()
 		const slide = pres.addSlide()
 		slide.addText(OVERFLOW, { x: 1, y: 1, w: 3, h: 1, fontFace: 'Aptos', fontSize: 18, fit: 'resize' })
-		const xml = await slide1Xml(pres)
+		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		expect(xml).toContain('<a:spAutoFit/>')
 		expect(firstXfrm(xml).cy).toBe(1 * EMU_PER_IN) // unchanged 1in box
 	})
@@ -170,7 +166,7 @@ describe("measured fit: fit:'resize' integration", () => {
 		await pres.registerFontMetrics(FACE, FACE_FILE)
 		const slide = pres.addSlide()
 		slide.addText(OVERFLOW, { x: 1, y: 1, w: 3, h: 1, fontFace: FACE, fontSize: 18, fit: 'resize', valign: 'top' })
-		const xml = await slide1Xml(pres)
+		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		expect(xml).toContain('<a:spAutoFit/>')
 		const { offY, cy } = firstXfrm(xml)
 		expect(cy).toBeGreaterThan(1 * EMU_PER_IN) // multi-line overflow → taller box
@@ -182,7 +178,7 @@ describe("measured fit: fit:'resize' integration", () => {
 		await pres.registerFontMetrics(FACE, FACE_FILE)
 		const slide = pres.addSlide()
 		slide.addText('Hi', { x: 1, y: 2, w: 6, h: 3, fontFace: FACE, fontSize: 18, fit: 'resize', valign: 'top' })
-		const xml = await slide1Xml(pres)
+		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		const { offY, cy } = firstXfrm(xml)
 		// One 18pt line + insets ≈ 30pt, far less than the authored 3in box.
 		expect(cy).toBeLessThan(3 * EMU_PER_IN)
@@ -196,7 +192,7 @@ describe("measured fit: fit:'resize' integration", () => {
 		const slide = pres.addSlide()
 		// Default (no valign) resolves to centered anchor → origin shifts by half the delta.
 		slide.addText('Hi', { x: 1, y: 2, w: 6, h: 3, fontFace: FACE, fontSize: 18, fit: 'resize' })
-		const xml = await slide1Xml(pres)
+		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		const { offY, cy } = firstXfrm(xml)
 		const delta = 3 * EMU_PER_IN - cy // positive (box shrank)
 		expect(offY).toBeCloseTo(2 * EMU_PER_IN + delta / 2, -2) // top moved down by half the shrink
@@ -224,15 +220,15 @@ describe("measured fit: fit:'resize' integration", () => {
 		await pres.registerFontMetrics(FACE, FACE_FILE)
 		build(pres)
 		// LATER has no metrics yet, so this write estimates it.
-		const estimated = await slide1Xml(pres)
+		const estimated = await partXml(await pres.toBytes(), SLIDE1)
 		await pres.registerFontMetrics(LATER, FACE_FILE)
-		const second = await slide1Xml(pres)
+		const second = await partXml(await pres.toBytes(), SLIDE1)
 
 		const fresh = new TsPptx()
 		await fresh.registerFontMetrics(FACE, FACE_FILE)
 		await fresh.registerFontMetrics(LATER, FACE_FILE)
 		build(fresh)
-		const expected = await slide1Xml(fresh)
+		const expected = await partXml(await fresh.toBytes(), SLIDE1)
 
 		// The estimate has to differ from the measured result, or the comparison below proves nothing.
 		expect(estimated).not.toBe(expected)

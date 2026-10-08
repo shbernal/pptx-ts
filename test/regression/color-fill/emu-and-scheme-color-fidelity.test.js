@@ -6,24 +6,17 @@
 // vocabulary boundaries executable rather than inferred from type declarations: widening
 // `Margin`/`colW` to `Coord`, or extending `SchemeColor` towards the full
 // `ST_SchemeColorVal` set, should fail here and be recorded as a deliberate change.
-import JSZip from 'jszip'
-import TsPptx from '../../../dist/node.js'
-import { defineRegressionSuite, assert, assertIncludes } from '../../helpers.js'
+import { defineRegressionSuite, assert, assertIncludes, slideXml } from '../../helpers.js'
 
 const EMU_PER_INCH = 914400
 
-async function slide1Xml(pres) {
-	const zip = await JSZip.loadAsync(await pres.toBytes())
-	const entry = zip.file('ppt/slides/slide1.xml')
-	if (!entry) throw new Error('slide1.xml missing')
-	return entry.async('string')
-}
-
-function deck() {
-	const pres = new TsPptx()
-	pres.defineLayout({ name: 'EMU_PROBE', width: 10, height: 5.625 })
-	pres.layout = 'EMU_PROBE'
-	return pres
+/** Build one slide on the probe layout and read its XML back. */
+function probeSlideXml(author) {
+	return slideXml((pres) => {
+		pres.defineLayout({ name: 'EMU_PROBE', width: 10, height: 5.625 })
+		pres.layout = 'EMU_PROBE'
+		author(pres.addSlide())
+	})
 }
 
 // Deliberately non-round EMU values: an imprecise conversion anywhere perturbs them, so
@@ -37,9 +30,9 @@ defineRegressionSuite('EMU-exact geometry and scheme-colour passthrough', [
 	{
 		name: 'top-level x/y/w/h accept "<n>emu" and reach a:off/a:ext unrounded',
 		fn: async () => {
-			const pres = deck()
-			pres.addSlide().addText('emu', { x: `${X}emu`, y: `${Y}emu`, w: `${W}emu`, h: `${H}emu` })
-			const xml = await slide1Xml(pres)
+			const xml = await probeSlideXml((slide) =>
+				slide.addText('emu', { x: `${X}emu`, y: `${Y}emu`, w: `${W}emu`, h: `${H}emu` })
+			)
 			assertIncludes(xml, `<a:off x="${X}" y="${Y}"/>`, 'slide XML')
 			assertIncludes(xml, `<a:ext cx="${W}" cy="${H}"/>`, 'slide XML')
 		},
@@ -47,24 +40,24 @@ defineRegressionSuite('EMU-exact geometry and scheme-colour passthrough', [
 	{
 		name: 'custGeom path nodes — including cubic control points — are EMU-exact',
 		fn: async () => {
-			const pres = deck()
-			pres.addSlide().addShape('custGeom', {
-				x: `${X}emu`,
-				y: `${Y}emu`,
-				w: '1000001emu',
-				h: '1000001emu',
-				points: [
-					{ x: '0emu', y: '0emu', moveTo: true },
-					{ x: '500001emu', y: '0emu' },
-					{
-						x: '1000001emu',
-						y: '500001emu',
-						curve: { type: 'cubic', x1: '700001emu', y1: '100001emu', x2: '900001emu', y2: '300001emu' },
-					},
-					{ close: true },
-				],
-			})
-			const xml = await slide1Xml(pres)
+			const xml = await probeSlideXml((slide) =>
+				slide.addShape('custGeom', {
+					x: `${X}emu`,
+					y: `${Y}emu`,
+					w: '1000001emu',
+					h: '1000001emu',
+					points: [
+						{ x: '0emu', y: '0emu', moveTo: true },
+						{ x: '500001emu', y: '0emu' },
+						{
+							x: '1000001emu',
+							y: '500001emu',
+							curve: { type: 'cubic', x1: '700001emu', y1: '100001emu', x2: '900001emu', y2: '300001emu' },
+						},
+						{ close: true },
+					],
+				})
+			)
 			assertIncludes(xml, '<a:path w="1000001" h="1000001">', 'slide XML')
 			// The three cubicBezTo children: two control points, then the end point.
 			for (const pt of ['x="700001" y="100001"', 'x="900001" y="300001"', 'x="1000001" y="500001"']) {
@@ -80,15 +73,15 @@ defineRegressionSuite('EMU-exact geometry and scheme-colour passthrough', [
 			// the identity for every EMU value in a realistic slide, because a double carries
 			// far more precision than the ~5.5e7 EMU involved. The loss only appears if the
 			// printed decimal is truncated — see the toFixed test below.
-			const pres = deck()
-			pres.addSlide().addTable([[{ text: 'a' }, { text: 'b' }]], {
-				x: 1,
-				y: 1,
-				w: 8,
-				colW: [3, 3],
-				rowH: [H / EMU_PER_INCH],
-			})
-			const xml = await slide1Xml(pres)
+			const xml = await probeSlideXml((slide) =>
+				slide.addTable([[{ text: 'a' }, { text: 'b' }]], {
+					x: 1,
+					y: 1,
+					w: 8,
+					colW: [3, 3],
+					rowH: [H / EMU_PER_INCH],
+				})
+			)
 			assertIncludes(xml, `<a:tr h="${H}"`, 'table row height')
 		},
 	},
@@ -138,11 +131,9 @@ defineRegressionSuite('EMU-exact geometry and scheme-colour passthrough', [
 			// It throws from `addText`, not from `toBytes`: the insets are resolved when the text
 			// object is defined, so the throw names the call that carries the bad value.
 			const emuMargin = /** @type {any} */ (['91441emu', 0.1, 0.1, 0.1])
-			const pres = deck()
 			let threw = null
 			try {
-				pres.addSlide().addText('inset', { x: 1, y: 1, w: 4, h: 1, margin: emuMargin })
-				await pres.toBytes()
+				await probeSlideXml((slide) => slide.addText('inset', { x: 1, y: 1, w: 4, h: 1, margin: emuMargin }))
 			} catch (err) {
 				threw = err
 			}
@@ -155,9 +146,9 @@ defineRegressionSuite('EMU-exact geometry and scheme-colour passthrough', [
 		fn: async () => {
 			const mapped = ['tx1', 'tx2', 'bg1', 'bg2', 'accent1', 'accent2', 'accent3', 'accent4', 'accent5', 'accent6']
 			for (const token of mapped) {
-				const pres = deck()
-				pres.addSlide().addShape('rect', { x: 1, y: 1, w: 2, h: 1, fill: { color: token } })
-				const xml = await slide1Xml(pres)
+				const xml = await probeSlideXml((slide) =>
+					slide.addShape('rect', { x: 1, y: 1, w: 2, h: 1, fill: { color: token } })
+				)
 				assertIncludes(xml, `<a:schemeClr val="${token}"/>`, `fill for scheme token ${token}`)
 			}
 		},
@@ -172,9 +163,9 @@ defineRegressionSuite('EMU-exact geometry and scheme-colour passthrough', [
 			// the theme's `a:clrScheme` and emit hex, never pass the token through.
 			const unmapped = ['dk1', 'lt1', 'dk2', 'lt2', 'hlink', 'folHlink', 'phClr']
 			for (const token of unmapped) {
-				const pres = deck()
-				pres.addSlide().addShape('rect', { x: 1, y: 1, w: 2, h: 1, fill: { color: token } })
-				const xml = await slide1Xml(pres)
+				const xml = await probeSlideXml((slide) =>
+					slide.addShape('rect', { x: 1, y: 1, w: 2, h: 1, fill: { color: token } })
+				)
 				assert(
 					!xml.includes(`<a:schemeClr val="${token}"`),
 					`"${token}" reached the slide as a schemeClr; the write path is not supposed to accept it. ` +
@@ -192,9 +183,7 @@ defineRegressionSuite('EMU-exact geometry and scheme-colour passthrough', [
 			// x/y/w/h does not yield inheritance either — it yields a degenerate box (cy="0").
 			// A converter must therefore always print concrete geometry, and may print
 			// `placeholder` on top of it purely for semantics/accessibility.
-			const pres = deck()
-			pres.addSlide().addText('Title', { placeholder: 'title' })
-			const xml = await slide1Xml(pres)
+			const xml = await probeSlideXml((slide) => slide.addText('Title', { placeholder: 'title' }))
 			assertIncludes(xml, '<p:ph', 'slide XML')
 			const ext = /<a:ext cx="(\d+)" cy="(\d+)"\/>/.exec(xml)
 			assert(ext, 'expected an explicit <a:ext> on a placeholder-bound shape; got:\n' + xml)
@@ -215,15 +204,11 @@ defineRegressionSuite('EMU-exact geometry and scheme-colour passthrough', [
 			// cannot be fully reproduced. Both are semantic losses, not visual ones — geometry is
 			// always explicit — but they must be declared, not discovered.
 			for (const token of ['title', 'body', 'pic', 'chart', 'tbl', 'media']) {
-				const pres = deck()
-				pres.addSlide().addText('x', { placeholder: token, x: 1, y: 1, w: 4, h: 1 })
-				const xml = await slide1Xml(pres)
+				const xml = await probeSlideXml((slide) => slide.addText('x', { placeholder: token, x: 1, y: 1, w: 4, h: 1 }))
 				assertIncludes(xml, `type="${token}"`, `p:ph for expressible type ${token}`)
 			}
 			for (const token of ['ctrTitle', 'subTitle', 'dt', 'sldNum', 'ftr', 'hdr', 'obj', 'clipArt', 'dgm', 'sldImg']) {
-				const pres = deck()
-				pres.addSlide().addText('x', { placeholder: token, x: 1, y: 1, w: 4, h: 1 })
-				const xml = await slide1Xml(pres)
+				const xml = await probeSlideXml((slide) => slide.addText('x', { placeholder: token, x: 1, y: 1, w: 4, h: 1 }))
 				assert(
 					!xml.includes(`type="${token}"`),
 					`"${token}" was emitted as a p:ph type; PlaceholderType is not supposed to cover it. ` +

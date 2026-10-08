@@ -11,8 +11,8 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, test, expect } from 'vitest'
-import JSZip from 'jszip'
 import TsPptx, { setDiagnosticHandler } from '../../../dist/node.js'
+import { partXml } from '../../helpers.js'
 // The `ts-pptx/measure` entry publishes the calibrated constants the bake uses, so a test
 // can state "inflated by the height safety factor" instead of re-pinning its value here.
 import { HEIGHT_SAFETY_FACTOR } from '../../../dist/measure.js'
@@ -26,11 +26,7 @@ const EMU_PER_PT = 12700
 // Silkscreen is a wide pixel font, so this string overflows a small box handily.
 const OVERFLOW = 'The quick brown fox jumps over the lazy dog. '.repeat(6).trim()
 
-async function slide1Xml(pres) {
-	const buf = await pres.toBytes()
-	const zip = await JSZip.loadAsync(buf)
-	return zip.file('ppt/slides/slide1.xml').async('string')
-}
+const SLIDE1 = 'ppt/slides/slide1.xml'
 
 /** First non-group xfrm (the spTree opens with a zero-size group). */
 function firstXfrm(xml) {
@@ -112,7 +108,7 @@ describe("applyMeasuredFit: fit:'shrink' through dist export", () => {
 		const pres = await pptxWithSilkscreen()
 		const slide = pres.addSlide()
 		slide.addText(OVERFLOW, { x: 1, y: 1, w: 3, h: 1, fontFace: 'Silkscreen', fontSize: 18, fit: 'shrink' })
-		const xml = await slide1Xml(pres)
+		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		const m = xml.match(/<a:normAutofit fontScale="(\d+)"/)
 		expect(m).not.toBeNull()
 		const scale = Number(m[1])
@@ -125,7 +121,7 @@ describe("applyMeasuredFit: fit:'shrink' through dist export", () => {
 		const pres = await pptxWithSilkscreen()
 		const slide = pres.addSlide()
 		slide.addText('Hi', { x: 1, y: 1, w: 6, h: 3, fontFace: 'Silkscreen', fontSize: 12, fit: 'shrink' })
-		const xml = await slide1Xml(pres)
+		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		expect(xml).toContain('<a:normAutofit/>')
 		expect(xml).not.toContain('fontScale')
 	})
@@ -136,7 +132,7 @@ describe("applyMeasuredFit: fit:'shrink' through dist export", () => {
 		// Deck opted into measured fit, so an unregistered *named* face falls back to the
 		// conservative average-advance heuristic rather than degrading to the bare flag.
 		slide.addText(OVERFLOW, { x: 1, y: 1, w: 3, h: 1, fontFace: 'Helvetica', fontSize: 18, fit: 'shrink' })
-		const xml = await slide1Xml(pres)
+		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		expect(xml).toContain('fontScale')
 	})
 
@@ -144,7 +140,7 @@ describe("applyMeasuredFit: fit:'shrink' through dist export", () => {
 		const pres = await pptxWithSilkscreen()
 		const slide = pres.addSlide()
 		slide.addText(OVERFLOW, { x: 1, y: 1, w: 3, h: 1, fontSize: 18, fit: 'shrink' })
-		const xml = await slide1Xml(pres)
+		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		expect(xml).toContain('<a:normAutofit/>')
 		expect(xml).not.toContain('fontScale')
 	})
@@ -154,7 +150,7 @@ describe("applyMeasuredFit: fit:'shrink' through dist export", () => {
 		await pres.registerFontMetrics('Silkscreen', new Uint8Array(readFileSync(REG_PATH)))
 		const slide = pres.addSlide()
 		slide.addText(OVERFLOW, { x: 1, y: 1, w: 3, h: 1, fontFace: 'Silkscreen', fontSize: 18, fit: 'shrink' })
-		const xml = await slide1Xml(pres)
+		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		expect(xml).toMatch(/<a:normAutofit fontScale="\d+"/)
 	})
 
@@ -169,7 +165,7 @@ describe("applyMeasuredFit: fit:'shrink' through dist export", () => {
 				},
 			},
 		])
-		const xml = await slide1Xml(pres)
+		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		expect(xml).toMatch(/<p:grpSp>.*<a:normAutofit fontScale="\d+"/s)
 	})
 
@@ -199,7 +195,7 @@ describe("applyMeasuredFit: fit:'shrink' through dist export", () => {
 				},
 			},
 		])
-		const xml = await slide1Xml(pres)
+		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		expect((xml.match(/<p:grpSp>/g) ?? []).length).toBe(2)
 		expect(xml).toMatch(/<a:normAutofit fontScale="\d+"/)
 	})
@@ -219,7 +215,7 @@ describe("applyMeasuredFit: fit:'resize' through dist export", () => {
 			fit: 'resize',
 			valign: 'top',
 		})
-		const xml = await slide1Xml(pres)
+		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		expect(xml).toContain('<a:spAutoFit/>')
 		const { offY, cy } = firstXfrm(xml)
 		expect(cy).toBeGreaterThan(1 * EMU_PER_IN)
@@ -230,7 +226,7 @@ describe("applyMeasuredFit: fit:'resize' through dist export", () => {
 		const pres = await pptxWithSilkscreen()
 		const slide = pres.addSlide()
 		slide.addText('Hi', { x: 1, y: 2, w: 6, h: 3, fontFace: 'Silkscreen', fontSize: 18, fit: 'resize' })
-		const xml = await slide1Xml(pres)
+		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		const { offY, cy } = firstXfrm(xml)
 		expect(cy).toBeLessThan(3 * EMU_PER_IN)
 		expect(cy).toBeGreaterThan(20 * EMU_PER_PT)
@@ -266,7 +262,7 @@ async function shrinkScale(extraOpts, text = OVERFLOW) {
 		fit: 'shrink',
 		...extraOpts,
 	})
-	return bakedScale(await slide1Xml(pres))
+	return bakedScale(await partXml(await pres.toBytes(), SLIDE1))
 }
 
 describe('measured fit: paragraph splitting', () => {
@@ -388,7 +384,7 @@ describe("measured fit: fit:'resize' vertical anchor", () => {
 			fit: 'resize',
 			valign: 'bottom',
 		})
-		const { offY, cy } = firstXfrm(await slide1Xml(pres))
+		const { offY, cy } = firstXfrm(await partXml(await pres.toBytes(), SLIDE1))
 		expect(cy).toBeGreaterThan(1 * EMU_PER_IN)
 		// Top moves up by the whole delta, so the bottom edge lands where it was authored.
 		expect(offY).toBeLessThan(2 * EMU_PER_IN)
@@ -400,7 +396,7 @@ describe("measured fit: fit:'resize' vertical anchor", () => {
 		// Registry is non-empty (the deck opted in), but an unnamed face cannot be guessed —
 		// so resize has nothing to bake and must not touch the box.
 		pres.addSlide().addText(OVERFLOW, { x: 1, y: 1, w: 3, h: 1, fontSize: 18, fit: 'resize' })
-		const { offY, cy } = firstXfrm(await slide1Xml(pres))
+		const { offY, cy } = firstXfrm(await partXml(await pres.toBytes(), SLIDE1))
 		expect(cy).toBe(1 * EMU_PER_IN)
 		expect(offY).toBe(1 * EMU_PER_IN)
 	})
@@ -516,7 +512,7 @@ describe("applyMeasuredFit: TableCellProps.fit:'shrink' through dist export", ()
 			w: 3,
 			rowH: [0.4],
 		})
-		const xml = await slide1Xml(pres)
+		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		const sizes = szValues(xml)
 		expect(sizes.length).toBeGreaterThan(0)
 		// 18pt == sz 1800; a shrink bakes something strictly smaller.
@@ -531,7 +527,7 @@ describe("applyMeasuredFit: TableCellProps.fit:'shrink' through dist export", ()
 			y: 0.5,
 			w: 3,
 		})
-		const xml = await slide1Xml(pres)
+		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		expect(szValues(xml)).toContain(1800) // authored 18pt preserved
 	})
 
@@ -545,7 +541,7 @@ describe("applyMeasuredFit: TableCellProps.fit:'shrink' through dist export", ()
 			rowH: [0.4],
 			fit: 'shrink',
 		})
-		const xml = await slide1Xml(pres)
+		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		expect(Math.min(...szValues(xml))).toBeLessThan(1800)
 	})
 })
@@ -729,7 +725,7 @@ describe('applyMeasuredFit: the table cell shrink pass', () => {
 	async function tableDeck(rows, opts) {
 		const pres = await pptxWithSilkscreen()
 		pres.addSlide().addTable(rows, { x: 0.5, y: 0.5, w: 3, ...opts })
-		return slide1Xml(pres)
+		return partXml(await pres.toBytes(), SLIDE1)
 	}
 
 	test('a cell without fit is left alone while its shrinking neighbor is baked', async () => {
@@ -835,7 +831,7 @@ describe('applyMeasuredFit: the table cell shrink pass', () => {
 		const slide = pres.addSlide()
 		slide.addImage({ data: 'image/png;base64,iVBORw0KGgo=', x: 1, y: 1, w: 1, h: 1 })
 		slide.addText(OVERFLOW, { x: 1, y: 3, w: 3, h: 1, fontFace: 'Silkscreen', fontSize: 18, fit: 'shrink' })
-		expect(await slide1Xml(pres)).toMatch(/<a:normAutofit fontScale="\d+"/)
+		expect(await partXml(await pres.toBytes(), SLIDE1)).toMatch(/<a:normAutofit fontScale="\d+"/)
 	})
 
 	test('a table with a row but no columns is passed over, not divided by zero', async () => {
@@ -848,7 +844,7 @@ describe('applyMeasuredFit: the table cell shrink pass', () => {
 		slide.addText(OVERFLOW, { x: 1, y: 3, w: 3, h: 1, fontFace: 'Silkscreen', fontSize: 18, fit: 'shrink' })
 		// The neighbouring box still bakes, so the empty table was skipped rather than
 		// having taken the whole pass down with it.
-		expect(await slide1Xml(pres)).toMatch(/<a:normAutofit fontScale="\d+"/)
+		expect(await partXml(await pres.toBytes(), SLIDE1)).toMatch(/<a:normAutofit fontScale="\d+"/)
 	})
 
 	test('a cell with no text is passed over while its neighbour still bakes', async () => {
