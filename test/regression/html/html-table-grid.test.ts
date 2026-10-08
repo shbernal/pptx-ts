@@ -10,7 +10,7 @@ import { createRowSpanOccupancy } from '../../../src/gen/table/grid.ts'
 // prescribes for this file's DOM-bound neighbours).
 
 /** Shorthand: a row of plain single-track cells. */
-const plain = (count) => Array.from({ length: count }, () => ({}))
+const plain = (count: number) => Array.from({ length: count }, () => ({}))
 
 describe('measureGridColumns', () => {
 	test('a rectangular table is as wide as its rows', () => {

@@ -12,7 +12,7 @@
  * the space the pager's own `Math.min(y, topMargin)` exists to protect.
  */
 import { Window } from 'happy-dom'
-import { tableToSlides } from '../../../dist/html.js'
+import { tableToSlides, type TableToSlidesProps } from '../../../dist/html.js'
 import { assert, assertEqual, build, defineRegressionSuite, listEntries, readEntry, defined } from '../../helpers.ts'
 
 const EMU_PER_INCH = 914400
@@ -24,7 +24,7 @@ const TALL_TABLE = `<table id="t"><tbody>${Array.from(
 ).join('')}</tbody></table>`
 
 /** The `y` (EMU) of the table frame on every emitted slide, in slide order. */
-async function frameYs(opts) {
+async function frameYs(opts: TableToSlidesProps) {
 	const win = new Window()
 	win.document.body.innerHTML = TALL_TABLE
 	const { zip } = await build((pptx) => {

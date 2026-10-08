@@ -2,7 +2,16 @@ import JSZip from 'jszip'
 import { Window } from 'happy-dom'
 import { tableToSlides } from '../../../dist/html.js'
 import BrowserTsPptx from '../../../dist/browser.js'
-import { build, readEntry, listEntries, assert, assertEqual, defineRegressionSuite } from '../../helpers.ts'
+import {
+	build,
+	readEntry,
+	listEntries,
+	assert,
+	assertEqual,
+	defineRegressionSuite,
+	asError,
+	type ThrownError,
+} from '../../helpers.ts'
 
 // Acceptance: the `ts-pptx/html` subpath converts an HTML table to slides outside a browser.
 // This is the case the whole portability effort exists for, and it is the one the pure-helper
@@ -22,27 +31,27 @@ const ONE_IN_EMU = 914400
  * live-DOM half, so it is the only one whose `tableToSlides` resolves; `toBytes` needs nothing from
  * the browser runtime adapter, so the deck it writes here is the deck a browser would write.
  */
-async function buildBrowser(buildFn) {
+async function buildBrowser(buildFn: (pres: BrowserTsPptx) => unknown) {
 	const pres = new BrowserTsPptx()
 	buildFn(pres)
 	return { zip: await JSZip.loadAsync(await pres.toBytes()) }
 }
 
 /** A fresh window per test — no global DOM is installed, and no state leaks between cases. */
-function windowWith(html) {
+function windowWith(html: string) {
 	const win = new Window()
 	win.document.body.innerHTML = html
 	return win
 }
 
-function tableOf(win, id = 't') {
+function tableOf(win: Window, id = 't') {
 	const table = win.document.getElementById(id)
 	assert(table, `fixture is missing #${id}`)
 	return table
 }
 
 /** Cell texts per row, in emitted order, from one slide's table. */
-function cellTexts(xml) {
+function cellTexts(xml: string) {
 	return [...xml.matchAll(/<a:tr\b[\s\S]*?<\/a:tr>/g)].map((row) =>
 		[...row[0].matchAll(/<a:tc[\s\S]*?<\/a:tc>/g)].map((cell) =>
 			[...cell[0].matchAll(/<a:t>([\s\S]*?)<\/a:t>/g)].map((run) => run[1]).join('|')
@@ -50,17 +59,17 @@ function cellTexts(xml) {
 	)
 }
 
-function gridColWidths(xml) {
+function gridColWidths(xml: string) {
 	return [...xml.matchAll(/<a:gridCol w="(\d+)"\/>/g)].map((m) => Number(m[1]))
 }
 
 /** Cell count per emitted row — must equal the `<a:gridCol>` count for a well-formed table. */
-function cellsPerRow(xml) {
+function cellsPerRow(xml: string) {
 	return [...xml.matchAll(/<a:tr\b[\s\S]*?<\/a:tr>/g)].map((row) => [...row[0].matchAll(/<a:tc\b/g)].length)
 }
 
 /** Assert the emitted table is a rectangle: every row carries exactly one cell per grid column. */
-function assertRectangular(xml) {
+function assertRectangular(xml: string) {
 	const cols = gridColWidths(xml).length
 	const rows = cellsPerRow(xml)
 	assert(cols > 0, `expected a non-empty grid; got: ${xml}`)
@@ -70,7 +79,7 @@ function assertRectangular(xml) {
 	)
 }
 
-function slideCount(zip) {
+function slideCount(zip: JSZip) {
 	return listEntries(zip).filter((name) => /^ppt\/slides\/slide\d+\.xml$/.test(name)).length
 }
 
@@ -292,13 +301,13 @@ defineRegressionSuite('HTML table to slides on Node (happy-dom)', [
 		fn: async () => {
 			for (const html of ['<table id="t"></table>', '<table id="t"><tbody><tr></tr></tbody></table>']) {
 				const win = windowWith(html)
-				let thrown
+				let thrown: ThrownError | undefined
 				try {
 					await build((pptx) => {
 						tableToSlides(pptx, tableOf(win))
 					})
 				} catch (err) {
-					thrown = err
+					thrown = asError(err)
 				}
 				assert(thrown, `an empty table must not silently emit a slide; html: ${html}`)
 				// It used to surface as "Reduce of empty array with no initial value" out of the
@@ -525,7 +534,7 @@ defineRegressionSuite('HTML table to slides on Node (happy-dom)', [
 		name: 'verbose mode logs without changing the emitted table',
 		fn: async () => {
 			const win = windowWith(STYLED_TABLE)
-			const logged = []
+			const logged: string[] = []
 			const realLog = console.log
 			console.log = (...args) => logged.push(args.join(' '))
 			let quiet
@@ -589,13 +598,13 @@ defineRegressionSuite('HTML table to slides on Node (happy-dom)', [
 	{
 		name: 'the string-id form names both remedies when no document is resolvable',
 		fn: async () => {
-			let thrown
+			let thrown: ThrownError | undefined
 			try {
 				await build((pptx) => {
 					tableToSlides(pptx, 'nowhere')
 				})
 			} catch (err) {
-				thrown = err
+				thrown = asError(err)
 			}
 			assert(thrown, 'a bare id with no DOM anywhere must throw, not silently emit nothing')
 			assert(
@@ -608,13 +617,13 @@ defineRegressionSuite('HTML table to slides on Node (happy-dom)', [
 		name: 'a missing table id still reports the historical message',
 		fn: async () => {
 			const win = windowWith(STYLED_TABLE)
-			let thrown
+			let thrown: ThrownError | undefined
 			try {
 				await build((pptx) => {
 					tableToSlides(pptx, 'absent', { document: win.document })
 				})
 			} catch (err) {
-				thrown = err
+				thrown = asError(err)
 			}
 			assert(thrown, 'an unresolvable id must throw')
 			assertEqual(thrown.message, 'tableToSlides: Table ID "absent" does not exist!', 'error message')

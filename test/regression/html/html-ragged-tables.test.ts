@@ -1,5 +1,5 @@
 import { Window } from 'happy-dom'
-import { tableToSlides } from '../../../dist/html.js'
+import { tableToSlides, type Diagnostic } from '../../../dist/html.js'
 import { build, readEntry, assert, assertEqual, defineRegressionSuite, setDiagnosticHandler } from '../../helpers.ts'
 
 // Acceptance: what an imported RAGGED HTML table looks like on the slide.
@@ -21,24 +21,24 @@ import { build, readEntry, assert, assertEqual, defineRegressionSuite, setDiagno
 // pins WHERE each authored string lands, not merely that it survived), and rectangularity.
 
 /** A fresh window per case; no global DOM is installed and no state leaks between them. */
-function windowWith(html) {
+function windowWith(html: string) {
 	const win = new Window()
 	win.document.body.innerHTML = html
 	return win
 }
 
-function tableOf(win, id = 't') {
+function tableOf(win: Window, id = 't') {
 	const table = win.document.getElementById(id)
 	assert(table, `fixture is missing #${id}`)
 	return table
 }
 
-function gridColWidths(xml) {
+function gridColWidths(xml: string) {
 	return [...xml.matchAll(/<a:gridCol w="(\d+)"\/>/g)].map((m) => Number(m[1]))
 }
 
 /** Cell texts per row, in emitted order. */
-function cellTexts(xml) {
+function cellTexts(xml: string) {
 	return [...xml.matchAll(/<a:tr\b[\s\S]*?<\/a:tr>/g)].map((row) =>
 		[...row[0].matchAll(/<a:tc[\s\S]*?<\/a:tc>/g)].map((cell) =>
 			[...cell[0].matchAll(/<a:t>([\s\S]*?)<\/a:t>/g)].map((run) => run[1]).join('|')
@@ -47,7 +47,7 @@ function cellTexts(xml) {
 }
 
 /** Assert the emitted table is a rectangle: every row carries exactly one cell per grid column. */
-function assertRectangular(xml) {
+function assertRectangular(xml: string) {
 	const cols = gridColWidths(xml).length
 	const rows = [...xml.matchAll(/<a:tr\b[\s\S]*?<\/a:tr>/g)].map((row) => [...row[0].matchAll(/<a:tc\b/g)].length)
 	assert(cols > 0, `expected a non-empty grid; got: ${xml}`)
@@ -58,7 +58,7 @@ function assertRectangular(xml) {
 }
 
 /** Convert one HTML table and return its slide XML. */
-async function convert(html) {
+async function convert(html: string) {
 	const win = windowWith(html)
 	const { zip } = await build((pptx) => {
 		tableToSlides(pptx, tableOf(win))
@@ -67,7 +67,7 @@ async function convert(html) {
 }
 
 /** The shared assertion: grid width, the whole text matrix, and a rectangular result. */
-function assertGrid(xml, columns, texts) {
+function assertGrid(xml: string, columns: number, texts: string[][]) {
 	assertEqual(gridColWidths(xml).length, columns, `expected ${columns} grid columns`)
 	assertEqual(JSON.stringify(cellTexts(xml)), JSON.stringify(texts), 'cell texts, per row, in emitted order')
 	assertRectangular(xml)
@@ -239,7 +239,7 @@ defineRegressionSuite('ragged HTML tables', [
 		// another: the definer's column count disagreed, and `b` was dropped past a one-column grid.
 		name: 'a span past the ceiling counts as one column everywhere, and says so',
 		fn: async () => {
-			const codes = []
+			const codes: Diagnostic['code'][] = []
 			setDiagnosticHandler((d) => codes.push(d.code))
 			let xml
 			try {

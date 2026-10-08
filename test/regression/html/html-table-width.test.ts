@@ -9,14 +9,14 @@
  * This is arithmetic on stated options, not DOM measurement, so it holds under any DOM.
  */
 import { Window } from 'happy-dom'
-import { tableToSlides } from '../../../dist/html.js'
+import { tableToSlides, type TableToSlidesProps } from '../../../dist/html.js'
 import { assert, assertEqual, build, defineRegressionSuite, readEntry, defined } from '../../helpers.ts'
 
 const EMU_PER_INCH = 914400
-const inches = (emu) => Math.round((emu / EMU_PER_INCH) * 1000) / 1000
+const inches = (emu: number) => Math.round((emu / EMU_PER_INCH) * 1000) / 1000
 
 /** The table frame's `x` and `cx` in inches, and the slide width, for one set of options. */
-async function frameOf(opts) {
+async function frameOf(opts: TableToSlidesProps) {
 	const win = new Window()
 	win.document.body.innerHTML = '<table id="t"><tbody><tr><td>a</td><td>b</td></tr></tbody></table>'
 	const { zip, pres } = await build((pptx) => {

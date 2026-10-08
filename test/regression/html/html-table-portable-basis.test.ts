@@ -150,8 +150,9 @@ describe('pickColWidthBasis', () => {
 
 // Minimal structural stand-ins for DOM nodes — `readCellText` is typed against the shape it
 // actually reads, so the fallback walk can be exercised with no DOM implementation at all.
-const textNode = (data) => ({ nodeType: 3, nodeValue: data })
-const element = (nodeName, childNodes = []) => ({ nodeType: 1, nodeName, childNodes })
+type TextCell = Parameters<typeof readCellText>[0]
+const textNode = (data: string): TextCell => ({ nodeType: 3, nodeValue: data })
+const element = (nodeName: string, childNodes: TextCell[] = []): TextCell => ({ nodeType: 1, nodeName, childNodes })
 const BR = element('BR')
 
 describe('readCellText', () => {

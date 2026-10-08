@@ -15,7 +15,7 @@ import { htmlBorderToProps } from '../../../src/gen/table/html-dom.ts'
 // broken. A computed width of exactly `0` is a different statement and yields `{ type: 'none' }`.
 
 /** px→pt at the CSS reference pixel, spelled out rather than imported, so the test states the ratio. */
-const pt = (px) => (px * 72) / 96
+const pt = (px: number) => (px * 72) / 96
 
 describe('HTML table border width is converted to points', () => {
 	test('96px is exactly 72pt -- the ratio itself, not a rounded decimal', () => {
