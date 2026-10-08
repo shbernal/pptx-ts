@@ -12,6 +12,7 @@
 
 import path from 'node:path'
 import { describe, expect, test } from 'vitest'
+import { defined } from '../helpers.js'
 import { PROGRAMS, programFrame, programModule, programSource } from '../../scripts/comparison/programs.mjs'
 import { PROBES, probeSource, SUBJECTS } from '../../scripts/comparison/probes.mjs'
 import { functionBody, literal, renderSource } from '../../scripts/comparison/source.mjs'
@@ -148,7 +149,7 @@ describe('the bundle corpus', () => {
 	})
 
 	test('a compiled program carries the frame, the constants and the body', () => {
-		const program = PROGRAMS.find((entry) => entry.id === 'full-deck')
+		const program = defined(PROGRAMS.find((entry) => entry.id === 'full-deck'))
 		const module = programModule(program, 'ts-pptx')
 		expect(module.startsWith("import TsPptx from 'pptx-ts'\n")).toBe(true)
 		expect(module).toContain('const pres = new TsPptx()')
@@ -156,7 +157,7 @@ describe('the bundle corpus', () => {
 	})
 
 	test('the compiled program keeps a data URL the page elides', () => {
-		const program = PROGRAMS.find((entry) => entry.id === 'full-deck')
+		const program = defined(PROGRAMS.find((entry) => entry.id === 'full-deck'))
 		expect(programSource(program, 'ts-pptx')).toContain('…')
 		expect(programModule(program, 'ts-pptx')).not.toContain('…')
 		expect(programModule(program, 'ts-pptx')).toContain('R9awAAAABJRU5ErkJggg==')

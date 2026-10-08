@@ -130,6 +130,7 @@ describe('ensure-dist staleness', () => {
 	const NEW = new Date('2020-01-02T00:00:00Z')
 
 	/** A tree holding the inputs and outputs `ensure-dist` looks at, each at a chosen mtime. */
+	/** @param {{ inputsAt?: Date, outputsAt?: Date, omit?: string[] }} [options] */
 	async function tree({ inputsAt = OLD, outputsAt = NEW, omit = [] } = {}) {
 		const root = await fs.mkdtemp(path.join(os.tmpdir(), 'ensure-dist-'))
 		await fs.mkdir(path.join(root, 'src', 'gen'), { recursive: true })
