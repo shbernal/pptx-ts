@@ -251,15 +251,3 @@ converter harnesses.
 
 `docs/contributing/testing.md` covers the font oracles, the COM check, PNG evidence and the
 LibreOffice oracle.
-
-## Commit messages and release notes go through a file
-
-- Write a commit message to `.git/COMMIT_MSG_DRAFT` with your file-writing tool, then run
-  `git commit -F .git/COMMIT_MSG_DRAFT`. Only a one-line `git commit -m "subject"` may be
-  typed inline.
-- Pass release notes as a file too, with `gh release create --notes-file`, as the
-  `release-publish` skill does.
-- The POSIX shell and PowerShell disagree on here-doc syntax. A delimiter in the wrong dialect
-  lands in the message without an error, and a file takes the shell out of the path.
-- The `no-shell-quoting-leak` commit-msg rule, pulled from `shbernal/lefthook-rules` through
-  `remotes:` in `lefthook.yml`, is a backstop. Do not rely on it to catch a leak.

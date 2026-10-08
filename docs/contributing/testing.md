@@ -61,8 +61,7 @@ Reading the matrix:
   of the `test` job runs it in place of `test`.
 - The pre-commit cells run on staged files only. oxlint and oxfmt re-stage what they fix.
   charcheck reads the staged content and fixes nothing.
-- A commit-msg hook also runs `no-ai-attribution` and `no-shell-quoting-leak` from
-  `shbernal/lefthook-rules`.
+- A commit-msg hook also runs `no-ai-attribution` from `shbernal/lefthook-rules`.
 - `package` runs `check:package` on `ubuntu-latest` and `windows-latest`, and `font-oracles`
   runs on `windows-latest`. Every other job runs on `ubuntu-latest`.
 - `docs:build` reaches the `browser` job because `test:browser` builds the site before
@@ -116,7 +115,7 @@ source or build config is newer than it.
 | Hook | Runs | Scope |
 | --- | --- | --- |
 | pre-commit | oxlint `--fix`, then oxfmt `--write`, then charcheck `--staged --max-warnings 0`, in that order | staged files |
-| commit-msg | `no-ai-attribution` and `no-shell-quoting-leak`, from `shbernal/lefthook-rules` at tag `v1` | the message |
+| commit-msg | `no-ai-attribution`, from `shbernal/lefthook-rules` at tag `v1` | the message |
 | pre-push | `lint`, `lint:chars`, `format:check`, `typecheck`, `typecheck:scripts` and `typecheck:site`, in parallel | the whole repository |
 
 No hook runs a test, `typecheck:test`, `docs:check` or `docs:build`. `verify` runs the first

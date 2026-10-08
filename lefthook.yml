@@ -26,8 +26,8 @@
 # the script bodies here would be a second definition of each gate to keep in
 # sync. Once per push is a fair price for one definition.
 
-# The commit-msg gates live in shbernal/lefthook-rules, not here, because they
-# are not about this project: every repo wants them and every repo would
+# The commit-msg gate lives in shbernal/lefthook-rules, not here, because it
+# is not about this project: every repo wants it and every repo would
 # otherwise hold its own drifting copy. Lefthook fetches the remote on
 # `install` (not on `dump`), caches it under `.git/info/lefthook-remotes/`, and
 # merges its jobs into the same hook. `prepare` already runs install.
@@ -45,7 +45,6 @@ remotes:
     ref: v1
     configs:
       - rules/no-ai-attribution.yml
-      - rules/no-shell-quoting-leak.yml
     refetch_frequency: 24h
 
 pre-commit:

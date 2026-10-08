@@ -63,7 +63,6 @@ then run only if that hooks path hands control back to them. Do not bypass hooks
 | pre-commit | `oxfmt` | `oxfmt --write` on staged `*.{json,jsonc,yaml,yml,mjs,mts,ts,js}` files except `pnpm-lock.yaml`, then re-stages the result |
 | pre-commit | `charcheck` | `charcheck --staged --max-warnings 0` over the staged content, when the commit touches a `*.{md,vue,ts,mts}` file |
 | commit-msg | `no-ai-attribution` | Rejects a message that carries an agent-attribution trailer or footer |
-| commit-msg | `no-shell-quoting-leak` | Rejects a message holding a leaked here-string delimiter, such as a line that is only `@'` |
 | pre-push | `lint` | `pnpm run lint` |
 | pre-push | `lint-chars` | `pnpm run lint:chars`, over the whole repository |
 | pre-push | `format` | `pnpm run format:check` |
@@ -72,8 +71,8 @@ then run only if that hooks path hands control back to them. Do not bypass hooks
 | pre-push | `typecheck-site` | `pnpm run typecheck:site` |
 
 Pre-commit runs its jobs one after another, in the order above. Pre-push runs its jobs in parallel.
-The two commit-msg rules come from [`shbernal/lefthook-rules`](https://github.com/shbernal/lefthook-rules)
-through the `remotes:` block in `lefthook.yml`, and they skip merge and rebase commits. No hook runs
+The commit-msg rule comes from [`shbernal/lefthook-rules`](https://github.com/shbernal/lefthook-rules)
+through the `remotes:` block in `lefthook.yml`, and it skips merge and rebase commits. No hook runs
 a test suite.
 
 ## Demos

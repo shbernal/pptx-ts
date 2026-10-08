@@ -127,9 +127,7 @@ git push origin vX.Y.Z
 ### 7. Create the GitHub Release (this is what publishes)
 
 The body is the version's CHANGELOG section followed by a full-changelog link. Match prior releases
-(`gh release view vLAST`). Write the notes to a file with your file-writing tool and pass the file.
-Never build the body with a shell here-doc: the POSIX and PowerShell dialects disagree, and a
-delimiter in the wrong one lands in the published notes.
+(`gh release view vLAST`). Write the notes to a file and pass the file.
 
 ```bash
 gh release create vX.Y.Z --title vX.Y.Z --notes-file <path/to/notes.md>
