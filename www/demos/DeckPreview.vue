@@ -6,13 +6,13 @@ import {
 	downloadDeck,
 	failureMessage,
 	previewDeck,
-	showcaseSource,
 	slideList,
 	summarizeNotes,
 } from './deck-preview.ts'
+import { showcaseSource } from './showcases.ts'
 import SlideFrame from './SlideFrame.vue'
 
-// Which deck to show, by its slug in `SHOWCASES`. An unknown slug throws here, while the
+// Which deck to show, by its slug in `showcases.ts`. An unknown slug throws here, while the
 // site is pre-rendered, rather than painting an empty viewer.
 const props = defineProps({ slug: { type: String, required: true } })
 const source = computed(() => showcaseSource(props.slug))

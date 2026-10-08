@@ -1,15 +1,8 @@
 import { Window } from 'happy-dom'
 import { describe, expect, it } from 'vitest'
 import { defined, at, take } from '../../helpers.ts'
-import {
-	counted,
-	SHOWCASES,
-	showcaseSource,
-	slideList,
-	splitDeck,
-	summarizeNotes,
-	type FidelityRow,
-} from '../../../www/demos/deck-preview.ts'
+import { counted, slideList, splitDeck, summarizeNotes, type FidelityRow } from '../../../www/demos/deck-preview.ts'
+import { SHOWCASES, showcaseSource } from '../../../www/demos/showcases.ts'
 
 /**
  * The demos page's pure helpers.

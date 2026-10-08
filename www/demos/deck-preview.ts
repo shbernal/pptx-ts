@@ -11,7 +11,6 @@
  */
 import { importDeck, renderDeck } from 'pptx-html'
 import type TsPptx from 'pptx-ts'
-import { showcase as quarterlyReview } from 'ts-pptx-demos-showcases/quarterly-review'
 
 /**
  * One entry from `pptx-html`'s fidelity ledger, flattened for display.
@@ -53,7 +52,7 @@ export interface DeckPreview {
  * A deck the page can preview and build: what to call it, and how to assemble it.
  *
  * The showcase modules export this shape as their `showcase` value, so a showcase is a
- * source as it stands. Nothing here names a particular deck except {@link SHOWCASES}.
+ * source as it stands. Nothing in this file names a particular deck: `showcases.ts` does.
  */
 export interface DeckSource {
 	slug: string
@@ -62,18 +61,6 @@ export interface DeckSource {
 	fileName: string
 	/** Assemble the deck and return the presentation, having written nothing. */
 	compose(): Promise<TsPptx>
-}
-
-/** The decks the site can preview, by slug. */
-export const SHOWCASES: Readonly<Record<string, DeckSource>> = {
-	[quarterlyReview.slug]: quarterlyReview,
-}
-
-/** The showcase registered under `slug`, or a throw naming the ones that are. */
-export function showcaseSource(slug: string): DeckSource {
-	const source = SHOWCASES[slug]
-	if (!source) throw new Error(`unknown showcase "${slug}"; known: ${Object.keys(SHOWCASES).join(', ')}`)
-	return source
 }
 
 /** Assemble a deck and return the package bytes. Nothing is written. */
