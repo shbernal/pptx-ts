@@ -18,7 +18,7 @@ const POSTER_FLOOR = 5_000
 const LINK = 'https://www.youtube.com/embed/Dph6ynRVyUc'
 
 /** Every `ppt/media/*.png` part of a built deck, as `{ name, bytes }`, largest first. */
-async function pngParts(zip) {
+async function pngParts(zip: JSZip) {
 	const names = Object.keys(zip.files).filter((name) => /^ppt\/media\/.*\.png$/.test(name))
 	const parts = await Promise.all(
 		names.map(async (name) => ({ name, bytes: await defined(zip.file(name)).async('uint8array') }))

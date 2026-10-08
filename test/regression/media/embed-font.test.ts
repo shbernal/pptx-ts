@@ -8,25 +8,23 @@
 
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import JSZip from 'jszip'
 import { describe, test, beforeAll } from 'vitest'
 import TsPptx from '../../../dist/node.js'
 import { assert, assertEqual, assertRejects, readEntry, defined } from '../../helpers.ts'
 import { FIXTURES } from '../../read/corpus.ts'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const fontsDir = path.join(FIXTURES, 'fonts')
 
-let regular
-let bold
+let regular: Uint8Array<ArrayBuffer>
+let bold: Uint8Array<ArrayBuffer>
 
 beforeAll(async () => {
 	regular = new Uint8Array(await readFile(path.join(fontsDir, 'Silkscreen-Regular.ttf')))
 	bold = new Uint8Array(await readFile(path.join(fontsDir, 'Silkscreen-Bold.ttf')))
 })
 
-async function zipOf(pres) {
+async function zipOf(pres: TsPptx) {
 	return JSZip.loadAsync(await pres.toBytes())
 }
 

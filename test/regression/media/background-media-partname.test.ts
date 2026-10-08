@@ -21,7 +21,7 @@ import {
 // these assertions are the only evidence.
 
 /** Undo the XML escaping a consumer would undo before resolving the target. */
-function unescapeXml(str) {
+function unescapeXml(str: string) {
 	return str
 		.replace(/&lt;/g, '<')
 		.replace(/&gt;/g, '>')
@@ -35,12 +35,12 @@ function unescapeXml(str) {
  * reference against the owning part's base. Using the platform URL parser rather than string
  * surgery is the point — `?`/`#`/`%` only misbehave under real URI rules.
  */
-function resolveTarget(relsPartName, target) {
+function resolveTarget(relsPartName: string, target: string) {
 	const base = 'file:///' + relsPartName.replace(/_rels\/[^/]*$/, '')
 	return decodeURIComponent(new URL(unescapeXml(target), base).pathname).replace(/^\//, '')
 }
 
-async function buildWithMasterTitle(title) {
+async function buildWithMasterTitle(title: string) {
 	const { zip } = await build((pres) => {
 		pres.defineSlideMaster({ title, background: { data: PNG_1X1_DATA_URI } })
 		pres.addSlide({ masterTitle: title })

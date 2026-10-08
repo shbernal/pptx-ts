@@ -10,6 +10,7 @@
  * `<a:videoFile r:link>` went on pointing at the first of them. The probe is scoped to the media
  * loop now, which is the only collection the pairing lives in.
  */
+import type JSZip from 'jszip'
 import { assert, assertEqual, build, defineRegressionSuite, readEntry } from '../../helpers.ts'
 
 const VIDEO_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/video'
@@ -17,7 +18,7 @@ const AUDIO_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relatio
 const MS_MEDIA_REL = 'http://schemas.microsoft.com/office/2007/relationships/media'
 
 /** `{ rId: Type }` for every relationship on slide 1. */
-async function slideRels(zip) {
+async function slideRels(zip: JSZip) {
 	const xml = await readEntry(zip, 'ppt/slides/_rels/slide1.xml.rels')
 	return Object.fromEntries([...xml.matchAll(/Id="(rId\d+)" Type="([^"]+)"/g)].map((m) => [m[1], m[2]]))
 }

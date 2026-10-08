@@ -3,7 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import JSZip from 'jszip'
 import { describe, expect, test } from 'vitest'
-import TsPptx from '../../../dist/node.js'
+import TsPptx, { type Slide } from '../../../dist/node.js'
 import { assert, assertRejects, captureDiagnostics, readEntry } from '../../helpers.ts'
 
 const BROKEN_SVG = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../browser/harness/broken.svg')
@@ -33,9 +33,10 @@ describe('media load failure policy', () => {
 
 	test("onMediaError:'placeholder' substitutes a placeholder and resolves", async () => {
 		// write({ outputType: 'nodebuffer' }) resolves to a Buffer; the return type is the union of all targets.
-		const buf = /** @type {Buffer} */ (
-			await deckWithMissingImage().write({ outputType: 'nodebuffer', onMediaError: 'placeholder' })
-		)
+		const buf = (await deckWithMissingImage().write({
+			outputType: 'nodebuffer',
+			onMediaError: 'placeholder',
+		})) as Buffer
 		assert(buf && buf.length > 0, 'placeholder mode must produce a non-empty package')
 	})
 
@@ -47,8 +48,8 @@ describe('media load failure policy', () => {
 	// The placeholder is a picture. Written into an OLE object's `.xlsx` part or a model's `.glb`, it
 	// is a part PowerPoint cannot open, so a payload that fails to load rejects under either policy.
 	for (const { kind, add } of [
-		{ kind: 'OLE object', add: (slide) => slide.addOleObject({ path: '/definitely/does/not/exist/book.xlsx' }) },
-		{ kind: '3D model', add: (slide) => slide.addModel3d({ path: '/definitely/does/not/exist/model.glb' }) },
+		{ kind: 'OLE object', add: (slide: Slide) => slide.addOleObject({ path: '/definitely/does/not/exist/book.xlsx' }) },
+		{ kind: '3D model', add: (slide: Slide) => slide.addModel3d({ path: '/definitely/does/not/exist/model.glb' }) },
 	]) {
 		test(`onMediaError:'placeholder' still rejects for a missing ${kind} payload`, async () => {
 			const pptx = new TsPptx()
@@ -78,7 +79,7 @@ describe('SVG preview on a runtime with no rasterizer', () => {
 			)
 			expect(codes).toEqual([])
 
-			const zip = await JSZip.loadAsync(/** @type {Buffer} */ (result))
+			const zip = await JSZip.loadAsync(result as Buffer)
 			const svgParts = Object.keys(zip.files).filter((name) => /^ppt\/media\/.*\.svg$/.test(name))
 			expect(svgParts).toHaveLength(1)
 			const written = await readEntry(zip, svgParts[0])
