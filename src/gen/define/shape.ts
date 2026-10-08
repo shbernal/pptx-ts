@@ -54,7 +54,7 @@ export function addShapeDefinition(target: PresSlideInternal, shapeName: SHAPE_N
 	// fill's rel id is registered through that reference and read back at emit time. `shadow` does
 	// not — `normalizeShadowOptions` returns a fresh bag, so a shadow literal shared across shapes
 	// gives each of them its own normalized copy and comes back as the caller wrote it.
-	// `test/regression/shape/shared-shadow.test.js` pins that the shared literal keeps emitting the
+	// `test/regression/shape/shared-shadow.test.ts` pins that the shared literal keeps emitting the
 	// same `<a:effectLst>` on every shape.
 	const options: ShapeProps = typeof opts === 'object' ? { ...opts } : {}
 	options.line = options.line || { type: 'none' }

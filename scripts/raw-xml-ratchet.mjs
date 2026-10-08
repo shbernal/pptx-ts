@@ -148,7 +148,7 @@ export function findingsIn(file) {
  *
  * Separated from {@link findingsIn} so the exemption rules — the message-sink and
  * captured-asset carve-outs, which are where this gate can silently stop counting —
- * can be exercised against a literal snippet in `test/scripts/raw-xml-ratchet.test.js`
+ * can be exercised against a literal snippet in `test/scripts/raw-xml-ratchet.test.ts`
  * instead of a fixture file on disk.
  * @param {string} text TypeScript source
  * @param {string} [fileName] name used for the synthetic source file

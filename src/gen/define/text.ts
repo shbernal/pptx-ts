@@ -57,7 +57,7 @@ export function addTextDefinition(
 	// spreading at each use. Sharing between the shape's options and a run's is load-bearing:
 	// `SlideBuilder.addText`'s string shorthand hands the same object to both, so `cleanOpts` runs
 	// over it twice, and the second pass emits bytes the first cannot (see the line-defaults case in
-	// `test/regression/text/text-definition.test.js`). Copying each reference separately would
+	// `test/regression/text/text-definition.test.ts`). Copying each reference separately would
 	// quietly change that shape's `<a:ln>`. The caller is protected either way — the aliasing is
 	// between two objects this function now owns.
 	//

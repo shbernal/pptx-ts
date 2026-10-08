@@ -83,7 +83,7 @@ pnpm run check:package  # what CI's package job runs
   `docs:api` regenerates the API reference, so `docs:check` validates current pages.
 - `verify` is `ensure-dist`, `check:core` and `test`. `check:static` is `lint`, `lint:chars`,
   `format:check` and `check:core`.
-- Add a cheap check to `check:core`, not to an aggregate. `test/scripts/gate-parsers.test.js`
+- Add a cheap check to `check:core`, not to an aggregate. `test/scripts/gate-parsers.test.ts`
   fails when a check reaches `verify` without reaching `check:static`, because CI runs the
   static checks only through `check:static`.
 - `verify:full` is `verify` plus `docs:build`, `script:roundtrip:all`, `package:lint`,
@@ -217,7 +217,7 @@ it tests whatever `dist/` the watcher last wrote.
 Once `dist/` is current, drive Vitest directly. These commands skip the build.
 
 ```bash
-pnpm exec vitest run test/regression/api/object-identity.test.js   # one file
+pnpm exec vitest run test/regression/api/object-identity.test.ts   # one file
 pnpm exec vitest run test/regression -t "content type default"     # by test name
 ```
 
@@ -256,7 +256,7 @@ intent does not.
 Two mechanisms replace the guarantee isolation gave:
 
 - `test/setup-globals.ts` resets `setDiagnosticHandler`, the one process-global the library
-  owns, after every test. `test/regression/api/global-state-reset.test.js` guards the reset.
+  owns, after every test. `test/regression/api/global-state-reset.test.ts` guards the reset.
 - `sequence.shuffle.files` randomizes file order, so an order dependence fails instead of
   hiding. Vitest prints the seed, and `--sequence.seed=<n>` reproduces a run. Tests inside a
   file keep source order, which `captureDiagnostics()` and the warn-capturing schema fixtures
@@ -291,11 +291,11 @@ A test imports the package from `dist/`, never from `src/`; see
 Regression tests live in `test/regression/`, one directory per subject: `chart/`, `table/`,
 `text/`, `image/`, `shape/`, `master-layout/`, `color-fill/`, `media/`, `slide-content/`,
 `html/`, `package/`, and `api/` for the cross-cutting rest. `html/` includes
-`test/regression/html/html-to-slides-node.test.js`, which runs `tableToSlides` against
+`test/regression/html/html-to-slides-node.test.ts`, which runs `tableToSlides` against
 happy-dom.
 
-- Name a file after the contract it tests, such as `object-identity.test.js` or
-  `slide-master-placeholders.test.js`, never after a bug number.
+- Name a file after the contract it tests, such as `object-identity.test.ts` or
+  `slide-master-placeholders.test.ts`, never after a bug number.
 - When a file could sit in two directories, put it with the subsystem whose emission it
   asserts on. No tooling keys on the directory, so a file can move freely.
 - Paths inside a suite are relative to its directory, for example `../../helpers.ts` and
@@ -877,7 +877,7 @@ The procedure:
 4. Put its PASS line in the commit message, so each use is on record.
 
 Never run it because `check` went red on a change meant to preserve bytes. `check` is the gate for
-every other refactor. `test/scripts/xml-equivalence.test.js` holds the changes the prover must
+every other refactor. `test/scripts/xml-equivalence.test.ts` holds the changes the prover must
 reject.
 
 ### PowerPoint desktop check (`test:com`)
@@ -1169,7 +1169,7 @@ documents.
 Before accepting a report as a layout report, ask what the browser actually supplies to the code
 path. `table-autopage.spec.mjs` is the example. Its cross-runtime assertion shows that the
 pagination does not depend on a rendered page, and the regression behind it is guarded without a
-DOM in `test/regression/table/table-autopage-continuation-budget.test.js`.
+DOM in `test/regression/table/table-autopage-continuation-budget.test.ts`.
 
 The adapter specs build their decks from `test/browser/harness/decks.mjs`, once in Chromium and
 once in Node, from one definition. Two copies would make a divergence in the fixture read as a

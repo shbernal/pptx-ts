@@ -87,7 +87,7 @@ nothing. Stop on these:
 `package.json` holds the version of record, and the workflow refuses to publish unless the tag
 matches it. `VERSION` in `src/presentation.ts`, behind `pres.version`, is derived from it by
 `scripts/sync-version.mjs`, never edited by hand. `pnpm run version:check` reports a drift and
-`pnpm run version:sync` repairs it. `test/regression/api/public-accessors.test.js` fails in `verify`
+`pnpm run version:sync` repairs it. `test/regression/api/public-accessors.test.ts` fails in `verify`
 on a drift either way.
 
 ```bash

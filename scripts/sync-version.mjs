@@ -6,7 +6,7 @@
 // to a consumer. The constant is therefore derived — but it used to be derived by hand,
 // so cutting a release meant editing two files and remembering the second one.
 //
-// It could not ship wrong. `test/regression/api/public-accessors.test.js` pins
+// It could not ship wrong. `test/regression/api/public-accessors.test.ts` pins
 // `pres.version` to the manifest, and that test runs in `verify`, which the publish
 // workflow runs as its `CI gate` job. A forgotten bump cost a red CI round trip, not a
 // mis-reported library. This script removes the round trip; the test stays as the

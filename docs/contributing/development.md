@@ -290,7 +290,7 @@ at the page under `pnpm run docs:dev` before committing it.
   roles.
 - **Nothing typechecks a `.vue` file.** `tsc` does not read single-file components, and this
   repository has no `vue-tsc`. So the page's logic lives in `www/demos/deck-preview.ts`, which
-  `typecheck:site` reads and `test/regression/www/deck-preview.test.js` covers. The component is
+  `typecheck:site` reads and `test/regression/www/deck-preview.test.ts` covers. The component is
   markup around it. Logic added to the component escapes both.
 
 ## Errors and diagnostics

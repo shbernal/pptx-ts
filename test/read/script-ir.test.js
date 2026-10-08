@@ -245,7 +245,7 @@ describe('deck IR — geometry', () => {
 		// `ImageBaseProps.line` takes the same `ShapeLineProps` every other shape does, and a
 		// picture's `p:spPr/a:ln` has always read back -- but the mapper never emitted it, so a
 		// bordered picture converted to a borderless one with no note. (The write side dropped the
-		// option too; image-border.test.js covers that half.)
+		// option too; image-border.test.ts covers that half.)
 		const { presentation } = await authorRead((pres) => {
 			pres.addSlide().addImage({
 				data: PNG_1X1,

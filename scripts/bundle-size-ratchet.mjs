@@ -148,7 +148,7 @@ export function stripComments(text) {
  * Relative specifiers named by one emitted file, in source order.
  *
  * Split out from {@link closureOf} because it is the whole of the parsing risk and
- * needs no filesystem to exercise — see `test/scripts/bundle-size-ratchet.test.js`.
+ * needs no filesystem to exercise — see `test/scripts/bundle-size-ratchet.test.ts`.
  * @param {string} text file contents
  * @returns {string[]} relative specifiers, duplicates included
  */

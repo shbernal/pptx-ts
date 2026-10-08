@@ -257,7 +257,7 @@
 		//   `gen/chart/chart-xml.ts` and `gen/chart/chartex-xml.ts` partition `ChartType`
 		//   between them, so neither can be exhaustive and neither can use `never`; they
 		//   throw `InternalError('chart/type-not-routed')`, and the catalog sweep in
-		//   `test/regression/chart/chart-option-validation.test.js` builds every
+		//   `test/regression/chart/chart-option-validation.test.ts` builds every
 		//   `ChartType` member through `addChart`, so an unrouted member fails a test
 		//   instead of shipping a chart-shaped hole. Probed both ways with a temporary
 		//   enum member: each dispatcher's throw is what fails. Those two sites still

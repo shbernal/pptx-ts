@@ -670,7 +670,7 @@ export function getSlidesForTableRows(
 		// the bottom of the slide (upstream gitbrent/PptxGenJS#1200). The symptom is easy to miss
 		// because the pager is *self*-consistent per slide: it only shows up as the first slide and
 		// the continuation slides disagreeing about how many identical rows fit the identical space,
-		// which is what test/regression/table/table-autopage-continuation-budget.test.js pins.
+		// which is what test/regression/table/table-autopage-continuation-budget.test.ts pins.
 		emuTabCurrH = chargedEmu
 		if (tableProps.verbose)
 			console.log(

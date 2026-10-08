@@ -109,7 +109,7 @@ two shapes.
 ## Fixtures
 
 Every emitter and parser here was built against PowerPoint-authored decks, recorded with their oracles
-in `test/read/fixtures/README.md`. `test/regression/slide-content/animations-transitions.test.js`
+in `test/read/fixtures/README.md`. `test/regression/slide-content/animations-transitions.test.ts`
 compares the emitted transition forms and timing trees with those oracles byte for byte, and the
 `p:sndAc` with relationship ids normalized, since the ids are this library's own numbering.
 

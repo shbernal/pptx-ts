@@ -4,7 +4,7 @@
  * tell a reader to install or import a package name this project no longer leads with.
  *
  * This repo cites files constantly, and it does it in backticks rather than as
- * markdown links: a doc says "see `test/regression/shape/group-shapes.test.js`", a
+ * markdown links: a doc says "see `test/regression/shape/group-shapes.test.ts`", a
  * source comment says "the read side (`src/read/api/ops/table-styles.ts`) merges …".
  * Those citations carry real weight — they are usually the evidence for the claim
  * beside them, naming the test that proves it or the module that owns it.

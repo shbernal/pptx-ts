@@ -165,7 +165,7 @@ export const makeCatAxisPlot: PlotBuilder = (chartType, data, opts, valAxisId, c
 			// the line with palette entry 0 -- the first bar's colour. PowerPoint does not restart the
 			// cycle per plot group: a three-series clustered-column chart whose third series is switched
 			// to a line keeps that series' third colour and merely moves it from the fill to the stroke
-			// (read back over COM; `test/regression/chart/combo-charts.test.js` carries the case).
+			// (read back over COM; `test/regression/chart/combo-charts.test.ts` carries the case).
 			// `lineDashValues` moved with it, for the same reason and by the same reading of "the series
 			// order in the `data` array".
 			const idx = seriesIdx(obj, chartType)

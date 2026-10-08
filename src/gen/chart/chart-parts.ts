@@ -304,7 +304,7 @@ export type PlotBuilder = (
  * This replaces two copies of a loop that wrote `opts[opt] = undefined` back onto the options
  * bag from inside an XML builder. Nothing downstream was corrupted (`ChartOptsInternal` is a
  * copy `gen/define/chart.ts` already made, guarded by
- * `test/regression/chart/chart-input-immutability.test.js`), but it meant calling the same axis
+ * `test/regression/chart/chart-input-immutability.test.ts`), but it meant calling the same axis
  * builder twice gave a different answer the second time, and it put validation somewhere nobody
  * would look for it.
  *

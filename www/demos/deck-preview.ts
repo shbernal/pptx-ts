@@ -3,7 +3,7 @@
  *
  * `DeckPreview.vue` is markup plus a few assignments; everything that could be wrong is
  * here, because `tsc` reads this file and does not read the SFC. The same split is what
- * lets `test/regression/www/deck-preview.test.js` cover the parts that are pure.
+ * lets `test/regression/www/deck-preview.test.ts` cover the parts that are pure.
  *
  * The deck is written by the **workspace** library and read back by the **published** one
  * that `pptx-html` depends on. See `www/README.md` for why those are deliberately two

@@ -65,7 +65,7 @@ flowchart TD
   under `gen/slide/objects/`. Chart emission splits per plot family under `gen/chart/` behind
   `makeChartType`. A chart's embedded workbook and every formula in its chart part are laid out from
   one `worksheetLayout` in `gen/chart/data-refs.ts`, and
-  `test/regression/chart/chart-worksheet-invariant.test.js` resolves each formula through the
+  `test/regression/chart/chart-worksheet-invariant.test.ts` resolves each formula through the
   workbook. `gen/utils.ts` holds the helpers no single part owns: XML escaping, object names, rel
   ids.
 - **Package assembly.** `package/assemble.ts`. `buildPackageParts` produces every part in emission

@@ -168,13 +168,13 @@ sequenceDiagram
 | `test/read/fixtures/embedded-fonts.pptx` | a PowerPoint-authored deck whose text box uses Silkscreen regular and bold, so both faces sit under one `p:embeddedFont`; the source of every import and read test |
 | `test/read/fixtures/embedded-fonts.oracle.json` | that deck's verbatim `embeddedFontLst`, font relationships, part list, presentation flags and the hashes of the raw faces; a record, read by no test |
 | `test/read/fixtures/fonts/Silkscreen-*.ttf` | whole SIL OFL faces with `fsType` Installable, fed to `embedFont` in the tests |
-| `test/regression/media/embed-font.test.js` | `embedFont`: byte sources, one entry per typeface, slot order, last call wins, validation, and an unchanged deck with no calls |
+| `test/regression/media/embed-font.test.ts` | `embedFont`: byte sources, one entry per typeface, slot order, last call wins, validation, and an unchanged deck with no calls |
 | `test/schema-cases.ts` | a generated deck with regular and bold against the OOXML validator, with the expected list written out |
 | `test/read/embedded-fonts.test.js` | `importSlide` carry, repeated imports, flag off, validator, and the dangling-`r:id` refusal for all three imports |
 | `test/read/import-slides.test.js`, `test/read/import-slide-masters.test.js` | the batch and master carries, including the byte-identical refusal |
 | `test/read/append-embedded-fonts.test.js` | the `appendSlides` carry, repeated appends and the validator |
 | `test/read/embedded-fonts-read.test.js` | `Presentation.embeddedFonts` on the fixture and after a carry |
-| `test/regression/package/xml-attribute-escaping.test.js` | a `typeface` with control characters |
+| `test/regression/package/xml-attribute-escaping.test.ts` | a `typeface` with control characters |
 
 PowerPoint COM saves embedded fonts only as subsets, so the fixture's parts are subsets and its
 presentation carries `saveSubsetFonts="1"`. The "Embed all characters" choice has no COM property.

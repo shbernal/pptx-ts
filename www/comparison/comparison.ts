@@ -4,7 +4,7 @@
  * `comparison.data.ts` runs {@link shapeComparison} at build time over
  * `scripts/comparison/snapshot.json`, so the page ships the handful of fields the charts draw
  * rather than the snapshot's recorded sources. The components are markup around the result, and
- * `test/regression/www/comparison-charts.test.js` covers the arithmetic here against the
+ * `test/regression/www/comparison-charts.test.ts` covers the arithmetic here against the
  * committed snapshot.
  */
 

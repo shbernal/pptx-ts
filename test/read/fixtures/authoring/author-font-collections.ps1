@@ -25,7 +25,7 @@ $ErrorActionPreference = 'Stop'
 # everything listed here is covered, which would fail if the unwrapper handed back a
 # different member's cmap.
 #
-# Consumed by test/regression/text/font-collection.test.js, which skips when the fonts
+# Consumed by test/regression/text/font-collection.test.ts, which skips when the fonts
 # are absent (any non-Windows machine, and CI). Re-run after a Windows font update if
 # the test starts reporting a family this file does not list.
 

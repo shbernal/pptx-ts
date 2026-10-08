@@ -1,7 +1,7 @@
 # Test suite map
 
 Tests are organized **by behavior**, not by source module — file names describe
-the contract under test (`object-identity.test.js`, `content-type-defaults.test.js`),
+the contract under test (`object-identity.test.ts`, `content-type-defaults.test.ts`),
 not the `src/*.ts` they exercise. This index answers the two questions that
 naming-by-behavior makes hard: *"does feature X already have a test?"* and
 *"where do I add one?"*
@@ -109,7 +109,7 @@ test.
 1. Check the table above (and `coverage-summary.json`) for an existing test of
    the behavior.
 2. Name the new file after the **contract**, not a bug number
-   (`slide-master-placeholders.test.js`, not `bug-123.test.js`). Record legacy
+   (`slide-master-placeholders.test.ts`, not `bug-123.test.js`). Record legacy
    provenance inside the suite name — `defineRegressionSuite('Table margins [legacy bug-14]', …)` —
    which is where a reporter will show it.
 3. Prefer public-API deck generation + focused package/XML assertions. See

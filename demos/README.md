@@ -44,7 +44,7 @@ read fixture.
 | ------------------ | ------------------------------------------------------------------------------ |
 | `cc_logo.jpg`      | four `test/regression/` suites, and `test/read/fixtures/authoring/author-table-cell-image-fill.ps1` |
 | `logo_square.png`  | the browser lane, both sides (`test/browser/helpers.mjs`, `test/browser/harness/harness.mjs`) |
-| `lock-green.svg`   | the same two, plus `test/regression/text/text-definition.test.js`               |
+| `lock-green.svg`   | the same two, plus `test/regression/text/text-definition.test.ts`               |
 
 The directory was pruned hard once, on the rule "no showcase deck references it". The
 unused half went with it: thirty-odd images and nine media files. These three survive that

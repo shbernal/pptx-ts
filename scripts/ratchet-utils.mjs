@@ -45,7 +45,7 @@ export function kb(bytes) {
  * Compare one measurement against one budget, on the ratchet's terms.
  *
  * The whole of the verdict logic, and it needs no build to exercise — see
- * `test/scripts/ratchet-utils.test.js`.
+ * `test/scripts/ratchet-utils.test.ts`.
  * @param {number} bytes - what was measured
  * @param {number} budget - what is frozen
  * @returns {'over' | 'under' | 'ok'} `under` means far enough under to be worth banking

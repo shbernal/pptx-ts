@@ -115,7 +115,7 @@ function runLeaf(command) {
 }
 
 // Guarded like every other gate script's entry: `expand` is imported by
-// `test/scripts/gate-parsers.test.js`, and without this the import would run the CLI.
+// `test/scripts/gate-parsers.test.ts`, and without this the import would run the CLI.
 if (isMain(import.meta.url))
 	await runCli(async () => {
 		const argv = process.argv.slice(2)

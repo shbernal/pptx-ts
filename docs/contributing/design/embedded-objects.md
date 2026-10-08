@@ -201,9 +201,9 @@ DEFLATE pass.
   attributes and the de-duplication counts. Schema validation reaches only the `mc:Fallback` branch, so it
   says nothing about `p:oleObj` or `am3d:model3d` inside `mc:Choice`. See
   [What the validator cannot see](../testing.md#what-the-validator-cannot-see).
-- Option refusals and warnings are pinned in `test/regression/api/definition-reality-checks.test.js`,
-  `test/regression/api/non-finite-numbers.test.js`, `test/regression/image/image-source-resolution.test.js`
-  and `test/regression/shape/authored-frame.test.js`.
+- Option refusals and warnings are pinned in `test/regression/api/definition-reality-checks.test.ts`,
+  `test/regression/api/non-finite-numbers.test.ts`, `test/regression/image/image-source-resolution.test.ts`
+  and `test/regression/shape/authored-frame.test.ts`.
 - `pnpm run test:com` opens both in PowerPoint. The `ole` leg reads each `progId` back, and the `model3d` leg
   reads the camera back and exports the slide to PNG. See
   [Check rendering with pixels, not COM properties](../testing.md#check-rendering-with-pixels-not-com-properties).

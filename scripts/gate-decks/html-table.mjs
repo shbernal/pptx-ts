@@ -8,7 +8,7 @@
  * exist for. See `./README.md` for why a gate deck is a separate thing from a showcase.
  *
  * The DOM is happy-dom, the same implementation the Node regression suite drives
- * (`test/regression/html/html-to-slides-node.test.js`). It is a devDependency, which is all
+ * (`test/regression/html/html-to-slides-node.test.ts`). It is a devDependency, which is all
  * this needs: the gate never ships and never runs from an installed package.
  *
  * **Nothing here lays the table out.** happy-dom resolves the cascade and computes styles but

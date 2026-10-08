@@ -65,7 +65,7 @@ export const SCALE_SIZES = [50, 200, 500]
  * other two corpora have two: the page prints these bodies, and a body that branches on
  * which library is running would put `subject === 'ts-pptx'` in front of a reader as though
  * it were a call they should make. The cost of writing the deck twice is that the two can
- * drift; `test/scripts/comparison-timing.test.js` is what stops them, by holding the two
+ * drift; `test/scripts/comparison-timing.test.ts` is what stops them, by holding the two
  * bodies against each other and allowing exactly the line that is allowed to differ.
  *
  * That line is `addChart`, which took a divergent signature at the detach: ts-pptx puts

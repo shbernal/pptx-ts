@@ -26,7 +26,7 @@
 // went second failed. It had never bitten only because the pool is usually wide enough to
 // put two such files in different workers, which is luck, not isolation.
 //
-// This does NOT reset `globalThis.fetch`, which test/regression/api/node-runtime-fetch.test.js
+// This does NOT reset `globalThis.fetch`, which test/regression/api/node-runtime-fetch.test.ts
 // swaps: that file installs and restores it in its own hooks, and a blanket reset here
 // would have to capture the real `fetch` at import time and could just as easily clobber a
 // deliberate stub mid-test. Keep such swaps local and paired; this file is for state the
