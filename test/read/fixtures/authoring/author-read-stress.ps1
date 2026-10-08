@@ -22,6 +22,8 @@ foreach ($k in 'DocumentRecovery','StartupItems') {
 $out   = (Join-Path $FIX 'read-stress.pptx')
 $svg   = (Join-Path $SCRATCH 'media\gear.svg')
 $png   = (Join-Path $SCRATCH 'media\mark.png')
+# Brand-free media drawn in code by make-assets.ps1.
+if (-not ((Test-Path $svg) -and (Test-Path $png))) { & (Join-Path $PSScriptRoot 'make-assets.ps1') }
 $thmxB = 'C:\Program Files\Microsoft Office\root\Document Themes 16\Facet.thmx'
 $msoFalse = 0; $msoTrue = -1
 

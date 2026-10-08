@@ -8,6 +8,8 @@ $ASSETS  = Join-Path $PSScriptRoot 'assets'
 $out = (Join-Path $FIX 'picture-media.pptx')
 $png = (Join-Path $SCRATCH 'media\pic.png')
 $svg = (Join-Path $SCRATCH 'media\pic.svg')
+# Brand-free media drawn in code by make-assets.ps1.
+if (-not ((Test-Path $svg) -and (Test-Path $png))) { & (Join-Path $PSScriptRoot 'make-assets.ps1') }
 $preexistingIds = @(Get-Process POWERPNT -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Id)
 $pp = $null
 $pres = $null
