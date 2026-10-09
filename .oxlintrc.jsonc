@@ -393,7 +393,7 @@
 			// zero here, and oxlint — unlike the preset-based setup this replaces — lets
 			// them stay on without dragging the `no-unsafe-*` family along. Keeping them is
 			// the one place this swap tightens the gate rather than reproducing it.
-			"files": ["scripts/**/*.mjs", "test/**/*.mjs", "test/**/*.js", "test/**/*.ts"],
+			"files": ["scripts/**/*.mjs", "assets/readme/**/*.mjs", "test/**/*.mjs", "test/**/*.js", "test/**/*.ts"],
 			"env": {
 				"node": true,
 				"es2024": true,

@@ -1,0 +1,25 @@
+flowchart LR
+  code["<b>Your TypeScript</b><br/>addSlide, addText, addChart"]
+  write["<b>pptx-ts</b><br/>writeFile, toBytes"]
+  pptx["<b>.pptx</b><br/>a zip of XML parts"]
+  apps["<b>PowerPoint</b><br/>Keynote, Google Slides,<br/>LibreOffice Impress"]
+  read["<b>pptx-ts/read</b><br/>load, edit, save"]
+  inspect["<b>pptx-ts/inspect</b><br/>slides, elements, boxes"]
+  script["<b>pptx-ts/script</b><br/>deck to code"]
+  report["Report<br/>for lints, diffs, tests"]
+
+  code --> write
+  write --> pptx
+  pptx -- opens in --> apps
+  apps -. "or a deck made by hand" .-> pptx
+  pptx -- load --> read
+  read -- "save: untouched parts<br/>byte for byte" --> pptx
+  pptx --> inspect
+  inspect --> report
+  read --> script
+  script -- "TypeScript that<br/>rebuilds the deck" --> code
+
+  classDef lib stroke:#b4451f,stroke-width:2px
+  classDef file stroke-dasharray:4 3
+  class write,read,inspect,script lib
+  class pptx file

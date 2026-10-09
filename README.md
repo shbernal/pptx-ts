@@ -1,102 +1,147 @@
-# pptx-ts
+<div align="center">
 
-[![npm](https://img.shields.io/npm/v/pptx-ts)](https://www.npmjs.com/package/pptx-ts)
-[![weekly downloads](https://img.shields.io/npm/dw/pptx-ts.svg?label=npm%20downloads&logo=npm)](https://www.npmjs.com/package/pptx-ts)
-[![total downloads](https://img.shields.io/npm/dt/pptx-ts.svg?label=npm%20total%20downloads&logo=npm)](https://www.npmjs.com/package/pptx-ts)
-[![CI](https://github.com/shbernal/pptx-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/shbernal/pptx-ts/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/banner/banner-dark.svg">
+  <img alt="pptx-ts: write a program, get a PowerPoint file" src="assets/readme/banner/banner-light.svg">
+</picture>
 
-**Write a program, get a PowerPoint file.**
+[![npm][npm-badge]][npm]
+[![Downloads][downloads-badge]][npm]
+[![CI][ci-badge]][ci]
+[![License][license-badge]][license]
 
-A `.pptx` is a zip full of XML. pptx-ts writes that zip for you, so you describe
-slides in TypeScript and a `.pptx` comes out the other end. PowerPoint never runs, no
-Office licence is involved, and nothing has to be installed on the machine doing the
-writing. The file opens cleanly in desktop PowerPoint, and Keynote, LibreOffice Impress
-and Google Slides import it on a best-effort basis.
+---
 
-Reach for it when a deck has to be built from data that changes: a monthly report,
-one deck per customer, a hundred decks per night, or a download button on a page that
-hands the user a deck built from what they are looking at.
+[Install](#install) • [Quickstart](#quickstart) • [Read and edit](#read-and-edit-decks-too) • [Compare](#how-this-compares-with-pptxgenjs) • [Docs](https://shbernal.github.io/pptx-ts/)
 
-## Install
+---
 
-```bash
-pnpm add pptx-ts
-```
+</div>
 
-`@shbernal/ts-pptx` is the same package under its first name, so install one or the other.
-[Installation](docs/getting-started/installation.md) covers npm, CommonJS and the optional
-math dependencies.
+<p align="center">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/demo/demo-dark.svg">
+  <img alt="A 28-line TypeScript program runs and writes report.pptx, a slide with a revenue bar chart" src="assets/readme/demo/demo-light.svg">
+</picture>
+</p>
 
-## Quick start
+pptx-ts writes `.pptx` files from TypeScript.
+You describe slides in code, and a deck comes out that opens cleanly in desktop PowerPoint.
+PowerPoint never runs, so there is no Office licence and nothing to install on the machine doing the writing.
+
+- Text, tables that page across slides, shapes, connectors, pictures, SVG, video and audio.
+- Native charts backed by an embedded workbook, so PowerPoint's "Edit Data" works.
+- Slide masters, layouts, sections, speaker notes, gradients and an image clipped to a shape.
+- LaTeX maths, embedded spreadsheets and 3D models.
+- [An HTML `<table>` becomes paged slides](docs/html-tables.md), in the browser or under Node.
+- [Text measured against the real font](docs/text-fit.md), so a box shrinks or grows to fit before the file is written.
+- Opens existing decks too: [inspect](docs/reference/pptx-inspection.md), [edit](docs/reading/read-and-edit.md), or [turn one into code](docs/reference/pptx-to-script.md).
+
+<p align="center">
+  <img alt="Nine slides from the two showcase decks: a gradient cover, a stacked column chart, a photo grid, KPI cards, a photo with a scrim, a styled table, a duotone map, a chevron timeline and an embedded video" src="assets/readme/gallery/gallery.webp">
+</p>
+
+pptx-ts wrote every slide above, and LibreOffice rendered them.
+They come from the two [showcase decks](www/showcases/README.md).
+
+## Why pptx-ts?
+
+Use it when a deck has to be built from data that changes:
+
+- a monthly report
+- one deck per customer
+- a hundred decks every night
+- a download button that hands the user a deck built from what they are looking at
+
+Every deck has to open cleanly in desktop PowerPoint.
+Keynote, LibreOffice Impress and Google Slides import it on a best-effort basis.
+
+## Quickstart
+
+1. Install pptx-ts on your project:
+
+   [![Node ≥ 24][node-badge]][node]
+
+   ```bash
+   pnpm add pptx-ts
+   ```
+
+2. Save this as `hello.mts`:
+
+   ```ts
+   import TsPptx from "pptx-ts"
+
+   const pptx = new TsPptx()
+   const slide = pptx.addSlide()
+
+   slide.addText("Hello from pptx-ts", {
+     x: 1,
+     y: 1,
+     w: 8,
+     h: 1,
+     fontSize: 24,
+     color: "363636",
+   })
+
+   await pptx.writeFile({ fileName: "hello.pptx" })
+   ```
+
+2. Run it. Node 24 strips the types itself, so there is no build step.
+
+   ```bash
+   node hello.mts
+   ```
+
+3. Open `hello.pptx`.
+
+Positions are in inches, from the top-left corner of a 10 by 5.625 inch slide.
+[Your first deck](docs/getting-started/first-deck.md) builds a four-slide report from an array, with a table, a chart and speaker notes.
+
+## Read and edit decks too
+
+PptxGenJS, the library pptx-ts descends from, only writes.
+pptx-ts also opens a `.pptx` you already have.
+
+| Entry point | What it does |
+| --- | --- |
+| `pptx-ts/inspect` | Slide count, size, parts, media and fonts, without loading the whole deck. [Guide](docs/reference/pptx-inspection.md) |
+| `pptx-ts/read` | Open a deck, change the text on slide four, save it. Parts you did not touch keep their original bytes. [Guide](docs/reading/read-and-edit.md) |
+| `pptx-ts/script` | Print TypeScript that rebuilds a deck, plus a note for each construct it could not carry. [Guide](docs/reference/pptx-to-script.md) |
 
 ```ts
-import TsPptx from "pptx-ts"
+import { readFile, writeFile } from "node:fs/promises"
+import { Presentation } from "pptx-ts/read"
 
-const pptx = new TsPptx()
-const slide = pptx.addSlide()
+const deck = await Presentation.load(await readFile("report.pptx"))
+const title = deck.slides[0]?.placeholder("title")
+if (title) title.text = "Q3 review"
 
-slide.addText("Hello from pptx-ts", {
-  x: 1,
-  y: 1,
-  w: 8,
-  h: 1,
-  fontSize: 24,
-  color: "363636",
-})
-
-await pptx.writeFile({ fileName: "example.pptx" })
+await writeFile("report.pptx", await deck.save())
 ```
 
-That is the whole shape of it. Make a presentation, add a slide, put things on the
-slide, write the file. Positions are in inches by default, so `x: 1, y: 1` is an inch
-in from the top-left corner of a 10 by 5.625 inch slide.
-[Your first deck](docs/getting-started/first-deck.md) builds a bigger one from data, with a
-table, a chart and speaker notes.
+The script printer is the quickest way to learn the API.
+Build a slide by hand in PowerPoint, then read the code for it.
 
-## What you can put on a slide
+## How it works
 
-Text and rich paragraphs. Tables, including ones that spill onto as many slides as
-they need. Shapes and connectors between them. Pictures, SVGs, video and audio.
-Charts, with a real embedded workbook behind them, so double-clicking a chart in
-PowerPoint opens its data the way it does for a chart a human made. Speaker notes,
-sections, slide masters and layouts, gradients, an image clipped to a shape, a
-spreadsheet embedded as an object, a 3D model, and LaTeX maths.
+<p align="center">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/how-it-works/loop-dark.svg">
+  <img alt="pptx-ts writes a .pptx from your code; pptx-ts/read loads and saves it, pptx-ts/inspect lists its contents, and pptx-ts/script turns it back into TypeScript" src="assets/readme/how-it-works/loop-light.svg">
+</picture>
+</p>
 
-Two features worth knowing about by name:
+A `.pptx` is a zip of XML parts.
+pptx-ts builds those parts from your calls and zips them, with no Office process involved.
 
-- **[An HTML table becomes slides](docs/html-tables.md).** Point `tableToSlides` at a
-  `<table>` you already have and it comes out as a PowerPoint table, paged across
-  slides. Works in a browser and under Node.
-- **[Text that has to fit](docs/text-fit.md).** pptx-ts can measure the text
-  against the real font and shrink or grow the box before it writes the file, instead
-  of leaving you to guess at font sizes.
-
-## Reading decks, not only writing them
-
-Writing is half of it. pptx-ts also opens a `.pptx` you already have, which is
-unusual: the library it descends from generates decks and does not read them.
-
-- **[Look inside one](docs/reference/pptx-inspection.md)** and get slide count, size,
-  parts, media and fonts, without loading the whole thing into a model.
-- **[Edit one](docs/reading/read-and-edit.md)**. Open a deck, change the text on slide
-  four, save it back. Parts you did not touch come out byte for byte as they went in.
-- **[Turn one into code](docs/reference/pptx-to-script.md)**. Point it at a deck and
-  get TypeScript that rebuilds it. Anything it could not express is reported to you
-  rather than dropped in silence. It is the fastest way to learn the API: build a
-  slide by hand in PowerPoint, then read the script for it.
-
-## Where it runs
-
-| Runtime | Load it with | `writeFile` |
+| Runtime | Import | `writeFile` |
 | --- | --- | --- |
 | Node.js 24 or later | `import`, or `require()` with the class on `.default` | writes to disk |
-| A browser app built with a bundler | `import` | downloads the file |
-| A browser page with no build step | `import TsPptx from "https://esm.sh/pptx-ts/browser"` in a module script | downloads the file |
+| Browser, with a bundler | `import` | downloads the file |
+| Browser, no build step | `import TsPptx from "https://esm.sh/pptx-ts/browser"` | downloads the file |
 | Deno, Bun, edge workers | `import` | throws; use `toBytes()` |
 
-[Where it runs](docs/getting-started/runtime.md) lists every entry point and how each runtime
-loads the one ESM build.
+[Where it runs](docs/getting-started/runtime.md) lists every entry point.
 
 <!-- comparison:start -->
 <!-- GENERATED REGION. Do not edit by hand.
@@ -127,40 +172,28 @@ PptxGenJS](docs/comparison-syntax.md).
 
 <!-- comparison:end -->
 
-## Documentation
+## Learn more
 
-The documentation site, with the generated API reference, is at
-**<https://shbernal.github.io/pptx-ts/>**. The [demos page](https://shbernal.github.io/pptx-ts/demos)
-builds a quarterly review deck in your browser and previews the slides.
+- [Documentation site](https://shbernal.github.io/pptx-ts/), with the API reference
+- [Live demo](https://shbernal.github.io/pptx-ts/demos): build a quarterly review deck in your browser
+- [Core concepts](docs/getting-started/concepts.md), [tables](docs/tables.md), [connectors](docs/connectors.md) and [groups](docs/groups.md)
+- [Smaller browser bundles](docs/bundle-size.md)
+- [Errors and warnings](docs/errors-and-warnings.md) and [troubleshooting](docs/troubleshooting.md)
 
-- Start with the [Introduction](docs/getting-started/introduction.md),
-  [Your first deck](docs/getting-started/first-deck.md) and
-  [Core concepts](docs/getting-started/concepts.md)
-- [Tables](docs/tables.md), [connectors](docs/connectors.md), [groups](docs/groups.md) and
-  [HTML tables to slides](docs/html-tables.md)
-- [Smaller bundles](docs/bundle-size.md) for a browser program that composes only what it uses
-- [Errors and warnings](docs/errors-and-warnings.md) and
-  [troubleshooting](docs/troubleshooting.md)
+Found a bug? [Open an issue](https://github.com/shbernal/pptx-ts/issues).
+Errors that are the library's fault print that link themselves.
 
-## Something wrong, or missing?
+If an agent writes most of your code, install the `ts-pptx-upstream` skill that ships in the package.
+It files a library defect the agent hits as an issue with a small reproduction, instead of a silent workaround.
+[CONTRIBUTING.md](CONTRIBUTING.md#the-skill-that-files-the-issue-for-you) has the install command.
 
-Open an issue: <https://github.com/shbernal/pptx-ts/issues>. Errors the library knows
-are its own fault print that link themselves.
 
-If an agent writes most of your code, install the `ts-pptx-upstream` skill that ships inside
-the package. It turns a library defect the agent hits into a filed issue with a small
-reproduction, instead of a silent workaround:
-
-```bash
-npx skills add ./node_modules/pptx-ts -s '*' -a claude-code -a codex -a universal -y
-```
-
-Name the runtimes you use. [CONTRIBUTING.md](CONTRIBUTING.md) covers what the skill does
-with a report and how to refresh it after a version bump.
-
-## License
-
-Copyright (c) 2015-2022 Brent Ely.
-Modifications copyright (c) 2026 shbernal.
-
-[MIT](LICENSE)
+[npm]: https://www.npmjs.com/package/pptx-ts
+[npm-badge]: https://img.shields.io/npm/v/pptx-ts?style=for-the-badge&logo=npm&logoColor=e9855c&label=npm&labelColor=1b1b1f&color=b4451f
+[downloads-badge]: https://img.shields.io/npm/dm/pptx-ts?style=for-the-badge&label=downloads&labelColor=1b1b1f&color=b4451f
+[ci]: https://github.com/shbernal/pptx-ts/actions/workflows/ci.yml
+[ci-badge]: https://img.shields.io/github/actions/workflow/status/shbernal/pptx-ts/ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=e9855c&label=CI&labelColor=1b1b1f&color=b4451f
+[node]: package.json
+[node-badge]: https://img.shields.io/badge/node-%E2%89%A524-b4451f?style=for-the-badge&logo=nodedotjs&logoColor=e9855c&labelColor=1b1b1f
+[license]: LICENSE
+[license-badge]: https://img.shields.io/github/license/shbernal/pptx-ts?style=for-the-badge&labelColor=1b1b1f&color=b4451f

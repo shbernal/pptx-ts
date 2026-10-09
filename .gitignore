@@ -37,3 +37,14 @@ docs/doc-index.md
 .claude/*.lock
 # Local junction/symlink mirroring .agents/skills/ for Skill-registry discovery; canonical source lives in .agents/
 .claude/skills/
+
+# Intermediates written by the README visual generators under assets/readme/
+/assets/readme/banner/*.png
+/assets/readme/demo/report.pptx
+/assets/readme/demo/report.pdf
+/assets/readme/demo/slide.png
+/assets/readme/demo/final-*.png
+/assets/readme/gallery/work/
+/assets/readme/gallery/features/
+/assets/readme/how-it-works/*.png
+/assets/readme/gallery/gallery-*.jpg
