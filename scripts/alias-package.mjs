@@ -114,7 +114,10 @@ export function aliasReadme(readme, { aliasName = ALIAS_NAME, canonicalName }) {
 		'> every example below use it.\n'
 
 	const lines = readme.split('\n')
-	const title = lines.findIndex((line) => line.startsWith('# '))
+	// A README that opens on a centered `<div>` header carries its title in a banner image,
+	// so the note goes after the header block rather than above the banner.
+	const header = lines[0]?.startsWith('<div') ? lines.indexOf('</div>') : -1
+	const title = header >= 0 ? header : lines.findIndex((line) => line.startsWith('# '))
 	if (title < 0) return banner + '\n' + readme
 	const head = lines.slice(0, title + 1).join('\n')
 	const tail = lines.slice(title + 1).join('\n')

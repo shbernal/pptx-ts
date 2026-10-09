@@ -96,6 +96,13 @@ describe('aliasReadme', () => {
 		expect(out).toContain('Body only.')
 	})
 
+	test('places the banner after a centered header block', () => {
+		const readme = ['<div align="center">', '', '<img alt="ts-pptx">', '', '</div>', '', 'Body.'].join('\n')
+		const lines = aliasReadme(readme, { canonicalName }).split('\n')
+		expect(lines.slice(0, 5)).toEqual(readme.split('\n').slice(0, 5))
+		expect(lines.findIndex((line) => line.startsWith('>'))).toBe(6)
+	})
+
 	// The first `# ` wins, not the last: a `# ` further down (inside a fenced block, say)
 	// must not pull the banner into the middle of the document.
 	test('uses the first title', () => {
