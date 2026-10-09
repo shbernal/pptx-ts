@@ -423,7 +423,9 @@ export interface TableProps extends PositionProps, TextBaseProps, ObjectNameProp
 	 * @example outerBorder: { type:'solid', color:'1A2B3C', width:1 } // box the table
 	 * @example outerBorder: [{type:'solid'}, undefined, {type:'solid'}, undefined] // rules above and below
 	 */
-	outerBorder?: BorderProps | [BorderProps?, BorderProps?, BorderProps?, BorderProps?]
+	outerBorder?:
+		| BorderProps
+		| [(BorderProps | undefined)?, (BorderProps | undefined)?, (BorderProps | undefined)?, (BorderProps | undefined)?]
 	/**
 	 * Width of table columns (inches)
 	 * - single value is applied to every column equally based upon `w`
