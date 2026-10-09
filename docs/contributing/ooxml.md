@@ -168,6 +168,16 @@ Either way the order is:
    `test/read/fixtures/authoring/` and runs with `pnpm ppt:run`. Verify the result with
    `.agents/skills/powerpoint-fixture-authoring/scripts/verify-powerpoint-fixture.ps1`, which
    runs the same way.
+
+   Re-authoring a committed fixture, add `--compare` (`pnpm ppt:run <recipe.ps1> --compare`). Each
+   returned deck that replaces a file is compared with it part by part, and the run exits 1 when a
+   part differs. Before comparing it replaces what PowerPoint stamps fresh on every save with
+   placeholders: `p14:creationId`, `p14:modId`, `a16:creationId`, `a16:colId`, `a16:rowId`,
+   `a:fld/@id` and a date field's cached text. Chart axis ids (`c:axId` and the `c:crossAx` naming
+   one) become ordinals in document order. It skips `docProps/core.xml`, `ppt/viewProps.xml` and
+   `docProps/thumbnail.jpeg` and lists them as skipped. Embedded workbooks are compared part by
+   part, but their own Excel stamps are not normalized. The normalizer is
+   `normalizePowerPointStamps` in `scripts/pptx-parts.mjs`.
 2. Record provenance and SHA-256 in
    [test/read/fixtures/README.md](https://github.com/shbernal/pptx-ts/blob/main/test/read/fixtures/README.md).
 3. Wire the test to the fixture: through the read harness for a read accessor, or a

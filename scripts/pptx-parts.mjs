@@ -11,6 +11,10 @@
  * a second, hand-rolled comparison would drift, and the way it drifts is silent — one
  * gate would start tolerating a difference the other still calls a regression, and
  * nobody would know which one was right.
+ *
+ * `comparePowerPointPackages` is the other comparison here, with a different question: whether a
+ * fixture PowerPoint re-authored matches the committed one. It normalizes what PowerPoint stamps
+ * on every save, which the byte-identity normalizers above must never excuse.
  */
 
 import fs from 'node:fs'
@@ -169,4 +173,144 @@ export function diffParts(baseDir, curDir) {
 		if (!a.equals(b)) diffs.push('CHANGED  ' + part)
 	}
 	return diffs.sort()
+}
+
+/**
+ * Parts PowerPoint rewrites on every save whatever the deck holds: the save timestamps, the
+ * window state, and the thumbnail. Comparing a re-authored fixture skips them outright and says
+ * so. Matched against a part's path inside its own package, so an embedded workbook's
+ * `docProps/core.xml` is skipped too.
+ */
+export const POWERPOINT_SKIPPED_PARTS = ['docProps/core.xml', 'ppt/viewProps.xml', 'docProps/thumbnail.jpeg']
+
+/**
+ * Values PowerPoint stamps fresh on every save, each replaced by a fixed placeholder. A value is
+ * replaced, never its element, so an id that appears or disappears still shows as a diff.
+ * @type {[RegExp, string][]}
+ */
+export const POWERPOINT_STAMPS = [
+	[/(<p14:creationId\b[^>]*\bval=")[^"]*"/g, '$1P14-CREATIONID"'],
+	[/(<p14:modId\b[^>]*\bval=")[^"]*"/g, '$1P14-MODID"'],
+	[/(<a16:creationId\b[^>]*\bid=")[^"]*"/g, '$1{A16-CREATIONID}"'],
+	[/(<a16:colId\b[^>]*\bval=")[^"]*"/g, '$1A16-COLID"'],
+	[/(<a16:rowId\b[^>]*\bval=")[^"]*"/g, '$1A16-ROWID"'],
+	// A date field's cached text is the date of the save. Only the `a:t` inside a field whose type
+	// is `datetime*`, and never past that field's own close or into the next field.
+	[
+		/(<a:fld\b[^>]*\btype="datetime[^"]*"[^>]*(?<!\/)>(?:(?!<\/a:fld>|<a:fld\b)[\s\S])*?<a:t>)[^<]*(<\/a:t>)/g,
+		'$1DATE-FIELD-TEXT$2',
+	],
+	[/(<a:fld\b[^>]*\bid=")[^"]*"/g, '$1{FLD-ID}"'],
+]
+
+/**
+ * Normalize what PowerPoint stamps fresh on every save in one XML part, so a re-authored fixture
+ * can be compared with the committed one. Each value in {@link POWERPOINT_STAMPS} becomes a
+ * placeholder. Chart axis ids become ordinals instead: every distinct `c:axId` value, and the
+ * `c:crossAx` that names it, maps to `AXIS-1`, `AXIS-2`, ... in order of first appearance, so the
+ * pairing between a plot and its axes still has to match.
+ * @param {string} text
+ * @returns {string}
+ */
+export function normalizePowerPointStamps(text) {
+	const stamped = POWERPOINT_STAMPS.reduce((out, [re, sub]) => out.replace(re, sub), text)
+	/** @type {Map<string, string>} */
+	const axes = new Map()
+	return stamped.replace(/(<c:(?:axId|crossAx)\b[^>]*\bval=")([^"]*)"/g, (_match, head, id) => {
+		let ordinal = axes.get(id)
+		if (!ordinal) {
+			ordinal = 'AXIS-' + (axes.size + 1)
+			axes.set(id, ordinal)
+		}
+		return head + ordinal + '"'
+	})
+}
+
+/**
+ * The first place two normalized parts disagree, as a short excerpt from each side.
+ * @param {Uint8Array} a
+ * @param {Uint8Array} b
+ * @returns {string}
+ */
+function firstDifference(a, b) {
+	let i = 0
+	while (i < a.length && i < b.length && a[i] === b[i]) i++
+	const decoder = new TextDecoder('utf-8')
+	/** @param {Uint8Array} bytes */
+	const excerpt = (bytes) =>
+		i >= bytes.length ? '(ends)' : JSON.stringify(decoder.decode(bytes.subarray(Math.max(0, i - 40), i + 40)))
+	return `at byte ${i}: ${excerpt(a)} vs ${excerpt(b)}`
+}
+
+/**
+ * @typedef {{ part: string, kind: 'added' | 'removed' | 'changed', detail?: string }} PartDifference
+ * @typedef {{ skipped: string[], differences: PartDifference[] }} PackageComparison
+ */
+
+/**
+ * Compare two PowerPoint-saved packages after {@link normalizePowerPointStamps}, recursing into
+ * embedded workbooks (their parts are named `<workbook>.xlsx!/<part>`). Parts in
+ * {@link POWERPOINT_SKIPPED_PARTS} are listed as skipped, not compared.
+ * @param {Uint8Array} base - the committed package
+ * @param {Uint8Array} current - the re-authored one
+ * @returns {Promise<PackageComparison>}
+ */
+export async function comparePowerPointPackages(base, current) {
+	const unzip = await unzipSync()
+	const encoder = new TextEncoder()
+	const decoder = new TextDecoder('utf-8')
+	/** @type {Set<string>} */
+	const skipped = new Set()
+
+	/**
+	 * Every part, normalized, keyed by its path from the outer package.
+	 * @param {Uint8Array} zipBytes
+	 * @param {string} prefix
+	 * @param {Map<string, Uint8Array>} into
+	 * @returns {Map<string, Uint8Array>}
+	 */
+	const parts = (zipBytes, prefix, into) => {
+		const entries = unzip(zipBytes)
+		for (const name of Object.keys(entries)) {
+			const bytes = /** @type {Uint8Array} */ (entries[name])
+			if (name.endsWith('/')) continue
+			if (POWERPOINT_SKIPPED_PARTS.includes(name)) skipped.add(prefix + name)
+			else if (/\.xlsx$/i.test(name)) parts(bytes, prefix + name + '!/', into)
+			else if (/\.(xml|rels)$/i.test(name))
+				into.set(prefix + name, encoder.encode(normalizePowerPointStamps(decoder.decode(bytes))))
+			else into.set(prefix + name, bytes)
+		}
+		return into
+	}
+
+	const before = parts(base, '', new Map())
+	const after = parts(current, '', new Map())
+	/** @type {PartDifference[]} */
+	const differences = []
+	for (const part of new Set([...before.keys(), ...after.keys()])) {
+		const a = before.get(part)
+		const b = after.get(part)
+		if (!a) differences.push({ part, kind: 'added' })
+		else if (!b) differences.push({ part, kind: 'removed' })
+		else if (Buffer.compare(a, b) !== 0) differences.push({ part, kind: 'changed', detail: firstDifference(a, b) })
+	}
+	differences.sort((x, y) => (x.part < y.part ? -1 : x.part > y.part ? 1 : 0))
+	return { skipped: [...skipped].sort(), differences }
+}
+
+/**
+ * A comparison as the lines `ppt:run --compare` prints: the verdict first, then each differing
+ * part, then the parts it did not look at.
+ * @param {string} label - what was compared, e.g. the fixture's path
+ * @param {PackageComparison} comparison
+ * @returns {string[]}
+ */
+export function formatComparison(label, { skipped, differences }) {
+	const lines = differences.length
+		? [`${label}: ${differences.length} part(s) differ after normalization:`]
+		: [`${label}: no part differs after normalization.`]
+	for (const { part, kind, detail } of differences)
+		lines.push(`  ${kind.toUpperCase().padEnd(8)} ${part}` + (detail ? `\n           ${detail}` : ''))
+	if (skipped.length) lines.push(`  skipped (rewritten on every save): ${skipped.join(', ')}`)
+	return lines
 }

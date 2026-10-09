@@ -70,7 +70,7 @@ are in every aggregate the repo has.
 | `path-refs.mjs` | Gate | Every backticked repo path in the tree must name a file that exists | `check:core` |
 | `png-utils.mjs` | Library | Minimal PNG encode/decode, for the gates that read pixels | `powerpoint-com-smoke.mjs`; unit-tested |
 | `powerpoint-com-smoke.mjs` | Gate | Opens decks in desktop PowerPoint over COM, each as one PowerPoint job | manual (`test:com`): Windows with PowerPoint, or any OS through the worker |
-| `pptx-parts.mjs` | Library | Explode/diff `.pptx` packages | — |
+| `pptx-parts.mjs` | Library | Explode/diff `.pptx` packages; compare a re-authored PowerPoint fixture with the committed one | `ppt:run --compare`; unit-tested |
 | `ooxml-literal-gate.mjs` | Gate | Schema URI and content-type literals outside `src/ooxml/` vs `ooxml-literal-allowlist.json`, each with its reason | `check:core` |
 | `test-import-gate.mjs` | Gate | Relative `src/` imports under `test/` vs the files allowed to unit-test an internal; the suite otherwise imports `dist/` | `check:core` |
 | `ratchet-utils.mjs` | Library | Budget mechanics the two size gates share: headroom, slack, verdict, budget file and stale-key check | — |

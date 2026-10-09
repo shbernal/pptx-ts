@@ -5,6 +5,7 @@
 //   pnpm ppt:run test/read/fixtures/authoring/author-slide-background.ps1
 //   pnpm ppt:run <recipe.ps1> -- -OutPath x.pptx     # arguments after -- go to the recipe
 //   pnpm ppt:run <recipe.ps1> --with .tmp/anim-probe.pptx
+//   pnpm ppt:run <recipe.ps1> --compare               # diff each replaced deck with what it replaced
 //
 // The job carries the whole `test/read/fixtures/` tree (recipes, sibling scripts, assets and
 // the committed decks some recipes reopen), the fixture-authoring skill's verification scripts,
@@ -15,12 +16,17 @@
 // Every file the recipe created or changed comes back to its repo-relative path. Only
 // `test/read/fixtures/` and `.tmp/` are writable: a returned path anywhere else is refused, and
 // the run fails, rather than written.
+//
+// With `--compare`, every returned deck that replaces an existing file is compared with the file
+// it replaced, after normalizing what PowerPoint stamps fresh on every save
+// (`comparePowerPointPackages` in `scripts/pptx-parts.mjs`). The run fails when any part differs.
 
 import fs from 'node:fs'
 import path from 'node:path'
 import { ROOT, isMain, parseCli, repoRel, runCli } from '../script-utils.mjs'
 import { TransportError, packFiles, resolveTransport, returnedFiles, runJob } from './client.mjs'
 import { normalizeRelPath } from './job.mjs'
+import { comparePowerPointPackages, formatComparison } from '../pptx-parts.mjs'
 
 const FIXTURES = 'test/read/fixtures'
 /** What every recipe job carries, besides the recipe's own references. */
@@ -36,6 +42,10 @@ Options:
   --with <path>        also send this repo file or directory (repeatable), e.g. a .tmp/ input
                        an earlier probe wrote
   --timeout <minutes>  how long the recipe may run (default 15)
+  --compare            compare each returned .pptx/.potx that replaces an existing file with
+                       that file, ignoring what PowerPoint stamps on every save (ids, the date
+                       field's text, core.xml, viewProps.xml, the thumbnail); exit 1 when a
+                       part differs
   -h, --help           show this message
 
 Environment:
@@ -91,6 +101,7 @@ async function main() {
 		options: {
 			with: { type: 'string', multiple: true, default: [] },
 			timeout: { type: 'string', default: '15' },
+			compare: { type: 'boolean', default: false },
 		},
 	})
 	const [recipeArg, ...recipeArgs] = positionals
@@ -156,9 +167,12 @@ async function main() {
 
 	const returned = returnedFiles(result)
 	const refused = [...returned.keys()].filter((rel) => !isWritable(rel))
+	/** @type {Map<string, Uint8Array>} what each returned deck replaced, for `--compare` */
+	const replaced = new Map()
 	for (const [rel, content] of returned) {
 		if (!isWritable(rel)) continue
 		const abs = path.join(ROOT, ...rel.split('/'))
+		if (values.compare && /\.(pptx|potx)$/i.test(rel) && fs.existsSync(abs)) replaced.set(rel, fs.readFileSync(abs))
 		fs.mkdirSync(path.dirname(abs), { recursive: true })
 		fs.writeFileSync(abs, content)
 	}
@@ -177,12 +191,23 @@ async function main() {
 		const recipeName = recipe.slice(FIXTURES.length + 1)
 		console.log(`Provenance line for a replaced fixture: Authored ${today} (\`${recipeName}\`, ${build}).`)
 	}
+	let differs = false
+	if (values.compare) {
+		const fresh = written.filter((rel) => /\.(pptx|potx)$/i.test(rel) && !replaced.has(rel))
+		if (!replaced.size) console.log('\n--compare: no returned deck replaced an existing file.')
+		for (const [rel, before] of [...replaced].sort(([a], [b]) => (a < b ? -1 : 1))) {
+			const comparison = await comparePowerPointPackages(before, /** @type {Uint8Array} */ (returned.get(rel)))
+			console.log('\n' + formatComparison(rel, comparison).join('\n'))
+			if (comparison.differences.length) differs = true
+		}
+		for (const rel of fresh) console.log(`--compare: ${rel} is new; nothing to compare it with.`)
+	}
 	if (refused.length) {
 		console.error(`Refused ${refused.length} returned file(s) outside ${WRITABLE.join(' and ')}:`)
 		for (const rel of refused) console.error('  ' + rel)
 		return 1
 	}
-	return result.exitCode === 0 && !result.timedOut ? 0 : 1
+	return result.exitCode === 0 && !result.timedOut && !differs ? 0 : 1
 }
 
 if (isMain(import.meta.url)) await runCli(main)
