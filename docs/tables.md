@@ -397,6 +397,7 @@ flowchart TD
 | --- | --- | --- |
 | `rows` is empty or not an array | throws `InvalidOptionError` | `table/rows-not-an-array` |
 | a row is not an array | throws `InvalidOptionError` | `table/rows-not-nested` |
+| `tableStyle` that is not a GUID in braces, such as a `TableStyle` key name | throws `InvalidOptionError` | `table/invalid-style-id` |
 | `border` is a string, on the table or a cell | warns, and that border is ignored | `table/invalid-border` |
 | `outerBorder` is a string | warns, ignored | `table/invalid-outer-border` |
 | unknown `dashType` | warns, falls back to `type` | `border/invalid-dash-type` |

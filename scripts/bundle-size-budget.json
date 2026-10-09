@@ -1,13 +1,13 @@
 {
-	"browser.js": 129024,
-	"families.js": 97280,
+	"browser.js": 136192,
+	"families.js": 98304,
 	"html.js": 17408,
-	"index.js": 124928,
-	"inspect.js": 86016,
+	"index.js": 132096,
+	"inspect.js": 87040,
 	"math.js": 2048,
-	"measure.js": 18432,
-	"node.js": 124928,
-	"read.js": 82944,
-	"script.js": 68608,
+	"measure.js": 19456,
+	"node.js": 132096,
+	"read.js": 84992,
+	"script.js": 70656,
 	"zip.js": 2048
 }

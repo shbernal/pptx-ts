@@ -1,5 +1,6 @@
 /**
- * The bounds of the three id spaces `presentation.xml` numbers its parts in.
+ * The bounds of the three id spaces `presentation.xml` numbers its parts in, and the shape of a
+ * GUID-valued id.
  *
  * The write path, the read model's slide and master registries, and the Slide Zoom definer each
  * spelled these as literals or as a private constant of their own. They are facts about the
@@ -22,3 +23,9 @@ export const MIN_SLIDE_MASTER_ID = 2147483648
 
 /** `ST_SlideLayoutId` minimum (0x80000000): the same floor as {@link MIN_SLIDE_MASTER_ID}. */
 export const MIN_SLIDE_LAYOUT_ID = 2147483648
+
+/**
+ * `ST_Guid`: upper-case hex in braces, the schema's own pattern. `a:tableStyleId` is one; a
+ * lower-case or unbraced GUID fails it.
+ */
+export const ST_GUID = /^\{[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}\}$/

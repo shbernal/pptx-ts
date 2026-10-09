@@ -39,6 +39,7 @@ import { createHyperlinkRels } from './hyperlinks.js'
 import { resolveFillKind } from '../drawingml/fill.js'
 import { registerImageFillMedia } from './image.js'
 import { InvalidOptionError } from '../../errors.js'
+import { ST_GUID } from '../../ooxml/ids.js'
 
 /** A per-cell TRBL border tuple; a null side is *omitted* (inherits), not erased. */
 type BorderTuple = [BorderProps | null, BorderProps | null, BorderProps | null, BorderProps | null]
@@ -415,6 +416,16 @@ export function addTableDefinition(
 				`addTable: 'rows' should be an array of cells! Row ${idx} is ${JSON.stringify(row)}`
 			)
 		})
+
+		// C: `a:tableStyleId` is an ST_Guid, so anything else (an enum key such as
+		// `'MEDIUM_STYLE_2_ACCENT_1'`, a bare GUID without braces) fails the schema. Dropping it
+		// would hand back a table without the style asked for, so throw.
+		if (opt.tableStyle !== undefined && !ST_GUID.test(opt.tableStyle)) {
+			throw new InvalidOptionError(
+				'table/invalid-style-id',
+				`addTable: \`tableStyle\` ${JSON.stringify(opt.tableStyle)} is not a style GUID. Use a \`TableStyle\` member, or a GUID in braces such as '{5C22544A-7EE6-4342-B048-85BDC9FD1C3A}'.`
+			)
+		}
 	}
 
 	// STEP 1.5: `headerRow` / `columns` inline sugar — bake blanket styling into cells as
