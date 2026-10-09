@@ -58,6 +58,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `fill: { type: 'pattern', pattern: { preset } }` with a name outside the 54 presets was written
   verbatim as `<a:pattFill prst>`, which fails the schema. It now throws `InvalidOptionError`
   with code `pattern-fill/invalid-preset`. Use one of the `PatternPreset` names.
+- **A `tableStyle` that is not a style GUID throws.** `addTable({ tableStyle })` wrote any string
+  into `<a:tableStyleId>`, so an enum key such as `'MEDIUM_STYLE_2_ACCENT_1'` produced a
+  schema-invalid table. A value that is not an upper-case GUID in braces now throws
+  `InvalidOptionError` with code `table/invalid-style-id`. Pass the `TableStyle` member
+  (`TableStyle.MEDIUM_STYLE_2_ACCENT_1`) instead of its key name.
 
 ## [4.0.1] - 2026-09-21
 

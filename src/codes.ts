@@ -279,6 +279,7 @@ export type InvalidOptionErrorCode =
 	// Tables
 	| 'table/rows-not-an-array'
 	| 'table/rows-not-nested'
+	| 'table/invalid-style-id'
 	// Editing a table in an existing deck (`pptx-ts/read`). Each names an attribute value
 	// outside its schema enum, or a measurement that cannot be written — conditions the read
 	// path throws on rather than drops, because a caller editing one attribute would

@@ -6,6 +6,7 @@ import {
 	captureDiagnostics,
 	assert,
 	assertEqual,
+	assertRejects,
 	expectDefined,
 	at,
 	take,
@@ -84,6 +85,22 @@ defineRegressionSuite('Table styling: built-in styles and the direct-formatting 
 				slide.includes(`<a:tableStyleId>${TableStyle.MEDIUM_STYLE_2_ACCENT_1}</a:tableStyleId>`),
 				'the built-in GUID is referenced; got: ' + slide
 			)
+		},
+	},
+	{
+		name: 'a tableStyle that is not a braced GUID throws rather than reaching a:tableStyleId',
+		fn: async () => {
+			// `a:tableStyleId` is an ST_Guid. The enum key, an unbraced GUID and a lower-case one
+			// each fail the schema, so none of them may reach the part.
+			for (const bad of [
+				'MEDIUM_STYLE_2_ACCENT_1',
+				'5C22544A-7EE6-4342-B048-85BDC9FD1C3A',
+				'{5c22544a-7ee6-4342-b048-85bdc9fd1c3a}',
+			]) {
+				// @ts-expect-error -- not a TableStyle member nor a braced GUID literal (for the first two)
+				const error = await assertRejects(() => tableParts({ tableStyle: bad }), /not a style GUID/, bad)
+				assertEqual(error.code, 'table/invalid-style-id', `error code for ${bad}`)
+			}
 		},
 	},
 	{
