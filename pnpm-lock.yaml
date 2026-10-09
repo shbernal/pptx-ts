@@ -253,13 +253,13 @@ importers:
         version: 7.0.2003
       pptx-html:
         specifier: ^0.2.1
-        version: 0.2.1(mathml2omml@0.5.0)(temml@0.13.5)
+        version: 0.2.1(mathml2omml@0.5.0)(temml@0.14.0)
       publint:
         specifier: ^0.3.25
         version: 0.3.25
       temml:
-        specifier: ^0.13.5
-        version: 0.13.5
+        specifier: ^0.14.0
+        version: 0.14.0
       tsdown:
         specifier: ^0.23.0
         version: 0.23.0(@arethetypeswrong/core@0.18.5)(publint@0.3.25)(typescript@7.0.2)
@@ -2996,8 +2996,8 @@ packages:
   tabbable@6.5.0:
     resolution: {integrity: sha512-wieBHXygIm7OyQOu5hQlkk62/WyCFYGlWg7L6/ZCUZwx0o398Zkn4pVmMyfYhfMG8kGrj/Krt8eIk6UKC6VzwA==}
 
-  temml@0.13.5:
-    resolution: {integrity: sha512-aPkDDgunanpLNL0ql32HbolqLep+w8DRcVXRql7rWrMt/PhczdLgL4UBYYVU3BYjCNjkGq4EqwIicu/zWr1iOg==}
+  temml@0.14.0:
+    resolution: {integrity: sha512-tz1LW/5IZpThK8c7ZpdTSH/n56eAj+ThirLieErtKxYC3EKCIiB4sKdRUehAgH+fQmvIKqMfP3gqTLBdLpy9zw==}
     engines: {node: '>=18.13.0'}
 
   thenify-all@1.6.0:
@@ -3997,14 +3997,14 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.63.4':
     optional: true
 
-  '@shbernal/ts-pptx@4.0.1(mathml2omml@0.5.0)(temml@0.13.5)':
+  '@shbernal/ts-pptx@4.0.1(mathml2omml@0.5.0)(temml@0.14.0)':
     dependencies:
       '@xmldom/xmldom': 0.9.12
       fflate: 0.8.3
       opentype.js: 2.0.0
     optionalDependencies:
       mathml2omml: 0.5.0
-      temml: 0.13.5
+      temml: 0.14.0
 
   '@shikijs/core@2.5.0':
     dependencies:
@@ -5542,9 +5542,9 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  pptx-html@0.2.1(mathml2omml@0.5.0)(temml@0.13.5):
+  pptx-html@0.2.1(mathml2omml@0.5.0)(temml@0.14.0):
     dependencies:
-      '@shbernal/ts-pptx': 4.0.1(mathml2omml@0.5.0)(temml@0.13.5)
+      '@shbernal/ts-pptx': 4.0.1(mathml2omml@0.5.0)(temml@0.14.0)
     transitivePeerDependencies:
       - mathml2omml
       - temml
@@ -5743,7 +5743,7 @@ snapshots:
 
   tabbable@6.5.0: {}
 
-  temml@0.13.5: {}
+  temml@0.14.0: {}
 
   thenify-all@1.6.0:
     dependencies:

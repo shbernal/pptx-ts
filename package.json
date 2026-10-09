@@ -175,7 +175,7 @@
 	},
 	"peerDependencies": {
 		"mathml2omml": "^0.5.0",
-		"temml": "^0.13.3"
+		"temml": "^0.13.3 || ^0.14.0"
 	},
 	"peerDependenciesMeta": {
 		"mathml2omml": {
@@ -216,7 +216,7 @@
 		"oxlint-tsgolint": "7.0.2003",
 		"pptx-html": "^0.2.1",
 		"publint": "^0.3.25",
-		"temml": "^0.13.5",
+		"temml": "^0.14.0",
 		"tsdown": "^0.23.0",
 		"typescript": "^7.0.2",
 		"typescript-6": "npm:typescript@6.0.3",
