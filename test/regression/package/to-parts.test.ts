@@ -31,7 +31,7 @@ describe('toParts()', () => {
 		const parts = await makePres().toParts()
 
 		// Independent oracle: unzip a real write() output with JSZip (not the fflate write path).
-		const buf = (await makePres().write({ outputType: 'uint8array' })) as Uint8Array
+		const buf = await makePres().write({ outputType: 'uint8array' })
 		const zip = await JSZip.loadAsync(buf)
 		// JSZip preserves central-directory order, which is the write path's insertion order.
 		const zipPaths = Object.entries(zip.files)

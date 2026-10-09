@@ -36,13 +36,26 @@ export interface WriteBaseProps {
 	 */
 	onMediaError?: 'throw' | 'placeholder'
 }
-export interface WriteProps extends WriteBaseProps {
+export interface WriteProps<T extends WRITE_OUTPUT_TYPE = WRITE_OUTPUT_TYPE> extends WriteBaseProps {
 	/**
-	 * Output type
+	 * Output type. `write()` resolves to the matching {@link WriteOutputMap} entry.
 	 * - values: 'arraybuffer' | 'base64' | 'binarystring' | 'blob' | 'nodebuffer' | 'uint8array'
 	 * @default 'blob'
 	 */
-	outputType?: WRITE_OUTPUT_TYPE
+	outputType?: T
+}
+/**
+ * What `write()` resolves to for each {@link WriteProps.outputType}. `'nodebuffer'` is a Node
+ * `Buffer` at run time, typed as the `Uint8Array` it extends so the declaration does not need
+ * Node's types.
+ */
+export interface WriteOutputMap {
+	arraybuffer: ArrayBuffer
+	base64: string
+	binarystring: string
+	blob: Blob
+	nodebuffer: Uint8Array
+	uint8array: Uint8Array
 }
 export interface WriteFileProps extends WriteBaseProps {
 	/**

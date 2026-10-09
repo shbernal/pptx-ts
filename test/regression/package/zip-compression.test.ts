@@ -83,7 +83,7 @@ defineRegressionSuite('ZIP package compression default', [
 		name: 'write() with a typed output honors compression (previously ignored)',
 		fn: async () => {
 			const pres = await buildPres()
-			const buf = (await pres.write({ outputType: 'nodebuffer' })) as Buffer
+			const buf = await pres.write({ outputType: 'nodebuffer' })
 			const methods = localHeaderMethods(buf)
 			assert(
 				methods.some((m) => m === 8),

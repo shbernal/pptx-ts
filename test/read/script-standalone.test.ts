@@ -83,8 +83,7 @@ async function runStandalone(bytes: Uint8Array, options: PrintStandaloneScriptOp
 async function authored(build: (pptx: TsPptx) => void) {
 	const pptx = new TsPptx()
 	build(pptx)
-	// `write` is typed as every output type's union; `nodebuffer` is the Buffer arm.
-	return (await pptx.write({ outputType: 'nodebuffer' })) as Buffer
+	return await pptx.write({ outputType: 'nodebuffer' })
 }
 
 /** Every shape name on a slide, descending into groups. */

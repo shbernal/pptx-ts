@@ -169,8 +169,7 @@ describe('3D model: pptx-ts-authored', () => {
 			h: 3,
 			...options,
 		})
-		// `write` is typed for every output target; `nodebuffer` resolves to a Buffer here.
-		return partBodies((await pptx.write({ outputType: 'nodebuffer' })) as Buffer)
+		return partBodies(await pptx.write({ outputType: 'nodebuffer' }))
 	}
 
 	test('emits the rel graph and content type the PowerPoint fixture pins', async () => {
@@ -249,7 +248,7 @@ describe('3D model: pptx-ts-authored', () => {
 			w: 4,
 			h: 3,
 		})
-		const errors = await validateBuf((await pptx.write({ outputType: 'nodebuffer' })) as Buffer)
+		const errors = await validateBuf(await pptx.write({ outputType: 'nodebuffer' }))
 		assertEqual(errors.length, 0, `validator errors: ${JSON.stringify(errors).slice(0, 2000)}`)
 	})
 })
