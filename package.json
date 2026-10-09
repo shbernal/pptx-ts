@@ -215,7 +215,7 @@
 		"oxlint": "^1.85.0",
 		"oxlint-tsgolint": "7.0.2002",
 		"pptx-html": "^0.2.1",
-		"publint": "^0.3.24",
+		"publint": "^0.3.25",
 		"temml": "^0.13.5",
 		"tsdown": "^0.23.0",
 		"typescript": "^7.0.2",
