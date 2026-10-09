@@ -1,9 +1,9 @@
-import { readFile, writeFile } from 'node:fs/promises'
+import { readFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import JSZip from 'jszip'
-import { mustMatch, zipPart } from './oracle-utils.mjs'
+import { mustMatch, zipPart, writeOracleJson } from './oracle-utils.mjs'
 
 // This script lives in test/read/fixtures/authoring/, so the fixtures dir is its parent.
 const FIX = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -65,7 +65,7 @@ const oracle = {
 		'Embedded WAV (ppt/media/audio1.wav) is a tiny self-generated 16-bit PCM mono 8kHz sine (authoring/assets/ding.wav), not a Microsoft asset — license-clean.',
 }
 
-await writeFile(resolve(FIX, 'slide-transition-sound.oracle.json'), JSON.stringify(oracle, null, '\t') + '\n')
+writeOracleJson(resolve(FIX, 'slide-transition-sound.oracle.json'), oracle)
 console.log('sha256', sha256)
 console.log('audio1.wav bytes', audioBytes.length, 'sha', sha(audioBytes))
 for (const s of slides)
