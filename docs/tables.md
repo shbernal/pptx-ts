@@ -135,21 +135,37 @@ A hyperlink in any cell switches the black default off for the whole table. Othe
 
 To brand a table, use direct formatting:
 
-```ts
-slide.addTable(rows, {
-  hasHeader: true,
-  border: { type: 'solid', color: 'D9D9D9', width: 0.5 },
-  headerRow: { fill: { color: '1A2B3C' }, color: 'FFFFFF', bold: true },
-})
+```ts live
+slide.addTable(
+  [
+    [{ text: 'Region' }, { text: 'Q1' }, { text: 'Q2' }],
+    [{ text: 'North' }, { text: '120' }, { text: '145' }],
+    [{ text: 'South' }, { text: '98' }, { text: '110' }],
+  ],
+  {
+    x: 1, y: 1, w: 8, h: 1.5,
+    hasHeader: true,
+    border: { type: 'solid', color: 'D9D9D9', width: 0.5 },
+    headerRow: { fill: { color: '1A2B3C' }, color: 'FFFFFF', bold: true },
+  },
+)
 ```
 
 For a graduated header band, put the shared typography in `headerRow` with no fill, and give each column its own fill:
 
-```ts
-slide.addTable(rows, {
-  headerRow: { color: 'FFFFFF', bold: true, align: 'center' },
-  columns: [{}, { fill: { color: 'BBD3FB' } }, { fill: { color: '4B7BE5' } }],
-})
+```ts live
+slide.addTable(
+  [
+    [{ text: 'Region' }, { text: 'Q1' }, { text: 'Q2' }],
+    [{ text: 'North' }, { text: '120' }, { text: '145' }],
+    [{ text: 'South' }, { text: '98' }, { text: '110' }],
+  ],
+  {
+    x: 1, y: 1, w: 8, h: 1.5,
+    headerRow: { color: 'FFFFFF', bold: true, align: 'center' },
+    columns: [{}, { fill: { color: 'BBD3FB' } }, { fill: { color: '4B7BE5' } }],
+  },
+)
 ```
 
 For banded rows in brand colours, set `fill` on the cells of every other row as you build the data.
@@ -234,14 +250,25 @@ slide.addTable(rows, { border: { type: 'solid', color: 'D9D9D9', width: 0.5 } })
 
 // Only the outside: a box with no interior lines.
 slide.addTable(rows, { outerBorder: { type: 'solid', color: '1A2B3C', width: 1 } })
+```
 
-// Light lines between rows, and a heavier rule above and below the table.
+The two compose. Here `border` draws light lines between rows, and `outerBorder` a heavier rule above and below the table:
+
+```ts live
 const hairline = { type: 'solid', color: 'D9D9D9' } as const
 const none = { type: 'none' } as const
-slide.addTable(rows, {
-  border: [hairline, none, hairline, none],
-  outerBorder: [{ type: 'solid', width: 2 }, undefined, { type: 'solid', width: 2 }, undefined],
-})
+slide.addTable(
+  [
+    [{ text: 'Region' }, { text: 'Q1' }, { text: 'Q2' }],
+    [{ text: 'North' }, { text: '120' }, { text: '145' }],
+    [{ text: 'South' }, { text: '98' }, { text: '110' }],
+  ],
+  {
+    x: 1, y: 1, w: 8, h: 1.5,
+    border: [hairline, none, hairline, none],
+    outerBorder: [{ type: 'solid', width: 2 }, undefined, { type: 'solid', width: 2 }, undefined],
+  },
+)
 ```
 
 Each side of a cell ends up in one of these states:
