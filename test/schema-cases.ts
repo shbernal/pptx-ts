@@ -2791,7 +2791,6 @@ export default [
 		name: 'line chart with null values defaults to gap',
 		fn: async () => {
 			const { buf } = await build((p) => {
-				// @ts-expect-error OptsChartData.values is number[], though a null value is the gap this case covers
 				p.addSlide().addChart([{ name: 'S1', labels: ['A', 'B', 'C', 'D'], values: [1, null, 3, 4] }], {
 					type: ChartType.line,
 					x: 1,

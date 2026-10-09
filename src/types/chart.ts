@@ -86,10 +86,13 @@ export interface OptsChartData {
 	 */
 	sizes?: number[]
 	/**
-	 * category values
+	 * category values. A `null` is a gap: the point has no value, and the embedded workbook
+	 * holds an empty cell for it. How a line or area chart draws across one is
+	 * `displayBlanksAs`.
 	 * @example [2000, 2010, 2020]
+	 * @example [5, null, 7] // no value for the second category
 	 */
-	values?: number[]
+	values?: Array<number | null>
 	/**
 	 * Custom text label per data point, replacing the auto-generated value label.
 	 * Index aligns with `values[]`. Empty string or missing entries fall back to the chart-level label settings.

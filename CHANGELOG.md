@@ -31,6 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `exactOptionalPropertyTypes`, `outerBorder: [rule, undefined, rule, undefined]` failed to compile,
   because the tuple's optional elements did not admit an explicit `undefined`. Each element now
   does. No migration is needed.
+- **Chart `values` admit `null` for a gap.** `OptsChartData.values` is now
+  `Array<number | null>`. A `null` has always been the gap spelling at run time (an empty workbook
+  cell, drawn per `displayBlanksAs`), but the type rejected it, so typed callers needed a cast.
+  No migration is needed.
 - **The read model's lookups take the nullable ids its getters return.** `Slide.shapeById`,
   `shapeByIdDeep` (on slides, layouts, masters and notes), `Diagram.point` and `OpcPackage.part`
   now accept `null` and miss on it, so a value read back can be passed straight in under

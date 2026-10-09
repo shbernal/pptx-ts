@@ -37,7 +37,7 @@ export function seriesHeader(series: OptsChartDataInternal | undefined, role: 'v
 // fallback so the OOXML/worksheet assembly never dereferences `undefined`. They also
 // tolerate an absent series (`data[0]` on an empty set) by returning an empty array.
 export const dataLabels = (d: OptsChartDataInternal | undefined): string[][] => d?.labels ?? []
-export const dataValues = (d: OptsChartDataInternal | undefined): number[] => d?.values ?? []
+export const dataValues = (d: OptsChartDataInternal | undefined): Array<number | null> => d?.values ?? []
 export const dataSizes = (d: OptsChartDataInternal | undefined): number[] => d?.sizes ?? []
 // The first label group of a series (`labels[0]`), empty when the series or group is absent.
 export const firstLabelGroup = (d: OptsChartDataInternal | undefined): string[] => dataLabels(d)[0] ?? []
