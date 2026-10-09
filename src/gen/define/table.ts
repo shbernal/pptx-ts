@@ -12,6 +12,7 @@ import { warn } from '../../diagnostics.js'
 import type {
 	BorderProps,
 	FillOption,
+	ShadowProps,
 	ShapeFillProps,
 	TableCellProps,
 	TableProps,
@@ -40,6 +41,7 @@ import { resolveFillKind } from '../drawingml/fill.js'
 import { registerImageFillMedia } from './image.js'
 import { InvalidOptionError } from '../../errors.js'
 import { ST_GUID } from '../../ooxml/ids.js'
+import { normalizeShadowOptions } from '../drawingml/effect.js'
 
 /** A per-cell TRBL border tuple; a null side is *omitted* (inherits), not erased. */
 type BorderTuple = [BorderProps | null, BorderProps | null, BorderProps | null, BorderProps | null]
@@ -138,6 +140,20 @@ function applyTableHeaderColumnSugar(tableRows: TableRow[], opt: TablePropsInter
 }
 
 /**
+ * A text shadow normalized the way `addText` normalizes one, on a bag this module already owns.
+ * The run emitter reads `_alpha`, which only {@link normalizeShadowOptions} derives from
+ * `transparency` or an RGBA colour; skipped, a cell's shadow painted at the default alpha
+ * whatever the caller asked for.
+ */
+function withRunShadow<T extends { shadow?: ShadowProps }>(bag: T): T {
+	if (bag.shadow === undefined) return bag
+	const shadow = normalizeShadowOptions(bag.shadow)
+	if (shadow) bag.shadow = shadow
+	else delete bag.shadow
+	return bag
+}
+
+/**
  * Transform loosely-typed table rows (strings / numbers / TableCellInternal) into a grid of
  * well-formed TableCellInternal objects with fully-resolved 4-side cell borders.
  *
@@ -158,7 +174,9 @@ function normalizeTableRows(srcRows: TableRow[], opt: TablePropsInternal): Table
 				// and the table-level inheritance the emitter resolves — wrote into the caller's own
 				// object. A `rows` literal reused across two tables therefore came out styled by the
 				// first table both times, and came back holding keys the caller never wrote.
-				const newCellOptions: TableCellProps = typeof cell === 'object' && cell.options ? { ...cell.options } : {}
+				const newCellOptions: TableCellProps = withRunShadow(
+					typeof cell === 'object' && cell.options ? { ...cell.options } : {}
+				)
 				const newCell: TableCellInternal = {
 					_type: SlideObjectType.tablecell,
 					text: '',
@@ -176,7 +194,9 @@ function normalizeTableRows(srcRows: TableRow[], opt: TablePropsInternal): Table
 					// hyperlink included, stays shared, because the id registered for it is read back through
 					// that reference.
 					else if (Array.isArray(cell.text))
-						newCell.text = cell.text.map((run) => (run.options ? { ...run, options: { ...run.options } } : { ...run }))
+						newCell.text = cell.text.map((run) =>
+							run.options ? { ...run, options: withRunShadow({ ...run.options }) } : { ...run }
+						)
 					else if (cell.text) newCell.text = cell.text
 					// Capture options (the copy made above; `newCell.options` already is it)
 				}

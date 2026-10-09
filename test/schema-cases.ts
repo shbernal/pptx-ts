@@ -343,8 +343,9 @@ export default [
 						[
 							{
 								text: 'Shadowed cell',
-								// @ts-expect-error TableCellProps does not declare `shadow`, though cell text emits it (the shadow also carries the removed `opacity`)
-								options: { shadow: { type: 'outer', blur: 4, offset: 3, angle: 45, color: '404040', opacity: 0.6 } },
+								options: {
+									shadow: { type: 'outer', blur: 4, offset: 3, angle: 45, color: '404040', transparency: 40 },
+								},
 							},
 						],
 					],
@@ -366,14 +367,13 @@ export default [
 	},
 	{
 		// RGBA (8-char) effect colors must not emit two <a:alpha> children when the
-		// effect also carries an explicit `opacity`. Cell text skips normalizeShadowOptions,
-		// so the RGBA byte reaches createColorElement directly — the caller's opacity wins.
-		name: 'RGBA effect color with explicit opacity (shadow + glow)',
+		// effect also carries an explicit `transparency` (shadow) or `opacity` (glow): the
+		// stated value wins over the colour's alpha byte, and only one alpha is written.
+		name: 'RGBA effect color with explicit transparency or opacity (shadow + glow)',
 		fn: async () => {
 			const { buf } = await build((p) => {
 				const s = p.addSlide()
-				// @ts-expect-error TableCellProps does not declare `shadow`, though cell text emits it (the shadow also carries the removed `opacity`)
-				s.addTable([[{ text: 'A', options: { shadow: { type: 'outer', color: '404040CC', opacity: 0.6 } } }]], {
+				s.addTable([[{ text: 'A', options: { shadow: { type: 'outer', color: '404040CC', transparency: 40 } } }]], {
 					x: 1,
 					y: 1,
 					w: 3,
