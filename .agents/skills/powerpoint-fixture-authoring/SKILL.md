@@ -16,7 +16,9 @@ describes.
 ## Workflow
 
 1. Fixtures live in `test/read/fixtures/`. Replace an existing one only when asked, and delete
-   only that path. Keep exploration decks out of the repo.
+   only that path. Keep exploration decks out of the repo. When a recipe re-authors a committed
+   fixture, run it with `--compare`: it lists every part that differs from the deck it replaced,
+   ignoring what PowerPoint stamps on every save, and exits 1 when any does.
 2. Write the recipe as `test/read/fixtures/authoring/author-<name>.ps1` from the start; it is
    the fixture's provenance and is committed with it. That directory's `README.md` has the
    path convention, `--with`, and the sidecar formatter step.
