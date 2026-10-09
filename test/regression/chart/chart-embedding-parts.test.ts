@@ -134,7 +134,6 @@ defineRegressionSuite('Chart embedding parts [legacy bug-17]', [
 
 			// The spelling a gap has always had, so the fix above is the only thing that changed.
 			const { buf } = await build((p) => {
-				// @ts-expect-error values is typed number[], so the null that spells a gap is rejected
 				p.addSlide().addChart([{ name: 'S1', labels: ['a', 'b', 'c'], values: [1, null, 3] }], {
 					type: ChartType.bar,
 					x: 1,

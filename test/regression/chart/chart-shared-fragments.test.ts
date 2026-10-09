@@ -256,7 +256,6 @@ defineRegressionSuite('Shared chart fragments', [
 		name: 'a pie caches a gap the same way every other family does',
 		fn: async () => {
 			const gap = await chartFor(ChartType.pie, [
-				// @ts-expect-error `values` is typed number[], so a null gap is outside it
 				{ name: 'Status', labels: ['Red', 'Amber', 'Green', 'Unknown'], values: [10, null, 38, 2] },
 			])
 			const val = valBlock(gap, 'c:val')
@@ -267,7 +266,7 @@ defineRegressionSuite('Shared chart fragments', [
 
 			// A doughnut shares the builder, so it inherits the same treatment.
 			const doughnut = await chartFor(ChartType.doughnut, [
-				// @ts-expect-error `values` is typed number[], so an undefined gap is outside it
+				// @ts-expect-error `values` spells a gap `null`; an undefined hole is the untyped input under test
 				{ name: 'Status', labels: ['a', 'b', 'c'], values: [1, undefined, 3] },
 			])
 			assertNotIncludes(valBlock(doughnut, 'c:val'), '<c:v></c:v>', 'and so does a doughnut')

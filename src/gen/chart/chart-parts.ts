@@ -1109,7 +1109,7 @@ export function makeSeriesDataPointsXml(
 	dataValues(obj).forEach((value, index) => {
 		const ptStyle = pointStyles?.[index]
 		const arrColors = varyColors
-			? value < 0
+			? value !== null && value < 0
 				? opts.invertedColors || opts.chartColors || BARCHART_COLORS
 				: varyColors
 			: null
