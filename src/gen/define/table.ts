@@ -45,7 +45,7 @@ import { normalizeShadowOptions } from '../drawingml/effect.js'
 
 /** A per-cell TRBL border tuple; a null side is *omitted* (inherits), not erased. */
 type BorderTuple = [BorderProps | null, BorderProps | null, BorderProps | null, BorderProps | null]
-type OuterBorderTuple = [BorderProps?, BorderProps?, BorderProps?, BorderProps?]
+type OuterBorderTuple = NonNullable<Extract<TableProps['outerBorder'], unknown[]>>
 
 /**
  * Expand a cell/table border into the 4-side tuple the rest of the pipeline expects.

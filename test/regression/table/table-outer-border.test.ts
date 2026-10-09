@@ -75,7 +75,6 @@ defineRegressionSuite('Table outerBorder', [
 						],
 						// TRBL, with the right and left entries left out: those edges keep whatever
 						// `border` (here: nothing) already put there.
-						// @ts-expect-error the documented undefined hole is rejected by the optional tuple under exactOptionalPropertyTypes
 						{ ...AT, outerBorder: [SOLID, undefined, SOLID, undefined] }
 					)
 				})
