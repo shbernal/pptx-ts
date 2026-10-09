@@ -235,5 +235,5 @@ export async function buildTableInNode(scenario: string): Promise<string> {
 	const table = win.document.getElementById(TABLE_ID)
 	if (!table) throw new Error(`fixture "${scenario}" rendered no #${TABLE_ID}`)
 	tableToSlides(pres, table)
-	return (await pres.write({ outputType: 'base64' })) as string
+	return await pres.write({ outputType: 'base64' })
 }

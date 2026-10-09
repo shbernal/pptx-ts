@@ -113,11 +113,10 @@ function objectsOfLayout(ir: DeckIr, index: number): IrValue[] {
 }
 
 /** Author a deck through the write API and return its bytes. */
-async function authored(build: (pptx: TsPptx) => void): Promise<Buffer> {
+async function authored(build: (pptx: TsPptx) => void): Promise<Uint8Array> {
 	const pptx = new TsPptx()
 	build(pptx)
-	// `write` is typed as every output type's union; `nodebuffer` is the Buffer arm.
-	return (await pptx.write({ outputType: 'nodebuffer' })) as Buffer
+	return await pptx.write({ outputType: 'uint8array' })
 }
 
 /**

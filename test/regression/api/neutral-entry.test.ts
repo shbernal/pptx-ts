@@ -21,8 +21,7 @@ function deck<P extends Pick<NeutralTsPptx, 'addSlide'>>(Ctor: new () => P): P {
 
 describe('neutral entry: producing a deck', () => {
 	test('write() returns package bytes', async () => {
-		// `write` is typed as every output type's union; `nodebuffer` is the Uint8Array arm.
-		const bytes = (await deck(NeutralTsPptx).write({ outputType: 'nodebuffer' })) as Uint8Array
+		const bytes = await deck(NeutralTsPptx).write({ outputType: 'nodebuffer' })
 		expect(bytes.length).toBeGreaterThan(0)
 		// PPTX is a ZIP → starts with the local-file-header magic "PK\x03\x04".
 		expect(bytes[0]).toBe(0x50)

@@ -19,6 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **`write()` is typed by its `outputType`.** `write({ outputType: 'uint8array' })` now resolves to
+  `Uint8Array`, `'arraybuffer'` to `ArrayBuffer`, `'base64'` and `'binarystring'` to `string`, and
+  no `outputType` to `Blob`, instead of the union of all four. `'nodebuffer'` is typed
+  `Uint8Array`, the class Node's `Buffer` extends, so the declaration needs no Node types. Casts
+  such as `(await pptx.write({ outputType: 'uint8array' })) as Uint8Array` can go. Code that
+  annotated `'nodebuffer'` output as `Buffer` needs the cast kept, or `outputType: 'uint8array'`.
+  `WriteProps` takes the output type as an optional type parameter, and the new `WriteOutputMap`
+  names each type's result.
 - **`outerBorder` accepts the `undefined` holes its own example shows.** Under
   `exactOptionalPropertyTypes`, `outerBorder: [rule, undefined, rule, undefined]` failed to compile,
   because the tuple's optional elements did not admit an explicit `undefined`. Each element now

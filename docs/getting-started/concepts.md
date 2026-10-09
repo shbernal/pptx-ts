@@ -105,7 +105,7 @@ different thing from `pptx.layout`, which is only the slide size.
 | Call | Resolves to | Where it works |
 | --- | --- | --- |
 | `writeFile({ fileName })` | the file name, once the file is written to disk (Node) or the download has started (browser) | Node and browsers. Deno, Bun and edge workers throw `runtime/file-output-unavailable` |
-| `write({ outputType })` | the deck in the type you name, a `Blob` by default | every runtime |
+| `write({ outputType })` | the deck in the type you name, a `Blob` by default, and typed as that type | every runtime |
 | `toBytes()` | the deck as a `Uint8Array` | every runtime |
 | `toParts()` | the package's parts before zipping, each a path and its bytes | every runtime |
 

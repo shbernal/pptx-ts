@@ -38,8 +38,10 @@ import type {
 	ThemeProps,
 	WriteBaseProps,
 	WriteFileProps,
+	WriteOutputMap,
 	WriteProps,
 } from './types/index.js'
+import type { WRITE_OUTPUT_TYPE } from './enums.js'
 import type {
 	PresentationPropsInternal,
 	PresSlideInternal,
@@ -729,13 +731,17 @@ export default class PresentationCore {
 	/**
 	 * Export the current Presentation as ZIP content with the selected type
 	 * @param {WriteProps} props output properties
-	 * @returns {Promise<string | ArrayBuffer | Blob | Uint8Array>} file content in selected type
+	 * @returns file content in the selected type: a `Blob` when `outputType` is left out, else
+	 * the {@link WriteOutputMap} entry for it
+	 * @example const bytes = await pptx.write({ outputType: 'uint8array' }) // Uint8Array, no cast
 	 */
-	async write(props?: WriteProps): Promise<string | ArrayBuffer | Blob | Uint8Array> {
-		return await writePackage(
+	async write<T extends WRITE_OUTPUT_TYPE = 'blob'>(props?: WriteProps<T>): Promise<WriteOutputMap[T]> {
+		// `zipPackageParts` produces the shape `outputType` names, defaulting to a Blob, which is
+		// the correspondence `WriteOutputMap` states.
+		return (await writePackage(
 			this.packageSource(),
 			pickDefined(props ?? {}, ['compression', 'outputType', 'onMediaError'])
-		)
+		)) as WriteOutputMap[T]
 	}
 
 	/**
