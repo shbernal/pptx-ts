@@ -89,7 +89,7 @@ pnpm run check:package  # what CI's package job runs
 - `verify:full` is `check:core`, `test:coverage`, `script:roundtrip:all` and `check:package`:
   every `verify` step, with the suite collecting coverage, plus the gates that run the read
   corpus through both printers or pack and install the tarball. Run it in place of the last
-  `verify` before a push. `test/scripts/gate-parsers.test.js` fails when a `verify` step is
+  `verify` before a push. `test/scripts/gate-parsers.test.ts` fails when a `verify` step is
   missing from it.
 - `check:package` is the four package gates.
 - Neither aggregate builds the site. `docs:build` costs about 2 GB and two minutes on a
