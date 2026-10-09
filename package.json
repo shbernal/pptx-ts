@@ -190,7 +190,7 @@
 	},
 	"devDependencies": {
 		"@arethetypeswrong/cli": "^0.18.5",
-		"@playwright/test": "^1.63.0",
+		"@playwright/test": "^1.64.0",
 		"@types/istanbul-lib-coverage": "^2.0.6",
 		"@types/istanbul-lib-report": "^3.0.3",
 		"@types/istanbul-reports": "^3.0.4",
