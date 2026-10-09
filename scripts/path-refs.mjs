@@ -39,8 +39,10 @@
  * Any of: relative to the repo root, relative to the citing file, or as a suffix of some
  * file's repo-relative path. That last rule is deliberately loose — comments cite
  * `read/api/rel-types.ts` and `gen/oxml/el.ts` without the `src/` prefix, and demanding
- * full paths would fail honest citations. A `.js`/`.mjs` token also resolves against its
- * `.ts`/`.mts` source, because ESM specifiers in comments name the emitted file.
+ * full paths would fail honest citations. A `.js`/`.mjs` token cited from `src/` also resolves
+ * against its `.ts`/`.mts` source, because ESM specifiers in library comments name the emitted
+ * file. Nowhere else: a doc or script naming `test/x.test.js` after the file became
+ * `test/x.test.ts` is a stale extension, and the swap would hide it.
  *
  * ## What is not checked
  *
@@ -97,8 +99,12 @@ const SKIP_DIRS = new Set(['node_modules', 'dist', 'coverage', '.git', '.tmp', '
  * be excluded by directory name and those two citations resolved only because `resolves()`
  * consulted the filesystem behind the walk's back. `.vitepress/dist` needs no entry: `dist` is
  * excluded by name wherever it appears.
+ *
+ * `tools/powerpoint-vm/shared` is the copy of the repo the PowerPoint worker syncs, gitignored
+ * for the same reason: it holds whatever tree was last pushed to the VM, so its citations are
+ * those of an older checkout.
  */
-const SKIP_PATHS = new Set(['docs/reference/api', 'docs/.vitepress/cache'])
+const SKIP_PATHS = new Set(['docs/reference/api', 'docs/.vitepress/cache', 'tools/powerpoint-vm/shared'])
 
 /** Only these carry citations worth resolving; a `.png` or `.pptx` is an asset, not a claim. */
 const CITED_EXT = /\.(ts|mts|tsx|js|mjs|cjs|jsx|vue|md|json|jsonc|yml|yaml|html|css|tsv)$/
@@ -200,7 +206,7 @@ function walk(dir, out = []) {
 }
 
 /**
- * Does `token` name a real file? Three ways, plus the ESM `.js` -> `.ts` swap.
+ * Does `token` name a real file? Three ways, plus the ESM `.js` -> `.ts` swap for `src/`.
  *
  * All three read the `known` set that {@link collect} builds by walking the scan roots, and
  * none of them touches the filesystem. That is the point: `existsSync` is case-INSENSITIVE on
@@ -221,10 +227,13 @@ function walk(dir, out = []) {
  */
 export function resolves(token, from, known) {
 	const candidates = [token]
-	// A comment citing `./pattern-fill.js` means the module whose source is `pattern-fill.ts`.
-	if (/\.m?js$/.test(token)) candidates.push(token.replace(/\.js$/, '.ts').replace(/\.mjs$/, '.mts'))
+	const fromRel = repoRel(from)
+	// A comment in `src/` citing `./pattern-fill.js` means the module whose source is
+	// `pattern-fill.ts`. Only there: `src/` is the code written against the emitted specifier.
+	if (fromRel.startsWith('src/') && /\.m?js$/.test(token))
+		candidates.push(token.replace(/\.js$/, '.ts').replace(/\.mjs$/, '.mts'))
 
-	const fromDir = path.posix.dirname(repoRel(from))
+	const fromDir = path.posix.dirname(fromRel)
 	for (const candidate of candidates) {
 		const bare = candidate.replace(/^(\.{1,2}\/)+/, '')
 		// Relative to the repo root.

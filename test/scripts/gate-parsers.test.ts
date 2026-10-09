@@ -90,10 +90,18 @@ describe('path-refs citation resolution', () => {
 		expect(resolves('../../read/api/shapes/types.ts', from, known)).toBe(true)
 	})
 
-	test('a `.js` citation resolves to the `.ts` source it names', () => {
+	test('a `.js` citation from `src/` resolves to the `.ts` source it names', () => {
 		// A comment citing a sibling module by its emitted `.js` name means the `.ts` it is
 		// compiled from, so the resolver tries that extension too.
 		expect(resolves('./plot-bar.js', from, known)).toBe(true)
+	})
+
+	test('a `.js` citation from outside `src/` does not resolve to a `.ts` file', () => {
+		// Prose naming `x.test.js` after the file became `x.test.ts` is a stale extension, and
+		// the swap would hide it.
+		const doc = path.join(ROOT, 'docs', 'contributing', 'testing.md')
+		expect(resolves('src/gen/chart/plot-bar.js', doc, known)).toBe(false)
+		expect(resolves('src/gen/chart/plot-bar.ts', doc, known)).toBe(true)
 	})
 
 	test('a suffix match needs a path boundary', () => {
