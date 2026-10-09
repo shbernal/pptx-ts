@@ -65,7 +65,7 @@ defineRegressionSuite('Slide transitions (write)', [
 			})
 			for (let i = 0; i < inputs.length; i++) {
 				const xml = await readEntry(zip, `ppt/slides/slide${i + 1}.xml`)
-				assert(transitionOf(xml) === oracle.slides[i].transitionXml, `slide ${i + 1} transition matches oracle`)
+				assert(transitionOf(xml) === at(oracle.slides, i).transitionXml, `slide ${i + 1} transition matches oracle`)
 				// Positioned between p:clrMapOvr and (absent) p:timing, inside p:sld.
 				assert(
 					/<\/p:clrMapOvr>(<p:transition|<mc:AlternateContent)/.test(xml),
@@ -340,7 +340,7 @@ defineRegressionSuite('Transition sounds (write)', [
 			for (let i = 0; i < oracle.slides.length; i++) {
 				const xml = await readEntry(zip, `ppt/slides/slide${i + 1}.xml`)
 				assert(
-					normRid(sndAcOf(xml)) === normRid(oracle.slides[i].soundRels.sndAcXml),
+					normRid(sndAcOf(xml)) === normRid(at(oracle.slides, i).soundRels.sndAcXml),
 					`slide ${i + 1} sndAc matches oracle`
 				)
 				// sndAc sits inside the transition, after the type element.

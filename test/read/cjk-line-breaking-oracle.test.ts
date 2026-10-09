@@ -36,23 +36,7 @@ import { defined, expectDefined } from '../helpers.ts'
 const EMU_PER_PT = 12700
 const DECK = 'autofit-cjk-wrap'
 
-/** One box of `autofit-cjk-wrap.oracle.json`, as `author-cjk-wrap.ps1` records it. */
-interface CjkCase {
-	id: string
-	text: string
-	fontFace: string
-	sizePt: number
-	boxWidthPt: number
-	insetLeftPt: number
-	insetRightPt: number
-	insetTopPt: number
-	insetBottomPt: number
-	bakedHeightPt: number
-	lineCount: number
-	lineWidthsPt: number[]
-}
-
-const oracle: { fontFace: string; cases: CjkCase[] } = await readOracle(DECK)
+const oracle = await readOracle(DECK)
 
 const metrics = await oracleMetrics({ family: oracle.fontFace })
 const registry = new FontMetricsRegistry()

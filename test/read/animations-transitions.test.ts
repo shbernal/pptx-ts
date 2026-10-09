@@ -300,9 +300,7 @@ describe('slide-animation-presets (read fixture)', () => {
 	test('every preset template appears verbatim in the slide', async () => {
 		const oracle = await readOracle('slide-animation-presets')
 		const xml = await slidePartXml(await readFile(fixturePath('slide-animation-presets')), 1)
-		const templates: Record<string, { effectParXml: string; behaviorsXml: string; bldPXml: string }> =
-			oracle.presetTemplates
-		for (const [name, t] of Object.entries(templates)) {
+		for (const [name, t] of Object.entries(oracle.presetTemplates)) {
 			assert.ok(xml.includes(t.effectParXml), `${name} effect node present verbatim`)
 			assert.ok(xml.includes(t.behaviorsXml), `${name} behaviors present verbatim`)
 			assert.ok(xml.includes(t.bldPXml), `${name} bldP present`)

@@ -53,6 +53,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { parseFontMetrics, type FontMetrics } from '../../dist/measure.js'
 import { FIXTURES } from './fixtures-dir.ts'
+import type { Oracles } from './oracles.ts'
 
 /** The committed metrics sidecar. */
 export const SIDECAR_PATH = path.join(FIXTURES, 'autofit-font-metrics.json')
@@ -332,13 +333,9 @@ export interface NeededFace {
 	codepoints: number[]
 }
 
-/** The fields of a committed `*.cases.json` and the CJK oracle that name a face and its text. */
+/** The fields of a committed `*.cases.json` that name a face and its text. */
 interface CaseSpec {
 	cases: { paragraphs: { runs: { font: string; bold?: boolean; italic?: boolean; text: string }[] }[] }[]
-}
-interface CjkOracle {
-	fontFace: string
-	cases: { fontFace?: string; bold?: boolean; italic?: boolean; text: string }[]
 }
 
 /** Every (face, code point) pair the committed cases measure, keyed by `faceLabel`. */
@@ -360,8 +357,9 @@ export function neededFaces(): NeededFace[] {
 		}
 	}
 
-	const cjk = JSON.parse(readFileSync(path.join(FIXTURES, CJK_ORACLE), 'utf8')) as CjkOracle
-	for (const c of cjk.cases) add(c.fontFace ?? cjk.fontFace, !!c.bold, !!c.italic, c.text)
+	const cjk = JSON.parse(readFileSync(path.join(FIXTURES, CJK_ORACLE), 'utf8')) as Oracles['autofit-cjk-wrap']
+	// The recipe authors every box regular weight, upright, and records each one's face.
+	for (const c of cjk.cases) add(c.fontFace, false, false, c.text)
 
 	return [...faces.values()]
 		.map((f) => ({ ...f, codepoints: [...f.codepoints].sort((a, b) => a - b) }))
