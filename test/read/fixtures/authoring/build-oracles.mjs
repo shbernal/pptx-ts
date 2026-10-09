@@ -1,9 +1,9 @@
-import { readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import { unzipSync, strFromU8 } from 'fflate'
-import { mustMatch } from './oracle-utils.mjs'
+import { mustMatch, writeOracleJson } from './oracle-utils.mjs'
 
 // This script lives in test/read/fixtures/authoring/, so the fixtures dir is its parent.
 const HERE = dirname(fileURLToPath(import.meta.url))
@@ -177,7 +177,7 @@ function buildTransition() {
 		slides,
 		entryEffectTable,
 	}
-	writeFileSync(`${FIX}/slide-transition.oracle.json`, JSON.stringify(oracle, null, '\t') + '\n')
+	writeOracleJson(`${FIX}/slide-transition.oracle.json`, oracle)
 	console.log(
 		'slide-transition.oracle.json',
 		'— slides:',
@@ -247,7 +247,7 @@ function buildAnimation(deck, noteHead) {
 		bldList: { spids: bldSpids, xml: bldLst },
 		timingXml: timing,
 	}
-	writeFileSync(`${FIX}/${deck}.oracle.json`, JSON.stringify(oracle, null, '\t') + '\n')
+	writeOracleJson(`${FIX}/${deck}.oracle.json`, oracle)
 	console.log(
 		`${deck}.oracle.json`,
 		'— effects:',

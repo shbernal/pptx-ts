@@ -1,9 +1,9 @@
-import { readFile, writeFile } from 'node:fs/promises'
+import { readFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import JSZip from 'jszip'
-import { mustMatch, zipPart } from './oracle-utils.mjs'
+import { mustMatch, zipPart, writeOracleJson } from './oracle-utils.mjs'
 
 // This script lives in test/read/fixtures/authoring/, so the fixtures dir is its parent.
 const FIX = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -123,7 +123,7 @@ const oracle = {
 	timingXml,
 }
 
-await writeFile(resolve(FIX, 'slide-animation-presets.oracle.json'), JSON.stringify(oracle, null, '\t') + '\n')
+writeOracleJson(resolve(FIX, 'slide-animation-presets.oracle.json'), oracle)
 console.log('sha256', sha256)
 console.log('presets', Object.keys(presetTemplates).join(', '))
 console.log('spids', animationSpids.join(','))

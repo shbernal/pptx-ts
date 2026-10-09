@@ -1,9 +1,9 @@
-import { readFile, writeFile } from 'node:fs/promises'
+import { readFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import JSZip from 'jszip'
-import { mustMatch, zipPart } from './oracle-utils.mjs'
+import { mustMatch, zipPart, writeOracleJson } from './oracle-utils.mjs'
 
 // This script lives in test/read/fixtures/authoring/, so the fixtures dir is its parent.
 const FIX = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -91,7 +91,7 @@ const oracle = {
 	},
 }
 
-await writeFile(resolve(FIX, 'import-animation-merge.oracle.json'), JSON.stringify(oracle, null, '\t') + '\n')
+writeOracleJson(resolve(FIX, 'import-animation-merge.oracle.json'), oracle)
 console.log('sha256', sha256)
 console.log('source spids', source.animationSpids.join(','), '| merged spids', merged.animationSpids.join(','))
 console.log('source effects', JSON.stringify(source.effects.map((e) => `${e.shapeName}:${e.presetID}@${e.spid}`)))
