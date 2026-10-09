@@ -23,6 +23,7 @@ import { corpusDecks } from '../../scripts/script-utils.mjs'
 import type { Presentation } from '../../dist/read.js'
 import type { DeckIr } from '../../dist/script.js'
 import { FIXTURES } from './fixtures-dir.ts'
+import type { OracleName, Oracles } from './oracles.ts'
 
 // Re-exported so this module stays the one place a test reads the corpus from. The constant
 // itself lives in `fixtures-dir.ts` because importing it should not also import the
@@ -66,10 +67,11 @@ export function readFixture(name: string): Promise<Buffer> {
  * tree for it (`'..', '..', 'read', 'fixtures'`) rather than through `fixturePath`, which has
  * taken an explicit extension since it was written.
  *
- * The shape is the fixture's own; the caller reads the fields it knows.
+ * The shape is the fixture's own, declared once in `oracles.ts`. The JSON is not validated
+ * against it at run time.
  */
-export async function readOracle(name: string): Promise<any> {
-	return JSON.parse(await readFile(fixturePath(`${name}.oracle.json`), 'utf8'))
+export async function readOracle<N extends OracleName>(name: N): Promise<Oracles[N]> {
+	return JSON.parse(await readFile(fixturePath(`${name}.oracle.json`), 'utf8')) as Oracles[N]
 }
 
 /**

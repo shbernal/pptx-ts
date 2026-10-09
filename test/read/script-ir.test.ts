@@ -13,14 +13,13 @@
 // see at all (theme line width, embedded media, equations). Each of those was a real bug
 // caught by running this against the corpus rather than by reading the types.
 
-import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import { Presentation, isAutoShape, type TransitionInput } from '../../dist/read.js'
 import { canonicalDeckIr, readModelToIr, type CallIr, type DeckIr, type IrValue } from '../../dist/script.js'
 import { PNG_1X1, assert, assertEqual, defined, expectDefined, readEntry, at as atIndex, take } from '../helpers.ts'
 import { authorRead } from './authored.ts'
-import { fixtureNames, fixturePath, freshIr, irFor, readFixture } from './corpus.ts'
+import { fixtureNames, freshIr, irFor, readFixture, readOracle } from './corpus.ts'
 import { at, opt, arrayOf, objectOf } from './ir-path.ts'
 
 /** A 1x1 SVG; only the blip it produces matters here. */
@@ -31,7 +30,7 @@ const SVG_SQUARE =
 	).toString('base64')
 
 /** PowerPoint-authored ground truth for the transition tests: see `deck IR — slide transitions`. */
-const transitionOracle = JSON.parse(await readFile(fixturePath('slide-transition.oracle.json'), 'utf8'))
+const transitionOracle = await readOracle('slide-transition')
 
 /** Every call across every slide, flattened. */
 function allCalls(ir: DeckIr): CallIr[] {
