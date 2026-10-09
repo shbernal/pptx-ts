@@ -170,8 +170,7 @@ defineRegressionSuite('Chart input immutability', [
 
 			await build((p) => {
 				p.defineSlideMaster({ title: 'CHART_MASTER', objects: [{ chart }] })
-				// @ts-expect-error masterName is not an addSlide option (masterTitle is)
-				p.addSlide({ masterName: 'CHART_MASTER' })
+				p.addSlide({ masterTitle: 'CHART_MASTER' })
 			})
 
 			expect(chart).toEqual(before)

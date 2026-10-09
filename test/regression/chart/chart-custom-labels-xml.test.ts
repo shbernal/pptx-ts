@@ -12,8 +12,7 @@ import { chartXml } from './chart-parts.ts'
 describe('chart customLabels (makeCustomDLblXml)', () => {
 	test('per-point customLabels text is escaped and rendered as a c:dLbl rich run', async () => {
 		const { zip } = await build((p) => {
-			// @ts-expect-error customLabels is typed string[], so a null entry for a skipped point is rejected
-			p.addSlide().addChart([{ name: 'S1', labels: ['A', 'B'], values: [1, 2], customLabels: ['Q&A', null] }], {
+			p.addSlide().addChart([{ name: 'S1', labels: ['A', 'B'], values: [1, 2], customLabels: ['Q&A', ''] }], {
 				type: ChartType.bar,
 				x: 1,
 				y: 1,
@@ -24,7 +23,7 @@ describe('chart customLabels (makeCustomDLblXml)', () => {
 		const xml = await chartXml(zip)
 		expect(xml).toContain('<c:dLbl><c:idx val="0"/>')
 		expect(xml).toContain('<a:t>Q&amp;A</a:t>')
-		// The second point's customLabel is null → no dLbl for idx 1.
+		// The second point's customLabel is empty, so idx 1 gets no dLbl.
 		expect(xml).not.toContain('<c:dLbl><c:idx val="1"/>')
 	})
 })
