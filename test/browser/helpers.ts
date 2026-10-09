@@ -102,7 +102,7 @@ export function failed<T extends HarnessOutcome | TableOutcome>(outcome: T): Ext
  */
 export async function buildDeckInBrowser(
 	page: Page,
-	slug = 'quarterly-review',
+	slug = 'quarterly-review'
 ): Promise<{ bytes: Uint8Array; fileName: string }> {
 	await page.goto('./demos')
 
