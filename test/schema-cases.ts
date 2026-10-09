@@ -307,8 +307,7 @@ export default [
 					w: 4,
 					h: 1,
 					fill: { color: '00B0B9' },
-					// @ts-expect-error `opacity` is a removed shadow input (now `transparency`); it is inert at runtime
-					shadow: { type: 'outer', blur: 6, offset: 2, color: '000000', opacity: 0.15 },
+					shadow: { type: 'outer', blur: 6, offset: 2, color: '000000', transparency: 85 },
 				})
 			})
 			await expectNoSchemaErrors(buf, 'shape-with-shadow')
@@ -325,8 +324,7 @@ export default [
 					w: 4,
 					h: 1,
 					fill: { color: '00B0B9' },
-					// @ts-expect-error `opacity` is a removed shadow input (now `transparency`); it is inert at runtime
-					shadow: { type: 'inner', blur: 6, offset: 2, color: '000000', opacity: 0.15 },
+					shadow: { type: 'inner', blur: 6, offset: 2, color: '000000', transparency: 85 },
 				})
 			})
 			await expectNoSchemaErrors(buf, 'shape-with-inner-shadow')
@@ -358,8 +356,7 @@ export default [
 					w: 4,
 					h: 1,
 					glow: { size: 6, color: 'FFFF00', opacity: 0.5 },
-					// @ts-expect-error `opacity` is a removed shadow input (now `transparency`); it is inert at runtime
-					shadow: { type: 'outer', blur: 5, offset: 2, color: '000000', opacity: 0.5 },
+					shadow: { type: 'outer', blur: 5, offset: 2, color: '000000', transparency: 50 },
 				})
 			})
 			await expectNoSchemaErrors(buf, 'text-run-shadow')
@@ -1171,8 +1168,6 @@ export default [
 								options: {
 									name: 'body-ph',
 									type: 'body',
-									// @ts-expect-error `idx` is not a PlaceholderProps option; it is inert at runtime
-									idx: 1,
 									x: 0.5,
 									y: 1.8,
 									w: 9,
@@ -1220,8 +1215,7 @@ export default [
 					title: 'TBL_MASTER',
 					objects: [
 						{
-							// @ts-expect-error `idx` is not a PlaceholderProps option; it is inert at runtime
-							placeholder: { options: { name: 'content', type: 'body', idx: 1, x: 0.5, y: 1.5, w: 9, h: 4 }, text: '' },
+							placeholder: { options: { name: 'content', type: 'body', x: 0.5, y: 1.5, w: 9, h: 4 }, text: '' },
 						},
 					],
 				})
@@ -1618,8 +1612,7 @@ export default [
 					w: 2,
 					h: 2,
 					line: { color: '0088CC', width: 2 },
-					// @ts-expect-error `opacity` is a removed shadow input (now `transparency`); it is inert at runtime
-					shadow: { type: 'outer', color: '000000', opacity: 0.5, blur: 8, offset: 4, angle: 270 },
+					shadow: { type: 'outer', color: '000000', transparency: 50, blur: 8, offset: 4, angle: 270 },
 				})
 				// dashed border
 				s.addImage({
@@ -3137,8 +3130,7 @@ export default [
 			const { buf } = await build((p) => {
 				p.firstSlideNum = 5
 				const slide = p.addSlide()
-				// @ts-expect-error `slideNumber` is not a TextPropsOptions option; it is inert at runtime
-				slide.addText('', { x: 0, y: 0, w: 1, h: 1, slideNumber: { x: 0.5, y: 0.5 } })
+				slide.slideNumber = { x: 0.5, y: 0.5 }
 			})
 			await expectNoSchemaErrors(buf, 'first-slide-num')
 		},
@@ -4974,15 +4966,17 @@ export default [
 				p.defineSlideMaster({
 					title: 'CLAMPS',
 					textStyles: {
-						// @ts-expect-error `title` is a single level, not an array of levels
-						title: [{ fontSize: 99999 }],
+						title: { fontSize: 99999 },
 						body: [{ fontSize: 0.001, marginLeft: 1e6, indent: -1e6 }],
 					},
 				})
-				// @ts-expect-error `masterName` is not an AddSlideProps option (it is `masterTitle`); it is inert at runtime
-				p.addSlide({ masterName: 'CLAMPS' }).addText('x', { x: 1, y: 1, w: 4, h: 1 })
+				p.addSlide({ masterTitle: 'CLAMPS' }).addText('x', { x: 1, y: 1, w: 4, h: 1 })
 			})
 			await expectNoSchemaErrors(buf, 'master-text-style-clamps')
+			// The title level is clamped too, to ST_TextFontSize's ceiling. The one master carries it.
+			const zip = await JSZip.loadAsync(buf)
+			const titleStyle = firstXmlBlock(await readEntry(zip, 'ppt/slideMasters/slideMaster1.xml'), 'p:titleStyle')
+			assertIncludes(titleStyle, 'sz="400000"', 'the clamped title size')
 		},
 	},
 	{

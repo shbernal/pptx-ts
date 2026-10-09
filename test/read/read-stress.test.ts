@@ -108,9 +108,7 @@ describe('read-stress.pptx — combined read-model integration', () => {
 		let resolvedFromStyle = 0
 		for (const row of tbl.rows) {
 			for (const c of row.cells) {
-				// @ts-expect-error `fillColor` is not a TableCell accessor (it reads undefined); `hasOwnFill` is the current one
-				const ownFill = c.fillColor || c.fillSchemeColor
-				if (!ownFill && c.resolvedFill?.effectiveHex) resolvedFromStyle++
+				if (!c.hasOwnFill && c.resolvedFill?.effectiveHex) resolvedFromStyle++
 			}
 		}
 		assert(resolvedFromStyle > 0, 'at least one no-own-fill cell resolves a fill from the table style')

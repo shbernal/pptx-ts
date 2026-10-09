@@ -394,8 +394,7 @@ defineRegressionSuite('Object identity [legacy bug-21]', [
 							{ placeholder: { options: { name: 'title-ph', type: 'title', x: 0.5, y: 0.3, w: 9, h: 1 }, text: '' } },
 							{
 								placeholder: {
-									// @ts-expect-error idx is not a placeholder option; the index is assigned per object
-									options: { name: 'body-ph', type: 'body', idx: 1, x: 0.5, y: 1.5, w: 9, h: 4 },
+									options: { name: 'body-ph', type: 'body', x: 0.5, y: 1.5, w: 9, h: 4 },
 									text: '',
 								},
 							},
