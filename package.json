@@ -210,7 +210,7 @@
 		"mathml2omml": "^0.5.0",
 		"mermaid": "^12.1.0",
 		"micromark": "^4.0.3",
-		"ooxml-validate": "^0.0.3",
+		"ooxml-validate": "^0.0.4",
 		"oxfmt": "^0.72.0",
 		"oxlint": "^1.87.0",
 		"oxlint-tsgolint": "7.0.2003",
