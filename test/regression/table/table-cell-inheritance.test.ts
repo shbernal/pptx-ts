@@ -21,6 +21,33 @@ async function firstRunProps(zip: JSZip) {
 
 defineRegressionSuite('table-level text options a cell inherits', [
 	{
+		name: "a cell's text shadow takes its transparency, on the cell and on a run",
+		fn: async () => {
+			// The run emitter reads the alpha `normalizeShadowOptions` derives from `transparency`
+			// or an RGBA colour. `addText` ran it and the table path did not, so every cell shadow
+			// painted at the 75% default whatever it asked for.
+			const shadow = (transparency: number) => ({ type: 'outer' as const, color: '404040', transparency })
+			const { zip } = await build((p) => {
+				p.addSlide().addTable(
+					[
+						[
+							{ text: 'cell', options: { shadow: shadow(40) } },
+							{ text: [{ text: 'run', options: { shadow: shadow(10) } }] },
+							{ text: [{ text: 'inherits' }], options: { shadow: shadow(20) } },
+							{ text: 'rgba', options: { shadow: { type: 'outer', color: '404040CC' } } },
+						],
+					],
+					{ x: 1, y: 1, w: 8, h: 1 }
+				)
+			})
+			const xml = await readEntry(zip, SLIDE_XML)
+			const alphas = [...xml.matchAll(/<a:outerShdw[^>]*><a:srgbClr val="404040"><a:alpha val="(\d+)"\/>/g)].map(
+				(m) => m[1]
+			)
+			assertEqual(alphas.join(','), '60000,90000,80000,80000', 'one alpha per cell, from what each stated')
+		},
+	},
+	{
 		name: 'a table-level `italic` reaches the cell it was measured against',
 		fn: async () => {
 			// The reachable half of the divergence: `italic` is on `TextBaseProps`, so `TableProps`

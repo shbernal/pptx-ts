@@ -63,6 +63,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   schema-invalid table. A value that is not an upper-case GUID in braces now throws
   `InvalidOptionError` with code `table/invalid-style-id`. Pass the `TableStyle` member
   (`TableStyle.MEDIUM_STYLE_2_ACCENT_1`) instead of its key name.
+- **A table cell's text shadow takes its `transparency`.** A `shadow` on a cell, or on a run inside
+  a cell's `text`, painted at the default 75% opacity whatever `transparency` or RGBA colour it
+  stated, because the table path skipped the normalization `addText` runs. `TableCellProps` now
+  declares `shadow`, which the cell's runs inherit, so a typed caller no longer needs a cast to set
+  it.
 
 ## [4.0.1] - 2026-09-21
 

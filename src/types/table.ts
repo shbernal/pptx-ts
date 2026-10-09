@@ -14,7 +14,7 @@ import type {
 import type { DataOrPathProps, Margin, PositionProps } from './core.js'
 import type { ObjectNameProps } from './object.js'
 import type { ShapeProps } from './shape.js'
-import type { BorderProps, FillOption, HyperlinkProps } from './style.js'
+import type { BorderProps, FillOption, HyperlinkProps, ShadowProps } from './style.js'
 import type { TextBaseProps, TextFitShrinkProps, TextProps, TextPropsOptions } from './text.js'
 
 /**
@@ -181,6 +181,11 @@ export interface TableCellProps extends TextBaseProps {
 	 * the text, below zero lowers it. On a cell it applies to every run that states none.
 	 */
 	baseline?: NonNullable<TextPropsOptions['baseline']>
+	/**
+	 * Text shadow (`a:rPr/a:effectLst`), as {@link TextPropsOptions.shadow} takes it on a run. A cell
+	 * has no shape effect of its own, so on a cell this is the shadow of every run that states none.
+	 */
+	shadow?: ShadowProps
 	/** Outline level of the paragraph a run starts, as {@link TextPropsOptions.indentLevel}. */
 	indentLevel?: NonNullable<TextPropsOptions['indentLevel']>
 	/** Line spacing in points, as {@link TextPropsOptions.lineSpacing}. */
