@@ -5,7 +5,7 @@
  * Re-exported by `./index.js`, which is the import site for the rest of `src/`.
  */
 import type { ShapeFillProps } from './style.js'
-import type { TextVerticalType } from '../ooxml/st-enums.js'
+import type { PATTERN_PRESETS, TextVerticalType } from '../ooxml/st-enums.js'
 
 /**
  * Coordinate value. A bare `number` is **always inches** — there is no magnitude-based unit
@@ -170,61 +170,7 @@ export interface RadialGradientFillProps {
 export type GradientFillProps = LinearGradientFillProps | RadialGradientFillProps
 
 /** OOXML ST_PresetPatternVal — preset pattern names for `<a:pattFill prst="...">` */
-export type PatternPreset =
-	| 'pct5'
-	| 'pct10'
-	| 'pct20'
-	| 'pct25'
-	| 'pct30'
-	| 'pct40'
-	| 'pct50'
-	| 'pct60'
-	| 'pct70'
-	| 'pct75'
-	| 'pct80'
-	| 'pct90'
-	| 'horz'
-	| 'vert'
-	| 'ltHorz'
-	| 'ltVert'
-	| 'dkHorz'
-	| 'dkVert'
-	| 'narHorz'
-	| 'narVert'
-	| 'dashHorz'
-	| 'dashVert'
-	| 'cross'
-	| 'dnDiag'
-	| 'upDiag'
-	| 'ltDnDiag'
-	| 'ltUpDiag'
-	| 'dkDnDiag'
-	| 'dkUpDiag'
-	| 'wdDnDiag'
-	| 'wdUpDiag'
-	| 'dashDnDiag'
-	| 'dashUpDiag'
-	| 'diagCross'
-	| 'smCheck'
-	| 'lgCheck'
-	| 'smGrid'
-	| 'lgGrid'
-	| 'dotGrid'
-	| 'smConfetti'
-	| 'lgConfetti'
-	| 'horzBrick'
-	| 'diagBrick'
-	| 'solidDmnd'
-	| 'openDmnd'
-	| 'dotDmnd'
-	| 'plaid'
-	| 'sphere'
-	| 'weave'
-	| 'divot'
-	| 'shingle'
-	| 'wave'
-	| 'trellis'
-	| 'zigZag'
+export type PatternPreset = (typeof PATTERN_PRESETS)[number]
 
 export interface PatternFillProps {
 	/** OOXML preset pattern (`prst` attribute on `<a:pattFill>`). */
