@@ -52,6 +52,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   decks by their default author, should match `pptx-ts` instead; a `setDiagnosticHandler` handler
   receives the message without the prefix and is unaffected.
 
+### Fixed
+
+- **An unknown pattern preset throws instead of writing a corrupt part.**
+  `fill: { type: 'pattern', pattern: { preset } }` with a name outside the 54 presets was written
+  verbatim as `<a:pattFill prst>`, which fails the schema. It now throws `InvalidOptionError`
+  with code `pattern-fill/invalid-preset`. Use one of the `PatternPreset` names.
+
 ## [4.0.1] - 2026-09-21
 
 ### Fixed

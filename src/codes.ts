@@ -249,6 +249,7 @@ export type InvalidOptionErrorCode =
 	| 'gradient/rotate-with-shape-not-boolean'
 	| 'gradient/scaled-not-boolean'
 	| 'pattern-fill/missing-pattern'
+	| 'pattern-fill/invalid-preset'
 	// Images
 	| 'image/missing-source'
 	| 'image/path-not-a-string'

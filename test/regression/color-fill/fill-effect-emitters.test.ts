@@ -2,6 +2,7 @@ import { Presentation, isAutoShape } from '../../../dist/read.js'
 import {
 	assert,
 	assertEqual,
+	assertRejects,
 	build,
 	captureDiagnostics,
 	defineRegressionSuite,
@@ -66,6 +67,24 @@ defineRegressionSuite('Fill and effect emitters the byte-identity corpus never r
 					'<a:bgClr><a:schemeClr val="accent2"/></a:bgClr></a:pattFill>',
 				'pattern fill with explicit hex fg and scheme bg'
 			)
+		},
+	},
+	{
+		name: 'a pattern preset outside ST_PresetPatternVal throws instead of emitting an invalid prst',
+		fn: async () => {
+			const error = await assertRejects(
+				() =>
+					slideXml((pres) => {
+						pres.addSlide().addShape('rect', {
+							...BOX,
+							// @ts-expect-error -- not an ST_PresetPatternVal member
+							fill: { type: 'pattern', pattern: { preset: 'nope' } },
+						})
+					}),
+				/pattern preset/,
+				'an unknown pattern preset'
+			)
+			assertEqual(error.code, 'pattern-fill/invalid-preset', 'error code')
 		},
 	},
 	{

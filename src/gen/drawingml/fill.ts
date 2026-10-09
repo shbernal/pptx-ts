@@ -24,6 +24,8 @@ import { genXmlImageCropRect, STRETCH_FILL_RECT } from './src-rect.js'
 import { InvalidOptionError, UnsupportedFeatureError } from '../../errors.js'
 import { el, raw, voidEl } from '../oxml/el.js'
 import { xsdBool } from '../../ooxml/xsd-boolean.js'
+import { checkEnumOrThrow } from '../../ooxml/check-enum.js'
+import { PATTERN_PRESETS } from '../../ooxml/st-enums.js'
 
 function normalizeGradientAngle(angle: number | undefined): number {
 	const degrees = angle ?? 0
@@ -137,9 +139,12 @@ export function genXmlGradientFill(gradient: GradientFillProps | undefined): str
  */
 export function genXmlPatternFill(pattern: PatternFillProps | undefined): string {
 	if (!pattern) throw new InvalidOptionError('pattern-fill/missing-pattern', 'Pattern fill requires a pattern object.')
+	// `prst` is what selects the hatch, so a value outside ST_PresetPatternVal leaves nothing to
+	// draw and would fail the schema: throw rather than drop it.
+	const preset = checkEnumOrThrow(pattern.preset, PATTERN_PRESETS, 'pattern preset', 'pattern-fill/invalid-preset')
 	const fgColor = namedColorOr(pattern.fgColor, '000000', 'pattern.fgColor')
 	const bgColor = namedColorOr(pattern.bgColor, 'FFFFFF', 'pattern.bgColor')
-	return el('a:pattFill', { prst: pattern.preset }, [
+	return el('a:pattFill', { prst: preset }, [
 		raw(el('a:fgClr', null, raw(createColorElement(fgColor)))),
 		raw(el('a:bgClr', null, raw(createColorElement(bgColor)))),
 	])

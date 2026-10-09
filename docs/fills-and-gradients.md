@@ -189,6 +189,7 @@ own object, clipped to a shape, see [Images in shapes](image-in-shape.md).
 | `rotateWithShape` or `scaled` that is not a boolean | throws `InvalidOptionError` | `gradient/rotate-with-shape-not-boolean`, `gradient/scaled-not-boolean` |
 | a `center` coordinate below 0 or above 100 | warns and clamps it | `gradient/center-out-of-range` |
 | `type: 'pattern'` with no `pattern` | throws `InvalidOptionError` | `pattern-fill/missing-pattern` |
+| a `preset` that is not a preset pattern name | throws `InvalidOptionError` | `pattern-fill/invalid-preset` |
 | a picture fill with no `path` or `data` | warns; no fill | `image-fill/missing-source` |
 | picture `data` without its base64 header | warns; no fill | `image-fill/missing-base64-header` |
 | an SVG picture fill | warns; no fill | `image-fill/svg-unsupported` |

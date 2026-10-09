@@ -298,6 +298,66 @@ export const TEXT_ANCHORS = ['t', 'ctr', 'b', 'just', 'dist'] as const
 export const TEXT_ALIGN_TYPES = ['l', 'ctr', 'r', 'just', 'justLow', 'dist', 'thaiDist'] as const
 
 /**
+ * `ST_PresetPatternVal` — `a:pattFill/@prst`, the hatch a pattern fill draws.
+ */
+export const PATTERN_PRESETS = [
+	'pct5',
+	'pct10',
+	'pct20',
+	'pct25',
+	'pct30',
+	'pct40',
+	'pct50',
+	'pct60',
+	'pct70',
+	'pct75',
+	'pct80',
+	'pct90',
+	'horz',
+	'vert',
+	'ltHorz',
+	'ltVert',
+	'dkHorz',
+	'dkVert',
+	'narHorz',
+	'narVert',
+	'dashHorz',
+	'dashVert',
+	'cross',
+	'dnDiag',
+	'upDiag',
+	'ltDnDiag',
+	'ltUpDiag',
+	'dkDnDiag',
+	'dkUpDiag',
+	'wdDnDiag',
+	'wdUpDiag',
+	'dashDnDiag',
+	'dashUpDiag',
+	'diagCross',
+	'smCheck',
+	'lgCheck',
+	'smGrid',
+	'lgGrid',
+	'dotGrid',
+	'smConfetti',
+	'lgConfetti',
+	'horzBrick',
+	'diagBrick',
+	'solidDmnd',
+	'openDmnd',
+	'dotDmnd',
+	'plaid',
+	'sphere',
+	'weave',
+	'divot',
+	'shingle',
+	'wave',
+	'trellis',
+	'zigZag',
+] as const
+
+/**
  * `ST_TextVerticalType` — `a:bodyPr/@vert` and `a:tcPr/@vert`.
  * @see ECMA-376 Part 1 §20.1.10.83
  */
