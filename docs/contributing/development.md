@@ -14,7 +14,7 @@ doc_type: "guide"
 ## Prerequisites
 
 - Node.js `>=24`.
-- `pnpm` through Corepack. The `packageManager` field in `package.json` pins the version.
+- `pnpm`. The `packageManager` field in `package.json` pins the version.
 
 ```bash
 pnpm install
