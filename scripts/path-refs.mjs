@@ -214,7 +214,7 @@ function walk(dir, out = []) {
  * on Windows and another on Linux while the suffix arm was case-exact everywhere -- the two
  * halves of this function disagreeing with each other on the same machine. An author here
  * could write `src/gen/Chart/plot-bar.ts`, watch `verify` pass, and have `check:static` fail
- * on `ubuntu-latest`; a citation whose case is right today could survive a future rename that
+ * on `ubuntu-24.04`; a citation whose case is right today could survive a future rename that
  * only changed case. Both are the header's own complaint one paragraph up: a verdict that is a
  * property of the machine rather than of the repo.
  *

@@ -58,7 +58,7 @@
  * `TSPPTX_RENDER_ORACLE=required`, which is how the CI lane runs it, because a lane that
  * installs the tools and then skips would be green without checking anything.
  *
- * It does run in CI, on `ubuntu-latest`, unlike the COM smoke it sits beside. Measured on a
+ * It does run in CI, on `ubuntu-24.04`, unlike the COM smoke it sits beside. Measured on a
  * hosted runner: `libreoffice-impress` plus `poppler-utils` install in ~41s from apt with no
  * caching, and the whole check then runs in ~2s. Neither the missing Microsoft fonts (Arial
  * resolves to Liberation Sans there) nor poppler's disagreements with xpdf disturb it — see

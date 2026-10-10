@@ -26,7 +26,7 @@ jobs:
   # still fails the deploy rather than the change; that is the accepted trade.
   static:
     name: Static checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout
@@ -61,7 +61,7 @@ jobs:
   # both legs, so collect them once on the primary version.
   test:
     name: Test (Node ${{ matrix.node }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -235,7 +235,7 @@ jobs:
   # construction; that property is what makes this leg portable, so keep it.
   render-oracle:
     name: Render oracle (LibreOffice)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     env:
       TSPPTX_RENDER_ORACLE: required
@@ -288,7 +288,7 @@ jobs:
   # Chromium only — the engine decision is recorded in playwright.config.ts.
   browser:
     name: Browser (Chromium)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout
@@ -366,7 +366,7 @@ jobs:
   # `src/runtime/browser.ts` where it actually runs. See scripts/coverage-gate.mjs.
   coverage:
     name: Coverage (merged)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs:
       - test
       - browser
@@ -429,7 +429,7 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-latest
+          - ubuntu-24.04
           - windows-latest
 
     steps:
