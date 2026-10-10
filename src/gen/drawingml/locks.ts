@@ -68,6 +68,8 @@ type LockAttrName =
  * Nothing imports it and nothing ever will: the `export` is what keeps it from being reported as
  * an unused binding, which is the one thing that would get an assertion like this deleted. Left
  * exported deliberately rather than by oversight — this note is the difference between the two.
+ * `@public` tells knip the same thing.
+ * @public
  */
 export const LOCK_ATTRS_MATCH_OBJECT_LOCK_PROPS: [
 	LockAttrName extends keyof ObjectLockProps ? true : never,

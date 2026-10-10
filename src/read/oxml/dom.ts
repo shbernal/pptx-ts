@@ -41,17 +41,8 @@ export function serializeXml(doc: Document): string {
 
 // The registry itself lives in `ooxml/namespaces.ts`, which has no runtime imports, so the
 // write side can reach it without pulling `@xmldom/xmldom` into the write-only bundle. Re-exported
-// here so every existing `from '.../oxml/dom.js'` import keeps working. `qn` stays in this module:
-// it raises a diagnostic, and giving the import-free registry a dependency on `errors.ts` would
-// cost exactly what moving the table there bought.
+// here so every existing `from '.../oxml/dom.js'` import keeps working.
 export { OOXML_NS } from '../../ooxml/namespaces.js'
-
-/** Build a prefixed qname string, e.g. `qn('p', 'sld')` → `"p:sld"`. */
-export function qn(prefix: string, local: string): string {
-	if (!(prefix in OOXML_NS))
-		throw new InvalidOptionError('oxml/unknown-namespace-prefix', `Unknown OOXML namespace prefix: ${prefix}`)
-	return `${prefix}:${local}`
-}
 
 function splitQName(qname: string): { uri: string; local: string } {
 	const colon = qname.indexOf(':')

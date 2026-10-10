@@ -27,7 +27,6 @@ export {
 	GRPSPPR_FILL_AFTER,
 	LN_FILL_AFTER,
 	SHAPE_AFTER_SPPR,
-	SPPR_AFTER_XFRM,
 	SPPR_FILL_AFTER,
 	SPPR_LN_AFTER,
 } from '../../../ooxml/sequence.js'

@@ -55,7 +55,6 @@ import { tableCall } from './table.js'
 import { chartCall } from './chart.js'
 import { forShape, type MapContext } from './context.js'
 import { cropOption, isRectSet } from './picture-fill.js'
-export type { AssetResolver } from './context.js'
 import { PERCENT_SCALE } from '../../units.js'
 
 import { glowOption, lineOption, noteHidden, shadowOption, styleOptions, transformOptions } from './shape-paint.js'

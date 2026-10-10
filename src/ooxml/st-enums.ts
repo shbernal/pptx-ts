@@ -490,7 +490,6 @@ export type BarGrouping = (typeof BAR_GROUPINGS)[number]
  * @see ECMA-376 Part 1 §21.2.3.17
  */
 export const GROUPINGS = ['percentStacked', 'standard', 'stacked'] as const
-export type Grouping = (typeof GROUPINGS)[number]
 
 /**
  * `ST_Shape` — the solid a 3-D bar is drawn as (`c:shape/@val`).

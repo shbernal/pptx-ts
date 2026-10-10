@@ -51,8 +51,6 @@ import {
 	type PrintedScript,
 } from './common.js'
 
-export type { AssetMode, PrintedScript } from './common.js'
-
 export interface PrintScriptOptions extends CommonPrintOptions {
 	/**
 	 * Path the emitted script loads its template from, resolved against the script's own

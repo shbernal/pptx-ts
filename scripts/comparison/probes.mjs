@@ -511,14 +511,3 @@ export function probeSource(probe, subject) {
 	const build = probe.build[subject]
 	return build ? renderSource(build, CORPUS_CONSTANTS) : null
 }
-
-/**
- * One probe by id, or a throw naming the ones that exist. Backs `--probe`.
- * @param {string} id
- * @returns {Probe}
- */
-export function probeById(id) {
-	const found = PROBES.find((probe) => probe.id === id)
-	if (!found) throw new Error('no probe with id "' + id + '"; have: ' + PROBES.map((p) => p.id).join(', '))
-	return found
-}

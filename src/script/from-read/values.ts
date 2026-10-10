@@ -19,10 +19,10 @@
 import type { IrValue } from '../ir.js'
 import type { Shape } from '../../read.js'
 import type { NoteScope, RecordableConstruct } from '../fidelity.js'
-import { emuToPoints, FIXED_PCT_PER_PERCENT, PERCENT_SCALE, POINTS_PER_INCH } from '../../units.js'
+import { FIXED_PCT_PER_PERCENT, PERCENT_SCALE, POINTS_PER_INCH } from '../../units.js'
 // Re-exported so this module stays the one import the mappers reach for; it lives in
 // `script/units.ts` because the printer needs it too and may not import from here.
-export { inches, INCH_DECIMALS } from '../units.js'
+export { inches } from '../units.js'
 import { toInches } from '../units.js'
 import { stripHash } from '../../hex-color.js'
 import { PRESET_LINE_DASHES } from '../../ooxml/st-enums.js'
@@ -32,11 +32,6 @@ import { VALIGN_BY_ANCHOR } from '../../ooxml/text-anchor.js'
 /** Geometry as a `Coord` the write API takes verbatim, preserving the exact EMU. */
 export function emu(value: number): string {
 	return `${Math.round(value)}emu`
-}
-
-/** EMU → points, the unit the write API uses for line widths and font sizes. */
-export function points(emuValue: number): number {
-	return emuToPoints(emuValue)
 }
 
 /**

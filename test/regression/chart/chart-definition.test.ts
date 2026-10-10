@@ -7,20 +7,17 @@ import {
 	type OptsChartData,
 } from '../../../dist/node.js'
 import type TsPptx from '../../../dist/node.js'
-import type JSZip from 'jszip'
 import {
 	setDiagnosticHandler,
 	defineRegressionSuite,
 	build,
-	readEntry,
-	listEntries,
 	assert,
 	assertEqual,
 	assertIncludes,
 	assertNotIncludes,
 	caught,
 } from '../../helpers.ts'
-import { chartXml } from './chart-parts.ts'
+import { chartExXml, chartXml } from './chart-parts.ts'
 
 // The normalization half of `gen/define/chart.ts` -- everything `addChartDefinition` does to the
 // options bag before a byte of chart XML exists: the defensive copy, the enum corrections keyed to
@@ -52,13 +49,6 @@ import { chartXml } from './chart-parts.ts'
 //      `tmpOpt = ... : opt` (L481) and `copyChartOptions(tmpOpt && ... ? tmpOpt : {})` (L487)
 //      without an input. The sibling guards on `data` (L483) and on a combo entry's own
 //      `data`/`options` ARE reachable from untyped JS and are covered below.
-
-/** The chartEx part, for the chart types that emit one (waterfall, funnel, ...). */
-function chartExXml(zip: JSZip): Promise<string> {
-	const path = listEntries(zip).find((p) => /^ppt\/charts\/chartEx\d+\.xml$/.test(p))
-	assert(path, 'expected a ppt/charts/chartExN.xml entry; got: ' + JSON.stringify(listEntries(zip)))
-	return readEntry(zip, path)
-}
 
 /** Build one chart and return its part. */
 async function chartFrom(data: OptsChartData[], options: ChartOpts & { type: CHART_NAME }): Promise<string>
