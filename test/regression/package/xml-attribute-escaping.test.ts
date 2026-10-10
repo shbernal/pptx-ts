@@ -7,7 +7,7 @@
 // `<p:font typeface="…">` verbatim, and a newline was silently normalised to a space by any
 // parser that read the file back, while every other attribute in the package had both handled.
 //
-// No showcase deck embeds a font with an exotic typeface, so byte identity cannot see this.
+// No gate deck embeds a font with an exotic typeface, so byte identity cannot see this.
 //
 // The read/edit path (`read/opc/*`) had the middle escaper: tab/CR/LF handled, control
 // characters not, `'` not. Its writers now share the same one.

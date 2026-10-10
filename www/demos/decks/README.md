@@ -3,6 +3,10 @@
 Two full decks, generated end to end by `pptx-ts`. No slide here was touched in
 PowerPoint.
 
+They exist for the site's [demos page](https://shbernal.github.io/pptx-ts/demos) and nothing else. No
+regression gate builds them, so a deck can change freely. A construct a gate should cover goes in
+a gate deck under `scripts/gate-decks/`, not here.
+
 ```bash
 pnpm showcases:build                    # both
 pnpm showcases:build field-notes        # one, by slug
@@ -47,12 +51,8 @@ build.mjs           the runner; the only place that touches the filesystem
 ```
 
 Each deck exports `{ slug, title, description, fileName, build }`. Adding a third deck means
-writing that object and adding it to `SHOWCASES` in `lib/showcases.mjs`.
-
-That registry is **not** in `build.mjs`, and the distinction is the whole reason it was
-moved out: `scripts/byte-identity.mjs` enumerates the decks from it too. A deck registered
-anywhere else still builds, and is silently absent from the gate that would have caught an
-emitter regression in it.
+writing that object, adding it to `SHOWCASES` in `lib/showcases.mjs` for the Node build and the
+browser lane, and adding it to `../showcases.ts` for the site.
 
 ## Two things worth knowing before editing a deck
 

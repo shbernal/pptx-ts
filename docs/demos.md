@@ -39,7 +39,7 @@ photographs, the video and the model when the deck comes into view.
 
 ## What you are looking at
 
-- **The decks** are `www/showcases/` in this repository. Node builds the same modules to files
+- **The decks** are `www/demos/decks/` in this repository. Node builds the same modules to files
   with `pnpm showcases:build`.
 - **The renderer** is a separate library. `pptx-html` reads a package into a slide model and
   renders that model; it does not approximate. Where it cannot model something, a video or a

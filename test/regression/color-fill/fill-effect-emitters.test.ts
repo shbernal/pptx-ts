@@ -14,7 +14,7 @@ import {
 } from '../../helpers.ts'
 
 // The byte-identity harness (`scripts/byte-identity.mjs`) is what gates a behavior-preserving
-// refactor of `src/gen/`, but its corpus is only what the showcase decks emit — and no showcase
+// refactor of `src/gen/`, but its corpus is only what the gate decks emit — and no gate deck
 // authors a pattern fill, an image fill, a glow, or an inner shadow. Migrating `drawingml/fill.ts`
 // and `drawingml/effect.ts` onto the `gen/oxml/el.ts` builder therefore had nothing gating it:
 // those four emitters produce zero bytes in every baseline part, so a PASS said nothing at all

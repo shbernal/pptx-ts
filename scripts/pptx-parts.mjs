@@ -22,7 +22,7 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { ROOT } from './script-utils.mjs'
 
-const SHOWCASES_ENTRY = path.join(ROOT, 'www', 'showcases', 'lib', 'showcases.mjs')
+const SHOWCASES_ENTRY = path.join(ROOT, 'www', 'demos', 'decks', 'lib', 'showcases.mjs')
 
 /**
  * Emitted values that legitimately differ between two identical runs.

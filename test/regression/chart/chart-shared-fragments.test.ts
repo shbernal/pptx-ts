@@ -13,8 +13,8 @@ import { chartXml } from './chart-parts.ts'
 
 // The fragments several plot builders share, pinned at the byte.
 //
-// These are the emitters the byte-identity harness cannot speak for: its corpus is the two
-// showcase decks, whose only charts are bar, doughnut and line. Scatter, bubble, stock and
+// These were the emitters the byte-identity harness could not speak for: its corpus was then the
+// two showcase decks, whose only charts are bar, doughnut and line. Scatter, bubble, stock and
 // surface are unproven there, not proven unchanged — so a refactor that touched them was
 // checked against a throwaway differential, and this file is what makes the next one cheaper.
 //

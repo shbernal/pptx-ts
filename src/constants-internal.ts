@@ -154,7 +154,7 @@ export const LEVEL_MARGINS_EMU: readonly number[] = Array.from({ length: 9 }, (_
  * The fourth computes it per level — a configured master's title can be centred or right —
  * and a spread that carried `algn` would silently overwrite that: a later key in an object
  * literal replaces the value without moving the key, so the attribute order would still look
- * right while the alignment was wrong. No showcase deck configures a master text style, so
+ * right while the alignment was wrong. No gate deck configures a master text style, so
  * `byte-identity` cannot see that path; `master-text-styles.test.ts` pins it instead.
  */
 export const LEVEL_PPR_TAIL = {

@@ -4,7 +4,7 @@ Decks that exist to be **diffed**, not looked at.
 
 `scripts/byte-identity.mjs` proves an emitter refactor changed no emitted byte by
 generating a corpus of decks and comparing every part against a frozen baseline. Its
-original corpus was the showcase decks (`www/showcases/`), and AGENTS.md is explicit
+original corpus was the showcase decks (`www/demos/decks/`), and AGENTS.md is explicit
 about the limit that imposes:
 
 > The corpus is only what the harness's decks emit, so before trusting a PASS, confirm the
@@ -17,7 +17,10 @@ because those are the three a business-review deck wants, and no arrangement of 
 low-close stock chart, and a date axis with an inverted scale. Pushing them there would
 make them worse at the job they exist for.
 
-So the gate gets its own corpus. A gate deck is under no obligation to look like anything:
+So the gate gets its own corpus, and since the demo decks moved to `www/demos/decks/` it is
+the **whole** corpus: the demo decks are for the site and are not built by the gate at all.
+Anything a demo emits that the gate must cover belongs in a gate deck, which is how
+`media-matrix.mjs` came to exist. A gate deck is under no obligation to look like anything:
 it is a fixture matrix that happens to be shaped like a `.pptx`, because going through
 `addChart` end to end is the only way to exercise the emitters as they are actually called.
 It is never built by `pnpm showcases:build`, never shipped, and never opened by a human except
@@ -40,17 +43,20 @@ when a diff needs reading.
 ## Adding one
 
 Charts needed a deck first, but the coverage gap is not specific to charts: `byte-identity`
-gates every `src/gen/` refactor, and its showcase corpus reaches whatever two presentation
-decks happen to reach. There are three decks now, and each arrived the same way, from a PASS
-that turned out to be a statement about nothing:
+gates every `src/gen/` refactor, and a corpus reaches only what its decks happen to reach.
+The first three decks arrived the same way, from a PASS that turned out to be a statement
+about nothing:
 
 - `chart-matrix.mjs` for the six chart emitters the showcases never construct.
 - `shape-matrix.mjs` for the slide objects a business deck has no reason to carry.
 - `html-table.mjs` for `tableToSlides`, which is a whole public entry point rather than one
   emitter: no showcase and no other gate deck called it, so a change moving every HTML-table
   border width by a third reported PASS.
+- `media-matrix.mjs` for what only the `field-notes` demo used to reach: embedded video and
+  3D models, picture crops and duotone, a styled hyperlink, a radial master background. It
+  was written when the demos left the corpus, so that leaving shrank nothing.
 
-The next refactor that runs into "the showcases never emit this" should add a deck rather
+The next refactor that runs into "no gate deck emits this" should add a deck rather
 than proceed on an unproven PASS. Registering one is a `gateDeck` export like the one at the
 foot of `chart-matrix.mjs`; the harness picks it up from `index.mjs`.
 

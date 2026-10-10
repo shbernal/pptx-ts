@@ -9,7 +9,7 @@
  * Build it with `pnpm showcases:build field-notes`.
  *
  * Unlike the quarterly review, this deck loads its photographs, video and `.glb` from
- * `www/showcases/media/`. `lib/assets.mjs` hands them over as paths under Node and as URLs on
+ * `www/demos/decks/media/`. `lib/assets.mjs` hands them over as paths under Node and as URLs on
  * the site, so the same module builds the deck in both.
  */
 import TsPptx, { ShapeType } from 'pptx-ts'

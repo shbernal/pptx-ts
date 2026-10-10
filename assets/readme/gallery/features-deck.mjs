@@ -13,9 +13,9 @@ import { Window } from 'happy-dom'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(HERE, '../../..')
-const design = await import(path.join(ROOT, 'www/showcases/quarterly-review/design.mjs'))
+const design = await import(path.join(ROOT, 'www/demos/decks/quarterly-review/design.mjs'))
 const { BRAND, MASTER, applyDesign, slideTitle } = design
-const img = (n) => path.join(ROOT, 'www/showcases/media', n)
+const img = (n) => path.join(ROOT, 'www/demos/decks/media', n)
 
 // Consolas is substituted badly by LibreOffice (overlapping glyphs), so the labels use
 // a mono face the render machine actually has.

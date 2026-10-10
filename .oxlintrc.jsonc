@@ -52,8 +52,8 @@
 	// repo's own helpers, and every one of them has an option that names the helper. What
 	// the remainder of the plugin costs is recorded in the `test/**` override below.
 	"plugins": ["eslint", "unicorn", "typescript", "oxc", "import", "vitest"],
-	// `www/showcases/` is plain untyped `.mjs` deck code, never linted before it moved there.
-	"ignorePatterns": ["coverage/**", "dist/**", "node_modules/**", "src/bld/**", "types/**", "www/showcases/**"],
+	// `www/demos/decks/` is plain untyped `.mjs` deck code, never linted before it moved there.
+	"ignorePatterns": ["coverage/**", "dist/**", "node_modules/**", "src/bld/**", "types/**", "www/demos/decks/**"],
 	"categories": {
 		"correctness": "error",
 	},

@@ -12,7 +12,7 @@
  * follows.
  */
 
-/** The URL of a file in `www/showcases/media/`. Written out in full each time so Vite sees it. */
+/** The URL of a file in `www/demos/decks/media/`. Written out in full each time so Vite sees it. */
 function mediaUrl(name) {
 	return new URL(`../media/${name}`, import.meta.url)
 }

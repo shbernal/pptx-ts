@@ -32,7 +32,7 @@ the hooks.
   the task asks to refresh release artifacts.
 - `docs/`: documentation content. See [Site changes](#site-changes).
 - `www/`: the site's theme and Vue components, the demos page, its showcase decks
-  (`www/showcases`) and live examples (`www/live`).
+  (`www/demos/decks`) and live examples (`www/live`).
 - `scripts/`: build, gate, package and demo automation. `scripts/powerpoint/` is the PowerPoint
   job runner: the worker that runs COM jobs on Windows, and the client that `test:com` and
   `ppt:run` send jobs through.
@@ -114,6 +114,7 @@ hatch is acceptable.
 | `pnpm run test:browser` | The Playwright lane in Chromium. Run `pnpm exec playwright install chromium` once first. |
 | `pnpm run docs:dev` | Serve the site with hot reload. |
 | `pnpm showcases:build` | Build the showcase decks. |
+| `pnpm gate-decks:build` | Build the byte-identity gate decks to `.tmp/gate-decks/`. |
 
 The [testing guide](testing.md) covers the single-purpose scripts, such as `coverage:probe`,
 `test:com`, `byte-identity:check` and the freeze commands.
@@ -228,7 +229,7 @@ lists the usual causes.
 
 ## Demo changes
 
-Demos live on the site. The two showcase decks in `www/showcases` are the demos page, and a guide
+Demos live on the site. The two showcase decks in `www/demos/decks` are the demos page, and a guide
 page shows a smaller example as a [live fence](#live-examples). There is no clone-and-run demo
 directory: a demo that cannot run on the site belongs in a guide as a plain code sample. The
 [testing guide](testing.md) says what checks the showcases and what covers the published package.
@@ -239,7 +240,7 @@ pnpm showcases:build quarterly-review   # one, by slug
 pnpm run docs:dev                       # the demos page and every live example
 ```
 
-[www/showcases/README.md](https://github.com/shbernal/pptx-ts/blob/main/www/showcases/README.md)
+[www/demos/decks/README.md](https://github.com/shbernal/pptx-ts/blob/main/www/demos/decks/README.md)
 says what each deck is for.
 
 ## Site changes

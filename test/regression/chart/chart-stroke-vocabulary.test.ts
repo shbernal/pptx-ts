@@ -14,7 +14,8 @@ import { chartXml } from './chart-parts.ts'
 // stroke can say — `width`, `dashType`, `type`, `color`, `cap`, `transparency` — now reaches
 // all four sites: the three axis lines, gridlines, series lines and error bars.
 //
-// The byte-identity gate cannot cover this: the showcase decks reach `*AxisLineShow` and
+// The byte-identity gate could not cover this when it was written: the showcase decks it then
+// built reach `*AxisLineShow` and
 // gridlines only, so `catAxisLineStyle`, `*AxisLineSize`, `*AxisLineColor`, error bars and
 // `barSeriesLine` have no coverage there at all. What each case asserts is the emitted
 // attribute or element, not that the option was accepted.

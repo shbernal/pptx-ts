@@ -9,8 +9,8 @@ import { TableStyle } from '../../../src/enums.ts'
 // it went once rendering in PowerPoint desktop 16.0 showed that a definition in this part is
 // never read: PowerPoint resolves `<a:tableStyleId>` against its own gallery, so a built-in
 // GUID paints with nothing here, and a custom GUID paints nothing however complete the
-// definition. The byte-identity harness still cannot see this part change — no showcase deck
-// ever produced a non-stub one — so what remains is the guard that it stays a stub.
+// definition. The byte-identity harness still cannot see this part change — no deck in its
+// corpus ever produced a non-stub one — so what remains is the guard that it stays a stub.
 
 describe('makeXmlTableStyles', () => {
 	test('emits a self-closing tblStyleLst naming the default style id', () => {

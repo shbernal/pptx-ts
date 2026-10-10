@@ -15,7 +15,7 @@ import { InvalidOptionError } from '../../../dist/node.js'
 // all and emitted a `sldSz` PowerPoint offers to repair. A negative one reached the file as
 // `cx="-4572000"`.
 //
-// No showcase deck defines a layout, so the byte-identity corpus cannot see any of this. These
+// No gate deck defines a layout, so the byte-identity corpus cannot see any of this. These
 // are the evidence.
 //
 // The policy being applied is `docs/contributing/development.md`'s ("Warn or throw?"): a finite out-of-range number clamps and

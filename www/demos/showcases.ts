@@ -4,8 +4,8 @@
  * The one module in `www/` that names a deck. It is kept apart from `deck-preview.ts` so a
  * page that previews something else (a live example) does not carry the showcases with it.
  */
-import { showcase as fieldNotes } from '../showcases/field-notes/index.mjs'
-import { showcase as quarterlyReview } from '../showcases/quarterly-review/index.mjs'
+import { showcase as fieldNotes } from './decks/field-notes/index.mjs'
+import { showcase as quarterlyReview } from './decks/quarterly-review/index.mjs'
 import type { DeckSource } from './deck-preview.ts'
 
 export const SHOWCASES: Readonly<Record<string, DeckSource>> = {

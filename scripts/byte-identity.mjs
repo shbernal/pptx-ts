@@ -4,8 +4,8 @@
  *
  * AGENTS.md ("Byte identity"): "Any other byte change is a real regression. Do not accept one as cleanup."
  * This proves a behavior-preserving refactor of the `src/gen/` emitters does not
- * change a single emitted byte, by generating every showcase deck, exploding each
- * one (recursing into its embedded .xlsx parts, which are their own OPC packages),
+ * change a single emitted byte, by generating every gate deck (`scripts/gate-decks/`), exploding
+ * each one (recursing into its embedded .xlsx parts, which are their own OPC packages),
  * and diffing every part against a frozen baseline.
  *
  *   node scripts/byte-identity.mjs baseline          # freeze current output as the reference
@@ -31,15 +31,13 @@
 import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
-import { diffParts, explodePackage, listParts, loadShowcases } from './pptx-parts.mjs'
+import { diffParts, explodePackage, listParts } from './pptx-parts.mjs'
 import { ROOT, parseCliOrExit, runNodeBin } from './script-utils.mjs'
 import { XmlSyntaxError, proveWhitespaceOnly } from './xml-equivalence.mjs'
 
 const OUT_ROOT = path.join(ROOT, '.tmp', 'byte-identity')
 const BASELINE = path.join(OUT_ROOT, 'baseline')
 const CURRENT = path.join(OUT_ROOT, 'current')
-// Written here rather than into `.tmp/showcases/`: the gate builds decks on every run, and it
-// has no business clobbering the decks `pnpm showcases:build` leaves for a human.
 const DECKS = path.join(OUT_ROOT, 'decks')
 
 const USAGE = `Byte-identity gate for write-side refactors.
@@ -73,34 +71,26 @@ if (mode !== 'baseline' && mode !== 'check' && mode !== 'prove-whitespace') {
 /**
  * Build every corpus deck with each nondeterministic source pinned.
  *
- * The corpus has two halves, and they are different kinds of thing:
+ * The corpus is the gate decks (`scripts/gate-decks/`): fixture matrices shaped like a
+ * `.pptx`, built for nothing but this diff. The site's demo decks (`www/demos/decks/`) are
+ * deliberately not in it, so a demo can change without moving the baseline, and an emitter
+ * the gate covers stays covered whatever the demos stop doing. AGENTS.md is explicit that a
+ * PASS on an emitter no deck reaches is "unproven, not proven unchanged".
  *
- * - **Showcase decks** (`www/showcases/`) are presentation decks that happen to drive the
- *   emitters end to end. They resolve their assets from their own URL, so no
- *   `process.chdir` is needed, and they import `pptx-ts` by the package's self-reference,
- *   which resolves to the `dist/` the build above just wrote.
- * - **Gate decks** (`scripts/gate-decks/`) are fixture matrices shaped like a `.pptx`. They
- *   exist because the showcases only reach what a plausible deck would reach: three chart
- *   types out of nine chart emitters, which left most of `src/gen/chart/` with no evidence
- *   at all. AGENTS.md is explicit that a PASS on an emitter no deck reaches is "unproven,
- *   not proven unchanged" — so the parts that no showcase would ever want get their own
- *   corpus rather than being bolted onto a deck that has a different job.
- *
- * Both are loaded by dynamic import rather than a static one: they pull in `dist/`, which
- * the build above writes moments earlier and which may not exist when this module is first
+ * Loaded by dynamic import rather than a static one: the decks pull in `dist/`, which the
+ * build above writes moments earlier and which may not exist when this module is first
  * evaluated.
  *
  * Returns one `{ slug, file }` per deck.
  */
 async function generateDecks() {
 	const { GATE_DECKS } = await import('./gate-decks/index.mjs')
-	const corpus = [...(await loadShowcases()), ...GATE_DECKS]
 
 	fs.rmSync(DECKS, { recursive: true, force: true })
 	fs.mkdirSync(DECKS, { recursive: true })
 
 	const decks = []
-	for (const showcase of corpus) {
+	for (const deck of GATE_DECKS) {
 		// `getUuid` (gen-utils) and the chart-colour fallback both draw on Math.random, so
 		// section ids and `c16:uniqueId` vary per run. Reseed per deck rather than once for
 		// the process: with a single stream, editing deck 1 shifts every GUID in deck 2 and
@@ -111,10 +101,10 @@ async function generateDecks() {
 			return seed / 0x80000000
 		}
 
-		const file = path.join(DECKS, showcase.fileName)
-		await showcase.build(file)
-		if (!fs.existsSync(file)) throw new Error('showcase deck was not written: ' + file)
-		decks.push({ slug: showcase.slug, file })
+		const file = path.join(DECKS, deck.fileName)
+		await deck.build(file)
+		if (!fs.existsSync(file)) throw new Error('gate deck was not written: ' + file)
+		decks.push({ slug: deck.slug, file })
 	}
 	return decks
 }

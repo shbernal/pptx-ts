@@ -14,7 +14,7 @@
 				"config": ["docs/.vitepress/config.mts"],
 				"entry": ["docs/.vitepress/theme/index.ts", "docs/**/*.md"]
 			},
-			"ignore": ["www/showcases/*/index.d.mts"],
+			"ignore": ["www/demos/decks/*/index.d.mts"],
 			"ignoreDependencies": ["@arethetypeswrong/cli", "temml", "mathml2omml"]
 		},
 		"tools/api-docs": {
