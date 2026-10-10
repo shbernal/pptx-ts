@@ -5,7 +5,7 @@ import { chartXml } from './chart-parts.ts'
 // The default series palettes are shorter than the number of series or data points a caller may
 // hand in, so every palette lookup has to wrap. It used to draw a *random* colour past the end
 // instead, which made the same deck emit different bytes on every build -- invisible to the
-// byte-identity harness, because no showcase deck reaches that far into a palette.
+// byte-identity harness, because no deck in its corpus reached that far into a palette.
 //
 // The cases below go past the end on purpose. They assert the two properties the wraparound has
 // to hold: the colour repeats from the start of the palette, and a second build of the same

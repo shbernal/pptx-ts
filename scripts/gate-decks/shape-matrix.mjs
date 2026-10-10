@@ -31,8 +31,8 @@
  * NOT here: OLE objects. An OLE payload is a real binary (a compound file or an embedded
  * package), and a gate deck that reads an asset off disk trades one blind spot for a second
  * kind of flap. `gen/slide/objects/ole.ts` therefore stays ungated — the remaining gap, and
- * the thing to fix before anyone refactors it. 3-D models need no case: `field-notes`
- * already emits one, so `model3d.ts` is covered by the showcase corpus.
+ * the thing to fix before anyone refactors it. 3-D models and embedded video are in
+ * `media-matrix.mjs`.
  */
 import TsPptx from '../../dist/node.js'
 

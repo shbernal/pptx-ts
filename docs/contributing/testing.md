@@ -836,7 +836,7 @@ It is not in `verify`, because it spawns seven validations per fixture and asser
 | Oracle | Run by | Proves | Blind to | In CI |
 | --- | --- | --- | --- | --- |
 | Schema validator | `test:schema`, and schema cases across `test` | Modelled markup conforms at `Microsoft365` and relationships resolve | `mc:Choice` content, unmodelled extensions, whether PowerPoint opens or paints the deck | yes, `test` |
-| Byte identity | `byte-identity:check`; `cross-runtime-bytes.spec.ts` in `test:browser` | A refactor changed no emitted byte; the browser builds the same bytes as Node | Parts no showcase or gate deck emits, such as OLE objects; whether the bytes are right | only the browser comparison, in `browser` |
+| Byte identity | `byte-identity:check`; `cross-runtime-bytes.spec.ts` in `test:browser` | A refactor changed no emitted byte; the browser builds the same bytes as Node | Parts no gate deck emits, such as OLE objects; whether the bytes are right | only the browser comparison, in `browser` |
 | COM read-back | `test:com` | PowerPoint opens the deck without a repair prompt, and resolves actions, connector sites and OLE `ProgID`s | What is painted; markup PowerPoint regenerates on open | no |
 | PNG export from PowerPoint | the `model3d` and preset-geometry legs of `test:com`, or `Slide.Export` by hand | What PowerPoint paints | Markup PowerPoint regenerates on open, such as the SmartArt drawing cache | no |
 | LibreOffice render | `test:lo` | Stored content is painted by an independent renderer, and which strings it draws | Layout fidelity; differences only a raster shows, such as `a:buClr` | yes, `render-oracle` |
@@ -850,8 +850,8 @@ pnpm run byte-identity:baseline   # before the refactor, on a committed src/gen/
 pnpm run byte-identity:check      # after each edit
 ```
 
-`scripts/byte-identity.mjs` builds every showcase deck and every gate deck listed in
-`scripts/gate-decks/index.mjs`, explodes each package, recursing into embedded `.xlsx` parts, and
+`scripts/byte-identity.mjs` builds every gate deck listed in `scripts/gate-decks/index.mjs`
+(never the demo decks), explodes each package, recursing into embedded `.xlsx` parts, and
 diffs every part against `.tmp/byte-identity/baseline/`. It normalizes `core.xml` timestamps,
 `p14:section` ids and `c16:uniqueId`, and nothing else. `baseline` refuses to run on an uncommitted
 `src/gen/`, because a baseline frozen after the edit cannot fail. A pass says nothing about a part
@@ -1007,7 +1007,7 @@ holds constructs rendered against a control. Its rules:
   stops a blank render from passing. Make a new case fail on purpose before trusting it.
 
 A candidate is any construct whose only evidence is the right bytes in a part, such as one no
-showcase deck emits. `a:buBlip`, `a:prstTxWarp` and `numCol` with `spcCol` are pairs. `rtl="1"`
+gate deck emits. `a:buBlip`, `a:prstTxWarp` and `numCol` with `spcCol` are pairs. `rtl="1"`
 and `altLang` do not change the extracted text, and `a:buClr` changes only the raster, so this
 oracle cannot see them. The header of `PAIRS` records that probe.
 
@@ -1022,15 +1022,14 @@ Windows neither tool needs admin rights. `pdftotext` ships with Git for Windows,
 
 ### Manual visual checks
 
-1. Build a small deck with `pnpm showcases:build`, or write one with `test:read:emit` or
-   `test:read:emit:edits`.
+1. Build the gate decks with `pnpm gate-decks:build`, or write a small deck with `test:read:emit`
+   or `test:read:emit:edits`.
 2. Open it in Microsoft PowerPoint.
 3. When the change affects cross-app compatibility, check the import in Keynote, LibreOffice
    Impress or Google Slides.
 4. For browser download behaviour, use the site's `/demos` page (`pnpm run docs:dev`).
 
-Showcase decks land in `.tmp/showcases/`.
-Git ignores both.
+Gate decks land in `.tmp/gate-decks/`, which git ignores.
 
 ## Font oracles
 
@@ -1258,17 +1257,17 @@ branch that reads a package from a file path, which the write path never runs.
 The showcase decks verify nothing. No aggregate builds them, and a broken showcase fails no
 check.
 
-Two gates touch showcase code without asserting on the decks:
+One gate touches showcase code without asserting on the decks. The site's `/demos` page
+(`www/demos/`) is the `demo` Playwright fixture, and the tests check that the deck the page builds
+has the right bytes. Nothing checks how the page looks or that its preview is a good likeness. The
+preview is drawn by `pptx-html` against the published `@shbernal/ts-pptx`, and this repository's
+gates make no claim about it.
 
-- The site's `/demos` page (`www/demos/`) is the `demo` Playwright fixture. The tests check that
-  the deck the page builds has the right bytes. Nothing checks how the page looks or that its
-  preview is a good likeness. The preview is drawn by `pptx-html` against the published
-  `@shbernal/ts-pptx`, and this repository's gates make no claim about it.
-- The byte-identity harness builds every deck in `www/showcases/lib/showcases.mjs`, then the
-  gate decks in `scripts/gate-decks/index.mjs`, and diffs the parts they emit. A showcase that
-  throws stops the harness.
+The decks in `www/demos/decks/` are for the demos only. The byte-identity harness does not build
+them: its corpus is the gate decks in `scripts/gate-decks/index.mjs`. When a demo deck reaches a
+construct the gate should cover, add it to a gate deck instead of pointing the harness at the demo.
 
-The harness corpus is only what those decks emit, so a pass is evidence only about the parts they
+The harness corpus is only what the gate decks emit, so a pass is evidence only about the parts they
 reach. Before trusting a pass, confirm the part you touched is in `.tmp/byte-identity/baseline/`.
 Charts, tables, 3D models and the theme inside a chart's embedded workbook are in it, because the
 harness recurses into each `.xlsx`. Slide, section and summary zoom frames are in it through

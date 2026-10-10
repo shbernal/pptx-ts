@@ -33,7 +33,7 @@
  * "the mirror wrote the right string" from "the mirror wrote *a* string".
  *
  * **The second family: zero-baseline constructs.** SmartArt is not the only thing this
- * oracle can see. `byte-identity` only covers what the showcase decks emit, so a construct
+ * oracle can see. `byte-identity` only covers what the gate decks emit, so a construct
  * the corpus never reaches has no evidence behind it beyond "the right bytes are in the
  * part" — true of `numCol`/`spcCol`, `a:prstTxWarp`, `a:buBlip`, `a:buClr`, `rtl="1"` and
  * `altLang`. Rendering answers a question the bytes cannot: whether an independent

@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url'
 import { SHOWCASES } from './lib/showcases.mjs'
 
 /** `.tmp/showcases/` at the repository root, which git ignores. */
-const OUTPUT_DIR = fileURLToPath(new URL('../../.tmp/showcases/', import.meta.url))
+const OUTPUT_DIR = fileURLToPath(new URL('../../../.tmp/showcases/', import.meta.url))
 
 const requested = process.argv.slice(2)
 const unknown = requested.filter((slug) => !SHOWCASES.some((s) => s.slug === slug))

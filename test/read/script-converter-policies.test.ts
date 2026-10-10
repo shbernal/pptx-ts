@@ -4,7 +4,7 @@
 // honoured by the shape mapper and skipped by the table, chart or gradient mapper. The round
 // trip cannot see a skipped one: it excludes exactly the *declared* losses, and an undeclared
 // one is invisible when both IRs come from the same reader. Nor can the byte-identity gate --
-// no showcase deck carries a `dk1` cell fill or a table inside a degenerate group.
+// no gate deck carries a `dk1` cell fill or a table inside a degenerate group.
 //
 // So each case here builds the construct, converts it, and asserts what the IR says.
 

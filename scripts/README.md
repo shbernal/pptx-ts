@@ -107,9 +107,11 @@ are in every aggregate the repo has.
 | `comparison/validity.mjs` | Library | Runs the decks the corpus built through the `test:schema` oracle, per library | `comparison/measure.mjs` |
 | `comparison/timing.mjs` | Library | How long each library takes to turn a deck into bytes, at two matched compression settings, interleaved and median-of-many | `comparison/measure.mjs` |
 | `comparison/workloads.mjs` | Library | The timing corpus: one deck shape at three slide counts, large enough for a clock to see | `comparison/timing.mjs` |
-| `gate-decks/chart-matrix.mjs` | Library | Gate deck reaching the chart emitters the showcase corpus never does | `byte-identity.mjs` |
+| `gate-decks/build.mjs` | Generator | Builds the gate decks to `.tmp/gate-decks/` for a reader or the PowerPoint smoke, unseeded | `pnpm gate-decks:build` |
+| `gate-decks/chart-matrix.mjs` | Library | Gate deck reaching the chart emitters a presentation deck never does | `byte-identity.mjs` |
 | `gate-decks/html-table.mjs` | Library | Gate deck reaching the HTML-table conversion, the one entry point with no deck of any kind behind it | `byte-identity.mjs` |
 | `gate-decks/index.mjs` | Library | The gate-deck registry — one list, so a deck cannot go undiffed | `byte-identity.mjs` |
+| `gate-decks/media-matrix.mjs` | Library | Gate deck reaching embedded video and 3D models, picture crops and duotone, hyperlinks and radial master backgrounds | `byte-identity.mjs` |
 | `gate-decks/shape-matrix.mjs` | Library | Gate deck reaching the slide-object constructs a presentation deck has no reason to carry | `byte-identity.mjs` |
 
 ### Why four of these are manual on purpose

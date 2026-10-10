@@ -207,5 +207,5 @@ DEFLATE pass.
 - `pnpm run test:com` opens both in PowerPoint. The `ole` leg reads each `progId` back, and the `model3d` leg
   reads the camera back and exports the slide to PNG. See
   [Check rendering with pixels, not COM properties](../testing.md#check-rendering-with-pixels-not-com-properties).
-- No showcase deck builds an OLE object, so the byte-identity harness passes an OLE refactor without looking at
+- No gate deck builds an OLE object, so the byte-identity harness passes an OLE refactor without looking at
   it. See [What the demos verify](../testing.md#what-the-demos-verify).

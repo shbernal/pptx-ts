@@ -78,7 +78,7 @@ a test suite.
 ## Demos
 
 - The [demos page](https://shbernal.github.io/pptx-ts/demos) builds the two showcase decks in a
-  browser. Their source is in `www/showcases`, and `pnpm showcases:build` builds both in Node.
+  browser. Their source is in `www/demos/decks`, and `pnpm showcases:build` builds both in Node.
 - Guide pages run their own examples: a `ts live` code fence shows the slide its code builds.
 
 ## Scope

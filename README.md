@@ -42,7 +42,7 @@ PowerPoint never runs, so there is no Office licence and nothing to install on t
 </p>
 
 pptx-ts wrote every slide above, and LibreOffice rendered them.
-They come from the two [showcase decks](www/showcases/README.md).
+They come from the two [showcase decks](www/demos/decks/README.md).
 
 ## Why pptx-ts?
 

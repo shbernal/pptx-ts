@@ -28,6 +28,7 @@ www/
     showcases.ts       the showcase decks the viewer can show, by slug
     DeckPreview.vue    the slide viewer: stage, filmstrip, notes and the build button
     SlideFrame.vue     one slide in a shadow root, which keeps the site's CSS out of it
+    decks/             the showcase decks themselves: plain ESM that also builds under Node
   live/
     snippet.ts         what a `ts live` fence is and what its body becomes, shared with the tests
     fence.ts           the markdown-it rule and the Vite plugin that compile a fence into a module

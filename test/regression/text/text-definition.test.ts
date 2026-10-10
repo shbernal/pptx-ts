@@ -471,8 +471,8 @@ defineRegressionSuite('Text definition', [
 		// the shape and its lone run: the run's bag was the shape's and did carry the key. Once that
 		// aliasing went -- a run must not inherit the shape's `shadow` -- the default started writing
 		// an explicit black `a:solidFill` onto text whose whole purpose is to take the layout's
-		// colour. A deck built that way stops following its theme, and nothing said so: no showcase
-		// deck states an inherited placeholder colour, so every byte-identity gate stayed green.
+		// colour. A deck built that way stops following its theme, and nothing said so: no deck in the
+		// byte-identity corpus states an inherited placeholder colour, so every byte-identity gate stayed green.
 		name: 'text targeting a placeholder states no colour, on the run as well as the shape',
 		fn: async () => {
 			const { zip } = await build((p) => {

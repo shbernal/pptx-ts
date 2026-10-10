@@ -44,7 +44,7 @@ defineRegressionSuite('Master text styles', [
 		// the paragraph-property tail (`defTabSz`, `rtl`, the line-break flags) is shared boilerplate.
 		// Both halves of that are asserted, value and position: the tail is spread from one constant,
 		// and a spread that carried `algn` would overwrite the computed value while leaving the
-		// attribute order looking untouched. No showcase deck configures `textStyles`, so the
+		// attribute order looking untouched. No gate deck configures `textStyles`, so the
 		// byte-identity harness cannot see this path at all.
 		name: 'a configured level alignment survives, and keeps its place in the attribute order',
 		fn: async () => {
