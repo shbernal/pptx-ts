@@ -1,0 +1,27 @@
+{
+	"$schema": "https://unpkg.com/knip@6/schema.json",
+	"workspaces": {
+		".": {
+			"entry": [
+				"scripts/browser-harness-server.mjs",
+				"test/browser/harness/*.mjs",
+				"test/read/fixtures/authoring/*.mjs",
+				"assets/readme/**/*.{mjs,mts}",
+				"charcheck.config.js",
+				"www/**/*.data.ts"
+			],
+			"vitepress": {
+				"config": ["docs/.vitepress/config.mts"],
+				"entry": ["docs/.vitepress/theme/index.ts", "docs/**/*.md"]
+			},
+			"ignore": ["www/showcases/*/index.d.mts"],
+			"ignoreDependencies": ["@arethetypeswrong/cli", "temml", "mathml2omml"]
+		},
+		"tools/api-docs": {
+			"ignoreDependencies": ["typedoc", "typedoc-plugin-markdown"]
+		}
+	},
+	"ignore": ["tools/powerpoint-vm/shared/**"],
+	"ignoreExportsUsedInFile": true,
+	"ignoreBinaries": ["reg", "fc-match"]
+}
