@@ -31,8 +31,6 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      # Same step as ci.yml and docs.yml: the version comes from `packageManager` in
-      # package.json (see the note in ci.yml). Not Corepack, which Node 25 dropped.
       - name: Setup pnpm
         uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
         with:
