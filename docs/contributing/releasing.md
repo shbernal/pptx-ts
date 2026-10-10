@@ -44,7 +44,9 @@ flowchart TD
 - Each name, `pptx-ts` and `@shbernal/ts-pptx`, has its own trusted publisher on npm, because npm
   exchanges the OIDC token per package. Both name repository `shbernal/pptx-ts`, workflow
   `publish.yml`, environment `npm-publish`, and the action `npm publish`.
-- The GitHub environment `npm-publish` exists.
+- The GitHub environment `npm-publish` exists, and its deployment policy allows only tags matching
+  `v*` (the `release` event runs on the tag) and the branch `main` (manual dispatch). A run from any
+  other ref fails at the publish job.
 - `package.json#repository.url` points at `shbernal/pptx-ts`.
 - No `NPM_TOKEN` secret. The workflow authenticates through OIDC with `id-token: write`, and passes
   `--provenance` so provenance stays required if npm's default changes.
