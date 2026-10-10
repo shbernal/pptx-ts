@@ -202,7 +202,7 @@
 		"ast-v8-to-istanbul": "^1.0.7",
 		"charcheck": "0.4.0",
 		"esbuild": "^0.28.2",
-		"happy-dom": "^20.14.5",
+		"happy-dom": "^20.14.6",
 		"istanbul-lib-coverage": "^3.2.2",
 		"istanbul-lib-report": "^3.0.1",
 		"istanbul-reports": "^3.2.0",
