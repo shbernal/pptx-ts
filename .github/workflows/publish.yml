@@ -31,17 +31,13 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
+      # No dependency cache in the release job: what ships is installed from the
+      # lockfile alone, never restored from a cache another run wrote.
+      - name: Setup
+        uses: ./.github/actions/setup
         with:
-          run_install: false
-
-      - name: Set up Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
-        with:
-          node-version: 24
+          cache: 'false'
           registry-url: https://registry.npmjs.org
-          package-manager-cache: false
 
       - name: Ensure npm supports trusted publishing
         # Pin to the npm 11.x line rather than @latest: npm 12.0.0 ships a broken
@@ -70,9 +66,7 @@ jobs:
       # A release now publishes two names, so "is this version unpublished?" has two
       # answers and the job needs both. The alias name is read back from the staging
       # script rather than written here a second time: a guard that checks a different
-      # package than the publish step touches is worse than no guard. `--print-name`
-      # returns before the script touches the filesystem, so this can run ahead of the
-      # install below.
+      # package than the publish step touches is worse than no guard.
       #
       # The failure is *both* already published, not either. Publishing two packages is
       # not atomic, so the second one can fail on its own — and a run that hard-failed
@@ -101,9 +95,6 @@ jobs:
           echo "canonical=$CANONICAL_TODO" >> "$GITHUB_OUTPUT"
           echo "alias=$ALIAS_TODO" >> "$GITHUB_OUTPUT"
           echo "Publishing: $CANONICAL_NAME=$CANONICAL_TODO $ALIAS_NAME=$ALIAS_TODO"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
 
       # Explicit, because the publish below passes --ignore-scripts and so never
       # fires `prepack`. This is the one build in the workflow, not one of many.
