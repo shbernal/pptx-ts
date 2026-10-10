@@ -63,8 +63,8 @@ Reading the matrix:
 - The pre-commit cells run on staged files only. oxlint and oxfmt re-stage what they fix.
   charcheck reads the staged content and fixes nothing.
 - A commit-msg hook also runs `no-ai-attribution` from `shbernal/lefthook-rules`.
-- `package` runs `check:package` on `ubuntu-latest` and `windows-latest`, and `font-oracles`
-  runs on `windows-latest`. Every other job runs on `ubuntu-latest`.
+- `package` runs `check:package` on `ubuntu-24.04` and `windows-latest`, and `font-oracles`
+  runs on `windows-latest`. Every other job runs on `ubuntu-24.04`.
 - `docs:build` reaches the `browser` job because `test:browser` builds the site before
   Playwright starts.
 
@@ -143,7 +143,7 @@ flowchart LR
     render["render-oracle<br/>test:lo"]
     browser["browser<br/>test:browser"]
     coverage["coverage<br/>coverage:gate"]
-    package["package, ubuntu-latest and windows-latest<br/>check:package"]
+    package["package, ubuntu-24.04 and windows-latest<br/>check:package"]
     test -- "coverage-node" --> coverage
     browser -- "coverage-browser, with its dist/" --> coverage
   end

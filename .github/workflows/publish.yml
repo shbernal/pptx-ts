@@ -24,7 +24,7 @@ jobs:
     name: Publish package
     if: github.repository == 'shbernal/pptx-ts'
     needs: gate
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: npm-publish
 
     steps:
