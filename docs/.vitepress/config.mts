@@ -2,9 +2,9 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { type DefaultTheme, defineConfig } from 'vitepress'
-import { mermaidFences } from '../../www/diagrams/fence'
-import { liveExampleModules, liveFencePlugin } from '../../www/live/fence'
-import { SITE_BASE } from './site-base'
+import { mermaidFences } from '../../www/diagrams/fence.ts'
+import { liveExampleModules, liveFencePlugin } from '../../www/live/fence.ts'
+import { SITE_BASE } from './site-base.ts'
 
 const configDir = path.dirname(fileURLToPath(import.meta.url))
 const docsDir = path.resolve(configDir, '..')
@@ -102,13 +102,8 @@ export default defineConfig({
 			// it here collapses both specifiers onto one copy.
 			dedupe: ['vue'],
 		},
-		esbuild: {
+		oxc: {
 			target: 'es2022',
-			tsconfigRaw: {
-				compilerOptions: {
-					target: 'es2022',
-				},
-			},
 		},
 	},
 })

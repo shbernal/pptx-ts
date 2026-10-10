@@ -8,7 +8,7 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { defineLoader } from 'vitepress'
-import { type ComparisonData, shapeComparison, type SnapshotInput } from './comparison'
+import { type ComparisonData, shapeComparison, type SnapshotInput } from './comparison.ts'
 
 declare const data: ComparisonData
 export { data }
