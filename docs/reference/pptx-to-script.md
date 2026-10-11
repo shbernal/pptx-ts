@@ -229,6 +229,7 @@ These constructs carry in both outputs and raise no note.
 | Right-to-left paragraphs and tab stops | `rtlMode` and `tabStops` |
 | Text columns and a WordArt warp | `columns`, `columnSpacing` and `textWarp` |
 | A shape's lock flags (`a:spLocks`) | `objectLock` on `addText` and `addShape` |
+| A picture's, table's and group's lock flags (`a:picLocks`, `a:graphicFrameLocks`, `a:grpSpLocks`) | `objectLock` on `addImage`, `addTable` and `addGroup` |
 | A baked autofit scale (`a:normAutofit/@fontScale`, `@lnSpcReduction`) | `fit: { type: 'shrink', fontScale, lnSpcReduction }`. A bare `<a:normAutofit/>` is `fit: 'shrink'` |
 | A table cell with a fill of its own | `fill` on the cell. A styled cell with no fill of its own is left to `tableStyle` |
 | A picture fill on a shape or cell | `fill: { type: 'image', image: { data, crop }, transparency }` |

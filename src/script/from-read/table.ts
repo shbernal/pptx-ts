@@ -23,6 +23,7 @@ import type { NoteScope } from '../fidelity.js'
 import type { CallIr, IrValue } from '../ir.js'
 import type { MapContext } from './context.js'
 import { TABLE_CELL_MARGIN_DEFAULTS_EMU } from '../../ooxml/body-insets.js'
+import { GRAPHIC_FRAME_LOCK_ATTRS } from '../../ooxml/lock-attrs.js'
 import {
 	ANCHOR_TO_VALIGN,
 	colorOption,
@@ -30,6 +31,7 @@ import {
 	frameOf,
 	identityOptions,
 	inches,
+	lockOption,
 	nameOf,
 	orUndefined,
 	positionOptions,
@@ -100,6 +102,8 @@ export function tableCall(frame: GraphicFrame, table: Table, ctx: MapContext): C
 	const options = compact({
 		...positionOptions(box),
 		...identityOptions(frame),
+		// `addTable` writes `noGrp` unless `objectLock` turns it off.
+		objectLock: lockOption(frame, GRAPHIC_FRAME_LOCK_ATTRS, ['noGrp']),
 		// The source GUID resolves against the destination's own tableStyles.xml, which a
 		// template-anchored output carries over intact.
 		tableStyle: orUndefined(styleId),

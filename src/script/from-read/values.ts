@@ -185,6 +185,36 @@ export function identityOptions(subject: {
 	return { objectName: subject.name || undefined, altText: subject.description || undefined }
 }
 
+/**
+ * The source object's locking element as `objectLock`, keeping only the flags `attrs` lists, which
+ * are the ones the call's own locking element can write. Every flag defaults to off and the write
+ * path writes a flag only when it is `true`, so a stated lock is carried as `true` and an unstated
+ * one is left out.
+ *
+ * `implied` names the flags the write path sets on its own unless `objectLock` turns them off:
+ * `noChangeAspect` on a picture, `noGrp` on a table. Those are inverted: left out when the source
+ * states them, and carried as `false` when it does not, so the replay does not gain a lock.
+ * @param subject - the source shape or graphic frame
+ * @param attrs - the attributes the call's locking element defines (`src/ooxml/lock-attrs.ts`)
+ * @param implied - the flags the write path adds unless told otherwise
+ */
+export function lockOption(
+	subject: { locks: Record<string, boolean> | null },
+	attrs: readonly string[],
+	implied: readonly string[] = []
+): IrValue | undefined {
+	const locks = subject.locks ?? {}
+	return compact(
+		Object.fromEntries(
+			attrs.map((name) => {
+				const stated = locks[name] === true
+				if (implied.includes(name)) return [name, stated ? undefined : false]
+				return [name, stated ? true : undefined]
+			})
+		)
+	)
+}
+
 /** Normalize a hex to the bare 6-digit uppercase form the write API expects. */
 export function literalColor(hex: string): string {
 	return stripHash(hex).toUpperCase()
