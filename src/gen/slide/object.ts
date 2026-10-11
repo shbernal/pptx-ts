@@ -11,10 +11,10 @@
  */
 
 import { SlideObjectType } from '../../enums.js'
-import { STRETCH_FILL_RECT } from '../drawingml/src-rect.js'
+import { genXmlImageCropRect, STRETCH_FILL_RECT } from '../drawingml/src-rect.js'
 import { prstGeomRect } from '../drawingml/geometry.js'
 import { DEF_PRES_LAYOUT_NAME, SLDNUM_PLACEHOLDER_TEXT, SLDNUMFLDID } from '../../constants-internal.js'
-import type { ObjectOptions, SlideNumberProps } from '../../types/index.js'
+import type { BackgroundOption, ObjectOptions, SlideNumberProps } from '../../types/index.js'
 import type {
 	PresSlideInternal,
 	SlideLayoutInternal,
@@ -37,6 +37,7 @@ import { cNvPrEl, grpXfrmEl, spTreeEl, type RenderContext, type RendererTable } 
 // Not a renderer: it measures the box an image is drawn in, which a group's bounds need, and emits no XML.
 import { resolveImageExtent } from './objects/image-extent.js'
 import { findLayoutPlaceholder } from '../define/layout-placeholder.js'
+import { backgroundImage } from '../define/background.js'
 import { collectSlideShapeIds, shapeIdCount } from './shape-ids.js'
 import { InternalError } from '../../errors.js'
 import { slidePath, targetBetweenPptSubparts } from '../opc/part-paths.js'
@@ -227,6 +228,16 @@ function warnDuplicateObjectNames(slide: PresSlideInternal | SlideLayoutInternal
  * mutually exclusive because a master carrying both a `color` and a `path` must still produce a
  * single `<p:bg>`.
  */
+/**
+ * The `<a:srcRect>` of a picture background: the crop an `image: { crop }` background states, else
+ * the empty, uncropped form every picture background wrote before it could have one.
+ */
+function backgroundSrcRect(background: BackgroundOption | undefined): string {
+	const image = backgroundImage(background)
+	const crop = image && 'crop' in image ? image.crop : undefined
+	return crop ? genXmlImageCropRect(crop, 'background image', '') : voidEl('a:srcRect')
+}
+
 function slideBackgroundXml(slide: PresSlideInternal | SlideLayoutInternal | SlideMasterInternal): string {
 	let strSlideXml = ''
 	if (slide._bkgdImgRid) {
@@ -238,7 +249,7 @@ function slideBackgroundXml(slide: PresSlideInternal | SlideLayoutInternal | Sli
 					raw(
 						el('a:blipFill', { dpi: '0', rotWithShape: '1' }, [
 							raw(el('a:blip', { 'r:embed': `rId${slide._bkgdImgRid}` }, raw(voidEl('a:lum')))),
-							raw(voidEl('a:srcRect')),
+							raw(backgroundSrcRect(slide.background)),
 							raw(STRETCH_FILL_RECT),
 						])
 					),

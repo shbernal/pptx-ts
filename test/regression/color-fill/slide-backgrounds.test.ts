@@ -169,6 +169,36 @@ defineRegressionSuite('Slide backgrounds [legacy bug-12]', [
 			assert(/<a:srgbClr val="FF0000"/.test(bg), `the colour background is painted; got ${bg}`)
 		},
 	},
+	{
+		// `BackgroundProps` extends `ShapeFillProps`, so `image: { data, crop }` type-checks, and
+		// the background writer never registered it: a warning and `<a:noFill/>` (issue #86).
+		name: 'a background given as image: { data, crop } paints the picture with its crop',
+		fn: async () => {
+			const { zip } = await build((p) => {
+				p.addSlide().background = { image: { data: PNG_B, crop: { l: 10, t: 20, r: 30, b: 5 } } }
+				p.addSlide().background = { image: { data: PNG_A } }
+			})
+			const cropped = /<p:bg>[\s\S]*?<\/p:bg>/.exec(await readEntry(zip, 'ppt/slides/slide1.xml'))?.[0] ?? ''
+			assert(cropped.includes('<a:blipFill'), `the picture is painted; got ${cropped}`)
+			assert(cropped.includes('<a:srcRect l="10000" t="20000" r="30000" b="5000"/>'), `with its crop; got ${cropped}`)
+			await assertBackgroundResolves(zip, 'ppt/slides/slide1.xml', PNG_B)
+
+			const plain = /<p:bg>[\s\S]*?<\/p:bg>/.exec(await readEntry(zip, 'ppt/slides/slide2.xml'))?.[0] ?? ''
+			assert(plain.includes('<a:srcRect/>'), `an uncropped one writes the empty srcRect; got ${plain}`)
+			await assertBackgroundResolves(zip, 'ppt/slides/slide2.xml', PNG_A)
+		},
+	},
+	{
+		name: 'a layout background given as image: { data } paints the picture',
+		fn: async () => {
+			const { zip } = await build((p) => {
+				p.defineSlideMaster({ title: 'PICTURE', background: { image: { data: PNG_A } } })
+				p.addSlide({ masterTitle: 'PICTURE' })
+			})
+			const layout = await layoutPartFor(zip, 'PICTURE')
+			await assertBackgroundResolves(zip, layout, PNG_A)
+		},
+	},
 ])
 
 /** Two different 1x1 PNGs, so a part that holds the wrong one is caught by its bytes. */
