@@ -899,6 +899,30 @@ describe('deck IR — picture bullets', () => {
 	})
 })
 
+describe('deck IR — slide placeholders', () => {
+	// `addText(..., { placeholder: 'body' })` writes `<p:ph type="body"/>`, but `readModelToIr` dropped
+	// the link and blamed the output tier (`shape.placeholder`, cause `unsupported`) (issue #61).
+	test('a placeholder the write option reproduces keeps its p:ph', async () => {
+		const { presentation, buf } = await authorRead((pres) => {
+			pres.addSlide().addText('T', { x: 1, y: 1, w: 5, h: 1.5, placeholder: 'body' })
+		})
+		const ph = (xml: string) => defined(xml.match(/<p:ph[^>]*>/)?.[0], 'a p:ph').replace(/\s+/g, ' ')
+		const source = ph(await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml'))
+		const ir = readModelToIr(presentation)
+		assert(!constructs(ir).has('shape.placeholder'), 'no loss is declared')
+		assertEqual(ph(await replay(ir)), source, 'the replay writes the same p:ph')
+	})
+
+	test('a placeholder bound by idx is flattened, and the note names the missing idx', async () => {
+		// PowerPoint numbers a layout's body placeholders with `idx`, and `placeholder` writes none.
+		const ir = await irFor('placeholder-inherit.pptx')
+		const note = ir.fidelity.find((n) => n.construct === 'shape.placeholder')
+		assert(note, 'an idx-bound placeholder is still declared')
+		assertEqual(note.cause, 'unwritable', 'the write option has no idx')
+		assert(note.detail.includes('idx'), `the note names the idx: ${note.detail}`)
+	})
+})
+
 describe('deck IR — slide transitions', () => {
 	// The mapping's whole difficulty is that the read model reports an *open* type string
 	// (it decodes PowerPoint's modern effects by namespace) while the write API has a closed

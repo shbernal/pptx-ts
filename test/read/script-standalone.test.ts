@@ -395,8 +395,9 @@ describe('standalone printer — cases the fixture corpus does not contain', () 
 			printScript(ir).notes.some((note) => note.slideNumber === 2 && note.construct === 'slide.carried'),
 			'while the template-anchored tier now copies that slide rather than transcribing it'
 		)
-		// The placeholder beside the diagram loses its identity and baked colour only when it is
-		// transcribed. Copied, it keeps both, so the tier that copies it does not report either.
+		// The title placeholder beside the diagram has its colour baked in only when it is transcribed.
+		// Copied, it keeps it, so the tier that copies it does not report it. Its identity survives
+		// either way since #61: a title carries as `placeholder`.
 		assertEqual(
 			printScript(ir)
 				.notes.filter((note) => note.slideNumber === 2)
@@ -407,8 +408,13 @@ describe('standalone printer — cases the fixture corpus does not contain', () 
 			'the template-anchored tier reports only the copy and the construct that forced it'
 		)
 		assert(
-			printed.notes.some((note) => note.slideNumber === 2 && note.construct === 'shape.placeholder'),
-			'while the standalone tier, which transcribes the placeholder, still reports its loss'
+			printed.notes.some((note) => note.slideNumber === 2 && note.construct === 'text.color.inherited'),
+			'while the standalone tier, which transcribes the placeholder, still reports its baked colour'
+		)
+		const title = defined(ir.slides[1]?.calls.find((call) => call.sourceName === 'Titre 1'))
+		assert(
+			JSON.stringify(title.args.at(-1)).includes('"placeholder":"title"'),
+			'and the transcribed title keeps its placeholder identity'
 		)
 	})
 })

@@ -156,14 +156,14 @@ The counts come from `pnpm run script:census`, run in a clone of the repository 
 
 A count is the number of fixtures that raise the note at least once. Each fixture targets a few constructs, so a count shows what the corpus exercises, not how often a construct occurs in real decks. The table lists only constructs some fixture raises. [`knownNoteConstructs()`](api/script/functions/knownNoteConstructs.md) returns the full catalogue.
 
-The Output column says where the note fires. A construct that fires in both outputs has the same count in each. A construct under the `layout.` prefix is the slide construct of the same name, raised while re-authoring a layout's shapes. Across the corpus the standalone output raises 915 notes and the template-anchored output 488, which is 3 to 14 more per deck.
+The Output column says where the note fires. A construct that fires in both outputs has the same count in each. A construct under the `layout.` prefix is the slide construct of the same name, raised while re-authoring a layout's shapes. Across the corpus the standalone output raises 900 notes and the template-anchored output 468, which is 3 to 14 more per deck.
 
 | Construct | Output | Cause | What happens | Fixtures |
 | --- | --- | --- | --- | --- |
 | `text.color.inherited` | Both | unsupported | A run with no colour of its own gets its inherited colour baked in, because the write path paints an uncoloured run black. It stops following theme changes. A link is the exception: the write path leaves one uncoloured too, so it stays uncoloured and keeps the theme hyperlink colour | 39/58 |
 | `line.width` | Both | unread | An outline taken from the theme line style (`p:style/a:lnRef`) keeps its colour and loses its width and dash | 10/58 |
-| `shape.placeholder` | Both | unsupported | A placeholder becomes a plain shape with its inherited geometry and styling baked in | 10/58 |
 | `shape.frameInherited` | Both | unsupported | A shape positioned by its layout or master gets that position baked in, and stops following edits to the layout or master | 9/58 |
+| `shape.placeholder` | Both | unwritable | A placeholder bound to its layout by `idx`, or of a type `placeholder` does not name, becomes a plain shape with its inherited geometry and styling baked in. A title, and any placeholder with one of the six types `placeholder` names and no `idx`, carries as `placeholder` | 7/58 |
 | `slide.animation` | Both | unread | Build animations are dropped and every shape lands static | 7/58 |
 | `chart.workbook` | Both | unsupported | The chart is rebuilt from its cached values. The plotted numbers match, and the workbook's formulas, extra columns and formatting are gone | 4/58 |
 | `diagram.all` | Both | unwritable | No write API builds SmartArt. The template-anchored output copies the slide, and the standalone output drops the diagram | 3/58 |
