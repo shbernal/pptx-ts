@@ -4,9 +4,19 @@
  * into its stops (colour + position) plus the linear/path geometry, resolving each
  * stop's colour against the slide theme.
  */
-import { attr, firstChild, firstChildElement, getElements, numberValue, pctAttr, type Element } from '../oxml/dom.js'
+import {
+	attr,
+	boolAttr,
+	firstChild,
+	firstChildElement,
+	getElements,
+	numberValue,
+	pctAttr,
+	type Element,
+} from '../oxml/dom.js'
 import type { ColorContext } from '../oxml/theme.js'
 import { readColorRef, type ColorRef } from './theme-context.js'
+import { readRect, type FillRect } from './picture-fill.js'
 import { ANGLE_UNITS_PER_DEGREE } from '../../units.js'
 
 /** One stop of a gradient fill (`a:gsLst/a:gs`), as read from a shape. */
@@ -38,6 +48,19 @@ export interface GradientFill {
 	path: string | null
 	/** The gradient stops in document order. */
 	stops: GradientStop[]
+	/**
+	 * Whether the fill rotates with the shape (`a:gradFill/@rotWithShape`), or `null` when the
+	 * attribute is absent.
+	 */
+	rotateWithShape: boolean | null
+	/** Whether a linear gradient's angle scales with the fill region (`a:lin/@scaled`), or `null` when unset. */
+	scaled: boolean | null
+	/**
+	 * A path gradient's focus rectangle (`a:path/a:fillToRect`) as per-edge fractions inset from the
+	 * fill box, or `null` when absent. Equal insets centre the focus; the write side's radial
+	 * `center: { x, y }` writes `left = x`, `top = y`, `right = 1 - x`, `bottom = 1 - y`.
+	 */
+	focusRect: FillRect | null
 }
 
 /**
@@ -71,10 +94,14 @@ export function readGradientFill(container: Element, ctx: ColorContext): Gradien
 	const lin = firstChild(grad, 'a:lin')
 	const path = firstChild(grad, 'a:path')
 	const ang = lin ? numberValue(attr(lin, 'ang')) : null
+	const focus = path ? firstChild(path, 'a:fillToRect') : null
 	return {
 		kind: lin ? 'linear' : path ? 'path' : null,
 		angleDeg: ang === null ? null : ang / ANGLE_UNITS_PER_DEGREE,
 		path: path ? (attr(path, 'path') ?? null) : null,
 		stops: readGradientStops(container, ctx) ?? [],
+		rotateWithShape: boolAttr(grad, 'rotWithShape'),
+		scaled: lin ? boolAttr(lin, 'scaled') : null,
+		focusRect: focus ? readRect(focus) : null,
 	}
 }

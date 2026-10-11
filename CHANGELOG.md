@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   on a cell but was missing from `TableCellProps`. Out-of-range values clamp to 0-4000pt and warn
   `text/kerning-out-of-range`.
 - **`Run.kerningPt` reads `a:rPr/@kern`** in points, or `null` when the run states none.
+- **Shape paint details read back.** `Shape.linePatternFill` reads a pattern stroke
+  (`a:ln/a:pattFill`). `GradientFill` gains `rotateWithShape` (`a:gradFill/@rotWithShape`),
+  `scaled` (`a:lin/@scaled`) and `focusRect` (`a:path/a:fillToRect`), and an outer shadow gains
+  `rotateWithShape`.
 
 ### Fixed
 
@@ -43,6 +47,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   default the shape-level pass gave the shape, so only the single-string form left a link to the
   theme colour. A link run now takes the shape's `color` only when the caller stated one, so links
   written in the array form with no colour now render in the theme hyperlink colour.
+- **Shape fill and line paint survive `readModelToIr`.** Seven details the write API authors were
+  dropped with no fidelity note ([#56](https://github.com/shbernal/pptx-ts/issues/56)): a solid
+  fill's transparency when the colour was the shape's own literal or theme token; a fill left to
+  inherit, which replayed as `<a:noFill/>`; a gradient's `scaled` and `rotateWithShape: false`; a
+  radial gradient's `center`; a gradient stroke's width, dash, cap and arrowheads; a pattern stroke;
+  and an outer shadow's `rotateWithShape`. All of them now carry. A radial focus rectangle that
+  `center` cannot place records a `fill.gradient.center` note.
 
 ## [4.1.0](https://github.com/shbernal/pptx-ts/releases/tag/v4.1.0) - 2026-10-11
 

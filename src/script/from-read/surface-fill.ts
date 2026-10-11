@@ -80,6 +80,9 @@ export function gradientStops(gradient: GradientFill, notes: NoteScope, where: F
 		return undefined
 	}
 
+	// `rotWithShape` is written as "1" when the option is unset, so only the off state needs saying.
+	const rotateWithShape = gradient.rotateWithShape === false ? false : undefined
+
 	if (gradient.kind === 'path') {
 		// `a:path` covers circle/rect/shape; the write API models only the radial case, so
 		// a rectangular or shape-following gradient becomes a circular one.
@@ -91,9 +94,37 @@ export function gradientStops(gradient: GradientFill, notes: NoteScope, where: F
 				`a "${gradient.path}" path gradient is emitted as a radial one; the write API models no other path shape`
 			)
 		}
-		return { kind: 'radial', stops }
+		return compact({ kind: 'radial', center: radialCenter(gradient, notes, where), rotateWithShape, stops })
 	}
-	return compact({ kind: 'linear', angle: gradient.angleDeg ?? 0, stops })
+	return compact({
+		kind: 'linear',
+		angle: gradient.angleDeg ?? 0,
+		scaled: gradient.scaled ?? undefined,
+		rotateWithShape,
+		stops,
+	})
+}
+
+/**
+ * A path gradient's `a:fillToRect` as the radial `center`, which writes the rectangle
+ * `l = x, t = y, r = 100 - x, b = 100 - y`: a focus *point*. A rectangle that is not one of those
+ * has no spelling and falls back to the nearest point the write API can place, its top-left
+ * inset. The centred focus is the option's default, so it is left out.
+ */
+function radialCenter(gradient: GradientFill, notes: NoteScope, where: FillNoteScope): IrValue | undefined {
+	const rect = gradient.focusRect
+	if (rect === null) return undefined
+	const x = fractionToPercent(rect.left)
+	const y = fractionToPercent(rect.top)
+	if (fractionToPercent(1 - rect.right) !== x || fractionToPercent(1 - rect.bottom) !== y) {
+		notes.note(
+			`${where}.gradient.center`,
+			'approximated',
+			'unwritable',
+			"this radial gradient's focus is a rectangle (a:fillToRect insets that do not meet at a point); the write API's center places a point, so the focus is placed at the rectangle's top-left corner"
+		)
+	}
+	return x === 50 && y === 50 ? undefined : { x, y }
 }
 
 /**
@@ -109,8 +140,8 @@ export function gradientStops(gradient: GradientFill, notes: NoteScope, where: F
 export function patternOption(
 	pattern: PatternFill | null,
 	notes: NoteScope,
-	where: FillSurface | BackgroundSurface
-): IrValue | undefined {
+	where: FillSurface | BackgroundSurface | 'line'
+): Record<string, IrValue> | undefined {
 	if (!pattern?.preset) return undefined
 	const color = (scheme: string | null, resolved: ResolvedColor | null, label: string): string | undefined =>
 		colorOption({ scheme, resolvedHex: resolved?.effectiveHex ?? null }, notes, `${where}.pattern.schemeToken`, label)
@@ -209,9 +240,12 @@ export function surfaceFill(
 
 	// The token and the surface's own literal come before the style short-circuit: both are the
 	// surface stating a colour of its own, which is what the short-circuit is testing for.
+	// The transparency an alpha transform on the surface's own `a:solidFill` carries rides with each
+	// colour leg. The token and literal legs used to return the colour alone.
+	const transparency = alphaToTransparency(subject.resolvedFill?.alpha)
 	const scheme = subject.fillSchemeColor
-	if (isWritableSchemeToken(scheme)) return { color: scheme as string }
-	if (subject.fillColor != null) return { color: literalColor(subject.fillColor) }
+	if (isWritableSchemeToken(scheme)) return compact({ color: scheme, transparency })
+	if (subject.fillColor != null) return compact({ color: literalColor(subject.fillColor), transparency })
 
 	// A styled surface with no fill of its own takes the style's banding, and the style GUID
 	// travels with the table — so emitting nothing here is not a loss, it is what keeps the copy
@@ -226,8 +260,7 @@ export function surfaceFill(
 		`${where}.schemeToken`,
 		surface.label
 	)
-	// The transparency an `a:alphaModFix` on the surface's own `a:solidFill` carries. Only the
-	// shape's copy of this ladder read it, so a table or a cell lost it with nothing declaring
-	// the loss.
-	return compact({ color, transparency: alphaToTransparency(resolved.alpha) })
+	// Only the shape's copy of this ladder used to read the transparency, so a table or a cell lost
+	// it with nothing declaring the loss.
+	return compact({ color, transparency })
 }

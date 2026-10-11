@@ -15,7 +15,7 @@ import { type IrValue } from '../ir.js'
 import { LINE_END_TYPES } from '../../ooxml/st-enums.js'
 import { LINE_CAP_BY_TOKEN } from '../../ooxml/line-cap.js'
 import { alphaToTransparency, colorOption, compact, orUndefined, WRITABLE_DASHES } from './values.js'
-import { type FillSubject, gradientStops, surfaceFill } from './surface-fill.js'
+import { type FillSubject, gradientStops, patternOption, surfaceFill } from './surface-fill.js'
 import { type MapContext } from './context.js'
 
 /** Arrowhead types `ShapeLineProps` accepts: every `ST_LineEndType`, the tokens `a:headEnd/@type` uses. */
@@ -62,7 +62,14 @@ export function transformOptions(shape: AnyShape): Record<string, IrValue | unde
 export function fillOption(shape: AnyShape, ctx: MapContext): IrValue | undefined {
 	// A shape has no explicit-noFill leg here: `lineOption` handles the stroke's, and a shape's
 	// own `a:noFill` reaches the write side as an absent fill option, which is the same output.
-	return surfaceFill({ ...fillAccessors(shape), fillColor: shape.fillColor }, ctx, 'fill')
+	const accessors = fillAccessors(shape)
+	const fill = surfaceFill({ ...accessors, fillColor: shape.fillColor }, ctx, 'fill')
+	if (fill !== undefined || shape.fillNoFill || shape.fillColor !== null) return fill
+	// No fill child and nothing a style resolves: the fill is left to inherit. An absent option is
+	// not that, because the write path turns it into `<a:noFill/>`; `type: 'inherit'` writes no
+	// fill child, as the source has. A fill the mapper dropped (a picture fill with no bytes) is
+	// not an absent one, so every accessor has to be empty.
+	return Object.values(accessors).every((value) => value === null) ? { type: 'inherit' } : undefined
 }
 
 /**
@@ -148,41 +155,52 @@ function noteLineLosses(
 export function lineOption(shape: AnyShape, notes: NoteScope): Record<string, IrValue> | undefined {
 	if (shape.lineNoFill) return { type: 'none' }
 
-	const gradient = shape.lineGradient
-	if (gradient) {
-		const stops = gradientStops(gradient, notes, 'line')
-		if (stops) return { type: 'gradient', gradient: stops }
-	}
-
 	const widthPt = shape.lineWidthPt
 	const dash = shape.lineDash
 	const cap = shape.lineCap
 	const scheme = shape.lineSchemeColor
 	const resolved = shape.resolvedLine
 
-	// The shared colour ladder: a writable token kept as a token, then the line's own literal, then
-	// an unwritable token baked to what it resolves to. This kept its own copy of that ladder, and
-	// the copy baked a token such as `dk1` or `hlink` without the note every other surface records.
-	const color = colorOption(
-		{ scheme, ownHex: shape.lineColor, resolvedHex: resolved?.effectiveHex ?? null },
-		notes,
-		'line.schemeToken',
-		'outline'
-	)
-
 	noteLineLosses(shape, { widthPt, dash, scheme, resolved }, notes)
 
-	const options = compact({
-		color,
+	return compact({
+		...linePaint(shape, notes),
 		width: orUndefined(widthPt),
 		dashType: dash !== null && WRITABLE_DASHES.has(dash) ? dash : undefined,
 		// The read side reports the raw `a:ln/@cap` token (`AutoShape.lineCap`) and the write side
 		// takes the friendly name that authors it.
 		cap: cap === null ? undefined : LINE_CAP_BY_TOKEN[cap],
-		transparency: alphaToTransparency(resolved?.alpha),
 		...arrowOptions(shape, notes),
 	})
-	return options
+}
+
+/**
+ * The stroke's paint: a gradient, a pattern, or a colour. Only the paint differs between them; the
+ * gradient arm used to return before the width, dash, cap and arrowheads were read, so a 3pt
+ * gradient border came back hairline, and a pattern stroke had no arm at all.
+ */
+function linePaint(shape: AnyShape, notes: NoteScope): Record<string, IrValue | undefined> {
+	const gradient = shape.lineGradient
+	if (gradient) {
+		const stops = gradientStops(gradient, notes, 'line')
+		if (stops) return { type: 'gradient', gradient: stops }
+	}
+	const pattern = patternOption(shape.linePatternFill, notes, 'line')
+	if (pattern) return pattern
+
+	// The shared colour ladder: a writable token kept as a token, then the line's own literal, then
+	// an unwritable token baked to what it resolves to. This kept its own copy of that ladder, and
+	// the copy baked a token such as `dk1` or `hlink` without the note every other surface records.
+	const resolved = shape.resolvedLine
+	return {
+		color: colorOption(
+			{ scheme: shape.lineSchemeColor, ownHex: shape.lineColor, resolvedHex: resolved?.effectiveHex ?? null },
+			notes,
+			'line.schemeToken',
+			'outline'
+		),
+		transparency: alphaToTransparency(resolved?.alpha),
+	}
 }
 
 /** Arrowheads. Types map directly; the `sm`/`med`/`lg` size classes have no option. */
@@ -233,6 +251,8 @@ export function shadowOption(shape: AnyShape, notes: NoteScope): IrValue | undef
 		offset: source.offsetPt,
 		angle: source.angleDeg,
 		transparency: alphaToTransparency(source.colorRef.resolved?.alpha),
+		// The write side writes `rotWithShape="0"` on an outer shadow that sets none.
+		rotateWithShape: outer?.rotateWithShape ? true : undefined,
 	})
 }
 

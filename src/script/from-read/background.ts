@@ -120,8 +120,7 @@ function fillIr(
 			return gradient ? { type: 'gradient', gradient } : undefined
 		}
 		case 'pattern': {
-			const pattern = patternOption(fill, notes, tier.construct)
-			return pattern ? (pattern as BackgroundIr) : undefined
+			return patternOption(fill, notes, tier.construct)
 		}
 	}
 }

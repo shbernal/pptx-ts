@@ -680,6 +680,16 @@ export abstract class Shape {
 	}
 
 	/**
+	 * The shape's line/border **pattern** stroke (`spPr/a:ln/a:pattFill`), or `null` when the line
+	 * is not a pattern. The line counterpart of {@link patternFill}, and what the write side's
+	 * `line.pattern` writes.
+	 */
+	get linePatternFill(): PatternFill | null {
+		const ln = this.#line()
+		return ln ? readPatternFill(ln, this.host.themeContext()) : null
+	}
+
+	/**
 	 * The shape's line/connector arrowheads (`a:ln/a:headEnd` + `a:tailEnd`), or
 	 * `null` when neither end carries one. Essential for replicating connectors,
 	 * whose dot/arrow ends are otherwise invisible in the geometry.

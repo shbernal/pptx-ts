@@ -759,6 +759,58 @@ describe('deck IR — a hyperlinked run with no colour of its own', () => {
 	})
 })
 
+describe('deck IR — shape paint details', () => {
+	// Each of these is a write option `readModelToIr` dropped with no note, so the replay painted a
+	// different shape and `diffDeckIr` called it clean (issue #56). The replay must write the same
+	// `p:spPr` the source did.
+	const stops = [
+		{ position: 0, color: 'F0C808' },
+		{ position: 100, color: '250F6B' },
+	]
+	const cases: [string, Record<string, unknown>][] = [
+		['fill.transparency', { fill: { color: 'F0C808', transparency: 40 } }],
+		['fill.type inherit', { fill: { type: 'inherit' } }],
+		[
+			'fill.gradient scaled and rotateWithShape',
+			{ fill: { gradient: { kind: 'linear', angle: 45, scaled: true, rotateWithShape: false, stops } } },
+		],
+		['fill.gradient radial center', { fill: { gradient: { kind: 'radial', center: { x: 20, y: 70 }, stops } } }],
+		['line.gradient with width', { line: { width: 3, gradient: { kind: 'linear', angle: 45, scaled: true, stops } } }],
+		['line.pattern', { line: { width: 3, pattern: { preset: 'dkDnDiag', fgColor: '250F6B', bgColor: 'F0C808' } } }],
+		[
+			'shadow.rotateWithShape',
+			{ shadow: { type: 'outer', color: '000000', blur: 6, offset: 4, angle: 270, rotateWithShape: true } },
+		],
+	]
+	const spPr = (xml: string) => defined(xml.match(/<p:spPr>.*?<\/p:spPr>/s)?.[0])
+
+	test.for(cases)('%s replays the p:spPr it was written with', async ([, options]) => {
+		const { presentation, buf } = await authorRead((pres) => {
+			pres.addSlide().addText('T', { x: 1, y: 1, w: 5, h: 1.5, ...options })
+		})
+		const source = spPr(await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml'))
+		assertEqual(spPr(await replay(readModelToIr(presentation))), source, 'the replayed shape properties')
+	})
+
+	test('a radial focus the write API cannot place is noted', async () => {
+		const { buf } = await authorRead((pres) => {
+			pres.addSlide().addText('T', { x: 1, y: 1, w: 5, h: 1.5, fill: { gradient: { kind: 'radial', stops } } })
+		})
+		const zip = await JSZip.loadAsync(buf)
+		const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
+		const patched = slideXml.replace(
+			/<a:fillToRect [^>]*\/>/,
+			'<a:fillToRect l="10000" t="10000" r="10000" b="10000"/>'
+		)
+		assert(patched !== slideXml, 'the focus rectangle was found and replaced')
+		zip.file('ppt/slides/slide1.xml', patched)
+		const ir = readModelToIr(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
+		const note = ir.fidelity.find((n) => n.construct === 'fill.gradient.center')
+		assert(note, 'a focus rectangle that is not a point is declared')
+		assertEqual(note.cause, 'unwritable', 'center names a point, not a rectangle')
+	})
+})
+
 describe('deck IR — slide transitions', () => {
 	// The mapping's whole difficulty is that the read model reports an *open* type string
 	// (it decodes PowerPoint's modern effects by namespace) while the write API has a closed

@@ -133,8 +133,10 @@ export const NOTE_CONSTRUCTS = {
 	// `gradientStops` is shared by both surfaces and scopes its notes by which one it is on.
 	'fill.gradient': { fields: ['gradient', 'fill'], tiers: BOTH_TIERS },
 	'fill.gradient.path': { fields: ['gradient', 'fill'], tiers: BOTH_TIERS },
+	'fill.gradient.center': { fields: ['gradient', 'fill'], tiers: BOTH_TIERS },
 	'line.gradient': { fields: ['gradient', 'line'], tiers: BOTH_TIERS },
 	'line.gradient.path': { fields: ['gradient', 'line'], tiers: BOTH_TIERS },
+	'line.gradient.center': { fields: ['gradient', 'line'], tiers: BOTH_TIERS },
 	'line.gradient.schemeToken': { fields: ['gradient', 'line'], tiers: BOTH_TIERS },
 	// Recorded only when an image-filled surface cannot carry its *bytes* — a linked blip, an
 	// SVG the write path refuses, a part missing from the package. The fill option is then
@@ -151,6 +153,7 @@ export const NOTE_CONSTRUCTS = {
 	// A hatch colour outside the tokens the write path maps, baked to a literal. The table twins
 	// below are scoped to their own option, like the gradient-stop ones.
 	'fill.pattern.schemeToken': { fields: ['fill.pattern.fgColor', 'fill.pattern.bgColor'], tiers: BOTH_TIERS },
+	'line.pattern.schemeToken': { fields: ['line.pattern.fgColor', 'line.pattern.bgColor'], tiers: BOTH_TIERS },
 	'fill.schemeToken': { fields: ['fill', 'fill.color'], tiers: BOTH_TIERS },
 	// The outline's twin on a glow, and `shadow.schemeToken` below on a shadow: a colour outside the
 	// ten tokens, baked to a literal.
@@ -186,6 +189,7 @@ export const NOTE_CONSTRUCTS = {
 	// A background's gradient and pattern take the shape fill's notes, under the tier's construct.
 	'master.background.gradient': { fields: ['chrome.masters.background.*'], tiers: STANDALONE_ONLY },
 	'master.background.gradient.path': { fields: ['chrome.masters.background.*'], tiers: STANDALONE_ONLY },
+	'master.background.gradient.center': { fields: ['chrome.masters.background.*'], tiers: STANDALONE_ONLY },
 	'master.background.gradient.schemeToken': { fields: ['chrome.masters.background.*'], tiers: STANDALONE_ONLY },
 	'master.background.pattern.schemeToken': { fields: ['chrome.masters.background.*'], tiers: STANDALONE_ONLY },
 	'master.background.schemeToken': { fields: ['chrome.masters.background.*'], tiers: STANDALONE_ONLY },
@@ -241,6 +245,7 @@ export const NOTE_CONSTRUCTS = {
 	'slide.background': { fields: ['background'], tiers: BOTH_TIERS },
 	'slide.background.gradient': { fields: ['background'], tiers: BOTH_TIERS },
 	'slide.background.gradient.path': { fields: ['background'], tiers: BOTH_TIERS },
+	'slide.background.gradient.center': { fields: ['background'], tiers: BOTH_TIERS },
 	'slide.background.gradient.schemeToken': { fields: ['background'], tiers: BOTH_TIERS },
 	'slide.background.pattern.schemeToken': { fields: ['background'], tiers: BOTH_TIERS },
 	// A solid background's own scheme token, the twin of `fill.schemeToken` on a shape.
@@ -290,6 +295,7 @@ export const NOTE_CONSTRUCTS = {
 	// on the fill option itself — `tableFill` for the background, `fill` for a cell.
 	'table.fill.gradient': { fields: ['tableFill'], tiers: BOTH_TIERS },
 	'table.fill.gradient.path': { fields: ['tableFill'], tiers: BOTH_TIERS },
+	'table.fill.gradient.center': { fields: ['tableFill'], tiers: BOTH_TIERS },
 	// A gradient STOP whose scheme token the write path cannot carry, baked to a literal. Scoped
 	// to the surface the stop sits on, like the two above it: the stop note used to hardcode the
 	// shape spelling, so a table gradient recorded `fill.gradient.schemeToken` while its
@@ -301,6 +307,7 @@ export const NOTE_CONSTRUCTS = {
 	},
 	'table.cell.fill.gradient': { fields: ['fill'], tiers: BOTH_TIERS },
 	'table.cell.fill.gradient.path': { fields: ['fill'], tiers: BOTH_TIERS },
+	'table.cell.fill.gradient.center': { fields: ['fill'], tiers: BOTH_TIERS },
 	'table.cell.fill.gradient.schemeToken': { fields: ['fill'], tiers: BOTH_TIERS },
 	'table.cell.fill.pattern.schemeToken': {
 		fields: ['fill.pattern.fgColor', 'fill.pattern.bgColor'],
