@@ -61,11 +61,11 @@ type PlacedSlide = {
 
 /**
  * Resolve `options.layout` — a layout *name* or a {@link LayoutHandle} — against this deck's
- * gallery, with no silent fallback: an unusable value is one of three named errors rather than a
+ * gallery, with no silent fallback: an unusable value is one of four named errors rather than a
  * default layout, because a slide bound to the wrong layout is a deck that looks authored.
  *
  * Split out because it is the part of the append most likely to be wanted by a second caller, and
- * because it is the only place `layout/ambiguous-name`, `layout/not-found` and
+ * because it is the only place `layout/missing`, `layout/ambiguous-name`, `layout/not-found` and
  * `layout/foreign-handle` are raised.
  *
  * @param deck - the destination deck, whose `layouts()` gallery is searched
@@ -74,10 +74,18 @@ type PlacedSlide = {
  */
 function resolveLayoutTarget(
 	deck: Presentation,
-	layout: AppendSlidesOptions['layout'],
+	layout: AppendSlidesOptions['layout'] | null | undefined,
 	api = 'appendSlides'
 ): LayoutHandle {
 	const gallery = deck.layouts()
+	const names = (): string => gallery.map((l) => JSON.stringify(l.name)).join(', ') || '(none)'
+	// The option is typed as required, but a JavaScript caller can leave it, or `options`, out.
+	if (layout == null) {
+		throw new InvalidOptionError(
+			'layout/missing',
+			`${api}: options.layout is required, a layout name or a LayoutHandle from layouts(); available: ${names()}`
+		)
+	}
 	if (typeof layout !== 'string') {
 		if (!gallery.some((l) => l.partName === layout.partName)) {
 			throw new InvalidOptionError(
@@ -96,10 +104,9 @@ function resolveLayoutTarget(
 	}
 	const [only] = matches
 	if (!only) {
-		const names = gallery.map((l) => JSON.stringify(l.name)).join(', ')
 		throw new InvalidOptionError(
 			'layout/not-found',
-			`${api}: no layout named ${JSON.stringify(layout)}; available: ${names || '(none)'}`
+			`${api}: no layout named ${JSON.stringify(layout)}; available: ${names()}`
 		)
 	}
 	return only
@@ -341,7 +348,8 @@ export async function appendSlides(
 	options: AppendSlidesOptions
 ): Promise<Slide[]> {
 	// 1. Resolve the target layout partname (explicit; no silent fallback).
-	const target = resolveLayoutTarget(deck, options.layout)
+	// `options?.`: the type requires it, a JavaScript caller can still omit it (#94).
+	const target = resolveLayoutTarget(deck, (options as AppendSlidesOptions | undefined)?.layout)
 
 	// 2. Author + extract; enforce equal slide size (no geometry rescale in v1).
 	const extracted = await source.extractSlides(pickDefined(options, ['onMediaError']))

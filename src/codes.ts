@@ -316,6 +316,7 @@ export type InvalidOptionErrorCode =
 	| 'slide/foreign-target'
 	| 'slide/id-space-exhausted'
 	| 'shape/index-out-of-range'
+	| 'layout/missing'
 	| 'layout/ambiguous-name'
 	| 'layout/not-found'
 	| 'layout/foreign-handle'

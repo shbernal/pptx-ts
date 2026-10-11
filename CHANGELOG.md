@@ -57,6 +57,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   slide is written, and colours every `addText` run and table cell that states no colour of its
   own ([#88](https://github.com/shbernal/pptx-ts/issues/88)). A deck that sets `slide.color` after
   adding text changes colour. Output that never sets it is unchanged.
+- **`appendSlides` without a `layout` throws `InvalidOptionError` `layout/missing`**, listing the
+  deck's layouts, instead of a bare `TypeError`. A JavaScript caller can leave out the `options`
+  argument or its `layout` ([#94](https://github.com/shbernal/pptx-ts/issues/94)).
 - **Two chart options no longer break the deck they are in.** PowerPoint refused a whole deck
   (0x80070570) over one chart with either of them
   ([#67](https://github.com/shbernal/pptx-ts/issues/67)):
