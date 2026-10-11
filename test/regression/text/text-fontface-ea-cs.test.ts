@@ -42,6 +42,19 @@ defineRegressionSuite('Text fontFace latin/ea/cs slots', [
 		},
 	},
 	{
+		// It was written only inside the `fontFace` branch, so on its own it was dropped with no
+		// warning (issue #60).
+		name: 'fontFaceEA alone writes only the East Asian slot, leaving latin and cs to inherit',
+		fn: async () => {
+			const { zip } = await build((p) => {
+				p.addSlide().addText('你好', { x: 1, y: 1, fontFaceEA: 'MS Mincho' })
+			})
+			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
+			assert(xml.includes('<a:ea typeface="MS Mincho"/>'), 'fontFaceEA alone emits <a:ea>')
+			assert(!xml.includes('<a:latin ') && !xml.includes('<a:cs '), 'and states no latin or cs face')
+		},
+	},
+	{
 		name: 'table cell endParaRPr follows the same latin/ea/cs rule',
 		fn: async () => {
 			const { zip } = await build((p) => {

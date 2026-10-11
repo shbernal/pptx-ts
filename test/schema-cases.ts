@@ -2462,6 +2462,16 @@ export default [
 		},
 	},
 	{
+		// `fontFaceEA` without `fontFace` writes `<a:ea>` as the only font child of `a:rPr` (#60).
+		name: 'text run with an East Asian face and no Latin face',
+		fn: async () => {
+			const { buf } = await build((p) => {
+				p.addSlide().addText('你好', { x: 1, y: 1, w: 4, h: 1, fontFaceEA: 'MS Mincho', color: 'FF0000' })
+			})
+			await expectNoSchemaErrors(buf, 'text-font-face-ea-alone')
+		},
+	},
+	{
 		name: 'out-of-range text fontSize/charSpacing/kerning/lineSpacing are clamped to valid ranges',
 		exclusive: true,
 		fn: async () => {
