@@ -243,7 +243,8 @@ the clip. Four options recolor the image:
 | `clrChange` | `{ from: Color, to: Color }` | Repaints pixels of one color as another. |
 
 Colors take a hex value or a theme color. Set one recolor option per picture: when several are
-set, all of them are written, and `Picture.recolor` reads back only the first.
+set, all of them are written, `Picture.recolor` reads back only the first, and `Picture.recolors`
+reads back every one.
 
 ```ts
 slide.addImage({
@@ -302,6 +303,7 @@ for (const shape of presentation.slides[0]?.shapes ?? []) {
 | `presetGeometry` | The preset clip, such as `'ellipse'`. `'rect'` for an unclipped picture, `null` for a freeform clip. |
 | `crop` | The source crop as fractions, `{ left, top, right, bottom }`, or `null` when there is none. |
 | `recolor` | The first effect on the image: `duotone`, `clrChange`, `grayscale`, `biLevel`, or `alphaModFix` for `transparency`. A picture with `transparency` reports `alphaModFix` ahead of its recolor. |
+| `recolors` | Every one of those effects, in the order they are written. |
 | `setImage(bytes, { contentType, fit })` | Swaps the image. `fit: 'cover'`, `'contain'` or `'stretch'` recomputes the crop for the new image. |
 
 The read model has no accessor for a picture's freeform clip path. See

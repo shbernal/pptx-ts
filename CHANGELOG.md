@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`Picture.recolors` reads every blip effect on a picture**, in document order. `recolor` reads
+  only the first, so a picture with `transparency` and a recolour reported the transparency alone.
 - **A `next` channel of unreleased builds.** Every commit on `main` that passes CI is published as
   a prerelease of `pptx-ts` under the `next` dist-tag (`pnpm add pptx-ts@next`), versioned
   `<base>-next.<run>.g<sha>`. `latest` and caret ranges are unaffected.
@@ -52,6 +54,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`readModelToIr` keeps a picture's recolour and transparency.** `grayscale`, `biLevel`,
+  `duotone`, `clrChange` and `transparency` were all dropped under an `image.recolor` note saying
+  none had a write option. Each now maps to its `addImage` option
+  ([#109](https://github.com/shbernal/pptx-ts/issues/109)).
 - **`readModelToIr` keeps a picture background's transparency.** A background picture with
   `a:alphaModFix` came back opaque, with no note. It now carries `transparency` beside the
   picture ([#107](https://github.com/shbernal/pptx-ts/issues/107)).

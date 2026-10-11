@@ -168,6 +168,10 @@ export const NOTE_CONSTRUCTS = {
 	'image.crop': { fields: ['crop'], tiers: BOTH_TIERS },
 	'image.data': { fields: ['data', '$asset'], tiers: BOTH_TIERS },
 	'image.recolor': { fields: ['duotone', 'grayscale', 'biLevel', 'clrChange'], tiers: BOTH_TIERS },
+	'image.recolor.schemeToken': {
+		fields: ['duotone.shadow', 'duotone.highlight', 'clrChange.from', 'clrChange.to'],
+		tiers: BOTH_TIERS,
+	},
 	// Covers the picture's bytes, not just an `svg` option: an SVG picture's raster fallback
 	// is regenerated rather than carried, so the blip the round trip compares is a different
 	// image from the source's — which is precisely the loss this note is about.

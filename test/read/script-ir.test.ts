@@ -1255,6 +1255,59 @@ describe('deck IR — slide transitions', () => {
 	})
 })
 
+describe('deck IR — picture recolour and transparency', () => {
+	// `addImage` writes all five blip effects the read model reports, and `readModelToIr` dropped
+	// every one under an `image.recolor` note saying none had a write option (issue #109). The
+	// replay must write the same `a:blip`.
+	const blipOf = (xml: string) =>
+		defined(/<a:blip [^>]*>.*?<\/a:blip>|<a:blip [^>]*\/>/s.exec(xml))[0].replace(/r:embed="[^"]*"/, '')
+	const cases: [string, Record<string, unknown>][] = [
+		['grayscale', { grayscale: true }],
+		['biLevel', { biLevel: { threshold: 0.3 } }],
+		['duotone', { duotone: { shadow: '250F6B', highlight: 'accent2' } }],
+		['clrChange', { clrChange: { from: '000000', to: '9B1B30' } }],
+		['transparency', { transparency: 40 }],
+		['transparency with a recolour', { transparency: 40, grayscale: true }],
+	]
+
+	test.for(cases)('%s carries and replays the same a:blip', async ([, options]) => {
+		const { presentation, buf } = await authorRead((pres) => {
+			pres.addSlide().addImage({ data: PNG_1X1, x: 1, y: 1, w: 5, h: 1.5, ...options })
+		})
+		const ir = readModelToIr(presentation)
+		assert(!constructs(ir).has('image.recolor'), 'nothing is declared lost')
+		const call = defined(allCalls(ir).find((c) => c.method === 'addImage'))
+		const { data: _data, ...args } = objectOf(call.args[0])
+		const { buf: replayed } = await authorRead((pres) => {
+			pres
+				.addSlide()
+				.addImage({ ...(args as Record<string, unknown>), data: PNG_1X1 } as Parameters<
+					ReturnType<typeof pres.addSlide>['addImage']
+				>[0])
+		})
+		const source = blipOf(await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml'))
+		const replay = blipOf(await readEntry(await JSZip.loadAsync(replayed), 'ppt/slides/slide1.xml'))
+		assertEqual(replay, source, 'the replayed blip')
+	})
+
+	test('a colour change to a transparent colour is noted', async () => {
+		// PowerPoint's Set Transparent Color writes an `a:alpha` on `a:clrTo`, which `clrChange.to`
+		// cannot carry.
+		const { buf } = await authorRead((pres) => {
+			pres.addSlide().addImage({ data: PNG_1X1, x: 1, y: 1, w: 5, h: 1.5, clrChange: { from: 'FFFFFF', to: 'FFFFFF' } })
+		})
+		const zip = await JSZip.loadAsync(buf)
+		const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
+		const faded = xml.replace(/(<a:clrTo><a:srgbClr val="FFFFFF")\/>/, '$1><a:alpha val="0"/></a:srgbClr>')
+		assert(faded !== xml, 'the target colour is made transparent')
+		zip.file('ppt/slides/slide1.xml', faded)
+		const ir = readModelToIr(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
+		const call = objectOf(defined(allCalls(ir).find((c) => c.method === 'addImage')).args[0])
+		assertEqual(JSON.stringify(call['clrChange']), '{"from":"FFFFFF","to":"FFFFFF"}', 'the colour change carries')
+		assert(constructs(ir).has('image.recolor'), 'and its lost transparency is noted')
+	})
+})
+
 describe('deck IR — picture fills', () => {
 	// An image-filled *surface* (`a:blipFill` in `p:spPr` or `a:tcPr`) is not a picture
 	// object: it is `ShapeFillProps.image`, so the converter has to re-embed the bytes
