@@ -55,6 +55,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   default the shape-level pass gave the shape, so only the single-string form left a link to the
   theme colour. A link run now takes the shape's `color` only when the caller stated one, so links
   written in the array form with no colour now render in the theme hyperlink colour.
+- **Picture bullets survive `readModelToIr`.** A paragraph whose bullet is an image (`a:buBlip`)
+  came back with a character bullet and a `text.bullet.picture` note with cause `unsupported`,
+  though `bullet.image` writes exactly that ([#58](https://github.com/shbernal/pptx-ts/issues/58)).
+  The IR now carries `bullet: { image: { data } }` with the image as an asset, and its size. The
+  note remains, with cause `unread`, only for a bullet whose image part cannot be reached.
 - **Shape locks survive `readModelToIr`.** `objectLock` writes `a:spLocks`, which had no accessor,
   so every lock on a text box or shape was gone after one round trip with no note
   ([#57](https://github.com/shbernal/pptx-ts/issues/57)). The IR now carries `objectLock` for

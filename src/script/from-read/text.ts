@@ -86,21 +86,29 @@ const AUTO_NUMBER_TYPES: ReadonlySet<string> = new Set(TEXT_AUTONUM_SCHEMES)
  * `a`. Every converted deck was affected and nothing failed, which is why the round-trip check
  * exists — and why the accessor is now a discriminated union with no parsing left to get wrong.
  */
-function bulletOption(bullet: BulletDetail, notes: NoteScope): IrValue {
+function bulletOption(bullet: BulletDetail, ctx: MapContext): IrValue {
+	const { notes } = ctx
 	// Explicit suppression, and it must stay explicit: an omitted `bullet` lets the
 	// destination list style put one back.
 	if (bullet.kind === 'none') return false
 
-	// A picture bullet's bytes would have to be re-embedded through the asset resolver, which
-	// the paragraph mapper does not carry — `addText`'s `bullet.image` could author it.
+	// A picture bullet is `bullet.image`, its bytes carried as an asset. It used to fall back to a
+	// character bullet under a note blaming the write API, which authors it. Only a blip whose image
+	// the read model cannot reach is a loss now, and the reader's.
 	if (bullet.kind === 'picture') {
-		notes.note(
-			'text.bullet.picture',
-			'approximated',
-			'unsupported',
-			'this paragraph uses an image as its bullet glyph (a:buBlip); the text mapper has no asset resolver to re-embed it with, so the bullet falls back to the default character'
-		)
-		return true
+		const asset = bullet.imagePartName === null ? null : ctx.assets.assetFor(bullet.imagePartName)
+		if (asset === null) {
+			notes.note(
+				'text.bullet.picture',
+				'approximated',
+				'unread',
+				'this paragraph uses an image as its bullet glyph (a:buBlip) whose image part cannot be reached, so the bullet falls back to the default character'
+			)
+			return true
+		}
+		// `buSzPct` still scales a picture bullet; its font and colour have nothing to style.
+		const size = bulletStyle(bullet, notes)['size']
+		return compact({ image: { data: asset }, size }) ?? { image: { data: asset } }
 	}
 
 	const style = bulletStyle(bullet, notes)
@@ -579,7 +587,8 @@ export function noteUnreadText(
 }
 
 /** Paragraph-level properties, replicated onto each of the paragraph's runs. */
-function paragraphOptions(paragraph: Paragraph, notes: NoteScope): Record<string, IrValue> {
+function paragraphOptions(paragraph: Paragraph, ctx: MapContext): Record<string, IrValue> {
+	const { notes } = ctx
 	const spacing = paragraph.lineSpacing
 	const bullet = paragraph.bulletDetail
 	const align = paragraph.align
@@ -604,7 +613,7 @@ function paragraphOptions(paragraph: Paragraph, notes: NoteScope): Record<string
 	// write option at all, so every margin it stated was replaced by whatever the `bullet` state
 	// wrote. `paraMarginLeft` / `paraIndent` state them now, so the mapper carries the values
 	// instead of excusing their loss and the note is gone rather than unmapped.
-	const bulletValue = bullet === null ? 'inherit' : bulletOption(bullet, notes)
+	const bulletValue = bullet === null ? 'inherit' : bulletOption(bullet, ctx)
 
 	return (
 		compact({
@@ -670,7 +679,7 @@ export function textRuns(frame: TextFrame, ctx: MapContext): IrValue[] {
 	const items: IrValue[] = []
 
 	paragraphs.forEach((paragraph, paragraphIndex) => {
-		const paraOpts = paragraphOptions(paragraph, ctx.notes)
+		const paraOpts = paragraphOptions(paragraph, ctx)
 		noteUnwritableBreaks(paragraph, ctx.notes)
 		const runs = paragraph.runs
 		// The paragraph break rides on the last run of every paragraph but the final one;
