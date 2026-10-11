@@ -131,7 +131,7 @@ Tier 5 writes four defaults onto every cell. They are direct formatting, so they
 | `fontSize` | `12` |
 | `margin` | `[0.05, 0.1, 0.05, 0.1]` inches |
 
-A hyperlink in any cell switches the black default off for the whole table. Otherwise the words after a link would stay black instead of taking the theme text colour.
+A cell that holds a hyperlink, on the cell or on one of its runs, gets no black default. Otherwise the words after the link would stay black instead of taking the theme text colour. The other cells keep the default.
 
 To brand a table, use direct formatting:
 

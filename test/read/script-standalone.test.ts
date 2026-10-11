@@ -407,9 +407,16 @@ describe('standalone printer — cases the fixture corpus does not contain', () 
 			'diagram.all,slide.carried',
 			'the template-anchored tier reports only the copy and the construct that forced it'
 		)
+		// The title's runs state no colour of their own and carry as a `placeholder`, so neither tier
+		// bakes the inherited colour in (#100). The standalone tier rebuilds the master without its
+		// text styles, which is where that colour comes from, and says so.
 		assert(
-			printed.notes.some((note) => note.slideNumber === 2 && note.construct === 'text.color.inherited'),
-			'while the standalone tier, which transcribes the placeholder, still reports its baked colour'
+			!printed.notes.some((note) => note.slideNumber === 2 && note.construct === 'text.color.inherited'),
+			'the standalone tier does not bake the placeholder title its colour'
+		)
+		assert(
+			printed.notes.some((note) => note.slideNumber === null && note.construct === 'master.txStyles'),
+			'and reports the master text styles the title inherits it from as lost'
 		)
 		const title = defined(ir.slides[1]?.calls.find((call) => call.sourceName === 'Titre 1'))
 		assert(

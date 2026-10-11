@@ -245,7 +245,7 @@ function bulletColor(bullet: BulletStyle, notes: NoteScope): string | undefined 
  * enumeration in its own right (ECMA-376 §20.1.10.81 / §20.1.10.78) and would be redundant
  * with omission otherwise.
  */
-export function runOptions(run: Run, ctx: MapContext): Record<string, IrValue> | undefined {
+export function runOptions(run: Run, ctx: MapContext, inPlaceholder = false): Record<string, IrValue> | undefined {
 	const { notes } = ctx
 	const underline = run.underline
 	const hyperlink = hyperlinkOption(run, ctx)
@@ -262,7 +262,7 @@ export function runOptions(run: Run, ctx: MapContext): Record<string, IrValue> |
 		)
 	}
 
-	const color = runColor(run, hyperlink !== undefined, notes)
+	const color = runColor(run, hyperlink !== undefined || inPlaceholder, notes)
 	return compact({
 		// `en-US` is what the write path states on a run that sets no `lang`, so it is left implied.
 		lang: run.language === null || run.language === 'en-US' ? undefined : run.language,
@@ -382,17 +382,19 @@ function spacingOptions(run: Run, notes: NoteScope): Record<string, IrValue> {
  * covers survive as tokens; the other seven degrade to a literal hex there anyway, so
  * passing one through unchanged would produce a silently different colour.
  */
-function runColor(run: Run, linked: boolean, notes: NoteScope): string | undefined {
+function runColor(run: Run, leftUncoloured: boolean, notes: NoteScope): string | undefined {
 	const scheme = run.schemeColor
 	if (scheme !== null)
 		return schemeColorOption(scheme, run.resolvedColor?.effectiveHex ?? null, notes, 'text.color.schemeToken', 'run')
 	if (run.color !== null) return literalColor(run.color)
 
-	// The one uncoloured run the write path does leave uncoloured: a link, which `addText` and
-	// `addTable` write with no fill so PowerPoint paints it in the theme's hlink colour. Baking the
-	// resolved colour in replayed a hlink-coloured link black. `linked` means the link itself
-	// carries; a dropped link leaves plain text, which the write path does paint black.
-	if (linked) return undefined
+	// The uncoloured runs the write path does leave uncoloured: a link, which `addText` and
+	// `addTable` write with no fill so PowerPoint paints it in the theme's hlink colour, and a run in
+	// a shape written back as a `placeholder`, which inherits from its layout. Baking the resolved
+	// colour in replayed a hlink-coloured link black, and froze a placeholder's (#100). A link counts
+	// only when the link itself carries; a dropped link leaves plain text, which the write path does
+	// paint black.
+	if (leftUncoloured) return undefined
 
 	// A run with no colour of its own inherits one, and leaving the option out does *not* pass
 	// that inheritance along: `addText` fills an uncoloured non-placeholder run with
@@ -661,8 +663,10 @@ function noteUnwritableBreaks(paragraph: Paragraph, notes: NoteScope): void {
  * An empty paragraph becomes an item with empty text and a `breakLine`, which is how a
  * blank line survives — dropping it would silently close up vertical space the author put
  * there deliberately.
+ * @param inPlaceholder - the shape is written back as a `placeholder`, so the write path leaves its
+ *   uncoloured runs to the layout and none of them takes its inherited colour baked in
  */
-export function textRuns(frame: TextFrame, ctx: MapContext): IrValue[] {
+export function textRuns(frame: TextFrame, ctx: MapContext, inPlaceholder = false): IrValue[] {
 	const paragraphs = frame.paragraphs
 	const items: IrValue[] = []
 
@@ -690,7 +694,7 @@ export function textRuns(frame: TextFrame, ctx: MapContext): IrValue[] {
 			delete continuation['bullet']
 			const options = compact({
 				...(runIndex === 0 ? paraOpts : continuation),
-				...runOptions(run, ctx),
+				...runOptions(run, ctx, inPlaceholder),
 				...(runIndex > 0 && run.breaksBefore > 0 ? { softBreakBefore: true } : {}),
 				...(isLastRun && breaks ? { breakLine: true } : {}),
 			})
