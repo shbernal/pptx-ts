@@ -122,6 +122,7 @@ The template-anchored output of [`pptx-ts/script`](../reference/pptx-to-script.m
 | Condition | Result | Code |
 | --- | --- | --- |
 | the input is not an OPC package | throws `PackageReadError` | `package/not-an-opc-package` |
+| `layout` (or the whole `options` argument) is left out | throws `InvalidOptionError` | `layout/missing` |
 | `layout` names no layout of the deck | throws `InvalidOptionError` | `layout/not-found` |
 | `layout` names a layout that several masters have | throws `InvalidOptionError` | `layout/ambiguous-name` |
 | `layout` is a `LayoutHandle` from another deck | throws `InvalidOptionError` | `layout/foreign-handle` |

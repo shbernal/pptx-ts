@@ -647,6 +647,20 @@ describe('Presentation.appendSlides', () => {
 		)
 	})
 
+	test('rejects a call with no layout by name, listing the layouts', async () => {
+		// `options` is typed as required, but a JavaScript caller can leave it out, and the call
+		// used to fail with a bare `TypeError` reading `layout` off `undefined` (#94).
+		const pres = await Presentation.load(await readFile(fixturePath('theme-colors')))
+		const pptx = wideGenerator()
+		pptx.addSlide()
+		const appendSlides = pres.appendSlides.bind(pres) as (source: TsPptx, options?: object) => Promise<unknown>
+		for (const options of [undefined, {}]) {
+			const err = await caught(() => appendSlides(pptx, options))
+			assertEqual(err?.code ?? null, 'layout/missing', `options ${JSON.stringify(options)}`)
+			assertIncludes(err?.message ?? '', '"Blank"', 'the message lists the layouts')
+		}
+	})
+
 	test('rejects a link to a slide the source deck does not have, leaving the deck as it was', async () => {
 		// The source refuses it while extracting, before the append has anything to add.
 		const pres = await Presentation.load(await readFile(fixturePath('theme-colors')))
