@@ -11,6 +11,7 @@
  * keeps the import surface every other module already uses.
  */
 export {
+	Field,
 	Run,
 	type BulletDetail,
 	type BulletStyle,
@@ -22,5 +23,5 @@ export {
 	type TextInheritance,
 } from './text/run.js'
 export { Paragraph } from './text/paragraph.js'
-export { TextFrame, type AutofitMode, type BodyProperties } from './text/frame.js'
+export { TextFrame, type AutofitMode, type BodyProperties, type ListStyleDefaults } from './text/frame.js'
 export { setParagraphText, setTextBodyText } from './text/edit.js'

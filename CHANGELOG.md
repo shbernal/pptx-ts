@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `kerning` is unchanged. Table cells take it too, along with `charSpacing`, which already worked
   on a cell but was missing from `TableCellProps`. Out-of-range values clamp to 0-4000pt and warn
   `text/kerning-out-of-range`.
+- **`Paragraph.fields` reads a paragraph's fields** (`a:fld`), such as a slide number or a date.
+  A `Field` has every formatting read a `Run` has, plus its `type` (`slidenum`, `datetime1`, …).
+- **`TextFrame.listStyleDefaults(level)` reads the character defaults a frame's own list style
+  states** (`a:lstStyle/a:lvlNpPr/a:defRPr`): size, face, bold, italic and colour.
 - **`Run.kerningPt` reads `a:rPr/@kern`** in points, or `null` when the run states none.
 - **Text reads for every `addText` option.** `Run` gains `language`, `eastAsianFontName`, `glow`,
   `outline`, `underlineColor` and `breaksBefore`; `Paragraph` gains `rtl` and `tabStops`;
@@ -59,6 +63,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`fontFaceEA` works without `fontFace`.** It was written only beside a `fontFace`, so on its own
   it was dropped with no warning ([#60](https://github.com/shbernal/pptx-ts/issues/60)). Alone it
   now writes `<a:ea>`, leaving the Latin and complex-script slots to inherit.
+- **A slide number survives `readModelToIr`.** `Slide.slideNumber` writes a `sldNum` placeholder
+  around a slide-number field. `readModelToIr` turned it into an empty rectangle, so the replayed
+  slide had no slide number and lost its formatting
+  ([#89](https://github.com/shbernal/pptx-ts/issues/89)). A slide-number placeholder that holds
+  only the field now carries as `slide.slideNumber`, with its position, `align`, `valign`,
+  `margin`, `bold`, `color`, `fontFace` and `fontSize`.
 - **A slide's no-fill background survives `readModelToIr`.** `background: { type: 'none' }`
   writes `p:bg/p:bgPr/a:noFill`, which turns the layout's background off. `readModelToIr` read it
   as no background at all, with no note, so the replayed slide showed the layout background again

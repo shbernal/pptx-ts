@@ -86,6 +86,10 @@ The write API names the 21 base ECMA-376 transitions. The converter keeps a tran
 
 A stop-previous sound (`p:endSnd`) and an embedded start sound both carry in both outputs. A start sound whose relationship does not resolve to an audio part is dropped with a `slide.transitionSound` note.
 
+### Slide numbers
+
+A slide-number placeholder whose one paragraph holds only the slide-number field prints as `slide.slideNumber = { … }`, with its position, alignment, vertical anchor, margins, bold, colour, face and size. A placeholder bound to its layout's by `idx`, as PowerPoint writes it, also gets a `shape.placeholder` note: `slideNumber` writes an unbound placeholder, so what the source inherited from the layout does not carry. A slide-number placeholder with other text in it is mapped as a shape, and its field is dropped with a `text.field` note.
+
 ### Theme colours
 
 The write path accepts ten scheme colour tokens: `tx1`, `tx2`, `bg1`, `bg2` and `accent1` to `accent6`. A colour stated as one of them prints as that token and resolves against the output deck's theme. In the template-anchored output that theme is the source theme. In the standalone output it is the re-authored `pptx.theme`.
@@ -156,7 +160,7 @@ The counts come from `pnpm run script:census`, run in a clone of the repository 
 
 A count is the number of fixtures that raise the note at least once. Each fixture targets a few constructs, so a count shows what the corpus exercises, not how often a construct occurs in real decks. The table lists only constructs some fixture raises. [`knownNoteConstructs()`](api/script/functions/knownNoteConstructs.md) returns the full catalogue.
 
-The Output column says where the note fires. A construct that fires in both outputs has the same count in each. A construct under the `layout.` prefix is the slide construct of the same name, raised while re-authoring a layout's shapes. Across the corpus the standalone output raises 900 notes and the template-anchored output 466, which is 3 to 14 more per deck.
+The Output column says where the note fires. A construct that fires in both outputs has the same count in each. A construct under the `layout.` prefix is the slide construct of the same name, raised while re-authoring a layout's shapes. Across the corpus the standalone output raises 898 notes and the template-anchored output 464, which is 3 to 14 more per deck.
 
 | Construct | Output | Cause | What happens | Fixtures |
 | --- | --- | --- | --- | --- |
@@ -189,7 +193,7 @@ The Output column says where the note fires. A construct that fires in both outp
 | `table.rowAuto` | Both | unsupported | Auto-height rows get an even share of the table height instead of fitting their content | 1/58 |
 | `table.style` | Both | unsupported | A table with no style ID takes the output deck's default table style | 1/58 |
 | `text.bullet.schemeToken` | Both | unwritable | A bullet colour outside the ten mapped scheme tokens is baked to hex | 1/58 |
-| `text.field` | Both | unread | The text of a slide number, date or footer field is dropped | 1/58 |
+| `text.field` | Both | unread | The text of a date or footer field, or of a slide number beside other text, is dropped | 1/58 |
 | `text.paraSpaceZero` | Both | unwritable | An explicit zero space before or after a paragraph is dropped, so the list style's spacing comes back | 1/58 |
 | `slide.carried` | Template-anchored | unwritable | A slide holding a frame the write API cannot author is copied from the source. It renders the same, and the script does not describe its contents | 4/58 |
 | `slide.layout` | Template-anchored | unsupported | Several source layouts share the slide's layout name, so the slide binds to a gallery position | 1/58 |

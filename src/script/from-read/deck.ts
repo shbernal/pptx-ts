@@ -37,6 +37,7 @@ import { shapeCall, unwritableFramePayload } from './shape.js'
 import type { AssetResolver, MapContext } from './context.js'
 import { chromeToIr } from './chrome.js'
 import { transitionToIr } from './transition.js'
+import { slideNumberIr } from './slide-number.js'
 import { compact, inches } from './values.js'
 import { ABSENT_SLIDE_SIZE_EMU } from '../../ooxml/slide-size.js'
 import { assetFilenameExtension } from '../../media/content-type.js'
@@ -247,7 +248,14 @@ function slideToIr(
 	// these and loses only the unwritable construct, rather than the whole slide. Each shape
 	// records its own note, so that loss is declared either way.
 	const calls: CallIr[] = []
+	let slideNumber: SlideIr['slideNumber']
 	for (const shape of slide.shapes) {
+		// The write API has one slide number per slide; a second is mapped as a shape.
+		const number = slideNumber === undefined ? slideNumberIr(shape, ctx) : null
+		if (number) {
+			slideNumber = number
+			continue
+		}
 		const call = shapeCall(shape, ctx)
 		if (call) calls.push(call)
 	}
@@ -259,6 +267,7 @@ function slideToIr(
 	return {
 		...base,
 		...(transition ? { transition } : {}),
+		...(slideNumber ? { slideNumber } : {}),
 		source: carried ? 'carried' : 'authored',
 		calls,
 	}
