@@ -143,7 +143,7 @@ gh release create vX.Y.Z --title vX.Y.Z --notes-file <path/to/notes.md>
 ### 8. Watch the publish run
 
 ```bash
-gh run list --workflow=publish.yml --limit 1
+gh run list --workflow=publish.yml --event release --limit 1
 gh run watch <run-id>      # or: gh run view <run-id> --log-failed
 ```
 

@@ -17,7 +17,9 @@ the alias is a second publish of the same build under a second name. `scripts/al
 stages that copy: the `name` differs, the README gains a banner naming `pptx-ts`, and the `scripts`
 block is dropped. You never bump, tag or stage the alias by hand.
 
-`.github/workflows/publish.yml` publishes both, when a GitHub Release is published. The
+`.github/workflows/publish.yml` publishes both, when a GitHub Release is published. It also
+publishes a prerelease of every push to `main` under the `next` dist-tag; see
+[The `next` channel](#the-next-channel). The
 [`release-publish` skill](https://github.com/shbernal/pptx-ts/blob/main/.agents/skills/release-publish/SKILL.md)
 has the commands for each step. This page says why the steps are shaped the way they are.
 
@@ -45,8 +47,9 @@ flowchart TD
   exchanges the OIDC token per package. Both name repository `shbernal/pptx-ts`, workflow
   `publish.yml`, environment `npm-publish`, and the action `npm publish`.
 - The GitHub environment `npm-publish` exists, and its deployment policy allows only tags matching
-  `v*` (the `release` event runs on the tag) and the branch `main` (manual dispatch). A run from any
-  other ref fails at the publish job.
+  `v*` (the `release` event runs on the tag) and the branch `main` (manual dispatch, and the
+  `next` channel, whose `workflow_run` event runs on the default branch). A run from any other ref
+  fails at the publish job.
 - `package.json#repository.url` points at `shbernal/pptx-ts`.
 - No `NPM_TOKEN` secret. The workflow authenticates through OIDC with `id-token: write`, and passes
   `--provenance` so provenance stays required if npm's default changes.
@@ -134,6 +137,34 @@ gh workflow run publish.yml --repo shbernal/pptx-ts --ref vX.Y.Z
 The guard passes because one name still lacks the version, the `pptx-ts` step skips, and the alias
 step publishes. The alias goes last on purpose, so a failure in it costs at most a re-dispatch and
 never the release that already went out. The selected ref must be the tag, not `master`.
+
+## The `next` channel
+
+Every push to `main` that passes CI is published as a prerelease of `pptx-ts` under the `next`
+dist-tag, for projects that would rather take an unreleased build than wait for a release:
+
+```bash
+pnpm add pptx-ts@next
+```
+
+The `next` job in `publish.yml` runs on `workflow_run`, after `ci.yml` completes. It publishes only
+when that CI run succeeded on a push to `main` in this repository, so it has no gate job of its own
+and CI runs once per push, not twice. Nothing is committed or tagged:
+
+- The version is `<base>-next.<run>.g<sha>`, from `scripts/next-version.mjs`. `<base>` is the patch
+  after the version in `package.json`, so after `4.1.0` the canaries are `4.1.1-next.*`, and the
+  publish workflow's run number orders them. The job writes the version into the working tree
+  with `npm version --no-git-tag-version`, syncs `pres.version`, builds and publishes with
+  `--tag next`.
+- `latest` never moves. A caret range never matches a prerelease, so only an install that names
+  `@next` or an exact prerelease gets one.
+- The job publishes only the newest commit on `main`. If `main` moved on while CI ran, the run for
+  that commit publishes nothing, because the provenance npm attaches would name the newer commit.
+  The newer commit is published once its own CI passes. Concurrent `next` runs cancel each other.
+- `@shbernal/ts-pptx` gets no prereleases. It exists so existing installs keep resolving.
+
+A `next` build that fails needs no repair. The next push to `main` publishes over it. Every
+prerelease stays on the registry, because npm restricts unpublishing.
 
 ## After publishing
 

@@ -144,8 +144,9 @@ flowchart LR
   subgraph docs["docs.yml: pull requests, pushes to main"]
     build["build<br/>docs:build"] --> deploy["deploy<br/>main only"]
   end
-  subgraph publish["publish.yml: release published, workflow_dispatch"]
+  subgraph publish["publish.yml: release published, workflow_dispatch, ci.yml completed on main"]
     gate["gate<br/>runs ci.yml"] --> pub["publish<br/>build, npm publish"]
+    next["next<br/>after ci.yml passed on a push to main<br/>build, npm publish --tag next"]
   end
 ```
 
@@ -169,6 +170,10 @@ passes every `ci.yml` leg, listed under `CI gate /` in the run. `docs.yml` is no
 gate. The `publish` job then checks that the tag is `v` plus the `package.json` version and that
 at least one of the two package names lacks that version, builds, and publishes. The
 `release-publish` skill in `.agents/skills/` has the release procedure.
+
+The `next` job in the same workflow has no gate job. It runs on `workflow_run` after a `ci.yml`
+run on a push to `main` succeeded, so the gate is the run that triggered it. See
+[The `next` channel](releasing.md#the-next-channel).
 
 ### Oracles that must not skip in CI
 
