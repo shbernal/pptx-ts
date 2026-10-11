@@ -237,13 +237,14 @@ These constructs carry in both outputs and raise no note.
 | A table cell with a fill of its own | `fill` on the cell. A styled cell with no fill of its own is left to `tableStyle` |
 | A picture fill on a shape or cell | `fill: { type: 'image', image: { data, crop }, transparency }` |
 | A picture's crop | `crop` on `addImage` |
+| A background picture's crop | `background: { image: { data, crop } }` |
 | A picture cropped to a preset shape | `shape` and `shapeAdjust` on `addImage` |
 | An outline's cap (`a:ln/@cap`) | `line.cap` |
 | A transition's type, speed, duration, advance and sound | `slide.transition` |
 | Position and size | `"<n>emu"` strings |
 | Shapes on a layout, standalone output | `defineSlideMaster({ objects })` |
 
-A crop with a negative inset, or with opposite insets that add up to 100% or more, has no `crop` spelling and raises `image.crop` or `fill.picture.geometry`. An autofit percentage outside 0 to 100 raises `text.autofit.fontScale` or `text.autofit.lnSpcReduction`.
+A crop with a negative inset, or with opposite insets that add up to 100% or more, has no `crop` spelling and raises `image.crop`, `fill.picture.geometry`, or for a background `slide.background` or `master.background`. An autofit percentage outside 0 to 100 raises `text.autofit.fontScale` or `text.autofit.lnSpcReduction`.
 
 ### Reader gaps
 

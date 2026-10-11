@@ -60,6 +60,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`appendSlides` without a `layout` throws `InvalidOptionError` `layout/missing`**, listing the
   deck's layouts, instead of a bare `TypeError`. A JavaScript caller can leave out the `options`
   argument or its `layout` ([#94](https://github.com/shbernal/pptx-ts/issues/94)).
+- **`readModelToIr` carries a background picture's crop.** A cropped picture background
+  (`a:srcRect`) came back as `background: { data }`, uncropped and with no note. It now maps to
+  `background: { image: { data, crop } }`, and a crop that option cannot express is noted
+  ([#97](https://github.com/shbernal/pptx-ts/issues/97)).
 - **Two chart options no longer break the deck they are in.** PowerPoint refused a whole deck
   (0x80070570) over one chart with either of them
   ([#67](https://github.com/shbernal/pptx-ts/issues/67)):

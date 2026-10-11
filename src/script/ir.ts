@@ -134,6 +134,8 @@ export interface BackgroundIr {
 	gradient?: IrValue
 	pattern?: IrValue
 	data?: AssetRef
+	/** A cropped picture: `{ data, crop }`, the spelling that carries the crop. An uncropped one is {@link data}. */
+	image?: IrValue
 }
 
 /**

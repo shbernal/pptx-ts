@@ -1729,6 +1729,33 @@ describe('deck IR — slide background', () => {
 		const xml = await readEntry(await JSZip.loadAsync(replayed), 'ppt/slides/slide1.xml')
 		assertEqual(/<p:bg>.*?<\/p:bg>/.exec(xml)?.[0], source?.[0], 'and the replay writes the same p:bg')
 	})
+
+	// A picture background's crop (`a:srcRect`) used to read back as a bare `{ data }`, dropped
+	// with no note (issue #97). The write API spells it `image: { data, crop }`.
+	test('a cropped picture background carries its crop as image.crop', async () => {
+		const crop = { l: 10, t: 20, r: 30, b: 5 }
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().background = { image: { data: PNG_1X1, crop } }
+		})
+		const ir = readModelToIr(presentation)
+		const background = objectOf(defined(atIndex(ir.slides, 0).background) as IrValue)
+		const image = objectOf(defined(background['image']))
+		assertEqual(JSON.stringify(image['crop']), JSON.stringify({ b: 5, l: 10, r: 30, t: 20 }), 'the crop')
+		assert(image['data'] !== undefined, 'the bytes ride along: ' + JSON.stringify(background))
+		assertEqual(
+			ir.fidelity.filter((n) => n.construct.startsWith('slide.background')).length,
+			0,
+			'and nothing is noted lost'
+		)
+	})
+
+	test('an uncropped picture background stays a bare { data }', async () => {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().background = { data: PNG_1X1 }
+		})
+		const background = objectOf(defined(atIndex(readModelToIr(presentation).slides, 0).background) as IrValue)
+		assertEqual(Object.keys(background).join(','), 'data', 'no image key: ' + JSON.stringify(background))
+	})
 })
 
 describe('deck IR — slide number', () => {

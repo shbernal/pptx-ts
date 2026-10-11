@@ -28,6 +28,7 @@ import type { ColorRef, ResolvedColor } from '../../read/api/theme-context.js'
 import type { AssetResolver } from './context.js'
 import type { BackgroundIr } from '../ir.js'
 import type { NoteScope } from '../fidelity.js'
+import { cropOption, isRectSet } from './picture-fill.js'
 import { gradientStops, patternOption, type BackgroundSurface } from './surface-fill.js'
 import { alphaToTransparency, colorOption } from './values.js'
 
@@ -116,7 +117,20 @@ function fillIr(
 			return solidIr(fill.colorRef, notes, tier)
 		case 'image': {
 			const asset = fill.partName === null ? null : assets.assetFor(fill.partName)
-			return asset ? { data: asset } : undefined
+			if (!asset) return undefined
+			// The crop (`a:srcRect`) carries as `image.crop`; an uncropped picture keeps the bare
+			// `{ data }` it has always been written back as (#97).
+			const crop = cropOption(fill.picture.srcRect)
+			if (crop !== undefined) return { image: { data: asset, crop } }
+			if (isRectSet(fill.picture.srcRect)) {
+				notes.note(
+					tier.construct,
+					'approximated',
+					'unwritable',
+					`${tier.subject} is a picture cropped (a:srcRect) with insets outside the 0–100% \`image.crop\` accepts, so it comes back uncropped`
+				)
+			}
+			return { data: asset }
 		}
 		case 'gradient': {
 			const gradient = gradientStops(fill.gradient, notes, tier.construct)
