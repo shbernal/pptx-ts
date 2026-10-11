@@ -394,7 +394,7 @@ export function genXmlTextRunProperties(opts: ObjectOptions | TextPropsOptions, 
 				? 'sng'
 				: null
 	const baseline = opts.baseline
-		? Math.round(opts.baseline * 50)
+		? Math.round(opts.baseline * 1000)
 		: opts.subscript
 			? -40000
 			: opts.superscript

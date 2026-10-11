@@ -688,8 +688,8 @@ describe('deck IR — character spacing and kerning', () => {
 })
 
 describe('deck IR — baseline shift', () => {
-	// The write option `baseline` is written as `Math.round(baseline * 50)` thousandths of a percent,
-	// while `Run.baselinePct` reads a percent. Mapping one straight onto the other shrank every
+	// The write option `baseline` and `Run.baselinePct` are both percents. Before #65 the option
+	// counted twentieths of a percent, and mapping one straight onto the other shrank every
 	// superscript, subscript and baseline shift 50x per round trip (issue #55).
 
 	test('superscript, subscript and a stated baseline replay the attribute they were written with', async () => {
@@ -698,28 +698,28 @@ describe('deck IR — baseline shift', () => {
 				[
 					{ text: 'Super', options: { superscript: true, breakLine: true } },
 					{ text: 'Sub', options: { subscript: true, breakLine: true } },
-					{ text: 'Shifted', options: { baseline: 30 } },
+					{ text: 'Shifted', options: { baseline: 15 } },
 				],
 				{ x: 1, y: 1, w: 5, h: 2 }
 			)
 		})
 		const sourceXml = await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml')
-		for (const attr of ['baseline="30000"', 'baseline="-40000"', 'baseline="1500"']) {
+		for (const attr of ['baseline="30000"', 'baseline="-40000"', 'baseline="15000"']) {
 			assert(sourceXml.includes(attr), `the writer states ${attr}`)
 		}
 		const replayed = await replay(readModelToIr(presentation))
 		const shifts = [...replayed.matchAll(/baseline="(-?\d+)"/g)].map((match) => match[1]).join(',')
-		assertEqual(shifts, '30000,-40000,1500', 'replaying the IR writes the same three shifts')
+		assertEqual(shifts, '30000,-40000,15000', 'replaying the IR writes the same three shifts')
 	})
 
 	test('a table cell keeps its baseline shift', async () => {
 		const { presentation } = await authorRead((pres) => {
-			pres.addSlide().addTable([[{ text: 'Cell', options: { baseline: -20 } }]], { x: 1, y: 1, w: 4 })
+			pres.addSlide().addTable([[{ text: 'Cell', options: { baseline: -12.5 } }]], { x: 1, y: 1, w: 4 })
 		})
 		const cell = JSON.stringify(
 			defined(allCalls(readModelToIr(presentation)).find((c) => c.method === 'addTable')).args
 		)
-		assert(cell.includes('"baseline":-20'), `the cell keeps baseline -20: ${cell}`)
+		assert(cell.includes('"baseline":-12.5'), `the cell keeps baseline -12.5: ${cell}`)
 	})
 })
 

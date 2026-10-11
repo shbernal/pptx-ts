@@ -20,6 +20,8 @@ function formattedRuns(pres: TsPptx) {
 			{ text: 'AllCaps', options: { caps: 'all' } },
 			{ text: 'Super', options: { superscript: true } },
 			{ text: 'Sub', options: { subscript: true } },
+			{ text: 'Raised', options: { baseline: 30 } },
+			{ text: 'Lowered', options: { baseline: -12.5 } },
 			{ text: 'Marked', options: { highlight: 'FFFF00' } },
 			{ text: 'Link', options: { hyperlink: { url: 'https://example.com', tooltip: 'Homepage' } } },
 			{ text: 'Plain', options: {} },
@@ -61,6 +63,12 @@ describe('Run character formatting — a:rPr attributes', () => {
 		assertEqual(run(runs, 'Super').baselinePct, 30, 'superscript → +30%')
 		assertEqual(run(runs, 'Sub').baselinePct, -40, 'subscript → -40%')
 		assertEqual(run(runs, 'Plain').baselinePct, null, 'a baseline-shifted-none run reports null')
+	})
+
+	test('a stated baseline is a percent, read back as the same percent', async () => {
+		const runs = runsOf((await authorRead(formattedRuns)).presentation)
+		assertEqual(run(runs, 'Raised').baselinePct, 30, 'baseline: 30 raises the text as superscript does')
+		assertEqual(run(runs, 'Lowered').baselinePct, -12.5, 'baseline: -12.5 → -12.5%')
 	})
 
 	test('charSpacing and kerning read back in points, null when unset', async () => {

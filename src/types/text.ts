@@ -348,10 +348,10 @@ export interface TextPropsOptions extends PositionProps, DataOrPathProps, TextBa
 	/**
 	 * Baseline shift (`a:rPr/@baseline`): above zero raises the text, below zero lowers it.
 	 *
-	 * The unit is a **twentieth of a percent** of the font size, so `600` raises the text by 30%
-	 * (what `superscript` writes) and `-800` lowers it by 40% (what `subscript` writes). The value
-	 * is written as `Math.round(baseline * 50)` thousandths of a percent. `0`, like leaving the
-	 * option out, states no shift. Wins over `superscript` and `subscript` when both are set.
+	 * A percent of the font size, so `30` raises the text by 30% (what `superscript` writes) and
+	 * `-40` lowers it by 40% (what `subscript` writes). It is written in thousandths of a percent,
+	 * rounded. `0`, like leaving the option out, states no shift. Wins over `superscript` and
+	 * `subscript` when both are set.
 	 */
 	baseline?: number
 	/**
