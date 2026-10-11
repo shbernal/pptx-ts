@@ -115,9 +115,10 @@ export const NOTE_CONSTRUCTS = {
 	'chart.xLabels': { fields: [], tiers: BOTH_TIERS },
 	'chart.workbook': { fields: ['*'], tiers: BOTH_TIERS },
 	'chartEx.all': { fields: ['*'], tiers: BOTH_TIERS },
-	'connector.binding': { fields: [], tiers: BOTH_TIERS },
+	'connector.binding': { fields: ['startShape', 'startShapeIdx', 'endShape', 'endShapeIdx'], tiers: BOTH_TIERS },
 	'connector.line': { fields: ['color', 'width', 'dashType', 'beginArrowType', 'endArrowType'], tiers: BOTH_TIERS },
 	'connector.rotation': { fields: ['rotate'], tiers: BOTH_TIERS },
+	'connector.route': { fields: ['type', 'bends', 'adj'], tiers: BOTH_TIERS },
 	// Empty, and the temptation to list title/author/subject/revision here has to be
 	// resisted: this note is about the *other* seven docProps, which have no setter and are
 	// absent from the IR. Listing the four that do have setters would excuse a printer that

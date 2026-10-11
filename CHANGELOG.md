@@ -52,6 +52,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`readModelToIr` keeps a connector's route and bindings.** Every connector came back as
+  `type: 'straight'` and unbound, with no note for the route. It now carries `type`, `bends` and
+  `adj` from the preset, and `startShape`/`endShape` with their sites when the bound shape's name
+  is unique on the slide. A route `addConnector` cannot write is noted as `connector.route`
+  ([#108](https://github.com/shbernal/pptx-ts/issues/108)).
 - **A hyperlink in one table cell no longer strips the black text default from the others.** Any
   link in the grid turned the default off for every cell, so a cell's output depended on its
   neighbours. Only the cell holding the link is now left to the link colour

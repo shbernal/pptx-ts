@@ -213,6 +213,15 @@ function layoutGallery(pres: Presentation): Map<string, SlideLayoutIr> {
 	)
 }
 
+/** How many shapes in `shapes` and their groups carry each name. */
+function shapeNameCounts(shapes: readonly AnyShape[], counts = new Map<string, number>()): Map<string, number> {
+	for (const shape of shapes) {
+		if (shape.name) counts.set(shape.name, (counts.get(shape.name) ?? 0) + 1)
+		if (isGroupShape(shape)) shapeNameCounts(shape.shapes, counts)
+	}
+	return counts
+}
+
 function slideToIr(
 	slide: Slide,
 	number: number,
@@ -221,7 +230,8 @@ function slideToIr(
 	layouts: Map<string, SlideLayoutIr>
 ): SlideIr {
 	const notes = scopeNotes(collector, number)
-	const ctx: MapContext = { ...deck, notes }
+	const nameCounts = shapeNameCounts(slide.shapes)
+	const ctx: MapContext = { ...deck, notes, isUniqueShapeName: (name) => nameCounts.get(name) === 1 }
 	const { assets } = deck
 	const layoutPartName = slide.layout?.partName
 	const base = {

@@ -41,6 +41,13 @@ export interface MapContext {
 	 * layout's shapes are re-authored under `defineSlideMaster`, where a slide link does not resolve.
 	 */
 	readonly slideNumberOf: (partName: string) => number | null
+	/**
+	 * Whether `name` names exactly one shape in the slide being mapped, groups included. The write
+	 * path binds a connector end to a shape by `objectName`, taking the first match, so only a unique
+	 * name binds the replay to the shape the source did. Absent where shapes cannot be bound by name
+	 * (a layout's shapes), which leaves every binding there unwritable.
+	 */
+	readonly isUniqueShapeName?: (name: string) => boolean
 }
 
 /**
