@@ -237,7 +237,7 @@ These constructs carry in both outputs and raise no note.
 | A table cell with a fill of its own | `fill` on the cell. A styled cell with no fill of its own is left to `tableStyle` |
 | A picture fill on a shape or cell | `fill: { type: 'image', image: { data, crop }, transparency }` |
 | A picture's crop | `crop` on `addImage` |
-| A background picture's crop | `background: { image: { data, crop } }` |
+| A background picture's crop and transparency (`a:alphaModFix`) | `background: { image: { data, crop }, transparency }` |
 | A connector's route, bends and bend positions (`bentConnector3`-`5`, `curvedConnector3`-`5`) | `type`, `bends` and `adj` on `addConnector`. Any other route prints straight under `connector.route` |
 | A connector bound to a shape with a name unique on its slide (`a:stCxn`, `a:endCxn`) | `startShape`, `endShape` and their `Idx` sites |
 | A picture cropped to a preset shape | `shape` and `shapeAdjust` on `addImage` |
