@@ -15,6 +15,7 @@
 
 import { describe, test } from 'vitest'
 import JSZip from 'jszip'
+import type { BackgroundProps } from '../../dist/index.js'
 import { Presentation, isAutoShape, type TransitionInput } from '../../dist/read.js'
 import { canonicalDeckIr, readModelToIr, type CallIr, type DeckIr, type IrValue } from '../../dist/script.js'
 import { PNG_1X1, assert, assertEqual, defined, expectDefined, readEntry, at as atIndex, take } from '../helpers.ts'
@@ -1703,5 +1704,29 @@ describe('deck IR — slide sourcing', () => {
 		const ir = readModelToIr(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
 		const slide = defined(ir.slides.find((candidate) => candidate.number === 2))
 		assertEqual(slide.source, 'carried', 'a diagram one level down still forces the copy')
+	})
+})
+
+describe('deck IR — slide background', () => {
+	// An explicit `a:noFill` and an absent `p:bg` are different states: the first turns the
+	// layout's background off, the second inherits it. The mapper collapsed both to "say
+	// nothing", so a replayed slide showed the layout background it had turned off (issue #87).
+	test('an explicit no-fill background carries as `type: none` and replays the same p:bg', async () => {
+		const { buf, presentation } = await authorRead((pres) => {
+			pres.addSlide().background = { type: 'none' }
+		})
+		const source = /<p:bg>.*?<\/p:bg>/.exec(await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml'))
+		assert(source?.[0].includes('<a:noFill/>'), `the source writes a no-fill background: ${source?.[0]}`)
+
+		const ir = readModelToIr(presentation)
+		const background = atIndex(ir.slides, 0).background
+		assertEqual(JSON.stringify(background), '{"type":"none"}', 'the IR states the no-fill background')
+
+		const { buf: replayed } = await authorRead((pres) => {
+			// The IR's background is the write API's own `background` option.
+			pres.addSlide().background = defined(background) as unknown as BackgroundProps
+		})
+		const xml = await readEntry(await JSZip.loadAsync(replayed), 'ppt/slides/slide1.xml')
+		assertEqual(/<p:bg>.*?<\/p:bg>/.exec(xml)?.[0], source?.[0], 'and the replay writes the same p:bg')
 	})
 })

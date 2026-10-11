@@ -124,10 +124,11 @@ export type SlideSource = 'authored' | 'carried'
  * `IrValue`, and be ignored at run time.
  *
  * `type`, `gradient` and `pattern` are the `ShapeFillProps` keys a non-solid background is
- * spelled with, the same values a shape's `fill` carries for the same elements.
+ * spelled with, the same values a shape's `fill` carries for the same elements. `type: 'none'`
+ * is a slide's explicit `a:noFill`, which turns its layout's background off.
  */
 export interface BackgroundIr {
-	type?: 'gradient' | 'pattern'
+	type?: 'gradient' | 'pattern' | 'none'
 	color?: string
 	transparency?: number
 	gradient?: IrValue
