@@ -7,7 +7,7 @@
  */
 
 import { PlaceholderType, SlideObjectType } from '../../enums.js'
-import { CRLF } from '../../constants-internal.js'
+import { CRLF, DEF_FONT_COLOR } from '../../constants-internal.js'
 import { warn } from '../../diagnostics.js'
 import { checkEnumOrWarn } from '../../ooxml/check-enum.js'
 import { TEXT_SHAPE_TYPES, TEXT_VERTICAL } from '../../ooxml/st-enums.js'
@@ -146,6 +146,7 @@ export function objectHasMath(slideObj: SlideObject): boolean {
 /**
  * Generate the XML for text and its options (bold, bullet, etc) including text runs (word-level formatting)
  * @param {SlideObject|TableCellInternal} slideObj - slideObj or tableCell
+ * @param slideColor - the colour a run marked `_slideColor` is written in: the slide's, else black
  * @note PPT text lines [lines followed by line-breaks] are created using <p>-aragraph's
  * @note Bullets are a paragragh-level formatting device
  * @template
@@ -165,7 +166,7 @@ export function objectHasMath(slideObj: SlideObject): boolean {
  *    </p:txBody>
  * @returns XML containing the param object's text and formatting
  */
-export function genXmlTextBody(slideObj: SlideObject | TableCellInternal): string {
+export function genXmlTextBody(slideObj: SlideObject | TableCellInternal, slideColor: string = DEF_FONT_COLOR): string {
 	const opts: ObjectOptions = slideObj.options || {}
 	let tmpTextObjects: TextProps[] = []
 	const arrTextObjects: RunProps[] = []
@@ -260,7 +261,7 @@ export function genXmlTextBody(slideObj: SlideObject | TableCellInternal): strin
 	const arrLines = groupRunsIntoLines(arrTextObjects, opts)
 
 	// STEP 6: Loop over each line and create paragraph props, text run, etc.
-	strSlideXml += renderTextParagraphsXml(arrLines, slideObj, opts)
+	strSlideXml += renderTextParagraphsXml(arrLines, slideObj, opts, slideColor)
 
 	// IMPORTANT: An empty txBody will cause "needs repair" error! Add <p> content if missing.
 	// This fixes an issue with table auto-paging where some cells would be empty on subsequent pages.

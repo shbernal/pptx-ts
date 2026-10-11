@@ -52,6 +52,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`slide.color` reaches all the slide's text.** It was read when text was added, so text added
+  before the assignment stayed black, and table cells never took it. It is now read when the
+  slide is written, and colours every `addText` run and table cell that states no colour of its
+  own ([#88](https://github.com/shbernal/pptx-ts/issues/88)). A deck that sets `slide.color` after
+  adding text changes colour. Output that never sets it is unchanged.
 - **Two chart options no longer break the deck they are in.** PowerPoint refused a whole deck
   (0x80070570) over one chart with either of them
   ([#67](https://github.com/shbernal/pptx-ts/issues/67)):

@@ -744,11 +744,13 @@ const PARAGRAPH_FALSY_IS_UNSTATED = [
 /**
  * Render each grouped line to an `<a:p>` paragraph: paragraph props, inherited run options,
  * text runs (and inline/display math), and the closing endParaRPr.
+ * @param slideColor - the colour a run marked `_slideColor` is written in
  */
 export function renderTextParagraphsXml(
 	arrLines: RunProps[][],
 	slideObj: SlideObject | TableCellInternal,
-	opts: ObjectOptionsInternal
+	opts: ObjectOptionsInternal,
+	slideColor: string
 ): string {
 	let strSlideXml = ''
 	arrLines.forEach((line) => {
@@ -850,7 +852,15 @@ export function renderTextParagraphsXml(
 				// Inline native equation (dn-inline-math): a bare <a14:m><m:oMath> run between plain runs.
 				paraXml += genXmlInlineMath(_textRunObj.math)
 			} else if (!isEmptyBreakArtifact) {
-				paraXml += genXmlTextRun(_textRunObj)
+				// A run with no colour after inheriting the shape's takes the slide's, decided now rather
+				// than when the text was added (#88). Onto a copy: the stored run keeps saying nothing,
+				// so a later `slide.color` reaches it on the next write.
+				const runOpts = _textRunObj.options as TextPropsOptionsInternal | undefined
+				paraXml += genXmlTextRun(
+					runOpts?._slideColor && runOpts.color === undefined
+						? { ..._textRunObj, options: { ...runOpts, color: slideColor } }
+						: _textRunObj
+				)
 			}
 
 			// E: Flag close fontSize for empty [lineBreak] elements.

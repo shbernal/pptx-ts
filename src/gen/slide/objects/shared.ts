@@ -18,6 +18,7 @@ import type {
 } from '../../../types/internal.js'
 import { createLineCap, genXmlLineFill, lineEndEl, resolveDash } from '../../drawingml/line.js'
 import { lineWidthToEmu, mapStated } from '../../../units-internal.js'
+import { DEF_FONT_COLOR } from '../../../constants-internal.js'
 import { el, raw, voidEl, type XmlAttrs, type XmlFmt } from '../../oxml/el.js'
 import { STRETCH_FILL_RECT } from '../../drawingml/src-rect.js'
 import { prstGeomRect } from '../../drawingml/geometry.js'
@@ -96,6 +97,16 @@ export type RenderedObjectType =
 	| SlideObjectType.table
 	| SlideObjectType.text
 	| SlideObjectType.zoom
+
+/**
+ * The colour text the definer marked `_slideColor` is written in on this page: the slide's
+ * {@link Slide.color}, else black. Read here, at write time, so an assignment made after the text
+ * was added still reaches it (#88). A layout or the master has no `color` and gives black.
+ * @param page - the page being written
+ */
+export function slideTextColor(page: RenderContext['slide']): string {
+	return ('color' in page && page.color) || DEF_FONT_COLOR
+}
 
 /** One shape family's emitter: everything it needs is in the {@link RenderContext}. */
 export type ObjectRenderer = (ctx: RenderContext) => string

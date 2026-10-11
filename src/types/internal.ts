@@ -127,6 +127,13 @@ export interface TextPropsOptionsInternal extends TextPropsOptions {
 		prstTxWarp?: TextShapeType
 	}
 	_lineIdx?: number
+	/**
+	 * Set by the definer on text that would otherwise be written black: no colour of its own, none
+	 * on its shape, not a placeholder, not a link. The emitter paints it in the slide's
+	 * {@link Slide.color}, else black. It is a flag rather than the colour because the slide's
+	 * colour is read when the slide is written, not when the text is added (#88).
+	 */
+	_slideColor?: true
 }
 
 /**
@@ -194,6 +201,8 @@ export interface TableCellInternal extends TableCell {
  */
 export interface TablePropsInternal extends TableProps {
 	_arrObjTabHeadRows?: TableRow[]
+	/** A cell that states no colour takes the slide's, else black; see {@link TextPropsOptionsInternal._slideColor}. */
+	_slideColor?: true
 }
 
 /** A row of {@link TableCellInternal}, the shape the pager builds and the emitter reads. */
