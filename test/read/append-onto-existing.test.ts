@@ -406,6 +406,36 @@ describe('Presentation.appendSlides', () => {
 		assertEqual(errors.length, 0, `validator errors: ${JSON.stringify(errors).slice(0, 2000)}`)
 	})
 
+	test("carries a transition's start sound: its p:sndAc, audio rel and media part (#91)", async () => {
+		// `extractSlides` never ran the registration that gives a transition sound its rel, so the
+		// emitter wrote the transition with no `p:sndAc` and the sound was silently dropped.
+		const wav = 'UklGRiwAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQgAAACAgICAgICAgA=='
+		const pres = await Presentation.load(await readFile(fixturePath('theme-colors')))
+		const pptx = wideGenerator()
+		const slide = pptx.addSlide()
+		slide.transition = { type: 'fade', sound: { data: `audio/wav;base64,${wav}`, name: 'chime.wav', loop: true } }
+		// A picture added after the transition, so the sound's rel id must not collide with its.
+		slide.addImage({ data: PNG_1X1, x: 1, y: 1, w: 1, h: 1 })
+		await pres.appendSlides(pptx, { layout: 'Blank' })
+
+		const reopened = await Presentation.load(await pres.save())
+		const appended = defined(reopened.slides.at(-1))
+		const sound = defined(appended.transition?.sound, 'the appended transition has a sound')
+		assertEqual(sound.form, 'start', 'a start sound')
+		assertEqual(sound.loop, true, 'that loops')
+		assertEqual(sound.name, 'chime.wav', 'under its name')
+		const embedRid = defined(sound.embedRid, 'p:snd names its audio rel')
+		assertEqual(typeOfRid(reopened.opc, appended.partName, embedRid), AUDIO_REL, 'p:snd r:embed → audio rel')
+		const target = defined(resolveRid(reopened.opc, appended.partName, embedRid))
+		assert(target.endsWith('.wav'), `the audio rel targets a .wav part (${target})`)
+		const part = defined(reopened.opc.part(target), 'the audio part exists')
+		assert(bytesEqual(part.originalBytes, Buffer.from(wav, 'base64')), 'and holds the WAV bytes')
+		assert(
+			[...reopened.opc.relationshipsFor(appended.partName)].some((rel) => rel.type === IMAGE_REL),
+			'the picture keeps its own rel beside it'
+		)
+	})
+
 	test('rejects an unknown layout name', async () => {
 		const pres = await Presentation.load(await readFile(fixturePath('theme-colors')))
 		const pptx = wideGenerator()

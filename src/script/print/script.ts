@@ -279,22 +279,6 @@ function printAuthoredSlide(
 		)
 	}
 
-	// A tier loss, and a narrow one: a transition's *stop-previous* form needs no relationship
-	// and rides across fine, while an embedded start sound needs an audio part wired to the
-	// appended slide. `extractSlides` never runs the registration pass that assigns it a
-	// relationship id (`registerTransitionSounds` belongs to the package-assembly path), so the
-	// emitter is handed no sound id and writes no `p:sndAc` at all. That is a silent drop rather
-	// than a dangling reference — which is the safe failure of the two, and still a loss the
-	// reader has to be told about. The standalone tier writes a real package and keeps it.
-	if (slide.transition?.sound?.data !== undefined) {
-		scopeNotes(collector, slide.number).note(
-			'slide.transitionSound',
-			'dropped',
-			'unsupported',
-			"this transition's start sound is dropped: the append path this tier rides does not register a transition's embedded audio part, so the sound does not reach the template. The assignment below still spells it out, and the WAV still ships beside the script, because both describe the source deck faithfully and would take effect the day the append path carries them — but this output is silent. Print the standalone variant to keep the sound"
-		)
-	}
-
 	const layout = slide.layout === null ? 'no layout' : `layout ${JSON.stringify(slide.layout.name)}`
 	return printSlide(
 		slide,

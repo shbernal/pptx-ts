@@ -13,7 +13,7 @@
  * "exactly as ... does". Nothing failed when they drifted: `extractSlides` would simply emit
  * slides that did not match what a normal write produces, and no test compares the two.
  *
- * Three steps rather than one combined pass, because the package path has work of its own that
+ * Separate steps rather than one combined pass, because the package path has work of its own that
  * must land between the last two: it de-duplicates identical media across the deck (which needs
  * the encoded bytes {@link encodeMediaForTargets} produces) and assigns package-unique chart part
  * filenames, both before any text is measured. Exposing the steps lets `assemble` keep that work
@@ -21,7 +21,9 @@
  *
  * The order is load-bearing:
  *
- * 1. **Backfill placeholders first**, so a slide carries its layout's placeholder objects before
+ * 0. **Register transition sounds**, before media encoding loads their bytes and before
+ *    backfill, so a slide's rel ids come out the same on both paths.
+ * 1. **Backfill placeholders**, so a slide carries its layout's placeholder objects before
  *    anything reads its media. A seeded placeholder can register media of its own, an image fill,
  *    and when backfill ran after encoding that image was never loaded and its rel named a part
  *    that was never written.
@@ -33,7 +35,7 @@
  *
  * The functions take different target sets on purpose: media lives on layouts and the master as
  * well as on slides, while placeholder backfill and measured fit apply only to slides.
- * `extractSlides` passes only its slides to all three, because it emits no layout or master
+ * `extractSlides` passes only its slides to every step, because it emits no layout or master
  * parts.
  */
 
@@ -41,10 +43,13 @@ import { InvalidOptionError } from '../errors.js'
 import { applyMeasuredFit } from '../measure/fit.js'
 import type { FontMetricsRegistry } from '../measure/font-metrics.js'
 import type { RuntimeAdapter } from '../runtime/types.js'
-import type { PresSlideInternal, SlideLayoutInternal, SlideMasterInternal } from '../types/internal.js'
+import type { PresSlideInternal, SlideLayoutInternal, SlideMasterInternal, SlideRelMedia } from '../types/internal.js'
 import { addPlaceholdersToSlideLayouts } from './define/placeholder.js'
 import { encodeSlideMediaRels } from './media.js'
-import { isHyperlinkRel } from './utils.js'
+import { getNewRelId, isHyperlinkRel } from './utils.js'
+import { pushMediaRel } from './define/image-rel.js'
+import { audioExtensionForSubtype, dataUriMediaType } from '../media/content-type.js'
+import { TRANSITION_TYPES } from '../ooxml/st-enums.js'
 
 /**
  * Before any step: refuse a link to a slide the deck does not have.
@@ -104,6 +109,81 @@ export async function encodeMediaForTargets(
 		promises.push(...encodeSlideMediaRels(target, runtime, onMediaError))
 	}
 	await Promise.all(promises)
+}
+
+/** The audio relationship a slide's transition sound was registered under, and the sound it was registered for. */
+interface RegisteredTransitionSound {
+	readonly rel: SlideRelMedia
+	readonly data: string | undefined
+	readonly path: string | undefined
+}
+
+/**
+ * Each slide's registered transition sound.
+ *
+ * Kept per slide, never on the transition: one transition object can be assigned to several slides,
+ * and a relationship id means something only inside the slide part that declares it. Kept across
+ * writes as well, so a deck written twice registers each sound once. An entry is reused only while
+ * the slide still holds its relationship and still has the same sound assigned.
+ */
+const registeredTransitionSounds = new WeakMap<PresSlideInternal, RegisteredTransitionSound>()
+
+/**
+ * Step 0: register an audio media part + relationship for each slide-transition start sound
+ * (`transition.sound` with `data`/`path`), and return the relationship id each slide's
+ * `p:sndAc/p:snd r:embed` refers to. Runs before media encoding so the bytes are loaded. Re-export
+ * is safe: a slide whose sound is already registered reuses that relationship. The stop-previous
+ * form (`sound.stopPrevious`) needs no part and is skipped.
+ *
+ * Registered here, at write time, rather than when `slide.transition` is assigned. A slide's rel
+ * ids and media part names are handed out in registration order, and a transition is often set
+ * before the slide's pictures and media are added; registering the sound then would move every
+ * later rel id and part name on the slide.
+ */
+export function registerTransitionSounds(slides: PresSlideInternal[]): Map<PresSlideInternal, number> {
+	const soundRIds = new Map<PresSlideInternal, number>()
+	slides.forEach((slide) => {
+		const transition = slide.transition
+		// A transition the emitter will not write has no sound action to register a part for.
+		if (!transition || !(TRANSITION_TYPES as readonly string[]).includes(transition.type)) return
+		const sound = transition.sound
+		if (!sound || sound.stopPrevious) return
+		if (!sound.data && !sound.path) return
+
+		const registered = registeredTransitionSounds.get(slide)
+		if (
+			registered &&
+			slide._relsMedia.includes(registered.rel) &&
+			registered.data === sound.data &&
+			registered.path === sound.path
+		) {
+			soundRIds.set(slide, registered.rel.rId)
+			return
+		}
+
+		// Derive the file extension from the data-URI mime, else the path, defaulting to wav.
+		// The mime's subtype is not itself an extension for the spellings PowerPoint actually
+		// uses (`audio/x-wav` for a transition sound), so it goes through the mapping rather
+		// than into the filename raw — see `audioExtensionForSubtype`.
+		const dataMime = dataUriMediaType(sound.data ?? '')
+		const pathFile = sound.path ? ((sound.path.split('/').pop() ?? '').split('?')[0] ?? '') : ''
+		const extn = dataMime?.startsWith('audio/')
+			? audioExtensionForSubtype(dataMime.slice('audio/'.length))
+			: (pathFile.split('.').pop() ?? 'wav').toLowerCase()
+
+		const rId = getNewRelId(slide)
+		const rel = pushMediaRel(slide, {
+			kind: 'audio',
+			extn,
+			type: `audio/${extn}`,
+			path: sound.path,
+			data: sound.data,
+			rId,
+		})
+		registeredTransitionSounds.set(slide, { rel, data: sound.data, path: sound.path })
+		soundRIds.set(slide, rId)
+	})
+	return soundRIds
 }
 
 /**

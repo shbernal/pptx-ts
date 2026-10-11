@@ -22,7 +22,13 @@ import { isHyperlinkRel } from './utils.js'
 import { msMediaRid, previewRid } from './define/media.js'
 import { decodeBase64ToBytes } from '../media/base64.js'
 import { avContentType, imageContentType } from '../media/content-type.js'
-import { backfillPlaceholders, bakeMeasuredFit, encodeMediaForTargets, requireSlideLinksInDeck } from './prepare.js'
+import {
+	backfillPlaceholders,
+	bakeMeasuredFit,
+	encodeMediaForTargets,
+	registerTransitionSounds,
+	requireSlideLinksInDeck,
+} from './prepare.js'
 import { makeXmlSlide } from './slide/slide.js'
 import type { RendererTable } from './slide/objects/shared.js'
 import type { SlideExtractors } from '../families/shared.js'
@@ -125,6 +131,19 @@ function imageMediaOf(slide: PresSlideInternal, avPreviewRids: ReadonlySet<numbe
 }
 
 /**
+ * A transition's start sound: the audio part behind `p:sndAc/p:stSnd/p:snd r:embed`, under the
+ * `rId` {@link registerTransitionSounds} gave it. `undefined` when the slide has no start sound.
+ */
+function transitionSoundOf(rId: number | undefined, relByRid: RelsByRid): ExtractedSlide['transitionSound'] {
+	const rel = rId === undefined ? undefined : relByRid.get(rId)
+	if (!rel || rId === undefined) return undefined
+	const bytes = decodeBase64ToBytes(typeof rel.data === 'string' ? rel.data : '')
+	if (!bytes) return undefined
+	const extn = relExtension(rel, 'wav')
+	return { rId, bytes, extn, contentType: avContentType(extn, 'audio') }
+}
+
+/**
  * Online (external-link) video. addMedia type:'online' pushes three rels off
  * mediaRid: the ECMA video rel (mediaRid, External), the MS-2007 media rel
  * (mediaRid+1, External, sharing the link Target), and the poster image rel
@@ -206,10 +225,11 @@ export async function extractSlides(
 	// A link to a slide the deck does not have is refused before anything is prepared, as on a write.
 	requireSlideLinksInDeck(deckSlides)
 
-	// STEP 1+2: The same pre-serialization pass `buildPackageParts` runs — backfill placeholders,
-	// encode media, bake measured fit — so extracted bodies match a normal write by construction
-	// rather than by keeping two copies in step. See `gen/prepare.ts`.
+	// STEP 1+2: The same pre-serialization pass `buildPackageParts` runs — register transition
+	// sounds, backfill placeholders, encode media, bake measured fit — so extracted bodies match a
+	// normal write by construction rather than by keeping two copies in step. See `gen/prepare.ts`.
 	// Only slides here: this emits no layout or master parts.
+	const transitionSoundRIds = registerTransitionSounds(deckSlides)
 	backfillPlaceholders(deckSlides)
 	await encodeMediaForTargets(deckSlides, source.runtime, onMediaError)
 	const restoreAuthoredFit = bakeMeasuredFit(deckSlides, source.fontMetrics)
@@ -222,8 +242,10 @@ export async function extractSlides(
 			const relByRid = new Map(slide._relsMedia.map((rel) => [rel.rId, rel] as const))
 			const avMedia = avMediaOf(slide, relByRid)
 			const notes = notesOf(slide)
+			const soundRId = transitionSoundRIds.get(slide)
+			const transitionSound = transitionSoundOf(soundRId, relByRid)
 			return {
-				xml: makeXmlSlide(slide, source.renderers),
+				xml: makeXmlSlide(slide, source.renderers, soundRId),
 				media: imageMediaOf(slide, new Set(avMedia.map((item) => item.previewRid))),
 				hyperlinks: hyperlinksOf(slide),
 				charts: source.extract.charts?.(slide) ?? [],
@@ -231,6 +253,7 @@ export async function extractSlides(
 				avMedia,
 				onlineMedia: onlineMediaOf(slide, relByRid),
 				...(notes ? { notes } : {}),
+				...(transitionSound ? { transitionSound } : {}),
 			}
 		})
 	} finally {

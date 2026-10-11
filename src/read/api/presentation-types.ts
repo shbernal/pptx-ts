@@ -420,6 +420,12 @@ export interface ExtractedSlide {
 	 * slide, and binds it to a notes master (see {@link ExtractedSlides.notesMaster}).
 	 */
 	notes?: ExtractedNotes
+	/**
+	 * The transition's start sound (`p:sndAc/p:stSnd/p:snd`), or `undefined` when the slide has
+	 * none. One audio part behind an `audio` rel, keyed by the `rId` the body's `p:snd r:embed`
+	 * uses. {@link Presentation.appendSlides} adds the part and the rel.
+	 */
+	transitionSound?: { rId: number; bytes: Uint8Array; extn: string; contentType: string }
 }
 
 /** One slide's speaker notes, extracted for {@link Presentation.appendSlides}. */

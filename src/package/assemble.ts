@@ -13,20 +13,17 @@
  */
 import { ZipWriter } from '../zip.js'
 import type { CustomPropertyValue, WriteProps } from '../types/index.js'
-import type { PresentationPropsInternal, PresSlideInternal, SlideRelMedia } from '../types/internal.js'
+import type { PresentationPropsInternal } from '../types/internal.js'
 import type { RuntimeAdapter } from '../runtime/types.js'
 import type { FontMetricsRegistry } from '../measure/font-metrics.js'
 import { flattenEmbeddedFaces } from '../embedded-fonts.js'
-import { getNewRelId } from '../gen/utils.js'
-import { pushMediaRel } from '../gen/define/image-rel.js'
 import { chartPartNames } from '../gen/chart/part-names.js'
 import { decodeBase64ToBytes } from '../media/base64.js'
-import { audioExtensionForSubtype, dataUriMediaType } from '../media/content-type.js'
-import { TRANSITION_TYPES } from '../ooxml/st-enums.js'
 import {
 	backfillPlaceholders,
 	bakeMeasuredFit,
 	encodeMediaForTargets,
+	registerTransitionSounds,
 	requireSlideLinksInDeck,
 } from '../gen/prepare.js'
 import { makeXmlApp } from '../gen/opc/app.js'
@@ -120,81 +117,6 @@ const ALREADY_COMPRESSED_MEDIA_EXTN = new Set([
  * without an OLE object are unaffected.
  */
 const ZIP_CONTAINER_EXTN = new Set(['xlsx', 'xlsm', 'docx', 'docm', 'pptx', 'pptm'])
-
-/** The audio relationship a slide's transition sound was registered under, and the sound it was registered for. */
-interface RegisteredTransitionSound {
-	readonly rel: SlideRelMedia
-	readonly data: string | undefined
-	readonly path: string | undefined
-}
-
-/**
- * Each slide's registered transition sound.
- *
- * Kept per slide, never on the transition: one transition object can be assigned to several slides,
- * and a relationship id means something only inside the slide part that declares it. Kept across
- * writes as well, so a deck written twice registers each sound once. An entry is reused only while
- * the slide still holds its relationship and still has the same sound assigned.
- */
-const registeredTransitionSounds = new WeakMap<PresSlideInternal, RegisteredTransitionSound>()
-
-/**
- * Register an audio media part + relationship for each slide-transition start sound
- * (`transition.sound` with `data`/`path`), and return the relationship id each slide's
- * `p:sndAc/p:snd r:embed` refers to. Runs before media encoding so the bytes are loaded. Re-export
- * is safe: a slide whose sound is already registered reuses that relationship. The stop-previous
- * form (`sound.stopPrevious`) needs no part and is skipped.
- *
- * Registered here, at write time, rather than when `slide.transition` is assigned. A slide's rel
- * ids and media part names are handed out in registration order, and a transition is often set
- * before the slide's pictures and media are added; registering the sound then would move every
- * later rel id and part name on the slide.
- */
-function registerTransitionSounds(slides: PresSlideInternal[]): Map<PresSlideInternal, number> {
-	const soundRIds = new Map<PresSlideInternal, number>()
-	slides.forEach((slide) => {
-		const transition = slide.transition
-		// A transition the emitter will not write has no sound action to register a part for.
-		if (!transition || !(TRANSITION_TYPES as readonly string[]).includes(transition.type)) return
-		const sound = transition.sound
-		if (!sound || sound.stopPrevious) return
-		if (!sound.data && !sound.path) return
-
-		const registered = registeredTransitionSounds.get(slide)
-		if (
-			registered &&
-			slide._relsMedia.includes(registered.rel) &&
-			registered.data === sound.data &&
-			registered.path === sound.path
-		) {
-			soundRIds.set(slide, registered.rel.rId)
-			return
-		}
-
-		// Derive the file extension from the data-URI mime, else the path, defaulting to wav.
-		// The mime's subtype is not itself an extension for the spellings PowerPoint actually
-		// uses (`audio/x-wav` for a transition sound), so it goes through the mapping rather
-		// than into the filename raw — see `audioExtensionForSubtype`.
-		const dataMime = dataUriMediaType(sound.data ?? '')
-		const pathFile = sound.path ? ((sound.path.split('/').pop() ?? '').split('?')[0] ?? '') : ''
-		const extn = dataMime?.startsWith('audio/')
-			? audioExtensionForSubtype(dataMime.slice('audio/'.length))
-			: (pathFile.split('.').pop() ?? 'wav').toLowerCase()
-
-		const rId = getNewRelId(slide)
-		const rel = pushMediaRel(slide, {
-			kind: 'audio',
-			extn,
-			type: `audio/${extn}`,
-			path: sound.path,
-			data: sound.data,
-			rId,
-		})
-		registeredTransitionSounds.set(slide, { rel, data: sound.data, path: sound.path })
-		soundRIds.set(slide, rId)
-	})
-	return soundRIds
-}
 
 /**
  * Write the media parts one target's rels point at. Images are how every deck carries a picture,

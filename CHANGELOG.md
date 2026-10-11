@@ -64,6 +64,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   as no background at all, with no note, so the replayed slide showed the layout background again
   ([#87](https://github.com/shbernal/pptx-ts/issues/87)). It now carries as
   `background: { type: 'none' }`.
+- **`appendSlides` keeps a transition's sound.** A slide whose `transition.sound` embeds a WAV
+  was appended with the transition and without the sound: no `p:sndAc`, no audio relationship and
+  no media part ([#91](https://github.com/shbernal/pptx-ts/issues/91)). The sound now comes across
+  as it does on a write, so the template-anchored script output keeps it too and no longer notes
+  it as `slide.transitionSound`.
 - **Character spacing survives `readModelToIr`.** A run's `a:rPr/@spc` was read by
   `Run.charSpacingPt` but never mapped, so the printed script and any replay of the `DeckIr` lost
   it, and `diffDeckIr` reported the round trip clean because neither IR carried the field
