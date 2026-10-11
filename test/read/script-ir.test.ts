@@ -939,6 +939,18 @@ describe('deck IR — text options the read model could not see', () => {
 	// and the replay must write the same fragment.
 	const cases: [string, unknown, Record<string, unknown>, RegExp][] = [
 		['lang', 'T', { lang: 'fr-FR' }, /<a:rPr[^>]*>/],
+		// The end-of-paragraph mark takes the shape's `lang`, which the IR put on the run only (#102).
+		['lang on the paragraph end', 'T', { lang: 'fr-FR' }, /<a:p>.*?<\/a:p>/],
+		[
+			'lang on the paragraph end beside runs in other languages',
+			[
+				{ text: 'A', options: { lang: 'de-DE' } },
+				{ text: 'B', options: { breakLine: true } },
+				{ text: 'C', options: { lang: 'en-US' } },
+			],
+			{ lang: 'fr-FR' },
+			/<p:txBody>.*?<\/p:txBody>/,
+		],
 		['glow', 'T', { glow: { size: 8, opacity: 0.5, color: 'FF00FF' } }, /<a:effectLst>.*?<\/a:effectLst>/],
 		['outline', 'T', { outline: { color: '9B1B30', size: 1.5 } }, /<a:ln w[^>]*>.*?<\/a:ln>/],
 		['transparency', 'T', { color: '000000', transparency: 40 }, /<a:rPr.*?<\/a:rPr>/],
@@ -960,6 +972,40 @@ describe('deck IR — text options the read model could not see', () => {
 		const source = fragment(await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml'))
 		const ir = readModelToIr(presentation)
 		assertEqual(fragment(await replay(ir)), source, 'the replayed fragment')
+	})
+})
+
+describe('deck IR — paragraph-end languages', () => {
+	test('paragraph ends in different languages are noted, as lang states one for the whole text', async () => {
+		const { buf } = await authorRead((pres) => {
+			pres.addSlide().addText([{ text: 'A', options: { breakLine: true } }, { text: 'B' }], {
+				x: 1,
+				y: 1,
+				w: 5,
+				h: 1,
+				lang: 'fr-FR',
+			})
+		})
+		const zip = await JSZip.loadAsync(buf)
+		const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
+		const mixed = xml.replace(/(<a:endParaRPr lang=")fr-FR(")/, '$1de-DE$2')
+		assert(mixed !== xml, 'the first paragraph now ends in German')
+		zip.file('ppt/slides/slide1.xml', mixed)
+		const ir = readModelToIr(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
+		const call = defined(allCalls(ir).find((c) => c.method === 'addText'))
+		assertEqual(at(call.args[1], 'lang'), undefined, 'no one language is stated for the text')
+		assertEqual(at(runOptionsOf(ir)[0], 'lang'), 'fr-FR', 'the runs keep their own')
+		assert(constructs(ir).has('text.endParagraph.lang'), 'and the paragraph ends are noted')
+	})
+
+	test('a table cell keeps its own lang, since a cell carries no text-level one', async () => {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addTable([[{ text: 'bonjour', options: { lang: 'fr-FR' } }]], { x: 1, y: 1, w: 4 })
+		})
+		const cell = JSON.stringify(
+			defined(allCalls(readModelToIr(presentation)).find((c) => c.method === 'addTable')).args
+		)
+		assert(cell.includes('"lang":"fr-FR"'), `the cell keeps fr-FR: ${cell}`)
 	})
 })
 

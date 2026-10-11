@@ -171,6 +171,7 @@ The Output column says where the note fires. A construct that fires in both outp
 | `slide.animation` | Both | unread | Build animations are dropped and every shape lands static | 7/58 |
 | `chart.workbook` | Both | unsupported | The chart is rebuilt from its cached values. The plotted numbers match, and the workbook's formulas, extra columns and formatting are gone | 4/58 |
 | `diagram.all` | Both | unwritable | No write API builds SmartArt. The template-anchored output copies the slide, and the standalone output drops the diagram | 3/58 |
+| `text.endParagraph.lang` | Both | unwritable | Paragraphs that end in different languages (`a:endParaRPr/@lang`) all end in `en-US`. Their runs keep their languages | 3/58 |
 | `group.childSpace` | Both | unsupported | The children of a group that scales them are printed pre-scaled, so resizing the group no longer rescales them | 2/58 |
 | `group.transform` | Both | unsupported | A group's rotation and flips are baked into its children. They render the same and no longer rotate with the group | 2/58 |
 | `media.audioVideo` | Both | unread | Embedded audio or video becomes a still image of its poster frame | 2/58 |
@@ -227,6 +228,7 @@ These constructs carry in both outputs and raise no note.
 | An explicit off: `u="none"`, `strike="noStrike"`, `cap="none"` | `underline: { style: 'none' }`, `strike: 'noStrike'`, `caps: 'none'` |
 | Superscript and subscript | `baseline` |
 | A run's language, East Asian face, glow, outline, transparency and underline colour | `lang`, `fontFaceEA`, `glow`, `outline`, `transparency` and `underline.color` |
+| The language every paragraph of a text ends in (`a:endParaRPr/@lang`) | `lang` on the text. A run in another language states its own |
 | A line break between two runs (`a:br`) | `softBreakBefore` on the run after it |
 | Right-to-left paragraphs and tab stops | `rtlMode` and `tabStops` |
 | Text columns and a WordArt warp | `columns`, `columnSpacing` and `textWarp` |

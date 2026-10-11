@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`Paragraph.endLanguage` reads the language of a paragraph's end mark** (`a:endParaRPr/@lang`),
+  or `null` when it states none.
 - **`Picture.recolors` reads every blip effect on a picture**, in document order. `recolor` reads
   only the first, so a picture with `transparency` and a recolour reported the transparency alone.
 - **A `next` channel of unreleased builds.** Every commit on `main` that passes CI is published as
@@ -54,6 +56,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`readModelToIr` keeps the language a text's paragraphs end in.** `addText('bonjour', { lang:
+  'fr-FR' })` writes `fr-FR` on the run and on `a:endParaRPr`. The IR carried it on the run only,
+  so the replay ended the paragraph in `en-US`. When every paragraph end agrees, the language is
+  now `lang` on the text. When they disagree, `text.endParagraph.lang` notes it
+  ([#102](https://github.com/shbernal/pptx-ts/issues/102)).
 - **`readModelToIr` keeps a picture's recolour and transparency.** `grayscale`, `biLevel`,
   `duotone`, `clrChange` and `transparency` were all dropped under an `image.recolor` note saying
   none had a write option. Each now maps to its `addImage` option

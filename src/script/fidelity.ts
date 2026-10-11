@@ -324,6 +324,7 @@ export const NOTE_CONSTRUCTS = {
 	'table.rowAuto': { fields: ['rowH'], tiers: BOTH_TIERS },
 	'table.style': { fields: ['tableStyle'], tiers: BOTH_TIERS },
 	'text.align': { fields: ['align'], tiers: BOTH_TIERS },
+	'text.endParagraph.lang': { fields: [], tiers: BOTH_TIERS },
 	// `text.bullet.numberStartAt` and `text.bullet.style` used to live here, for
 	// `a:buAutoNum/@startAt` and for a bullet's own font/size/colour. `Paragraph.bulletDetail`
 	// reads all four, so the mapper emits `numberStartAt` / `fontFace` / `size` / `color` and

@@ -10,7 +10,7 @@
  *
  * Writes ./output.pptx. Needs an ESM context — it uses top-level await.
  *
- * FIDELITY: 11 declared loss(es). Everything not listed here is expected to
+ * FIDELITY: 13 declared loss(es). Everything not listed here is expected to
  * survive unchanged; a difference that is not in this list is a defect, not a caveat.
  *
  * Deck:
@@ -42,6 +42,8 @@
  *   deck built through the write API is stamped with the library's own value for each in its constructor with no
  *   way to unset it, so the output declares these the source did not
  * Slide 1:
+ * - text.endParagraph.lang (replaceText) [approximated, unwritable] — this text's paragraphs end in different
+ *   languages (de-DE, en-US), and lang states one for the whole text, so each paragraph end comes back in en-US
  * - text.color.inherited (replaceText) [flattened, unsupported] — this run inherits its colour from the
  *   placeholder, master or theme; the write path paints an uncoloured run black instead of leaving it to
  *   inherit, so the inherited colour is resolved and baked in and no longer tracks a theme change
@@ -49,6 +51,9 @@
  *   master or theme; the write path paints an uncoloured run black instead of leaving it to inherit, so the
  *   inherited colour is resolved and baked in and no longer tracks a theme change
  * Slide 2:
+ * - text.endParagraph.lang (replaceTextBullet1) [approximated, unwritable] — this text's paragraphs end in
+ *   different languages (de-DE, en-US), and lang states one for the whole text, so each paragraph end comes back
+ *   in en-US
  * - text.color.inherited (replaceTextBullet1) [flattened, unsupported] — this run inherits its colour from the
  *   placeholder, master or theme; the write path paints an uncoloured run black instead of leaving it to
  *   inherit, so the inherited colour is resolved and baked in and no longer tracks a theme change
