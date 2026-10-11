@@ -223,6 +223,11 @@ export interface SlideIr {
 	 */
 	transition?: TransitionIr
 	/**
+	 * The slide's number placeholder, as the write API's `slideNumber` option. Slide-scoped for
+	 * the reason {@link transition} is: the write API sets it by assignment, not by a method.
+	 */
+	slideNumber?: { [key: string]: IrValue }
+	/**
 	 * Write-API calls in z-order.
 	 *
 	 * Populated for every slide, **including a `carried` one**. A printer that can copy the

@@ -15,7 +15,7 @@
 
 import { describe, test } from 'vitest'
 import JSZip from 'jszip'
-import type { BackgroundProps } from '../../dist/index.js'
+import type { BackgroundProps, SlideNumberProps } from '../../dist/index.js'
 import { Presentation, isAutoShape, type TransitionInput } from '../../dist/read.js'
 import { canonicalDeckIr, readModelToIr, type CallIr, type DeckIr, type IrValue } from '../../dist/script.js'
 import { PNG_1X1, assert, assertEqual, defined, expectDefined, readEntry, at as atIndex, take } from '../helpers.ts'
@@ -1728,5 +1728,61 @@ describe('deck IR — slide background', () => {
 		})
 		const xml = await readEntry(await JSZip.loadAsync(replayed), 'ppt/slides/slide1.xml')
 		assertEqual(/<p:bg>.*?<\/p:bg>/.exec(xml)?.[0], source?.[0], 'and the replay writes the same p:bg')
+	})
+})
+
+describe('deck IR — slide number', () => {
+	// `Slide.slideNumber` writes a `sldNum` placeholder around an `a:fld type="slidenum"`. The
+	// converter flattened it into an empty `addShape('rect')`, so the replay had no slide number
+	// and lost its formatting (issue #89).
+	const sldNumSp = (xml: string) => defined(/<p:sp>(?:(?!<p:sp>).)*?type="sldNum".*?<\/p:sp>/s.exec(xml))[0]
+
+	test('carries as slide.slideNumber and replays the same placeholder', async () => {
+		const slideNumber = {
+			x: 0.5,
+			y: 6.5,
+			w: 1,
+			h: 0.4,
+			align: 'center',
+			valign: 'bottom',
+			bold: true,
+			color: '9B1B30',
+			fontFace: 'Georgia',
+			fontSize: 20,
+			margin: [0.1, 0.2, 0.1, 0.2],
+		} as const
+		const { buf, presentation } = await authorRead((pres) => {
+			pres.addSlide().slideNumber = { ...slideNumber, margin: [...slideNumber.margin] }
+		})
+		const source = sldNumSp(await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml'))
+
+		const ir = readModelToIr(presentation)
+		const slide = atIndex(ir.slides, 0)
+		assertEqual(slide.calls.length, 0, `no shape call stands in for it: ${JSON.stringify(slide.calls)}`)
+		assert(
+			!ir.fidelity.some((note) => note.construct === 'text.field' || note.construct === 'shape.placeholder'),
+			`and nothing is noted lost: ${JSON.stringify([...constructs(ir)])}`
+		)
+		const carried = defined(slide.slideNumber, 'the IR carries a slide number')
+
+		const { buf: replayed } = await authorRead((pres) => {
+			// The IR's slide number is the write API's own `slideNumber` option.
+			pres.addSlide().slideNumber = carried as unknown as SlideNumberProps
+		})
+		const xml = await readEntry(await JSZip.loadAsync(replayed), 'ppt/slides/slide1.xml')
+		assertEqual(sldNumSp(xml), source, 'the replay writes the same placeholder')
+	})
+
+	test('a slide-number placeholder holding more than the field is still flattened', async () => {
+		const { buf } = await authorRead((pres) => {
+			pres.addSlide().slideNumber = { x: 0.5, y: 6.5, w: 1, h: 0.4 }
+		})
+		const zip = await JSZip.loadAsync(buf)
+		const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
+		zip.file('ppt/slides/slide1.xml', slideXml.replace('<a:fld ', '<a:r><a:t>Page </a:t></a:r><a:fld '))
+		const ir = readModelToIr(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
+		const slide = atIndex(ir.slides, 0)
+		assertEqual(slide.slideNumber, undefined, 'it is not a slide number the option can write')
+		assert(constructs(ir).has('text.field'), 'and the field it drops is noted')
 	})
 })

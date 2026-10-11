@@ -66,6 +66,8 @@ export interface CanonicalSlide {
 	 * wrong transition *type*.
 	 */
 	transition: IrValue | null
+	/** The slide number placeholder, or `null`; here for the reason {@link transition} is. */
+	slideNumber: IrValue | null
 	calls: CanonicalCall[]
 }
 
@@ -156,6 +158,7 @@ function canonicalSlide(slide: SlideIr, digests: Map<string, string>): Canonical
 		background: slide.background === undefined ? null : canonicalValue(slide.background as IrValue, digests),
 		notesText: slide.notesText ?? null,
 		transition: slide.transition === undefined ? null : canonicalValue(asIrValue(slide.transition), digests),
+		slideNumber: slide.slideNumber === undefined ? null : canonicalValue(slide.slideNumber, digests),
 		calls: slide.calls.map((call) => {
 			const args = call.args.map((arg) => canonicalValue(arg, digests))
 			return {

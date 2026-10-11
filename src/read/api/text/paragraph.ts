@@ -30,6 +30,7 @@ import {
 import { HUNDREDTHS_PER_POINT } from '../../../units.js'
 import { ptFromEmu, ptFromHundredths } from '../coords.js'
 import {
+	Field,
 	Run,
 	type BulletDetail,
 	type BulletStyle,
@@ -52,10 +53,16 @@ export class Paragraph {
 		private readonly slideLstStyle: Element | null
 	) {}
 
-	/** The runs (`a:r`) in document order. Fields (`a:fld`) and breaks are not runs; see `text`. */
+	/** The runs (`a:r`) in document order. Fields (`a:fld`) are not runs (see {@link fields}), nor are breaks. */
 	get runs(): Run[] {
 		const inherited = this.#inheritedRunProps()
 		return getElements(this.element, 'a:r').map((element) => new Run(element, this.context, inherited))
+	}
+
+	/** The fields (`a:fld`) in document order, each read like a run; see {@link Field}. */
+	get fields(): Field[] {
+		const inherited = this.#inheritedRunProps()
+		return getElements(this.element, 'a:fld').map((element) => new Field(element, this.context, inherited))
 	}
 
 	/**

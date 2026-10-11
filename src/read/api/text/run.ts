@@ -582,3 +582,16 @@ export class Run {
 		if (changed) this.context.part.markDirty()
 	}
 }
+
+/**
+ * One text field (`a:fld`): text PowerPoint computes as it renders, such as a slide number
+ * (`slidenum`) or a date (`datetime1`). A field carries the same `a:rPr` a run does, so it reads
+ * and resolves its formatting like one. {@link text} is the rendering PowerPoint last cached,
+ * which it recomputes on open.
+ */
+export class Field extends Run {
+	/** The field type (`@type`), such as `slidenum` or `datetime1`, or `null` when unset. */
+	get type(): string | null {
+		return attr(this.element_, 'type')
+	}
+}

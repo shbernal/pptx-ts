@@ -4,8 +4,19 @@
  * The frame is where a shape's text begins: it owns the body properties (insets, anchor,
  * wrap, autofit) and hands each `a:p` to a {@link Paragraph}.
  */
-import { attr, type Element, firstChild, getElements, numberValue, pctPointsAttr } from '../../oxml/dom.js'
-import { resolveInheritedAnchor } from '../theme-context.js'
+import {
+	attr,
+	type Element,
+	firstChild,
+	firstChildElement,
+	getElements,
+	numberValue,
+	pctPointsAttr,
+} from '../../oxml/dom.js'
+import { readColorRef, resolveInheritedAnchor, type ColorRef } from '../theme-context.js'
+import { lstStyleLevelDefRPr } from '../../oxml/placeholder-inherit.js'
+import { boolValue } from '../../../ooxml/xsd-boolean.js'
+import { ptFromHundredths } from '../coords.js'
 import { emuToPoints } from '../../../units.js'
 import type { TextContext } from './run.js'
 import { Paragraph } from './paragraph.js'
@@ -35,6 +46,23 @@ export interface BodyProperties {
 }
 
 /**
+ * The character defaults a frame's own list style states for one level
+ * (`a:lstStyle/a:lvlNpPr/a:defRPr`). Each field is `null` when that `a:defRPr` does not state it.
+ */
+export interface ListStyleDefaults {
+	/** `@sz` in points, or `null`. */
+	fontSizePt: number | null
+	/** `a:latin/@typeface`, as written (a `+mj-lt` token stays a token), or `null`. */
+	fontName: string | null
+	/** `@b`, or `null`. */
+	bold: boolean | null
+	/** `@i`, or `null`. */
+	italic: boolean | null
+	/** The `a:solidFill` colour, or `null` when the level states no solid fill. */
+	colorRef: ColorRef | null
+}
+
+/**
  * A text frame's vertical-autofit mode, read from its `a:bodyPr` autofit child:
  * - `'none'`       — `a:noAutofit`, or no autofit child at all (the box has a fixed
  *                    size and text can overflow); write-side `fit: 'none'`.
@@ -59,6 +87,28 @@ export class TextFrame {
 		// inheritance chain; resolve it once and share it.
 		const slideLstStyle = this.context.inherit ? firstChild(this.txBody, 'a:lstStyle') : null
 		return getElements(this.txBody, 'a:p').map((element) => new Paragraph(element, this.context, slideLstStyle))
+	}
+
+	/**
+	 * The character defaults this frame's own list style states for paragraphs at `level`
+	 * (0-based): `a:lstStyle/a:lvlNpPr/a:defRPr`, else `a:defPPr/a:defRPr`. `null` when the frame
+	 * has no list style or it states no defaults for that level.
+	 *
+	 * Only the frame's own tier. What a run inherits through it, and through a placeholder's
+	 * layout and master, is the run's `resolved*` reads.
+	 */
+	listStyleDefaults(level = 0): ListStyleDefaults | null {
+		const defRPr = lstStyleLevelDefRPr(firstChild(this.txBody, 'a:lstStyle'), level)
+		if (!defRPr) return null
+		const fill = firstChild(defRPr, 'a:solidFill')
+		const latin = firstChild(defRPr, 'a:latin')
+		return {
+			fontSizePt: ptFromHundredths(numberValue(attr(defRPr, 'sz'))),
+			fontName: (latin && attr(latin, 'typeface')) || null,
+			bold: boolValue(attr(defRPr, 'b')),
+			italic: boolValue(attr(defRPr, 'i')),
+			colorRef: fill ? readColorRef(firstChildElement(fill), this.context.ctx) : null,
+		}
 	}
 
 	/**

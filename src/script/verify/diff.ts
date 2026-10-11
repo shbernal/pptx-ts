@@ -351,7 +351,8 @@ function diffSlide(expected: CanonicalSlide, actual: CanonicalSlide, out: IrDiff
 	at('layoutName', 'layoutName', expected.layoutName, actual.layoutName)
 	at('background', 'background', expected.background, actual.background)
 	at('notesText', 'notesText', expected.notesText, actual.notesText)
-	// Structural rather than whole-value, unlike the four above: a transition is a small object
+	at('slideNumber', 'slideNumber', expected.slideNumber, actual.slideNumber)
+	// Structural rather than whole-value, unlike those above: a transition is a small object
 	// whose parts are lost independently — the append path drops an embedded sound while
 	// keeping the effect — and a whole-value compare would force the note that declares the
 	// sound to carry `field: 'transition'`, which would then excuse a wrong type or duration too.

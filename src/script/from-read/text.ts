@@ -795,7 +795,7 @@ function bakedPct(value: number | null, name: 'fontScale' | 'lnSpcReduction', no
  * spelled out — defaulting them to 0 would visibly reflow every body that sets one side.
  */
 
-function marginOption(body: BodyProperties | null): IrValue | undefined {
+export function marginOption(body: BodyProperties | null): IrValue | undefined {
 	const insets = body?.insetsPt
 	if (!insets) return undefined
 	const { left, right, top, bottom } = insets

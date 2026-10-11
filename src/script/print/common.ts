@@ -232,6 +232,9 @@ export function printSlide(
 	if (slide.transition) {
 		lines.push(`${identifier}.transition = ${printValue(asIrValue(slide.transition), 0, printAsset)}`)
 	}
+	if (slide.slideNumber) {
+		lines.push(`${identifier}.slideNumber = ${printValue(slide.slideNumber, 0, printAsset)}`)
+	}
 	if (slide.notesText !== undefined) {
 		lines.push(printArguments(`${identifier}.addNotes`, [slide.notesText], 0, printAsset))
 	}

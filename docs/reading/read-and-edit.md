@@ -90,6 +90,7 @@ if (second) second.text = 'Second bullet, rewritten'
 - Leading and trailing spaces are kept (`xml:space="preserve"`).
 - Setting `text` on a shape with no text frame, such as a picture, throws `UnsupportedFeatureError` with code `shape/no-text-frame`.
 - To change one run and leave its neighbours alone, set `run.text` through `textFrame.paragraphs[i].runs[j]`.
+- A field (`a:fld`), such as a slide number or a date, is not a run. [`paragraph.fields`](../reference/api/read/classes/Paragraph.md#fields) lists them. Each [`Field`](../reference/api/read/classes/Field.md) has a run's formatting reads, plus its `type` (`slidenum`, `datetime1` and so on). Its `text` is the value PowerPoint last cached.
 
 ## Change position, size and colour
 
@@ -272,4 +273,4 @@ if (part && text) {
 - [Read object model](../reference/read-object-model.md)
 - [Layout units](../reference/layout-units.md)
 - [Errors and warnings](../errors-and-warnings.md)
-- API reference: [`Presentation`](../reference/api/read/classes/Presentation.md), [`Slide`](../reference/api/read/classes/Slide.md), [`Shape`](../reference/api/read/classes/Shape.md), [`TextFrame`](../reference/api/read/classes/TextFrame.md), [`Paragraph`](../reference/api/read/classes/Paragraph.md), [`Run`](../reference/api/read/classes/Run.md), [`Picture`](../reference/api/read/classes/Picture.md), [`NotesSlide`](../reference/api/read/classes/NotesSlide.md), [`AddTextBoxOptions`](../reference/api/read/interfaces/AddTextBoxOptions.md), [`AddPictureOptions`](../reference/api/read/interfaces/AddPictureOptions.md)
+- API reference: [`Presentation`](../reference/api/read/classes/Presentation.md), [`Slide`](../reference/api/read/classes/Slide.md), [`Shape`](../reference/api/read/classes/Shape.md), [`TextFrame`](../reference/api/read/classes/TextFrame.md), [`Paragraph`](../reference/api/read/classes/Paragraph.md), [`Run`](../reference/api/read/classes/Run.md), [`Field`](../reference/api/read/classes/Field.md), [`Picture`](../reference/api/read/classes/Picture.md), [`NotesSlide`](../reference/api/read/classes/NotesSlide.md), [`AddTextBoxOptions`](../reference/api/read/interfaces/AddTextBoxOptions.md), [`AddPictureOptions`](../reference/api/read/interfaces/AddPictureOptions.md)

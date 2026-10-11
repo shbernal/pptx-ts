@@ -286,6 +286,48 @@ describe('Run, paragraph and body reads the write API authors (issue #54)', () =
 	})
 })
 
+describe('Field and list-style reads', () => {
+	test("a slide number reads as a field, with the frame's list-style defaults beside it", async () => {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().slideNumber = {
+				x: 1,
+				y: 1,
+				w: 1,
+				h: 0.5,
+				bold: true,
+				color: 'accent2',
+				fontFace: 'Georgia',
+				fontSize: 20,
+			}
+		})
+		const shape = defined(firstShape(presentation, (s) => s.placeholder?.type === 'sldNum'))
+		const frame = defined(shape.textFrame)
+		const paragraph = defined(frame.paragraphs[0])
+		assertEqual(paragraph.runs.length, 0, 'the field is not a run')
+		const field = defined(paragraph.fields[0])
+		assertEqual(paragraph.fields.length, 1, 'one field')
+		assertEqual(field.type, 'slidenum', 'its @type')
+		assertEqual(field.text, '1', 'its cached text')
+		assertEqual(field.bold, true, 'its own a:rPr reads like a run')
+		assertEqual(field.resolvedSizePt, 20, 'and resolves through the list style')
+
+		const defaults = defined(frame.listStyleDefaults())
+		assertEqual(defaults.fontSizePt, 20, 'lvl1pPr/defRPr @sz')
+		assertEqual(defaults.fontName, 'Georgia', 'its a:latin')
+		assertEqual(defaults.colorRef?.scheme, 'accent2', 'its colour token')
+		assertEqual(defaults.bold, null, 'and nothing it does not state')
+	})
+
+	test('a frame with no list style states no defaults', async () => {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addText('Plain', { x: 1, y: 1, w: 4, h: 1 })
+		})
+		const frame = defined(firstShape(presentation, (s) => s.hasTextFrame)?.textFrame)
+		assertEqual(frame.listStyleDefaults(), null, 'no defaults')
+		assertEqual(defined(frame.paragraphs[0]).fields.length, 0, 'and no fields')
+	})
+})
+
 describe('Run/paragraph formatting — schema validity', () => {
 	test.skipIf(!validatorInstalled)('the authored formatted deck is schema-valid', async () => {
 		assertEqual((await schemaErrors((await authorRead(formattedRuns)).buf)).length, 0, 'formatted-runs deck validates')
