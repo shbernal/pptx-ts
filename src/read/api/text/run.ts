@@ -12,6 +12,7 @@ import {
 	attr,
 	boolValue,
 	type Element,
+	ELEMENT_NODE,
 	firstChild,
 	firstChildElement,
 	getOrAddChild,
@@ -26,6 +27,7 @@ import { checkEnumOrThrow } from '../../../ooxml/check-enum.js'
 import { TEXT_UNDERLINE_TYPES } from '../../../ooxml/st-enums.js'
 import { resolveThemeFont, type ThemeContext } from '../../oxml/theme.js'
 import {
+	readColorRef,
 	resolveColorElement,
 	resolveSolidFillColor,
 	type ColorRef,
@@ -36,7 +38,9 @@ import {
 import { InvalidOptionError } from '../../../errors.js'
 import { ptToHundredths } from '../../../units.js'
 import { RPR_FILL_AFTER, RPR_LATIN_AFTER } from '../../../ooxml/sequence.js'
-import { ptFromHundredths } from '../coords.js'
+import { ptFromEmu, ptFromHundredths } from '../coords.js'
+import { readGlow } from '../shapes/effects.js'
+import type { Glow } from '../shapes/types.js'
 import type { TableCellTextStyle } from '../table-style-resolve.js'
 
 /**
@@ -159,6 +163,30 @@ export type BulletDetail =
 			 */
 			imagePartName: string | null
 	  } & BulletStyle)
+
+/** One tab stop of a paragraph (`a:pPr/a:tabLst/a:tab`). */
+export interface TabStop {
+	/** Position from the paragraph's left edge in points (`@pos` ÷ 12700), or `null` when unset. */
+	positionPt: number | null
+	/** Alignment token (`@algn`: `l` | `ctr` | `r` | `dec`), or `null` when unset (the schema default is `l`). */
+	alignment: string | null
+}
+
+/** A run's text outline (`a:rPr/a:ln`): the stroke drawn around each glyph. */
+export interface RunOutline {
+	/** Stroke width in points (`@w` ÷ 12700), or `null` when unset. */
+	widthPt: number | null
+	/**
+	 * `true` for an explicit no-outline (`a:ln/a:noFill`), which PowerPoint writes on ordinary text
+	 * to say the glyphs are not stroked.
+	 */
+	noFill: boolean
+	/**
+	 * The stroke's solid colour (`a:ln/a:solidFill`), as written and resolved against the slide theme.
+	 * Every field is `null` when the outline has no solid fill (`a:noFill`, a gradient, or none).
+	 */
+	colorRef: ColorRef
+}
 
 /** One text run (`a:r`): a span of text with uniform character formatting. */
 export class Run {
@@ -317,6 +345,72 @@ export class Run {
 	 */
 	get hyperlink(): Hyperlink | null {
 		return readHyperlink(this.#rPr(), this.context.rels)
+	}
+
+	/**
+	 * The run's language tag (`a:rPr/@lang`, e.g. `fr-FR`), or `null` when unset. Decides spelling,
+	 * hyphenation and font fallback. The read counterpart of the write-side `lang` option.
+	 */
+	get language(): string | null {
+		return this.#rPrAttrRaw('lang')
+	}
+
+	/**
+	 * The run's own glow (`a:rPr/a:effectLst/a:glow`), resolved against the slide theme, or `null`.
+	 * The read counterpart of the write-side text `glow` option; a shape's glow is `Shape.glow`.
+	 */
+	get glow(): Glow | null {
+		const rPr = this.#rPr()
+		return readGlow(rPr && firstChild(rPr, 'a:effectLst'), this.context.ctx)
+	}
+
+	/** The run's text outline (`a:rPr/a:ln`), or `null` when it has none. The read counterpart of `outline`. */
+	get outline(): RunOutline | null {
+		const rPr = this.#rPr()
+		const ln = rPr && firstChild(rPr, 'a:ln')
+		if (!ln) return null
+		const fill = firstChild(ln, 'a:solidFill')
+		return {
+			widthPt: ptFromEmu(numberValue(attr(ln, 'w'))),
+			noFill: firstChild(ln, 'a:noFill') !== null,
+			colorRef: readColorRef(fill && firstChildElement(fill), this.context.ctx),
+		}
+	}
+
+	/**
+	 * The underline's own colour (`a:rPr/a:uFill/a:solidFill`), as written and resolved, or `null`
+	 * when the underline follows the text colour. The read counterpart of `underline.color`.
+	 */
+	get underlineColor(): ColorRef | null {
+		const rPr = this.#rPr()
+		const uFill = rPr && firstChild(rPr, 'a:uFill')
+		const fill = uFill && firstChild(uFill, 'a:solidFill')
+		return fill ? readColorRef(firstChildElement(fill), this.context.ctx) : null
+	}
+
+	/**
+	 * The East Asian typeface (`a:rPr/a:ea/@typeface`), or `null` when unset. {@link fontName} is the
+	 * Latin slot. The read counterpart of the write-side `fontFaceEA` option.
+	 */
+	get eastAsianFontName(): string | null {
+		const rPr = this.#rPr()
+		const ea = rPr && firstChild(rPr, 'a:ea')
+		return ea ? attr(ea, 'typeface') : null
+	}
+
+	/**
+	 * How many line breaks (`a:br`) sit directly before this run in its paragraph, with no run or
+	 * field between them. A soft break is not a run, so without this the runs on either side of one
+	 * read as plain neighbours. The read counterpart of the write-side `softBreakBefore` option.
+	 */
+	get breaksBefore(): number {
+		let count = 0
+		for (let node = this.element.previousSibling; node; node = node.previousSibling) {
+			if (node.nodeType !== ELEMENT_NODE) continue
+			if ((node as Element).localName !== 'br') break
+			count++
+		}
+		return count
 	}
 
 	/** Latin typeface name (`a:rPr/a:latin/@typeface`), or `null` when unset. */

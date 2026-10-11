@@ -8,6 +8,7 @@
 import { resolvePartName } from '../../opc/partnames.js'
 import {
 	attr,
+	boolValue,
 	type Element,
 	ELEMENT_NODE,
 	firstChild,
@@ -34,6 +35,7 @@ import {
 	type BulletStyle,
 	type InheritedRunProps,
 	type LineSpacing,
+	type TabStop,
 	type TextContext,
 } from './run.js'
 import { setParagraphText } from './edit.js'
@@ -150,6 +152,29 @@ export class Paragraph {
 	/** First-line indent in points (`a:pPr/@indent` is EMU; negative for a hanging indent), or `null` when unset. */
 	get indentPt(): number | null {
 		return this.#emuAttrPt('indent')
+	}
+
+	/**
+	 * Right-to-left paragraph direction (`a:pPr/@rtl`), or `null` when unset (left to right). The
+	 * read counterpart of the write-side `rtlMode` option.
+	 */
+	get rtl(): boolean | null {
+		const pPr = firstChild(this.element, 'a:pPr')
+		return pPr ? boolValue(attr(pPr, 'rtl')) : null
+	}
+
+	/**
+	 * The paragraph's own tab stops (`a:pPr/a:tabLst/a:tab`) in document order, or `null` when it
+	 * states no tab list and inherits one. The read counterpart of the write-side `tabStops` option.
+	 */
+	get tabStops(): TabStop[] | null {
+		const pPr = firstChild(this.element, 'a:pPr')
+		const tabLst = pPr && firstChild(pPr, 'a:tabLst')
+		if (!tabLst) return null
+		return getElements(tabLst, 'a:tab').map((tab) => ({
+			positionPt: ptFromEmu(numberValue(attr(tab, 'pos'))),
+			alignment: attr(tab, 'algn') ?? null,
+		}))
 	}
 
 	/**

@@ -122,6 +122,8 @@ export {
 	type BulletStyle,
 	type InheritedRunProps,
 	type LineSpacing,
+	type RunOutline,
+	type TabStop,
 	type TextContext,
 	type TextInheritance,
 } from './read/api/text.js'

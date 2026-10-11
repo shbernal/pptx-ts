@@ -340,6 +340,12 @@ export const NOTE_CONSTRUCTS = {
 	'text.color.default': { fields: ['options.color'], tiers: BOTH_TIERS },
 	'text.color.inherited': { fields: ['options.color'], tiers: BOTH_TIERS },
 	'text.color.schemeToken': { fields: ['options.color'], tiers: BOTH_TIERS },
+	'text.underline.schemeToken': { fields: ['options.underline.color'], tiers: BOTH_TIERS },
+	'text.outline': { fields: ['options.outline'], tiers: BOTH_TIERS },
+	'text.outline.schemeToken': { fields: ['options.outline.color'], tiers: BOTH_TIERS },
+	'text.glow.schemeToken': { fields: ['options.glow.color'], tiers: BOTH_TIERS },
+	// A dropped break moves text between lines; no field carries it, like `text.kern`.
+	'text.softBreak': { fields: [], tiers: BOTH_TIERS },
 	'text.equation': { fields: ['*'], tiers: BOTH_TIERS },
 	'text.field': { fields: ['*'], tiers: BOTH_TIERS },
 	// A run link the run-level `hyperlink` cannot spell is left off, so the difference lands there.

@@ -17,6 +17,7 @@
  */
 import type { CellBorder, Table, TableCell } from '../../read/api/table.js'
 import type { GraphicFrame } from '../../read/api/shapes.js'
+import type { Run } from '../../read/api/text.js'
 import type { TextBaseProps } from '../../types/text.js'
 import type { NoteScope } from '../fidelity.js'
 import type { CallIr, IrValue } from '../ir.js'
@@ -194,10 +195,20 @@ function cellIr(cell: TableCell, hasStyle: boolean, ctx: MapContext): IrValue {
 			: undefined,
 		// A cell's own runs may each carry formatting; the first run's options double as the
 		// cell default, which is how the write path applies cell-level character formatting.
-		...(frame?.paragraphs[0]?.runs[0] ? (runOptions(frame.paragraphs[0].runs[0], ctx) ?? {}) : {}),
+		...cellRunDefaults(frame?.paragraphs[0]?.runs[0], ctx),
 	})
 
 	return compact({ text: frame ? textRuns(frame, ctx) : cell.text, options }) ?? { text: '' }
+}
+
+/**
+ * The first run's options as the cell's defaults, less the two `TableCellProps` has no field for.
+ * A run's `outline` and `glow` stay on the run itself, in the cell's `text`.
+ */
+function cellRunDefaults(run: Run | undefined, ctx: MapContext): Record<string, IrValue> {
+	if (!run) return {}
+	const { outline: _outline, glow: _glow, ...defaults } = runOptions(run, ctx) ?? {}
+	return defaults
 }
 
 /**
