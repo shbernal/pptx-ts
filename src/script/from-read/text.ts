@@ -263,12 +263,22 @@ export function runOptions(run: Run, ctx: MapContext): Record<string, IrValue> |
 		color: runColor(run, notes),
 		highlight: run.highlight ? literalColor(run.highlight.effectiveHex) : undefined,
 		caps: orUndefined(run.caps),
-		// The write API spells baseline shift as a percentage, the same unit the read
-		// model reports, so superscript/subscript survive without a preset round-trip.
-		baseline: orUndefined(run.baselinePct),
+		baseline: baselineOption(run.baselinePct),
 		...spacingOptions(run, notes),
 		hyperlink,
 	})
+}
+
+/**
+ * `Run.baselinePct` → `baseline`, which is not a percent: the write path writes
+ * `Math.round(baseline * 50)` thousandths of a percent, so the option counts twentieths of one.
+ * Passing the percent straight through shrank every shift 50x per round trip, a superscript
+ * (`30000`, 30%) coming back as `baseline: 30` and then `@baseline="1500"`. The thousandths are
+ * divided by 50 rather than the percent multiplied by 20, so the round trip lands on the
+ * attribute it started from.
+ */
+function baselineOption(pct: number | null): number | undefined {
+	return pct === null ? undefined : Math.round(pct * 1000) / 50
 }
 
 /**

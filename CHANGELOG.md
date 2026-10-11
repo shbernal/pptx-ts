@@ -27,6 +27,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `kerning`, for shape text and table cells. A spaced run that states no `kern`, which the write
   API cannot reproduce, records a `text.kern` fidelity note. Spaced speaker-notes text now counts
   toward the `notes.formatting` note.
+- **Baseline shifts survive `readModelToIr`.** The `baseline` option counts twentieths of a percent
+  (it is written as `Math.round(baseline * 50)` thousandths), but `readModelToIr` carried
+  `Run.baselinePct`, a percent, straight across. Every superscript, subscript and baseline shift
+  came back 50 times smaller after one round trip, a superscript's `baseline="30000"` replaying as
+  `baseline="1500"` ([#55](https://github.com/shbernal/pptx-ts/issues/55)). The IR now converts to
+  the option's unit, for shape text and table cells, and `TextPropsOptions.baseline` documents it.
 
 ## [4.1.0](https://github.com/shbernal/pptx-ts/releases/tag/v4.1.0) - 2026-10-11
 
