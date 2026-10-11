@@ -32,7 +32,7 @@
 
 ## Checklist
 
-- [ ] I ran `pnpm run verify:full` and it passed.
+- [ ] `pnpm run verify` passes locally. CI runs the full gate on this pull request.
 - [ ] I performed a self-review of my own changes.
 - [ ] The change is covered by a focused test.
 - [ ] **Emitted-OOXML changes only:** the change is grounded in evidence and
@@ -40,8 +40,7 @@
       [docs/contributing/ooxml.md](../docs/contributing/ooxml.md#evidence-and-fixtures).
 - [ ] **Breaking changes only:** [CHANGELOG.md](../CHANGELOG.md) records the
       change and its migration guidance.
-- [ ] I read [CONTRIBUTING.md](../CONTRIBUTING.md) and [AGENTS.md](../AGENTS.md), which are the
-      authoritative contributor docs.
+- [ ] I read [CONTRIBUTING.md](../CONTRIBUTING.md), the authoritative contributor doc.
 
 ## Notes for the reviewer
 

@@ -27,7 +27,7 @@ has the commands for each step. This page says why the steps are shaped the way 
 flowchart TD
   s1["1. Refresh the comparison<br/>comparison:measure, comparison:render"] --> s2["2. Review the snapshot diff"]
   s2 --> s3["3. Write and stage the CHANGELOG entry"]
-  s3 --> s4["4. Local gate<br/>check:static, verify:full, npm view for a 404 on both names"]
+  s3 --> s4["4. Local gate<br/>check:static, verify, npm view for a 404 on both names"]
   s4 --> s5["5. pnpm version<br/>bumps, syncs the constant, commits, tags"]
   s5 --> s6["6. Push master, then the vX.Y.Z tag"]
   s6 --> s7["7. Publish a GitHub Release from the tag"]
@@ -107,7 +107,8 @@ tagged `vX.Y.Z`. Both flags are needed:
   the check for everything, so run `git status` first and leave scratch files untracked.
 
 The local gate runs before this command, so the tag lands on a commit that already passed
-`check:static` and `verify:full`. CI runs the same gate again before it publishes.
+`check:static` and `verify`. The heavier gates are CI's: the publish workflow runs every `ci.yml`
+leg before it publishes, so they are not repeated locally.
 
 ## What the workflow checks
 

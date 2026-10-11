@@ -25,7 +25,7 @@ import {
 // child sequence are unchanged, and every one of those is invisible to a substring check.
 //
 // If one of these fails after an emitter change, the question is whether the *bytes* were meant
-// to change. If they were, that is an OOXML change and needs a schema fixture too (AGENTS.md);
+// to change. If they were, that is an OOXML change and needs a schema fixture too (`docs/contributing/ooxml.md`);
 // if they were not, the builder call is wrong.
 
 /** A 1x1 transparent PNG — the smallest thing that resolves to a real media relationship. */

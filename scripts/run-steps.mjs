@@ -4,7 +4,7 @@
 //
 // Why this exists: the gates are composites, and a composite has to name its steps
 // rather than inline their commands, or each gate gets a second, drifting copy
-// (AGENTS.md). This runner keeps package.json as the single definition of what each
+// (testing guide, "Aggregates"). This runner keeps package.json as the single definition of what each
 // step *is*, and adds what `pnpm run a && pnpm run b` cannot: a repeat inside one
 // invocation is skipped (composites overlap on `ensure-dist` and the docs steps),
 // `--list` prints a gate's real contents, and a passing run prints its cost per step.

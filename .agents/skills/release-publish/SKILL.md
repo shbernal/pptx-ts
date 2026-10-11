@@ -28,7 +28,7 @@ release (`git log --oneline vLAST..HEAD`). The user's explicit ask wins:
 
 - **patch** (`X.Y.Z+1`): only `fix:` or internal changes, no API change.
 - **minor** (`X.Y+1.0`): any `feat:` or additive API, or a fix the user wants shipped as a minor.
-- **major** (`X+1.0.0`): a breaking API change (allowed here; see AGENTS.md "API evolution policy").
+- **major** (`X+1.0.0`): a breaking API change (allowed here; see "Reporting bugs and proposing changes" in `CONTRIBUTING.md`).
 
 If the user says "minor release", do that even for a lone fix.
 
@@ -86,11 +86,14 @@ git add CHANGELOG.md
 
 ### 4. Run the local gate
 
-The publish workflow's gate is `ci.yml`, and CI is these two commands:
+The publish workflow's gate is `ci.yml`, which runs every heavy gate before anything publishes.
+Locally, run the cheap part, which catches a bad CHANGELOG or comparison edit before the tag:
 
 ```bash
-pnpm run check:static && pnpm run verify:full
+pnpm run check:static && pnpm run verify
 ```
+
+Do not run `verify:full`; CI carries it.
 
 Then confirm the version is new under both names. Both commands should fail with a registry 404:
 

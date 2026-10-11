@@ -1,13 +1,13 @@
 // The whitespace-equivalence prover.
 //
-// This module's job is to discharge an AGENTS.md STOP: a whitespace-only byte diff is
+// This module's job is to discharge the byte-identity gate's rule: a whitespace-only byte diff is
 // refused unless a program can prove that is all it is. That makes a false PASS the worst
-// thing it can do — it would wave through the exact content change the STOP exists to
+// thing it can do — it would wave through the exact content change the rule exists to
 // catch, while looking like evidence. So the tests here are weighted toward the red cases:
 // every kind of difference that is NOT inert whitespace gets one, and each is written so
 // that a prover which merely stripped whitespace and compared would fail it.
 //
-// AGENTS.md, on the render oracle: "Make any new case fail on purpose before trusting it."
+// The testing guide, on the render oracle: "Make a new case fail on purpose before trusting it."
 // That is what the `rejects` blocks are.
 
 import { describe, expect, test } from 'vitest'

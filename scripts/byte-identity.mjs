@@ -2,7 +2,7 @@
 /**
  * Byte-identity gate for write-side refactors.
  *
- * AGENTS.md ("Byte identity"): "Any other byte change is a real regression. Do not accept one as cleanup."
+ * Any byte change is a real regression, never a cleanup ("Byte identity" in `docs/contributing/testing.md`).
  * This proves a behavior-preserving refactor of the `src/gen/` emitters does not
  * change a single emitted byte, by generating every gate deck (`scripts/gate-decks/`), exploding
  * each one (recursing into its embedded .xlsx parts, which are their own OPC packages),
@@ -19,7 +19,7 @@
  * wrong code.
  *
  * `prove-whitespace` is NOT a looser `check`, and reaching for it because `check` went
- * red is a misuse. AGENTS.md keeps whitespace-only byte diffs a STOP because judging a
+ * red is a misuse. The testing guide keeps whitespace-only byte diffs a failure because judging a
  * diff to be "just formatting" is the same act that would wave through a content change;
  * this subcommand replaces the judgement with a program (`xml-equivalence.mjs`), which
  * compares raw text, attribute order, quote characters and self-closing forms and relaxes
@@ -74,8 +74,8 @@ if (mode !== 'baseline' && mode !== 'check' && mode !== 'prove-whitespace') {
  * The corpus is the gate decks (`scripts/gate-decks/`): fixture matrices shaped like a
  * `.pptx`, built for nothing but this diff. The site's demo decks (`www/demos/decks/`) are
  * deliberately not in it, so a demo can change without moving the baseline, and an emitter
- * the gate covers stays covered whatever the demos stop doing. AGENTS.md is explicit that a
- * PASS on an emitter no deck reaches is "unproven, not proven unchanged".
+ * the gate covers stays covered whatever the demos stop doing. A PASS on an
+ * emitter no deck reaches is unproven, not proven unchanged.
  *
  * Loaded by dynamic import rather than a static one: the decks pull in `dist/`, which the
  * build above writes moments earlier and which may not exist when this module is first
@@ -131,7 +131,7 @@ async function explodeDecks(decks, destDir) {
  * `check` passes trivially — a green gate that proves nothing. Refuse instead,
  * and say so, because the obvious workaround is `git stash`: stashing a dirty
  * tree to fake a retroactive baseline risks losing unrelated work to a pop
- * conflict (AGENTS.md: "Preserve unrelated dirty state").
+ * conflict (the development guide: leave unrelated uncommitted changes as you found them).
  *
  * Scoped to `src/gen/` deliberately — dirt anywhere else cannot affect the
  * emitted bytes, so it is none of this gate's business.

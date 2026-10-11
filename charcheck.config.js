@@ -73,7 +73,7 @@ export default {
 			scope: 'markdown',
 			fix: strategies.clauseSeparator,
 			message: MESSAGE,
-			include: ['README.md', 'AGENTS.md', 'CONTRIBUTING.md', 'www/**/*.md', 'docs/**/*.md', 'skills/**/*.md'],
+			include: ['README.md', 'CONTRIBUTING.md', 'www/**/*.md', 'docs/**/*.md', 'skills/**/*.md'],
 		},
 		{
 			// The site's one Vue component: template text and allowlisted attributes. Its

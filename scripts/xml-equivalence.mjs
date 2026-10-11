@@ -1,7 +1,7 @@
 /**
  * Mechanical proof that two XML parts differ **only** in inert inter-element whitespace.
  *
- * AGENTS.md: "Whitespace-only byte diffs are a STOP, not a known divergence" — because
+ * A whitespace-only byte diff fails the byte-identity gate, not a known divergence, because
  * waving a diff through on the grounds that it *looks* like whitespace is the same
  * reasoning that would wave through a content change. This module exists so that a change
  * planned as whitespace-only is settled by a program rather than by reading a diff

@@ -580,7 +580,7 @@ defineRegressionSuite('Group shapes', [
 	{
 		name: 'an empty group warns rather than silently emitting a zero-size group',
 		fn: async () => {
-			// Auto-bounds over no children is a 0x0 box — the degenerate result AGENTS.md says to warn on.
+			// Auto-bounds over no children is a 0x0 box — the degenerate result the warn-or-throw rule says to warn on.
 			const warnings: string[] = []
 			setDiagnosticHandler((d) => warnings.push(d.message))
 			let xml

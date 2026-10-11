@@ -36,13 +36,13 @@ Each cell comes from `package.json`, `lefthook.yml` or a workflow under `.github
 | `docs:check` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
 | `comparison:check` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
 | `test` | ✓ | | | | | `test` (Node 26.x) | every change, through `verify` |
-| `test:coverage` | | ✓ | | | | `test` (Node 24.x) | before pushing, through `verify:full`; `coverage:probe` while editing |
+| `test:coverage` | | ✓ | | | | `test` (Node 24.x) | CI; `coverage:probe` while editing |
 | `docs:build` | | | | | | `docs.yml` `build`, and `browser` | a change to `docs/.vitepress/`, `www/` or a docs generator |
-| `script:roundtrip:all` | | ✓ | | | | `test` (Node 24.x) | before pushing, through `verify:full` |
-| `package:lint` | | ✓ | | | | `package` | before pushing; exports, entry points or shipped files change |
-| `test:package` | | ✓ | | | | `package` | before pushing; exports, entry points or shipped files change |
-| `bundle-size:check` | | ✓ | | | | `package` | before pushing; an import moves or a dependency arrives |
-| `bundle-tier:check` | | ✓ | | | | `package` | before pushing; an import moves or a dependency arrives |
+| `script:roundtrip:all` | | ✓ | | | | `test` (Node 24.x) | CI; `script:roundtrip` while editing `src/script/` |
+| `package:lint` | | ✓ | | | | `package` | CI; locally only to iterate on a `package` failure |
+| `test:package` | | ✓ | | | | `package` | CI; locally only to iterate on a `package` failure |
+| `bundle-size:check` | | ✓ | | | | `package` | CI; locally to re-freeze after an import moves or a dependency arrives |
+| `bundle-tier:check` | | ✓ | | | | `package` | CI; locally to re-freeze after an import moves or a dependency arrives |
 | `lint` | | | ✓ | staged, fixes | ✓ | `static` | the hooks run it |
 | `lint:chars` | | | ✓ | staged | ✓ | `static` | the hooks run it |
 | `format:check` | | | ✓ | staged, writes | ✓ | `static` | the hooks run it |
@@ -71,11 +71,14 @@ Reading the matrix:
 ### Aggregates
 
 ```bash
-pnpm run verify         # per change
-pnpm run verify:full    # before pushing, and for package or release changes
+pnpm run verify         # the local gate: per change, and before pushing
+pnpm run verify:full    # CI only: the Node-side gates of the test and package jobs
 pnpm run check:static   # what CI's static job runs
 pnpm run check:package  # what CI's package job runs
 ```
+
+`verify` is the only aggregate a contributor runs. The others name what CI runs, so a failing leg
+can be reproduced by its own command.
 
 - `check:core` is the one list of cheap checks: the four typechecks, `raw-xml:check`,
   `ooxml-literals:check`, `test-imports:check`, `path-refs:check`, `docs:api`, `docs:check` and
@@ -88,8 +91,8 @@ pnpm run check:package  # what CI's package job runs
   static checks only through `check:static`.
 - `verify:full` is `check:core`, `test:coverage`, `script:roundtrip:all` and `check:package`:
   every `verify` step, with the suite collecting coverage, plus the gates that run the read
-  corpus through both printers or pack and install the tarball. Run it in place of the last
-  `verify` before a push. `test/scripts/gate-parsers.test.ts` fails when a `verify` step is
+  corpus through both printers or pack and install the tarball. CI carries it, split across the
+  `test` and `package` jobs; do not run it before a push. `test/scripts/gate-parsers.test.ts` fails when a `verify` step is
   missing from it.
 - `check:package` is the four package gates.
 - Neither aggregate builds the site. `docs:build` costs about 2 GB and two minutes on a
@@ -117,20 +120,11 @@ source or build config is newer than it.
 
 ### Git hooks
 
-`lefthook.yml` defines the hooks, and `prepare` installs them through
-`scripts/install-hooks.mjs`.
-
-| Hook | Runs | Scope |
-| --- | --- | --- |
-| pre-commit | oxlint `--fix`, then oxfmt `--write`, then charcheck `--staged --max-warnings 0`, in that order | staged files |
-| commit-msg | `no-ai-attribution`, from `shbernal/lefthook-rules` at tag `v1` | the message |
-| pre-push | `lint`, `lint:chars`, `format:check`, `typecheck`, `typecheck:scripts` and `typecheck:site`, in parallel | the whole repository |
-
-No hook runs a test, `typecheck:test`, `docs:check` or `docs:build`. `verify` runs the first
-three, and `docs.yml` builds the site.
-
-Pre-push repeats `lint:chars` over the whole repository because pre-commit sees one commit. The
-repeat catches prose that arrived through `--no-verify`, a merge or a rebase.
+[CONTRIBUTING.md](https://github.com/shbernal/pptx-ts/blob/main/CONTRIBUTING.md#git-hooks) lists
+the hooks, and `lefthook.yml` records why each is shaped the way it is. The pre-commit and
+pre-push columns of the [gate matrix](#gate-matrix) show where they overlap the aggregates. No
+hook runs a test, `typecheck:test`, `docs:check` or `docs:build`. `verify` runs the first three,
+and `docs.yml` builds the site.
 
 ### CI workflows
 
@@ -467,8 +461,9 @@ through the same function and fails collection below 40 decks.
 `script:roundtrip` runs source → IR₁ → script → run it → output → IR₂ for every deck, then
 `diffDeckIr(canonicalDeckIr(IR₁), canonicalDeckIr(IR₂), printed.notes)`. It fails on any
 undeclared difference and on any deck whose script does not run. It is the only copy of the
-whole-corpus round trip, and `verify` does not run it. `verify:full` and CI run both printers
-through `script:roundtrip:all`. Run that before pushing a change to `src/script/`.
+whole-corpus round trip, and `verify` does not run it. CI runs both printers through
+`script:roundtrip:all`. While changing `src/script/`, run `script:roundtrip` locally for the
+default printer.
 
 - Each script is written into a fresh directory under `.tmp/`, not the OS temp directory. The
   script imports the package by its published name, and Node resolves that self-reference only
@@ -1345,7 +1340,7 @@ pnpm run bundle-size:check   # what each published entry ships, an upper bound
 pnpm run bundle-tier:check   # what a real program downloads, after tree-shaking
 ```
 
-Both run in `verify:full` and `check:package`. The figures a consumer reads are on
+Both run in CI's `package` job, through `check:package`. The figures a consumer reads are on
 [Smaller bundles](../bundle-size.md).
 
 Both are ratchets. `--freeze` writes a small headroom above the measurement into the budget file.

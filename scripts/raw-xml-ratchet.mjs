@@ -20,7 +20,7 @@
  * design, and its `fmt` describes whitespace *around* an element rather than
  * inside its open tag. Dropping the padding would be the real fix and no XML
  * consumer could see the difference, but it is still an output change, and
- * AGENTS.md is explicit that a whitespace-only diff is a stop rather than a
+ * the byte-identity gate treats a whitespace-only diff as a failure rather than a
  * cleanup — so each one stays hand-written with the reason at its call site.
  *
  * Without *some* gate the migration silently un-does itself: nothing stops a new

@@ -1,9 +1,8 @@
 ---
 doc-schema-version: 1
 title: "Development guide"
-summary: "Setup, source layout, generated outputs, and contribution rules."
+summary: "Source layout, generated outputs, everyday commands, and contribution rules."
 read_when:
-  - Setting up the repository
   - Changing source layout or generated output policy
   - Updating development commands
 doc_type: "guide"
@@ -11,18 +10,8 @@ doc_type: "guide"
 
 # Development guide
 
-## Prerequisites
-
-- Node.js `>=24`.
-- `pnpm`. The `packageManager` field in `package.json` pins the version.
-
-```bash
-pnpm install
-```
-
-`pnpm install` runs `prepare`, which installs the git hooks and builds `dist/` when it is missing.
-[CONTRIBUTING.md](https://github.com/shbernal/pptx-ts/blob/main/CONTRIBUTING.md#git-hooks) lists
-the hooks.
+[CONTRIBUTING.md](https://github.com/shbernal/pptx-ts/blob/main/CONTRIBUTING.md#setting-up)
+covers setting up the repository, the gate to run locally, and the git hooks.
 
 ## Repository layout
 
@@ -101,11 +90,10 @@ hatch is acceptable.
 
 | Command | What it is for |
 | --- | --- |
-| `pnpm run verify` | The per-change check: typechecks, source and docs checks, and every Vitest suite. |
-| `pnpm run verify:full` | Before pushing, and for a package or release change, in place of the last `verify`: the same checks with the suite collecting coverage, plus the script round trip and the package and size gates. |
+| `pnpm run verify` | The local gate, per change and before pushing: typechecks, source and docs checks, and every Vitest suite. |
 | `pnpm run check:static` | CI's static job: `lint`, `lint:chars` and `format:check`, then `check:core`. |
 | `pnpm run check:core` | The cheap checks that `verify` and `check:static` share. |
-| `pnpm run check:package` | A package boundary change: `package:lint`, `test:package` and both size gates. |
+| `pnpm run check:package` | CI's package job: `package:lint`, `test:package` and both size gates. Run it locally only to answer a package boundary question before CI does. |
 | `pnpm run test` | Every Vitest suite. `test:unit`, `test:read` and `test:schema` run one part of it. |
 | `pnpm run watch:dev` and `pnpm run test:watch` | The edit-then-test loop, one per terminal. `watch:dev` rebuilds `dist/` without declarations. |
 | `pnpm run typecheck` | The `src/` TypeScript project. `typecheck:scripts`, `typecheck:test` and `typecheck:site` cover `scripts/`, `test/` and the site. |
@@ -223,8 +211,9 @@ covers schema validation and `pnpm run test:schema`.
 ## Package boundary changes
 
 The package ships one ESM build. A change to package exports, generated filenames or package
-contents must keep the support contract in [where it runs](../getting-started/runtime.md). Run
-`pnpm run check:package`. When `test:package` fails, [`test:package` fails](#testpackage-fails)
+contents must keep the support contract in [where it runs](../getting-started/runtime.md). CI's
+`package` job runs `check:package` on Linux and Windows; run it locally only to iterate on a
+failure. When `test:package` fails, [`test:package` fails](#testpackage-fails)
 lists the usual causes.
 
 ## Demo changes

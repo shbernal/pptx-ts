@@ -10,8 +10,8 @@ metadata:
 Reference fixtures are evidence for how PowerPoint writes OOXML, so never generate them with
 pptx-ts. `pnpm ppt:run` sends a recipe to the worker when `TSPPTX_POWERPOINT_URL` is set (the
 VM in `tools/powerpoint-vm/`; `pnpm ppt:health` confirms it answers) and otherwise runs it on
-this Windows machine's PowerPoint. With neither, stop and open the fixture issue AGENTS.md
-describes.
+this Windows machine's PowerPoint. With neither, stop and open the fixture issue "Evidence and fixtures" in
+`docs/contributing/ooxml.md` describes.
 
 ## Workflow
 

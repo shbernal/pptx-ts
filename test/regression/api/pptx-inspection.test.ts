@@ -402,7 +402,7 @@ defineRegressionSuite('PPTX inspection primitives', [
 	{
 		// A group whose a:chExt is zero has no child-space ratio, so its children have no
 		// resolvable slide position. Reporting the raw child-space box would be a
-		// confidently wrong number; per AGENTS.md the element is dropped with a warning
+		// confidently wrong number; per the warn-or-throw rule the element is dropped with a warning
 		// instead. (The read API's absoluteFrame returns null on the same input.)
 		name: 'inspect omits children of a degenerate group and says so',
 		fn: async () => {

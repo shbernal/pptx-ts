@@ -4,8 +4,9 @@ Decks that exist to be **diffed**, not looked at.
 
 `scripts/byte-identity.mjs` proves an emitter refactor changed no emitted byte by
 generating a corpus of decks and comparing every part against a frozen baseline. Its
-original corpus was the showcase decks (`www/demos/decks/`), and AGENTS.md is explicit
-about the limit that imposes:
+original corpus was the showcase decks (`www/demos/decks/`), and the
+[testing guide](../../docs/contributing/testing.md#byte-identity-byte-identitycheck) states the
+limit that imposes:
 
 > The corpus is only what the harness's decks emit, so before trusting a PASS, confirm the
 > part you touched is in `.tmp/byte-identity/baseline/`. An emitter no deck reaches is

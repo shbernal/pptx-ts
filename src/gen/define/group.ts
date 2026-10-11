@@ -128,7 +128,7 @@ function buildGroupObject(
 	})
 
 	// A group with no renderable children resolves to a zero-size <p:grpSp> (auto-bounds over an empty
-	// bbox is 0×0). That is the degenerate result AGENTS.md says to warn on rather than emit silently —
+	// bbox is 0×0). That is the degenerate result the warn-or-throw rule says to warn on rather than emit silently —
 	// the same class as the partial-frame fallback. Warn once here, at the group that is actually empty:
 	// a nested empty group has already warned in its own recursion, and its non-empty parent has not.
 	if (groupObjects.length === 0) {

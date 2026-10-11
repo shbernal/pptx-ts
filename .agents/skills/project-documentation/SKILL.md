@@ -1,6 +1,6 @@
 ---
 name: project-documentation
-description: Use when creating, updating, or reviewing README, docs, AGENTS.md, CLI docs, config docs, architecture docs, troubleshooting docs, or behavior-linked documentation in this repository.
+description: Use when creating, updating, or reviewing README, CONTRIBUTING, docs, CLI docs, config docs, architecture docs, troubleshooting docs, or behavior-linked documentation in this repository.
 metadata:
   internal: true
 ---

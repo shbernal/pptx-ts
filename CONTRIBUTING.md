@@ -5,10 +5,8 @@ install it. This file covers how the repository is built, tested and contributed
 
 ## Start here
 
-- **[AGENTS.md](AGENTS.md)**: repository expectations, scope, the API evolution policy, and the
-  OOXML and PowerPoint working rules. Read it first, whether you are a human or an agent.
-- **[docs/contributing/development.md](docs/contributing/development.md)**: setup, repository
-  layout, source conventions and the everyday commands.
+- **[docs/contributing/development.md](docs/contributing/development.md)**: repository layout,
+  source conventions and the everyday commands.
 - **[docs/contributing/testing.md](docs/contributing/testing.md)**: the test suites and gates, and
   the [gate matrix](docs/contributing/testing.md#gate-matrix) of what runs where.
 - **[docs/contributing/scope-and-policy.md](docs/contributing/scope-and-policy.md)**: what this
@@ -16,25 +14,35 @@ install it. This file covers how the repository is built, tested and contributed
 
 ## Setting up
 
-The repository uses `pnpm` and Node.js 24 or newer.
+The repository uses Node.js 24 or newer and `pnpm`, whose version the `packageManager` field in
+`package.json` pins.
 
 ```bash
 pnpm install
-pnpm run verify        # while iterating
-pnpm run verify:full   # before pushing, and for package or release changes
+pnpm run verify        # while iterating, and before pushing
 ```
 
-The [gate matrix](docs/contributing/testing.md#gate-matrix) shows what each command runs.
+`pnpm install` runs `prepare`, which installs the [git hooks](#git-hooks) and builds `dist/` when it
+is missing.
+
+`verify` is the only gate to run locally. It typechecks, runs the source and docs checks and every
+Vitest suite. CI runs the heavier gates on every pull request: coverage, the script round trip,
+the package and size gates on Linux and Windows, the browser lane and the oracles. `verify:full`
+bundles the Node-side part of that list, and it is CI's job, not a step before pushing. Let the
+pull request's checks carry it, and read a failure from the CI log. The
+[gate matrix](docs/contributing/testing.md#gate-matrix) shows what each command and CI job runs.
 [Repository layout](docs/contributing/development.md#repository-layout) says where source, tests and
 generated output live. The project site keeps its content in `docs/` and its theme and components
 in `www/`. `pnpm run docs:dev` serves it, and
 [Site changes](docs/contributing/development.md#site-changes) covers both trees.
 
 A change to emitted OOXML needs a fixture in `test/schema-cases.ts` and evidence behind it, per
-AGENTS.md. The [testing guide](docs/contributing/testing.md) covers schema validation.
+[Evidence and fixtures](docs/contributing/ooxml.md#evidence-and-fixtures). The
+[testing guide](docs/contributing/testing.md) covers schema validation.
 
-A change to the package boundary (exports, entry points, shipped artifacts) also needs
-`pnpm run check:package`.
+A change to the package boundary (exports, entry points, shipped artifacts) is gated by CI's
+`package` job. `pnpm run check:package` runs the same gates locally when you want an answer before
+the pull request has one.
 
 ### PowerPoint
 
@@ -49,7 +57,7 @@ PowerPoint fixture. Both find PowerPoint the same way:
 - **macOS:** no supported path yet. PowerPoint for Mac has no COM, and the VM needs KVM.
 
 Without PowerPoint, `test:com` reports SKIP, and fixture-gated work goes through a GitHub issue,
-as AGENTS.md describes.
+as [Evidence and fixtures](docs/contributing/ooxml.md#evidence-and-fixtures) describes.
 
 ## Git hooks
 

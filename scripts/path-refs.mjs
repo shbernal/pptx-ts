@@ -67,7 +67,7 @@ import { isMain, parseCli, repoRel, ROOT, runCli } from './script-utils.mjs'
 const SCAN_ROOTS = ['docs', 'src', 'test', 'scripts', 'tools', 'www', '.github']
 
 /** Files at the repo root that carry citations. `CHANGELOG.md` is excluded on purpose. */
-const ROOT_FILES = ['AGENTS.md', 'README.md', 'CONTRIBUTING.md', 'SECURITY.md']
+const ROOT_FILES = ['README.md', 'CONTRIBUTING.md', 'SECURITY.md']
 
 /**
  * Directory names never walked, wherever they appear. Deliberately *not* including

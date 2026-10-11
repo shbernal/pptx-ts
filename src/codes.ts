@@ -203,7 +203,7 @@ export type DiagnosticCode =
  * Conditions carried by `InvalidOptionError`: the caller passed something the library cannot use.
  *
  * This is the largest group by design — the project's stated policy is to throw rather than coerce
- * (`AGENTS.md` → "Silent coercion of invalid input is a footgun"), so most throws are here.
+ * (`docs/contributing/development.md` → "Warn or throw?"), so most throws are here.
  */
 export type InvalidOptionErrorCode =
 	// Units and coordinates

@@ -28,7 +28,7 @@ issue include, for example:
 - Dependency vulnerabilities that are reachable through this package's API.
 
 Out of scope: issues that only manifest in the two out-of-active-scope domains
-documented in [AGENTS.md](AGENTS.md) (live-DOM/browser-layout features and
+documented in [CONTRIBUTING.md](CONTRIBUTING.md#scope) (live-DOM/browser-layout features and
 third-party office-suite interop quirks), unless they represent a genuine
 security defect in the OOXML this library itself emits.
 

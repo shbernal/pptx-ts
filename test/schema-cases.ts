@@ -5059,7 +5059,7 @@ export default [
 		// and `verify` has no other way to see it.
 		//
 		// So: perturb a deck that was valid a moment ago and require the gate to catch it.
-		// This is the same discipline the em-dash gate is held to in AGENTS.md — when a
+		// This is the same discipline the render oracle is held to in the testing guide — when a
 		// green run is load-bearing, prove it can still fail.
 		//
 		// The assertions are on `id` and `xpath`, never `description`: the id is a stable

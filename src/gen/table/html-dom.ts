@@ -6,7 +6,7 @@
  * (`resolveHtmlColWidth`, `pickColWidthBasis`, `htmlBorderToProps`, `cssColorToHex`) that
  * are unit-tested directly, and the whole flow runs anywhere there is a DOM.
  *
- * Only real *measurement* is out of active scope (see AGENTS.md): without a layout engine
+ * Only real *measurement* is out of active scope (see `docs/contributing/scope-and-policy.md`): without a layout engine
  * `offsetWidth` is `0`, so widths fall back to computed CSS then to an equal split. A fallback
  * rather than a degradation, and the distinction is load-bearing — see {@link pickColWidthBasis},
  * whose two bases measure different boxes.
@@ -148,7 +148,7 @@ function resolveDomContext(target: TableToSlidesElement | string, options: Table
 
 // ===== DOM-table helpers (browser path) =====
 // DOM-independent helpers factored out of the browser-only tableToSlides() flow
-// so they can be unit-tested without a rendered page (see AGENTS.md scope note).
+// so they can be unit-tested without a rendered page (see the scope policy).
 
 /**
  * Convert one 0-255 RGB component to its two-digit hex form.
@@ -548,7 +548,7 @@ export function readCellText(cell: TextCell): string {
 
 // ===== Live-DOM tableToSlides() flow =====
 // Browser-only entry (reads a rendered table via getComputedStyle/offsetWidth);
-// out of active scope — see AGENTS.md. Internally signposted by `// STEP 1..5`.
+// out of active scope, see the scope policy. Internally signposted by `// STEP 1..5`.
 
 /**
  * Resolve `options.masterTitle` to the slide layout it names, so the auto-pager can take that
