@@ -52,6 +52,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A picture background applies `transparency`.** `background: { data, transparency: 50 }`
+  wrote the picture fully opaque, with no warning. It now writes `a:alphaModFix` on the picture,
+  as a shape's picture fill does ([#98](https://github.com/shbernal/pptx-ts/issues/98)).
 - **`slide.color` reaches all the slide's text.** It was read when text was added, so text added
   before the assignment stayed black, and table cells never took it. It is now read when the
   slide is written, and colours every `addText` run and table cell that states no colour of its

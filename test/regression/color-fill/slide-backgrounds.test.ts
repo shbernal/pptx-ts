@@ -189,6 +189,26 @@ defineRegressionSuite('Slide backgrounds [legacy bug-12]', [
 		},
 	},
 	{
+		// `transparency` type-checks on a picture background and wrote nothing (issue #98). A shape's
+		// picture fill writes it as `a:alphaModFix` on the blip, which is also what PowerPoint writes
+		// for Format Background > Picture > Transparency.
+		name: 'a picture background writes its transparency as a:alphaModFix',
+		fn: async () => {
+			const { zip } = await build((p) => {
+				p.addSlide().background = { data: PNG_A, transparency: 50 }
+				p.addSlide().background = { image: { data: PNG_B }, transparency: 25 }
+				p.addSlide().background = { data: PNG_A }
+				p.defineSlideMaster({ title: 'FADED', background: { data: PNG_B, transparency: 40 } })
+			})
+			const blip = async (part: string) =>
+				/<p:bg>[\s\S]*?<a:blip [^>]*>([\s\S]*?)<\/a:blip>/.exec(await readEntry(zip, part))?.[1] ?? ''
+			assertEqual(await blip('ppt/slides/slide1.xml'), '<a:alphaModFix amt="50000"/><a:lum/>', 'top-level data')
+			assertEqual(await blip('ppt/slides/slide2.xml'), '<a:alphaModFix amt="75000"/><a:lum/>', 'image: { data }')
+			assertEqual(await blip('ppt/slides/slide3.xml'), '<a:lum/>', 'no transparency writes none')
+			assertEqual(await blip(await layoutPartFor(zip, 'FADED')), '<a:alphaModFix amt="60000"/><a:lum/>', 'a layout')
+		},
+	},
+	{
 		name: 'a layout background given as image: { data } paints the picture',
 		fn: async () => {
 			const { zip } = await build((p) => {
