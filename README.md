@@ -152,18 +152,18 @@ pptx-ts builds those parts from your calls and zips them, with no Office process
 
 pptx-ts is an independent derivative of
 [PptxGenJS](https://github.com/gitbrent/PptxGenJS), detached at its v4.0.1. Both were
-measured on 2026-09-21 by building the same 22 deck intents with each library and reading
+measured on 2026-10-11 by building the same 22 deck intents with each library and reading
 the bytes that came out.
 
 - **Construct coverage:** pptx-ts emitted 21 of 22, pptxgenjs 10 of 22. Nothing in the
   corpus is emitted by pptxgenjs and not by pptx-ts.
 - **Schema validity:** of the decks each library built, 21 of 21 pptx-ts decks and 0 of 10
   pptxgenjs decks validate with no error against the Open XML SDK.
-- **Adoption:** pptxgenjs is downloaded 10,539,687 times a month, against 1,780 for
+- **Adoption:** pptxgenjs is downloaded 14,641,405 times a month, against 1,915 for
   pptx-ts. If a large installed base matters to you more than the differences above, use
   pptxgenjs.
-- **Activity:** last commit on the default branch, 2026-09-15 for pptx-ts and 2025-06-26
-  for pptxgenjs. Last npm publish, 2026-08-29 and 2025-06-26.
+- **Activity:** last commit on the default branch, 2026-10-10 for pptx-ts and 2025-06-26
+  for pptxgenjs. Last npm publish, 2026-09-21 and 2025-06-26.
 
 Where the two libraries part company is on the [comparison page](docs/comparison.md), and
 [how it was measured](docs/comparison-method.md) has every full table. Every intent as

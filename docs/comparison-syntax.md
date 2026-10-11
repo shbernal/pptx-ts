@@ -1,7 +1,7 @@
 ---
 doc-schema-version: 1
 title: "Porting from PptxGenJS"
-summary: "Moving a deck script from pptxgenjs 4.0.1 to pptx-ts 3.7.0: the calls that change, what changes around them, and every intent in the comparison corpus as code in both libraries."
+summary: "Moving a deck script from pptxgenjs 4.0.1 to pptx-ts 4.0.1: the calls that change, what changes around them, and every intent in the comparison corpus as code in both libraries."
 read_when:
   - Porting a deck script from pptxgenjs to pptx-ts
   - Reading a comparison row and wanting the calls behind it
@@ -21,7 +21,7 @@ the 10 intents both libraries build in the comparison corpus, 7 are called with 
 code. This page is the rest: the calls that change, what changes around them, and then
 every intent and program in the corpus as code in both libraries.
 
-Measured on 2026-09-21: pptx-ts 3.7.0 built from this repository, against pptxgenjs 4.0.1
+Measured on 2026-10-11: pptx-ts 4.0.1 built from this repository, against pptxgenjs 4.0.1
 installed from npm.
 
 ## The calls that change
