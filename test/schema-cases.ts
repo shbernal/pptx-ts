@@ -850,6 +850,19 @@ export default [
 		},
 	},
 	{
+		// The `ShapeFillProps` spelling of a picture background writes an `a:blipFill` with a cropped
+		// `a:srcRect` inside `p:bgPr`, where it used to write `a:noFill` (issue #86).
+		name: 'a cropped image-fill slide background emits a valid p:bgPr',
+		fn: async () => {
+			const data =
+				'image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+			const { buf } = await build((p) => {
+				p.addSlide().background = { image: { data, crop: { l: 10, t: 20, r: 30, b: 5 } } }
+			})
+			await expectNoSchemaErrors(buf, 'image-fill-background')
+		},
+	},
+	{
 		name: 'bullet text',
 		fn: async () => {
 			const { buf } = await build((p) => {

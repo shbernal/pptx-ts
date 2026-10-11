@@ -5,11 +5,12 @@
  * the `<p:bg>` XML is emitted later at slide / layout serialize time.
  */
 import { warn } from '../../diagnostics.js'
-import type { BackgroundOption } from '../../types/index.js'
+import type { BackgroundOption, DataOrPathProps, ImageFillProps } from '../../types/index.js'
 import type { PresSlideInternal, SlideLayoutInternal } from '../../types/internal.js'
 import { imageContentType } from '../../media/content-type.js'
 import { getNewRelId, preencodedPath } from '../utils.js'
 import { pushMediaRel, resolveImageSource } from './image-rel.js'
+import { resolveFillKind } from '../drawingml/fill.js'
 
 /**
  * Adds a background image or color to a slide definition.
@@ -43,7 +44,8 @@ import { pushMediaRel, resolveImageSource } from './image-rel.js'
  * @param {SlideLayoutInternal} target - slide or layout that the background is set on
  */
 export function addBackgroundDefinition(props: BackgroundOption | undefined, target: SlideLayoutInternal): void {
-	if (!(props && typeof props === 'object' && (props.path || props.data))) {
+	const image = backgroundImage(props)
+	if (!image) {
 		delete target._bkgdImgRid
 		return
 	}
@@ -52,7 +54,7 @@ export function addBackgroundDefinition(props: BackgroundOption | undefined, tar
 	// bytes alone used to fall back on a PNG placeholder path and declare `image/png` no matter
 	// what it actually carried, so `{ data: 'data:image/svg+xml;…' }` shipped SVG bytes in a part
 	// the package announced as PNG.
-	const source = resolveImageSource(props)
+	const source = resolveImageSource(image)
 	if (typeof source === 'string') {
 		warn(
 			'background/missing-base64-header',
@@ -87,4 +89,22 @@ export function addBackgroundDefinition(props: BackgroundOption | undefined, tar
 	const rId = getNewRelId(slide)
 	pushMediaRel(slide, { kind: 'image', extn: strImgExtn, type, path: source.path, data: source.data, rId })
 	target._bkgdImgRid = rId
+}
+
+/**
+ * The picture a background names, in either of its two spellings: `{ data }` / `{ path }` from
+ * `DataOrPathProps`, or `{ image: { data, crop } }` from `ShapeFillProps`, which `BackgroundProps`
+ * also extends. The second used to type-check and register nothing, so the background was written
+ * as `<a:noFill/>` and its crop was lost with it.
+ *
+ * The top-level spelling wins, as it always has. The `image` one follows the fill rule that an
+ * explicit `type` other than `'image'` wins over a sub-object.
+ * @param props - the background option
+ * @returns the picture's source, or `null` when the background names none
+ */
+export function backgroundImage(props: BackgroundOption | undefined): ImageFillProps | DataOrPathProps | null {
+	if (!props || typeof props !== 'object') return null
+	if (props.path || props.data) return props
+	const image = props.image
+	return resolveFillKind(props) === 'image' && image && (image.path || image.data) ? image : null
 }

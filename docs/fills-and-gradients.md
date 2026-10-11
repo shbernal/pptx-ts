@@ -36,7 +36,7 @@ slide.addShape("rect", {
 | Target | Option | Solid | Gradient | Pattern | Picture |
 | --- | --- | --- | --- | --- | --- |
 | Shape, text box | `fill` | yes | yes | yes | yes, raster |
-| Slide or master background | `background` | yes | yes | yes | through `path` or `data` |
+| Slide or master background | `background` | yes | yes | yes | yes, through `image` or a top-level `path` or `data` |
 | Table, table cell | `tableFill`, `fill`, a cell's `options.fill` | yes | yes | yes | yes, raster |
 | Chart area, plot area | `chartArea.fill`, `plotArea.fill` | yes | yes | yes | no, see [invalid input](#invalid-input) |
 | Line | `line` | yes | yes | yes | no, see [invalid input](#invalid-input) |
@@ -176,6 +176,10 @@ The picture is stretched to the filled area. `crop` trims a percentage from each
 first; `l` plus `r`, and `t` plus `b`, each stay under 100. `transparency` fades the picture. The
 source has to be a raster image: an SVG leaves the area unfilled. To put a picture on a slide as its
 own object, clipped to a shape, see [Images in shapes](image-in-shape.md).
+
+A slide or master `background` takes the same `image`, crop included, or the picture as a top-level
+`path` or `data`: `background: { data }` is `background: { image: { data } }` without a crop. When
+both are set, the top-level one is used. A picture background does not apply `transparency`.
 
 ## Invalid input
 

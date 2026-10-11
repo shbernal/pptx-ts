@@ -69,6 +69,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#89](https://github.com/shbernal/pptx-ts/issues/89)). A slide-number placeholder that holds
   only the field now carries as `slide.slideNumber`, with its position, `align`, `valign`,
   `margin`, `bold`, `color`, `fontFace` and `fontSize`.
+- **`background: { image }` paints the picture.** `BackgroundProps` extends `ShapeFillProps`, so
+  `background: { image: { data, crop } }` type-checked, and the writer warned
+  `image-fill/unresolved-media` and wrote `<a:noFill/>`
+  ([#86](https://github.com/shbernal/pptx-ts/issues/86)). It now writes the picture, cropped by
+  `image.crop`, on a slide and on a `defineSlideMaster` layout alike. `{ data }` and `{ path }`
+  are unchanged and win when both spellings are given.
 - **A slide's no-fill background survives `readModelToIr`.** `background: { type: 'none' }`
   writes `p:bg/p:bgPr/a:noFill`, which turns the layout's background off. `readModelToIr` read it
   as no background at all, with no note, so the replayed slide showed the layout background again
