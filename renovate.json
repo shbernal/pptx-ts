@@ -42,6 +42,11 @@
 			"groupName": "type definitions"
 		},
 		{
+			"description": "Hold @types/node on the major in `.node-version` and the `engines` floor. Types from a newer major let the source call APIs that Node 24 users don't have, and typecheck stays green while it happens. Raise this together with `.node-version` and `engines`.",
+			"matchPackageNames": ["@types/node"],
+			"allowedVersions": "<25"
+		},
+		{
 			"description": "Group the oxlint / oxfmt toolchain. `oxlint-tsgolint` belongs here rather than with TypeScript despite its 7.0.x version: it is oxlint's type-aware backend and is released against oxlint, not against the compiler.",
 			"matchPackageNames": ["oxlint", "oxlint-tsgolint", "oxfmt"],
 			"groupName": "lint & format toolchain"
