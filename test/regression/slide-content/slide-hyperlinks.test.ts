@@ -38,6 +38,44 @@ defineRegressionSuite('Slide hyperlink theme colors', [
 		},
 	},
 	{
+		// The shape-level pass used to default the SHAPE's colour to black, and a link run then took
+		// that default as if the caller had stated it, so only the single-string form above stayed
+		// uncoloured (issue #59).
+		name: 'a link run in the array form takes no defaulted black either, while its plain sibling does',
+		fn: async () => {
+			const { zip } = await build((p) => {
+				p.addSlide().addText(
+					[
+						{ text: 'plain ', options: {} },
+						{ text: 'docs', options: { hyperlink: { url: 'https://example.com' } } },
+					],
+					{ x: 1, y: 1, w: 4, h: 0.5 }
+				)
+			})
+			const runs = (await readEntry(zip, SLIDE_XML)).match(/<a:r>.*?<\/a:r>/gs) ?? []
+			assertIncludes(runs[0] ?? '', '<a:srgbClr val="000000"/>', 'the plain run keeps the DEF_FONT_COLOR default')
+			assertNotIncludes(runs[1] ?? '', 'a:solidFill', 'the link run carries no fill')
+			assertNotIncludes(runs[1] ?? '', 'hlinkClr', 'and no hlinkClr text-color override')
+		},
+	},
+	{
+		name: 'a link run takes a colour the caller stated on the shape',
+		fn: async () => {
+			const { zip } = await build((p) => {
+				p.addSlide().addText([{ text: 'docs', options: { hyperlink: { url: 'https://example.com' } } }], {
+					x: 1,
+					y: 1,
+					w: 4,
+					h: 0.5,
+					color: 'FF0000',
+				})
+			})
+			const xml = await readEntry(zip, SLIDE_XML)
+			assertIncludes(xml, '<a:srgbClr val="FF0000"/>', 'the stated shape colour reaches the link run')
+			assertIncludes(xml, 'ahyp:hlinkClr', 'pinned with hlinkClr, as an explicit run colour is')
+		},
+	},
+	{
 		name: 'hyperlink with explicit color still pins to that color via hlinkClr="tx"',
 		fn: async () => {
 			const { zip } = await build((p) => {

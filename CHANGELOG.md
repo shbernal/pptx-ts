@@ -33,6 +33,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   came back 50 times smaller after one round trip, a superscript's `baseline="30000"` replaying as
   `baseline="1500"` ([#55](https://github.com/shbernal/pptx-ts/issues/55)). The IR now converts to
   the option's unit, for shape text and table cells, and `TextPropsOptions.baseline` documents it.
+- **A link with no colour of its own keeps the theme hyperlink colour through `readModelToIr`.**
+  The write path leaves such a run uncoloured, so PowerPoint paints it in the theme's `hlink`
+  colour, but `readModelToIr` baked the resolved colour in with a `text.color.inherited` note, and
+  the replay wrote an explicit `000000`: the link came back black
+  ([#59](https://github.com/shbernal/pptx-ts/issues/59)). A linked run, in shape text or a table
+  cell, now stays uncoloured and records no note. The writer had the same fault on its own side: a
+  link run in the array form of `addText` (`[{ text, options: { hyperlink } }]`) took the black
+  default the shape-level pass gave the shape, so only the single-string form left a link to the
+  theme colour. A link run now takes the shape's `color` only when the caller stated one, so links
+  written in the array form with no colour now render in the theme hyperlink colour.
 
 ## [4.1.0](https://github.com/shbernal/pptx-ts/releases/tag/v4.1.0) - 2026-10-11
 

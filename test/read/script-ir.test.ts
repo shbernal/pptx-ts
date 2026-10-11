@@ -723,6 +723,42 @@ describe('deck IR — baseline shift', () => {
 	})
 })
 
+describe('deck IR — a hyperlinked run with no colour of its own', () => {
+	// The writer leaves a link run with no colour uncoloured, so PowerPoint paints it in the theme's
+	// hlink colour. `readModelToIr` used to bake the run's resolved colour in, with a
+	// `text.color.inherited` note blaming the write API, so a hlink-coloured link replayed black
+	// (issue #59).
+
+	test('stays uncoloured, so the replay leaves it to the theme hlink colour', async () => {
+		const { presentation, buf } = await authorRead((pres) => {
+			pres.addSlide().addText('Link', { x: 1, y: 1, w: 5, h: 1, hyperlink: { url: 'https://example.com/' } })
+		})
+		const runXml = (xml: string) => defined(xml.match(/<a:r>.*?<\/a:r>/)?.[0])
+		const sourceRun = runXml(await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml'))
+		assert(!sourceRun.includes('a:solidFill'), `the writer leaves the link uncoloured: ${sourceRun}`)
+
+		const ir = readModelToIr(presentation)
+		assertEqual(at(runOptionsOf(ir)[0], 'color'), undefined, 'the IR states no colour on the link run')
+		assert(!constructs(ir).has('text.color.inherited'), 'and declares no loss, because there is none')
+		const replayed = runXml(await replay(ir))
+		assert(!replayed.includes('a:solidFill'), `and the replay leaves it uncoloured too: ${replayed}`)
+	})
+
+	test('a table cell link stays uncoloured too', async () => {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addTable([[{ text: 'Link', options: { hyperlink: { url: 'https://example.com/' } } }]], {
+				x: 1,
+				y: 1,
+				w: 4,
+			})
+		})
+		const ir = readModelToIr(presentation)
+		const cell = JSON.stringify(defined(allCalls(ir).find((c) => c.method === 'addTable')).args)
+		assert(!cell.includes('"color"'), `the cell states no colour: ${cell}`)
+		assert(!constructs(ir).has('text.color.inherited'), 'and declares no loss')
+	})
+})
+
 describe('deck IR — slide transitions', () => {
 	// The mapping's whole difficulty is that the read model reports an *open* type string
 	// (it decodes PowerPoint's modern effects by namespace) while the write API has a closed

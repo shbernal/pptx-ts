@@ -260,7 +260,7 @@ export function runOptions(run: Run, ctx: MapContext): Record<string, IrValue> |
 		strike: orUndefined(run.strike),
 		fontSize: orUndefined(run.fontSizePt),
 		fontFace: orUndefined(run.fontName),
-		color: runColor(run, notes),
+		color: runColor(run, hyperlink !== undefined, notes),
 		highlight: run.highlight ? literalColor(run.highlight.effectiveHex) : undefined,
 		caps: orUndefined(run.caps),
 		baseline: baselineOption(run.baselinePct),
@@ -313,11 +313,17 @@ function spacingOptions(run: Run, notes: NoteScope): Record<string, IrValue> {
  * covers survive as tokens; the other seven degrade to a literal hex there anyway, so
  * passing one through unchanged would produce a silently different colour.
  */
-function runColor(run: Run, notes: NoteScope): string | undefined {
+function runColor(run: Run, linked: boolean, notes: NoteScope): string | undefined {
 	const scheme = run.schemeColor
 	if (scheme !== null)
 		return schemeColorOption(scheme, run.resolvedColor?.effectiveHex ?? null, notes, 'text.color.schemeToken', 'run')
 	if (run.color !== null) return literalColor(run.color)
+
+	// The one uncoloured run the write path does leave uncoloured: a link, which `addText` and
+	// `addTable` write with no fill so PowerPoint paints it in the theme's hlink colour. Baking the
+	// resolved colour in replayed a hlink-coloured link black. `linked` means the link itself
+	// carries; a dropped link leaves plain text, which the write path does paint black.
+	if (linked) return undefined
 
 	// A run with no colour of its own inherits one, and leaving the option out does *not* pass
 	// that inheritance along: `addText` fills an uncoloured non-placeholder run with
