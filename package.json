@@ -216,7 +216,7 @@
 		"ooxml-validate": "^0.0.4",
 		"oxfmt": "^0.72.0",
 		"oxlint": "^1.87.0",
-		"oxlint-tsgolint": "7.0.2003",
+		"oxlint-tsgolint": "7.0.2004",
 		"pptx-html": "^0.2.1",
 		"publint": "^0.3.25",
 		"temml": "^0.14.0",
