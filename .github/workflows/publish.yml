@@ -4,20 +4,32 @@ on:
   workflow_dispatch:
   release:
     types: [published]
+  # The `next` channel: every push to `main` that passes CI, published as a prerelease
+  # under the `next` dist-tag. See the `next` job below.
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
 
 permissions:
   contents: read
   id-token: write
 
+# A release never cancels: two of them on one tag are a re-dispatch racing the original,
+# and the second waits for the first. The `next` channel does cancel, because only the
+# newest commit on `main` is worth publishing and a queued older one would be skipped by
+# its own head-commit check anyway.
 concurrency:
-  group: publish-npm-${{ github.ref }}
-  cancel-in-progress: false
+  group: ${{ github.event_name == 'workflow_run' && 'publish-npm-next' || format('publish-npm-{0}', github.ref) }}
+  cancel-in-progress: ${{ github.event_name == 'workflow_run' }}
 
 jobs:
   # The full CI gate, run as-is rather than transcribed. Publishing waits on it.
+  # Not for the `next` channel, which runs only after that same gate passed as the CI
+  # run that triggered it. `publish` needs this job, so it is skipped along with it.
   gate:
     name: CI gate
-    if: github.repository == 'shbernal/pptx-ts'
+    if: github.repository == 'shbernal/pptx-ts' && github.event_name != 'workflow_run'
     uses: ./.github/workflows/ci.yml
 
   publish:
@@ -117,3 +129,76 @@ jobs:
         run: |
           node scripts/alias-package.mjs --out .tmp/alias-package
           npm publish .tmp/alias-package --access public --provenance --ignore-scripts
+
+  # The `next` channel: a prerelease of every push to `main` that passed CI, for projects
+  # that would rather take an unreleased build than wait for the release. It publishes
+  # `pptx-ts` only, as `<base>-next.<run>.g<sha>` (scripts/next-version.mjs), under the
+  # `next` dist-tag. `latest` stays where the last release put it, and a caret range never
+  # matches a prerelease, so nobody receives these builds without asking for `@next`.
+  #
+  # No gate job: `workflow_run` fires after `ci.yml` finished on `main`, and the conditions
+  # below accept only a run of it that succeeded on a push to this repository. Running the
+  # gate again here would put every CI leg through twice per push.
+  #
+  # `github.sha` is the newest commit on `main` when this run started, and the provenance
+  # statement npm attaches names it. Publishing anything else would attest a build to the
+  # wrong commit, so a CI run for a commit `main` has already moved past publishes nothing.
+  # The run for the newer commit publishes that one instead, once its own CI passes.
+  #
+  # The scoped alias is not published here. It exists so installs that already name it keep
+  # resolving, and none of them asked for prereleases.
+  next:
+    name: Publish next
+    if: >-
+      github.repository == 'shbernal/pptx-ts' &&
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.head_sha == github.sha
+    runs-on: ubuntu-24.04
+    environment: npm-publish
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      # As in `publish`: what ships is installed from the lockfile alone.
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          cache: 'false'
+          registry-url: https://registry.npmjs.org
+
+      - name: Ensure npm supports trusted publishing
+        run: |
+          npm install -g npm@latest
+          npm --version
+
+      # Written into the working tree only, never committed. `--ignore-scripts` keeps the
+      # `version` lifecycle script out of it, and the constant is synced explicitly instead,
+      # so `pres.version` in the build reports the version the registry has.
+      - name: Set the prerelease version
+        id: version
+        env:
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          VERSION="$(node scripts/next-version.mjs --run "$GITHUB_RUN_NUMBER" --sha "$HEAD_SHA")"
+          npm version "$VERSION" --no-git-tag-version --ignore-scripts
+          node scripts/sync-version.mjs
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Build package artifacts
+        run: pnpm run build
+
+      # `--tag next` is the whole safety property of this job. Without it npm would move
+      # `latest` to a prerelease, and every plain install would receive an unreleased build.
+      - name: Publish to npm
+        run: npm publish --access public --provenance --ignore-scripts --tag next
+
+      - name: Summary
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: echo "Published \`pptx-ts@$VERSION\` under the \`next\` dist-tag." >> "$GITHUB_STEP_SUMMARY"

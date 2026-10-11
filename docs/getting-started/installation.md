@@ -41,6 +41,19 @@ the same commit at the same version, so projects that already depend on it keep 
 one name, not both: to your program, two copies in one dependency tree are two separate libraries.
 These docs use `pptx-ts`.
 
+### Unreleased builds
+
+Every commit on `main` that passes CI is published under the `next` dist-tag, as a prerelease
+version such as `4.1.1-next.12.g87333ef`:
+
+```bash
+pnpm add pptx-ts@next
+```
+
+These builds have passed CI and nothing else. They can contain breaking changes the changelog has
+not yet described, and a later `next` build can undo an earlier one. Pin the exact version you
+tested, because a caret range never resolves to a prerelease.
+
 ## Optional dependencies for math
 
 `pptx-ts/math` turns LaTeX and MathML into native equations through two optional peer

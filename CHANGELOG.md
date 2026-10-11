@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **A `next` channel of unreleased builds.** Every commit on `main` that passes CI is published as
+  a prerelease of `pptx-ts` under the `next` dist-tag (`pnpm add pptx-ts@next`), versioned
+  `<base>-next.<run>.g<sha>`. `latest` and caret ranges are unaffected.
 - **Text runs take a `kerning` option.** `kerning: 12` writes `a:rPr/@kern="1200"`: text at 12pt
   or larger is pair-kerned, smaller text is not, and `kerning: 0` turns kerning off. It is the
   number in PowerPoint's "Kerning for fonts: _ Points and above". A stated `kerning` wins over the
