@@ -55,6 +55,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   default the shape-level pass gave the shape, so only the single-string form left a link to the
   theme colour. A link run now takes the shape's `color` only when the caller stated one, so links
   written in the array form with no colour now render in the theme hyperlink colour.
+- **Slide placeholders that `placeholder` can write survive `readModelToIr`.** Every placeholder
+  was flattened into a plain shape under a `shape.placeholder` note with cause `unsupported`,
+  including text that `addText(..., { placeholder })` itself wrote
+  ([#61](https://github.com/shbernal/pptx-ts/issues/61)). A placeholder with one of the six types
+  the option names and no `idx`, which includes every title, now carries as `placeholder` and
+  replays the same `p:ph`. One that PowerPoint binds to its layout by `idx`, which includes every
+  body placeholder, is still flattened. Its note now has cause `unwritable` and says the option
+  writes no `idx`.
 - **Picture bullets survive `readModelToIr`.** A paragraph whose bullet is an image (`a:buBlip`)
   came back with a character bullet and a `text.bullet.picture` note with cause `unsupported`,
   though `bullet.image` writes exactly that ([#58](https://github.com/shbernal/pptx-ts/issues/58)).

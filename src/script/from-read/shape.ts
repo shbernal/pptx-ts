@@ -57,6 +57,7 @@ import { forShape, type MapContext } from './context.js'
 import { cropOption, isRectSet } from './picture-fill.js'
 import { PERCENT_SCALE } from '../../units.js'
 import { SHAPE_LOCK_ATTRS } from '../../ooxml/lock-attrs.js'
+import { PlaceholderType } from '../../enums.js'
 
 import { glowOption, lineOption, noteHidden, shadowOption, styleOptions, transformOptions } from './shape-paint.js'
 
@@ -102,6 +103,31 @@ function autoShapeText(shape: AutoShape, notes: NoteScope): TextFrame | null {
 	return noteUnreadText(frame, shape.element_, notes, 'shape').length > 0 ? frame : null
 }
 
+/** The `p:ph/@type` values `placeholder` writes back as they are (`genXmlPlaceholder`). */
+const WRITABLE_PLACEHOLDER_TYPES: ReadonlySet<string> = new Set(Object.values(PlaceholderType))
+
+/**
+ * A slide placeholder as the `placeholder` option, when that reproduces its `p:ph`.
+ *
+ * The option takes a type and writes `<p:ph type="…"/>` with no `idx`, so it reproduces a
+ * placeholder that has one of the six types it knows and the default `idx` of 0: a title, or text
+ * placed with `placeholder` itself. That used to be flattened too, under a note blaming the output
+ * tier. A placeholder PowerPoint binds to its layout by `idx` (every body placeholder) cannot be
+ * written, so it is still flattened, with its inherited geometry and styling baked in.
+ */
+function placeholderOption(shape: AutoShape, notes: NoteScope): IrValue | undefined {
+	const ph = shape.placeholder
+	if (!ph) return undefined
+	if (ph.idx === '0' && ph.type !== null && WRITABLE_PLACEHOLDER_TYPES.has(ph.type)) return ph.type
+	notes.note(
+		'shape.placeholder',
+		'flattened',
+		'unwritable',
+		`this placeholder (p:ph type="${ph.type ?? 'body'}" idx="${ph.idx}") is emitted as a plain shape with its inherited geometry and styling baked in, so it no longer follows its layout; the placeholder option names a type and writes no idx, ${ph.idx === '0' ? 'and does not know this type' : 'so it cannot bind to the layout placeholder this one is matched to by idx'}`
+	)
+	return undefined
+}
+
 /**
  * The shape's `a:spLocks` as `objectLock`. Only a stated lock is written back, since every flag
  * defaults to off; the write path writes a flag only when it is `true`.
@@ -120,14 +146,7 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 	const custom = shape.customGeometry
 	const frame = autoShapeText(shape, notes)
 
-	if (shape.placeholder) {
-		notes.note(
-			'shape.placeholder',
-			'flattened',
-			'unsupported',
-			'a placeholder is emitted as a plain shape with its inherited geometry and styling baked in, so it no longer follows its layout'
-		)
-	}
+	const placeholder = placeholderOption(shape, notes)
 
 	const common = {
 		...positionOptions(box),
@@ -135,6 +154,7 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 		...styleOptions(shape, ctx),
 		...identityOptions(shape),
 		objectLock: shapeLockOption(shape),
+		placeholder,
 		// The shape's own `p:cNvPr/a:hlinkClick`, distinct from a run's. Both `addShape` and
 		// `addText` take it, and neither used to receive it: a linked shape converted to an
 		// unlinked one.
