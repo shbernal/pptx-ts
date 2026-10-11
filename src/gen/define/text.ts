@@ -133,13 +133,15 @@ export function addTextDefinition(
 				// rather than silently getting the default. See `rejectEmptyColor`.
 				rejectEmptyColor(itemOpts.color, 'color')
 				rejectEmptyColor(objectOptions.color, 'color')
+				// A link run takes the shape's colour only when the caller stated it. The shape-level
+				// pass runs first and gives a shape with no link the black default, so reading
+				// `objectOptions.color` unguarded pinned every link in the array form to black (#59).
+				const linked = Boolean(itemOpts.hyperlink || objectOptions.hyperlink)
+				const shapeColor = linked && !authoredKeys.get(objectOptions)?.has('color') ? undefined : objectOptions.color
 				setOrClear(
 					itemOpts,
 					'color',
-					itemOpts.color ||
-						objectOptions.color ||
-						target.color ||
-						(itemOpts.hyperlink || objectOptions.hyperlink ? undefined : DEF_FONT_COLOR)
+					itemOpts.color || shapeColor || target.color || (linked ? undefined : DEF_FONT_COLOR)
 				)
 			}
 
