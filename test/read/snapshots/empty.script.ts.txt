@@ -46,7 +46,12 @@ const gen1 = generator()
 const slide1 = gen1.addSlide()
 // Textfeld 3
 slide1.addText(
-	[{ options: { bullet: 'inherit', color: '000000', fontSize: 12 }, text: 'This is an almost empty slide.' }],
+	[
+		{
+			options: { bullet: 'inherit', color: '000000', fontSize: 12, lang: 'de-DE' },
+			text: 'This is an almost empty slide.',
+		},
+	],
 	{
 		fit: 'resize',
 		h: '276999emu',

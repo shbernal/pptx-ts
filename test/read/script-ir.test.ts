@@ -811,6 +811,36 @@ describe('deck IR — shape paint details', () => {
 	})
 })
 
+describe('deck IR — text options the read model could not see', () => {
+	// Eleven options `addText` writes came back from `readModelToIr` without the value and without a
+	// note, so a replay lost them and `diffDeckIr` called it clean (issue #54). Each case writes one,
+	// and the replay must write the same fragment.
+	const cases: [string, unknown, Record<string, unknown>, RegExp][] = [
+		['lang', 'T', { lang: 'fr-FR' }, /<a:rPr[^>]*>/],
+		['glow', 'T', { glow: { size: 8, opacity: 0.5, color: 'FF00FF' } }, /<a:effectLst>.*?<\/a:effectLst>/],
+		['outline', 'T', { outline: { color: '9B1B30', size: 1.5 } }, /<a:ln w[^>]*>.*?<\/a:ln>/],
+		['transparency', 'T', { color: '000000', transparency: 40 }, /<a:rPr.*?<\/a:rPr>/],
+		['underline.color', 'T', { underline: { style: 'sng', color: '9B1B30' } }, /<a:rPr.*?<\/a:rPr>/],
+		['fontFaceEA', 'T', { fontFace: 'Georgia', fontFaceEA: 'MS Mincho' }, /<a:rPr.*?<\/a:rPr>/],
+		['fontFaceEA alone', 'T', { fontFaceEA: 'MS Mincho' }, /<a:rPr.*?<\/a:rPr>/],
+		['softBreakBefore', [{ text: 'A' }, { text: 'B', options: { softBreakBefore: true } }], {}, /<a:p>.*?<\/a:p>/],
+		['rtlMode', 'T', { rtlMode: true }, /<a:pPr[^>]*>/],
+		['tabStops', 'T', { tabStops: [{ position: 1.5, alignment: 'r' }] }, /<a:tabLst>.*?<\/a:tabLst>/],
+		['columns', 'T', { columns: 2, columnSpacing: 0.5 }, /<a:bodyPr[^>]*>/],
+		['textWarp', 'T', { textWarp: 'textArchUp' }, /<a:bodyPr.*?<\/a:bodyPr>/],
+	]
+
+	test.for(cases)('%s replays the fragment it was written with', async ([, text, options, pick]) => {
+		const { presentation, buf } = await authorRead((pres) => {
+			pres.addSlide().addText(text as string, { x: 1, y: 1, w: 5, h: 1.5, ...options })
+		})
+		const fragment = (xml: string) => defined(xml.match(pick)?.[0], `no ${pick} in ${xml}`)
+		const source = fragment(await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml'))
+		const ir = readModelToIr(presentation)
+		assertEqual(fragment(await replay(ir)), source, 'the replayed fragment')
+	})
+})
+
 describe('deck IR — slide transitions', () => {
 	// The mapping's whole difficulty is that the read model reports an *open* type string
 	// (it decodes PowerPoint's modern effects by namespace) while the write API has a closed

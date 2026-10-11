@@ -375,9 +375,9 @@ Every read value that carries a colour carries a [`ColorRef`](api/read/interface
 - [`TextFrame.text`](api/read/classes/TextFrame.md#text) joins its paragraphs with `\n`. Setting it collapses the frame to one paragraph and one run, keeping the first run's `a:rPr`.
 - [`Paragraph.text`](api/read/classes/Paragraph.md#text) joins run and field text in document order, with each `a:br` as `\n`. Setting it replaces that paragraph with one run, keeping its first run's `a:rPr` and its `a:pPr`, and leaves the other paragraphs alone.
 - [`Run.text`](api/read/classes/Run.md#text) is the `a:t` text as written. Setting a value with leading or trailing whitespace adds `xml:space="preserve"`.
-- [`Paragraph.runs`](api/read/classes/Paragraph.md#runs) lists `a:r` elements only. Fields and breaks are not runs.
-- [`bodyProperties`](api/read/classes/TextFrame.md#bodyproperties) reports only the insets, anchor, wrap and direction the frame states. An absent inset is PowerPoint's default.
-- [`level`](api/read/classes/Paragraph.md#level) is `0` when unset. [`align`](api/read/classes/Paragraph.md#align), [`lineSpacing`](api/read/classes/Paragraph.md#linespacing), [`spaceBeforePt`](api/read/classes/Paragraph.md#spacebeforept), [`spaceAfterPt`](api/read/classes/Paragraph.md#spaceafterpt), [`marginLeftPt`](api/read/classes/Paragraph.md#marginleftpt) and [`indentPt`](api/read/classes/Paragraph.md#indentpt) are `null` when unset.
+- [`Paragraph.runs`](api/read/classes/Paragraph.md#runs) lists `a:r` elements only. Fields and breaks are not runs. [`Run.breaksBefore`](api/read/classes/Run.md#breaksbefore) counts the `a:br` elements directly before a run.
+- [`bodyProperties`](api/read/classes/TextFrame.md#bodyproperties) reports only the insets, anchor, wrap, direction, columns (`columns`, `columnSpacingPt`) and WordArt warp (`textWarp`) the frame states. An absent inset is PowerPoint's default.
+- [`level`](api/read/classes/Paragraph.md#level) is `0` when unset. [`align`](api/read/classes/Paragraph.md#align), [`lineSpacing`](api/read/classes/Paragraph.md#linespacing), [`spaceBeforePt`](api/read/classes/Paragraph.md#spacebeforept), [`spaceAfterPt`](api/read/classes/Paragraph.md#spaceafterpt), [`marginLeftPt`](api/read/classes/Paragraph.md#marginleftpt) [`indentPt`](api/read/classes/Paragraph.md#indentpt), [`rtl`](api/read/classes/Paragraph.md#rtl) and [`tabStops`](api/read/classes/Paragraph.md#tabstops) are `null` when unset.
 - `spaceBeforePt` and `spaceAfterPt` are also `null` for spacing given as a percentage. `lineSpacing` reports either form: `{ type: 'points', valuePt }` or `{ type: 'percent', percent }`, where `150` is 1.5 lines.
 - [`bulletDetail`](api/read/classes/Paragraph.md#bulletdetail) reports the bullet as `none`, `char`, `autoNum` or `picture`, with the bullet's own font, size and colour. It is `null` when the paragraph inherits its bullet.
 
@@ -396,6 +396,7 @@ A run's own getters and its resolved getters answer different questions:
 - [`underline`](api/read/classes/Run.md#underline) takes an `ST_TextUnderlineType` token such as `sng`, and throws `text/invalid-underline` for any other value.
 - [`strike`](api/read/classes/Run.md#strike) and [`caps`](api/read/classes/Run.md#caps) report the raw token, because the attribute has three states. [`baselinePct`](api/read/classes/Run.md#baselinepct) is a percent: the write side's superscript is `30` and its subscript `-40`.
 - [`charSpacingPt`](api/read/classes/Run.md#charspacingpt) and [`highlight`](api/read/classes/Run.md#highlight) are read-only.
+- [`language`](api/read/classes/Run.md#language), [`eastAsianFontName`](api/read/classes/Run.md#eastasianfontname), [`glow`](api/read/classes/Run.md#glow), [`outline`](api/read/classes/Run.md#outline) and [`underlineColor`](api/read/classes/Run.md#underlinecolor) are read-only and `null` when unset. `fontName` is the Latin slot, and `glow` is the run's own, not the shape's.
 
 ### Autofit
 

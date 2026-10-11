@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   on a cell but was missing from `TableCellProps`. Out-of-range values clamp to 0-4000pt and warn
   `text/kerning-out-of-range`.
 - **`Run.kerningPt` reads `a:rPr/@kern`** in points, or `null` when the run states none.
+- **Text reads for every `addText` option.** `Run` gains `language`, `eastAsianFontName`, `glow`,
+  `outline`, `underlineColor` and `breaksBefore`; `Paragraph` gains `rtl` and `tabStops`;
+  `BodyProperties` gains `columns`, `columnSpacingPt` and `textWarp`.
 - **Shape paint details read back.** `Shape.linePatternFill` reads a pattern stroke
   (`a:ln/a:pattFill`). `GradientFill` gains `rotateWithShape` (`a:gradFill/@rotWithShape`),
   `scaled` (`a:lin/@scaled`) and `focusRect` (`a:path/a:fillToRect`), and an outer shadow gains
@@ -50,6 +53,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   default the shape-level pass gave the shape, so only the single-string form left a link to the
   theme colour. A link run now takes the shape's `color` only when the caller stated one, so links
   written in the array form with no colour now render in the theme hyperlink colour.
+- **Eleven text options survive `readModelToIr`.** `lang`, a run's `glow`, `outline` and
+  `transparency`, `underline.color`, `fontFaceEA`, `softBreakBefore`, `rtlMode`, `tabStops`,
+  `columns`/`columnSpacing` and `textWarp` were dropped with no fidelity note, most of them because
+  the read model had no accessor ([#54](https://github.com/shbernal/pptx-ts/issues/54)). All of them
+  now carry. A line break `softBreakBefore` cannot place (before a paragraph's first run, a second
+  in a row, or after its last run) records a `text.softBreak` note, and an outline that is not a
+  solid colour records `text.outline`.
 - **Shape fill and line paint survive `readModelToIr`.** Seven details the write API authors were
   dropped with no fidelity note ([#56](https://github.com/shbernal/pptx-ts/issues/56)): a solid
   fill's transparency when the colour was the shape's own literal or theme token; a fill left to

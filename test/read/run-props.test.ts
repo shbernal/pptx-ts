@@ -191,6 +191,93 @@ describe('Paragraph line spacing — a:lnSpc', () => {
 	})
 })
 
+describe('Run, paragraph and body reads the write API authors (issue #54)', () => {
+	/** Every run of every text frame in a fixture, with the paragraph it sits in. */
+	async function fixtureRuns(name: string) {
+		const deck = await Presentation.load(await readFixture(name))
+		return deck.slides.flatMap((slide) =>
+			slide.shapes.flatMap((shape) =>
+				(shape.textFrame?.paragraphs ?? []).flatMap((paragraph) => paragraph.runs.map((r) => ({ r, paragraph })))
+			)
+		)
+	}
+
+	test('PowerPoint-authored decks: lang, the East Asian face, soft breaks, a no-outline and a warp', async () => {
+		// `empty.pptx`, `autofit-cjk-wrap.pptx`, `autofit-resize.pptx`, `table.pptx` and `mixed.pptx` are
+		// PowerPoint output.
+		assert(
+			(await fixtureRuns('empty.pptx')).every(({ r }) => r.language === 'de-DE'),
+			'empty.pptx states lang="de-DE" on its runs'
+		)
+		assert(
+			(await fixtureRuns('autofit-cjk-wrap.pptx')).some(({ r }) => r.eastAsianFontName === 'Malgun Gothic'),
+			'autofit-cjk-wrap.pptx names an <a:ea> face'
+		)
+		const broken = (await fixtureRuns('autofit-resize.pptx')).filter(({ r }) => r.breaksBefore > 0)
+		assert(broken.length > 0, 'autofit-resize.pptx has runs after an <a:br/>')
+		for (const { r, paragraph } of broken) {
+			assert(paragraph.text.includes(`\n${r.text}`), `the break sits right before "${r.text}"`)
+		}
+		const table = await Presentation.load(await readFixture('table.pptx'))
+		const cellRun = table.slides
+			.flatMap((slide) => slide.shapes.flatMap((shape) => (isGraphicFrame(shape) && shape.table?.rows) || []))
+			.flatMap((row) => row.cells.flatMap((cell) => cell.textFrame?.paragraphs ?? []))
+			.flatMap((p) => p.runs)
+			.find((r) => r.outline !== null)
+		assertEqual(cellRun?.outline?.noFill, true, 'table.pptx writes <a:ln><a:noFill/></a:ln> on its cell runs')
+		const mixed = await Presentation.load(await readFixture('mixed.pptx'))
+		const warps = mixed.slides.flatMap((slide) => slide.shapes.map((s) => s.textFrame?.bodyProperties?.textWarp))
+		assert(warps.includes('textNoShape'), 'mixed.pptx states <a:prstTxWarp prst="textNoShape">')
+	})
+
+	test('the rest read back from what the writer emits, null when unset', async () => {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addText(
+				[
+					{
+						text: 'Styled',
+						options: {
+							lang: 'fr-FR',
+							glow: { size: 8, opacity: 0.5, color: 'FF00FF' },
+							outline: { color: '9B1B30', size: 1.5 },
+							underline: { style: 'sng', color: '00FF00' },
+							rtlMode: true,
+							tabStops: [{ position: 1.5, alignment: 'r' }],
+						},
+					},
+				],
+				{ x: 1, y: 1, w: 6, h: 2, columns: 2, columnSpacing: 9 }
+			)
+			pres.addSlide().addText('Plain', { x: 1, y: 1, w: 6, h: 2 })
+		})
+		const shapes = presentation.slides.map((slide) => defined(slide.shapes[0]?.textFrame))
+		const [styled, plain] = shapes.map((frame) => defined(frame.paragraphs[0]))
+		const r = defined(styled?.runs[0])
+		assertEqual(r.language, 'fr-FR', 'lang')
+		assertEqual(r.glow?.radiusPt, 8, 'glow radius in points')
+		assertEqual(r.glow?.colorRef.resolved?.alpha, 0.5, 'glow opacity')
+		assertEqual(r.outline?.widthPt, 1.5, 'outline width in points')
+		assertEqual(r.outline?.colorRef.srgb, '9B1B30', 'outline colour')
+		assertEqual(r.underlineColor?.srgb, '00FF00', 'underline colour')
+		assertEqual(styled?.rtl, true, 'rtl')
+		assertEqual(JSON.stringify(styled?.tabStops), '[{"positionPt":108,"alignment":"r"}]', 'tab stops in points')
+		const body = shapes[0]?.bodyProperties
+		assertEqual(body?.columns, 2, 'numCol')
+		assertEqual(body?.columnSpacingPt, 9, 'spcCol in points')
+
+		const p = defined(plain?.runs[0])
+		assertEqual(p.glow, null, 'no glow')
+		assertEqual(p.outline, null, 'no outline')
+		assertEqual(p.underlineColor, null, 'no underline colour')
+		assertEqual(p.eastAsianFontName, null, 'no East Asian face')
+		assertEqual(p.breaksBefore, 0, 'no break')
+		assertEqual(plain?.rtl, null, 'no direction')
+		assertEqual(plain?.tabStops, null, 'no tab list')
+		assertEqual(shapes[1]?.bodyProperties?.columns, null, 'no columns')
+		assertEqual(shapes[1]?.bodyProperties?.textWarp, null, 'no warp')
+	})
+})
+
 describe('Run/paragraph formatting — schema validity', () => {
 	test.skipIf(!validatorInstalled)('the authored formatted deck is schema-valid', async () => {
 		assertEqual((await schemaErrors((await authorRead(formattedRuns)).buf)).length, 0, 'formatted-runs deck validates')

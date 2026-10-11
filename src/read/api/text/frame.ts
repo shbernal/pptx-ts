@@ -26,6 +26,12 @@ export interface BodyProperties {
 	wrap: string | null
 	/** Explicitly-set text insets in points (`@lIns`/`@rIns`/`@tIns`/`@bIns` ÷ 12700); a missing side uses the PowerPoint default. */
 	insetsPt: { left?: number; right?: number; top?: number; bottom?: number }
+	/** Number of text columns (`@numCol`), or `null` when unset (one column). The write side's `columns`. */
+	columns: number | null
+	/** Space between columns in points (`@spcCol` ÷ 12700), or `null` when unset. The write side's `columnSpacing`. */
+	columnSpacingPt: number | null
+	/** Preset WordArt warp (`a:prstTxWarp/@prst`, e.g. `textArchUp`), or `null` when none. The write side's `textWarp`. */
+	textWarp: string | null
 }
 
 /**
@@ -72,11 +78,16 @@ export class TextFrame {
 		inset('rIns', 'right')
 		inset('tIns', 'top')
 		inset('bIns', 'bottom')
+		const spcCol = numberValue(attr(bodyPr, 'spcCol'))
+		const warp = firstChild(bodyPr, 'a:prstTxWarp')
 		return {
 			vert: attr(bodyPr, 'vert') ?? null,
 			anchor: attr(bodyPr, 'anchor') ?? null,
 			wrap: attr(bodyPr, 'wrap') ?? null,
 			insetsPt,
+			columns: numberValue(attr(bodyPr, 'numCol')),
+			columnSpacingPt: spcCol === null ? null : emuToPoints(spcCol),
+			textWarp: warp ? (attr(warp, 'prst') ?? null) : null,
 		}
 	}
 

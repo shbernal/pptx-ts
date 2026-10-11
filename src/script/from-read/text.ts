@@ -35,6 +35,7 @@ import type { IrValue } from '../ir.js'
 import type { MapContext } from './context.js'
 import { hasEquation } from './detect.js'
 import {
+	alphaToTransparency,
 	ANCHOR_TO_VALIGN,
 	colorOption,
 	compact,
@@ -253,19 +254,91 @@ export function runOptions(run: Run, ctx: MapContext): Record<string, IrValue> |
 		)
 	}
 
+	const color = runColor(run, hyperlink !== undefined, notes)
 	return compact({
+		// `en-US` is what the write path states on a run that sets no `lang`, so it is left implied.
+		lang: run.language === null || run.language === 'en-US' ? undefined : run.language,
 		bold: orUndefined(run.bold),
 		italic: orUndefined(run.italic),
-		underline: underline === null ? undefined : { style: underline },
+		underline: underlineOption(run, underline, notes),
 		strike: orUndefined(run.strike),
 		fontSize: orUndefined(run.fontSizePt),
 		fontFace: orUndefined(run.fontName),
-		color: runColor(run, hyperlink !== undefined, notes),
+		fontFaceEA: orUndefined(run.eastAsianFontName),
+		color,
+		// The alpha on the run's own `a:solidFill`; the write path writes it only beside a colour.
+		transparency: color === undefined ? undefined : alphaToTransparency(run.resolvedColor?.alpha),
+		outline: outlineOption(run, notes),
+		glow: runGlowOption(run, notes),
 		highlight: run.highlight ? literalColor(run.highlight.effectiveHex) : undefined,
 		caps: orUndefined(run.caps),
 		baseline: baselineOption(run.baselinePct),
 		...spacingOptions(run, notes),
 		hyperlink,
+	})
+}
+
+/** The underline style, with its own colour (`a:uFill`) when it has one. */
+function underlineOption(run: Run, style: string | null, notes: NoteScope): IrValue | undefined {
+	if (style === null) return undefined
+	const ref = run.underlineColor
+	const color =
+		ref === null
+			? undefined
+			: colorOption(
+					{ scheme: ref.scheme, ownHex: ref.srgb, resolvedHex: ref.resolved?.effectiveHex ?? null },
+					notes,
+					'text.underline.schemeToken',
+					'underline'
+				)
+	return compact({ style, color }) ?? { style }
+}
+
+/**
+ * The run's text outline as `outline`, which takes a width and a solid colour. An outline painted
+ * some other way (a gradient or a pattern) has no spelling and is noted; the write path would
+ * otherwise paint it white, its default.
+ */
+function outlineOption(run: Run, notes: NoteScope): IrValue | undefined {
+	const outline = run.outline
+	// An explicit no-outline strokes nothing, which is also what a run without `outline` draws.
+	if (!outline || outline.noFill) return undefined
+	const ref = outline.colorRef
+	const color = colorOption(
+		{ scheme: ref.scheme, ownHex: ref.srgb, resolvedHex: ref.resolved?.effectiveHex ?? null },
+		notes,
+		'text.outline.schemeToken',
+		'text outline'
+	)
+	if (color === undefined) {
+		notes.note(
+			'text.outline',
+			'dropped',
+			'unwritable',
+			'this run is outlined with something other than a solid colour (a:rPr/a:ln), which the outline option cannot spell, so the run comes back without an outline'
+		)
+		return undefined
+	}
+	return compact({ color, size: orUndefined(outline.widthPt) })
+}
+
+/**
+ * The run's own glow as the text `glow` option. Opacity is spelled out even when the glow is
+ * opaque, because the write path fills an unset one with its 0.75 default.
+ */
+function runGlowOption(run: Run, notes: NoteScope): IrValue | undefined {
+	const glow = run.glow
+	if (!glow) return undefined
+	const ref = glow.colorRef
+	return compact({
+		size: glow.radiusPt,
+		color: colorOption(
+			{ scheme: ref.scheme, ownHex: ref.srgb, resolvedHex: ref.resolved?.effectiveHex ?? null },
+			notes,
+			'text.glow.schemeToken',
+			'text glow'
+		),
+		opacity: ref.resolved?.alpha ?? 1,
 	})
 }
 
@@ -543,6 +616,9 @@ function paragraphOptions(paragraph: Paragraph, notes: NoteScope): Record<string
 			paraSpaceAfter: orUndefined(paragraph.spaceAfterPt),
 			lineSpacing: spacing?.type === 'points' ? spacing.valuePt : undefined,
 			lineSpacingMultiple: spacing?.type === 'percent' ? spacing.percent / 100 : undefined,
+			// `rtl="0"` is the default direction, which the write path cannot state and need not.
+			rtlMode: paragraph.rtl ? true : undefined,
+			tabStops: tabStopsOption(paragraph),
 			// A paragraph with no bullet child of its own states nothing, and `'inherit'` is
 			// how the write path says that. `undefined` would NOT do — an omitted `bullet`
 			// emits an explicit `a:buNone`, which suppresses whatever the destination list
@@ -553,6 +629,33 @@ function paragraphOptions(paragraph: Paragraph, notes: NoteScope): Record<string
 			bullet: bulletValue,
 		}) ?? {}
 	)
+}
+
+/** `a:tabLst` as `tabStops`, whose positions are inches. */
+function tabStopsOption(paragraph: Paragraph): IrValue | undefined {
+	const stops = paragraph.tabStops
+	if (!stops || stops.length === 0) return undefined
+	return stops.map(
+		(stop) => compact({ position: pointsToInches(stop.positionPt ?? 0), alignment: orUndefined(stop.alignment) }) ?? {}
+	)
+}
+
+/**
+ * Note the paragraph's line breaks the runs cannot carry. `softBreakBefore` writes one `a:br`
+ * before a run that is not the first on its line, so a break opening the paragraph, a second in a
+ * row, or one after the last run has no spelling.
+ */
+function noteUnwritableBreaks(paragraph: Paragraph, notes: NoteScope): void {
+	const total = paragraph.text.split('\n').length - 1
+	const carried = paragraph.runs.slice(1).filter((run) => run.breaksBefore > 0).length
+	if (total > carried) {
+		notes.note(
+			'text.softBreak',
+			'dropped',
+			'unwritable',
+			'this paragraph has a line break (a:br) that softBreakBefore cannot place: one before its first run, a second in a row, or one after its last run, so that break is lost'
+		)
+	}
 }
 
 /**
@@ -568,6 +671,7 @@ export function textRuns(frame: TextFrame, ctx: MapContext): IrValue[] {
 
 	paragraphs.forEach((paragraph, paragraphIndex) => {
 		const paraOpts = paragraphOptions(paragraph, ctx.notes)
+		noteUnwritableBreaks(paragraph, ctx.notes)
 		const runs = paragraph.runs
 		// The paragraph break rides on the last run of every paragraph but the final one;
 		// a trailing break would add an empty line the frame never had.
@@ -590,6 +694,7 @@ export function textRuns(frame: TextFrame, ctx: MapContext): IrValue[] {
 			const options = compact({
 				...(runIndex === 0 ? paraOpts : continuation),
 				...runOptions(run, ctx),
+				...(runIndex > 0 && run.breaksBefore > 0 ? { softBreakBefore: true } : {}),
 				...(isLastRun && breaks ? { breakLine: true } : {}),
 			})
 			items.push(compact({ text: run.text, options }) ?? { text: run.text })
@@ -632,6 +737,10 @@ export function textFrameOptions(frame: TextFrame, notes: NoteScope): Record<str
 			vert: vert !== null && WRITABLE_VERT.has(vert) ? vert : undefined,
 			fit: fitOption(frame, notes),
 			margin: marginOption(body),
+			columns: orUndefined(body?.columns ?? null),
+			// Zero is the attribute's default, and the write path writes no `spcCol` for it.
+			columnSpacing: body?.columnSpacingPt || undefined,
+			textWarp: orUndefined(body?.textWarp ?? null),
 		}) ?? {}
 	)
 }

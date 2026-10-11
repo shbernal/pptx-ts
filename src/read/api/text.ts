@@ -16,6 +16,8 @@ export {
 	type BulletStyle,
 	type InheritedRunProps,
 	type LineSpacing,
+	type RunOutline,
+	type TabStop,
 	type TextContext,
 	type TextInheritance,
 } from './text/run.js'

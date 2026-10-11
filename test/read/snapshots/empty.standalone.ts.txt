@@ -102,7 +102,12 @@ pptx.defineSlideMaster({ background: { color: 'FFFFFF' }, title: 'Vertikaler Tit
 const slide1 = pptx.addSlide({ masterTitle: 'Titelfolie' })
 // Textfeld 3
 slide1.addText(
-	[{ options: { bullet: 'inherit', color: '000000', fontSize: 12 }, text: 'This is an almost empty slide.' }],
+	[
+		{
+			options: { bullet: 'inherit', color: '000000', fontSize: 12, lang: 'de-DE' },
+			text: 'This is an almost empty slide.',
+		},
+	],
 	{
 		fit: 'resize',
 		h: '276999emu',
