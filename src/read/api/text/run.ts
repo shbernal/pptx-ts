@@ -285,6 +285,15 @@ export class Run {
 	}
 
 	/**
+	 * Kerning threshold in points (`a:rPr/@kern`, authored in hundredths of a point), or `null`
+	 * when unset: text at this font size or larger is pair-kerned, and `0` means kerning is off.
+	 * PowerPoint's own default is `12`. The read counterpart of the write-side `kerning` option.
+	 */
+	get kerningPt(): number | null {
+		return ptFromHundredths(this.#rPrAttr('kern'))
+	}
+
+	/**
 	 * The run's highlight colour (`a:rPr/a:highlight`), resolved to a literal hex
 	 * through the owning slide's theme, or `null` when the run has no highlight or
 	 * its colour cannot be made literal. The writer authors highlights from a hex

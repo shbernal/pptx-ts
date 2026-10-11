@@ -99,6 +99,23 @@ describe('run properties', () => {
 		expect(rPr({ charSpacing: 3 })).toContain('spc="300" kern="0"')
 	})
 
+	test('kerning writes its threshold in hundredths of a point', () => {
+		expect(rPr({ kerning: 12 })).toContain(' kern="1200" ')
+		expect(rPr({ kerning: 10.5 })).toContain(' kern="1050" ')
+	})
+
+	test('kerning: 0 is a statement, kerning off, rather than unstated', () => {
+		expect(rPr({ kerning: 0 })).toContain(' kern="0" ')
+	})
+
+	test('a stated kerning wins over the kern="0" that charSpacing implies', () => {
+		expect(rPr({ charSpacing: 3, kerning: 12 })).toContain('spc="300" kern="1200"')
+	})
+
+	test('no kerning and no charSpacing writes no kern', () => {
+		expect(rPr({})).not.toContain('kern=')
+	})
+
 	test('font names are escaped in every slot', () => {
 		const xml = rPr({ fontFace: 'A&B', fontFaceEA: '<EA>' })
 		expect(xml).toContain('<a:latin typeface="A&amp;B" pitchFamily="34" charset="0"/>')

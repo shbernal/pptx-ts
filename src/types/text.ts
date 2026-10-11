@@ -350,6 +350,15 @@ export interface TextPropsOptions extends PositionProps, DataOrPathProps, TextBa
 	 */
 	charSpacing?: number
 	/**
+	 * Kerning (`a:rPr/@kern`): the smallest font size, in points, that gets pair kerning. Text at
+	 * this size or larger is kerned, smaller text is not, and `0` turns kerning off.
+	 * - PowerPoint: Font > Character Spacing > "Kerning for fonts: _ Points and above"
+	 * - range: 0-4000
+	 * @example 12 // kern text set at 12pt or larger, PowerPoint's own default
+	 * @default undefined // no `kern`, except that a non-zero `charSpacing` writes `kern="0"`
+	 */
+	kerning?: number
+	/**
 	 * Number of text columns in the text body
 	 * - PowerPoint: Format Shape > Shape Options > Size & Properties > Text Box > Columns > "Number"
 	 * - range: 1-16

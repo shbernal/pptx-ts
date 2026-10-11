@@ -7,7 +7,8 @@
 
 import { describe, test } from 'vitest'
 import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.ts'
-import type { Presentation, Run } from '../../dist/read.js'
+import { Presentation, isGraphicFrame, type Run } from '../../dist/read.js'
+import { readFixture } from './corpus.ts'
 import { assert, assertEqual, defined, type TsPptx, at } from '../helpers.ts'
 
 /** A text box whose runs each carry one character-formatting property. */
@@ -60,6 +61,54 @@ describe('Run character formatting — a:rPr attributes', () => {
 		assertEqual(run(runs, 'Super').baselinePct, 30, 'superscript → +30%')
 		assertEqual(run(runs, 'Sub').baselinePct, -40, 'subscript → -40%')
 		assertEqual(run(runs, 'Plain').baselinePct, null, 'a baseline-shifted-none run reports null')
+	})
+
+	test('charSpacing and kerning read back in points, null when unset', async () => {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addText(
+				[
+					{ text: 'Spaced', options: { charSpacing: 4 } },
+					{ text: 'Tight', options: { charSpacing: -1.5 } },
+					{ text: 'Kerned', options: { kerning: 12 } },
+					{ text: 'Unkerned', options: { kerning: 0 } },
+					{ text: 'Plain', options: {} },
+				],
+				{ x: 1, y: 1, w: 8, h: 3 }
+			)
+		})
+		const runs = runsOf(presentation)
+		assertEqual(run(runs, 'Spaced').charSpacingPt, 4, 'charSpacing:4 → 4pt')
+		assertEqual(run(runs, 'Tight').charSpacingPt, -1.5, 'negative spacing tightens')
+		assertEqual(run(runs, 'Spaced').kerningPt, 0, 'spacing alone turns kerning off')
+		assertEqual(run(runs, 'Kerned').kerningPt, 12, 'kerning:12 → 12pt')
+		assertEqual(run(runs, 'Unkerned').kerningPt, 0, 'kerning:0 → kerning off')
+		assertEqual(run(runs, 'Plain').kerningPt, null, 'a run with no kern reports null')
+	})
+
+	test('kerning reads PowerPoint-authored kern values', async () => {
+		// `table.pptx` is PowerPoint-authored and states `kern="1200"` (PowerPoint's 12pt default)
+		// on its cell runs; `math-omml-inline.pptx` states `kern="100"`.
+		const table = await Presentation.load(await readFixture('table.pptx'))
+		const tableKerns = new Set(
+			table.slides.flatMap((slide) =>
+				slide.shapes.flatMap((shape) =>
+					((isGraphicFrame(shape) && shape.table?.rows) || []).flatMap((row) =>
+						row.cells.flatMap((cell) =>
+							(cell.textFrame?.paragraphs ?? []).flatMap((p) => p.runs.map((r) => r.kerningPt))
+						)
+					)
+				)
+			)
+		)
+		assert(tableKerns.has(12), `table.pptx cell runs read kern="1200" as 12pt: ${[...tableKerns].join(', ')}`)
+
+		const math = await Presentation.load(await readFixture('math-omml-inline.pptx'))
+		const mathKerns = math.slides.flatMap((slide) =>
+			slide.shapes.flatMap((shape) =>
+				(shape.textFrame?.paragraphs ?? []).flatMap((p) => p.runs.map((r) => r.kerningPt))
+			)
+		)
+		assert(mathKerns.includes(1), `math-omml-inline.pptx reads kern="100" as 1pt: ${mathKerns.join(', ')}`)
 	})
 
 	test('highlight resolves to a literal hex', async () => {

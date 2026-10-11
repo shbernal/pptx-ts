@@ -314,9 +314,9 @@ function notesOf(slide: Slide, notes: NoteScope): { notesText?: string } {
  * `true` when a speaker-notes paragraph states anything plain text cannot carry.
  *
  * `addNotes` takes plain text. The note used to fire for bold and italic only, so underline,
- * strike, colour, size, face, highlight, a hyperlink, a bullet or an indent level went with
- * nothing said. An explicit off (`u="none"`, `strike="noStrike"`, a suppressed bullet) is how plain
- * text reads anyway, so it does not count. Reads accessors only: `runOptions` would record colour
+ * strike, colour, size, face, highlight, character spacing, a hyperlink, a bullet or an indent
+ * level went with nothing said. An explicit off (`u="none"`, `strike="noStrike"`, a suppressed
+ * bullet) is how plain text reads anyway, so it does not count. Reads accessors only: `runOptions` would record colour
  * notes for text that emits no call.
  */
 function hasNotesFormatting(paragraph: Paragraph): boolean {
@@ -334,6 +334,7 @@ function hasNotesFormatting(paragraph: Paragraph): boolean {
 			run.fontSizePt !== null ||
 			run.fontName !== null ||
 			run.highlight !== null ||
+			Boolean(run.charSpacingPt) ||
 			run.hyperlink !== null
 	)
 }

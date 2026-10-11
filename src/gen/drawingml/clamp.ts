@@ -83,6 +83,17 @@ const CHAR_SPACING: ClampSpec = {
 	max: 400000,
 }
 
+const KERNING: ClampSpec = {
+	code: 'text/kerning-out-of-range',
+	nonFiniteCode: 'coord/non-finite',
+	label: 'kerning',
+	range: '0-4000pt',
+	convert: ptToHundredths,
+	perUnit: HUNDREDTHS_PER_POINT,
+	min: 0,
+	max: 400000,
+}
+
 const PARA_MARGIN: ClampSpec = {
 	code: 'text/paragraph-margin-out-of-range',
 	nonFiniteCode: 'coord/non-finite',
@@ -162,6 +173,11 @@ export function clampFontSizeSz(fontSizePts: number, label?: string): number {
 /** Clamp character spacing (points) into ST_TextPoint (-4000..4000pt); returns hundredths for the `spc` attribute. */
 export function clampCharSpacingSpc(charSpacingPts: number): number {
 	return clampWithWarn(charSpacingPts, CHAR_SPACING)
+}
+
+/** Clamp a kerning threshold (points) into ST_TextNonNegativePoint (0..4000pt); returns hundredths for the `kern` attribute. */
+export function clampKerningKern(kerningPts: number): number {
+	return clampWithWarn(kerningPts, KERNING)
 }
 
 /**

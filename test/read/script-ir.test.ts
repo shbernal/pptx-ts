@@ -596,6 +596,97 @@ describe('deck IR — the explicit off for text decorations', () => {
 	})
 })
 
+describe('deck IR — character spacing and kerning', () => {
+	// `a:rPr/@spc` was read (`Run.charSpacingPt`) but never mapped, and nothing noted the loss. A
+	// spaced run came back unspaced, and `diffDeckIr` called the round trip clean because neither
+	// IR carried the field (issue #53). `@kern` had no reader and no write option at all.
+
+	/** The per-run option objects of the deck's single `addText` call. */
+	const runOptionsOf = (ir: DeckIr) =>
+		arrayOf(defined(allCalls(ir).find((call) => call.method === 'addText')).args[0]).map((run) => at(run, 'options'))
+
+	/** Rebuild the deck's single `addText` call from its IR, as a printed script would. */
+	async function replay(ir: DeckIr): Promise<string> {
+		const call = defined(allCalls(ir).find((candidate) => candidate.method === 'addText'))
+		const { buf } = await authorRead((pres) => {
+			// The IR's argument objects are the write API's own option objects.
+			pres.addSlide().addText(...(call.args as Parameters<ReturnType<typeof pres.addSlide>['addText']>))
+		})
+		return readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml')
+	}
+
+	test('a spaced run keeps its spacing, and the kern="0" the writer pairs with it stays implied', async () => {
+		const { presentation, buf } = await authorRead((pres) => {
+			pres.addSlide().addText('Spaced', { x: 1, y: 1, w: 5, h: 1, charSpacing: 4 })
+		})
+		const sourceXml = await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml')
+		assert(sourceXml.includes('spc="400" kern="0"'), 'the writer states spacing and turns kerning off')
+
+		const ir = readModelToIr(presentation)
+		const options = runOptionsOf(ir)[0]
+		assertEqual(at(options, 'charSpacing'), 4, 'the IR carries the spacing in points')
+		assertEqual(at(options, 'kerning'), undefined, 'and leaves the kern="0" to the writer, as it was authored')
+		assert(
+			JSON.stringify(canonicalDeckIr(ir)).includes('"charSpacing":4'),
+			'so a diffDeckIr oracle can see a future loss of it'
+		)
+		assertEqual(ir.fidelity.filter((note) => note.construct === 'text.kern').length, 0, 'nothing is lost')
+		assert((await replay(ir)).includes('spc="400" kern="0"'), 'and replaying the IR writes the same attributes')
+	})
+
+	test('a stated kerning carries, with or without spacing', async () => {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addText(
+				[
+					{ text: 'Kerned', options: { kerning: 12, breakLine: true } },
+					{ text: 'Unkerned', options: { kerning: 0, breakLine: true } },
+					{ text: 'Spaced and kerned', options: { charSpacing: -1.5, kerning: 10 } },
+				],
+				{ x: 1, y: 1, w: 6, h: 2 }
+			)
+		})
+		const ir = readModelToIr(presentation)
+		const options = runOptionsOf(ir)
+		assertEqual(at(options[0], 'kerning'), 12, 'kern="1200" → kerning: 12')
+		assertEqual(at(options[1], 'kerning'), 0, 'kern="0" without spacing is stated, so it is carried')
+		assertEqual(at(options[2], 'charSpacing'), -1.5, 'negative spacing carries')
+		assertEqual(at(options[2], 'kerning'), 10, 'and a kerning beside spacing that is not 0 carries too')
+
+		const replayed = await replay(ir)
+		for (const attr of ['kern="1200"', 'kern="0"', 'spc="-150" kern="1000"']) {
+			assert(replayed.includes(attr), `replaying the IR writes ${attr}`)
+		}
+	})
+
+	test('a table cell carries its spacing and kerning', async () => {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addTable([[{ text: 'Cell', options: { charSpacing: 2, kerning: 12 } }]], { x: 1, y: 1, w: 4 })
+		})
+		const cell = JSON.stringify(
+			defined(allCalls(readModelToIr(presentation)).find((c) => c.method === 'addTable')).args
+		)
+		assert(cell.includes('"charSpacing":2') && cell.includes('"kerning":12'), `the cell keeps both: ${cell}`)
+	})
+
+	test('spacing with no kern at all is the one state the writer cannot spell, so it is noted', async () => {
+		// PowerPoint can space a run without stating `kern`; the write path pairs spacing with kern="0".
+		const { buf } = await authorRead((pres) => {
+			pres.addSlide().addText('Spaced', { x: 1, y: 1, w: 5, h: 1, charSpacing: 4 })
+		})
+		const zip = await JSZip.loadAsync(buf)
+		const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
+		const patched = slideXml.replace('spc="400" kern="0"', 'spc="400"')
+		assert(patched !== slideXml, 'the kern attribute was found and removed')
+		zip.file('ppt/slides/slide1.xml', patched)
+		const ir = readModelToIr(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
+
+		assertEqual(at(runOptionsOf(ir)[0], 'charSpacing'), 4, 'the spacing still carries')
+		const noted = ir.fidelity.find((note) => note.construct === 'text.kern')
+		assert(noted, 'and the kern="0" the rebuilt run gains is declared')
+		assertEqual(noted.cause, 'unwritable', 'the read model sees the state; the write API cannot leave kern out')
+	})
+})
+
 describe('deck IR — slide transitions', () => {
 	// The mapping's whole difficulty is that the read model reports an *open* type string
 	// (it decodes PowerPoint's modern effects by namespace) while the write API has a closed

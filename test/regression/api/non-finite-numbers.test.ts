@@ -55,6 +55,7 @@ describe('non-finite and out-of-range numbers on the write side', () => {
 		const cases: Array<[string, string, string, string]> = [
 			['fontSize', ' sz="400000"', 'font/size-out-of-range', 'coord/non-finite'],
 			['charSpacing', ' spc="400000"', 'text/char-spacing-out-of-range', 'coord/non-finite'],
+			['kerning', ' kern="400000"', 'text/kerning-out-of-range', 'coord/non-finite'],
 			['lineSpacing', '<a:spcPts val="158400"', 'text/line-spacing-out-of-range', 'coord/non-finite'],
 			['lineSpacingMultiple', '<a:spcPct val="13200000"', 'text/line-spacing-out-of-range', 'percent/non-finite'],
 			['transparency', '<a:alpha val="0"', 'transparency/out-of-range', 'percent/non-finite'],

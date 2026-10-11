@@ -36,6 +36,7 @@ import { textAlignToken } from '../../ooxml/text-align.js'
 import {
 	clampCharSpacingSpc,
 	clampFontSizeSz,
+	clampKerningKern,
 	clampLineSpacingMultiplePct,
 	clampLineSpacingPts,
 	clampParaIndentEmu,
@@ -419,7 +420,10 @@ export function genXmlTextRunProperties(opts: ObjectOptions | TextPropsOptions, 
 		u: underline,
 		baseline,
 		spc: mapStated(opts.charSpacing, clampCharSpacingSpc) ?? null,
-		kern: opts.charSpacing ? 0 : null, // IMPORTANT: Also disable kerning; otherwise text won't actually expand
+		// IMPORTANT: spaced text also disables kerning, otherwise it won't actually expand -- unless
+		// the caller states a kerning of their own. `kerning: 0` is a statement (kerning off), not
+		// the unstated case `mapStated` reads a zero as.
+		kern: opts.kerning === 0 ? 0 : (mapStated(opts.kerning, clampKerningKern) ?? (opts.charSpacing ? 0 : null)),
 		dirty: '0',
 	}
 
@@ -667,6 +671,7 @@ const RUN_INHERITABLE_OPTIONS = [
 	'subscript',
 	'superscript',
 	'charSpacing',
+	'kerning',
 	'color',
 	'transparency',
 	'fontFace',
