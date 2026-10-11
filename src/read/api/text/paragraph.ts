@@ -98,6 +98,16 @@ export class Paragraph {
 		}
 	}
 
+	/**
+	 * The language of the paragraph's end mark (`a:endParaRPr/@lang`, e.g. `fr-FR`), or `null` when
+	 * unset. It is what text typed at the end of the paragraph, or into an empty one, is spelled in.
+	 * The write side states it from the text's `lang` option.
+	 */
+	get endLanguage(): string | null {
+		const end = firstChild(this.element, 'a:endParaRPr')
+		return end ? attr(end, 'lang') : null
+	}
+
 	/** Indent level (`a:pPr/@lvl`), 0 when unset. */
 	get level(): number {
 		const pPr = firstChild(this.element, 'a:pPr')

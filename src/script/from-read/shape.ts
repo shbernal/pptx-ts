@@ -108,6 +108,12 @@ function autoShapeText(shape: AutoShape, notes: NoteScope): TextFrame | null {
 	return noteUnreadText(frame, shape.element_, notes, 'shape').length > 0 ? frame : null
 }
 
+/** The `lang` a text's options carry, which its runs then state only where they differ. */
+function textLang(options: Record<string, IrValue> | undefined): string | undefined {
+	const lang = options?.['lang']
+	return typeof lang === 'string' ? lang : undefined
+}
+
 /** The `p:ph/@type` values `placeholder` writes back as they are (`genXmlPlaceholder`). */
 const WRITABLE_PLACEHOLDER_TYPES: ReadonlySet<string> = new Set(Object.values(PlaceholderType))
 
@@ -171,7 +177,7 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 			})
 			return {
 				method: 'addText',
-				args: [textRuns(frame, ctx, placeholder !== undefined), options ?? {}],
+				args: [textRuns(frame, ctx, placeholder !== undefined, textLang(options)), options ?? {}],
 				...nameOf(shape),
 			}
 		}
@@ -191,7 +197,7 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 		})
 		return {
 			method: 'addText',
-			args: [textRuns(frame, ctx, placeholder !== undefined), options ?? {}],
+			args: [textRuns(frame, ctx, placeholder !== undefined, textLang(options)), options ?? {}],
 			...nameOf(shape),
 		}
 	}
