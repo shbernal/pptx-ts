@@ -185,7 +185,7 @@ defineRegressionSuite('Shared chart fragments', [
 		// chart-bar3d-series-axis.test.ts; this one had nothing.
 		name: 'category-axis time units are lowercased, and an unrecognized one is dropped with a warning',
 		fn: async () => {
-			const ok = await chartFor(ChartType.line, [{ name: 'S', labels: ['a', 'b'], values: [1, 2] }], {
+			const ok = await chartFor(ChartType.line, [{ name: 'S', labels: ['2026-01-01', '2026-02-01'], values: [1, 2] }], {
 				catLabelFormatCode: 'yyyy-mm',
 				// @ts-expect-error the type spells time units in lower case; the runtime folds case
 				catAxisBaseTimeUnit: 'Days',
@@ -198,12 +198,16 @@ defineRegressionSuite('Shared chart fragments', [
 			assertIncludes(ok, '<c:minorTimeUnit val="years"/>')
 
 			const diag = await captureDiagnostics(async () => {
-				const bad = await chartFor(ChartType.line, [{ name: 'S', labels: ['a', 'b'], values: [1, 2] }], {
-					catLabelFormatCode: 'yyyy',
-					catAxisBaseTimeUnit: 'days',
-					// @ts-expect-error 'fortnights' is not an ST_TimeUnit member
-					catAxisMajorTimeUnit: 'fortnights',
-				})
+				const bad = await chartFor(
+					ChartType.line,
+					[{ name: 'S', labels: ['2026-01-01', '2026-02-01'], values: [1, 2] }],
+					{
+						catLabelFormatCode: 'yyyy',
+						catAxisBaseTimeUnit: 'days',
+						// @ts-expect-error 'fortnights' is not an ST_TimeUnit member
+						catAxisMajorTimeUnit: 'fortnights',
+					}
+				)
 				assertIncludes(bad, '<c:baseTimeUnit val="days"/>', 'the valid sibling still emits')
 				assertNotIncludes(bad, '<c:majorTimeUnit', 'the whole element is omitted, not emitted with a bad value')
 			})

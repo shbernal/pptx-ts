@@ -470,6 +470,82 @@ function normalizeAxisOptions(axis: AxisOptions, prefix: string): void {
 	}
 }
 
+/** `YYYY-MM-DD`, optionally with a `THH:MM` or `THH:MM:SS` time (a space works as well as `T`). */
+const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2}))?)?$/
+/** Days from the spreadsheet epoch (serial 0, 1899-12-30) to the Unix epoch. */
+const SERIAL_UNIX_EPOCH = 25569
+/** 1900-03-01: earlier serials are skewed by the spreadsheet's phantom 1900-02-29. */
+const FIRST_SAFE_SERIAL = 61
+
+/**
+ * A category label as the date serial a `<c:numCache>` point holds, or `null` when it is not one.
+ *
+ * A number passes, written plainly (`'1e3'` is 1000): it already is a serial. An ISO date or date-time becomes its serial, read
+ * as calendar time, so `'2026-01-01'` is 46023 in every time zone. A date that does not exist, such
+ * as `'2026-02-30'`, or one before 1900-03-01 is not converted.
+ * @param label - one category label, not blank
+ */
+function dateCategorySerial(label: string): string | null {
+	const number = Number(label)
+	if (Number.isFinite(number)) return String(number)
+	const m = ISO_DATE.exec(label.trim())
+	if (!m) return null
+	const [y, mo, d, h, mi, s] = m.slice(1).map((group: string | undefined) => Number(group ?? 0))
+	if (y === undefined || mo === undefined || d === undefined || h === undefined || mi === undefined || s === undefined)
+		return null
+	const ms = Date.UTC(y, mo - 1, d, h, mi, s)
+	const date = new Date(ms)
+	if (date.getUTCMonth() !== mo - 1 || date.getUTCDate() !== d || h > 23 || mi > 59 || s > 59) return null
+	const serial = ms / 86_400_000 + SERIAL_UNIX_EPOCH
+	return serial >= FIRST_SAFE_SERIAL ? String(serial) : null
+}
+
+/**
+ * Turn the leaf category labels into date serials when `catLabelFormatCode` makes them dates, or drop
+ * the format code, warning, when one of them is not a date.
+ *
+ * A format code makes the categories a `<c:numRef>` under a `<c:dateAx>`, and its cache was written
+ * from the labels as given. PowerPoint refuses the whole deck (0x80070570) over one `<c:numCache>`
+ * point that is not a number, so `labels: ['2026-01-01', …]` broke the deck it was in. Blank labels
+ * stay blank. Only the leaf level is cached, so it is the only level converted.
+ *
+ * The series' label arrays are replaced, never written through: the outer array is this model's own,
+ * but the inner ones are the caller's.
+ * @param options - the chart's options, `catLabelFormatCode` deleted when the labels are not dates
+ * @param series - every series, a combo's across all its subcharts
+ */
+function normalizeDateCategories(options: ChartOptsInternal, series: OptsChartDataInternal[]): void {
+	if (!options.catLabelFormatCode) return
+	// Only the plots that cache categories through `catValRefs` read the format code. A pie keeps its
+	// labels as text, and scatter and bubble have X values instead.
+	const type = options._type
+	const plotsDates =
+		Array.isArray(type) ||
+		!(isXyChart(type) || type === ChartType.pie || type === ChartType.doughnut || isChartExType(type))
+	if (!plotsDates) return
+	const converted = new Map<OptsChartDataInternal, string[][]>()
+	for (const item of series) {
+		const [leaf, ...outer] = item.labels ?? []
+		if (!leaf) continue
+		const serials: string[] = []
+		for (const label of leaf) {
+			const text = label == null ? '' : String(label)
+			const serial = text.trim() === '' ? text : dateCategorySerial(text)
+			if (serial === null) {
+				warn(
+					'chart/invalid-option-value',
+					`"catLabelFormatCode" needs category labels that are dates (a serial number or YYYY-MM-DD); "${text}" is neither, so the categories stay text.`
+				)
+				delete options.catLabelFormatCode
+				return
+			}
+			serials.push(serial)
+		}
+		converted.set(item, [serials, ...outer])
+	}
+	for (const [item, labels] of converted) item.labels = labels
+}
+
 /**
  * Drop each `x`/`y`/`w`/`h` of a manual layout that is not a fraction of the chart, warning, so that
  * axis stays automatic. Shared by the plot area's `layout` and `legendLayout`; the legend's used to
@@ -1078,6 +1154,7 @@ export function addChartDefinition(
 	normalizeAxisOptions(options, '')
 	options.catAxes?.forEach((axis, idx) => normalizeAxisOptions(axis, `catAxes[${idx}].`))
 	options.valAxes?.forEach((axis, idx) => normalizeAxisOptions(axis, `valAxes[${idx}].`))
+	normalizeDateCategories(options, tmpData)
 
 	// Set gridline defaults
 	const scatterGrid: OptsChartGridLine = { color: 'D9D9D9', width: 1 }

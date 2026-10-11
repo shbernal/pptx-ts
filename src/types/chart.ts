@@ -527,6 +527,13 @@ export interface ChartPropsAxisCat {
 	catAxisTitleFontSize?: number
 	catAxisTitleRotate?: number
 	catGridLine?: OptsChartGridLine
+	/**
+	 * Date format for the category labels, which makes the category axis a date axis (`c:dateAx`).
+	 * - Example: `'yyyy-mm-dd'`, `'mmm yyyy'`
+	 * - labels: ISO dates or date-times (`'2026-01-01'`, `'2026-01-01T12:00'`) or date serial numbers;
+	 *   ISO ones are written as their serials. A label that is neither warns and the categories stay text.
+	 * - PowerPoint: Format Axis > Number > Format Code
+	 */
 	catLabelFormatCode?: string
 	/**
 	 * Whether data should use secondary category axis (instead of primary)

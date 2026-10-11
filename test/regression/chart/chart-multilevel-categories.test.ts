@@ -12,9 +12,11 @@ import {
 } from '../../helpers.ts'
 import { chartXml } from './chart-parts.ts'
 
+const LEAF = ['Gear', 'Berg', 'Motr', 'Swch', 'Plug', 'Cord', 'Pump', 'Leak', 'Seal']
+const OUTER = ['Mech', '', '', 'Elec', '', '', 'Hydr', '', '']
 const LABELS = [
-	['Gear', 'Berg', 'Motr', 'Swch', 'Plug', 'Cord', 'Pump', 'Leak', 'Seal'], // leaf (inner) — labels[0]
-	['Mech', '', '', 'Elec', '', '', 'Hydr', '', ''], // outer group — labels[1]
+	LEAF, // leaf (inner) — labels[0]
+	OUTER, // outer group — labels[1]
 ]
 
 const DATA = [
@@ -120,14 +122,19 @@ defineRegressionSuite('Multi-level category chart embedded workbook [upstream-pr
 		name: 'a single-column category reference over nested labels points at the leaf column',
 		fn: async () => {
 			const leafRef = '<c:f>Sheet1!$B$2:$B$10</c:f>'
-			const cases: [string, ChartOpts & { type: CHART_NAME }, string][] = [
-				['a bar with a category format code', { type: ChartType.bar, catLabelFormatCode: '0' }, 'numRef'],
-				['a stock chart', { type: ChartType.stock }, 'strRef'],
-				['a surface chart', { type: ChartType.surface }, 'strRef'],
+			// A format code makes the leaf level numbers, so that case nests serials under the groups.
+			const numericLeaf = DATA.map((series) => ({
+				...series,
+				labels: [LEAF.map((_, idx) => String(46023 + idx)), OUTER],
+			}))
+			const cases: [string, ChartOpts & { type: CHART_NAME }, string, typeof DATA][] = [
+				['a bar with a category format code', { type: ChartType.bar, catLabelFormatCode: '0' }, 'numRef', numericLeaf],
+				['a stock chart', { type: ChartType.stock }, 'strRef', DATA],
+				['a surface chart', { type: ChartType.surface }, 'strRef', DATA],
 			]
-			for (const [label, opts, cache] of cases) {
+			for (const [label, opts, cache, data] of cases) {
 				const { zip } = await build((p) => {
-					p.addSlide().addChart(DATA, { ...opts, x: 1, y: 1, w: 6, h: 4 })
+					p.addSlide().addChart(data, { ...opts, x: 1, y: 1, w: 6, h: 4 })
 				})
 				assertIncludes(await chartXml(zip), `<c:cat><c:${cache}>${leafRef}`, `${label} references the leaf column`)
 			}
