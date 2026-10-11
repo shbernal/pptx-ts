@@ -119,9 +119,12 @@ function fillIr(
 			const asset = fill.partName === null ? null : assets.assetFor(fill.partName)
 			if (!asset) return undefined
 			// The crop (`a:srcRect`) carries as `image.crop`; an uncropped picture keeps the bare
-			// `{ data }` it has always been written back as (#97).
+			// `{ data }` it has always been written back as (#97). The blip's `a:alphaModFix` is the
+			// top-level `transparency` beside either spelling (#107).
+			const transparency = alphaToTransparency(fill.picture.alpha)
+			const faded = transparency === undefined ? {} : { transparency }
 			const crop = cropOption(fill.picture.srcRect)
-			if (crop !== undefined) return { image: { data: asset, crop } }
+			if (crop !== undefined) return { image: { data: asset, crop }, ...faded }
 			if (isRectSet(fill.picture.srcRect)) {
 				notes.note(
 					tier.construct,
@@ -130,7 +133,7 @@ function fillIr(
 					`${tier.subject} is a picture cropped (a:srcRect) with insets outside the 0–100% \`image.crop\` accepts, so it comes back uncropped`
 				)
 			}
-			return { data: asset }
+			return { data: asset, ...faded }
 		}
 		case 'gradient': {
 			const gradient = gradientStops(fill.gradient, notes, tier.construct)

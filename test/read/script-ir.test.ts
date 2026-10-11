@@ -1877,6 +1877,28 @@ describe('deck IR — slide background', () => {
 		const background = objectOf(defined(atIndex(readModelToIr(presentation).slides, 0).background) as IrValue)
 		assertEqual(Object.keys(background).join(','), 'data', 'no image key: ' + JSON.stringify(background))
 	})
+
+	// A picture background's `a:alphaModFix` read back as an opaque picture, with no note (issue #107).
+	test.for([
+		['a bare picture', { data: PNG_1X1, transparency: 50 }],
+		['a cropped picture', { image: { data: PNG_1X1, crop: { l: 10, t: 0, r: 0, b: 0 } }, transparency: 50 }],
+	] as const)('%s background carries its transparency', async ([, written]) => {
+		const { presentation, buf } = await authorRead((pres) => {
+			pres.addSlide().background = written
+		})
+		const ir = readModelToIr(presentation)
+		const background = defined(atIndex(ir.slides, 0).background)
+		assertEqual(background.transparency, 50, 'the transparency: ' + JSON.stringify(background))
+
+		const source = /<p:bg>.*?<\/p:bg>/.exec(await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml'))
+		// The IR carries the bytes as an asset reference; the printed script inlines them.
+		const replayable = JSON.parse(JSON.stringify(background).replace(/\{"\$asset":"[^"]+"\}/, JSON.stringify(PNG_1X1)))
+		const { buf: replayed } = await authorRead((pres) => {
+			pres.addSlide().background = replayable as BackgroundProps
+		})
+		const xml = await readEntry(await JSZip.loadAsync(replayed), 'ppt/slides/slide1.xml')
+		assertEqual(/<p:bg>.*?<\/p:bg>/.exec(xml)?.[0], source?.[0], 'and the replay writes the same p:bg')
+	})
 })
 
 describe('deck IR — slide number', () => {

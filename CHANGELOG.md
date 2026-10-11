@@ -52,6 +52,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`readModelToIr` keeps a picture background's transparency.** A background picture with
+  `a:alphaModFix` came back opaque, with no note. It now carries `transparency` beside the
+  picture ([#107](https://github.com/shbernal/pptx-ts/issues/107)).
 - **`readModelToIr` keeps a connector's route and bindings.** Every connector came back as
   `type: 'straight'` and unbound, with no note for the route. It now carries `type`, `bends` and
   `adj` from the preset, and `startShape`/`endShape` with their sites when the bound shape's name
