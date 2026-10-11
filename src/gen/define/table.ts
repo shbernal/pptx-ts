@@ -7,7 +7,7 @@
  */
 import { namedColorOr } from '../drawingml/color.js'
 import { SlideObjectType } from '../../enums.js'
-import { DEF_CELL_BORDER, DEF_FONT_COLOR, DEF_FONT_SIZE } from '../../constants-internal.js'
+import { DEF_CELL_BORDER, DEF_FONT_SIZE } from '../../constants-internal.js'
 import { warn } from '../../diagnostics.js'
 import type {
 	BorderProps,
@@ -484,13 +484,18 @@ export function addTableDefinition(
 	// NOTE: Dont set default `h` - leaving it null triggers auto-rowH in `makeXMLSlide()`
 	opt.fontSize = opt.fontSize || DEF_FONT_SIZE
 	opt.margin = resolveCellMarginsInches(opt.margin)
-	// Black lands on the table and is inherited by every cell that has no colour of its own
-	// (`gen/slide/objects/table.ts`), as direct formatting. One thing stands it down: a
-	// hyperlink anywhere in the grid, because the default paints the whole run, so the words
-	// *after* a link come out black instead of following the link colour. That run is then
-	// emitted with no `<a:solidFill>` and PowerPoint resolves the text from the theme's `tx1`.
-	if (!tableHasHyperlink(arrRows)) {
-		if (!opt.color) opt.color = DEF_FONT_COLOR // table option > inherit from Slide > default to black
+	// The slide's colour, else black, lands on every cell that has no colour of its own
+	// (`gen/slide/objects/table.ts`), as direct formatting. It is resolved when the slide is
+	// written, so `slide.color` set after this call still reaches the table (#88). One thing
+	// stands it down: a hyperlink anywhere in the grid, because the default paints the whole run,
+	// so the words *after* a link come out black instead of following the link colour. That run
+	// is then emitted with no `<a:solidFill>` and PowerPoint resolves the text from the theme's
+	// `tx1`.
+	if (!tableHasHyperlink(arrRows) && !opt.color) {
+		// table option > the slide's `color` > black. An empty `color` is unstated, as it was when
+		// black was written over it here.
+		delete opt.color
+		opt._slideColor = true
 	}
 	if (Array.isArray(opt.border)) {
 		// A HOLE stays a hole. The cell path has always been explicit that a `null` side is

@@ -26,7 +26,7 @@ import {
 	resolveTableRowHeightEmu,
 } from '../../../units-internal.js'
 import { EMU_PER_INCH } from '../../../units.js'
-import { type RenderContext, cNvPrEl, graphicFrameEl } from './shared.js'
+import { type RenderContext, cNvPrEl, graphicFrameEl, slideTextColor } from './shared.js'
 import { OOXML_NS, TABLE_GRAPHIC_DATA_URI } from '../../../ooxml/namespaces.js'
 import { xsdBoolIfTrue } from '../../../ooxml/xsd-boolean.js'
 import { type GridPlacement, tableColCount, walkTableGrid } from '../../table/grid.js'
@@ -212,6 +212,7 @@ export function renderTableObject(ctx: RenderContext): string {
 	const {
 		obj: slideItemObj,
 		shapeId,
+		slide,
 		frame: { x, y, cx, cy },
 		placeholder: placeholderObj,
 		itemOpts,
@@ -428,6 +429,7 @@ export function renderTableObject(ctx: RenderContext): string {
 			// the reference handed to `genXmlTextBody` below carried keys the cell never stated.
 			// The invariant at the head of this file has said "never mutates" throughout.
 			const cellOpts = inheritTableOptions(cell.options, objTabOpts)
+			if (cellOpts.color === undefined && itemOpts._slideColor) cellOpts.color = slideTextColor(slide)
 
 			const cellValign = resolveTextAnchor(cellOpts.valign)
 			const cellTextDir = cellOpts.textDirection && cellOpts.textDirection !== 'horz' ? cellOpts.textDirection : null

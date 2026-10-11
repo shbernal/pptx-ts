@@ -16,7 +16,7 @@ import { genXmlPlaceholder, genXmlTextBody, objectHasMath } from '../../drawingm
 import { el, elOrVoid, raw, type XmlAttrs } from '../../oxml/el.js'
 import { alternateContentEl } from '../../oxml/alternate-content.js'
 import { OOXML_NS } from '../../../ooxml/namespaces.js'
-import { cNvPrEl, cNvPrHyperlink, genXmlShapeLine, type RenderContext, xfrmEl } from './shared.js'
+import { cNvPrEl, cNvPrHyperlink, genXmlShapeLine, type RenderContext, slideTextColor, xfrmEl } from './shared.js'
 import { xsdBoolIfTrue } from '../../../ooxml/xsd-boolean.js'
 
 /**
@@ -102,7 +102,7 @@ export function renderTextObject(ctx: RenderContext): string {
 	strSlideXml += '</p:spPr>'
 
 	// C: Add formatted text (text body "bodyPr")
-	strSlideXml += genXmlTextBody(slideItemObj)
+	strSlideXml += genXmlTextBody(slideItemObj, slideTextColor(slide))
 
 	// LAST: Close SHAPE =======================================================
 	strSlideXml += '</p:sp>'

@@ -216,7 +216,10 @@ export interface Slide {
 	 */
 	background?: BackgroundOption | undefined
 	/**
-	 * Default text color (hex format)
+	 * Default text color (hex format): the color of `addText` and table text that states none
+	 * itself, on its shape or on its table. Read when the slide is written, so it reaches text
+	 * added before it was set. Placeholder text and hyperlinks keep inheriting their colors, and a
+	 * table with a hyperlink in it states no default color at all.
 	 * @example 'FF3399'
 	 * @default '000000' (DEF_FONT_COLOR)
 	 */

@@ -8,7 +8,6 @@
  */
 import { rejectEmptyColor } from '../drawingml/color.js'
 import { AlignH, type PLACEHOLDER_TYPE, ShapeType, SlideObjectType, TextAnchor } from '../../enums.js'
-import { DEF_FONT_COLOR } from '../../constants-internal.js'
 import { warn } from '../../diagnostics.js'
 import type { TextProps, TextPropsOptions } from '../../types/index.js'
 import type { ObjectOptionsInternal, PresSlideInternal, SlideObject } from '../../types/internal.js'
@@ -138,11 +137,11 @@ export function addTextDefinition(
 				// `objectOptions.color` unguarded pinned every link in the array form to black (#59).
 				const linked = Boolean(itemOpts.hyperlink || objectOptions.hyperlink)
 				const shapeColor = linked && !authoredKeys.get(objectOptions)?.has('color') ? undefined : objectOptions.color
-				setOrClear(
-					itemOpts,
-					'color',
-					itemOpts.color || shapeColor || target.color || (linked ? undefined : DEF_FONT_COLOR)
-				)
+				const color = itemOpts.color || shapeColor || undefined
+				setOrClear(itemOpts, 'color', color)
+				// The slide's colour, else black, is decided when the slide is written: an assignment
+				// to `slide.color` after this call has to reach this text too (#88).
+				setOrClear(itemOpts, '_slideColor', color === undefined && !linked ? true : undefined)
 			}
 
 			// A.2: Placeholder should inherit their bullets or override them, so don't default them
