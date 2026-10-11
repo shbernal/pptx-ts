@@ -333,8 +333,8 @@ export const NOTE_CONSTRUCTS = {
 	'text.bullet.sizePct': { fields: ['bullet'], tiers: BOTH_TIERS },
 	// A bullet colour outside the ten scheme tokens the write path maps, baked to a literal.
 	'text.bullet.schemeToken': { fields: ['bullet'], tiers: BOTH_TIERS },
-	// A picture bullet (`a:buBlip`): readable, and `bullet.image` could author it, but the
-	// paragraph mapper carries no asset resolver to re-embed the bytes with.
+	// A picture bullet (`a:buBlip`) whose image part the read model cannot reach. One it can reach
+	// carries as `bullet.image`.
 	'text.bullet.picture': { fields: ['bullet'], tiers: BOTH_TIERS },
 	// A run's colour, wherever the run sits: a shape, a group child or a table cell.
 	'text.color.default': { fields: ['options.color'], tiers: BOTH_TIERS },

@@ -873,6 +873,32 @@ describe('deck IR — shape locks', () => {
 	})
 })
 
+describe('deck IR — picture bullets', () => {
+	// `bullet.image` writes `a:buBlip`, but `readModelToIr` replaced it with a character bullet and
+	// blamed the write API (`text.bullet.picture`, cause `unsupported`) (issue #58).
+	test('a picture bullet carries its image bytes and records no note', async () => {
+		const { presentation, buf } = await authorRead((pres) => {
+			pres.addSlide().addText('Item', { x: 1, y: 1, w: 5, h: 1, bullet: { image: { data: PNG_1X1 } } })
+		})
+		const zip = await JSZip.loadAsync(buf)
+		const sourceXml = await readEntry(zip, 'ppt/slides/slide1.xml')
+		assert(sourceXml.includes('<a:buBlip>'), 'the writer emits a picture bullet')
+
+		const ir = readModelToIr(presentation)
+		assert(!constructs(ir).has('text.bullet.picture'), 'no loss is declared')
+		const image = objectOf(at(at(runOptionsOf(ir)[0], 'bullet'), 'image'))
+		const ref = image['data'] as { $asset?: string }
+		const asset = defined(ir.assets.find((candidate) => candidate.name === ref.$asset))
+		assertEqual(asset.contentType, 'image/png', 'the bullet image is carried as an asset')
+		const media = defined(Object.keys(zip.files).find((name) => name.startsWith('ppt/media/')))
+		assertEqual(
+			Buffer.from(asset.bytes).equals(Buffer.from(await defined(zip.file(media)).async('uint8array'))),
+			true,
+			'with the bytes the deck embeds'
+		)
+	})
+})
+
 describe('deck IR — slide transitions', () => {
 	// The mapping's whole difficulty is that the read model reports an *open* type string
 	// (it decodes PowerPoint's modern effects by namespace) while the write API has a closed

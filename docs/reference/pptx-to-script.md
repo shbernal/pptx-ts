@@ -221,6 +221,7 @@ These constructs carry in both outputs and raise no note.
 | A paragraph with no bullet element of its own | `bullet: 'inherit'` |
 | Paragraph left margin and first-line indent (`a:pPr/@marL`, `@indent`) | `paraMarginLeft` and `paraIndent`, in points, or `'inherit'` |
 | Numbering start, bullet font, bullet size percentage and bullet colour | `numberStartAt`, `fontFace`, `size` and `color` inside `bullet` |
+| A picture bullet (`a:buBlip`) | `bullet: { image: { data }, size }`, the image carried as an asset |
 | An explicit off: `u="none"`, `strike="noStrike"`, `cap="none"` | `underline: { style: 'none' }`, `strike: 'noStrike'`, `caps: 'none'` |
 | Superscript and subscript | `baseline` |
 | A run's language, East Asian face, glow, outline, transparency and underline colour | `lang`, `fontFaceEA`, `glow`, `outline`, `transparency` and `underline.color` |
