@@ -871,6 +871,55 @@ describe('deck IR — shape locks', () => {
 		const placeholder = defined(deck.slides.flatMap((slide) => slide.shapes).find((shape) => shape.placeholder))
 		assertEqual(JSON.stringify(placeholder.locks), '{"noGrp":true}', 'noGrp="1"')
 	})
+
+	// `addImage`, `addTable` and `addGroup` write `a:picLocks`, `a:graphicFrameLocks` and
+	// `a:grpSpLocks` from the same `objectLock`, and `readModelToIr` dropped all three (issue #73).
+	const lockElements = (xml: string) => xml.match(/<a:(?:picLocks|graphicFrameLocks|grpSpLocks)\b[^>]*\/>/g) ?? []
+
+	/** Author `ir`'s calls on one slide, the image bytes swapped for a stand-in. */
+	async function replayLocks(ir: DeckIr): Promise<string[]> {
+		const { buf } = await authorRead((pres) => {
+			const slide = pres.addSlide()
+			for (const call of allCalls(ir)) {
+				const args = call.method === 'addImage' ? [{ ...objectOf(call.args[0]), data: PNG_1X1 }] : [...call.args]
+				const method = call.method as 'addImage' | 'addTable' | 'addGroup'
+				;(slide[method] as (...args: unknown[]) => unknown)(...args)
+			}
+		})
+		return lockElements(await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml'))
+	}
+
+	test('a picture, a table and a group keep their locks', async () => {
+		const { presentation, buf } = await authorRead((pres) => {
+			const slide = pres.addSlide()
+			slide.addImage({ data: PNG_1X1, x: 1, y: 1, w: 1, h: 1, objectLock: { noCrop: true, noMove: true } })
+			slide.addTable([[{ text: 'Cell' }]], { x: 1, y: 3, w: 4, objectLock: { noDrilldown: true, noResize: true } })
+			slide.addGroup([{ rect: { x: 6, y: 1, w: 2, h: 1 } }], { objectLock: { noRot: true, noSelect: true } })
+		})
+		const source = lockElements(await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml'))
+		assertEqual(source.length, 3, `the writer emits three locking elements: ${source.join('')}`)
+
+		const ir = readModelToIr(presentation)
+		const lockOf = (method: string) => {
+			const call = defined(allCalls(ir).find((c) => c.method === method))
+			return JSON.stringify(at(call.args[method === 'addImage' ? 0 : 1], 'objectLock'))
+		}
+		assertEqual(lockOf('addImage'), '{"noCrop":true,"noMove":true}', 'the writer-implied noChangeAspect is left out')
+		assertEqual(lockOf('addTable'), '{"noDrilldown":true,"noResize":true}', 'the writer-implied noGrp is left out')
+		assertEqual(lockOf('addGroup'), '{"noRot":true,"noSelect":true}', 'the group locks')
+		assertEqual((await replayLocks(ir)).join(''), source.join(''), 'the replay')
+	})
+
+	test('a picture without noChangeAspect and a table without noGrp do not gain them', async () => {
+		const { presentation, buf } = await authorRead((pres) => {
+			const slide = pres.addSlide()
+			slide.addImage({ data: PNG_1X1, x: 1, y: 1, w: 1, h: 1, objectLock: { noChangeAspect: false } })
+			slide.addTable([[{ text: 'Cell' }]], { x: 1, y: 3, w: 4, objectLock: { noGrp: false } })
+		})
+		const source = lockElements(await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml'))
+		assertEqual(source.length, 0, `the writer emits no locking element: ${source.join('')}`)
+		assertEqual((await replayLocks(readModelToIr(presentation))).length, 0, 'nor does the replay')
+	})
 })
 
 describe('deck IR — picture bullets', () => {

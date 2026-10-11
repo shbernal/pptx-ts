@@ -79,6 +79,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   though `bullet.image` writes exactly that ([#58](https://github.com/shbernal/pptx-ts/issues/58)).
   The IR now carries `bullet: { image: { data } }` with the image as an asset, and its size. The
   note remains, with cause `unread`, only for a bullet whose image part cannot be reached.
+- **Picture, table and group locks survive `readModelToIr`.** `objectLock` writes `a:picLocks` on
+  `addImage`, `a:graphicFrameLocks` on `addTable` and `a:grpSpLocks` on `addGroup`, but
+  `readModelToIr` dropped all three with no note
+  ([#73](https://github.com/shbernal/pptx-ts/issues/73)). The IR now carries them. The writer adds
+  `noChangeAspect` to a picture and `noGrp` to a table on its own, so the IR leaves those out when
+  the source states them and carries them as `false` when it does not, and the replay gains no lock.
 - **Shape locks survive `readModelToIr`.** `objectLock` writes `a:spLocks`, which had no accessor,
   so every lock on a text box or shape was gone after one round trip with no note
   ([#57](https://github.com/shbernal/pptx-ts/issues/57)). The IR now carries `objectLock` for
