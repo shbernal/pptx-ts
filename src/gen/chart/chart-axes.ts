@@ -271,6 +271,30 @@ export function makeCatAxis(opts: ChartOptsInternal, axisId: string, valAxisId: 
 }
 
 /**
+ * A value-axis bound as the axis can carry it: `undefined` when the axis is logarithmic and the
+ * bound is not above 0, with a warning, so the axis scales itself instead.
+ *
+ * PowerPoint refuses a whole deck (0x80070570) over one chart whose `<c:logBase>` sits beside a
+ * `<c:min val="0"/>`: a log axis has no 0 to start from. The check is here rather than in
+ * `addChartDefinition` because a `valAxes[i]` entry is spread over the chart's options at emit
+ * time, so a log base and a bound can each come from a different bag.
+ * @param opts - the axis's options, overrides already applied
+ * @param key - which bound
+ */
+function logAxisBound(opts: ChartOptsInternal, key: 'valAxisMaxVal' | 'valAxisMinVal'): number | undefined {
+	const bound = opts[key]
+	if (bound == null) return undefined
+	if (opts.valAxisLogScaleBase && bound <= 0) {
+		warn(
+			'chart/option-out-of-range',
+			`"${key}" must be above 0 on a logarithmic axis; ignoring ${bound} so the axis scales itself.`
+		)
+		return undefined
+	}
+	return bound
+}
+
+/**
  * Create Value Axis (Used by `bar3D`)
  * @param {ChartOptsInternal} opts - chart options
  * @param {string} valAxisId - value
@@ -285,8 +309,8 @@ export function makeValAxis(opts: ChartOptsInternal, valAxisId: string): string 
 	const scaling = el('c:scaling', null, [
 		opts.valAxisLogScaleBase ? raw(voidEl('c:logBase', { val: opts.valAxisLogScaleBase })) : null,
 		raw(voidEl('c:orientation', { val: opts.valAxisOrientation || 'minMax' })),
-		opts.valAxisMaxVal != null ? raw(voidEl('c:max', { val: opts.valAxisMaxVal })) : null,
-		opts.valAxisMinVal != null ? raw(voidEl('c:min', { val: opts.valAxisMinVal })) : null,
+		logAxisBound(opts, 'valAxisMaxVal') != null ? raw(voidEl('c:max', { val: opts.valAxisMaxVal })) : null,
+		logAxisBound(opts, 'valAxisMinVal') != null ? raw(voidEl('c:min', { val: opts.valAxisMinVal })) : null,
 	])
 
 	const ticks = isScatterChart(opts._type)

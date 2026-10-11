@@ -436,8 +436,9 @@ defineRegressionSuite('Chart option validation', [
 			// `CT_DateAx` orders them baseTimeUnit, majorUnit, majorTimeUnit, minorUnit,
 			// minorTimeUnit. Emitting the three time units and then the two numeric ones is a
 			// content-model violation even though every element is legal on the type.
+			const dates = [{ name: 'S1', labels: ['2026-01-01', '2026-01-02', '2026-01-03'], values: [1, 2, 3] }]
 			const { zip } = await build((p) => {
-				p.addSlide().addChart(SERIES, {
+				p.addSlide().addChart(dates, {
 					...BASE,
 					type: ChartType.line,
 					catLabelFormatCode: 'yyyy-mm-dd',
@@ -914,6 +915,87 @@ defineRegressionSuite('Chart option validation', [
 			)
 			assert(thrown instanceof InvalidOptionError, `a NaN base throws; got ${thrown}`)
 			assertEqual(thrown.code, 'chart/option-non-finite', 'with the shared code')
+		},
+	},
+	{
+		// PowerPoint refused the chart-matrix gate deck (0x80070570) over `<c:logBase>` beside
+		// `<c:min val="0"/>`: a log axis has no 0. The bound can come from a `valAxes[i]` entry or the
+		// chart's own options, so the check runs where the two are merged.
+		name: 'a log axis drops a bound that is not above 0, wherever the bound comes from',
+		fn: async () => {
+			const own = await chartWith(SERIES, {
+				type: ChartType.line,
+				valAxisLogScaleBase: 10,
+				valAxisMinVal: 0,
+				valAxisMaxVal: 100,
+			})
+			assertIncludes(own.xml, '<c:logBase val="10"/><c:orientation val="minMax"/><c:max val="100"/></c:scaling>')
+			assertNotIncludes(own.xml, '<c:min ', 'the 0 minimum is left off')
+			assert(own.codes.includes('chart/option-out-of-range'), `and warns; got ${JSON.stringify(own.codes)}`)
+
+			const negativeMax = await chartWith(SERIES, { type: ChartType.bar, valAxisLogScaleBase: 2, valAxisMaxVal: -5 })
+			assertNotIncludes(negativeMax.xml, '<c:max ', 'a maximum below 0 is left off too')
+
+			const inherited = await chartWith(SERIES, {
+				type: ChartType.bar,
+				valAxisMinVal: 0,
+				valAxes: [{ valAxisLogScaleBase: 10 }],
+				catAxes: [{}],
+			})
+			assertNotIncludes(inherited.xml, '<c:min ', "a chart-level 0 does not reach an entry's log axis")
+
+			const linear = await chartWith(SERIES, { type: ChartType.bar, valAxisMinVal: 0 })
+			assertIncludes(linear.xml, '<c:min val="0"/>', 'a linear axis keeps its 0')
+			const positive = await chartWith(SERIES, { type: ChartType.bar, valAxisLogScaleBase: 10, valAxisMinVal: 1 })
+			assertIncludes(positive.xml, '<c:min val="1"/>', 'a log axis keeps a bound above 0')
+		},
+	},
+	{
+		// The other half of the chart-matrix gate deck's 0x80070570: `catLabelFormatCode` caches the
+		// categories as a `<c:numCache>`, which had `<c:v>2026-01-01</c:v>` written into it as given.
+		name: 'catLabelFormatCode caches ISO dates as serials, and drops itself over a label that is no date',
+		fn: async () => {
+			const dates = [{ name: 'D', labels: ['2026-01-01', '', '2026-01-03T12:00'], values: [1, 2, 3] }]
+			const iso = await chartWith(dates, { type: ChartType.line, catLabelFormatCode: 'yyyy-mm-dd' })
+			assertIncludes(
+				iso.xml,
+				'<c:numCache><c:formatCode>yyyy-mm-dd</c:formatCode><c:ptCount val="3"/>' +
+					'<c:pt idx="0"><c:v>46023</c:v></c:pt>' +
+					'<c:pt idx="2"><c:v>46025.5</c:v></c:pt></c:numCache>',
+				'each ISO date becomes its serial, a date-time a fractional one, and a blank one no point'
+			)
+			assertIncludes(iso.xml, '<c:dateAx>')
+			assertEqual(iso.codes.length, 0, `and nothing warns; got ${JSON.stringify(iso.codes)}`)
+
+			const serials = await chartWith([{ name: 'D', labels: ['46023', '46024'], values: [1, 2] }], {
+				type: ChartType.line,
+				catLabelFormatCode: 'yyyy-mm-dd',
+			})
+			assertIncludes(serials.xml, '<c:pt idx="0"><c:v>46023</c:v></c:pt>', 'a serial passes as it is')
+
+			for (const bad of ['Mon', '2026-02-30', '1899-12-31']) {
+				const text = await chartWith([{ name: 'D', labels: ['2026-01-01', bad], values: [1, 2] }], {
+					type: ChartType.line,
+					catLabelFormatCode: 'yyyy-mm-dd',
+				})
+				assertIncludes(text.xml, '<c:cat><c:strRef>', `"${bad}" keeps the categories text`)
+				assertIncludes(text.xml, '<c:catAx>', `under a category axis, for "${bad}"`)
+				assertNotIncludes(text.xml, '<c:numCache><c:formatCode>yyyy-mm-dd', `with no date cache, for "${bad}"`)
+				assert(text.codes.includes('chart/invalid-option-value'), `and warns for "${bad}"; got ${text.codes}`)
+			}
+
+			const caller = ['2026-01-01']
+			await chartWith([{ name: 'D', labels: caller, values: [1] }], {
+				type: ChartType.line,
+				catLabelFormatCode: 'yyyy-mm-dd',
+			})
+			assertEqual(caller[0], '2026-01-01', "the caller's labels are not rewritten")
+
+			const pie = await chartWith([{ name: 'P', labels: ['2026-01-01'], values: [1] }], {
+				type: ChartType.pie,
+				catLabelFormatCode: 'yyyy-mm-dd',
+			})
+			assertIncludes(pie.xml, '<c:v>2026-01-01</c:v>', 'a pie, which caches text, keeps its labels')
 		},
 	},
 	{

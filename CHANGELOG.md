@@ -40,6 +40,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Two chart options no longer break the deck they are in.** PowerPoint refused a whole deck
+  (0x80070570) over one chart with either of them
+  ([#67](https://github.com/shbernal/pptx-ts/issues/67)):
+  - A logarithmic value axis with `valAxisMinVal` or `valAxisMaxVal` at or below 0. A log axis has
+    no 0, so the bound is now left off with a `chart/option-out-of-range` warning and the axis
+    scales itself. That holds whether the bound and the log base come from the chart's options
+    or a `valAxes[i]` entry.
+  - `catLabelFormatCode` over labels that are not numbers. It caches the categories as numbers,
+    and `labels: ['2026-01-01', …]` went into that cache as text. ISO dates and date-times
+    (`YYYY-MM-DD`, `YYYY-MM-DDTHH:MM[:SS]`) are now written as their date serials, and a blank
+    label leaves a gap. A label that is neither a date nor a number warns
+    `chart/invalid-option-value` and keeps the categories as text on a category axis.
+
 - **`fontFaceEA` works without `fontFace`.** It was written only beside a `fontFace`, so on its own
   it was dropped with no warning ([#60](https://github.com/shbernal/pptx-ts/issues/60)). Alone it
   now writes `<a:ea>`, leaving the Latin and complex-script slots to inherit.

@@ -1311,11 +1311,16 @@ export function xySeriesRefs(
  * different spelling.
  * @param kind - `num` for a numeric (date) category cache, `str` for a text one
  * @param ref - the `<c:f>` formula
- * @param labels - the category labels, in order; escaped on the way into `<c:v>`
+ * @param labels - the category labels, in order; escaped on the way into `<c:v>`. A blank one has no
+ *   point in a numeric cache, whose `<c:v>` must hold a number, as {@link numCachePt} leaves a gap.
  * @param formatCode - the cached `<c:formatCode>`; numeric caches only
  */
 export function catRefBlock(kind: 'num' | 'str', ref: string, labels: string[], formatCode?: string): string {
-	const points = labels.map((label, idx) => el('c:pt', { idx }, raw(el('c:v', null, label)))).join('')
+	const points = labels
+		.map((label, idx) =>
+			kind === 'num' && String(label ?? '').trim() === '' ? '' : el('c:pt', { idx }, raw(el('c:v', null, label)))
+		)
+		.join('')
 	const cache = el(`c:${kind}Cache`, null, [
 		formatCode === undefined ? null : raw(el('c:formatCode', null, formatCode)),
 		raw(voidEl('c:ptCount', { val: labels.length }) + points),
