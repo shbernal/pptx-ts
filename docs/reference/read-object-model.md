@@ -361,7 +361,7 @@ Every read value that carries a colour carries a [`ColorRef`](api/read/interface
 - PowerPoint usually pairs an SVG with a raster fallback. Some exporters write an SVG with no raster, where `imagePartName` is `null` and only `svgPartName` resolves.
 - [`mediaKind`](api/read/classes/Picture.md#mediakind) reports `'raster'`, `'svg'`, `'both'` or `'none'`. [`mediaPartName`](api/read/classes/Picture.md#mediapartname) is the raster part, else the SVG part.
 - A partname getter is `null` when the id is absent, when the part's relationships lack it, or when it points outside the package, as for a linked image.
-- [`crop`](api/read/classes/Picture.md#crop) reads `a:srcRect` as fractions, and [`recolor`](api/read/classes/Picture.md#recolor) reads the first recolour effect on the blip.
+- [`crop`](api/read/classes/Picture.md#crop) reads `a:srcRect` as fractions, [`recolor`](api/read/classes/Picture.md#recolor) reads the first recolour effect on the blip, and [`recolors`](api/read/classes/Picture.md#recolors) reads all of them.
 - [`setImage()`](api/read/classes/Picture.md#setimage) replaces the image: see [Read and edit a deck](../reading/read-and-edit.md#replace-the-image-of-a-picture).
 
 ### Connector endpoints

@@ -34,11 +34,15 @@ import {
 	type GraphicFrame,
 	type GroupShape,
 	type Picture,
+	type Recolor,
 } from '../../read/api/shapes.js'
+import type { ColorRef } from '../../read/api/theme-context.js'
 import { UNWRITABLE_FRAME_CONSTRUCTS, type NoteScope, type UnwritableFramePayload } from '../fidelity.js'
 import { isAssetRef, type CallIr, type IrValue } from '../ir.js'
 import type { ConnectorProps, ShapeLineProps } from '../../types/style.js'
 import {
+	alphaToTransparency,
+	colorOption,
 	compact,
 	compactRequired,
 	emu,
@@ -365,14 +369,6 @@ function pictureCall(shape: Picture, ctx: MapContext): CallIr | null {
 			"the vector part of this SVG picture is carried and the source's own raster fallback is not; the write path generates a fresh fallback, so a renderer that cannot draw SVG shows a different image from the one the source deck shipped"
 		)
 	}
-	if (shape.recolor) {
-		notes.note(
-			'image.recolor',
-			'dropped',
-			'unwritable',
-			'a picture recolour (a:duotone / a:clrChange / a:grayscl) is read but has no write-API option'
-		)
-	}
 
 	// The same guard a picture fill's crop takes. A negative inset (PowerPoint writes one for a fit
 	// crop) or opposite insets summing to 100% or more have no `crop` spelling, and passing them
@@ -403,6 +399,7 @@ function pictureCall(shape: Picture, ctx: MapContext): CallIr | null {
 		// `lineOption`, so a picture's outline takes the same colour ladder and the same loss notes
 		// as every other shape's.
 		line: lineOption(shape, notes),
+		...recolorOptions(shape, notes),
 		// `crop`, not `sizing`. Both exist and they are not interchangeable: `crop` is
 		// `a:srcRect` emitted verbatim as percentage edge insets — the exact model the read
 		// model reports — while `sizing: 'crop'` cuts a window in *displayed inches* against
@@ -411,6 +408,76 @@ function pictureCall(shape: Picture, ctx: MapContext): CallIr | null {
 		crop,
 	})
 	return { method: 'addImage', args: [{ ...options, data: asset }], ...nameOf(shape) }
+}
+
+/**
+ * A picture's blip effects as the `addImage` options that write them: `grayscale`, `biLevel`,
+ * `duotone`, `clrChange`, and `transparency` for `a:alphaModFix`. All five used to be dropped under
+ * an `image.recolor` note saying none had a write option (#109).
+ *
+ * The note stays for what the options cannot state: a second effect of one kind (an option holds
+ * one), a duotone without exactly two colours, a colour change missing a colour or fading its
+ * target colour (Set Transparent Color writes an `a:alpha` on `a:clrTo`, which `clrChange.to`
+ * cannot carry), and a black-and-white split with no threshold.
+ */
+function recolorOptions(shape: Picture, notes: NoteScope): Record<string, IrValue | undefined> {
+	const out: Record<string, IrValue | undefined> = {}
+	const lost = (detail: string) => notes.note('image.recolor', 'dropped', 'unwritable', detail)
+	const color = (ref: ColorRef | null, label: string): string | undefined =>
+		ref === null
+			? undefined
+			: colorOption(
+					{ scheme: ref.scheme, ownHex: ref.srgb, resolvedHex: ref.resolved?.effectiveHex ?? null },
+					notes,
+					'image.recolor.schemeToken',
+					label
+				)
+	const seen = new Set<Recolor['kind']>()
+	for (const effect of shape.recolors) {
+		if (seen.has(effect.kind)) {
+			lost(`this picture carries a second ${effect.kind} effect, and addImage writes one of each`)
+			continue
+		}
+		seen.add(effect.kind)
+		switch (effect.kind) {
+			case 'grayscale':
+				out['grayscale'] = true
+				break
+			case 'biLevel':
+				if (effect.threshold === null) lost('this black-and-white recolour (a:biLevel) states no threshold')
+				else out['biLevel'] = { threshold: effect.threshold }
+				break
+			case 'duotone': {
+				const [shadow, highlight] = effect.stops.map((stop, index) => color(stop, `duotone colour ${index + 1}`))
+				if (effect.stops.length !== 2 || shadow === undefined || highlight === undefined) {
+					lost('this duotone (a:duotone) does not have exactly two colours the write path can state')
+				} else out['duotone'] = { shadow, highlight }
+				break
+			}
+			case 'clrChange': {
+				const from = color(effect.from, 'colour change source')
+				const to = color(effect.to, 'colour change target')
+				if (from === undefined || to === undefined) {
+					lost('this colour change (a:clrChange) is missing a colour the write path can state')
+				} else {
+					if ((effect.to?.resolved?.alpha ?? 1) < 1) {
+						notes.note(
+							'image.recolor',
+							'approximated',
+							'unwritable',
+							'this colour change makes its colour transparent (Set Transparent Color), and clrChange.to takes no transparency, so the colour is replaced with an opaque one'
+						)
+					}
+					out['clrChange'] = { from, to }
+				}
+				break
+			}
+			case 'alphaModFix':
+				out['transparency'] = alphaToTransparency(effect.amount)
+				break
+		}
+	}
+	return out
 }
 
 /**
