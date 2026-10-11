@@ -20,8 +20,17 @@ import type { Field, Paragraph, TextFrame } from '../../read/api/text.js'
 import type { NoteScope } from '../fidelity.js'
 import type { IrValue } from '../ir.js'
 import { forShape, type MapContext } from './context.js'
-import { marginOption } from './text.js'
-import { ANCHOR_TO_VALIGN, colorOption, compactRequired, frameOf, positionOptions } from './values.js'
+import { marginOption, underlineOption } from './text.js'
+import {
+	alphaToTransparency,
+	ANCHOR_TO_VALIGN,
+	colorOption,
+	compactRequired,
+	frameOf,
+	literalColor,
+	orUndefined,
+	positionOptions,
+} from './values.js'
 
 /** The `p:ph/@idx` `Slide.slideNumber` writes: no layout placeholder carries it, so it binds to none. */
 const UNBOUND_IDX = '4294967295'
@@ -58,18 +67,30 @@ export function slideNumberIr(shape: AnyShape, ctx: MapContext): Record<string, 
 		)
 	}
 
-	const anchor = frame.bodyProperties?.anchor ?? null
+	const body = frame.bodyProperties
+	const anchor = body?.anchor ?? null
 	return compactRequired({
 		...positionOptions(box),
 		align: ALIGN[algn],
 		valign: anchor === null ? undefined : ANCHOR_TO_VALIGN[anchor],
-		margin: marginOption(frame.bodyProperties),
+		margin: marginOption(body),
+		textDirection: orUndefined(body?.vert ?? null),
+		textWarp: orUndefined(body?.textWarp ?? null),
+		paraMarginLeft: orUndefined(paragraph.marginLeftPt),
+		paraIndent: orUndefined(paragraph.indentPt),
 		bold: field.bold === true ? true : undefined,
+		italic: field.italic === true ? true : undefined,
+		caps: orUndefined(field.caps),
+		underline: underlineOption(field, field.underline, notes),
+		highlight: field.highlight ? literalColor(field.highlight.effectiveHex) : undefined,
+		// `en-US` is what the write path states when no `lang` is given, so it is left implied.
+		lang: field.language === null || field.language === 'en-US' ? undefined : field.language,
+		fontFaceEA: orUndefined(field.eastAsianFontName),
 		...characterOptions(frame, paragraph, field, notes),
 	})
 }
 
-/** Colour, face and size, from the field's own `a:rPr` or else the frame's list style. */
+/** Colour, transparency, face and size, from the field's own `a:rPr` or else the frame's list style. */
 function characterOptions(
 	frame: TextFrame,
 	paragraph: Paragraph,
@@ -93,5 +114,7 @@ function characterOptions(
 		fontSize: field.fontSizePt ?? defaults?.fontSizePt ?? undefined,
 		fontFace: field.fontName ?? defaults?.fontName ?? undefined,
 		color,
+		// The alpha on that colour's `a:solidFill`; the write path writes it only beside a colour.
+		transparency: color === undefined ? undefined : alphaToTransparency(field.resolvedColor?.alpha),
 	}
 }

@@ -25,11 +25,11 @@ import type {
 	SlideRelMedia,
 } from '../../types/internal.js'
 import { encodeXmlAttrValue, getDuplicateObjectNames, isHyperlinkRel } from '../utils.js'
-import { fillNamesPaint, genXmlColorSelection } from '../drawingml/fill.js'
-import { rejectEmptyColor } from '../drawingml/color.js'
+import { fillNamesPaint, genXmlColorSelection, solidPaint } from '../drawingml/fill.js'
+import { createColorElement, rejectEmptyColor } from '../drawingml/color.js'
 import { convertRotationDegrees, getSmartParseNumber, mapStated, resolveInsetsEmu } from '../../units-internal.js'
 import { warn } from '../../diagnostics.js'
-import { clampFontSizeSz } from '../drawingml/clamp.js'
+import { clampFontSizeSz, clampParaIndentEmu, clampParaMarginEmu } from '../drawingml/clamp.js'
 import { resolveTextAnchor } from '../drawingml/text-body.js'
 import { genXmlObjectLock, GROUP_SHAPE_LOCK_ATTRS } from '../drawingml/locks.js'
 import { el, elOrVoid, raw, voidEl, type XmlAttrs } from '../oxml/el.js'
@@ -52,6 +52,8 @@ import {
 } from '../../ooxml/rel-types.js'
 import { externalHyperlinkRel, relationshipEl, relationshipsPart } from '../opc/rels.js'
 import { xsdBool, xsdBoolIfTrue } from '../../ooxml/xsd-boolean.js'
+import { checkEnumOrWarn } from '../../ooxml/check-enum.js'
+import { TEXT_CAPS_TYPES, TEXT_SHAPE_TYPES, TEXT_UNDERLINE_TYPES, TEXT_VERTICAL } from '../../ooxml/st-enums.js'
 
 /** The four axes that make up an explicit group frame. All or nothing — see `givenGroupFrameAxes`. */
 const GROUP_FRAME_AXES = ['x', 'y', 'w', 'h'] as const
@@ -340,13 +342,25 @@ function slideNumberPlaceholderXml(
 	// NOTE: attribute ORDER is byte-significant; `resolveInsetsEmu` owns the array's own
 	// [Top, Right, Bottom, Left] order.
 	const snInsets = resolveInsetsEmu(snProps.margin)
-	strSlideXml += voidEl('a:bodyPr', {
-		lIns: snInsets?.l ?? null,
-		tIns: snInsets?.t ?? null,
-		rIns: snInsets?.r ?? null,
-		bIns: snInsets?.b ?? null,
-		anchor: resolveTextAnchor(snProps.valign),
-	})
+	// `textDirection` and `textWarp` are written as `addText` writes them (`genXmlTextBody`).
+	const snWarp = checkEnumOrWarn(snProps.textWarp, TEXT_SHAPE_TYPES, 'text/invalid-warp', 'slideNumber: textWarp')
+	strSlideXml += elOrVoid(
+		'a:bodyPr',
+		{
+			lIns: snInsets?.l ?? null,
+			tIns: snInsets?.t ?? null,
+			rIns: snInsets?.r ?? null,
+			bIns: snInsets?.b ?? null,
+			anchor: resolveTextAnchor(snProps.valign),
+			vert: checkEnumOrWarn(
+				snProps.textDirection,
+				TEXT_VERTICAL,
+				'text/invalid-vertical',
+				'slideNumber: textDirection'
+			),
+		},
+		snWarp ? el('a:prstTxWarp', { prst: snWarp }, raw(voidEl('a:avLst'))) : ''
+	)
 	let defRPr = ''
 	rejectEmptyColor(snProps.color, 'slideNumber color')
 	if (snProps.fontFace || snProps.fontSize || snProps.color) {
@@ -354,7 +368,7 @@ function slideNumberPlaceholderXml(
 		// escapes it, so a `"`/`&` in the name cannot close the attribute early.
 		const face = snProps.fontFace
 		defRPr = el('a:defRPr', { sz: clampFontSizeSz(snProps.fontSize || 12) }, [
-			snProps.color ? raw(genXmlColorSelection(snProps.color)) : null,
+			snProps.color ? raw(genXmlColorSelection(solidPaint(snProps.color, snProps.transparency))) : null,
 			face ? raw(voidEl('a:latin', { typeface: face })) : null,
 			face ? raw(voidEl('a:ea', { typeface: face })) : null,
 			face ? raw(voidEl('a:cs', { typeface: face })) : null,
@@ -368,11 +382,17 @@ function slideNumberPlaceholderXml(
 	const snAlignRaw = snProps.align ?? 'left'
 	const snAlign = snAlignRaw.startsWith('c') ? 'ctr' : snAlignRaw.startsWith('r') ? 'r' : 'l'
 	strSlideXml += el('a:p', null, [
-		raw(voidEl('a:pPr', { algn: snAlign })),
+		raw(
+			voidEl('a:pPr', {
+				algn: snAlign,
+				marL: paragraphMarginEmu(snProps.paraMarginLeft, clampParaMarginEmu),
+				indent: paragraphMarginEmu(snProps.paraIndent, clampParaIndentEmu),
+			})
+		),
 		raw(
 			el('a:fld', { id: SLDNUMFLDID, type: 'slidenum' }, [
 				// NOTE: `b` is emitted as "0" when unset, unlike the run properties elsewhere which omit it.
-				raw(voidEl('a:rPr', { b: xsdBool(snProps.bold), lang: 'en-US' })),
+				raw(slideNumberRunProperties(snProps)),
 				// `<a:t>` inside an `a:fld` is the *cached* rendering of the field, so it is only a
 				// slide number where there is a slide number to cache. A master has none
 				// (`_slideNum` is null) and a layout carries the internal 1000+ counter, so this
@@ -391,6 +411,48 @@ function slideNumberPlaceholderXml(
 	])
 	strSlideXml += '</p:txBody></p:sp>'
 	return strSlideXml
+}
+
+/**
+ * The slide-number field's own `a:rPr`: `b` and `lang` as it has always written them, then the
+ * character options `addText` writes on a run's `a:rPr` (`genXmlTextRunProperties`). Colour, face
+ * and size stay on the list style's `a:defRPr`, where they were written first.
+ * @param snProps - the part's slide-number properties
+ */
+function slideNumberRunProperties(snProps: SlideNumberProps): string {
+	const underline = snProps.underline
+	rejectEmptyColor(snProps.highlight, 'slideNumber highlight')
+	rejectEmptyColor(underline?.color, 'slideNumber underline.color')
+	// NOTE: children follow CT_TextCharacterProperties order: highlight, uFill, ea.
+	return elOrVoid(
+		'a:rPr',
+		{
+			b: xsdBool(snProps.bold),
+			lang: snProps.lang || 'en-US',
+			i: xsdBoolIfTrue(snProps.italic),
+			cap: snProps.caps
+				? checkEnumOrWarn(snProps.caps, TEXT_CAPS_TYPES, 'text/invalid-caps', 'slideNumber `caps`')
+				: null,
+			u: underline?.style
+				? checkEnumOrWarn(
+						underline.style,
+						TEXT_UNDERLINE_TYPES,
+						'text/invalid-underline',
+						'slideNumber `underline.style`'
+					)
+				: null,
+		},
+		[
+			snProps.highlight ? el('a:highlight', null, raw(createColorElement(snProps.highlight))) : '',
+			underline?.color ? el('a:uFill', null, raw(genXmlColorSelection(underline.color))) : '',
+			snProps.fontFaceEA ? voidEl('a:ea', { typeface: snProps.fontFaceEA }) : '',
+		].join('')
+	)
+}
+
+/** `paraMarginLeft` / `paraIndent` in EMU through the attribute's clamp, or `null` to write none. */
+function paragraphMarginEmu(option: number | 'inherit' | undefined, clamp: (points: number) => number): number | null {
+	return option === undefined || option === 'inherit' ? null : clamp(option)
 }
 
 /**

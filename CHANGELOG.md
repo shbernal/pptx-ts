@@ -44,6 +44,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   This changes the output of every call that sets `baseline`, on a text run or a table cell:
   divide the old value by 20 to keep the same shift, so `baseline: 600` becomes `baseline: 30`
   and `baseline: -800` becomes `baseline: -40`. `superscript` and `subscript` are unchanged.
+- **`SlideNumberProps` no longer takes `bullet`, `breakLine`, `softBreakBefore` or `tabStops`.**
+  It took all of `TextBaseProps`, and these four wrote nothing: a slide number is one paragraph
+  holding one field, with no list marker, no breaks between runs and no tab characters
+  ([#90](https://github.com/shbernal/pptx-ts/issues/90)). Remove them from a `slideNumber`
+  object; the output does not change.
 
 ### Fixed
 
@@ -63,6 +68,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`fontFaceEA` works without `fontFace`.** It was written only beside a `fontFace`, so on its own
   it was dropped with no warning ([#60](https://github.com/shbernal/pptx-ts/issues/60)). Alone it
   now writes `<a:ea>`, leaving the Latin and complex-script slots to inherit.
+- **`Slide.slideNumber` writes the rest of its text options.** `italic`, `caps`, `underline`,
+  `highlight`, `lang`, `fontFaceEA`, `transparency`, `paraMarginLeft`, `paraIndent`,
+  `textDirection` and `textWarp` type-checked and left the slide byte-identical
+  ([#90](https://github.com/shbernal/pptx-ts/issues/90)). Each is now written where `addText`
+  writes it: on the field's `a:rPr`, the `a:pPr`, or `a:bodyPr`. `readModelToIr` reads them back.
+  A slide number that sets none of them is written as before.
 - **A slide number survives `readModelToIr`.** `Slide.slideNumber` writes a `sldNum` placeholder
   around a slide-number field. `readModelToIr` turned it into an empty rectangle, so the replayed
   slide had no slide number and lost its formatting

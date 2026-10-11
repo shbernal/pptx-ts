@@ -863,6 +863,37 @@ export default [
 		},
 	},
 	{
+		// Issue #90: the field's `a:rPr` children, the paragraph margins and the body's `vert` and
+		// `a:prstTxWarp`, all on the slide-number placeholder at once.
+		name: 'a slide number with every text option emits a valid placeholder',
+		fn: async () => {
+			const { buf } = await build((p) => {
+				p.addSlide().slideNumber = {
+					x: 0.5,
+					y: 6.5,
+					w: 1,
+					h: 0.4,
+					bold: true,
+					color: '9B1B30',
+					transparency: 40,
+					fontFace: 'Georgia',
+					fontSize: 14,
+					italic: true,
+					caps: 'all',
+					underline: { style: 'dbl', color: '0B003D' },
+					highlight: 'F0C808',
+					lang: 'fr-FR',
+					fontFaceEA: 'MS Mincho',
+					paraMarginLeft: 18,
+					paraIndent: 12,
+					textDirection: 'vert',
+					textWarp: 'textArchUp',
+				}
+			})
+			await expectNoSchemaErrors(buf, 'slide-number-text-options')
+		},
+	},
+	{
 		name: 'bullet text',
 		fn: async () => {
 			const { buf } = await build((p) => {
