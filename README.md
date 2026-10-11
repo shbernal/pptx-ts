@@ -38,7 +38,7 @@ PowerPoint never runs, so there is no Office licence and nothing to install on t
 - Opens existing decks too: [inspect](docs/reference/pptx-inspection.md), [edit](docs/reading/read-and-edit.md), or [turn one into code](docs/reference/pptx-to-script.md).
 
 <p align="center">
-  <img alt="Nine slides from the two showcase decks: a gradient cover, a stacked column chart, a photo grid, KPI cards, a photo with a scrim, a styled table, a duotone map, a chevron timeline and an embedded video" src="assets/readme/gallery/gallery.webp">
+  <img alt="Nine slides from the two showcase decks: a consulting cover, a cost waterfall, a dark pitch-deck cover over a night sky, KPI cards, a pipeline diagram with connectors, a business-case table with Harvey balls, a terminal mock, a 2x2 prioritisation matrix and an area chart" src="assets/readme/gallery/gallery.webp">
 </p>
 
 pptx-ts wrote every slide above, and LibreOffice rendered them.
@@ -175,7 +175,7 @@ PptxGenJS](docs/comparison-syntax.md).
 ## Learn more
 
 - [Documentation site](https://shbernal.github.io/pptx-ts/), with the API reference
-- [Live demo](https://shbernal.github.io/pptx-ts/demos): build a quarterly review deck in your browser
+- [Live demo](https://shbernal.github.io/pptx-ts/demos): build a strategy consulting deck and a startup pitch deck in your browser
 - [Core concepts](docs/getting-started/concepts.md), [tables](docs/tables.md), [connectors](docs/connectors.md) and [groups](docs/groups.md)
 - [Smaller browser bundles](docs/bundle-size.md)
 - [Errors and warnings](docs/errors-and-warnings.md) and [troubleshooting](docs/troubleshooting.md)

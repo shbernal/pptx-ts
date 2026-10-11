@@ -235,9 +235,9 @@ directory: a demo that cannot run on the site belongs in a guide as a plain code
 [testing guide](testing.md) says what checks the showcases and what covers the published package.
 
 ```bash
-pnpm showcases:build                    # both showcase decks, into .tmp/showcases/
-pnpm showcases:build quarterly-review   # one, by slug
-pnpm run docs:dev                       # the demos page and every live example
+pnpm showcases:build                     # both showcase decks, into .tmp/showcases/
+pnpm showcases:build cost-transformation  # one, by slug
+pnpm run docs:dev                        # the demos page and every live example
 ```
 
 [www/demos/decks/README.md](https://github.com/shbernal/pptx-ts/blob/main/www/demos/decks/README.md)

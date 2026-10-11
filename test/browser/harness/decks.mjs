@@ -1,7 +1,7 @@
 // Deck definitions shared by the browser harness and the Node side of the same test.
 //
 // Every scenario here exists to reach one of the three `RuntimeAdapter` loaders that
-// `quarterly-review` never touches, because it draws every asset rather than loading one:
+// `cost-transformation` never touches, because it draws every asset rather than loading one:
 // `loadMedia`, `createSvgPngPreview`, `loadFontData` (src/runtime/browser.ts).
 //
 // The point of defining them once is that most of these decks get built *twice* — once in

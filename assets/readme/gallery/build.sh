@@ -22,12 +22,12 @@ if [[ "${SKIP_DECKS:-0}" != 1 ]]; then
 	node "$HERE/features-deck.mjs" "$WORK/features.pptx"
 fi
 OUT="$ROOT/.tmp/showcases"
-cp "$OUT/Kestrel_Q3_Business_Review.pptx" "$WORK/kestrel.pptx"
-cp "$OUT/Field_Notes_Four_Cities.pptx" "$WORK/field.pptx"
+cp "$OUT/AIP_Lodestar_Cost_Transformation.pptx" "$WORK/lodestar.pptx"
+cp "$OUT/Nightjar_Series_A.pptx" "$WORK/nightjar.pptx"
 
 # --- 3. render -------------------------------------------------------------------------
 # One page = one slide. 1600px wide is enough for both the grid and the feature cards.
-for deck in kestrel field features; do
+for deck in lodestar nightjar features; do
 	soffice --headless --convert-to pdf --outdir "$WORK" "$WORK/$deck.pptx" >/dev/null 2>&1
 	rm -f "$SLIDES/$deck"-*.png
 	pdftoppm -scale-to-x 1600 -scale-to-y -1 -png "$WORK/$deck.pdf" "$SLIDES/$deck"
@@ -59,9 +59,9 @@ card() {
 
 # The grid: dark and light slides in a checkerboard so no row reads as one block.
 GRID=(
-	kestrel-1 kestrel-5 field-2
-	kestrel-4 field-6 kestrel-8
-	field-4 kestrel-10 field-7
+	lodestar-1 lodestar-5 nightjar-1
+	lodestar-2 nightjar-3 lodestar-8
+	nightjar-4 lodestar-7 nightjar-7
 )
 COLS=3 GAP=26 PAD=30 CANVAS_W=1600
 TW=$(((CANVAS_W - 2 * PAD - (COLS - 1) * GAP) / COLS))
@@ -91,12 +91,12 @@ magick "$WORK/gallery-full.png" -background '#0d1117' -flatten -quality 82 -samp
 
 # Feature cards, one per README bullet. 960px wide, transparent, same treatment.
 fcard() { card "$SLIDES/$1.png" "$WORK/f.png" 960 && magick "$WORK/f.png" -quality 86 -define webp:method=6 "$HERE/features/$2.webp"; }
-fcard kestrel-5 chart
-fcard kestrel-8 table
-fcard kestrel-4 kpi-group
+fcard lodestar-5 chart
+fcard lodestar-8 table
+fcard lodestar-2 kpi-group
 fcard features-3 text-fit
 fcard features-4 image-in-shape
-fcard field-6 photo-scrim
+fcard nightjar-1 photo-scrim
 
 # HTML table to slides: the two pages it produced, the second fanned behind the first.
 card "$SLIDES/features-1.png" "$WORK/p1.png" 860

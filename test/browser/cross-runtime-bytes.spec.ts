@@ -21,15 +21,15 @@ import { buildDeckInBrowser } from './helpers.ts'
  * (`p14:section` ids, `c16:uniqueId`) — and are normalized there. Everything else is a
  * real finding.
  *
- * Both showcases, because they cross different paths. The quarterly review draws every mark,
- * so it never calls `loadMedia`. Field Notes loads photographs, a video and a model: by path
+ * Both showcases, because they cross different paths. The Lodestar deck draws every mark,
+ * so it never calls `loadMedia`. Series A loads photographs, a video and a model: by path
  * under Node, where the adapter returns raw base64, and by URL on the page, where it returns
  * a `FileReader` data URI. Equal packages say those two encodings decode to the same bytes.
  */
 
 const OUT_ROOT = path.join(ROOT, '.tmp', 'browser-parity')
 
-for (const slug of ['quarterly-review', 'field-notes']) {
+for (const slug of ['cost-transformation', 'series-a']) {
 	test(`a browser-built ${slug} is byte-identical to the Node-built one`, async ({ page }) => {
 		const { bytes: browserBytes } = await buildDeckInBrowser(page, slug)
 

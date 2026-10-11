@@ -1159,7 +1159,7 @@ Each project matches its specs by filename prefix (`deck-*` and `cross-runtime-*
 `table-*`). None matches by exclusion, because an exclusion would also match every prefix added
 later. Adding a prefix is an edit to `playwright.config.ts`.
 
-The demos page reaches `loadMedia` only on the success path, through Field Notes' photographs,
+The demos page reaches `loadMedia` only on the success path, through the Series A deck's photographs,
 video and model. The harness covers the rest of the adapter: SVG rasterizing, fonts, and every
 failure arm. The harness serves the repository with its real layout and loads
 `dist/browser.js` through a plain `<script type="module">`, so the shipped file runs with no
@@ -1192,7 +1192,7 @@ divergence in the runtime.
 `pnpm showcases:build` builds from the same showcase module. `src/zip.ts` pins `FIXED_MTIME`, so
 one diff shows that every serializer, the zip writer, part ordering and relationship numbering
 are runtime-invariant. A runtime-dependent code path anywhere in `src/gen/` surfaces as a named
-part. Field Notes adds `loadMedia`: Node returns raw base64 and the browser a `FileReader` data
+part. Series A adds `loadMedia`: Node returns raw base64 and the browser a `FileReader` data
 URI, and equal packages show the two decode to the same bytes.
 
 That diff goes through `scripts/pptx-parts.mjs`, with the same explode, normalizers and diff as

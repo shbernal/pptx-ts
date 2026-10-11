@@ -1,7 +1,7 @@
 ---
 doc-schema-version: 1
 title: "Demos"
-summary: "Two showcase decks, a corporate report and a photo essay, built in your browser and previewed in the page."
+summary: "Two showcase decks, a strategy consulting deck and a startup pitch deck, built in your browser and previewed in the page."
 read_when:
   - Seeing what a deck built with pptx-ts looks like before installing it
   - Downloading a finished deck to open in PowerPoint
@@ -21,21 +21,25 @@ and paints each slide as SVG.
 That round trip is the point. A screenshot would prove nothing about the package, but this
 preview can only appear if the bytes are a deck a reader can open.
 
-## A quarterly business review
+## A strategy consulting deck
 
-Eleven slides: five slide masters, three charts with real embedded workbooks, a styled table,
-grouped KPI cards and speaker notes. Every mark is drawn; nothing is loaded. Kestrel Analytics
-is fictional.
+Twelve slides for a steering committee: four slide masters, action titles, a section tracker
+whose tabs link to each section, a cost waterfall, a doughnut and a line chart with real embedded
+workbooks, an issue tree, a 2x2 prioritisation matrix, a business-case table with Harvey balls,
+a wave plan and speaker notes. Every mark is drawn; nothing is loaded. Actionable Insights
+Partners and its client are fictional.
 
-<DeckPreview slug="quarterly-review" />
+<DeckPreview slug="cost-transformation" />
 
-## A photo essay
+## A startup pitch deck
 
-Nine slides: full-bleed photographs under gradient scrims, a duotone, an image grid, an
-embedded video with a poster frame, a 3D model and a real hyperlink. The page fetches the
-photographs, the video and the model when the deck comes into view.
+Eleven slides on the Tokyo Night palette: a logo drawn from shapes, photographs under gradient
+scrims, a pattern-filled ground, connectors bound to the shapes they join, an area chart and a
+bar chart, an embedded demo video with a poster frame and live hyperlinks. The page
+fetches the images and the video when the deck comes into view. Nightjar is
+fictional.
 
-<DeckPreview slug="field-notes" />
+<DeckPreview slug="series-a" />
 
 ## What you are looking at
 

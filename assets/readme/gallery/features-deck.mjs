@@ -1,7 +1,7 @@
 /**
  * A small deck that shows the README features the two showcase decks do not cover:
  * an HTML table paged onto slides, text fit against real font metrics, and pictures
- * clipped to shapes. It reuses the Kestrel design module so it looks like a sibling.
+ * clipped to shapes. It reuses the Lodestar deck's design module so it looks like a sibling.
  *
  * Usage: node features-deck.mjs <out.pptx>
  */
@@ -13,8 +13,8 @@ import { Window } from 'happy-dom'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(HERE, '../../..')
-const design = await import(path.join(ROOT, 'www/demos/decks/quarterly-review/design.mjs'))
-const { BRAND, MASTER, applyDesign, slideTitle } = design
+const design = await import(path.join(ROOT, 'www/demos/decks/cost-transformation/design.mjs'))
+const { BRAND, FONT, MASTER, actionTitle, applyDesign, sticker } = design
 const img = (n) => path.join(ROOT, 'www/demos/decks/media', n)
 
 // Consolas is substituted badly by LibreOffice (overlapping glyphs), so the labels use
@@ -56,11 +56,11 @@ await pptx.registerFontMetrics(FIT_FONT, FIT_FONT_FILE)
 		['Toronto', 'CA', 377, 15.9, '+7.1%'],
 		['Warsaw', 'PL', 142, 5.0, '+21.3%'],
 	]
-	const td = 'padding:6px 10px;border-bottom:1px solid #D9DED1;color:#0C1D13;font-size:16px;font-family:Segoe UI'
+	const td = `padding:6px 10px;border-bottom:1px solid #${BRAND.mist};color:#${BRAND.ink};font-size:16px;font-family:${FONT.body}`
 	const rows = cities
 		.map(([c, cc, acc, rev, g], i) => {
-			const bg = i % 2 ? '#F3F1EA' : '#FFFFFF'
-			const gc = g.startsWith('-') ? '#A75A3C' : '#3E6B4A'
+			const bg = i % 2 ? `#${BRAND.fog}` : `#${BRAND.white}`
+			const gc = g.startsWith('-') ? `#${BRAND.alert}` : `#${BRAND.deep}`
 			return (
 				`<tr style="background:${bg}"><td style="${td};font-weight:bold">${c}</td>` +
 				`<td style="${td}">${cc}</td><td style="${td};text-align:right">${acc}</td>` +
@@ -69,7 +69,7 @@ await pptx.registerFontMetrics(FIT_FONT, FIT_FONT_FILE)
 			)
 		})
 		.join('')
-	const th = 'padding:8px 10px;background:#14301F;color:#FFFFFF;font-size:15px;font-family:Segoe UI;font-weight:bold'
+	const th = `padding:8px 10px;background:#${BRAND.navy};color:#${BRAND.white};font-size:15px;font-family:${FONT.body};font-weight:bold`
 	const win = new Window()
 	win.document.body.innerHTML = `<table id="accounts">
 		<thead><tr><th style="${th};text-align:left">City</th><th style="${th};text-align:left">Country</th>
@@ -78,24 +78,25 @@ await pptx.registerFontMetrics(FIT_FONT, FIT_FONT_FILE)
 
 	tableToSlides(pptx, 'accounts', {
 		document: win.document,
-		masterTitle: MASTER.data,
-		x: 0.75,
-		y: 1.55,
-		w: 11.83,
-		h: 5.1,
+		masterTitle: MASTER.content,
+		x: 0.6,
+		y: 1.85,
+		w: 12.13,
+		h: 5.0,
 		autoPageRepeatHeader: true,
-		autoPageSlideStartY: 1.55,
+		autoPageSlideStartY: 1.85,
 		addText: {
 			text: 'Accounts by city (from an HTML <table>)',
 			options: {
-				x: 0.75,
-				y: 0.55,
+				x: 0.6,
+				y: 0.62,
 				w: 11,
-				h: 0.6,
+				h: 0.95,
 				margin: 0,
-				fontFace: 'Segoe UI Semibold',
-				fontSize: 28,
-				color: BRAND.ink,
+				valign: 'bottom',
+				fontFace: FONT.head,
+				fontSize: 24,
+				color: BRAND.navy,
 			},
 		},
 	})
@@ -104,7 +105,8 @@ await pptx.registerFontMetrics(FIT_FONT, FIT_FONT_FILE)
 // 2. Text that fits ------------------------------------------------------------------
 {
 	const slide = pptx.addSlide({ masterTitle: MASTER.content })
-	slideTitle(slide, 'Same box, same words, fitted at write time', 'Text fit')
+	sticker(slide, 'Text fit')
+	actionTitle(slide, 'Same box, same words, fitted at write time')
 	const words =
 		'Platform revenue grew 13.7% quarter on quarter, and for the first time it is more than half of the business. Licensing turned over.'
 	const box = {
@@ -123,20 +125,20 @@ await pptx.registerFontMetrics(FIT_FONT, FIT_FONT_FILE)
 			label: "fit: 'none'",
 			note: 'Overflows the box. The renderer is left to cope.',
 			fit: 'none',
-			accent: BRAND.rust,
+			accent: BRAND.alert,
 		},
 		{
 			x: 6.95,
 			label: "fit: 'shrink'",
 			note: 'Measured against the font file; the scale is baked into the XML.',
 			fit: 'shrink',
-			accent: BRAND.pine,
+			accent: BRAND.blue,
 		},
 	]
 	for (const c of cols) {
 		slide.addText(c.label, {
 			x: c.x,
-			y: 1.6,
+			y: 1.8,
 			w: 5.4,
 			h: 0.45,
 			margin: 0,
@@ -160,9 +162,9 @@ await pptx.registerFontMetrics(FIT_FONT, FIT_FONT_FILE)
 			w: 5.4,
 			h: 0.6,
 			margin: 0,
-			fontFace: 'Segoe UI',
+			fontFace: FONT.body,
 			fontSize: 13,
-			color: BRAND.ash,
+			color: BRAND.slate,
 		})
 	}
 }
@@ -170,7 +172,8 @@ await pptx.registerFontMetrics(FIT_FONT, FIT_FONT_FILE)
 // 3. Pictures clipped to shapes ------------------------------------------------------
 {
 	const slide = pptx.addSlide({ masterTitle: MASTER.content })
-	slideTitle(slide, 'One photo, four outlines', 'Image in shape')
+	sticker(slide, 'Image in shape')
+	actionTitle(slide, 'One photo, four outlines')
 	const s = 2.5
 	const gap = 0.45
 	const left = (13.333 - (4 * s + 3 * gap)) / 2
@@ -200,7 +203,7 @@ await pptx.registerFontMetrics(FIT_FONT, FIT_FONT_FILE)
 			align: 'center',
 			fontFace: MONO,
 			fontSize: 13,
-			color: BRAND.brassInk,
+			color: BRAND.blue,
 			bold: true,
 		})
 	})
@@ -211,9 +214,9 @@ await pptx.registerFontMetrics(FIT_FONT, FIT_FONT_FILE)
 		h: 0.5,
 		margin: 0,
 		align: 'center',
-		fontFace: 'Segoe UI',
+		fontFace: FONT.body,
 		fontSize: 14,
-		color: BRAND.ash,
+		color: BRAND.slate,
 	})
 }
 

@@ -3,7 +3,7 @@
  * Build the showcase decks.
  *
  *   pnpm showcases:build                    both decks
- *   pnpm showcases:build field-notes        one deck, by slug
+ *   pnpm showcases:build series-a           one deck, by slug
  *
  * These decks are showcases, not tests. Nothing here asserts anything about the output and
  * no verification aggregate runs it — if a deck breaks, the fix belongs in the deck. The

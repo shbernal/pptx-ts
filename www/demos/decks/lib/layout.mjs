@@ -32,17 +32,6 @@ export function columns(count, opts = {}) {
 	return { x, w }
 }
 
-/**
- * Centre `count` items of width `w` (plus `gap`) horizontally on the slide.
- * Used where a row is narrower than the content column and should sit centred
- * rather than left-aligned — e.g. the KPI band and the contents thumbnails.
- */
-export function centeredRow(count, w, gap) {
-	const total = count * w + (count - 1) * gap
-	const left = (WIDE.w - total) / 2
-	return Array.from({ length: count }, (_, i) => left + i * (w + gap))
-}
-
 /** Format a number as a signed percentage string, e.g. `+12.4%`. */
 export function signedPct(value, digits = 1) {
 	return `${value >= 0 ? '+' : '−'}${Math.abs(value).toFixed(digits)}%`

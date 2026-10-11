@@ -85,8 +85,8 @@ export async function downloadDeck(source: DeckSource): Promise<void> {
  * Read a package back and render it as an HTML document.
  *
  * `renderDeck`'s `bytes` source is wired to the import's own asset index, so a deck with
- * pictures in it renders them rather than silently painting empty frames. The quarterly
- * review happens to draw every shape it shows, but a preview that only works for decks
+ * pictures in it renders them rather than silently painting empty frames. The Lodestar
+ * deck happens to draw every shape it shows, but a preview that only works for decks
  * without media would be a trap for the next deck added here.
  */
 export async function previewDeck(

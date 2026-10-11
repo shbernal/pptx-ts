@@ -9,33 +9,52 @@ a gate deck under `scripts/gate-decks/`, not here.
 
 ```bash
 pnpm showcases:build                    # both
-pnpm showcases:build field-notes        # one, by slug
+pnpm showcases:build series-a           # one, by slug
 ```
 
 Output goes to `.tmp/showcases/` at the repository root (git-ignored).
 
 ## The decks
 
-### `quarterly-review/`: Kestrel Q3 FY26 Business Review
+### `cost-transformation/`: Project Lodestar, by Actionable Insights Partners
 
-Eleven slides. The corporate flagship: a themed `<a:clrScheme>`, five slide masters, native
-linear gradients on the cover and closing, KPI cards assembled as groups, a stacked column
-chart, a doughnut with a text well in its hole, a line chart with a callout, a hand-styled
-table with a totals row, chevron timeline, and speaker notes throughout.
+Twelve slides. The corporate flagship, a strategy consulting deck in navy: a themed
+`<a:clrScheme>`, four slide masters with a title placeholder and master text styles, action
+titles, a section tracker whose tabs are internal slide links, a cost waterfall built as a stacked
+column over an invisible base, a doughnut with a text well in its hole, a line chart with a drawn
+gap bracket, an issue tree and a governance chart on shape-bound connectors, a 2x2 matrix, a
+business-case table with a colspan header and drawn Harvey balls, a chevron and Gantt wave plan,
+and speaker notes throughout.
 
 It imports nothing from `node:`. Every mark on every slide is drawn rather than loaded.
 That is what lets the site's demos page (`www/demos/`) import this same module and build the
-identical deck in a browser.
+identical deck in a browser. The figures all derive from one `INITIATIVES` list in `data.mjs`, so
+the totals on every slide reconcile.
 
-### `field-notes/`: Four Cities After Dark
+### `series-a/`: Nightjar, Series A
 
-Nine slides. The visual flagship: full-bleed photography, gradient scrims over images (the
-standard editorial fix for putting white type on an unpredictable photo), a duotone picture
-effect, a three-up image grid, an embedded video with a poster frame, and a radial-gradient
-colophon carrying a real hyperlink relationship.
+Eleven slides. The visual flagship, a dark startup pitch deck on the Tokyo Night palette: a logo
+drawn from a custom path and gradients, photographs under gradient scrims, a dot-pattern ground,
+a pipeline diagram on shape-bound connectors with build animations, a terminal mock in
+syntax-coloured runs, an area chart and a bar chart, a feature-matrix table, an embedded video
+with a poster frame, and a radial-gradient close carrying internal and external
+hyperlinks.
 
-It loads photographs, a video and a model from `media/`, as paths under Node and as URLs on the
-site, where the demos page builds it in the browser like the quarterly review.
+It loads two photographs and a screen recording from `media/`, as paths under Node and as URLs on the
+site, where the demos page builds it in the browser like the consulting deck. On a dark ground
+every text, chart and table colour is set explicitly: the theme's `dk1` stays dark, so anything
+left to the default would draw dark on dark.
+
+### Media
+
+Where each file in `media/` comes from:
+
+| File | What it is | Source |
+|---|---|---|
+| `night-sky.jpg` | Nightjar's cover | Nathan Anderson, [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Night_Sky_Stars_Silverthorne_(Unsplash).jpg), CC0 |
+| `code-on-monitor.jpg` | Nightjar's problem slide | Markus Spiske, [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Code_on_computer_monitor_(Unsplash).jpg), CC0 |
+| `nj-run.mp4`, `nj-run-poster.jpg` | the demo video and its poster: the product slide's terminal session, sped up | rendered for this repo |
+| `sydney_harbour_bridge_night.jpg` | the README gallery's feature deck, not a showcase | inherited from PptxGenJS's demos |
 
 ## Layout
 
@@ -44,8 +63,7 @@ lib/assets.mjs      media as a path (Node) or URL (site), and the one base64 hel
 lib/layout.mjs      slide geometry: the 16:9 box, margins, column arithmetic
 lib/showcases.mjs   the SHOWCASES registry — every deck, in build order
 <deck>/design.mjs   palette, type scale, theme, masters — no slide names a raw hex
-<deck>/data.mjs     content, kept apart from layout (quarterly review only; Field Notes
-                    carries its handful of captions inline)
+<deck>/data.mjs     content, kept apart from layout
 <deck>/index.mjs    the slides, plus an exported `showcase` descriptor
 build.mjs           the runner; the only place that touches the filesystem
 ```
@@ -54,13 +72,7 @@ Each deck exports `{ slug, title, description, fileName, build }`. Adding a thir
 writing that object, adding it to `SHOWCASES` in `lib/showcases.mjs` for the Node build and the
 browser lane, and adding it to `../showcases.ts` for the site.
 
-## Two things worth knowing before editing a deck
-
-**`addChart` mutates the series you hand it.** It normalizes `labels` from `string[]` to
-`string[][]` **in place**, so an array passed to a chart is not the array you passed in.
-Iterating it afterwards to build a legend yields one nested array instead of three strings.
-`quarterly-review/data.mjs` keeps a plain `SEGMENTS` source of truth and derives the chart
-shape from it; do the same rather than reusing a chart's arrays.
+## Worth knowing before editing a deck
 
 **`addMedia`'s `cover` takes base64, not a path**, unlike `addImage`, which takes either.
 `lib/assets.mjs` exports `imageDataUri()` for exactly that one call site.

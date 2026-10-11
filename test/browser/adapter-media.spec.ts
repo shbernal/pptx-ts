@@ -19,7 +19,7 @@ import {
 /**
  * `loadMedia` and `createSvgPngPreview` (src/runtime/browser.ts) in a real browser.
  *
- * These two functions are why the demo fixture is not enough: `quarterly-review` draws
+ * These two functions are why the demo fixture is not enough: `cost-transformation` draws
  * every asset it shows, so no deck in the demo ever asks the runtime to load one. Here
  * the harness loads the shipped `dist/browser.js` unbundled and builds decks whose only
  * purpose is to reach them — from real URLs, with real 404s.

@@ -52,7 +52,7 @@ about nothing:
 - `html-table.mjs` for `tableToSlides`, which is a whole public entry point rather than one
   emitter: no showcase and no other gate deck called it, so a change moving every HTML-table
   border width by a third reported PASS.
-- `media-matrix.mjs` for what only the `field-notes` demo used to reach: embedded video and
+- `media-matrix.mjs` for what only the former `field-notes` demo used to reach: embedded video and
   3D models, picture crops and duotone, a styled hyperlink, a radial master background. It
   was written when the demos left the corpus, so that leaving shrank nothing.
 

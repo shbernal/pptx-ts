@@ -14,10 +14,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the page is the code that runs, and the test suite runs every live sample against the Node build
   and fails on a throw, a warning or a schema error. [Fills and
   gradients](https://shbernal.github.io/pptx-ts/fills-and-gradients) is the first page with them.
-- **The demos page shows both showcase decks.** Field Notes, the photo essay with photographs, a
-  video and a 3D model, now builds in the browser beside the quarterly review.
+- **The demos page shows both showcase decks.** The startup pitch deck, with its photographs and
+  video, now builds in the browser beside the consulting deck.
 
 ### Changed
+
+- **The showcase decks are a strategy consulting deck and a startup pitch deck.** The quarterly
+  review becomes Project Lodestar, a twelve-slide cost-transformation deck by the fictional
+  Actionable Insights Partners in navy: action titles, a linked section tracker, a waterfall, an
+  issue tree, a 2x2 and Harvey balls, still with nothing loaded. The Field Notes photo essay is
+  replaced by Nightjar, an eleven-slide Series A pitch on the Tokyo Night palette that keeps the
+  photographs, scrims and video. More of each deck is drawn than charted, because the demos page's
+  preview shows a native chart as a placeholder.
+
+  This is only visible if you build the showcases. The slugs change from `quarterly-review` and
+  `field-notes` to `cost-transformation` and `series-a`, the files from
+  `Kestrel_Q3_Business_Review.pptx` and `Field_Notes_Four_Cities.pptx` to
+  `AIP_Lodestar_Cost_Transformation.pptx` and `Nightjar_Series_A.pptx`. In
+  `www/demos/decks/media/`, the photographs only Field Notes used, the subway maps, the stock
+  video with its clapperboard poster, and the cube model are gone. Two CC0 photographs and a
+  rendered recording of the deck's own terminal session replace them.
 
 - **`write()` is typed by its `outputType`.** `write({ outputType: 'uint8array' })` now resolves to
   `Uint8Array`, `'arraybuffer'` to `ArrayBuffer`, `'base64'` and `'binarystring'` to `string`, and

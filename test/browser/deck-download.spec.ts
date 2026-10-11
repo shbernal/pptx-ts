@@ -16,7 +16,7 @@ import { buildDeckInBrowser, defined } from './helpers.ts'
 test('the demos page builds a downloadable .pptx package in the browser', async ({ page }) => {
 	const { bytes, fileName } = await buildDeckInBrowser(page)
 
-	expect(fileName).toBe('Kestrel_Q3_Business_Review.pptx')
+	expect(fileName).toBe('AIP_Lodestar_Cost_Transformation.pptx')
 	expect(bytes.byteLength).toBeGreaterThan(10_000)
 
 	const zip = await JSZip.loadAsync(bytes)
@@ -27,10 +27,10 @@ test('the demos page builds a downloadable .pptx package in the browser', async 
 	expect(names).toContain('_rels/.rels')
 	expect(names).toContain('ppt/presentation.xml')
 
-	// The showcase is eleven slides. A package that unzips but lost its slides would
+	// The showcase is twelve slides. A package that unzips but lost its slides would
 	// otherwise pass every assertion above.
 	const slides = names.filter((name) => /^ppt\/slides\/slide\d+\.xml$/.test(name))
-	expect(slides).toHaveLength(11)
+	expect(slides).toHaveLength(12)
 
 	const presentation = await defined(zip.file('ppt/presentation.xml')).async('string')
 	expect(presentation).toContain('<p:sldIdLst>')

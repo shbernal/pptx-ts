@@ -168,9 +168,9 @@ describe('splitDeck', () => {
 
 describe('showcaseSource', () => {
 	it('finds a registered deck by its slug', () => {
-		const source = showcaseSource('quarterly-review')
+		const source = showcaseSource('cost-transformation')
 
-		expect(source.slug).toBe('quarterly-review')
+		expect(source.slug).toBe('cost-transformation')
 		expect(source.fileName).toMatch(/\.pptx$/)
 		expect(typeof source.compose).toBe('function')
 	})
@@ -181,7 +181,7 @@ describe('showcaseSource', () => {
 
 	it('names the known slugs when asked for one that is not registered', () => {
 		expect(() => showcaseSource('no-such-deck')).toThrow(
-			/unknown showcase "no-such-deck"; known: quarterly-review, field-notes/
+			/unknown showcase "no-such-deck"; known: cost-transformation, series-a/
 		)
 	})
 })

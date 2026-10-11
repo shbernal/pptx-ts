@@ -12,7 +12,7 @@ import { SITE_BASE } from './docs/.vitepress/site-base.ts'
  *     showcase modules `pnpm showcases:build` runs. This is the bundled story: a real
  *     consumer, Vite resolving the `browser` export condition, Rollup tree-shaking it.
  *     It exercises `writeFile` (the object-URL `<a download>` path), `loadMedia`'s success
- *     path through Field Notes' media, and proves the emission core is runtime-invariant.
+ *     path through the Series A deck's media, and proves the emission core is runtime-invariant.
  *     It never rasterizes an SVG, loads a font or fails a fetch.
  *   - **runtime-adapter** — loads the shipped `dist/browser.js` unbundled off a static
  *     server (scripts/browser-harness-server.mjs) and drives it with decks built to hit

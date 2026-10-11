@@ -3,7 +3,7 @@
  * essay reaches.
  *
  * Corpus for `scripts/byte-identity.mjs`. These constructs used to be gated only because the
- * `field-notes` demo deck happened to emit them. The demo decks (`www/demos/decks/`) are for the
+ * former `field-notes` demo deck happened to emit them. The demo decks (`www/demos/decks/`) are for the
  * site and nothing else, so this deck now carries them, and a demo deck can change freely
  * without shrinking the proof. See `./README.md` for why a gate deck may only ever grow.
  *
