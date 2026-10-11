@@ -59,6 +59,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`fontFaceEA` works without `fontFace`.** It was written only beside a `fontFace`, so on its own
   it was dropped with no warning ([#60](https://github.com/shbernal/pptx-ts/issues/60)). Alone it
   now writes `<a:ea>`, leaving the Latin and complex-script slots to inherit.
+- **A slide's no-fill background survives `readModelToIr`.** `background: { type: 'none' }`
+  writes `p:bg/p:bgPr/a:noFill`, which turns the layout's background off. `readModelToIr` read it
+  as no background at all, with no note, so the replayed slide showed the layout background again
+  ([#87](https://github.com/shbernal/pptx-ts/issues/87)). It now carries as
+  `background: { type: 'none' }`.
 - **Character spacing survives `readModelToIr`.** A run's `a:rPr/@spc` was read by
   `Run.charSpacingPt` but never mapped, so the printed script and any replay of the `DeckIr` lost
   it, and `diffDeckIr` reported the round trip clean because neither IR carried the field
