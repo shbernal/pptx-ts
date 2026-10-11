@@ -179,8 +179,9 @@ export interface TextBaseProps {
 	/**
 	 * East Asian font face name (`<a:ea>` slot), used to render CJK (Chinese/Japanese/Korean) glyphs
 	 *
-	 * Set this when the East Asian font differs from `fontFace`. When omitted, `<a:ea>` inherits the
-	 * theme East Asian font, which is what PowerPoint does for Latin fonts.
+	 * Independent of `fontFace`: set alone, it writes only `<a:ea>` and the Latin and complex-script
+	 * slots keep inheriting. When omitted, `<a:ea>` inherits the theme East Asian font, which is what
+	 * PowerPoint does for Latin fonts.
 	 * @example '微軟正黑體' // render East Asian glyphs with Microsoft JhengHei
 	 */
 	fontFaceEA?: string

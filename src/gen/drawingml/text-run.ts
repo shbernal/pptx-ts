@@ -432,6 +432,7 @@ export function genXmlTextRunProperties(opts: ObjectOptions | TextPropsOptions, 
 	if (
 		opts.color ||
 		opts.fontFace ||
+		opts.fontFaceEA ||
 		opts.outline ||
 		opts.glow ||
 		hasShadow ||
@@ -474,6 +475,10 @@ export function genXmlTextRunProperties(opts: ObjectOptions | TextPropsOptions, 
 			runProps += voidEl('a:latin', { typeface: opts.fontFace, pitchFamily: '34', charset: '0' })
 			if (opts.fontFaceEA) runProps += voidEl('a:ea', { typeface: opts.fontFaceEA })
 			runProps += voidEl('a:cs', { typeface: opts.fontFace })
+		} else if (opts.fontFaceEA) {
+			// The East Asian slot on its own, the Latin and complex-script slots left to inherit. It was
+			// written only beside a `fontFace`, so on its own it was dropped without a word.
+			runProps += voidEl('a:ea', { typeface: opts.fontFaceEA })
 		}
 	}
 
