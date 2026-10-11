@@ -38,6 +38,7 @@ import {
 	ANCHOR_TO_VALIGN,
 	colorOption,
 	compact,
+	compactRequired,
 	literalColor,
 	orUndefined,
 	pointsToInches,
@@ -265,7 +266,34 @@ export function runOptions(run: Run, ctx: MapContext): Record<string, IrValue> |
 		// The write API spells baseline shift as a percentage, the same unit the read
 		// model reports, so superscript/subscript survive without a preset round-trip.
 		baseline: orUndefined(run.baselinePct),
+		...spacingOptions(run, notes),
 		hyperlink,
+	})
+}
+
+/**
+ * `charSpacing` and `kerning`, which the write path couples: a non-zero `charSpacing` with no
+ * `kerning` writes `kern="0"` beside its `spc`. So a `kern="0"` next to spacing is left for the
+ * writer to imply, which keeps a script printed from a pptx-ts deck to the one option it was
+ * written with, and spacing with no `kern` at all is the one state the write API cannot spell.
+ *
+ * A zero `spc` is left out too: the write path reads `charSpacing: 0` as unstated and writes
+ * no `spc`, and zero is the attribute's default.
+ */
+function spacingOptions(run: Run, notes: NoteScope): Record<string, IrValue> {
+	const charSpacing = run.charSpacingPt || undefined
+	const kerning = run.kerningPt
+	if (charSpacing !== undefined && kerning === null) {
+		notes.note(
+			'text.kern',
+			'approximated',
+			'unwritable',
+			'this run is spaced and states no kerning; the write path turns kerning off on spaced text it is given no kerning for, so it comes back stating kern="0"'
+		)
+	}
+	return compactRequired({
+		charSpacing,
+		kerning: charSpacing !== undefined && kerning === 0 ? undefined : orUndefined(kerning),
 	})
 }
 

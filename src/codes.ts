@@ -113,6 +113,7 @@ export type DiagnosticCode =
 	| 'text/invalid-underline'
 	| 'text/invalid-tab-alignment'
 	| 'text/char-spacing-out-of-range'
+	| 'text/kerning-out-of-range'
 	| 'text/line-spacing-out-of-range'
 	| 'text/paragraph-margin-out-of-range'
 	| 'text/paragraph-indent-out-of-range'

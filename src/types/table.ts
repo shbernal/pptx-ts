@@ -181,6 +181,10 @@ export interface TableCellProps extends TextBaseProps {
 	 * the text, below zero lowers it. On a cell it applies to every run that states none.
 	 */
 	baseline?: NonNullable<TextPropsOptions['baseline']>
+	/** Character spacing in points, as {@link TextPropsOptions.charSpacing}. On a cell it applies to every run that states none. */
+	charSpacing?: NonNullable<TextPropsOptions['charSpacing']>
+	/** Kerning threshold in points, as {@link TextPropsOptions.kerning}. On a cell it applies to every run that states none. */
+	kerning?: NonNullable<TextPropsOptions['kerning']>
 	/**
 	 * Text shadow (`a:rPr/a:effectLst`), as {@link TextPropsOptions.shadow} takes it on a run. A cell
 	 * has no shape effect of its own, so on a cell this is the shadow of every run that states none.

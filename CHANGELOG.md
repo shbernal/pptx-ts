@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Text runs take a `kerning` option.** `kerning: 12` writes `a:rPr/@kern="1200"`: text at 12pt
+  or larger is pair-kerned, smaller text is not, and `kerning: 0` turns kerning off. It is the
+  number in PowerPoint's "Kerning for fonts: _ Points and above". A stated `kerning` wins over the
+  `kern="0"` that a non-zero `charSpacing` still writes on its own, so output that sets no
+  `kerning` is unchanged. Table cells take it too, along with `charSpacing`, which already worked
+  on a cell but was missing from `TableCellProps`. Out-of-range values clamp to 0-4000pt and warn
+  `text/kerning-out-of-range`.
+- **`Run.kerningPt` reads `a:rPr/@kern`** in points, or `null` when the run states none.
+
+### Fixed
+
+- **Character spacing survives `readModelToIr`.** A run's `a:rPr/@spc` was read by
+  `Run.charSpacingPt` but never mapped, so the printed script and any replay of the `DeckIr` lost
+  it, and `diffDeckIr` reported the round trip clean because neither IR carried the field
+  ([#53](https://github.com/shbernal/pptx-ts/issues/53)). The IR now carries `charSpacing` and
+  `kerning`, for shape text and table cells. A spaced run that states no `kern`, which the write
+  API cannot reproduce, records a `text.kern` fidelity note. Spaced speaker-notes text now counts
+  toward the `notes.formatting` note.
+
 ## [4.1.0](https://github.com/shbernal/pptx-ts/releases/tag/v4.1.0) - 2026-10-11
 
 ### Added
