@@ -57,4 +57,33 @@ defineRegressionSuite('Table cell hyperlinks over runs', [
 			assertEqual(Object.keys(cell.options).join(), cellKeysBefore, 'the cell’s options gained no key')
 		},
 	},
+	{
+		// The black default used to stand down for the whole table when any one cell had a link, so
+		// a cell's output depended on its neighbours (issue #101). Only a cell holding a link leaves
+		// its text to the link colour.
+		name: 'a link in one cell leaves the black default on every other cell',
+		fn: async () => {
+			const runsOf = async (link: boolean) => {
+				const { zip } = await build((p) => {
+					p.addSlide().addTable(
+						[
+							[{ text: 'a', options: link ? { hyperlink: { url: URL } } : {} }, { text: 'b' }],
+							[{ text: 'c' }, { text: 'd' }],
+						],
+						{ x: 1, y: 1, w: 6, h: 1 }
+					)
+				})
+				const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
+				return [...xml.matchAll(/<a:r>([\s\S]*?)<\/a:r>/g)].map((match) => at(match, 1))
+			}
+			const plain = await runsOf(false)
+			const linked = await runsOf(true)
+			assertEqual(linked.length, 4, 'four runs')
+			assert(!at(linked, 0).includes('<a:solidFill>'), 'the linked cell is left to the link colour')
+			for (const index of [1, 2, 3]) {
+				assert(at(linked, index).includes('<a:srgbClr val="000000"/>'), `cell ${index} keeps the black default`)
+				assertEqual(at(linked, index), at(plain, index), `cell ${index} is written as it is with no link in the table`)
+			}
+		},
+	},
 ])

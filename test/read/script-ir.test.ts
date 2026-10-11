@@ -758,6 +758,45 @@ describe('deck IR — a hyperlinked run with no colour of its own', () => {
 		assert(!cell.includes('"color"'), `the cell states no colour: ${cell}`)
 		assert(!constructs(ir).has('text.color.inherited'), 'and declares no loss')
 	})
+
+	test('the cell beside a linked cell keeps the black it was written with', async () => {
+		// The writer used to drop the black default from every cell once one held a link, and the
+		// IR then baked that cell's inherited colour in under a note blaming the writer (#100, #101).
+		const { presentation } = await authorRead((pres) => {
+			pres
+				.addSlide()
+				.addTable([[{ text: 'a', options: { hyperlink: { url: 'https://example.com/' } } }, { text: 'b' }]], {
+					x: 1,
+					y: 1,
+					w: 4,
+				})
+		})
+		const ir = readModelToIr(presentation)
+		const cells = JSON.stringify(defined(allCalls(ir).find((c) => c.method === 'addTable')).args)
+		assert(cells.includes('"color":"000000"'), `the plain cell keeps its black: ${cells}`)
+		assert(!constructs(ir).has('text.color.inherited'), 'and declares no loss, because it was stated')
+	})
+})
+
+describe('deck IR — a placeholder run with no colour of its own', () => {
+	// The writer leaves a run in a `placeholder` shape uncoloured, so it inherits from the layout.
+	// `readModelToIr` baked the inherited colour in under a note saying the writer paints it black,
+	// which it does not there (issue #100).
+
+	test('stays uncoloured, so the replay leaves it to the layout', async () => {
+		const { presentation, buf } = await authorRead((pres) => {
+			pres.addSlide().addText('body text', { x: 1, y: 1, w: 6, h: 1, placeholder: 'body' })
+		})
+		const runXml = (xml: string) => defined(xml.match(/<a:r>.*?<\/a:r>/)?.[0])
+		const sourceRun = runXml(await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml'))
+		assert(!sourceRun.includes('a:solidFill'), `the writer leaves the placeholder run uncoloured: ${sourceRun}`)
+
+		const ir = readModelToIr(presentation)
+		assertEqual(at(runOptionsOf(ir)[0], 'color'), undefined, 'the IR states no colour on the run')
+		assert(!constructs(ir).has('text.color.inherited'), 'and declares no loss, because there is none')
+		const replayed = runXml(await replay(ir))
+		assert(!replayed.includes('a:solidFill'), `and the replay leaves it uncoloured too: ${replayed}`)
+	})
 })
 
 describe('deck IR — shape paint details', () => {

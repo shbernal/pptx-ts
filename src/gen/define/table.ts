@@ -25,7 +25,7 @@ import type {
 	TablePropsInternal,
 } from '../../types/internal.js'
 import { getSlidesForTableRows } from '../table/autopage.js'
-import { tableHasHyperlink, withCheckedSpans } from '../table/spans.js'
+import { withCheckedSpans } from '../table/spans.js'
 import { tableColCount, walkTableGrid } from '../table/grid.js'
 import {
 	getSmartParseNumber,
@@ -486,12 +486,12 @@ export function addTableDefinition(
 	opt.margin = resolveCellMarginsInches(opt.margin)
 	// The slide's colour, else black, lands on every cell that has no colour of its own
 	// (`gen/slide/objects/table.ts`), as direct formatting. It is resolved when the slide is
-	// written, so `slide.color` set after this call still reaches the table (#88). One thing
-	// stands it down: a hyperlink anywhere in the grid, because the default paints the whole run,
-	// so the words *after* a link come out black instead of following the link colour. That run
-	// is then emitted with no `<a:solidFill>` and PowerPoint resolves the text from the theme's
+	// written, so `slide.color` set after this call still reaches the table (#88). A cell holding
+	// a hyperlink is left out (`cellHasHyperlink`), because the default paints the whole run, so
+	// the words *after* a link would come out black instead of following the link colour. That
+	// cell is emitted with no `<a:solidFill>` and PowerPoint resolves its text from the theme's
 	// `tx1`.
-	if (!tableHasHyperlink(arrRows) && !opt.color) {
+	if (!opt.color) {
 		// table option > the slide's `color` > black. An empty `color` is unstated, as it was when
 		// black was written over it here.
 		delete opt.color

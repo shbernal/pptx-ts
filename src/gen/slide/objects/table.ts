@@ -15,7 +15,7 @@ import { rejectEmptyColor } from '../../drawingml/color.js'
 import { genXmlColorSelection } from '../../drawingml/fill.js'
 import { genXmlObjectLock, GRAPHIC_FRAME_LOCK_ATTRS } from '../../drawingml/locks.js'
 import { genTableCellBorderXml } from '../../drawingml/table-border.js'
-import { resolveSpan, withCheckedSpans } from '../../table/spans.js'
+import { cellHasHyperlink, resolveSpan, withCheckedSpans } from '../../table/spans.js'
 import { genTableCell3DXml } from '../../drawingml/table-cell3d.js'
 import { genXmlPlaceholder, genXmlTextBody, resolveTextAnchor } from '../../drawingml/text-body.js'
 import { el, elOrVoid, raw, voidEl, type XmlAttrs } from '../../oxml/el.js'
@@ -429,7 +429,8 @@ export function renderTableObject(ctx: RenderContext): string {
 			// the reference handed to `genXmlTextBody` below carried keys the cell never stated.
 			// The invariant at the head of this file has said "never mutates" throughout.
 			const cellOpts = inheritTableOptions(cell.options, objTabOpts)
-			if (cellOpts.color === undefined && itemOpts._slideColor) cellOpts.color = slideTextColor(slide)
+			if (cellOpts.color === undefined && itemOpts._slideColor && !cellHasHyperlink(cell))
+				cellOpts.color = slideTextColor(slide)
 
 			const cellValign = resolveTextAnchor(cellOpts.valign)
 			const cellTextDir = cellOpts.textDirection && cellOpts.textDirection !== 'horz' ? cellOpts.textDirection : null

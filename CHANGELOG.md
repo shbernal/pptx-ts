@@ -52,6 +52,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A hyperlink in one table cell no longer strips the black text default from the others.** Any
+  link in the grid turned the default off for every cell, so a cell's output depended on its
+  neighbours. Only the cell holding the link is now left to the link colour
+  ([#101](https://github.com/shbernal/pptx-ts/issues/101)).
+- **`readModelToIr` leaves a placeholder's uncoloured runs uncoloured.** A run with no colour of
+  its own in a shape that carries as `placeholder` came back with its inherited colour baked in,
+  under a `text.color.inherited` note, though the writer leaves such a run to its layout
+  ([#100](https://github.com/shbernal/pptx-ts/issues/100)).
 - **A picture background applies `transparency`.** `background: { data, transparency: 50 }`
   wrote the picture fully opaque, with no warning. It now writes `a:alphaModFix` on the picture,
   as a shape's picture fill does ([#98](https://github.com/shbernal/pptx-ts/issues/98)).

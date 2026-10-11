@@ -165,7 +165,11 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 				shape: 'custGeom',
 				points,
 			})
-			return { method: 'addText', args: [textRuns(frame, ctx), options ?? {}], ...nameOf(shape) }
+			return {
+				method: 'addText',
+				args: [textRuns(frame, ctx, placeholder !== undefined), options ?? {}],
+				...nameOf(shape),
+			}
 		}
 		const options = compact({ ...common, points })
 		return { method: 'addShape', args: ['custGeom', options ?? {}], ...nameOf(shape) }
@@ -181,7 +185,11 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 			...(isTextBox(shape.element_) ? { isTextBox: true } : {}),
 			...(preset === null ? {} : { shape: preset, ...adjustOptions(shape) }),
 		})
-		return { method: 'addText', args: [textRuns(frame, ctx), options ?? {}], ...nameOf(shape) }
+		return {
+			method: 'addText',
+			args: [textRuns(frame, ctx, placeholder !== undefined), options ?? {}],
+			...nameOf(shape),
+		}
 	}
 
 	// No text and no geometry of its own: an empty placeholder, whose shape comes from the

@@ -164,7 +164,7 @@ The Output column says where the note fires. A construct that fires in both outp
 
 | Construct | Output | Cause | What happens | Fixtures |
 | --- | --- | --- | --- | --- |
-| `text.color.inherited` | Both | unsupported | A run with no colour of its own gets its inherited colour baked in, because the write path paints an uncoloured run black. It stops following theme changes. A link is the exception: the write path leaves one uncoloured too, so it stays uncoloured and keeps the theme hyperlink colour | 39/58 |
+| `text.color.inherited` | Both | unsupported | A run with no colour of its own gets its inherited colour baked in, because the write path paints an uncoloured run black. It stops following theme changes. A link and a run in a shape that carries as a `placeholder` are the exceptions: the write path leaves those uncoloured too, so a link keeps the theme hyperlink colour and a placeholder run its layout's | 38/58 |
 | `line.width` | Both | unread | An outline taken from the theme line style (`p:style/a:lnRef`) keeps its colour and loses its width and dash | 10/58 |
 | `shape.frameInherited` | Both | unsupported | A shape positioned by its layout or master gets that position baked in, and stops following edits to the layout or master | 9/58 |
 | `shape.placeholder` | Both | unwritable | A placeholder bound to its layout by `idx`, or of a type `placeholder` does not name, becomes a plain shape with its inherited geometry and styling baked in. A title, and any placeholder with one of the six types `placeholder` names and no `idx`, carries as `placeholder` | 7/58 |

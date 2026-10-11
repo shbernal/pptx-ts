@@ -103,24 +103,21 @@ export function withCheckedSpans(rows: TableCellInternal[][]): TableCellInternal
 }
 
 /**
- * Whether any cell in the grid carries a hyperlink — on the cell itself, or on any run of a
- * cell whose `text` is a run array.
+ * Whether a cell carries a hyperlink — on the cell itself, or on any run of its `text` when that
+ * is a run array.
  *
- * `addTable` uses this to decide whether to stand its black text default down: the default is
- * direct formatting on the table, so it would paint the words *after* a link black rather than
- * letting them follow the link colour. The test used to be
- * `JSON.stringify({ arrRows }).includes('hyperlink')`, which matched the literal word anywhere
- * in the grid's *content* — a cell reading "see the hyperlink docs" suppressed the default for
- * the whole table — and serialized every cell on every `addTable` to ask.
- * @param rows - the table's rows
+ * The table's black text default is direct formatting on the cell's runs, so on a linked cell it
+ * would paint the words *after* the link black rather than letting them follow the link colour.
+ * The emitter stands the default down for such a cell, and only for it: the test used to be
+ * table-wide, so one link stripped the default from every cell in the grid and a cell's output
+ * depended on its neighbours (#101). Before that it was
+ * `JSON.stringify({ arrRows }).includes('hyperlink')`, which matched the literal word anywhere in
+ * the grid's *content*.
+ * @param cell - the cell, or a hole in the grid
  */
-export function tableHasHyperlink(rows: TableCellInternal[][]): boolean {
-	return rows.some((cells) =>
-		cells.some((cell) => {
-			if (!cell) return false
-			if (cell.options?.hyperlink) return true
-			if (!Array.isArray(cell.text)) return false
-			return cell.text.some((run) => !!run?.options?.hyperlink)
-		})
-	)
+export function cellHasHyperlink(cell: TableCellInternal | undefined): boolean {
+	if (!cell) return false
+	if (cell.options?.hyperlink) return true
+	if (!Array.isArray(cell.text)) return false
+	return cell.text.some((run) => !!run?.options?.hyperlink)
 }
