@@ -1773,6 +1773,38 @@ describe('deck IR — slide number', () => {
 		assertEqual(sldNumSp(xml), source, 'the replay writes the same placeholder')
 	})
 
+	test('the character, paragraph and body options carry too', async () => {
+		// The options `slideNumber` gained in issue #90, each read back from where it is written.
+		const { buf, presentation } = await authorRead((pres) => {
+			pres.addSlide().slideNumber = {
+				x: 0.5,
+				y: 6.5,
+				w: 1,
+				h: 0.4,
+				color: '9B1B30',
+				transparency: 40,
+				italic: true,
+				caps: 'all',
+				underline: { style: 'dbl', color: '0B003D' },
+				highlight: 'F0C808',
+				lang: 'fr-FR',
+				fontFaceEA: 'MS Mincho',
+				paraMarginLeft: 18,
+				paraIndent: 12,
+				textDirection: 'vert',
+				textWarp: 'textArchUp',
+			}
+		})
+		const source = sldNumSp(await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml'))
+		const ir = readModelToIr(presentation)
+		const carried = defined(atIndex(ir.slides, 0).slideNumber, 'the IR carries a slide number')
+		const { buf: replayed } = await authorRead((pres) => {
+			pres.addSlide().slideNumber = carried as unknown as SlideNumberProps
+		})
+		const xml = await readEntry(await JSZip.loadAsync(replayed), 'ppt/slides/slide1.xml')
+		assertEqual(sldNumSp(xml), source, 'the replay writes the same placeholder')
+	})
+
 	test('a slide-number placeholder holding more than the field is still flattened', async () => {
 		const { buf } = await authorRead((pres) => {
 			pres.addSlide().slideNumber = { x: 0.5, y: 6.5, w: 1, h: 0.4 }

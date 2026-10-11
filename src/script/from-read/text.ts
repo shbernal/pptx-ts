@@ -287,7 +287,7 @@ export function runOptions(run: Run, ctx: MapContext): Record<string, IrValue> |
 }
 
 /** The underline style, with its own colour (`a:uFill`) when it has one. */
-function underlineOption(run: Run, style: string | null, notes: NoteScope): IrValue | undefined {
+export function underlineOption(run: Run, style: string | null, notes: NoteScope): IrValue | undefined {
 	if (style === null) return undefined
 	const ref = run.underlineColor
 	const color =

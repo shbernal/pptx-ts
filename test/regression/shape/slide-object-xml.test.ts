@@ -359,6 +359,36 @@ describe('slide number placeholder', () => {
 	test('an empty lvl1pPr is still emitted when no font properties are set', () => {
 		expect(sn({})).toContain('<a:lvl1pPr></a:lvl1pPr>')
 	})
+
+	// Every `TextBaseProps` option the type admits used to type-check and write nothing (issue #90).
+	// Each is now written where `addText` writes it: the field's `a:rPr`, the `a:pPr`, or `a:bodyPr`.
+	test.for([
+		['italic', { italic: true }, '<a:rPr b="0" lang="en-US" i="1"/>'],
+		['caps', { caps: 'all' }, '<a:rPr b="0" lang="en-US" cap="all"/>'],
+		['lang', { lang: 'fr-FR' }, '<a:rPr b="0" lang="fr-FR"/>'],
+		[
+			'underline',
+			{ underline: { style: 'dbl', color: '9B1B30' } },
+			'<a:rPr b="0" lang="en-US" u="dbl"><a:uFill><a:solidFill><a:srgbClr val="9B1B30"/></a:solidFill></a:uFill></a:rPr>',
+		],
+		[
+			'highlight',
+			{ highlight: 'F0C808' },
+			'<a:rPr b="0" lang="en-US"><a:highlight><a:srgbClr val="F0C808"/></a:highlight></a:rPr>',
+		],
+		['fontFaceEA', { fontFaceEA: 'MS Mincho' }, '<a:rPr b="0" lang="en-US"><a:ea typeface="MS Mincho"/></a:rPr>'],
+		['transparency', { color: '9B1B30', transparency: 40 }, '<a:alpha val="60000"/>'],
+		['paraMarginLeft', { paraMarginLeft: 18 }, '<a:pPr algn="l" marL="228600"/>'],
+		['paraIndent', { paraIndent: 12 }, '<a:pPr algn="l" indent="152400"/>'],
+		['textDirection', { textDirection: 'vert' }, '<a:bodyPr vert="vert"/>'],
+		[
+			'textWarp',
+			{ textWarp: 'textArchUp' },
+			'<a:bodyPr><a:prstTxWarp prst="textArchUp"><a:avLst/></a:prstTxWarp></a:bodyPr>',
+		],
+	] as const)('%s is written', ([, props, fragment]) => {
+		expect(sn(props)).toContain(fragment)
+	})
 })
 
 describe('groups', () => {

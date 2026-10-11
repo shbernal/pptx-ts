@@ -10,7 +10,15 @@ import type { BackgroundOption, Color, HAlign, Margin, PositionProps } from './c
 import type { CommonObjectDescriptor, PlaceholderProps } from './object.js'
 import type { TextBaseProps } from './text.js'
 
-export interface SlideNumberProps extends PositionProps, TextBaseProps {
+/**
+ * The slide number placeholder: one paragraph holding one slide-number field.
+ *
+ * Takes the `TextBaseProps` that format that field, its paragraph and its text body. `bullet`,
+ * `breakLine`, `softBreakBefore` and `tabStops` are left out: they shape a paragraph's list
+ * marker, its breaks between runs and its tab characters, and the field has none of them.
+ */
+export interface SlideNumberProps
+	extends PositionProps, Omit<TextBaseProps, 'bullet' | 'breakLine' | 'softBreakBefore' | 'tabStops'> {
 	/**
 	 * margin (inches) — text-frame internal margin; a value `>= 1` warns as a likely legacy points value
 	 */

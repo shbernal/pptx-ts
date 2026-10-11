@@ -88,7 +88,7 @@ A stop-previous sound (`p:endSnd`) and an embedded start sound both carry in bot
 
 ### Slide numbers
 
-A slide-number placeholder whose one paragraph holds only the slide-number field prints as `slide.slideNumber = { … }`, with its position, alignment, vertical anchor, margins, bold, colour, face and size. A placeholder bound to its layout's by `idx`, as PowerPoint writes it, also gets a `shape.placeholder` note: `slideNumber` writes an unbound placeholder, so what the source inherited from the layout does not carry. A slide-number placeholder with other text in it is mapped as a shape, and its field is dropped with a `text.field` note.
+A slide-number placeholder whose one paragraph holds only the slide-number field prints as `slide.slideNumber = { … }`, with its position and every text option it states: alignment, vertical anchor, margins, paragraph indents, text direction and warp, and the field's character formatting. A placeholder bound to its layout's by `idx`, as PowerPoint writes it, also gets a `shape.placeholder` note: `slideNumber` writes an unbound placeholder, so what the source inherited from the layout does not carry. A slide-number placeholder with other text in it is mapped as a shape, and its field is dropped with a `text.field` note.
 
 ### Theme colours
 
