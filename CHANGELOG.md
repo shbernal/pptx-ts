@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Text reads for every `addText` option.** `Run` gains `language`, `eastAsianFontName`, `glow`,
   `outline`, `underlineColor` and `breaksBefore`; `Paragraph` gains `rtl` and `tabStops`;
   `BodyProperties` gains `columns`, `columnSpacingPt` and `textWarp`.
+- **`Shape.locks` reads a shape's lock flags** (`a:spLocks`, `a:picLocks`, `a:cxnSpLocks`,
+  `a:graphicFrameLocks`, `a:grpSpLocks`) as booleans keyed by attribute name.
 - **Shape paint details read back.** `Shape.linePatternFill` reads a pattern stroke
   (`a:ln/a:pattFill`). `GradientFill` gains `rotateWithShape` (`a:gradFill/@rotWithShape`),
   `scaled` (`a:lin/@scaled`) and `focusRect` (`a:path/a:fillToRect`), and an outer shadow gains
@@ -53,6 +55,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   default the shape-level pass gave the shape, so only the single-string form left a link to the
   theme colour. A link run now takes the shape's `color` only when the caller stated one, so links
   written in the array form with no colour now render in the theme hyperlink colour.
+- **Shape locks survive `readModelToIr`.** `objectLock` writes `a:spLocks`, which had no accessor,
+  so every lock on a text box or shape was gone after one round trip with no note
+  ([#57](https://github.com/shbernal/pptx-ts/issues/57)). The IR now carries `objectLock` for
+  `addText` and `addShape`.
 - **Eleven text options survive `readModelToIr`.** `lang`, a run's `glow`, `outline` and
   `transparency`, `underline.color`, `fontFaceEA`, `softBreakBefore`, `rtlMode`, `tabStops`,
   `columns`/`columnSpacing` and `textWarp` were dropped with no fidelity note, most of them because

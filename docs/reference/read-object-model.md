@@ -304,6 +304,7 @@ The other paint getters are read-only:
 - [`resolvedLine`](api/read/classes/Shape.md#resolvedline) resolves the line's solid fill. An `a:ln` with no fill of its own falls back to the `p:style/a:lnRef` colour, because PowerPoint layers such an `a:ln` over the style line one property at a time.
 - [`gradientFill`](api/read/classes/Shape.md#gradientfill), [`gradientStops`](api/read/classes/Shape.md#gradientstops), [`patternFill`](api/read/classes/Shape.md#patternfill) and [`pictureFill`](api/read/classes/Shape.md#picturefill) decode the fills `resolvedFill` does not. A `GradientFill` also carries `rotateWithShape`, a linear gradient's `scaled` and a path gradient's `focusRect`. The write side authors pattern fills with `fill: { type: 'pattern' }` and picture fills with `fill: { type: 'image' }`.
 - [`lineWidthPt`](api/read/classes/Shape.md#linewidthpt), [`lineDash`](api/read/classes/Shape.md#linedash), [`lineCap`](api/read/classes/Shape.md#linecap), [`lineAlign`](api/read/classes/Shape.md#linealign), [`lineEnds`](api/read/classes/Shape.md#lineends), [`lineGradient`](api/read/classes/Shape.md#linegradient) and [`linePatternFill`](api/read/classes/Shape.md#linepatternfill) describe the line.
+- [`locks`](api/read/classes/Shape.md#locks) reads the shape's lock flags (`a:spLocks`, `a:picLocks` and the rest) as booleans keyed by attribute name, or `null` when it has none. The write side's `objectLock` authors them.
 
 ### Colours
 

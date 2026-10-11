@@ -10,46 +10,17 @@ import type { ObjectLockProps } from '../../types/index.js'
 import { voidEl } from '../oxml/el.js'
 import { warn } from '../../diagnostics.js'
 
-// Object lock attributes valid for each DrawingML locking element, in emit order (ECMA-376 §20.1.2.2.x / §20.1.2.2.34).
-// Every name is a key of `ObjectLockProps`, so serialization is a filtered lookup; the assertion
-// below the four tables is what keeps that true.
-export const SHAPE_LOCK_ATTRS = [
-	'noGrp',
-	'noSelect',
-	'noRot',
-	'noChangeAspect',
-	'noMove',
-	'noResize',
-	'noEditPoints',
-	'noAdjustHandles',
-	'noChangeArrowheads',
-	'noChangeShapeType',
-	'noTextEdit',
-] as const
-export const PICTURE_LOCK_ATTRS = [
-	'noGrp',
-	'noSelect',
-	'noRot',
-	'noChangeAspect',
-	'noMove',
-	'noResize',
-	'noEditPoints',
-	'noAdjustHandles',
-	'noChangeArrowheads',
-	'noChangeShapeType',
-	'noCrop',
-] as const
-export const GRAPHIC_FRAME_LOCK_ATTRS = [
-	'noGrp',
-	'noDrilldown',
-	'noSelect',
-	'noChangeAspect',
-	'noMove',
-	'noResize',
-] as const
-export const GROUP_SHAPE_LOCK_ATTRS = ['noGrp', 'noSelect', 'noRot', 'noChangeAspect', 'noMove', 'noResize'] as const
+import {
+	GRAPHIC_FRAME_LOCK_ATTRS,
+	GROUP_SHAPE_LOCK_ATTRS,
+	PICTURE_LOCK_ATTRS,
+	SHAPE_LOCK_ATTRS,
+} from '../../ooxml/lock-attrs.js'
 
-/** Every attribute name the four tables between them list. */
+export { GRAPHIC_FRAME_LOCK_ATTRS, GROUP_SHAPE_LOCK_ATTRS, PICTURE_LOCK_ATTRS, SHAPE_LOCK_ATTRS }
+
+// Every lock attribute name is a key of `ObjectLockProps`, so serialization is a filtered lookup;
+// the assertion below is what keeps that true.
 type LockAttrName =
 	| (typeof SHAPE_LOCK_ATTRS)[number]
 	| (typeof PICTURE_LOCK_ATTRS)[number]
