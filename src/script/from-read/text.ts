@@ -280,7 +280,7 @@ export function runOptions(run: Run, ctx: MapContext): Record<string, IrValue> |
 		glow: runGlowOption(run, notes),
 		highlight: run.highlight ? literalColor(run.highlight.effectiveHex) : undefined,
 		caps: orUndefined(run.caps),
-		baseline: baselineOption(run.baselinePct),
+		baseline: orUndefined(run.baselinePct),
 		...spacingOptions(run, notes),
 		hyperlink,
 	})
@@ -348,18 +348,6 @@ function runGlowOption(run: Run, notes: NoteScope): IrValue | undefined {
 		),
 		opacity: ref.resolved?.alpha ?? 1,
 	})
-}
-
-/**
- * `Run.baselinePct` → `baseline`, which is not a percent: the write path writes
- * `Math.round(baseline * 50)` thousandths of a percent, so the option counts twentieths of one.
- * Passing the percent straight through shrank every shift 50x per round trip, a superscript
- * (`30000`, 30%) coming back as `baseline: 30` and then `@baseline="1500"`. The thousandths are
- * divided by 50 rather than the percent multiplied by 20, so the round trip lands on the
- * attribute it started from.
- */
-function baselineOption(pct: number | null): number | undefined {
-	return pct === null ? undefined : Math.round(pct * 1000) / 50
 }
 
 /**

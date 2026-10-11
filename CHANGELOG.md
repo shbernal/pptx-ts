@@ -27,6 +27,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `scaled` (`a:lin/@scaled`) and `focusRect` (`a:path/a:fillToRect`), and an outer shadow gains
   `rotateWithShape`.
 
+### Changed
+
+- **`baseline` is a percent.** It counted twentieths of a percent (written as
+  `Math.round(baseline * 50)` thousandths), unlike `bullet.size`, `fit.fontScale`,
+  `Run.baselinePct` and every other percentage in the API
+  ([#65](https://github.com/shbernal/pptx-ts/issues/65)). It is now written as
+  `Math.round(baseline * 1000)`, so `baseline: 30` raises the text by 30%, as `superscript` does.
+  This changes the output of every call that sets `baseline`, on a text run or a table cell:
+  divide the old value by 20 to keep the same shift, so `baseline: 600` becomes `baseline: 30`
+  and `baseline: -800` becomes `baseline: -40`. `superscript` and `subscript` are unchanged.
+
 ### Fixed
 
 - **`fontFaceEA` works without `fontFace`.** It was written only beside a `fontFace`, so on its own
@@ -39,12 +50,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `kerning`, for shape text and table cells. A spaced run that states no `kern`, which the write
   API cannot reproduce, records a `text.kern` fidelity note. Spaced speaker-notes text now counts
   toward the `notes.formatting` note.
-- **Baseline shifts survive `readModelToIr`.** The `baseline` option counts twentieths of a percent
-  (it is written as `Math.round(baseline * 50)` thousandths), but `readModelToIr` carried
-  `Run.baselinePct`, a percent, straight across. Every superscript, subscript and baseline shift
-  came back 50 times smaller after one round trip, a superscript's `baseline="30000"` replaying as
-  `baseline="1500"` ([#55](https://github.com/shbernal/pptx-ts/issues/55)). The IR now converts to
-  the option's unit, for shape text and table cells, and `TextPropsOptions.baseline` documents it.
+- **Baseline shifts survive `readModelToIr`.** The `baseline` option counted twentieths of a
+  percent, but `readModelToIr` carried `Run.baselinePct`, a percent, straight across. Every
+  superscript, subscript and baseline shift came back 50 times smaller after one round trip, a
+  superscript's `baseline="30000"` replaying as `baseline="1500"`
+  ([#55](https://github.com/shbernal/pptx-ts/issues/55)). With `baseline` now a percent (see
+  Changed), the IR carries the read percent as it is, for shape text and table cells.
 - **A link with no colour of its own keeps the theme hyperlink colour through `readModelToIr`.**
   The write path leaves such a run uncoloured, so PowerPoint paints it in the theme's `hlink`
   colour, but `readModelToIr` baked the resolved colour in with a `text.color.inherited` note, and
