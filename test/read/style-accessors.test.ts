@@ -250,6 +250,20 @@ describe('Shape style reads — minimal real PowerPoint fixtures', () => {
 		assertEqual(stop.colorRef.resolved.transforms.length, 0, 'a bare srgbClr carries no transform children')
 		assertEqual(stop.colorRef.srgb, stop.colorRef.resolved.hex, 'the literal the stop states is its base hex')
 	})
+
+	test('gradientFill reads rotWithShape, a:lin/@scaled and the radial a:fillToRect PowerPoint wrote', async () => {
+		// PowerPoint writes `rotWithShape="1"` on every gradient, `scaled="1"` on a linear one, and a
+		// centred `<a:fillToRect l="50000" t="50000" r="50000" b="50000"/>` on its radial preset.
+		const slide = at((await openFixture('gradient-fill')).slides, 0)
+		const linear = defined(shapeNamed(slide, 'grad-linear-2').gradientFill)
+		assertEqual(linear.rotateWithShape, true, 'rotWithShape="1"')
+		assertEqual(linear.scaled, true, 'scaled="1"')
+		assertEqual(linear.focusRect, null, 'a linear gradient has no focus rectangle')
+
+		const radial = defined(shapeNamed(slide, 'grad-radial').gradientFill)
+		assertEqual(radial.scaled, null, 'a path gradient has no a:lin to scale')
+		assertEqual(JSON.stringify(radial.focusRect), '{"left":0.5,"top":0.5,"right":0.5,"bottom":0.5}', 'centred focus')
+	})
 })
 
 describe('GradientStop colorRef.resolved — the transform list survives the read (off-fixture)', () => {

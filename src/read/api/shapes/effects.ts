@@ -13,7 +13,7 @@
  * effect needs to know which it is.
  */
 
-import { attr, firstChild, firstChildElement, numberValue, pctAttr, type Element } from '../../oxml/dom.js'
+import { attr, boolAttr, firstChild, firstChildElement, numberValue, pctAttr, type Element } from '../../oxml/dom.js'
 import { readColorRef } from '../theme-context.js'
 import type { ColorContext } from '../../oxml/theme.js'
 import type { Glow, InnerShadow, OuterShadow, Reflection, SoftEdge } from './types.js'
@@ -71,7 +71,11 @@ function readShadow(shdw: Element, ctx: ColorContext): OuterShadow {
  */
 export function readOuterShadow(effectLst: Element | null, ctx: ColorContext): OuterShadow | null {
 	const shdw = effect(effectLst, 'a:outerShdw')
-	return shdw ? readShadow(shdw, ctx) : null
+	if (!shdw) return null
+	const out = readShadow(shdw, ctx)
+	const rotate = boolAttr(shdw, 'rotWithShape')
+	if (rotate !== null) out.rotateWithShape = rotate
+	return out
 }
 
 /**

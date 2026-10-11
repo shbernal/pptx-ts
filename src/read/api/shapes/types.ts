@@ -77,6 +77,11 @@ export interface OuterShadow {
 	offsetPt?: number
 	/** Offset direction in degrees, clockwise from 3 o'clock (`@dir` ÷ 60000), or `undefined` when unset. */
 	angleDeg?: number
+	/**
+	 * Whether the shadow rotates with the shape (`@rotWithShape`), or `undefined` when unset. Only an
+	 * outer shadow has the attribute.
+	 */
+	rotateWithShape?: boolean
 }
 
 /**
