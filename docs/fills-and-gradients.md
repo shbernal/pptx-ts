@@ -179,7 +179,7 @@ own object, clipped to a shape, see [Images in shapes](image-in-shape.md).
 
 A slide or master `background` takes the same `image`, crop included, or the picture as a top-level
 `path` or `data`: `background: { data }` is `background: { image: { data } }` without a crop. When
-both are set, the top-level one is used. A picture background does not apply `transparency`.
+both are set, the top-level one is used. `transparency` fades a picture background too.
 
 ## Invalid input
 

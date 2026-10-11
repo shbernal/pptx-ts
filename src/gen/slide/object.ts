@@ -27,7 +27,13 @@ import type {
 import { encodeXmlAttrValue, getDuplicateObjectNames, isHyperlinkRel } from '../utils.js'
 import { fillNamesPaint, genXmlColorSelection, solidPaint } from '../drawingml/fill.js'
 import { createColorElement, rejectEmptyColor } from '../drawingml/color.js'
-import { convertRotationDegrees, getSmartParseNumber, mapStated, resolveInsetsEmu } from '../../units-internal.js'
+import {
+	convertRotationDegrees,
+	getSmartParseNumber,
+	mapStated,
+	resolveInsetsEmu,
+	transparencyToAlpha,
+} from '../../units-internal.js'
 import { warn } from '../../diagnostics.js'
 import { clampFontSizeSz, clampParaIndentEmu, clampParaMarginEmu } from '../drawingml/clamp.js'
 import { resolveTextAnchor } from '../drawingml/text-body.js'
@@ -240,6 +246,16 @@ function backgroundSrcRect(background: BackgroundOption | undefined): string {
 	return crop ? genXmlImageCropRect(crop, 'background image', '') : voidEl('a:srcRect')
 }
 
+/**
+ * The children of a picture background's `<a:blip>`: its `transparency` as `a:alphaModFix`, as a
+ * shape's picture fill writes it and PowerPoint writes Format Background's picture transparency
+ * (#98), then the `a:lum` every picture background has always carried.
+ */
+function backgroundBlipEffects(background: BackgroundOption | undefined): string {
+	const transparency = typeof background === 'object' ? background.transparency : undefined
+	return (transparency ? voidEl('a:alphaModFix', { amt: transparencyToAlpha(transparency) }) : '') + voidEl('a:lum')
+}
+
 function slideBackgroundXml(slide: PresSlideInternal | SlideLayoutInternal | SlideMasterInternal): string {
 	let strSlideXml = ''
 	if (slide._bkgdImgRid) {
@@ -250,7 +266,7 @@ function slideBackgroundXml(slide: PresSlideInternal | SlideLayoutInternal | Sli
 				el('p:bgPr', null, [
 					raw(
 						el('a:blipFill', { dpi: '0', rotWithShape: '1' }, [
-							raw(el('a:blip', { 'r:embed': `rId${slide._bkgdImgRid}` }, raw(voidEl('a:lum')))),
+							raw(el('a:blip', { 'r:embed': `rId${slide._bkgdImgRid}` }, raw(backgroundBlipEffects(slide.background)))),
 							raw(backgroundSrcRect(slide.background)),
 							raw(STRETCH_FILL_RECT),
 						])
