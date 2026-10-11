@@ -180,7 +180,7 @@ The Output column says where the note fires. A construct that fires in both outp
 | `text.hyperlink.underline` | Both | unwritable | A link that states no underline comes back stating `u="sng"`. It looks the same | 2/58 |
 | `chart.combo` | Both | unsupported | A combo chart becomes a single bar chart | 1/58 |
 | `chart.xLabels` | Both | unwritable | A scatter or bubble chart plotted against text X labels plots at the same positions, and the labels are gone | 1/58 |
-| `connector.binding` | Both | unsupported | A connector no longer follows the shapes it was attached to | 1/58 |
+| `connector.binding` | Both | unsupported | A connector bound to a shape with no name, a name another shape on the slide shares, or one that is not written, no longer follows it | 1/58 |
 | `fill.gradient.path` | Both | unwritable | A `rect` path gradient becomes radial | 1/58 |
 | `fill.schemeToken` | Both | unwritable | A fill colour outside the ten mapped scheme tokens is baked to hex | 1/58 |
 | `graphicFrame.unknown` | Both | unread | A graphic frame the reader does not decode, such as a 3D model, an OLE object or ink, is dropped. The template-anchored output copies the slide | 1/58 |
@@ -238,6 +238,8 @@ These constructs carry in both outputs and raise no note.
 | A picture fill on a shape or cell | `fill: { type: 'image', image: { data, crop }, transparency }` |
 | A picture's crop | `crop` on `addImage` |
 | A background picture's crop | `background: { image: { data, crop } }` |
+| A connector's route, bends and bend positions (`bentConnector3`-`5`, `curvedConnector3`-`5`) | `type`, `bends` and `adj` on `addConnector`. Any other route prints straight under `connector.route` |
+| A connector bound to a shape with a name unique on its slide (`a:stCxn`, `a:endCxn`) | `startShape`, `endShape` and their `Idx` sites |
 | A picture cropped to a preset shape | `shape` and `shapeAdjust` on `addImage` |
 | An outline's cap (`a:ln/@cap`) | `line.cap` |
 | A transition's type, speed, duration, advance and sound | `slide.transition` |
@@ -318,7 +320,6 @@ The script resolves every path against its own location.
 
 - The standalone output drops a table on a layout (`layout.decoration`) and turns a group on a layout into loose shapes (`layout.group`).
 - A slide master's own shapes have no write-side target (`master.decoration`).
-- Connectors print as straight connectors with no note, because the reader does not report the bends a connector preset implies.
 - The package has no command-line converter. Call the functions from your own script.
 - The published counts measure the construct-targeted corpus. Run `pnpm run script:census -- --dir <path>` in a clone to count notes on your own decks.
 

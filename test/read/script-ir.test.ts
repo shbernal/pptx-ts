@@ -335,6 +335,88 @@ describe('deck IR — connectors', () => {
 			}
 		}
 	})
+
+	// Every connector used to come back `type: 'straight'` and unbound, with no note for the route,
+	// though the read model reports the preset, its adjust guides and both bindings (issue #108).
+	const connectorOf = (ir: DeckIr) =>
+		objectOf(defined(allCalls(ir).find((call) => call.method === 'addConnector')).args[0])
+	const cxnXml = (xml: string) => defined(xml.match(/<p:cxnSp>.*?<\/p:cxnSp>/s)?.[0])
+
+	test('an elbow connector keeps its route, bends and both shape bindings', async () => {
+		const { presentation, buf } = await authorRead((pres) => {
+			const slide = pres.addSlide()
+			slide.addShape('rect', { x: 0.5, y: 0.5, w: 1, h: 1, objectName: 'from' })
+			slide.addShape('rect', { x: 4.5, y: 2.5, w: 1, h: 1, objectName: 'to' })
+			slide.addConnector({
+				x1: 1,
+				y1: 1,
+				x2: 5,
+				y2: 3,
+				type: 'elbow',
+				bends: 2,
+				adj: [30, 70],
+				startShape: 'from',
+				endShape: 'to',
+				endShapeIdx: 2,
+			})
+		})
+		const ir = readModelToIr(presentation)
+		const connector = connectorOf(ir)
+		assertEqual(connector['type'], 'elbow', 'the route')
+		assertEqual(connector['bends'], 2, 'the bend count')
+		assertEqual(JSON.stringify(connector['adj']), '[30,70]', 'the bend positions')
+		assertEqual(connector['startShape'], 'from', 'the start binding')
+		assertEqual(connector['startShapeIdx'], undefined, 'site 0 is the default')
+		assertEqual(connector['endShape'], 'to', 'the end binding')
+		assertEqual(connector['endShapeIdx'], 2, 'the end site')
+		assert(!constructs(ir).has('connector.binding'), 'and no binding is declared lost')
+
+		const sourceXml = await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml')
+		const { buf: replayed } = await authorRead((pres) => {
+			const slide = pres.addSlide()
+			for (const call of allCalls(ir)) {
+				;(slide as unknown as Record<string, (...args: unknown[]) => unknown>)[call.method]?.(...call.args)
+			}
+		})
+		const replayXml = await readEntry(await JSZip.loadAsync(replayed), 'ppt/slides/slide1.xml')
+		assertEqual(cxnXml(replayXml), cxnXml(sourceXml), 'the replay writes the same connector')
+	})
+
+	test('a one-bend curved connector keeps its route and bend position', async () => {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addConnector({ x1: 1, y1: 1, x2: 5, y2: 3, type: 'curved', adj: 25 })
+		})
+		const connector = connectorOf(readModelToIr(presentation))
+		assertEqual(connector['type'], 'curved', 'the route')
+		assertEqual(connector['bends'], undefined, 'one bend is the default')
+		assertEqual(connector['adj'], 25, 'the bend position')
+	})
+
+	test('a route addConnector cannot write is noted', async () => {
+		const { buf } = await authorRead((pres) => {
+			pres.addSlide().addConnector({ x1: 1, y1: 1, x2: 5, y2: 3, type: 'elbow' })
+		})
+		const deck = await Presentation.load(buf)
+		const shape = defined(deck.slides[0]?.shapes.find((candidate) => candidate.constructor.name === 'Connector'))
+		const geom = defined(shape.element_.getElementsByTagNameNS(A_NS, 'prstGeom').item(0))
+		geom.setAttribute('prst', 'bentConnector2')
+		shape.markDirty()
+		const ir = readModelToIr(await Presentation.load(await deck.save()))
+		assertEqual(connectorOf(ir)['type'], 'straight', 'it is written straight')
+		assert(constructs(ir).has('connector.route'), 'and says so')
+	})
+
+	test('a binding to a shape whose name is not unique on the slide is noted', async () => {
+		const { presentation } = await authorRead((pres) => {
+			const slide = pres.addSlide()
+			slide.addShape('rect', { x: 0.5, y: 0.5, w: 1, h: 1, objectName: 'box' })
+			slide.addShape('rect', { x: 4.5, y: 2.5, w: 1, h: 1, objectName: 'box' })
+			slide.addConnector({ x1: 1, y1: 1, x2: 5, y2: 3, startShape: 'box' })
+		})
+		const ir = readModelToIr(presentation)
+		assertEqual(connectorOf(ir)['startShape'], undefined, 'the name would bind the replay to either shape')
+		assert(constructs(ir).has('connector.binding'), 'so the binding is declared lost')
+	})
 })
 
 describe('deck IR — groups', () => {

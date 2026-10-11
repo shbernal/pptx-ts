@@ -56,7 +56,7 @@ import { tableCall } from './table.js'
 import { chartCall } from './chart.js'
 import { forShape, type MapContext } from './context.js'
 import { cropOption, isRectSet } from './picture-fill.js'
-import { PERCENT_SCALE } from '../../units.js'
+import { FIXED_PCT_PER_PERCENT, PERCENT_SCALE } from '../../units.js'
 import { GROUP_SHAPE_LOCK_ATTRS, PICTURE_LOCK_ATTRS, SHAPE_LOCK_ATTRS } from '../../ooxml/lock-attrs.js'
 import { PlaceholderType } from '../../enums.js'
 
@@ -76,7 +76,7 @@ export function shapeCall(shape: AnyShape, ctx: MapContext): CallIr | null {
 
 	if (isGroupShape(shape)) return groupCall(shape, scoped)
 	if (isPicture(shape)) return pictureCall(shape, scoped)
-	if (isConnector(shape)) return connectorCall(shape, scoped.notes)
+	if (isConnector(shape)) return connectorCall(shape, scoped)
 	if (isGraphicFrame(shape)) return graphicFrameCall(shape, scoped)
 	if (isAutoShape(shape)) return autoShapeCall(shape, scoped)
 
@@ -456,15 +456,13 @@ const CONNECTOR_FLATTENED_LINE_KEYS: Record<
  * diagonal of the box the line runs along, so dropping them would silently mirror every
  * connector that runs up or leftward.
  *
- * The *bindings* (`a:stCxn`/`a:endCxn`) reference source shape ids that have no counterpart
- * in the output, so a connector lands unbound and stops following its shapes when they move.
+ * The route comes from the preset ({@link connectorRoute}) and the *bindings* (`a:stCxn`/`a:endCxn`)
+ * from the bound shapes' names ({@link connectorBindings}). Both used to be dropped with no note
+ * for the route, so every connector came back straight and unbound (#108).
  */
-function connectorCall(shape: Connector, notes: NoteScope): CallIr | null {
-	const drawn = connectorLine(
-		shape,
-		notes,
-		'connector endpoint bindings reference source shape ids with no counterpart in the output, so the connector lands unbound and no longer follows its shapes'
-	)
+function connectorCall(shape: Connector, ctx: MapContext): CallIr | null {
+	const { notes } = ctx
+	const drawn = connectorLine(shape, notes, null)
 	if (!drawn) return null
 	// A connector with no outline has no `addConnector` spelling: its stroke options take no `type`,
 	// and one given none is drawn with the write path's default line. The `line` shape it paints as
@@ -504,19 +502,111 @@ function connectorCall(shape: Connector, notes: NoteScope): CallIr | null {
 		method: 'addConnector',
 		args: [
 			compact({
-				// Routing is not readable — `presetGeometry` names the connector preset but the
-				// bend count it implies is not exposed — so every connector emits straight.
-				type: 'straight',
+				...connectorRoute(shape, notes),
 				x1: emu(shape.flipH ? right : frame.left),
 				y1: emu(shape.flipV ? bottom : frame.top),
 				x2: emu(shape.flipH ? frame.left : right),
 				y2: emu(shape.flipV ? frame.top : bottom),
 				...identityOptions(shape),
 				...stroke,
+				...connectorBindings(shape, ctx),
 			}) ?? {},
 		],
 		...nameOf(shape),
 	}
+}
+
+/** The connector presets `addConnector` writes, by `type`; `bends` is the suffix less two. */
+const CONNECTOR_ROUTES: ReadonlyMap<string, 'elbow' | 'curved'> = new Map([
+	['bentConnector', 'elbow'],
+	['curvedConnector', 'curved'],
+])
+
+/**
+ * A connector's `type`, `bends` and `adj`, read off its preset and adjust guides.
+ *
+ * `addConnector` writes `straightConnector1` and `bentConnector3`-`5` / `curvedConnector3`-`5`, the
+ * suffix being the bend count plus two, with one `adjN` guide per bend in 1000ths of a percent. A
+ * `line` preset draws the same as a straight connector. Any other preset (`bentConnector2`, the
+ * L-shaped elbow with no handle, is the one PowerPoint writes) has no spelling, and is written
+ * straight under a note. A guide the source leaves out takes the preset default, 50%, which is also
+ * what the writer needs to be given once any one bend is stated.
+ */
+function connectorRoute(shape: Connector, notes: NoteScope): Record<string, IrValue | undefined> {
+	const preset = shape.presetGeometry
+	const match = preset === null ? null : /^(bentConnector|curvedConnector)([345])$/.exec(preset)
+	const type = match ? CONNECTOR_ROUTES.get(match[1] ?? '') : undefined
+	if (!match || !type) {
+		if (preset !== 'straightConnector1' && preset !== 'line') {
+			notes.note(
+				'connector.route',
+				'approximated',
+				'unwritable',
+				`this connector's route (${preset === null ? 'a custom geometry' : `a:prstGeom prst="${preset}"`}) is not one addConnector writes (straight, or an elbow or curve with one to three bends), so it is written straight between the same endpoints`
+			)
+		}
+		return { type: 'straight' }
+	}
+	const bends = Number(match[2]) - 2
+	const guides = shape.adjustValues
+	let stated = false
+	const adj = Array.from({ length: bends }, (_, index) => {
+		const formula = guides[`adj${index + 1}`]
+		const value = formula === undefined ? null : /^val (-?\d+)$/.exec(formula.trim())?.[1]
+		if (value === undefined) {
+			notes.note(
+				'connector.route',
+				'approximated',
+				'unwritable',
+				`this connector's bend adj${index + 1} is the formula "${formula ?? ''}", which adj cannot state, so that bend takes the preset default of 50%`
+			)
+		}
+		if (value === null || value === undefined) return 50
+		stated = true
+		return Number(value) / FIXED_PCT_PER_PERCENT
+	})
+	return {
+		type,
+		bends: bends === 1 ? undefined : bends,
+		adj: stated ? (bends === 1 ? adj[0] : adj) : undefined,
+	}
+}
+
+/**
+ * A connector's end bindings as `startShape`/`endShape` and their site indexes.
+ *
+ * The write path binds an end to a shape on the same slide by `objectName`, so a binding carries
+ * when the bound shape has a name no other shape on the slide shares and is itself written. Any
+ * other binding is lost, and noted: the connector keeps its endpoints and no longer follows the
+ * shape.
+ */
+function connectorBindings(shape: Connector, ctx: MapContext): Record<string, IrValue | undefined> {
+	const out: Record<string, IrValue | undefined> = {}
+	let lost = false
+	const ends = [
+		['startShape', shape.startConnection],
+		['endShape', shape.endConnection],
+	] as const
+	for (const [key, site] of ends) {
+		if (site === null) continue
+		const bound = site.boundShape
+		const name = bound?.name
+		if (!bound || bound.hidden || !name || !ctx.isUniqueShapeName?.(name)) {
+			lost = true
+			continue
+		}
+		out[key] = name
+		out[`${key}Idx`] = site.siteIndex || undefined
+	}
+	if (lost) {
+		ctx.notes.note(
+			'connector.binding',
+			'dropped',
+			'unsupported',
+			'this connector is bound to a shape the output cannot name: one with no name, a name another shape on the slide shares, or one that is not written, so the connector lands unbound and no longer follows it'
+		)
+	}
+	return out
 }
 
 /**
@@ -820,7 +910,7 @@ interface ConnectorLine {
  * @param notes - the scope bound to this connector
  * @param bindingDetail - the endpoint-binding note's detail, for where this connector lands
  */
-function connectorLine(shape: Connector, notes: NoteScope, bindingDetail: string): ConnectorLine | null {
+function connectorLine(shape: Connector, notes: NoteScope, bindingDetail: string | null): ConnectorLine | null {
 	if (shape.hidden) {
 		noteHidden(notes)
 		return null
@@ -828,7 +918,7 @@ function connectorLine(shape: Connector, notes: NoteScope, bindingDetail: string
 	const box = frameOf(shape, notes)
 	if (!box) return null
 
-	if (shape.startConnection || shape.endConnection) {
+	if (bindingDetail !== null && (shape.startConnection || shape.endConnection)) {
 		notes.note('connector.binding', 'dropped', 'unsupported', bindingDetail)
 	}
 
