@@ -146,7 +146,9 @@ async function installUpstream(workDir, reuse) {
 async function publishDate(version) {
 	try {
 		const { stdout } = await run('npm', ['view', 'pptxgenjs@' + version, 'time', '--json'], { capture: true })
-		const times = JSON.parse(stdout)
+		// npm 12 wraps a single-version view in an array; npm 11 printed the object bare.
+		const parsed = JSON.parse(stdout)
+		const times = Array.isArray(parsed) ? parsed[0] : parsed
 		const stamp = typeof times === 'string' ? times : times?.[version]
 		if (typeof stamp === 'string') return stamp.slice(0, 10)
 		return unavailable('npm view returned no publish time for pptxgenjs@' + version)
