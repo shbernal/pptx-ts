@@ -227,6 +227,7 @@ These constructs carry in both outputs and raise no note.
 | A line break between two runs (`a:br`) | `softBreakBefore` on the run after it |
 | Right-to-left paragraphs and tab stops | `rtlMode` and `tabStops` |
 | Text columns and a WordArt warp | `columns`, `columnSpacing` and `textWarp` |
+| A shape's lock flags (`a:spLocks`) | `objectLock` on `addText` and `addShape` |
 | A baked autofit scale (`a:normAutofit/@fontScale`, `@lnSpcReduction`) | `fit: { type: 'shrink', fontScale, lnSpcReduction }`. A bare `<a:normAutofit/>` is `fit: 'shrink'` |
 | A table cell with a fill of its own | `fill` on the cell. A styled cell with no fill of its own is left to `tableStyle` |
 | A picture fill on a shape or cell | `fill: { type: 'image', image: { data, crop }, transparency }` |

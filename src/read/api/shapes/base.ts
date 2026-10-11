@@ -161,6 +161,30 @@ export abstract class Shape {
 	}
 
 	/**
+	 * The shape's lock flags: the attributes of the locking element under its non-visual drawing
+	 * properties (`a:spLocks`, `a:picLocks`, `a:cxnSpLocks`, `a:graphicFrameLocks` or
+	 * `a:grpSpLocks`), each as the boolean it states, keyed by attribute name (`noMove`, `noGrp`, …).
+	 * `null` when the shape has no locking element. The read counterpart of `objectLock`.
+	 */
+	get locks(): Record<string, boolean> | null {
+		const cNvPr = nonVisualCNvPr(this.element)
+		const nvPr = cNvPr?.parentNode as Element | null | undefined
+		if (!nvPr) return null
+		for (const props of childElements(nvPr)) {
+			if (props === cNvPr) continue
+			const lock = childElements(props).find((child) => child.localName?.endsWith('Locks'))
+			if (!lock) continue
+			const out: Record<string, boolean> = {}
+			for (const attribute of Array.from(lock.attributes)) {
+				const value = boolValue(attribute.value)
+				if (value !== null) out[attribute.localName ?? attribute.name] = value
+			}
+			return out
+		}
+		return null
+	}
+
+	/**
 	 * The shape's alt-text description (`p:cNvPr/@descr`), or `null` when unset.
 	 * This is the accessibility primitive a screen reader announces; an audit or
 	 * accessible-export tool reads it here. Distinct from {@link name}, which is

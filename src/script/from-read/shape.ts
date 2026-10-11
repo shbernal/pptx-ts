@@ -56,6 +56,7 @@ import { chartCall } from './chart.js'
 import { forShape, type MapContext } from './context.js'
 import { cropOption, isRectSet } from './picture-fill.js'
 import { PERCENT_SCALE } from '../../units.js'
+import { SHAPE_LOCK_ATTRS } from '../../ooxml/lock-attrs.js'
 
 import { glowOption, lineOption, noteHidden, shadowOption, styleOptions, transformOptions } from './shape-paint.js'
 
@@ -101,6 +102,16 @@ function autoShapeText(shape: AutoShape, notes: NoteScope): TextFrame | null {
 	return noteUnreadText(frame, shape.element_, notes, 'shape').length > 0 ? frame : null
 }
 
+/**
+ * The shape's `a:spLocks` as `objectLock`. Only a stated lock is written back, since every flag
+ * defaults to off; the write path writes a flag only when it is `true`.
+ */
+function shapeLockOption(shape: AutoShape): IrValue | undefined {
+	const locks = shape.locks
+	if (!locks) return undefined
+	return compact(Object.fromEntries(SHAPE_LOCK_ATTRS.map((name) => [name, locks[name] === true ? true : undefined])))
+}
+
 function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 	const { notes } = ctx
 	const box = frameOf(shape, notes)
@@ -123,6 +134,7 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 		...transformOptions(shape),
 		...styleOptions(shape, ctx),
 		...identityOptions(shape),
+		objectLock: shapeLockOption(shape),
 		// The shape's own `p:cNvPr/a:hlinkClick`, distinct from a run's. Both `addShape` and
 		// `addText` take it, and neither used to receive it: a linked shape converted to an
 		// unlinked one.

@@ -841,6 +841,38 @@ describe('deck IR — text options the read model could not see', () => {
 	})
 })
 
+describe('deck IR — shape locks', () => {
+	// `objectLock` writes `p:cNvSpPr/a:spLocks`, which had no accessor, so every lock was gone after
+	// one round trip with no note (issue #57).
+	test('a text box and a shape keep their spLocks', async () => {
+		const { presentation, buf } = await authorRead((pres) => {
+			const slide = pres.addSlide()
+			slide.addText('T', { x: 1, y: 1, w: 5, h: 1, objectLock: { noMove: true, noResize: true, noTextEdit: true } })
+			slide.addShape('rect', { x: 1, y: 3, w: 2, h: 1, objectLock: { noRot: true, noSelect: true } })
+		})
+		const locks = (xml: string) => xml.match(/<a:spLocks [^>]*\/>/g)?.join('') ?? ''
+		const source = locks(await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml'))
+		assert(source.includes('noTextEdit="1"') && source.includes('noRot="1"'), `the writer emits both: ${source}`)
+
+		const ir = readModelToIr(presentation)
+		const { buf: replayed } = await authorRead((pres) => {
+			const slide = pres.addSlide()
+			for (const call of allCalls(ir)) {
+				const method = call.method as 'addText' | 'addShape'
+				;(slide[method] as (...args: unknown[]) => unknown)(...call.args)
+			}
+		})
+		assertEqual(locks(await readEntry(await JSZip.loadAsync(replayed), 'ppt/slides/slide1.xml')), source, 'the replay')
+	})
+
+	test('Shape.locks reads the flags PowerPoint writes on a placeholder', async () => {
+		// PowerPoint writes `<a:spLocks noGrp="1"/>` on every slide placeholder.
+		const deck = await Presentation.load(await readFixture('placeholder-inherit.pptx'))
+		const placeholder = defined(deck.slides.flatMap((slide) => slide.shapes).find((shape) => shape.placeholder))
+		assertEqual(JSON.stringify(placeholder.locks), '{"noGrp":true}', 'noGrp="1"')
+	})
+})
+
 describe('deck IR — slide transitions', () => {
 	// The mapping's whole difficulty is that the read model reports an *open* type string
 	// (it decodes PowerPoint's modern effects by namespace) while the write API has a closed
