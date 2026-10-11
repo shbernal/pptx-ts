@@ -137,6 +137,24 @@ function wireAvMedia(deck: Presentation, rels: Relationships, partName: string, 
 }
 
 /**
+ * A transition's start sound: one audio part behind the `audio` rel the body's `p:snd r:embed`
+ * names. Registered as a Default extension entry, as {@link wireAvMedia} does.
+ */
+function wireTransitionSound(
+	deck: Presentation,
+	rels: Relationships,
+	partName: string,
+	slide: PlacedSlide['slide']
+): void {
+	const sound = slide.transitionSound
+	if (!sound) return
+	const mediaPartName = deck.opc.reserveMediaPartName(sound.extn, 'media')
+	deck.opc.contentTypes.ensureDefault(sound.extn, sound.contentType)
+	deck.opc.addPart(mediaPartName, sound.contentType, sound.bytes)
+	rels.addWithId(`rId${sound.rId}`, AUDIO_REL, relativePartName(partName, mediaPartName))
+}
+
+/**
  * Online (external-link) video: two External rels share the link Target — the ECMA video rel and
  * the MS-2007 media rel — with no media binary part and no content-type entry. The poster image is
  * wired by {@link wireMedia}, which runs first.
@@ -267,7 +285,8 @@ function requireLinksInBatch(slides: readonly PlacedSlide['slide'][]): void {
 
 /**
  * The first of pass 2's two phases: every rel the slide body names by id — media, embedded and
- * online media, hyperlinks, charts, slide links — each added with the rId the generator wrote.
+ * online media, a transition sound, hyperlinks, charts, slide links — each added with the rId the
+ * generator wrote.
  * Also creates the notes part, whose own rels are fixed ids too.
  *
  * A new rel the body references by id belongs here, and nowhere after {@link wireAutoIdRels}.
@@ -284,6 +303,7 @@ function wireFixedIdRels(
 	const { slide, partName } = placed
 	wireMedia(deck, rels, partName, slide)
 	wireAvMedia(deck, rels, partName, slide)
+	wireTransitionSound(deck, rels, partName, slide)
 	wireOnlineMedia(rels, slide)
 	wireHyperlinks(rels, slide)
 	const notesPartName = wireNotes(deck, partName, slide, sourceNotesMaster)

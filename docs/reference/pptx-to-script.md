@@ -84,7 +84,7 @@ A slide's transition prints as an assignment such as `slide.transition = { type:
 
 The write API names the 21 base ECMA-376 transitions. The converter keeps a transition only when its element is in the `p` namespace and has one of those names. PowerPoint's newer effects, such as Morph and Vortex in the `p14`, `p15` and `p159` namespaces, are dropped with a `slide.transition` note, and the slide advances with no effect.
 
-A stop-previous sound (`p:endSnd`) carries in both outputs. An embedded start sound carries in the standalone output only. The template-anchored output drops it with a `slide.transitionSound` note.
+A stop-previous sound (`p:endSnd`) and an embedded start sound both carry in both outputs. A start sound whose relationship does not resolve to an audio part is dropped with a `slide.transitionSound` note.
 
 ### Theme colours
 
@@ -145,7 +145,7 @@ Read `PrintedScript.notes`, not `DeckIr.fidelity`. The IR holds every note the c
 - The note catalogue marks each construct as applying to both outputs, to the standalone output only, or to the template-anchored output only. The master, theme and document-property notes and every construct under the `layout.` prefix apply to the standalone output only, because the template-anchored output keeps those parts of the source.
 - `slide.carried` applies to the template-anchored output only. On a slide it copies, that output keeps `slide.carried` and the note for the frame that forced the copy (`chartEx.all`, `diagram.all` or `graphicFrame.unknown`). It drops the slide's other notes, because the copy keeps what they describe.
 - Both printers add `slide.name` for a slide with its own name, which has no write-API setter.
-- The template-anchored printer adds `slide.layout` when the slide's layout name is not unique, and `slide.transitionSound` for an embedded start sound.
+- The template-anchored printer adds `slide.layout` when the slide's layout name is not unique.
 - The standalone printer adds `slide.layout` when a slide's layout produced no master, `master.default` for the extra layout, and `deck.docPropsDefault` for properties the write path stamps.
 
 Pass `PrintedScript.notes` to [`diffDeckIr()`](api/script/functions/diffDeckIr.md) when you [verify a conversion](#verifying-a-conversion).
@@ -156,7 +156,7 @@ The counts come from `pnpm run script:census`, run in a clone of the repository 
 
 A count is the number of fixtures that raise the note at least once. Each fixture targets a few constructs, so a count shows what the corpus exercises, not how often a construct occurs in real decks. The table lists only constructs some fixture raises. [`knownNoteConstructs()`](api/script/functions/knownNoteConstructs.md) returns the full catalogue.
 
-The Output column says where the note fires. A construct that fires in both outputs has the same count in each. A construct under the `layout.` prefix is the slide construct of the same name, raised while re-authoring a layout's shapes. Across the corpus the standalone output raises 900 notes and the template-anchored output 468, which is 3 to 14 more per deck.
+The Output column says where the note fires. A construct that fires in both outputs has the same count in each. A construct under the `layout.` prefix is the slide construct of the same name, raised while re-authoring a layout's shapes. Across the corpus the standalone output raises 900 notes and the template-anchored output 466, which is 3 to 14 more per deck.
 
 | Construct | Output | Cause | What happens | Fixtures |
 | --- | --- | --- | --- | --- |
@@ -193,7 +193,6 @@ The Output column says where the note fires. A construct that fires in both outp
 | `text.paraSpaceZero` | Both | unwritable | An explicit zero space before or after a paragraph is dropped, so the list style's spacing comes back | 1/58 |
 | `slide.carried` | Template-anchored | unwritable | A slide holding a frame the write API cannot author is copied from the source. It renders the same, and the script does not describe its contents | 4/58 |
 | `slide.layout` | Template-anchored | unsupported | Several source layouts share the slide's layout name, so the slide binds to a gallery position | 1/58 |
-| `slide.transitionSound` | Template-anchored | unsupported | An embedded transition start sound is dropped | 1/58 |
 | `deck.docProps` | Standalone | unwritable | Keywords, description, category, content status and last-modified-by are dropped | 58/58 |
 | `deck.docPropsDefault` | Standalone | unwritable | A title, author, subject, revision or company the source left blank gets the library's value | 58/58 |
 | `master.default` | Standalone | unsupported | The layout gallery gains a blank `DEFAULT` layout ahead of the source layouts | 58/58 |
@@ -312,7 +311,6 @@ The script resolves every path against its own location.
 
 ## Known limitations
 
-- The template-anchored output drops an embedded transition start sound, because the append path does not register the audio part.
 - The standalone output drops a table on a layout (`layout.decoration`) and turns a group on a layout into loose shapes (`layout.group`).
 - A slide master's own shapes have no write-side target (`master.decoration`).
 - Connectors print as straight connectors with no note, because the reader does not report the bends a connector preset implies.
