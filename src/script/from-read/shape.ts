@@ -206,11 +206,12 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 	const frame = autoShapeText(shape, notes)
 
 	const placeholder = placeholderOption(shape, notes)
+	const style = styleOptions(shape, ctx)
 
 	const common = {
 		...positionOptions(box),
 		...transformOptions(shape, ctx.groups),
-		...styleOptions(shape, ctx),
+		...style,
 		...identityOptions(shape),
 		objectLock: lockOption(shape, SHAPE_LOCK_ATTRS),
 		placeholder,
@@ -242,7 +243,7 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 				...nameOf(shape),
 			}
 		}
-		const options = compact({ ...common, points, ...custGeomListOptions(custom) })
+		const options = compact({ ...common, ...addShapeLine(style['line']), points, ...custGeomListOptions(custom) })
 		return { method: 'addShape', args: ['custGeom', options ?? {}], ...nameOf(shape) }
 	}
 
@@ -280,8 +281,19 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 		)
 		return null
 	}
-	const options = compact({ ...common, ...adjustOptions(shape) })
+	const options = compact({ ...common, ...addShapeLine(style['line']), ...adjustOptions(shape) })
 	return { method: 'addShape', args: [preset, options ?? {}], ...nameOf(shape) }
+}
+
+/**
+ * An `addShape` call's `line`, spelled out when the source states none.
+ *
+ * `addShape` writes an absent `line` as `{ type: 'none' }`, so that is what a shape stating no
+ * outline already came back with. Left implicit, the copy's own IR stated a line the source's did
+ * not, which the round trip reported on every placeholder the writer seeds empty (#177).
+ */
+function addShapeLine(line: IrValue | undefined): { line: IrValue } {
+	return { line: line ?? { type: 'none' } }
 }
 
 /** The note for what a `custGeom` holds beside its path, shared by a freeform shape and a picture clipped to one. */

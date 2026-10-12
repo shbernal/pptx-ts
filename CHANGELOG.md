@@ -135,6 +135,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`readModelToIr` spells an outline-less `addShape` as `line: { type: 'none' }`.** `addShape`
+  writes an absent `line` that way, so a shape stating no outline, such as a placeholder the writer
+  seeds empty, came back from its own copy with a line its source's IR did not state, and the
+  standalone round trip reported it ([#177](https://github.com/shbernal/pptx-ts/issues/177)).
 - **A scatter's own data labels carry through `readModelToIr`.** `ChartSeries.customLabels` reads a
   series' per-point labels that state their own text, with any `a:fld` fields, and `chartCall` maps
   them onto `dataLabelFormatScatter` (`custom` or `customXY`) and each series' `labels`; a series

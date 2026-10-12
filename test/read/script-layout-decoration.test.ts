@@ -532,10 +532,9 @@ describe('layout placeholder definitions', () => {
 		assertEqual(at(definitions[0], 'placeholder', 'options', 'type'), 'body', 'with its type')
 		assert(!ir.fidelity.some((note) => note.construct === 'master.placeholders'), 'and nothing is declared lost')
 		assertEqual(atIndex(output.slides, 0).shapes.length, 2, 'the copy has the text and the filled placeholder, no more')
-		// The one difference left is the seeded placeholder's empty `a:ln` coming back as `line: none`,
-		// which draws the same and predates this change (#177).
-		const others = report.undeclared.filter((difference) => difference.field !== 'line')
-		assertEqual(others.length, 0, 'and rebuilds the deck: ' + JSON.stringify(others))
+		// The seeded placeholder's empty `a:ln` came back as `line: none`, which `addShape` writes for
+		// an absent line, and was the one difference left (#177).
+		assertEqual(report.undeclared.length, 0, 'and rebuilds the deck: ' + JSON.stringify(report.undeclared))
 	})
 
 	test("a PowerPoint layout's definitions a slide leaves out stay out, and are noted", async () => {
