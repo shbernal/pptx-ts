@@ -143,6 +143,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A chart or plot area with no fill of its own comes back as `fill: { type: 'inherit' }`.**
+  `ChartAreaFormat.hasOwnFill` reads whether the area states any fill. `readModelToIr` left such an
+  area's `fill` out, and the writer spells an absent fill `a:noFill`, so the copy stated no fill
+  where its source inherited one ([#186](https://github.com/shbernal/pptx-ts/issues/186)).
 - **`readModelToIr` spells an outline-less `addShape` as `line: { type: 'none' }`.** `addShape`
   writes an absent `line` that way, so a shape stating no outline, such as a placeholder the writer
   seeds empty, came back from its own copy with a line its source's IR did not state, and the
