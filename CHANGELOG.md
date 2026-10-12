@@ -88,6 +88,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   chart writer reads none but `lang`, so a chart given them was byte-identical to one without. They
   are now named in one `chart/option-not-supported` warning; a chart's text is styled through its
   own options ([#138](https://github.com/shbernal/pptx-ts/issues/138)).
+- **`textWarp` on a table or cell warns `table/option-not-supported`.** A cell took it from
+  `TextBaseProps` and wrote nothing, with nothing reported; PowerPoint has no text transform in a
+  table cell ([#84](https://github.com/shbernal/pptx-ts/issues/84)).
 - **A chart or plot area paints a picture fill.** `chartArea.fill` and `plotArea.fill` with
   `type: 'image'` wrote no fill and warned that the caller's `image.data` was missing. The chart part
   now declares the picture and writes an `a:blipFill`, through `write()`, `extractSlides()` and
