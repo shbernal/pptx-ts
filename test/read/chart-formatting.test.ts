@@ -276,6 +276,29 @@ describe('Chart.plotGroups, Chart.view3D, Chart.displayBlanksAs and series marke
 		expect((call.args[0] as Array<{ pointStyles?: unknown }>)[0]?.pointStyles).toBeUndefined()
 	})
 
+	// A pie's dataBorder was read from the series' placeholder outline, which no slice draws when it
+	// states its own: a pie with none gained one, and a pie's own was lost (#204).
+	test.each<[CHART_NAME, ChartOpts]>([
+		['pie', {}],
+		['pie', { dataBorder: { width: 2, color: 'FF0000' } }],
+		['doughnut', { dataBorder: { width: 1.5, color: '0B6E4F' } }],
+	])("a %s's slice outlines carry through readModelToIr (%o)", async (type, options) => {
+		const data = [{ name: 'S', labels: ['a', 'b', 'c'], values: [1, 2, 3] }]
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addChart(data, { type, x: 1, y: 1, w: 6, h: 4, objectName: 'probe', ...options })
+		})
+		const ir = readModelToIr(presentation)
+		expect(ir.fidelity.filter((note) => note.construct === 'chart.dataPoints')).toEqual([])
+		const rebuilt = rebuiltOptions(ir, 'probe')
+		expect(rebuilt.dataBorder).toEqual(options.dataBorder)
+		const copy = await authorRead((pres) => {
+			pres.addSlide().addChart(data as never, { ...rebuilt, objectName: 'probe' })
+		})
+		const outlines = (deck: Presentation) =>
+			chartNamed(deck, 'probe').series[0]?.dataPoints.map((point) => [point.line?.colorRef.srgb, point.line?.widthPt])
+		expect(outlines(copy.presentation)).toEqual(outlines(presentation))
+	})
+
 	test('a default chart states none of them', async () => {
 		for (const type of ['bar', 'line', 'pie', 'doughnut', 'radar', 'bar3D'] as const) {
 			const { presentation } = await authorRead((pres) => {
