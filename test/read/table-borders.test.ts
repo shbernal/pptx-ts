@@ -116,6 +116,30 @@ describe('TableCell.borders — a:tcPr/a:lnL|lnR|lnT|lnB', () => {
 		)
 	})
 
+	test('an edge and a diagonal read their cap, unset or not', async () => {
+		const { presentation } = await authorRead((pres) => {
+			const line = { type: 'solid' as const, color: '9B1B30', width: 2 }
+			pres.addSlide().addTable(
+				[
+					[
+						{
+							text: 'a',
+							options: {
+								border: [{ ...line, cap: 'round' }, line, line, line],
+								diagonal: { tlToBr: { ...line, cap: 'square' } },
+							},
+						},
+					],
+				],
+				{ x: 1, y: 1, w: 5 }
+			)
+		})
+		const borders = defined(defined(defined(firstTable(presentation)).cell(0, 0)).borders)
+		assertEqual(defined(borders.top).cap, 'rnd', 'the round cap is the rnd token')
+		assertEqual(defined(borders.right).cap, 'flat', 'a side that sets none is written flat')
+		assertEqual(defined(borders.tlToBr).cap, 'sq', 'and a diagonal reads its own')
+	})
+
 	test.skipIf(!validatorInstalled)('the authored bordered/styled decks are schema-valid', async () => {
 		const bordered = await authorRead(borderedTable)
 		assertEqual((await schemaErrors(bordered.buf)).length, 0, 'bordered deck validates')

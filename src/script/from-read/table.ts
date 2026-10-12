@@ -24,7 +24,9 @@ import type { CallIr, IrValue } from '../ir.js'
 import type { MapContext } from './context.js'
 import { TABLE_CELL_MARGIN_DEFAULTS_EMU } from '../../ooxml/body-insets.js'
 import { GRAPHIC_FRAME_LOCK_ATTRS } from '../../ooxml/lock-attrs.js'
+import { LINE_CAP_BY_TOKEN } from '../../ooxml/line-cap.js'
 import {
+	alphaToTransparency,
 	ANCHOR_TO_VALIGN,
 	colorOption,
 	compact,
@@ -358,6 +360,10 @@ function borderIr(edge: CellBorder | null, notes: NoteScope): IrValue {
 				'cell border'
 			),
 			width: orUndefined(edge.widthPt),
+			// `flat` is what the writer states for a border that sets no cap.
+			cap: edge.cap === null || edge.cap === 'flat' ? undefined : LINE_CAP_BY_TOKEN[edge.cap],
+			// The alpha on the stroke's colour, which the writer writes from `transparency`.
+			transparency: alphaToTransparency(edge.colorRef.resolved?.alpha),
 		}) ?? {}
 	)
 }

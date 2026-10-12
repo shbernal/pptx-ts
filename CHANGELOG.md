@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`CellBorder.cap` reads a table cell edge's or diagonal's line cap** (`@cap`) as its raw token,
+  `flat`, `rnd` or `sq`, or `null` when unset.
 - **`placeholder` takes a binding: `{ name?, type?, idx? }`.** On `addText`, `addImage` and
   `addTable`, a stated `type` or `idx` writes that `p:ph` whether or not the deck defines a layout
   placeholder to match, so a slide can fill placeholder `idx="1"` of a template layout it is
@@ -73,6 +75,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`readModelToIr` keeps a table cell border's `cap` and `transparency`.** Both came back as the
+  writer's defaults with no note, on an edge and on a diagonal
+  ([#81](https://github.com/shbernal/pptx-ts/issues/81)).
 - **`readModelToIr` leaves the runs of a linked shape uncoloured.** A text box with a shape-level
   `hyperlink: { action }` came back with `color: '000000'` on its run, which `addText` leaves
   uncoloured, so the replay added a black fill the source never had
