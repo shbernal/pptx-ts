@@ -40,18 +40,18 @@ registered.
 
 | Program | initial | total |
 | --- | --- | --- |
-| `createPresentation()`, one text box | 59.4 KiB | 138.2 KiB |
-| `createPresentation({ use: [charts] })`, plus a chart | 80.5 KiB | 159.3 KiB |
-| `new PptxTs()`, one text box | 98.7 KiB | 177.4 KiB |
-| `new PptxTs()`, plus a shape and an image | 98.9 KiB | 177.6 KiB |
-| `new PptxTs()`, plus a chart, a table and a video | 99.0 KiB | 177.7 KiB |
+| `createPresentation()`, one text box | 64.9 KiB | 143.7 KiB |
+| `createPresentation({ use: [charts] })`, plus a chart | 88.5 KiB | 167.2 KiB |
+| `new PptxTs()`, one text box | 107.7 KiB | 186.4 KiB |
+| `new PptxTs()`, plus a shape and an image | 107.8 KiB | 186.5 KiB |
+| `new PptxTs()`, plus a chart, a table and a video | 107.9 KiB | 186.7 KiB |
 
-A text-only program downloads 59.4 KiB composed against 98.7 KiB through the class, so composing saves
-39.3 KiB before the first line runs. The chart family costs 21.1 KiB to the program that asks for it and
-nothing to one that does not. The three `PptxTs` rows sit within 0.3 KiB of each other, because the
+A text-only program downloads 64.9 KiB composed against 107.7 KiB through the class, so composing saves
+42.8 KiB before the first line runs. The chart family costs 23.6 KiB to the program that asks for it and
+nothing to one that does not. The three `PptxTs` rows sit within 0.2 KiB of each other, because the
 class carries every family whatever the program calls.
 
-The [comparison page](comparison.md) reports 98.6 KiB for a hello world. That is a separate
+The [comparison page](comparison.md) reports 104.6 KiB for a hello world. That is a separate
 measurement, of a different program, taken with the rest of the comparison on its snapshot date. The
 figures here come from the repository's size gate and follow the current build; the
 [testing guide](https://github.com/shbernal/pptx-ts/blob/main/docs/contributing/testing.md#size-gates)

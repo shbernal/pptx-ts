@@ -15,6 +15,7 @@ www/
   theme/
     index.ts    the VitePress theme: extends the default, registers the components below
     style.css   the site's own palette, diagram, demos page and live example styles
+    HomeBanner.vue  the README's banner above the home page hero, in the colour mode shown
   comparison/
     comparison.ts       what the comparison charts draw, as data: plain TS, typechecked, unit-tested
     comparison.data.ts  runs it over scripts/comparison/snapshot.json while the site builds
@@ -24,7 +25,7 @@ www/
     render.ts           draws a graph to SVG, importing mermaid on first use
     MermaidDiagram.vue  the component a fence becomes; redraws on a colour mode change
   demos/
-    deck-preview.ts    the pipeline and its types — plain TS, typechecked, unit-tested
+    deck-preview.ts    the pipeline and its types: plain TS, typechecked, unit-tested
     showcases.ts       the showcase decks the viewer can show, by slug
     DeckPreview.vue    the slide viewer: stage, filmstrip, notes and the build button
     SlideFrame.vue     one slide in a shadow root, which keeps the site's CSS out of it

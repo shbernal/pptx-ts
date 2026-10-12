@@ -97,8 +97,8 @@ Explicit means set on the element itself, with nothing resolved from the layout,
 | `line` | `string \| null` | hex, no `#` | Explicit RGB outline color (`a:ln`) | `null` for a theme color or no outline, and for a group or graphic frame |
 | `shapeType` | `string \| null` | none | Preset geometry (`a:prstGeom/@prst`), such as `rect` or `straightConnector1` | `null` for custom geometry, groups and graphic frames |
 
-`text` joins runs with no separator, including across paragraphs.
-The last word of one paragraph and the first word of the next therefore count as one word.
+`text` joins the runs of a paragraph with no separator, and puts a space between paragraphs.
+The last word of one paragraph and the first word of the next therefore count as two words.
 
 `textRuns[].text` is the run's `a:t` verbatim, including the whitespace an `xml:space="preserve"` run carries.
 Each run is a [`PptxTextRun`](api/inspect/interfaces/PptxTextRun.md): size, RGB color, typeface, bold, italic, strike, highlight and character spacing, as the run sets them.

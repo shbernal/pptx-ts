@@ -12,7 +12,7 @@
 
 ---
 
-[Install](#install) • [Quickstart](#quickstart) • [Read and edit](#read-and-edit-decks-too) • [Compare](#how-this-compares-with-pptxgenjs) • [Docs](https://shbernal.github.io/pptx-ts/)
+[Quickstart](#quickstart) • [Read and edit](#read-and-edit-decks-too) • [Compare](#how-this-compares-with-pptxgenjs) • [Docs](https://shbernal.github.io/pptx-ts/)
 
 ---
 
@@ -86,13 +86,13 @@ Keynote, LibreOffice Impress and Google Slides import it on a best-effort basis.
    await pptx.writeFile({ fileName: "hello.pptx" })
    ```
 
-2. Run it. Node 24 strips the types itself, so there is no build step.
+3. Run it. Node 24 strips the types itself, so there is no build step.
 
    ```bash
    node hello.mts
    ```
 
-3. Open `hello.pptx`.
+4. Open `hello.pptx`.
 
 Positions are in inches, from the top-left corner of a 10 by 5.625 inch slide.
 [Your first deck](docs/getting-started/first-deck.md) builds a four-slide report from an array, with a table, a chart and speaker notes.

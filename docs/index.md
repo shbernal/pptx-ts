@@ -8,7 +8,6 @@ read_when:
   - Updating the main project overview
 doc_type: "overview"
 hero:
-  name: "pptx-ts"
   text: "PowerPoint decks from TypeScript"
   tagline: "Write .pptx packages that open cleanly in PowerPoint, read them back, and turn one into the script that would rebuild it."
   actions:
