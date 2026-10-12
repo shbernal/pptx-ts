@@ -115,7 +115,7 @@ describe('Chart.plotGroups, Chart.view3D, Chart.displayBlanksAs and series marke
 			barDir: 'bar',
 			barGrouping: 'stacked',
 			barGapWidthPct: 80,
-			barSeriesLine: true,
+			barSeriesLine: { width: 0.75 },
 		})
 		expect(rebuiltOptions(ir, 'column-3d-chart')).toMatchObject({
 			bar3DShape: 'cylinder',
@@ -320,5 +320,89 @@ describe('chart text formatting', () => {
 		)
 		expect(stated).toEqual([])
 		expect(rebuilt.seriesOptions).toBeUndefined()
+	})
+})
+
+describe('chart and plot areas, manual layouts and series effects', () => {
+	// The read model read a series' solid fill and line and nothing else drawn by a chart's shape
+	// properties or placed by its manual layout (#134).
+
+	test("PowerPoint's areas, layouts, series alpha and shadow read back", async () => {
+		const bar = chartNamed(await openFixture('chart-formatting'), 'stacked-bar-chart')
+		expect(bar.chartArea).toMatchObject({ fillColor: 'F0C808', border: { widthPt: 2, colorRef: { srgb: '9B1B30' } } })
+		expect(bar.roundedCorners).toBe(false)
+		expect(bar.plotArea?.fillColor).toBe('DDE3F0')
+		expect(bar.plotArea?.layout).toMatchObject({ target: 'inner', xMode: 'edge' })
+		expect(bar.legend?.layout?.x).toBeCloseTo(0.838, 3)
+		const first = defined(bar.series[0])
+		expect(first.fill?.alpha).toBeCloseTo(0.6, 5)
+		expect(first.shadow?.colorRef.srgb).toBe('9B1B30')
+		expect(first.dataLabels?.fill?.colorRef.srgb).toBe('9B1B30')
+		const pie = chartNamed(await openFixture('chart-formatting'), 'pie-leader-chart')
+		expect(pie.series[0]?.dataLabels?.leaderLines?.colorRef.srgb).toBe('9B1B30')
+	})
+
+	test("readModelToIr rebuilds PowerPoint's areas and layouts", async () => {
+		const ir = readModelToIr(await openFixture('chart-formatting'))
+		const bar = rebuiltOptions(ir, 'stacked-bar-chart')
+		expect(bar).toMatchObject({
+			chartArea: { fill: { color: 'F0C808' }, border: { color: '9B1B30', width: 2 }, roundedCorners: false },
+			plotArea: { fill: { color: 'DDE3F0' } },
+			dataLabelBkgrdColors: true,
+			shadow: { type: 'outer', color: '9B1B30' },
+		})
+		expect(bar.layout?.w).toBeCloseTo(0.619, 3)
+		expect(rebuiltOptions(ir, 'pie-leader-chart')).toMatchObject({ leaderLineColor: '9B1B30' })
+	})
+
+	const areaCases: Array<[CHART_NAME, ChartOpts]> = [
+		['bar', { chartArea: { fill: { color: 'F0C808' }, border: { color: '9B1B30', width: 2 } } }],
+		['bar', { chartArea: { fill: { color: 'F0C808' }, roundedCorners: false } }],
+		['bar', { plotArea: { fill: { color: 'F0C808' }, border: { color: '9B1B30', width: 1 } } }],
+		['bar', { layout: { x: 0.1, y: 0.15, w: 0.7, h: 0.6 } }],
+		['bar', { showLegend: true, legendLayout: { x: 0.7, y: 0.3, w: 0.25, h: 0.4 } }],
+		['bar', { chartColorsOpacity: 40 }],
+		['bar', { shadow: { type: 'outer', color: '9B1B30', blur: 4, offset: 2, angle: 45 } }],
+		['line', { lineCap: 'round' }],
+		['bar', { dataBorder: { color: '9B1B30', width: 2, transparency: 30 } }],
+		['bar', { showValue: true, dataLabelBkgrdColors: true }],
+		['bar', { barGrouping: 'stacked', barSeriesLine: { color: '9B1B30', width: 2 } }],
+	]
+	test.each(areaCases)('%s %j comes back from readModelToIr', async (type, options) => {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addChart(SERIES, { type, x: 1, y: 1, w: 6, h: 4, objectName: 'probe', ...options })
+		})
+		expect(rebuiltOptions(readModelToIr(presentation), 'probe')).toMatchObject(options)
+	})
+
+	test("a chart area's picture fill comes back as a picture", async () => {
+		const png =
+			'image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addChart(SERIES, {
+				type: 'bar',
+				x: 1,
+				y: 1,
+				w: 6,
+				h: 4,
+				objectName: 'probe',
+				chartArea: { fill: { type: 'image', image: { data: png } } },
+			})
+		})
+		expect(chartNamed(presentation, 'probe').chartArea?.pictureFill?.partName).toMatch(/^\/ppt\/media\//)
+		expect(rebuiltOptions(readModelToIr(presentation), 'probe').chartArea).toMatchObject({ fill: { type: 'image' } })
+	})
+
+	test('a default chart states no area, layout or series effect', async () => {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addChart(SERIES, { type: 'bar', x: 1, y: 1, w: 6, h: 4, objectName: 'probe', showLegend: true })
+		})
+		const rebuilt = rebuiltOptions(readModelToIr(presentation), 'probe')
+		const stated = Object.keys(rebuilt).filter((key) =>
+			/^(chartArea|plotArea|layout|legendLayout|chartColorsOpacity|shadow|lineCap|dataLabelBkgrdColors|leaderLine)/.test(
+				key
+			)
+		)
+		expect(stated).toEqual([])
 	})
 })
