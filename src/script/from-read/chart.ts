@@ -363,8 +363,8 @@ const POINT_STYLE_TYPES: ReadonlySet<string> = new Set(['area', 'bar', 'bar3D', 
  * A series' own data points as its `pointStyles`, each point's literal fill as `fill`: the per-point
  * colours `invertedColors` writes on a bar (#184), a line's, an area's or a scatter's own points, and
  * a pie's slices (#197). `pointStyles` writes the same `c:dPt`. A point formatted beyond a literal
- * fill keeps what it can and is noted. An outline the series draws too is not the point's own: it
- * comes back as `dataBorder`, which the writer strokes a pie's slices with.
+ * fill keeps what it can and is noted. An outline every point shares is not the point's own: it
+ * comes back as `dataBorder`, which the writer strokes a pie's slices with ({@link sliceOutline}).
  * @param type - the write-API chart type the chart is rebuilt as
  */
 function pointStyles(series: ChartSeries, type: string, notes: NoteScope): IrValue[] | undefined {
@@ -381,9 +381,11 @@ function pointStyles(series: ChartSeries, type: string, notes: NoteScope): IrVal
 	}
 	const styles: IrValue[] = []
 	let partial = false
+	// The outline every point shares comes back as `dataBorder`: a slice's own, or the series'.
+	const shared = SLICED_TYPES.has(type) ? sliceOutline(series) : series.line
 	for (const point of points) {
 		const hex = point.fill?.noFill ? null : (point.fill?.colorRef.srgb ?? null)
-		const ownLine = point.line !== null && !point.line.noFill && !sameLine(point.line, series.line)
+		const ownLine = point.line !== null && !point.line.noFill && !sameLine(point.line, shared)
 		if (point.patternFill || ownLine || point.invertIfNegative === true) partial = true
 		if (point.fill && !point.fill.noFill && hex === null) partial = true
 		if (hex === null) continue
@@ -399,6 +401,29 @@ function pointStyles(series: ChartSeries, type: string, notes: NoteScope): IrVal
 		)
 	}
 	return styles.length > 0 ? styles : undefined
+}
+
+/** The plot types whose `dataBorder` strokes each slice in its own `c:dPt`, not the series. */
+const SLICED_TYPES: ReadonlySet<string> = new Set(['doughnut', 'pie'])
+
+/**
+ * The outline a pie's or doughnut's slices draw (#204). The writer strokes each slice's `c:dPt`
+ * with `dataBorder` and gives the series a 0.75pt `F9F9F9` placeholder outline, which shows only
+ * where a slice states none. So the slices' own shared outline is read first. With none stated,
+ * the series' outline is what shows, and the writer's placeholder comes back as no `dataBorder`.
+ */
+function sliceOutline(series: ChartSeries): ChartLine | null {
+	const own = series.dataPoints.map((point) => point.line).find((line) => line !== null)
+	if (own) return own
+	const line = series.line
+	const placeholder =
+		line !== null &&
+		!line.noFill &&
+		line.colorRef.srgb === 'F9F9F9' &&
+		line.widthPt === 0.75 &&
+		(line.dash ?? 'solid') === 'solid' &&
+		line.alpha === null
+	return placeholder ? null : line
 }
 
 /** Whether two outlines stroke alike: the same colour, width and dash. */
@@ -1009,14 +1034,14 @@ const DEFAULT_LINE_SIZE = 2
  * A stroked series (a line, a radar, a scatter, a bubble) takes `lineSize` and `lineDash`, or
  * `lineDashValues` when its series differ. A bar's, an area's or a pie's outline is `dataBorder`,
  * which the writer paints the same on every series, solid: it is taken from the first series that
- * draws one. Widths that differ between stroked series are {@link seriesOverrides}' job.
+ * draws one, and on a pie or doughnut from its slices ({@link sliceOutline}). Widths that differ between stroked series are {@link seriesOverrides}' job.
  */
 function seriesLineOptions(
 	series: readonly ChartSeries[],
 	type: string,
 	notes: NoteScope
 ): Record<string, IrValue | undefined> {
-	const lines = series.map((one) => one.line)
+	const lines = series.map((one) => (SLICED_TYPES.has(type) ? sliceOutline(one) : one.line))
 	if (!STROKED_TYPES.has(type)) {
 		const line = lines.find((one) => one !== null && !one.noFill)
 		if (!line) return {}
