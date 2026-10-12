@@ -8,6 +8,8 @@ import { SlideObjectType } from '../../enums.js'
 import type { PresSlideInternal, SlideObject } from '../../types/internal.js'
 import { layoutPlaceholderName, statedPlaceholderBinding } from './layout-placeholder.js'
 import { addTextDefinition, placeholderOptionsForSlide } from './text.js'
+import { fillNamesPaint } from '../drawingml/fill.js'
+import { withLineDefaults } from '../drawingml/line.js'
 
 /**
  * Adds placeholder objects to slide
@@ -40,6 +42,16 @@ export function addPlaceholdersToSlideLayouts(slide: PresSlideInternal): void {
 				if (seeded) {
 					seeded._seeded = true
 					seeded.text = []
+					// And the outline `addShape` writes for the definition's line (#194, #205): a stated
+					// stroke with its defaults, and none for a line that paints nothing. Left as given, a
+					// line naming no paint wrote an empty `<a:ln>`, which inherits, where its replay
+					// wrote an explicit no-line. Nothing up a defined layout's chain draws one either.
+					const options = seeded.options ?? (seeded.options = {})
+					const line = options.line
+					options.line =
+						line && line.type !== 'none' && fillNamesPaint(line)
+							? withLineDefaults(line, 'line.color')
+							: { type: 'none' }
 				}
 			}
 		}

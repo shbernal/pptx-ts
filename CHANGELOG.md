@@ -185,6 +185,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   chart each point's literal fill comes back as the series' `pointStyles`, which write the same
   points; a point formatted beyond that is noted under `chart.dataPoints`
   ([#184](https://github.com/shbernal/pptx-ts/issues/184)).
+- **A slide's copy of a layout placeholder it leaves unfilled writes the outline `addShape` writes.**
+  A line naming no paint wrote an empty `<a:ln>`, which inherits, and a stated line had no
+  `a:prstDash`, while the copy's `readModelToIr` replay, `addShape` bound to the placeholder, wrote
+  `<a:ln><a:noFill/></a:ln>` and the solid dash. The two drew the same, since nothing up a defined
+  layout's chain draws an outline, but wrote different bytes. The copy now writes `addShape`'s outline
+  ([#194](https://github.com/shbernal/pptx-ts/issues/194),
+  [#205](https://github.com/shbernal/pptx-ts/issues/205)).
 - **A pie's or doughnut's `dataBorder` is read from its slices.** `readModelToIr` read it from the
   series' placeholder outline (0.75pt `F9F9F9`), which no slice draws when it states its own. A pie
   with no `dataBorder` came back with that placeholder as one, and a pie's own `dataBorder` was lost.
