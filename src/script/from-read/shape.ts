@@ -31,6 +31,7 @@ import {
 	type AutoShape,
 	type Connector,
 	type CustomGeometry,
+	type GeometryCoordinate,
 	type GraphicFrame,
 	type GroupShape,
 	type Picture,
@@ -52,6 +53,7 @@ import {
 	identityOptions,
 	lockOption,
 	nameOf,
+	orUndefined,
 	positionOptions,
 	type ShapeBox,
 } from './values.js'
@@ -219,11 +221,11 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 	}
 
 	if (custom) {
-		noteCustGeomGuides(notes)
 		const points = customGeometryPoints(box, custom)
 		// A freeform holding text is an `addText` with the same points: this arm used to return
 		// `addShape` before the text arm below, so a freeform's text was discarded.
 		if (frame !== null) {
+			noteUnwritableCustGeomLists(custom, 'addText', notes)
 			const options = compact({
 				...common,
 				...textFrameOptions(frame, notes),
@@ -240,7 +242,7 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 				...nameOf(shape),
 			}
 		}
-		const options = compact({ ...common, points })
+		const options = compact({ ...common, points, ...custGeomListOptions(custom) })
 		return { method: 'addShape', args: ['custGeom', options ?? {}], ...nameOf(shape) }
 	}
 
@@ -283,13 +285,59 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 }
 
 /** The note for what a `custGeom` holds beside its path, shared by a freeform shape and a picture clipped to one. */
-function noteCustGeomGuides(notes: NoteScope): void {
+function noteUnwritableCustGeomLists(custom: CustomGeometry, method: string, notes: NoteScope): void {
+	if (custom.guides.length === 0 && custom.adjustHandles.length === 0 && custom.connectionSites.length === 0) return
 	notes.note(
 		'shape.custGeom.guides',
 		'dropped',
-		'unread',
-		'custGeom guides, adjust handles and connection sites (a:gdLst / a:ahLst / a:cxnLst) have no accessor, so only the path outline carries'
+		'unwritable',
+		`custGeom guides, adjust handles and connection sites (a:gdLst / a:ahLst / a:cxnLst) are addShape options, and ${method} takes the freeform's points alone, so only the path outline carries`
 	)
+}
+
+/**
+ * A custom geometry's guides, adjust handles and connection sites as `addShape` takes them. A
+ * position is in the shape's own EMU space on both sides, or names a guide, which passes through.
+ */
+function custGeomListOptions(custom: CustomGeometry): Record<string, IrValue | undefined> {
+	const coord = (value: GeometryCoordinate | null): IrValue | undefined =>
+		value === null ? undefined : typeof value === 'number' ? emu(value) : value
+	return {
+		guides: custom.guides.length
+			? custom.guides.map((guide) => ({ name: guide.name, formula: guide.formula }))
+			: undefined,
+		connectionSites: custom.connectionSites.length
+			? custom.connectionSites.map(
+					(site) => compact({ ang: site.angleDeg ?? 0, x: coord(site.x), y: coord(site.y) }) ?? { ang: 0 }
+				)
+			: undefined,
+		adjustHandles: custom.adjustHandles.length
+			? custom.adjustHandles.map(
+					(handle) =>
+						(handle.kind === 'xy'
+							? compact({
+									x: coord(handle.x),
+									y: coord(handle.y),
+									gdRefX: orUndefined(handle.gdRefX),
+									minX: coord(handle.minX),
+									maxX: coord(handle.maxX),
+									gdRefY: orUndefined(handle.gdRefY),
+									minY: coord(handle.minY),
+									maxY: coord(handle.maxY),
+								})
+							: compact({
+									x: coord(handle.x),
+									y: coord(handle.y),
+									gdRefR: orUndefined(handle.gdRefR),
+									minR: coord(handle.minR),
+									maxR: coord(handle.maxR),
+									gdRefAng: orUndefined(handle.gdRefAng),
+									minAng: orUndefined(handle.minAngDeg),
+									maxAng: orUndefined(handle.maxAngDeg),
+								})) ?? {}
+				)
+			: undefined,
+	}
 }
 
 /**
@@ -302,7 +350,7 @@ function noteCustGeomGuides(notes: NoteScope): void {
 function pictureClipOptions(shape: Picture, box: ShapeBox, notes: NoteScope): Record<string, IrValue | undefined> {
 	const custom = shape.customGeometry
 	if (custom) {
-		noteCustGeomGuides(notes)
+		noteUnwritableCustGeomLists(custom, 'addImage', notes)
 		return { points: customGeometryPoints(box, custom) }
 	}
 	const preset = shape.presetGeometry
