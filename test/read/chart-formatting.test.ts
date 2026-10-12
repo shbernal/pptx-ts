@@ -6,6 +6,7 @@ import { describe, expect, test } from 'vitest'
 import { isGraphicFrame, type Chart, type Presentation } from '../../dist/read.js'
 import { readModelToIr, type CallIr, type DeckIr } from '../../dist/script.js'
 import type { CHART_NAME, ChartOpts } from '../../dist/node.js'
+import { readZip } from '../../dist/zip.js'
 import { assert, defined } from '../helpers.ts'
 import { authorRead } from './authored.ts'
 import { openFixture } from './corpus.ts'
@@ -25,6 +26,13 @@ function rebuiltOptions(ir: DeckIr, name: string): ChartOpts {
 		.find((one: CallIr) => one.method === 'addChart' && (one.args[1] as ChartOpts).objectName === name)
 	assert(call, `the IR rebuilds ${name}`)
 	return call.args[1] as ChartOpts
+}
+
+/** The first chart part of a written deck. */
+async function chartXml(deck: Uint8Array): Promise<string> {
+	const entries = await readZip(deck)
+	const name = [...entries.keys()].find((one) => /^ppt\/charts\/chart\d+\.xml$/.test(one))
+	return new TextDecoder().decode(entries.get(defined(name)))
 }
 
 const SERIES = [
@@ -178,6 +186,33 @@ describe('Chart.plotGroups, Chart.view3D, Chart.displayBlanksAs and series marke
 			pres.addSlide().addChart(SERIES, { type, x: 1, y: 1, w: 6, h: 4, objectName: 'probe', ...options })
 		})
 		expect(rebuiltOptions(readModelToIr(presentation), 'probe')).toMatchObject(options)
+	})
+
+	// A series' data points (`c:dPt`) had no accessor, so the per-point fills `invertedColors` writes
+	// were dropped with no note (#184). They come back as the series' `pointStyles`, which write the
+	// same points.
+	test("a bar series' per-point fills read back and carry through readModelToIr", async () => {
+		const net = [{ name: 'Net', labels: ['Q1', 'Q2', 'Q3'], values: [4, -2, 5] }]
+		const options: ChartOpts = { invertedColors: ['9B1B30', '250F6B', '0B6E4F'] }
+		const { presentation, buf } = await authorRead((pres) => {
+			pres.addSlide().addChart(net, { type: 'bar', x: 1, y: 1, w: 6, h: 4, objectName: 'probe', ...options })
+		})
+		const points = defined(chartNamed(presentation, 'probe').series[0]).dataPoints
+		expect(points.map((point) => [point.index, point.fill?.colorRef.srgb])).toEqual([
+			[0, 'C0504D'],
+			[1, '250F6B'],
+			[2, '9BBB59'],
+		])
+		const ir = readModelToIr(presentation)
+		const call = defined(ir.slides[0]?.calls.find((one) => one.method === 'addChart'))
+		const series = (call.args[0] as Array<{ pointStyles?: unknown }>)[0]
+		expect(series?.pointStyles).toEqual([{ fill: 'C0504D' }, { fill: '250F6B' }, { fill: '9BBB59' }])
+		expect(ir.fidelity.filter((note) => note.construct === 'chart.dataPoints')).toEqual([])
+		const copy = await authorRead((pres) => {
+			pres.addSlide().addChart(call.args[0] as never, call.args[1] as never)
+		})
+		const dPt = (deck: Uint8Array) => chartXml(deck).then((xml) => xml.match(/<c:dPt>[\s\S]*?<\/c:dPt>/g))
+		expect(await dPt(copy.buf)).toEqual(await dPt(buf))
 	})
 
 	test('a default chart states none of them', async () => {

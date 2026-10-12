@@ -110,6 +110,9 @@ export const NOTE_CONSTRUCTS = {
 	'chart.layout': { fields: [], tiers: BOTH_TIERS },
 	// A series' gradient or pattern fill, which no addChart option spells. Absent from both IRs.
 	'chart.series.fill': { fields: [], tiers: BOTH_TIERS },
+	// A bar's data point formatted beyond a literal fill (a theme colour, a pattern, an outline), which
+	// its `pointStyles` entry leaves out on both sides, so the IRs agree without it.
+	'chart.dataPoints': { fields: [], tiers: BOTH_TIERS },
 	// A bar series' c:invertIfNegative, which no addChart option writes. Absent from both IRs.
 	'chart.invertIfNegative': { fields: [], tiers: BOTH_TIERS },
 	// A series outline the chart writer cannot dash as the source did, rebuilt solid. Both IRs carry
