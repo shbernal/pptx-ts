@@ -394,6 +394,8 @@ export interface SlideObject {
 	ole?: OleInternal
 	// model3d: resolved payload/preview rIds + camera/scale for the `<p:graphicFrame>` emitter
 	model3d?: Model3dInternal
+	// placeholder: an empty copy `addPlaceholdersToSlideLayouts` seeded for an unfilled layout placeholder
+	_seeded?: boolean
 }
 /**
  * Resolved 3D-model payload carried on a {@link SlideObject} until `gen/slide/objects/model3d.ts`

@@ -143,6 +143,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A slide's unfilled layout placeholder writes a bare text body.** The empty copy a slide gets for
+  a placeholder it leaves unfilled wrote a list style and an empty run stamped `lang="en-US"`, where
+  `addShape` bound to the same placeholder, and PowerPoint for an empty one, write
+  `<a:lstStyle/><a:p><a:endParaRPr/></a:p>`. So `readModelToIr`'s replay of it differed with no
+  note. The layout's placeholder still carries the language, and desktop PowerPoint renders both forms
+  the same.
 - **A combo chart carries through `readModelToIr` as a combo.** `ChartPlotGroup.axisIds` reads the
   axes a plot group plots against. `readModelToIr` replays an area, bar, line and scatter combo
   through `addChart`'s multi-type form: each plot's type, series and own settings, `secondaryValAxis`

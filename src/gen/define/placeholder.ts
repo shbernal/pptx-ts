@@ -34,6 +34,13 @@ export function addPlaceholdersToSlideLayouts(slide: PresSlideInternal): void {
 			if (!slide._slideObjects.some(fills)) {
 				// A copy whose rel-bearing options are the slide's own, not the layout placeholder's.
 				addTextDefinition(slide, [{ text: '' }], placeholderOptionsForSlide(slideLayoutOptions), true)
+				// It writes the bare body `addShape` writes for a text-less placeholder, and PowerPoint
+				// for an empty one: the layout's placeholder already carries the list style and `lang`.
+				const seeded = slide._slideObjects.at(-1)
+				if (seeded) {
+					seeded._seeded = true
+					seeded.text = []
+				}
 			}
 		}
 	})
