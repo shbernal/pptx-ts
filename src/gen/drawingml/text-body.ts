@@ -317,8 +317,13 @@ export function genXmlPlaceholder(
 	// prompt text; it must not be set on a populated slide-level text shape promoted to a
 	// placeholder, or PowerPoint would treat the visible text as prompt text. A slide object
 	// bound to a layout placeholder is handed that layout's definition, so the object's type
-	// cannot tell the two apart: the caller says which one it is writing.
-	const isPlaceholderDef = definition && placeholderObj?._type === SlideObjectType.placeholder
+	// cannot tell the two apart: the caller says which one it is writing. An empty prompt is not a
+	// custom one: PowerPoint drops the flag when a layout's prompt is cleared, and the definition
+	// shows "Click to add text".
+	const hasCustomPrompt =
+		definition &&
+		placeholderObj?._type === SlideObjectType.placeholder &&
+		(placeholderObj.text ?? []).some((run) => typeof run.text === 'string' && run.text.length > 0)
 
 	// NOTE: `placeholderType` is already the mapped OOXML value (e.g. 'pic', 'tbl') validated on
 	// the line above; do NOT re-look it up in PLACEHOLDER_TYPE_MAP (its keys are the input names,
@@ -333,6 +338,6 @@ export function genXmlPlaceholder(
 	return `<p:ph
 		${placeholderIdx !== '' ? ' idx="' + placeholderIdx.toString() + '"' : ''}
 		${placeholderType ? ` type="${placeholderType}"` : ''}
-		${isPlaceholderDef && placeholderObj?.text && placeholderObj.text.length > 0 ? ' hasCustomPrompt="1"' : ''}
+		${hasCustomPrompt ? ' hasCustomPrompt="1"' : ''}
 		/>`
 }
