@@ -930,11 +930,14 @@ function areaOptions(chart: Chart, type: string, ctx: MapContext): Record<string
 	}
 }
 
-/** The chart area as `chartArea`: its fill, its border and its square corners. */
+/**
+ * The chart area as `chartArea`: its fill, its border and its square corners. A chart space with no
+ * `c:spPr` states no fill either, and inherits one.
+ */
 function chartAreaOption(chart: Chart, ctx: MapContext): IrValue | undefined {
 	const area = chart.chartArea
 	return compact({
-		...(area ? areaFormatFields(area, ctx) : {}),
+		...(area ? areaFormatFields(area, ctx) : { fill: INHERITED_FILL }),
 		roundedCorners: chart.roundedCorners === false ? false : undefined,
 	})
 }
@@ -944,12 +947,16 @@ function areaFormatOption(area: ChartAreaFormat, ctx: MapContext): IrValue | und
 	return compact(areaFormatFields(area, ctx))
 }
 
+/** The fill an area that states none of its own takes: the chart style's (#186). */
+const INHERITED_FILL = { type: 'inherit' }
+
 /** {@link areaFormatOption}'s fields, for a caller that adds its own. */
 function areaFormatFields(area: ChartAreaFormat, ctx: MapContext): Record<string, IrValue | undefined> {
-	// No fill and no border are what the writer draws when either is left out.
+	// No fill and no border are what the writer draws when either is left out, so an area with no fill
+	// of its own says so: left out, it would come back explicitly unfilled.
 	const border = area.border
 	return {
-		fill: area.fillNoFill ? undefined : surfaceFill(area, ctx, 'fill'),
+		fill: !area.hasOwnFill ? INHERITED_FILL : area.fillNoFill ? undefined : surfaceFill(area, ctx, 'fill'),
 		border: border && !border.noFill ? borderOption(border) : undefined,
 	}
 }

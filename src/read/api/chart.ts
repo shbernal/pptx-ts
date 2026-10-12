@@ -23,6 +23,7 @@ import {
 	OOXML_NS,
 } from '../oxml/dom.js'
 import { CHART_METADATA_EXT_URI, CHART_METADATA_NS } from '../../ooxml/chart-metadata.js'
+import { hasFillChoice } from '../oxml/fill.js'
 import { readIndexedPoints } from '../oxml/point-cache.js'
 import { readLineBasics } from './line.js'
 import { readColorRef, resolveColorElement, type ColorRef, type ResolvedColor } from './theme-context.js'
@@ -200,6 +201,11 @@ export interface ChartManualLayout {
 export interface ChartAreaFormat {
 	/** Whether the area is explicitly unfilled (`a:noFill`). */
 	fillNoFill: boolean
+	/**
+	 * Whether the area states a fill of its own: any fill choice, `a:noFill` included. `false` when
+	 * it states none and inherits its fill from the chart style.
+	 */
+	hasOwnFill: boolean
 	/** A literal solid fill colour (`a:srgbClr`), or `null`. */
 	fillColor: string | null
 	/** A theme solid fill colour (`a:schemeClr`), or `null`. */
@@ -1301,6 +1307,7 @@ function readAreaFormat(spPr: Element | null, layout: Element | null, rels: Rela
 	const ln = spPr && firstChild(spPr, 'a:ln')
 	return {
 		fillNoFill: spPr ? firstChild(spPr, 'a:noFill') !== null : false,
+		hasOwnFill: hasFillChoice(spPr),
 		fillColor: colorValueOf(color, 'srgbClr'),
 		fillSchemeColor: colorValueOf(color, 'schemeClr'),
 		resolvedFill: color && color.localName === 'srgbClr' ? resolveColorElement(color, NO_THEME) : null,

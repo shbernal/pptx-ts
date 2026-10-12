@@ -375,6 +375,24 @@ describe('chart and plot areas, manual layouts and series effects', () => {
 		expect(rebuiltOptions(readModelToIr(presentation), 'probe')).toMatchObject(options)
 	})
 
+	// An area with no fill of its own inherits one, and the writer spells an absent option `a:noFill`,
+	// so the rebuilt chart stated no fill where its source inherited (#186).
+	test.each(['chartArea', 'plotArea'] as const)('a %s fill of type inherit comes back as inherit', async (key) => {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addChart(SERIES, {
+				type: 'bar',
+				x: 1,
+				y: 1,
+				w: 6,
+				h: 4,
+				objectName: 'probe',
+				[key]: { fill: { type: 'inherit' } },
+			})
+		})
+		expect(chartNamed(presentation, 'probe')[key]?.hasOwnFill).toBe(false)
+		expect(rebuiltOptions(readModelToIr(presentation), 'probe')[key]).toEqual({ fill: { type: 'inherit' } })
+	})
+
 	test("a chart area's picture fill comes back as a picture", async () => {
 		const png =
 			'image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
