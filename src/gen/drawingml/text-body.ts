@@ -191,7 +191,7 @@ export function genXmlTextBody(slideObj: SlideObject | TableCellInternal, slideC
 		// KNOWN LIMITATION: horizontal align on a LINE does not work — text is always left-aligned inside the line.
 		if (opts.h === 0 && opts.line && opts.align)
 			strSlideXml += el('a:lstStyle', null, raw(voidEl('a:lvl1pPr', { algn: 'l' })))
-		else if (slideObj._type === SlideObjectType.placeholder)
+		else if (slideObj._type === SlideObjectType.placeholder && !slideObj._seeded)
 			strSlideXml += el('a:lstStyle', null, raw(genXmlParagraphProperties(slideObj, true)))
 		else strSlideXml += voidEl('a:lstStyle')
 	}
