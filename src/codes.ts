@@ -259,6 +259,9 @@ export type InvalidOptionErrorCode =
 	| 'image/crop-window-overflows'
 	| 'image/crop-inset-out-of-range'
 	| 'image/crop-insets-exceed-extent'
+	// Placeholder bindings
+	| 'placeholder/invalid-idx'
+	| 'placeholder/invalid-type'
 	// Media and OLE
 	| 'media/missing-source'
 	| 'media/missing-base64-header'

@@ -5,6 +5,7 @@
  */
 import type { PLACEHOLDER_TYPE, SHAPE_NAME } from '../enums.js'
 import type { Margin, PositionProps } from './core.js'
+import type { PlaceholderXmlType } from '../ooxml/st-enums.js'
 import type { ImageProps } from './media.js'
 import type { ShapeProps } from './shape.js'
 import type { TextBaseProps, TextProps, TextPropsOptions } from './text.js'
@@ -35,6 +36,36 @@ export interface PlaceholderProps
 	 */
 	rectRadius?: number
 }
+/**
+ * A slide object's placeholder binding stated in full: the `p:ph` it writes, with or without a
+ * layout placeholder of that name in the same deck.
+ *
+ * The string form of `placeholder` binds only to a placeholder the deck's own layout defines by
+ * name, and takes its `idx` from there. A slide that fills a placeholder of a layout the deck does
+ * not define, such as one from a template it is appended to, needs the `idx` stated, because
+ * PowerPoint matches a slide placeholder to its layout's by `idx`.
+ * @example { idx: 1 } // the content placeholder of PowerPoint's "Title and Content" layout
+ * @example { type: 'ctrTitle' } // the title of a title slide
+ */
+export interface PlaceholderBinding {
+	/**
+	 * Name of a layout placeholder defined in this deck, as the string form takes it. The object
+	 * inherits its options and frame, and its `type` and `idx` unless they are stated here too.
+	 */
+	name?: string
+	/**
+	 * `p:ph/@type`. Omitted, it is the named layout placeholder's type, else none, which
+	 * PowerPoint reads as `obj`.
+	 */
+	type?: PlaceholderXmlType
+	/**
+	 * `p:ph/@idx`, a non-negative integer. Omitted, it is the named layout placeholder's index,
+	 * else none, which PowerPoint reads as `0`.
+	 */
+	idx?: number
+}
+/** A slide object's `placeholder`: a layout placeholder's name, or a {@link PlaceholderBinding}. */
+export type PlaceholderOption = string | PlaceholderBinding
 export interface ObjectNameProps {
 	/**
 	 * Object name

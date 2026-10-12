@@ -26,7 +26,7 @@ import type {
 	VAlign,
 } from './core.js'
 import type { ShapeAdjustValue } from './shape.js'
-import type { ObjectNameProps } from './object.js'
+import type { ObjectNameProps, PlaceholderOption } from './object.js'
 import type { FillOption, HyperlinkProps, ShadowProps, ShapeLineProps } from './style.js'
 
 /**
@@ -483,6 +483,9 @@ export interface TextPropsOptions extends PositionProps, DataOrPathProps, TextBa
 	 *   a real `<p:ph type="...">`. Use `placeholder: 'title'` to give a slide an accessible
 	 *   title (PowerPoint's accessibility checker otherwise reports "Missing Slide Title")
 	 * - values: 'title' | 'body' | et. al.
+	 * - a {@link PlaceholderBinding} states the `p:ph` in full: its `name` binds as the string
+	 *   does, and its `type` and `idx` are written whether or not a layout placeholder matches,
+	 *   which is how text fills a placeholder of a layout this deck does not define
 	 *
 	 * **The placeholder supplies, it does not impose.** Every option this bag states wins; the
 	 * layout placeholder fills in the ones it leaves out. So `{ placeholder: 'body' }` alone
@@ -495,9 +498,10 @@ export interface TextPropsOptions extends PositionProps, DataOrPathProps, TextBa
 	 * inheritance runs: a value this library defaults on the way past does not count as the
 	 * caller stating one, and does not beat the layout.
 	 * @example 'title'
+	 * @example { type: 'body', idx: 1 }
 	 * @see https://learn.microsoft.com/en-us/office/vba/api/powerpoint.ppplaceholdertype
 	 */
-	placeholder?: string
+	placeholder?: PlaceholderOption
 	/**
 	 * Corner radius (inches) of the text box's `shape`, for `'roundRect'` and the other rounded presets
 	 * - resolved against the shorter side of the box and written as the preset's corner guide

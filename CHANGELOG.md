@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`placeholder` takes a binding: `{ name?, type?, idx? }`.** On `addText`, `addImage` and
+  `addTable`, a stated `type` or `idx` writes that `p:ph` whether or not the deck defines a layout
+  placeholder to match, so a slide can fill placeholder `idx="1"` of a template layout it is
+  appended to. `type` takes any `ST_PlaceholderType` value (`ctrTitle`, `subTitle`, `ftr`, …).
+  `name` binds as the string form does, and a stated `idx` or `type` wins over the named
+  placeholder's. A binding to a layout placeholder's `idx` fills it, so no empty copy is stamped.
+  A bad `idx` or `type` throws `placeholder/invalid-idx` or `placeholder/invalid-type`
+  ([#112](https://github.com/shbernal/pptx-ts/issues/112)).
 - **`Paragraph.endLanguage` reads the language of a paragraph's end mark** (`a:endParaRPr/@lang`),
   or `null` when it states none.
 - **`Picture.recolors` reads every blip effect on a picture**, in document order. `recolor` reads
@@ -56,6 +64,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`readModelToIr` keeps a placeholder's layout binding.** A text placeholder bound by `idx`
+  (every body placeholder) and a picture or table in a placeholder came back as plain objects
+  under a `shape.placeholder` note. They now carry the source's `p:ph` as a `placeholder: { type,
+  idx }` binding, in both printed scripts. A chart in a placeholder is still noted: `addChart`
+  takes no `placeholder` ([#111](https://github.com/shbernal/pptx-ts/issues/111),
+  [#112](https://github.com/shbernal/pptx-ts/issues/112)).
 - **`textStyles` `bullet: true` writes a bullet.** On a slide-master level it wrote nothing, so the
   title, whose default is no bullet, could not be given one without a `characterCode`. It now
   writes the level's own glyph, or `•` where the level has none, as `addText`'s `bullet: true` does

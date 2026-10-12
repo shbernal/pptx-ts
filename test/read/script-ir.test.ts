@@ -1189,13 +1189,28 @@ describe('deck IR — slide placeholders', () => {
 		assertEqual(ph(await replay(ir)), source, 'the replay writes the same p:ph')
 	})
 
-	test('a placeholder bound by idx is flattened, and the note names the missing idx', async () => {
-		// PowerPoint numbers a layout's body placeholders with `idx`, and `placeholder` writes none.
+	test('a placeholder bound by idx carries its idx, and the replay writes the same p:ph', async () => {
+		// PowerPoint numbers a layout's body placeholders with `idx`. The string form writes none, so
+		// this placeholder was flattened under a note (#112); a `{ type, idx }` binding writes it.
 		const ir = await irFor('placeholder-inherit.pptx')
-		const note = ir.fidelity.find((n) => n.construct === 'shape.placeholder')
-		assert(note, 'an idx-bound placeholder is still declared')
-		assertEqual(note.cause, 'unwritable', 'the write option has no idx')
-		assert(note.detail.includes('idx'), `the note names the idx: ${note.detail}`)
+		assert(!constructs(ir).has('shape.placeholder'), `no loss is declared: ${JSON.stringify(ir.fidelity)}`)
+		const options = allCalls(ir)
+			.filter((call) => call.method === 'addText')
+			.map((call) => objectOf(call.args[1]).placeholder)
+		assertEqual(JSON.stringify(options), '["title",{"idx":1,"type":"body"}]', 'the title as a type, the body by idx')
+		const { buf } = await authorRead((pres) => {
+			const slide = pres.addSlide()
+			for (const call of allCalls(ir).filter((candidate) => candidate.method === 'addText'))
+				slide.addText(...(call.args as Parameters<typeof slide.addText>))
+		})
+		const phs = (await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml'))
+			.match(/<p:ph[^>]*>/g)
+			?.map((ph) => ph.replace(/\s+/g, ' '))
+		assertEqual(
+			JSON.stringify(phs),
+			JSON.stringify(['<p:ph type="title" />', '<p:ph idx="1" type="body" />']),
+			'with no layout defining idx 1'
+		)
 	})
 })
 
@@ -1362,10 +1377,10 @@ describe('deck IR — slide transitions', () => {
 
 describe('deck IR — a picture in a placeholder', () => {
 	// The picture's `p:ph` had no accessor, so the IR dropped its layout binding with no note
-	// (issue #111). `addImage({ placeholder })` binds only to a layout placeholder defined in the
-	// same deck by name, which neither printed script defines, so the binding is declared lost.
-	test('declares its layout binding lost', async () => {
-		const { presentation } = await authorRead((pres) => {
+	// (issue #111). `addImage({ placeholder })` takes it as a `{ type, idx }` binding, which writes
+	// the source's `p:ph` with no layout placeholder defined by name in the printed script (#112).
+	test('carries its layout binding as a placeholder binding', async () => {
+		const { presentation, buf } = await authorRead((pres) => {
 			pres.defineSlideMaster({
 				title: 'PICTURE_MASTER',
 				objects: [{ placeholder: { options: { name: 'pic', type: 'pic', x: 1, y: 1, w: 5, h: 1.5 }, text: '' } }],
@@ -1374,8 +1389,35 @@ describe('deck IR — a picture in a placeholder', () => {
 				.addSlide({ masterTitle: 'PICTURE_MASTER' })
 				.addImage({ data: PNG_1X1, x: 1, y: 1, w: 5, h: 1.5, placeholder: 'pic' })
 		})
+		const source = defined(
+			(await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml')).match(/<p:ph[^>]*>/)?.[0]
+		)
 		const ir = readModelToIr(presentation)
-		const note = ir.fidelity.find((n) => n.slideNumber === 1 && n.construct === 'shape.placeholder')
+		assert(!constructs(ir).has('shape.placeholder'), `no loss is declared: ${JSON.stringify(ir.fidelity)}`)
+		const image = objectOf(defined(allCalls(ir).find((call) => call.method === 'addImage')).args[0])
+		assertEqual(JSON.stringify(image.placeholder), '{"idx":100,"type":"pic"}', `the binding carries, from ${source}`)
+
+		const { buf: replayed } = await authorRead((pres) => {
+			pres.addSlide().addImage({ ...(image as object), data: PNG_1X1 })
+		})
+		const ph = defined(
+			(await readEntry(await JSZip.loadAsync(replayed), 'ppt/slides/slide1.xml')).match(/<p:ph[^>]*>/)?.[0]
+		)
+		assertEqual(ph.replace(/\s+/g, ' '), '<p:ph idx="100" type="pic" />', 'and the replay writes it')
+	})
+
+	test('a chart in a placeholder declares its binding lost', async () => {
+		// `addChart` takes no `placeholder` option.
+		const { buf } = await authorRead((pres) => {
+			pres.addSlide().addChart([{ name: 'S', labels: ['a'], values: [1] }], { type: 'bar', x: 1, y: 1, w: 4, h: 3 })
+		})
+		const zip = await JSZip.loadAsync(buf)
+		const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
+		const bound = slideXml.replace('<p:nvPr></p:nvPr>', '<p:nvPr><p:ph type="chart" idx="2"/></p:nvPr>')
+		assert(bound !== slideXml, 'the chart frame was given a p:ph')
+		zip.file('ppt/slides/slide1.xml', bound)
+		const ir = readModelToIr(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
+		const note = ir.fidelity.find((n) => n.construct === 'shape.placeholder')
 		assert(note, 'the binding is declared: ' + JSON.stringify(ir.fidelity))
 		assertEqual(note.cause, 'unwritable', 'as one the write API cannot reproduce')
 	})
