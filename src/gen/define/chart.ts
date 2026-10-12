@@ -1138,6 +1138,15 @@ export function addChartDefinition(
 	data: OptsChartData[] | ChartOpts,
 	opt?: ChartOptsInternal
 ): object {
+	// A one-entry array combines nothing, and for a bubble chart it is the only way the multi-type
+	// form could ever be written: any bubble entry is refused as a combo below, so `type[].data[].sizes`
+	// type-checked and could never reach a deck (#140). It is written as the standalone chart, its
+	// options over the chart-level ones, as a combo subchart's are.
+	const [only] = Array.isArray(type) && type.length === 1 ? type : []
+	if (only && isChartType(only.type) && isBubbleChart(asChartType(only.type))) {
+		const chartOpts = !Array.isArray(data) && data && typeof data === 'object' ? data : opt
+		return addChartDefinition(target, only.type, only.data, { ...chartOpts, ...only.options })
+	}
 	// Placeholder part identity, unique only within this target. The authoritative,
 	// package-unique chart part filename is assigned at write time by a per-presentation
 	// pass in `buildPackageParts` (`package/assemble.ts`, STEP 2). A module-global counter
