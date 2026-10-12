@@ -73,6 +73,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A table cell writes `hyperlink.action` and `bullet.image`.** A show-jump link on a cell wrote
+  no `a:hlinkClick`, leaving underlined text that went nowhere, and a picture bullet fell back to
+  a `•` glyph with `bullet/image-embed-failed`. Both are now written as `addText` writes them
+  ([#82](https://github.com/shbernal/pptx-ts/issues/82)).
+- **A picture bullet no longer writes its relationship id into the caller's `bullet` object.**
+  Reused in a second deck, that object carried an `r:embed` the deck never declared
+  ([#83](https://github.com/shbernal/pptx-ts/issues/83)).
 - **A slide object filling a layout placeholder no longer writes `hasCustomPrompt`.** `addText`
   and `addImage` with `placeholder` copied the flag from the layout's definition onto the slide's
   `p:ph`, so a filled shape claimed its own text was prompt text. Only the layout or master

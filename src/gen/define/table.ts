@@ -37,6 +37,7 @@ import { resolveObjectName } from './object-name.js'
 import { checkPlaceholderBinding, placeholderFrame } from './layout-placeholder.js'
 import { EMU_PER_INCH } from '../../units.js'
 import { createHyperlinkRels } from './hyperlinks.js'
+import { createBulletImageRels } from './text.js'
 import { resolveFillKind } from '../drawingml/fill.js'
 import { registerImageFillMedia } from './image.js'
 import { InvalidOptionError } from '../../errors.js'
@@ -652,6 +653,15 @@ export function addTableDefinition(
 		// Same timing rule as the hyperlink rels above: resolve cell image fills to media rels
 		// on the slide this table actually landed on.
 		registerTableImageFills(target, arrRows, opt)
+
+		// And the picture bullets, on a cell or on one of its runs, the way `addText` registers them.
+		// Left out, a cell's `bullet.image` fell back to a glyph (#82).
+		createBulletImageRels(
+			target,
+			arrRows.flatMap((row) =>
+				row.flatMap((cell) => [cell.options, ...(Array.isArray(cell.text) ? cell.text.map((run) => run.options) : [])])
+			)
+		)
 
 		// Add slideObjects (NOTE: Use `extend` to avoid mutation)
 		// `columns` (per-column TableCellProps[]) is consumed in STEP 1.5 and baked into cells;
