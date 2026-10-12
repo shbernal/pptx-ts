@@ -201,4 +201,28 @@ defineRegressionSuite('Chart embedding parts [legacy bug-17]', [
 			columns.forEach((col) => assert(col.includes('name='), '`name` is required on a tableColumn; got: ' + col))
 		},
 	},
+	{
+		// The workbook names its author the way the deck's own `core.xml` does by default: the
+		// package name, not the class name, which is an API detail and has changed before.
+		name: "the embedded workbook's document properties name the library as pptx-ts",
+		fn: async () => {
+			const { buf } = await build((p) => {
+				p.addSlide().addChart([{ name: 'S1', labels: ['a', 'b'], values: [1, 2] }], {
+					type: ChartType.bar,
+					x: 1,
+					y: 1,
+					w: 6,
+					h: 4,
+				})
+			})
+			const xlsx = await JSZip.loadAsync(
+				await defined((await JSZip.loadAsync(buf)).file('ppt/embeddings/Microsoft_Excel_Worksheet1.xlsx')).async(
+					'arraybuffer'
+				)
+			)
+			const core = await defined(xlsx.file('docProps/core.xml')).async('string')
+			assertIncludes(core, '<dc:creator>pptx-ts</dc:creator>', 'the workbook creator')
+			assertIncludes(core, '<cp:lastModifiedBy>pptx-ts</cp:lastModifiedBy>', 'the workbook last editor')
+		},
+	},
 ])

@@ -171,8 +171,8 @@ export function buildEmbeddedWorksheet(chartObject: SlideRelChart): Uint8Array {
 				'docProps/core.xml',
 				XML_DECL +
 					el('cp:coreProperties', CORE_PROPS_NS, [
-						raw(el('dc:creator', null, 'TsPptx')),
-						raw(el('cp:lastModifiedBy', null, 'TsPptx')),
+						raw(el('dc:creator', null, 'pptx-ts')),
+						raw(el('cp:lastModifiedBy', null, 'pptx-ts')),
 						raw(el('dcterms:created', { 'xsi:type': 'dcterms:W3CDTF' }, now)),
 						raw(el('dcterms:modified', { 'xsi:type': 'dcterms:W3CDTF' }, now)),
 					])
