@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`CellBorder.cap` reads a table cell edge's or diagonal's line cap** (`@cap`) as its raw token,
+  `flat`, `rnd` or `sq`, or `null` when unset.
 - **`placeholder` takes a binding: `{ name?, type?, idx? }`.** On `addText`, `addImage` and
   `addTable`, a stated `type` or `idx` writes that `p:ph` whether or not the deck defines a layout
   placeholder to match, so a slide can fill placeholder `idx="1"` of a template layout it is
@@ -73,6 +75,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`readModelToIr` keeps a table cell border's `cap` and `transparency`.** Both came back as the
+  writer's defaults with no note, on an edge and on a diagonal
+  ([#81](https://github.com/shbernal/pptx-ts/issues/81)).
 - **A table cell writes `hyperlink.action` and `bullet.image`.** A show-jump link on a cell wrote
   no `a:hlinkClick`, leaving underlined text that went nowhere, and a picture bullet fell back to
   a `•` glyph with `bullet/image-embed-failed`. Both are now written as `addText` writes them
