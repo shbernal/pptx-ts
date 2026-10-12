@@ -61,6 +61,37 @@ function recolorColorOf(color: Element | null, ctx: ColorContext): ColorRef | nu
 	return readColorRef(color, ctx)
 }
 
+/** One `a:blip` child as a {@link Recolor}, or `null` when it is not one of the five recognised effects. */
+function recolorOf(child: Element, ctx: ColorContext): Recolor | null {
+	switch (child.localName) {
+		case 'duotone':
+			return {
+				kind: 'duotone',
+				stops: childElements(child)
+					.map((color) => recolorColorOf(color, ctx))
+					.filter((c): c is ColorRef => c !== null),
+			}
+		case 'clrChange': {
+			const from = firstChild(child, 'a:clrFrom')
+			const to = firstChild(child, 'a:clrTo')
+			return {
+				kind: 'clrChange',
+				from: from ? recolorColorOf(firstChildElement(from), ctx) : null,
+				to: to ? recolorColorOf(firstChildElement(to), ctx) : null,
+			}
+		}
+		case 'grayscl':
+			return { kind: 'grayscale' }
+		case 'biLevel': {
+			return { kind: 'biLevel', threshold: pctAttr(child, 'thresh') }
+		}
+		case 'alphaModFix': {
+			return { kind: 'alphaModFix', amount: pctAttr(child, 'amt') ?? 1 }
+		}
+	}
+	return null
+}
+
 /** A picture (`p:pic`). */
 export class Picture extends Shape {
 	readonly shapeType = 'picture' as const
@@ -173,46 +204,33 @@ export class Picture extends Shape {
 	 * `null` when the blip carries none. Recognises the effects a faithful reader
 	 * needs to reproduce a recoloured image: `a:duotone` (the two-stop icon-tint
 	 * trick), `a:clrChange`, `a:grayscl`, `a:biLevel`, and `a:alphaModFix`; the
-	 * first such effect in document order wins. Colours mirror the
+	 * first such effect in document order wins, and {@link recolors} lists them all. Colours mirror the
 	 * {@link GradientStop} split (`color`/`schemeColor`/`presetColor`) so theme
 	 * tokens resolve through {@link Slide.themeContext}. `threshold`/`amount` are
 	 * 0–1 fractions. {@link hidden} (the duotone fallback-layer trick) reports the
 	 * *visibility* of a recolour source; this reports the *tint* itself.
 	 */
 	get recolor(): Recolor | null {
+		return this.recolors[0] ?? null
+	}
+
+	/**
+	 * Every blip effect {@link recolor} recognises, in document order: the first is
+	 * {@link recolor}. They combine (a picture can be faded with `a:alphaModFix` and
+	 * recoloured too, which is how the write API emits `transparency` beside a
+	 * recolour), and {@link recolor} alone reported only the first of them.
+	 */
+	get recolors(): Recolor[] {
 		const blip = this.#blip()
-		if (!blip) return null
+		if (!blip) return []
 		const ctx = this.host.themeContext()
+		const out: Recolor[] = []
 		for (const child of childElements(blip)) {
 			if (child.namespaceURI !== OOXML_NS.a) continue
-			switch (child.localName) {
-				case 'duotone':
-					return {
-						kind: 'duotone',
-						stops: childElements(child)
-							.map((color) => recolorColorOf(color, ctx))
-							.filter((c): c is ColorRef => c !== null),
-					}
-				case 'clrChange': {
-					const from = firstChild(child, 'a:clrFrom')
-					const to = firstChild(child, 'a:clrTo')
-					return {
-						kind: 'clrChange',
-						from: from ? recolorColorOf(firstChildElement(from), ctx) : null,
-						to: to ? recolorColorOf(firstChildElement(to), ctx) : null,
-					}
-				}
-				case 'grayscl':
-					return { kind: 'grayscale' }
-				case 'biLevel': {
-					return { kind: 'biLevel', threshold: pctAttr(child, 'thresh') }
-				}
-				case 'alphaModFix': {
-					return { kind: 'alphaModFix', amount: pctAttr(child, 'amt') ?? 1 }
-				}
-			}
+			const effect = recolorOf(child, ctx)
+			if (effect) out.push(effect)
 		}
-		return null
+		return out
 	}
 
 	/**

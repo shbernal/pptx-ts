@@ -281,6 +281,92 @@ export default [
 		},
 	},
 	{
+		name: 'chart and plot area picture fills',
+		fn: async () => {
+			const png =
+				'image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+			const { buf } = await build((p) => {
+				p.addSlide().addChart([{ name: 'S', labels: ['A', 'B'], values: [1, 2] }], {
+					type: 'bar',
+					x: 1,
+					y: 1,
+					w: 6,
+					h: 4,
+					chartArea: { fill: { type: 'image', image: { data: png } } },
+					plotArea: { fill: { type: 'image', image: { data: png } } },
+				})
+			})
+			await expectNoSchemaErrors(buf, 'chart-area-picture-fill')
+		},
+	},
+	{
+		name: 'chart axis entries with crossings and a per-axis value format',
+		fn: async () => {
+			const data = [{ name: 'S', labels: ['A', 'B', 'C'], values: [1, 2, 3] }]
+			const { buf } = await build((p) => {
+				p.addSlide().addChart(
+					[
+						{ type: 'bar', data, options: {} },
+						{ type: 'line', data, options: { secondaryValAxis: true, secondaryCatAxis: true } },
+					],
+					{
+						x: 1,
+						y: 1,
+						w: 6,
+						h: 4,
+						catAxes: [{ catAxisCrossesAt: 2 }, {}],
+						valAxes: [{ valAxisCrossesAt: 1, valLabelFormatCode: '0.0' }, { valLabelFormatCode: '0%' }],
+					}
+				)
+			})
+			await expectNoSchemaErrors(buf, 'chart-axis-entries')
+		},
+	},
+	{
+		name: 'layout placeholder definitions with a stated idx and any ST_PlaceholderType',
+		fn: async () => {
+			const { buf } = await build((p) => {
+				p.defineSlideMaster({
+					title: 'TYPED',
+					objects: [
+						{ placeholder: { options: { name: 'title', type: 'ctrTitle', idx: 0, x: 1, y: 1, w: 8, h: 1 } } },
+						{ placeholder: { options: { name: 'Content 2', type: 'obj', idx: 1, x: 1, y: 2, w: 8, h: 2 } } },
+						{ placeholder: { options: { name: 'Date 3', type: 'dt', idx: 10, x: 1, y: 5, w: 2, h: 0.4 } } },
+						{ placeholder: { options: { name: 'Number 4', type: 'sldNum', idx: 12, x: 7, y: 5, w: 2, h: 0.4 } } },
+					],
+				})
+				p.addSlide({ masterTitle: 'TYPED' }).addText('Title', {
+					x: 1,
+					y: 1,
+					w: 8,
+					h: 1,
+					placeholder: { type: 'ctrTitle' },
+				})
+			})
+			await expectNoSchemaErrors(buf, 'layout-placeholder-definitions')
+		},
+	},
+	{
+		name: 'object locks on a chart frame and a group',
+		fn: async () => {
+			const { buf } = await build((p) => {
+				const s = p.addSlide()
+				s.addChart([{ name: 'S', labels: ['A', 'B'], values: [1, 2] }], {
+					type: 'bar',
+					x: 1,
+					y: 1,
+					w: 4,
+					h: 3,
+					objectLock: { noGrp: true, noDrilldown: true, noMove: true, noResize: true },
+				})
+				s.addGroup([{ rect: { x: 6, y: 1, w: 1, h: 1 } }, { rect: { x: 8, y: 1, w: 1, h: 1 } }], {
+					objectLock: { noGrp: true, noUngrp: true },
+				})
+			})
+			await expectNoSchemaErrors(buf, 'chart-group-locks')
+		},
+	},
+	{
 		name: 'shape line with round cap',
 		fn: async () => {
 			const { buf } = await build((p) => {
@@ -2770,6 +2856,26 @@ export default [
 				s.addText('another svg', { x: 1, y: 2, w: 4, h: 0.5, bullet: { image: { data: svg } } })
 			})
 			await expectNoSchemaErrors(buf, 'svg-picture-bullet')
+		},
+	},
+	{
+		name: 'table cell picture bullet and show-jump link',
+		fn: async () => {
+			const png =
+				'image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+			const { buf } = await build((p) => {
+				p.addSlide().addTable(
+					[
+						[
+							{ text: 'picture', options: { bullet: { image: { data: png } } } },
+							{ text: 'next', options: { hyperlink: { action: 'nextslide' } } },
+						],
+					],
+					{ x: 1, y: 1, w: 6, h: 1 }
+				)
+				p.addSlide()
+			})
+			await expectNoSchemaErrors(buf, 'table-cell-picture-bullet-action')
 		},
 	},
 	{

@@ -351,6 +351,7 @@ function diffSlide(expected: CanonicalSlide, actual: CanonicalSlide, out: IrDiff
 	at('layoutName', 'layoutName', expected.layoutName, actual.layoutName)
 	at('background', 'background', expected.background, actual.background)
 	at('notesText', 'notesText', expected.notesText, actual.notesText)
+	at('notesRuns', 'notesRuns', expected.notesRuns, actual.notesRuns)
 	at('slideNumber', 'slideNumber', expected.slideNumber, actual.slideNumber)
 	// Structural rather than whole-value, unlike those above: a transition is a small object
 	// whose parts are lost independently — the append path drops an embedded sound while

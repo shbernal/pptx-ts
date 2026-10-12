@@ -31,21 +31,29 @@ import {
 	type AutoShape,
 	type Connector,
 	type CustomGeometry,
+	type GeometryCoordinate,
 	type GraphicFrame,
 	type GroupShape,
 	type Picture,
+	type Recolor,
 } from '../../read/api/shapes.js'
+import type { ColorRef } from '../../read/api/theme-context.js'
+import type { GroupTransform } from '../../read/api/shapes/group-transform.js'
 import { UNWRITABLE_FRAME_CONSTRUCTS, type NoteScope, type UnwritableFramePayload } from '../fidelity.js'
 import { isAssetRef, type CallIr, type IrValue } from '../ir.js'
 import type { ConnectorProps, ShapeLineProps } from '../../types/style.js'
 import {
+	alphaToTransparency,
+	colorOption,
 	compact,
 	compactRequired,
 	emu,
 	frameOf,
+	groupTransformOf,
 	identityOptions,
 	lockOption,
 	nameOf,
+	orUndefined,
 	positionOptions,
 	type ShapeBox,
 } from './values.js'
@@ -56,9 +64,10 @@ import { tableCall } from './table.js'
 import { chartCall } from './chart.js'
 import { forShape, type MapContext } from './context.js'
 import { cropOption, isRectSet } from './picture-fill.js'
-import { PERCENT_SCALE } from '../../units.js'
+import { FIXED_PCT_PER_PERCENT, PERCENT_SCALE } from '../../units.js'
 import { GROUP_SHAPE_LOCK_ATTRS, PICTURE_LOCK_ATTRS, SHAPE_LOCK_ATTRS } from '../../ooxml/lock-attrs.js'
 import { PlaceholderType } from '../../enums.js'
+import { PLACEHOLDER_TYPES } from '../../ooxml/st-enums.js'
 
 import { glowOption, lineOption, noteHidden, shadowOption, styleOptions, transformOptions } from './shape-paint.js'
 
@@ -75,9 +84,9 @@ export function shapeCall(shape: AnyShape, ctx: MapContext): CallIr | null {
 	}
 
 	if (isGroupShape(shape)) return groupCall(shape, scoped)
-	if (isPicture(shape)) return pictureCall(shape, scoped)
-	if (isConnector(shape)) return connectorCall(shape, scoped.notes)
-	if (isGraphicFrame(shape)) return graphicFrameCall(shape, scoped)
+	if (isPicture(shape)) return withPlaceholder(shape, pictureCall(shape, scoped), scoped.notes)
+	if (isConnector(shape)) return connectorCall(shape, scoped)
+	if (isGraphicFrame(shape)) return withPlaceholder(shape, graphicFrameCall(shape, scoped), scoped.notes)
 	if (isAutoShape(shape)) return autoShapeCall(shape, scoped)
 
 	// Unreachable: the five guards above exhaust `AnyShape`, which is why `shape` narrows to
@@ -104,45 +113,105 @@ function autoShapeText(shape: AutoShape, notes: NoteScope): TextFrame | null {
 	return noteUnreadText(frame, shape.element_, notes, 'shape').length > 0 ? frame : null
 }
 
-/** The `p:ph/@type` values `placeholder` writes back as they are (`genXmlPlaceholder`). */
-const WRITABLE_PLACEHOLDER_TYPES: ReadonlySet<string> = new Set(Object.values(PlaceholderType))
-
 /**
- * A slide placeholder as the `placeholder` option, when that reproduces its `p:ph`.
+ * A picture, table or chart placeholder's call, carrying its layout binding where the call takes one.
  *
- * The option takes a type and writes `<p:ph type="…"/>` with no `idx`, so it reproduces a
- * placeholder that has one of the six types it knows and the default `idx` of 0: a title, or text
- * placed with `placeholder` itself. That used to be flattened too, under a note blaming the output
- * tier. A placeholder PowerPoint binds to its layout by `idx` (every body placeholder) cannot be
- * written, so it is still flattened, with its inherited geometry and styling baked in.
+ * `addImage`, `addTable` and `addChart` take the source's `p:ph` as a `placeholder` binding (#111).
+ * A graphic frame written back as some other call keeps its frame and no longer follows its layout,
+ * under a note.
  */
-function placeholderOption(shape: AutoShape, notes: NoteScope): IrValue | undefined {
+function withPlaceholder(shape: Picture | GraphicFrame, call: CallIr | null, notes: NoteScope): CallIr | null {
 	const ph = shape.placeholder
-	if (!ph) return undefined
-	if (ph.idx === '0' && ph.type !== null && WRITABLE_PLACEHOLDER_TYPES.has(ph.type)) return ph.type
+	if (!call || !ph) return call
+	const binding = placeholderBinding(ph, false)
+	// The options bag: `addImage(options)`, `addTable(rows, options)`, `addChart(data, options)`.
+	const at = call.method === 'addImage' ? 0 : call.method === 'addTable' || call.method === 'addChart' ? 1 : -1
+	const options = at >= 0 ? call.args[at] : undefined
+	if (
+		binding !== undefined &&
+		options !== null &&
+		typeof options === 'object' &&
+		!Array.isArray(options) &&
+		!isAssetRef(options)
+	) {
+		const args = [...call.args]
+		args[at] = { ...options, placeholder: binding }
+		return { ...call, args }
+	}
 	notes.note(
 		'shape.placeholder',
 		'flattened',
 		'unwritable',
-		`this placeholder (p:ph type="${ph.type ?? 'body'}" idx="${ph.idx}") is emitted as a plain shape with its inherited geometry and styling baked in, so it no longer follows its layout; the placeholder option names a type and writes no idx, ${ph.idx === '0' ? 'and does not know this type' : 'so it cannot bind to the layout placeholder this one is matched to by idx'}`
+		binding === undefined
+			? `this ${shape.shapeType === 'picture' ? 'picture' : 'graphic frame'} fills a placeholder (p:ph type="${ph.type ?? 'obj'}" idx="${ph.idx}") whose type or idx has no placeholder spelling, so it is emitted as a plain object with its frame baked in and no longer follows its layout`
+			: `this graphic frame fills a placeholder (p:ph type="${ph.type ?? 'obj'}" idx="${ph.idx}") and is emitted as a plain ${call.method} with its frame baked in, so it no longer follows its layout; ${call.method} takes no placeholder option`
+	)
+	return call
+}
+
+/** The `lang` a text's options carry, which its runs then state only where they differ. */
+function textLang(options: Record<string, IrValue> | undefined): string | undefined {
+	const lang = options?.['lang']
+	return typeof lang === 'string' ? lang : undefined
+}
+
+/** The `p:ph/@type` values the string form of `placeholder` writes back as they are (`genXmlPlaceholder`). */
+const WRITABLE_PLACEHOLDER_TYPES: ReadonlySet<string> = new Set(Object.values(PlaceholderType))
+
+/**
+ * A source `p:ph` as the `placeholder` option, or `undefined` when its `type` or `idx` has no spelling.
+ *
+ * On text, a title, or text placed with `placeholder` itself, has one of the six types the string
+ * form knows and the default `idx` of 0, and comes back as that string (`typeString`). An image's
+ * or a table's string names a layout placeholder rather than a type. Anything else comes back as a
+ * `{ type, idx }` binding, which writes the source's `p:ph` whether or not the script defines the
+ * layout placeholder it binds to: a body placeholder PowerPoint matches to its layout by `idx`
+ * stays bound to it (#112). The default `idx` (0) is left out unless it is all the `p:ph` states.
+ */
+function placeholderBinding(ph: { type: string | null; idx: string }, typeString: boolean): IrValue | undefined {
+	if (typeString && ph.idx === '0' && ph.type !== null && WRITABLE_PLACEHOLDER_TYPES.has(ph.type)) return ph.type
+	const idx = Number(ph.idx)
+	if (!/^\d+$/.test(ph.idx) || idx > 0xffffffff) return undefined
+	if (ph.type !== null && !(PLACEHOLDER_TYPES as readonly string[]).includes(ph.type)) return undefined
+	// A bare `<p:ph/>` still needs one of the two stated, or the binding writes nothing.
+	if (ph.type === null) return { idx }
+	return compactRequired({ type: ph.type, idx: idx === 0 ? undefined : idx })
+}
+
+/**
+ * A slide placeholder as the `placeholder` option. Its geometry and styling are baked in as well,
+ * and they win over what it inherits, so the shape looks the same whether or not the layout it
+ * binds to is present.
+ */
+function placeholderOption(shape: AutoShape, notes: NoteScope): IrValue | undefined {
+	const ph = shape.placeholder
+	if (!ph) return undefined
+	const binding = placeholderBinding(ph, true)
+	if (binding !== undefined) return binding
+	notes.note(
+		'shape.placeholder',
+		'flattened',
+		'unwritable',
+		`this placeholder (p:ph type="${ph.type ?? 'obj'}" idx="${ph.idx}") is emitted as a plain shape with its inherited geometry and styling baked in, so it no longer follows its layout; its type or idx has no placeholder spelling`
 	)
 	return undefined
 }
 
 function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 	const { notes } = ctx
-	const box = frameOf(shape, notes)
+	const box = frameOf(shape, notes, ctx.groups)
 	if (!box) return null
 	const preset = shape.presetGeometry
 	const custom = shape.customGeometry
 	const frame = autoShapeText(shape, notes)
 
 	const placeholder = placeholderOption(shape, notes)
+	const style = styleOptions(shape, ctx)
 
 	const common = {
 		...positionOptions(box),
-		...transformOptions(shape),
-		...styleOptions(shape, ctx),
+		...transformOptions(shape, ctx.groups),
+		...style,
 		...identityOptions(shape),
 		objectLock: lockOption(shape, SHAPE_LOCK_ATTRS),
 		placeholder,
@@ -153,11 +222,11 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 	}
 
 	if (custom) {
-		noteCustGeomGuides(notes)
 		const points = customGeometryPoints(box, custom)
 		// A freeform holding text is an `addText` with the same points: this arm used to return
 		// `addShape` before the text arm below, so a freeform's text was discarded.
 		if (frame !== null) {
+			noteUnwritableCustGeomLists(custom, 'addText', notes)
 			const options = compact({
 				...common,
 				...textFrameOptions(frame, notes),
@@ -165,9 +234,16 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 				shape: 'custGeom',
 				points,
 			})
-			return { method: 'addText', args: [textRuns(frame, ctx), options ?? {}], ...nameOf(shape) }
+			return {
+				method: 'addText',
+				args: [
+					textRuns(frame, ctx, placeholder !== undefined || common.hyperlink !== undefined, textLang(options)),
+					options ?? {},
+				],
+				...nameOf(shape),
+			}
 		}
-		const options = compact({ ...common, points })
+		const options = compact({ ...common, ...addShapeLine(style['line']), points, ...custGeomListOptions(custom) })
 		return { method: 'addShape', args: ['custGeom', options ?? {}], ...nameOf(shape) }
 	}
 
@@ -181,7 +257,14 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 			...(isTextBox(shape.element_) ? { isTextBox: true } : {}),
 			...(preset === null ? {} : { shape: preset, ...adjustOptions(shape) }),
 		})
-		return { method: 'addText', args: [textRuns(frame, ctx), options ?? {}], ...nameOf(shape) }
+		return {
+			method: 'addText',
+			args: [
+				textRuns(frame, ctx, placeholder !== undefined || common.hyperlink !== undefined, textLang(options)),
+				options ?? {},
+			],
+			...nameOf(shape),
+		}
 	}
 
 	// No text and no geometry of its own: an empty placeholder, whose shape comes from the
@@ -198,18 +281,75 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 		)
 		return null
 	}
-	const options = compact({ ...common, ...adjustOptions(shape) })
+	const options = compact({ ...common, ...addShapeLine(style['line']), ...adjustOptions(shape) })
 	return { method: 'addShape', args: [preset, options ?? {}], ...nameOf(shape) }
 }
 
+/**
+ * An `addShape` call's `line`, spelled out when the source states none.
+ *
+ * `addShape` writes an absent `line` as `{ type: 'none' }`, so that is what a shape stating no
+ * outline already came back with. Left implicit, the copy's own IR stated a line the source's did
+ * not, which the round trip reported on every placeholder the writer seeds empty (#177).
+ */
+function addShapeLine(line: IrValue | undefined): { line: IrValue } {
+	return { line: line ?? { type: 'none' } }
+}
+
 /** The note for what a `custGeom` holds beside its path, shared by a freeform shape and a picture clipped to one. */
-function noteCustGeomGuides(notes: NoteScope): void {
+function noteUnwritableCustGeomLists(custom: CustomGeometry, method: string, notes: NoteScope): void {
+	if (custom.guides.length === 0 && custom.adjustHandles.length === 0 && custom.connectionSites.length === 0) return
 	notes.note(
 		'shape.custGeom.guides',
 		'dropped',
-		'unread',
-		'custGeom guides, adjust handles and connection sites (a:gdLst / a:ahLst / a:cxnLst) have no accessor, so only the path outline carries'
+		'unwritable',
+		`custGeom guides, adjust handles and connection sites (a:gdLst / a:ahLst / a:cxnLst) are addShape options, and ${method} takes the freeform's points alone, so only the path outline carries`
 	)
+}
+
+/**
+ * A custom geometry's guides, adjust handles and connection sites as `addShape` takes them. A
+ * position is in the shape's own EMU space on both sides, or names a guide, which passes through.
+ */
+function custGeomListOptions(custom: CustomGeometry): Record<string, IrValue | undefined> {
+	const coord = (value: GeometryCoordinate | null): IrValue | undefined =>
+		value === null ? undefined : typeof value === 'number' ? emu(value) : value
+	return {
+		guides: custom.guides.length
+			? custom.guides.map((guide) => ({ name: guide.name, formula: guide.formula }))
+			: undefined,
+		connectionSites: custom.connectionSites.length
+			? custom.connectionSites.map(
+					(site) => compact({ ang: site.angleDeg ?? 0, x: coord(site.x), y: coord(site.y) }) ?? { ang: 0 }
+				)
+			: undefined,
+		adjustHandles: custom.adjustHandles.length
+			? custom.adjustHandles.map(
+					(handle) =>
+						(handle.kind === 'xy'
+							? compact({
+									x: coord(handle.x),
+									y: coord(handle.y),
+									gdRefX: orUndefined(handle.gdRefX),
+									minX: coord(handle.minX),
+									maxX: coord(handle.maxX),
+									gdRefY: orUndefined(handle.gdRefY),
+									minY: coord(handle.minY),
+									maxY: coord(handle.maxY),
+								})
+							: compact({
+									x: coord(handle.x),
+									y: coord(handle.y),
+									gdRefR: orUndefined(handle.gdRefR),
+									minR: coord(handle.minR),
+									maxR: coord(handle.maxR),
+									gdRefAng: orUndefined(handle.gdRefAng),
+									minAng: orUndefined(handle.minAngDeg),
+									maxAng: orUndefined(handle.maxAngDeg),
+								})) ?? {}
+				)
+			: undefined,
+	}
 }
 
 /**
@@ -222,7 +362,7 @@ function noteCustGeomGuides(notes: NoteScope): void {
 function pictureClipOptions(shape: Picture, box: ShapeBox, notes: NoteScope): Record<string, IrValue | undefined> {
 	const custom = shape.customGeometry
 	if (custom) {
-		noteCustGeomGuides(notes)
+		noteUnwritableCustGeomLists(custom, 'addImage', notes)
 		return { points: customGeometryPoints(box, custom) }
 	}
 	const preset = shape.presetGeometry
@@ -318,7 +458,7 @@ function customGeometryPoints(box: ShapeBox, custom: CustomGeometry): IrValue {
  */
 function pictureCall(shape: Picture, ctx: MapContext): CallIr | null {
 	const { notes, assets } = ctx
-	const box = frameOf(shape, notes)
+	const box = frameOf(shape, notes, ctx.groups)
 	if (!box) return null
 	if (isAudioVideo(shape.element_)) {
 		notes.note(
@@ -357,30 +497,22 @@ function pictureCall(shape: Picture, ctx: MapContext): CallIr | null {
 			"the vector part of this SVG picture is carried and the source's own raster fallback is not; the write path generates a fresh fallback, so a renderer that cannot draw SVG shows a different image from the one the source deck shipped"
 		)
 	}
-	if (shape.recolor) {
-		notes.note(
-			'image.recolor',
-			'dropped',
-			'unwritable',
-			'a picture recolour (a:duotone / a:clrChange / a:grayscl) is read but has no write-API option'
-		)
-	}
 
-	// The same guard a picture fill's crop takes. A negative inset (PowerPoint writes one for a fit
-	// crop) or opposite insets summing to 100% or more have no `crop` spelling, and passing them
-	// through put a crop in the IR that made the printed script throw at `addImage`.
+	// The same guard a picture fill's crop takes. An inset over 100% or opposite insets summing to
+	// 100% or more have no `crop` spelling, and passing them through would put a crop in the IR
+	// that made the printed script throw at `addImage`.
 	const crop = cropOption(shape.crop)
 	if (crop === undefined && isRectSet(shape.crop)) {
 		notes.note(
 			'image.crop',
 			'approximated',
 			'unwritable',
-			"this picture's source crop (a:srcRect) has an inset outside the 0–100% `crop` accepts, or opposite insets that leave no image, so the picture is emitted uncropped"
+			"this picture's source crop (a:srcRect) has an inset over the 100% `crop` accepts, or opposite insets that leave no image, so the picture is emitted uncropped"
 		)
 	}
 	const options = compact({
 		...positionOptions(box),
-		...transformOptions(shape),
+		...transformOptions(shape, ctx.groups),
 		...identityOptions(shape),
 		// `addImage` writes `noChangeAspect` unless `objectLock` turns it off.
 		objectLock: lockOption(shape, PICTURE_LOCK_ATTRS, ['noChangeAspect']),
@@ -395,6 +527,7 @@ function pictureCall(shape: Picture, ctx: MapContext): CallIr | null {
 		// `lineOption`, so a picture's outline takes the same colour ladder and the same loss notes
 		// as every other shape's.
 		line: lineOption(shape, notes),
+		...recolorOptions(shape, notes),
 		// `crop`, not `sizing`. Both exist and they are not interchangeable: `crop` is
 		// `a:srcRect` emitted verbatim as percentage edge insets — the exact model the read
 		// model reports — while `sizing: 'crop'` cuts a window in *displayed inches* against
@@ -403,6 +536,76 @@ function pictureCall(shape: Picture, ctx: MapContext): CallIr | null {
 		crop,
 	})
 	return { method: 'addImage', args: [{ ...options, data: asset }], ...nameOf(shape) }
+}
+
+/**
+ * A picture's blip effects as the `addImage` options that write them: `grayscale`, `biLevel`,
+ * `duotone`, `clrChange`, and `transparency` for `a:alphaModFix`. All five used to be dropped under
+ * an `image.recolor` note saying none had a write option (#109).
+ *
+ * The note stays for what the options cannot state: a second effect of one kind (an option holds
+ * one), a duotone without exactly two colours, a colour change missing a colour or fading its
+ * target colour (Set Transparent Color writes an `a:alpha` on `a:clrTo`, which `clrChange.to`
+ * cannot carry), and a black-and-white split with no threshold.
+ */
+function recolorOptions(shape: Picture, notes: NoteScope): Record<string, IrValue | undefined> {
+	const out: Record<string, IrValue | undefined> = {}
+	const lost = (detail: string) => notes.note('image.recolor', 'dropped', 'unwritable', detail)
+	const color = (ref: ColorRef | null, label: string): string | undefined =>
+		ref === null
+			? undefined
+			: colorOption(
+					{ scheme: ref.scheme, ownHex: ref.srgb, resolvedHex: ref.resolved?.effectiveHex ?? null },
+					notes,
+					'image.recolor.schemeToken',
+					label
+				)
+	const seen = new Set<Recolor['kind']>()
+	for (const effect of shape.recolors) {
+		if (seen.has(effect.kind)) {
+			lost(`this picture carries a second ${effect.kind} effect, and addImage writes one of each`)
+			continue
+		}
+		seen.add(effect.kind)
+		switch (effect.kind) {
+			case 'grayscale':
+				out['grayscale'] = true
+				break
+			case 'biLevel':
+				if (effect.threshold === null) lost('this black-and-white recolour (a:biLevel) states no threshold')
+				else out['biLevel'] = { threshold: effect.threshold }
+				break
+			case 'duotone': {
+				const [shadow, highlight] = effect.stops.map((stop, index) => color(stop, `duotone colour ${index + 1}`))
+				if (effect.stops.length !== 2 || shadow === undefined || highlight === undefined) {
+					lost('this duotone (a:duotone) does not have exactly two colours the write path can state')
+				} else out['duotone'] = { shadow, highlight }
+				break
+			}
+			case 'clrChange': {
+				const from = color(effect.from, 'colour change source')
+				const to = color(effect.to, 'colour change target')
+				if (from === undefined || to === undefined) {
+					lost('this colour change (a:clrChange) is missing a colour the write path can state')
+				} else {
+					if ((effect.to?.resolved?.alpha ?? 1) < 1) {
+						notes.note(
+							'image.recolor',
+							'approximated',
+							'unwritable',
+							'this colour change makes its colour transparent (Set Transparent Color), and clrChange.to takes no transparency, so the colour is replaced with an opaque one'
+						)
+					}
+					out['clrChange'] = { from, to }
+				}
+				break
+			}
+			case 'alphaModFix':
+				out['transparency'] = alphaToTransparency(effect.amount)
+				break
+		}
+	}
+	return out
 }
 
 /**
@@ -448,15 +651,13 @@ const CONNECTOR_FLATTENED_LINE_KEYS: Record<
  * diagonal of the box the line runs along, so dropping them would silently mirror every
  * connector that runs up or leftward.
  *
- * The *bindings* (`a:stCxn`/`a:endCxn`) reference source shape ids that have no counterpart
- * in the output, so a connector lands unbound and stops following its shapes when they move.
+ * The route comes from the preset ({@link connectorRoute}) and the *bindings* (`a:stCxn`/`a:endCxn`)
+ * from the bound shapes' names ({@link connectorBindings}). Both used to be dropped with no note
+ * for the route, so every connector came back straight and unbound (#108).
  */
-function connectorCall(shape: Connector, notes: NoteScope): CallIr | null {
-	const drawn = connectorLine(
-		shape,
-		notes,
-		'connector endpoint bindings reference source shape ids with no counterpart in the output, so the connector lands unbound and no longer follows its shapes'
-	)
+function connectorCall(shape: Connector, ctx: MapContext): CallIr | null {
+	const { notes } = ctx
+	const drawn = connectorLine(shape, notes, null)
 	if (!drawn) return null
 	// A connector with no outline has no `addConnector` spelling: its stroke options take no `type`,
 	// and one given none is drawn with the write path's default line. The `line` shape it paints as
@@ -496,19 +697,111 @@ function connectorCall(shape: Connector, notes: NoteScope): CallIr | null {
 		method: 'addConnector',
 		args: [
 			compact({
-				// Routing is not readable — `presetGeometry` names the connector preset but the
-				// bend count it implies is not exposed — so every connector emits straight.
-				type: 'straight',
+				...connectorRoute(shape, notes),
 				x1: emu(shape.flipH ? right : frame.left),
 				y1: emu(shape.flipV ? bottom : frame.top),
 				x2: emu(shape.flipH ? frame.left : right),
 				y2: emu(shape.flipV ? frame.top : bottom),
 				...identityOptions(shape),
 				...stroke,
+				...connectorBindings(shape, ctx),
 			}) ?? {},
 		],
 		...nameOf(shape),
 	}
+}
+
+/** The connector presets `addConnector` writes, by `type`; `bends` is the suffix less two. */
+const CONNECTOR_ROUTES: ReadonlyMap<string, 'elbow' | 'curved'> = new Map([
+	['bentConnector', 'elbow'],
+	['curvedConnector', 'curved'],
+])
+
+/**
+ * A connector's `type`, `bends` and `adj`, read off its preset and adjust guides.
+ *
+ * `addConnector` writes `straightConnector1` and `bentConnector3`-`5` / `curvedConnector3`-`5`, the
+ * suffix being the bend count plus two, with one `adjN` guide per bend in 1000ths of a percent. A
+ * `line` preset draws the same as a straight connector. Any other preset (`bentConnector2`, the
+ * L-shaped elbow with no handle, is the one PowerPoint writes) has no spelling, and is written
+ * straight under a note. A guide the source leaves out takes the preset default, 50%, which is also
+ * what the writer needs to be given once any one bend is stated.
+ */
+function connectorRoute(shape: Connector, notes: NoteScope): Record<string, IrValue | undefined> {
+	const preset = shape.presetGeometry
+	const match = preset === null ? null : /^(bentConnector|curvedConnector)([345])$/.exec(preset)
+	const type = match ? CONNECTOR_ROUTES.get(match[1] ?? '') : undefined
+	if (!match || !type) {
+		if (preset !== 'straightConnector1' && preset !== 'line') {
+			notes.note(
+				'connector.route',
+				'approximated',
+				'unwritable',
+				`this connector's route (${preset === null ? 'a custom geometry' : `a:prstGeom prst="${preset}"`}) is not one addConnector writes (straight, or an elbow or curve with one to three bends), so it is written straight between the same endpoints`
+			)
+		}
+		return { type: 'straight' }
+	}
+	const bends = Number(match[2]) - 2
+	const guides = shape.adjustValues
+	let stated = false
+	const adj = Array.from({ length: bends }, (_, index) => {
+		const formula = guides[`adj${index + 1}`]
+		const value = formula === undefined ? null : /^val (-?\d+)$/.exec(formula.trim())?.[1]
+		if (value === undefined) {
+			notes.note(
+				'connector.route',
+				'approximated',
+				'unwritable',
+				`this connector's bend adj${index + 1} is the formula "${formula ?? ''}", which adj cannot state, so that bend takes the preset default of 50%`
+			)
+		}
+		if (value === null || value === undefined) return 50
+		stated = true
+		return Number(value) / FIXED_PCT_PER_PERCENT
+	})
+	return {
+		type,
+		bends: bends === 1 ? undefined : bends,
+		adj: stated ? (bends === 1 ? adj[0] : adj) : undefined,
+	}
+}
+
+/**
+ * A connector's end bindings as `startShape`/`endShape` and their site indexes.
+ *
+ * The write path binds an end to a shape on the same slide by `objectName`, so a binding carries
+ * when the bound shape has a name no other shape on the slide shares and is itself written. Any
+ * other binding is lost, and noted: the connector keeps its endpoints and no longer follows the
+ * shape.
+ */
+function connectorBindings(shape: Connector, ctx: MapContext): Record<string, IrValue | undefined> {
+	const out: Record<string, IrValue | undefined> = {}
+	let lost = false
+	const ends = [
+		['startShape', shape.startConnection],
+		['endShape', shape.endConnection],
+	] as const
+	for (const [key, site] of ends) {
+		if (site === null) continue
+		const bound = site.boundShape
+		const name = bound?.name
+		if (!bound || bound.hidden || !name || !ctx.isUniqueShapeName?.(name)) {
+			lost = true
+			continue
+		}
+		out[key] = name
+		out[`${key}Idx`] = site.siteIndex || undefined
+	}
+	if (lost) {
+		ctx.notes.note(
+			'connector.binding',
+			'dropped',
+			'unsupported',
+			'this connector is bound to a shape the output cannot name: one with no name, a name another shape on the slide shares, or one that is not written, so the connector lands unbound and no longer follows it'
+		)
+	}
+	return out
 }
 
 /**
@@ -536,7 +829,7 @@ function graphicFrameCall(shape: GraphicFrame, ctx: MapContext): CallIr | null {
 	if (table) return tableCall(shape, table, ctx)
 
 	const chart = shape.chart
-	if (chart) return chartCall(shape, chart, notes)
+	if (chart) return chartCall(shape, chart, ctx)
 
 	// Everything below emits no call. Reached even when the deck-level walk already marked the
 	// slide `carried`, because the standalone tier has no source package to copy from and needs
@@ -588,21 +881,28 @@ function graphicFrameCall(shape: GraphicFrame, ctx: MapContext): CallIr | null {
  */
 function groupCall(shape: GroupShape, ctx: MapContext): CallIr | null {
 	const { notes } = ctx
-	const box = frameOf(shape, notes)
+	const box = frameOf(shape, notes, ctx.groups)
 	if (!box) return null
+	// The children are placed in this group's child space, since the group carries its own
+	// rotation and flips below. A group with no child space to map through leaves them to their
+	// slide-absolute frames, which then fail too and fall back as such a frame does.
+	const own = groupTransformOf(shape)
+	const { groups: _outer, ...rest } = ctx
+	const inner: MapContext = own ? { ...ctx, groups: [own, ...(ctx.groups ?? [])] } : rest
 	const children: IrValue[] = []
 	for (const child of shape.shapes) {
 		// `addConnector` has no group child variant, and a connector child used to be dropped.
 		if (isConnector(child)) {
 			const drawn = connectorLine(
 				child,
-				forShape(ctx, child).notes,
-				'this connector is bound to shapes; it is re-authored as a line shape inside its group, which paints the same stroke but no longer follows them'
+				forShape(inner, child).notes,
+				'this connector is bound to shapes; it is re-authored as a line shape inside its group, which paints the same stroke but no longer follows them',
+				inner.groups
 			)
 			if (drawn) children.push(lineShape(drawn.options))
 			continue
 		}
-		const call = shapeCall(child, ctx)
+		const call = shapeCall(child, inner)
 		if (!call) continue
 		const tagged = asGroupChild(call)
 		if (!tagged) {
@@ -635,27 +935,16 @@ function groupCall(shape: GroupShape, ctx: MapContext): CallIr | null {
 		)
 	}
 
-	// The group's own rotation and flips are deliberately NOT emitted here. `absoluteFrame`
-	// composes them into every child, and the children above were built from it, so the
-	// transform is already baked in at slide-absolute coordinates. Emitting it on the group
-	// as well would apply it a second time — measured: a group rotated 30° came back at 60°
-	// with its children walked off their positions, and a flipped group came back unflipped
-	// because the double flip cancelled. The group's frame is a bounding box and nothing else.
-	if (shape.rotation !== 0 || shape.flipH || shape.flipV) {
-		notes.note(
-			'group.transform',
-			'flattened',
-			'unsupported',
-			"the group's own rotation and flips are baked into its children's coordinates rather than kept on the group, because addGroup would otherwise apply them twice; the shapes render identically but rotating or resetting the group no longer moves them together"
-		)
-	}
-
 	return {
 		method: 'addGroup',
 		args: [
 			children,
 			compact({
 				...positionOptions(box),
+				// The group's own rotation and flips, which used to be baked into its children under a
+				// `group.transform` note (#116). `addGroup` writes them on the group and keeps an identity
+				// child space, which is why the children above are placed without them.
+				...transformOptions(shape, ctx.groups),
 				...identityOptions(shape),
 				objectLock: lockOption(shape, GROUP_SHAPE_LOCK_ATTRS),
 			}) ?? {},
@@ -811,16 +1100,22 @@ interface ConnectorLine {
  * @param shape - the connector
  * @param notes - the scope bound to this connector
  * @param bindingDetail - the endpoint-binding note's detail, for where this connector lands
+ * @param groups - the groups enclosing a connector re-authored as a group's line child
  */
-function connectorLine(shape: Connector, notes: NoteScope, bindingDetail: string): ConnectorLine | null {
+function connectorLine(
+	shape: Connector,
+	notes: NoteScope,
+	bindingDetail: string | null,
+	groups?: readonly GroupTransform[]
+): ConnectorLine | null {
 	if (shape.hidden) {
 		noteHidden(notes)
 		return null
 	}
-	const box = frameOf(shape, notes)
+	const box = frameOf(shape, notes, groups)
 	if (!box) return null
 
-	if (shape.startConnection || shape.endConnection) {
+	if (bindingDetail !== null && (shape.startConnection || shape.endConnection)) {
 		notes.note('connector.binding', 'dropped', 'unsupported', bindingDetail)
 	}
 
@@ -830,7 +1125,7 @@ function connectorLine(shape: Connector, notes: NoteScope, bindingDetail: string
 	// a colour that paints nothing on the source and a filled box on the output.
 	const options = compactRequired({
 		...positionOptions(box),
-		...transformOptions(shape),
+		...transformOptions(shape, groups),
 		line,
 		shadow: shadowOption(shape, notes),
 		glow: glowOption(shape, notes),

@@ -5,7 +5,7 @@
  */
 import type { SHAPE_NAME } from '../enums.js'
 import type { Color, Coord, DataOrPathProps, DataOrPathRequiredProps, GeometryPoint, PositionProps } from './core.js'
-import type { ObjectNameProps } from './object.js'
+import type { ObjectNameProps, PlaceholderOption } from './object.js'
 import type { ShapeAdjustValue } from './shape.js'
 import type { HyperlinkProps, ShadowProps, ShapeLineProps } from './style.js'
 
@@ -53,14 +53,17 @@ export interface ImageBaseProps extends PositionProps, ObjectNameProps {
 	 */
 	line?: ShapeLineProps
 	/**
-	 * Name of a picture placeholder defined on the slide layout/master to populate
+	 * Name of a picture placeholder defined on the slide layout/master to populate, or a
+	 * {@link PlaceholderBinding} that states the `p:ph` to write
 	 * - when it matches a layout/master placeholder, the image inherits that placeholder's
 	 *   position and size for any of `x`/`y`/`w`/`h` not supplied explicitly;
 	 *   explicit values always win
+	 * - a name that matches none writes no `p:ph`; a binding's `idx` or `type` writes one regardless
 	 * @example 'picph'
+	 * @example { type: 'pic', idx: 13 }
 	 * @see https://docs.microsoft.com/en-us/office/vba/api/powerpoint.ppplaceholdertype
 	 */
-	placeholder?: string
+	placeholder?: PlaceholderOption
 	/**
 	 * Image rotation (degrees)
 	 * - range: -360 to 360
@@ -115,8 +118,10 @@ export interface ImageBaseProps extends PositionProps, ObjectNameProps {
 	/**
 	 * Crop the source image to a sub-region by percentage edge insets, emitted verbatim
 	 * as OOXML `<a:srcRect>`.
-	 * - each value is the percent (0–100) trimmed off that edge of the *source* image, the
+	 * - each value is the percent (at most 100) trimmed off that edge of the *source* image, the
 	 *   same model PowerPoint's Picture Format > Crop uses; `l`+`r` and `t`+`b` must each be < 100
+	 * - a negative value pads that edge with empty space instead, as PowerPoint's Fit crop and
+	 *   `sizing: 'contain'` do
 	 * - the remaining sub-region is stretched to fill the picture's displayed `w`×`h` box, so this
 	 *   is the faithful way to reproduce a deck that maps several icons out of one composite raster
 	 * - operates on the source image directly (independent of natural-pixel measurement), so unlike
@@ -125,13 +130,13 @@ export interface ImageBaseProps extends PositionProps, ObjectNameProps {
 	 * @example { l: 0, t: 0, r: 50, b: 50 } // keep the top-left quadrant of the source image
 	 */
 	crop?: {
-		/** Percent (0–100) trimmed from the left edge of the source image. @default 0 */
+		/** Percent trimmed from the left edge of the source image; negative pads it. @default 0 */
 		l?: number
-		/** Percent (0–100) trimmed from the top edge of the source image. @default 0 */
+		/** Percent trimmed from the top edge of the source image; negative pads it. @default 0 */
 		t?: number
-		/** Percent (0–100) trimmed from the right edge of the source image. @default 0 */
+		/** Percent trimmed from the right edge of the source image; negative pads it. @default 0 */
 		r?: number
-		/** Percent (0–100) trimmed from the bottom edge of the source image. @default 0 */
+		/** Percent trimmed from the bottom edge of the source image; negative pads it. @default 0 */
 		b?: number
 	}
 	/**

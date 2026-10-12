@@ -44,7 +44,7 @@ import {
 } from '../../../ooxml/rel-types.js'
 import type { Presentation } from '../presentation.js'
 import type { Slide } from '../slide.js'
-import type { AppendSlidesOptions, LayoutHandle, SlideSource } from '../presentation-types.js'
+import type { AppendSlidesOptions, ExtractedSlide, LayoutHandle, SlideSource } from '../presentation-types.js'
 import { carryGeneratedEmbeddedFonts } from './embedded-fonts.js'
 import { addNotesSlidePart, ensureNotesMasterFromXml } from './notes-master.js'
 import { requireEqualSlideSize } from './slide-size.js'
@@ -194,7 +194,9 @@ function wireNotes(
 	deck: Presentation,
 	partName: string,
 	slide: PlacedSlide['slide'],
-	sourceNotesMaster: { xml: string; themeXml: string } | undefined | null
+	sourceNotesMaster: { xml: string; themeXml: string } | undefined | null,
+	partBySourceNumber: Map<number, string>,
+	index: number
 ): string | null {
 	if (!slide.notes) return null
 	const notesMasterPartName = sourceNotesMaster ? ensureNotesMasterFromXml(deck, sourceNotesMaster) : null
@@ -203,6 +205,7 @@ function wireNotes(
 	for (const h of slide.notes.hyperlinks) {
 		notesRels.addWithId(`rId${h.rId}`, HYPERLINK_REL, h.target, 'External')
 	}
+	wireSlideLinks(notesRels, notesPartName, slide.notes.slideLinks ?? [], partBySourceNumber, index)
 	return notesPartName
 }
 
@@ -233,6 +236,11 @@ function wireCharts(deck: Presentation, rels: Relationships, partName: string, s
 		deck.opc.addPart(embeddingPartName, XLSX_CONTENT_TYPE, c.embeddingBytes)
 		const chartRels = deck.opc.relationshipsFor(chartPartName)
 		chartRels.addWithId('rId1', PACKAGE_REL, relativePartName(chartPartName, embeddingPartName))
+		for (const picture of c.pictures ?? []) {
+			const mediaPartName = deck.opc.reserveMediaPartName(picture.extn)
+			deck.opc.addPart(mediaPartName, picture.contentType, picture.bytes)
+			chartRels.addWithId(`rId${picture.rId}`, IMAGE_REL, relativePartName(chartPartName, mediaPartName))
+		}
 		if (c.chartEx) {
 			// rId2 = colors, rId3 = style: the order the write path authors
 			// (`buildChartExRelsXml` in gen/chart/embed-xlsx.ts).
@@ -249,18 +257,18 @@ function wireCharts(deck: Presentation, rels: Relationships, partName: string, s
 }
 
 /**
- * Intra-batch slide-to-slide links: a `slide:N` in the source is repointed at the Nth appended
- * slide's new partname, which is why pass 1 places every slide before any of this runs. A link out
+ * Intra-batch slide-to-slide links, from a slide or from its notes: a `slide:N` in the source is
+ * repointed at the Nth appended slide's new partname, which is why pass 1 places every slide before any of this runs. A link out
  * of the batch was refused before pass 1 by {@link requireLinksInBatch}.
  */
 function wireSlideLinks(
 	rels: Relationships,
 	partName: string,
-	slide: PlacedSlide['slide'],
+	links: ExtractedSlide['slideLinks'],
 	partBySourceNumber: Map<number, string>,
 	index: number
 ): void {
-	for (const link of slide.slideLinks) {
+	for (const link of links) {
 		const targetPartName = partBySourceNumber.get(link.sourceSlideNumber)
 		if (!targetPartName) {
 			throw new InternalError(
@@ -279,7 +287,7 @@ function wireSlideLinks(
  */
 function requireLinksInBatch(slides: readonly PlacedSlide['slide'][]): void {
 	slides.forEach((slide, index) => {
-		for (const link of slide.slideLinks) {
+		for (const link of [...slide.slideLinks, ...(slide.notes?.slideLinks ?? [])]) {
 			if (link.sourceSlideNumber > slides.length) {
 				throw new InvalidOptionError(
 					'import/unresolved-slide-link',
@@ -313,9 +321,9 @@ function wireFixedIdRels(
 	wireTransitionSound(deck, rels, partName, slide)
 	wireOnlineMedia(rels, slide)
 	wireHyperlinks(rels, slide)
-	const notesPartName = wireNotes(deck, partName, slide, sourceNotesMaster)
+	const notesPartName = wireNotes(deck, partName, slide, sourceNotesMaster, partBySourceNumber, index)
 	wireCharts(deck, rels, partName, slide)
-	wireSlideLinks(rels, partName, slide, partBySourceNumber, index)
+	wireSlideLinks(rels, partName, slide.slideLinks, partBySourceNumber, index)
 	return notesPartName
 }
 

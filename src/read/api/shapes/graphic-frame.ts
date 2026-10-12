@@ -95,7 +95,7 @@ export class GraphicFrame extends Shape {
 		const relId = chartRef && attr(chartRef, 'r:id')
 		if (!relId) return null
 		const part = relPart(this.host.opc, this.host.relationships, relId)
-		return part ? new Chart(part) : null
+		return part ? new Chart(part, this.host.opc.relationshipsFor(part.partName)) : null
 	}
 
 	/**

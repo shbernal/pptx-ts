@@ -197,15 +197,20 @@ defineRegressionSuite('Table styling: built-in styles and the direct-formatting 
 		},
 	},
 	{
-		name: 'a hyperlink anywhere in the grid stands the black default down',
+		name: 'a hyperlinked cell stands the black default down',
 		fn: async () => {
 			// Long-standing carve-out, unrelated to table styles: the default paints the whole run,
 			// so the words *after* a link would come out black instead of following the link colour.
+			// It is the linked cell's alone: it used to strip the default from every cell (#101).
 			const { slide } = await tableParts({}, [
 				[{ text: 'H1' }, { text: 'docs', options: { hyperlink: { url: 'https://example.com' } } }],
 			])
-			assert(slide.includes('<a:hlinkClick'), 'the hyperlink is emitted; got: ' + slide)
-			assert(!slide.includes('<a:srgbClr val="000000"/>'), 'and nothing is painted black; got: ' + slide)
+			const [plain, linked] = slide.match(/<a:tc[ >][\s\S]*?<\/a:tc>/g) || []
+			expectDefined(plain, 'the first cell')
+			expectDefined(linked, 'the second cell')
+			assert(linked.includes('<a:hlinkClick'), 'the hyperlink is emitted; got: ' + linked)
+			assert(!linked.includes('<a:srgbClr val="000000"/>'), 'and the linked cell is not painted black; got: ' + linked)
+			assert(plain.includes('<a:srgbClr val="000000"/>'), 'while the cell beside it keeps the default; got: ' + plain)
 		},
 	},
 	{
@@ -231,8 +236,12 @@ defineRegressionSuite('Table styling: built-in styles and the direct-formatting 
 					{ text: [{ text: 'docs', options: { hyperlink: { url: 'https://example.com' } } }, { text: ' and more' }] },
 				],
 			])
-			assert(slide.includes('<a:hlinkClick'), 'the hyperlink is emitted; got: ' + slide)
-			assert(!slide.includes('<a:srgbClr val="000000"/>'), 'and nothing is painted black; got: ' + slide)
+			const [plain, linked] = slide.match(/<a:tc[ >][\s\S]*?<\/a:tc>/g) || []
+			expectDefined(plain, 'the first cell')
+			expectDefined(linked, 'the second cell')
+			assert(linked.includes('<a:hlinkClick'), 'the hyperlink is emitted; got: ' + linked)
+			assert(!linked.includes('<a:srgbClr val="000000"/>'), 'and no run of that cell is painted black; got: ' + linked)
+			assert(plain.includes('<a:srgbClr val="000000"/>'), 'while the cell beside it keeps the default; got: ' + plain)
 		},
 	},
 	{

@@ -12,7 +12,7 @@ import type {
 	TextHorzOverflowType,
 } from '../ooxml/st-enums.js'
 import type { DataOrPathProps, Margin, PositionProps } from './core.js'
-import type { ObjectNameProps } from './object.js'
+import type { ObjectNameProps, PlaceholderOption } from './object.js'
 import type { ShapeProps } from './shape.js'
 import type { BorderProps, FillOption, HyperlinkProps, ShadowProps } from './style.js'
 import type { TextBaseProps, TextFitShrinkProps, TextProps, TextPropsOptions } from './text.js'
@@ -322,9 +322,11 @@ export interface TableProps extends PositionProps, TextBaseProps, ObjectNameProp
 	 *   placeholder's `<p:ph>` (idx/type) so PowerPoint treats the table as filling the placeholder
 	 *   (e.g. a "Title and Content" content placeholder)
 	 * - the table also inherits the placeholder's position/size for any of x/y/w/h left unset
+	 * - a {@link PlaceholderBinding} states the `p:ph` to write, with or without such a placeholder
 	 * @example 'body' // bind to the layout placeholder named 'body'
+	 * @example { idx: 1 } // fill placeholder 1 of a layout this deck does not define
 	 */
-	placeholder?: string
+	placeholder?: PlaceholderOption
 
 	/**
 	 * Whether to enable auto-paging

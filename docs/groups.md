@@ -41,7 +41,7 @@ await pptx.writeFile({ fileName: "group.pptx" })
 | `flipH`, `flipV` | `boolean` | `false` | Mirrors the whole group |
 | `objectName` | `string` | `Group 1`, `Group 2`, ... | Selection Pane name |
 | `altText` | `string` | none | Alt text for the group |
-| `objectLock` | `ObjectLockProps` | none | Locks. A group takes `noGrp`, `noSelect`, `noRot`, `noChangeAspect`, `noMove` and `noResize` |
+| `objectLock` | `ObjectLockProps` | none | Locks. A group takes `noGrp`, `noUngrp`, `noSelect`, `noRot`, `noChangeAspect`, `noMove` and `noResize` |
 
 ## The identity child space
 

@@ -194,7 +194,8 @@ export interface ImageFillProps {
 	/**
 	 * Crop the source image to a sub-region by percentage edge insets, emitted as
 	 * DrawingML `<a:srcRect>`.
-	 * - each value is the percent (0–100) trimmed from that edge of the source image
+	 * - each value is the percent (at most 100) trimmed from that edge of the source image;
+	 *   a negative value pads that edge with empty space instead
 	 * - `l` + `r` and `t` + `b` must each be less than 100
 	 * - omitted edges default to 0
 	 *
@@ -203,13 +204,13 @@ export interface ImageFillProps {
 	 * clipped by the shape geometry.
 	 */
 	crop?: {
-		/** Percent trimmed from the left edge of the source image. @default 0 */
+		/** Percent trimmed from the left edge of the source image; negative pads it. @default 0 */
 		l?: number
-		/** Percent trimmed from the top edge of the source image. @default 0 */
+		/** Percent trimmed from the top edge of the source image; negative pads it. @default 0 */
 		t?: number
-		/** Percent trimmed from the right edge of the source image. @default 0 */
+		/** Percent trimmed from the right edge of the source image; negative pads it. @default 0 */
 		r?: number
-		/** Percent trimmed from the bottom edge of the source image. @default 0 */
+		/** Percent trimmed from the bottom edge of the source image; negative pads it. @default 0 */
 		b?: number
 	}
 }

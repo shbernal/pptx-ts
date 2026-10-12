@@ -26,7 +26,7 @@ import type {
 	TimeUnit,
 } from '../ooxml/st-enums.js'
 import type { Color, HexColor, PatternFillProps, PositionProps } from './core.js'
-import type { ObjectNameProps } from './object.js'
+import type { ObjectNameProps, PlaceholderOption } from './object.js'
 import type { BorderProps, FillOption, ShadowProps, StrokeProps } from './style.js'
 import type { TextBaseProps } from './text.js'
 
@@ -246,13 +246,14 @@ export interface ChartPropsFillLine {
 	 * states neither a `color` nor a `type` — `transparency` alone is not a fill, since
 	 * there is no colour for the alpha to apply to.
 	 *
-	 * `type: 'image'` is not supported here and falls back to no fill with a warning: a
-	 * blip fill needs a media relationship on the chart part, which nothing registers.
+	 * `type: 'image'` paints a picture, which the chart part references through a relationship of
+	 * its own. A chartEx chart (waterfall, funnel, …) writes no area fill at all.
 	 * @example fill: '696969' // hex RGB color value, shorthand for {color: '696969'}
 	 * @example fill: {color: '696969'} // hex RGB color value
 	 * @example fill: {color: SchemeColor.background2} // Theme color value
 	 * @example fill: {color: '696969', transparency: 50} // 50% transparent grey
 	 * @example fill: {type: 'gradient', gradient: {kind: 'linear', angle: 90, stops: [{position: 0, color: '0088CC'}, {position: 100, color: 'FFFFFF'}]}}
+	 * @example fill: {type: 'image', image: {path: 'paper.png'}} // a picture, stretched over the area
 	 * @example fill: {type: 'inherit'} // no fill child at all -- take the chart style's fill
 	 */
 	fill?: FillOption
@@ -1118,6 +1119,16 @@ export interface ChartOpts
 	 * - PowerPoint: [right-click on a chart] > "Edit Alt Text..."
 	 */
 	altText?: string
+	/**
+	 * Name of a placeholder defined on the slide layout/master to fill, or a
+	 * {@link PlaceholderBinding} that states the `p:ph` to write
+	 * - when it matches a layout/master placeholder, the chart takes that placeholder's position
+	 *   and size for any of `x`/`y`/`w`/`h` not supplied explicitly; explicit values always win
+	 * - a name that matches none writes no `p:ph`; a binding's `idx` or `type` writes one regardless
+	 * @example 'chartph'
+	 * @example { type: 'chart', idx: 13 }
+	 */
+	placeholder?: PlaceholderOption
 	/**
 	 * Custom chart-level metadata, emitted as a schema-valid extension on the chart space
 	 * (`c:chartSpace/c:extLst`) under a stable pptx-ts vendor GUID.

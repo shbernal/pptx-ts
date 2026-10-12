@@ -100,6 +100,7 @@ export type DiagnosticCode =
 	| 'table/invalid-row-height'
 	| 'table/invalid-margin'
 	| 'table/invalid-header-row-count'
+	| 'table/option-not-supported'
 	// Text and bullets
 	| 'text/invalid-valign'
 	| 'text/invalid-vertical'
@@ -259,6 +260,9 @@ export type InvalidOptionErrorCode =
 	| 'image/crop-window-overflows'
 	| 'image/crop-inset-out-of-range'
 	| 'image/crop-insets-exceed-extent'
+	// Placeholder bindings
+	| 'placeholder/invalid-idx'
+	| 'placeholder/invalid-type'
 	// Media and OLE
 	| 'media/missing-source'
 	| 'media/missing-base64-header'
@@ -298,6 +302,7 @@ export type InvalidOptionErrorCode =
 	| 'hyperlink/missing-target'
 	| 'hyperlink/conflicting-targets'
 	| 'hyperlink/invalid-slide'
+	| 'hyperlink/invalid-action'
 	| 'slide/link-past-last-slide'
 	// Text
 	| 'text/invalid-text'

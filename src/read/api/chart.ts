@@ -11,7 +11,9 @@ import type { Part } from '../opc/part.js'
 import {
 	attr,
 	boolValue,
+	childElements,
 	concatDrawingMLText,
+	descendantsByTag,
 	type Element,
 	ELEMENT_NODE,
 	firstChild,
@@ -20,9 +22,18 @@ import {
 	numberValue,
 	OOXML_NS,
 } from '../oxml/dom.js'
+import { CHART_METADATA_EXT_URI, CHART_METADATA_NS } from '../../ooxml/chart-metadata.js'
+import { hasFillChoice } from '../oxml/fill.js'
 import { readIndexedPoints } from '../oxml/point-cache.js'
 import { readLineBasics } from './line.js'
-import { readColorRef, type ColorRef } from './theme-context.js'
+import { readColorRef, resolveColorElement, type ColorRef, type ResolvedColor } from './theme-context.js'
+import type { Relationships } from '../opc/relationships.js'
+import type { ColorContext } from '../oxml/theme.js'
+import { readGradientFill, type GradientFill } from './gradient.js'
+import { readPatternFill, type PatternFill } from './pattern-fill.js'
+import { readPictureFill, type PictureFill } from './picture-fill.js'
+import { readInnerShadow, readOuterShadow } from './shapes/effects.js'
+import type { InnerShadow, OuterShadow } from './shapes/types.js'
 
 /** A chart axis number format (`c:numFmt`). */
 export interface AxisNumberFormat {
@@ -38,6 +49,37 @@ export interface ChartLegend {
 	position: string | null
 	/** Whether the legend overlays the plot area (`c:overlay/@val`). */
 	overlay: boolean | null
+	/** The legend text's formatting (`c:txPr`), or `null` when it states none. */
+	textStyle: ChartTextStyle | null
+	/** The legend's manual layout, or `null` when it is placed automatically. */
+	layout: ChartManualLayout | null
+}
+
+/**
+ * The formatting of a block of chart text: a `c:txPr` (a legend's, an axis' labels', data labels')
+ * or a title's `c:rich`. Read off the block's `a:bodyPr` and its first paragraph: the paragraph's
+ * `a:pPr` and `a:defRPr`, and in a title, the first run's `a:rPr` over them. Every field is `null`
+ * where the block states nothing.
+ */
+export interface ChartTextStyle {
+	/** Size in points (`@sz`). */
+	sizePt: number | null
+	/** Bold (`@b`). */
+	bold: boolean | null
+	/** Italic (`@i`). */
+	italic: boolean | null
+	/** Underline style (`@u`, e.g. `sng`, `none`). */
+	underline: string | null
+	/** The solid colour, unresolved: a chart part is read without a theme. */
+	color: ColorRef | null
+	/** Whether {@link color} carries a transform (`a:lumMod`, …) that only a theme can apply. */
+	colorTransformed: boolean
+	/** The Latin typeface (`a:latin/@typeface`), a theme token such as `+mn-lt` included. */
+	fontName: string | null
+	/** Rotation in degrees (`a:bodyPr/@rot` / 60000), or `null` when unstated or outside -90 to 90. */
+	rotationDeg: number | null
+	/** Paragraph alignment (`a:pPr/@algn`: `l`, `ctr`, `r`, …). */
+	align: string | null
 }
 
 /** Data-label settings (`c:dLbls`), read from a plot group or from one series. */
@@ -60,6 +102,80 @@ export interface ChartDataLabels {
 	position: string | null
 	/** Label number format (`c:numFmt`), or `null` when absent. */
 	numberFormat: AxisNumberFormat | null
+	/** The labels' text formatting (`c:txPr`), or `null` when the block states none. */
+	textStyle: ChartTextStyle | null
+	/** The labels' background fill (`c:spPr`), or `null` when it states none. */
+	fill: ChartFill | null
+	/** The leader lines' stroke (`c:leaderLines/c:spPr/a:ln`), or `null` when they state none. */
+	leaderLines: ChartLine | null
+}
+
+/** One stretch of a data label's own text: a run, or a field PowerPoint fills in (`a:fld`). */
+export interface ChartLabelRun {
+	/** The text, which for a field is what it showed when the chart was saved. */
+	text: string
+	/** The field type (`a:fld/@type`: `XVALUE`, `YVALUE`, `CELLRANGE`, …), or `null` for a plain run. */
+	field: string | null
+}
+
+/** A data label that states its own text (`c:dLbl` with `c:tx/c:rich`), as a scatter's custom labels do. */
+export interface ChartPointLabel {
+	/** The index of the point it labels (`c:idx`). */
+	index: number
+	/** Its runs and fields, in order, across its paragraphs. */
+	runs: ChartLabelRun[]
+}
+
+/** The 3-D view of a chart (`c:chart/c:view3D`). Every field is `null` when the element leaves it unstated. */
+export interface ChartView3D {
+	/** Tilt in degrees (`c:rotX`), -90 to 90. */
+	rotX: number | null
+	/** Turn in degrees (`c:rotY`), 0 to 360. */
+	rotY: number | null
+	/** Field of view (`c:perspective`), 0 to 240, twice the angle in degrees. */
+	perspective: number | null
+	/** Whether the axes stay at right angles (`c:rAngAx`), which turns perspective off. */
+	rightAngleAxes: boolean | null
+}
+
+/** A series' data-point marker (`c:ser/c:marker`). */
+export interface ChartMarker {
+	/** The marker shape (`c:symbol`, `ST_MarkerStyle`: `circle`, `diamond`, `none`, …), or `null` when unstated. */
+	symbol: string | null
+	/** The marker size in points (`c:size`), 2 to 72, or `null` when unstated. */
+	size: number | null
+	/** The marker's solid fill, as {@link ChartSeries.fill} reads a series'. */
+	fill: ChartFill | null
+	/** The marker's outline, as {@link ChartSeries.line} reads a series'. */
+	line: ChartLine | null
+}
+
+/** One data point a series formats on its own (`c:ser/c:dPt`). */
+export interface ChartDataPoint {
+	/** The point's index in the series (`c:idx`). */
+	index: number
+	/** Whether a negative bar at this point paints inverted (`c:invertIfNegative`), or `null` when unstated. */
+	invertIfNegative: boolean | null
+	/** The point's solid fill, as {@link ChartSeries.fill} reads a series'. */
+	fill: ChartFill | null
+	/** The point's pattern fill (`a:pattFill`), or `null`. */
+	patternFill: PatternFill | null
+	/** The point's outline, as {@link ChartSeries.line} reads a series'. */
+	line: ChartLine | null
+}
+
+/** A chart's data table (`c:plotArea/c:dTable`), the grid of values drawn under the plot. */
+export interface ChartDataTable {
+	/** Horizontal cell borders (`c:showHorzBorder`), or `null` when unstated. */
+	showHorizontalBorder: boolean | null
+	/** Vertical cell borders (`c:showVertBorder`), or `null` when unstated. */
+	showVerticalBorder: boolean | null
+	/** The outline around the table (`c:showOutline`), or `null` when unstated. */
+	showOutline: boolean | null
+	/** The legend keys beside each series' row (`c:showKeys`), or `null` when unstated. */
+	showKeys: boolean | null
+	/** The table text's size in points (`c:txPr`'s first `a:defRPr/@sz`), or `null` when unstated. */
+	fontSizePt: number | null
 }
 
 /** A series' solid fill (`c:ser/c:spPr`). */
@@ -71,6 +187,56 @@ export interface ChartFill {
 	colorRef: ColorRef
 	/** Whether the fill is explicitly suppressed (`a:noFill`). */
 	noFill: boolean
+	/** The opacity of the solid colour, 0 to 1 (its `a:alpha`), or `null` when it states none. */
+	alpha: number | null
+}
+
+/**
+ * A manual layout (`c:layout/c:manualLayout`): where an element sits, as fractions of the chart.
+ * Every field is `null` where the layout leaves it automatic.
+ */
+export interface ChartManualLayout {
+	/** What the box bounds (`c:layoutTarget`): `inner` (the plot alone) or `outer` (with its labels). */
+	target: string | null
+	/** How `x` reads (`c:xMode`): `edge` (from the chart's left edge) or `factor` (an offset). */
+	xMode: string | null
+	/** How `y` reads (`c:yMode`). */
+	yMode: string | null
+	x: number | null
+	y: number | null
+	w: number | null
+	h: number | null
+}
+
+/**
+ * The fill, border and manual layout of a chart surface: the chart area (`c:chartSpace/c:spPr`) or
+ * the plot area (`c:plotArea`). The fill accessors are the ones a slide shape has, read the same way.
+ */
+export interface ChartAreaFormat {
+	/** Whether the area is explicitly unfilled (`a:noFill`). */
+	fillNoFill: boolean
+	/**
+	 * Whether the area states a fill of its own: any fill choice, `a:noFill` included. `false` when
+	 * it states none and inherits its fill from the chart style.
+	 */
+	hasOwnFill: boolean
+	/** A literal solid fill colour (`a:srgbClr`), or `null`. */
+	fillColor: string | null
+	/** A theme solid fill colour (`a:schemeClr`), or `null`. */
+	fillSchemeColor: string | null
+	/**
+	 * The solid fill resolved without a theme: a literal colour with its transforms applied, its
+	 * `alpha` included; `null` for a scheme colour or a non-solid fill.
+	 */
+	resolvedFill: ResolvedColor | null
+	gradientFill: GradientFill | null
+	patternFill: PatternFill | null
+	/** A picture fill (`a:blipFill`), its image resolved through the chart part's relationships. */
+	pictureFill: PictureFill | null
+	/** The area's border (`a:ln`), or `null` when it states none. */
+	border: ChartLine | null
+	/** The area's manual layout; always `null` for the chart area, which fills the frame. */
+	layout: ChartManualLayout | null
 }
 
 /** A series' line/stroke (`c:ser/c:spPr/a:ln`). */
@@ -83,14 +249,65 @@ export interface ChartLine {
 	colorRef: ColorRef
 	/** Whether the line is explicitly suppressed (`a:noFill`). */
 	noFill: boolean
+	/** The line end cap (`@cap`) as its raw token (`flat`, `rnd`, `sq`), or `null` when unset. */
+	cap: string | null
+	/** The opacity of the stroke's colour, 0 to 1 (its `a:alpha`), or `null` when it states none. */
+	alpha: number | null
+	/**
+	 * Whether the stroke's colour carries a transform besides `a:alpha` (`a:lumMod`, `a:shade`, …).
+	 * A chart part is read without a theme, so {@link colorRef} does not apply it: PowerPoint's
+	 * default axis line, `tx1` lightened to a grey, reads as the bare `tx1` token.
+	 */
+	colorTransformed: boolean
+}
+
+/** The display units of a value axis (`c:dispUnits`). */
+export interface ChartDisplayUnits {
+	/** A built-in unit (`c:builtInUnit`: `hundreds`, `thousands`, …, `trillions`), or `null`. */
+	builtIn: string | null
+	/** A custom divisor (`c:custUnit`), or `null`. */
+	custom: number | null
+	/** Whether the unit is labelled on the axis (`c:dispUnitsLbl`). */
+	showLabel: boolean
 }
 
 /** A chart graphic-frame's chart, backed by its chart part. */
 export class Chart {
 	constructor(
 		/** The chart's OPC part (`/ppt/charts/chartN.xml`). */
-		readonly part: Part
+		readonly part: Part,
+		/** The chart part's relationships, which resolve a picture fill's image; `null` leaves it unresolved. */
+		private readonly rels: Relationships | null = null
 	) {}
+
+	/** The chart area's fill and border (`c:chartSpace/c:spPr`), or `null` when it states none. */
+	get chartArea(): ChartAreaFormat | null {
+		const root = this.part.dom.documentElement
+		const spPr = root ? firstChild(root, 'c:spPr') : null
+		return spPr ? readAreaFormat(spPr, null, this.rels) : null
+	}
+
+	/** Whether the chart area's corners are rounded (`c:roundedCorners`), or `null` when unstated. */
+	get roundedCorners(): boolean | null {
+		const root = this.part.dom.documentElement
+		const element = root ? firstChild(root, 'c:roundedCorners') : null
+		return element ? boolValue(attr(element, 'val')) : null
+	}
+
+	/** The plot area's fill, border and manual layout, or `null` when the chart has no plot area. */
+	get plotArea(): ChartAreaFormat | null {
+		const plotArea = this.#plotArea()
+		if (!plotArea) return null
+		const spPr = firstChild(plotArea, 'c:spPr')
+		return readAreaFormat(spPr, firstChild(plotArea, 'c:layout'), this.rels)
+	}
+
+	/** The title's manual layout (`c:title/c:layout`), or `null` when it is placed automatically. */
+	get titleLayout(): ChartManualLayout | null {
+		const chart = this.#chart()
+		const title = chart && firstChild(chart, 'c:title')
+		return readManualLayout(title && firstChild(title, 'c:layout'))
+	}
 
 	/** Partname of the chart part. */
 	get partName(): string {
@@ -154,7 +371,28 @@ export class Chart {
 		return {
 			position: pos ? attr(pos, 'val') : null,
 			overlay: overlay ? boolValue(attr(overlay, 'val')) : null,
+			textStyle: readTextStyle(firstChild(legend, 'c:txPr')),
+			layout: readManualLayout(firstChild(legend, 'c:layout')),
 		}
+	}
+
+	/** The chart title's formatting (`c:title/c:tx/c:rich`), or `null` when the chart has no rich title. */
+	get titleStyle(): ChartTextStyle | null {
+		const chart = this.#chart()
+		return readTitleStyle(chart && firstChild(chart, 'c:title'))
+	}
+
+	/**
+	 * The language the chart's text is tagged with: `c:lang`, which PowerPoint writes, else the first
+	 * paragraph end's `@lang` in the part, where `addChart` writes its `lang`. `null` when neither says.
+	 */
+	get language(): string | null {
+		const root = this.part.dom.documentElement
+		if (!root) return null
+		const lang = firstChild(root, 'c:lang')
+		if (lang) return attr(lang, 'val')
+		const end = descendantsByTag(root, OOXML_NS.a, 'endParaRPr').find((element) => attr(element, 'lang'))
+		return end ? attr(end, 'lang') : null
 	}
 
 	/**
@@ -170,6 +408,83 @@ export class Chart {
 	get dataLabels(): ChartDataLabels | null {
 		const group = this.#chartGroups()[0]
 		return readDataLabels(group ? firstChild(group, 'c:dLbls') : null)
+	}
+
+	/** The data table under the plot (`c:plotArea/c:dTable`), or `null` when the chart draws none. */
+	get dataTable(): ChartDataTable | null {
+		const plotArea = this.#plotArea()
+		const table = plotArea && firstChild(plotArea, 'c:dTable')
+		if (!table) return null
+		const flag = (qname: string): boolean | null => {
+			const element = firstChild(table, qname)
+			return element ? boolValue(attr(element, 'val')) : null
+		}
+		return {
+			showHorizontalBorder: flag('c:showHorzBorder'),
+			showVerticalBorder: flag('c:showVertBorder'),
+			showOutline: flag('c:showOutline'),
+			showKeys: flag('c:showKeys'),
+			fontSizePt: readTextSizePt(firstChild(table, 'c:txPr')),
+		}
+	}
+
+	/**
+	 * The key/value annotations `addChart`'s `metadata` option writes: the pptx-ts extension on
+	 * `c:chartSpace/c:extLst` (uri `{094A432E-1F6C-499B-95B8-B57DC9536949}`). `null` when the chart
+	 * carries no such extension; an extension with no item reads as an empty map.
+	 */
+	get metadata(): Record<string, string> | null {
+		const root = this.part.dom.documentElement
+		const extLst = root ? firstChild(root, 'c:extLst') : null
+		const ext = extLst
+			? getElements(extLst, 'c:ext').find((element) => attr(element, 'uri') === CHART_METADATA_EXT_URI)
+			: undefined
+		const payload = ext
+			? childElements(ext).find(
+					(element) => element.namespaceURI === CHART_METADATA_NS && element.localName === 'metadata'
+				)
+			: undefined
+		if (!payload) return null
+		const out: Record<string, string> = {}
+		for (const item of childElements(payload)) {
+			if (item.namespaceURI !== CHART_METADATA_NS || item.localName !== 'item') continue
+			const key = attr(item, 'key')
+			if (key) out[key] = attr(item, 'value') ?? ''
+		}
+		return out
+	}
+
+	/**
+	 * The plot groups (`c:barChart`, `c:lineChart`, …) of the plot area, in document order, each
+	 * with what it sets on all its series and the series it plots. A combo chart has several.
+	 */
+	get plotGroups(): ChartPlotGroup[] {
+		return this.#chartGroups().map((group) => new ChartPlotGroup(group, this.part))
+	}
+
+	/** The 3-D view (`c:chart/c:view3D`), or `null` when the chart states none. */
+	get view3D(): ChartView3D | null {
+		const chart = this.#chart()
+		const view = chart && firstChild(chart, 'c:view3D')
+		if (!view) return null
+		const number = (qname: string): number | null => {
+			const element = firstChild(view, qname)
+			return element ? numberValue(attr(element, 'val')) : null
+		}
+		const rAngAx = firstChild(view, 'c:rAngAx')
+		return {
+			rotX: number('c:rotX'),
+			rotY: number('c:rotY'),
+			perspective: number('c:perspective'),
+			rightAngleAxes: rAngAx ? boolValue(attr(rAngAx, 'val')) : null,
+		}
+	}
+
+	/** How blank cells plot (`c:chart/c:dispBlanksAs`): `gap`, `zero` or `span`, or `null` when unstated. */
+	get displayBlanksAs(): string | null {
+		const chart = this.#chart()
+		const element = chart && firstChild(chart, 'c:dispBlanksAs')
+		return element ? attr(element, 'val') : null
 	}
 
 	/** The data series (`c:ser`) across all chart groups, in document order. */
@@ -225,6 +540,129 @@ export class Chart {
 			if (element.namespaceURI === OOXML_NS.c && element.localName?.endsWith('Chart')) groups.push(element)
 		}
 		return groups
+	}
+}
+
+/**
+ * One plot group of a chart's plot area (`c:barChart`, `c:lineChart`, `c:pieChart`, …): the series
+ * it plots and what it sets on all of them. Each accessor reads `null` (or `false` for an element
+ * that is either there or not) where the group does not state it, including on a plot type whose
+ * schema has no such element.
+ */
+export class ChartPlotGroup {
+	constructor(
+		private readonly group: Element,
+		/** The owning chart's OPC part, so {@link markDirty} can reach it from {@link element_}. */
+		private readonly part: Part
+	) {}
+
+	/** The plot type, the element's local name less `Chart`: `bar`, `line`, `bar3D`, `doughnut`, … */
+	get type(): string {
+		return (this.group.localName ?? '').replace(/Chart$/, '')
+	}
+
+	/** The series this group plots (`c:ser`), in document order. */
+	get series(): ChartSeries[] {
+		return getElements(this.group, 'c:ser').map((ser) => new ChartSeries(ser, this.part))
+	}
+
+	/**
+	 * The ids of the axes this group plots against (`c:axId`), as {@link ChartAxis.id} reads them: a
+	 * combo's group on the secondary axes names the secondary pair. Empty for a pie or a doughnut.
+	 */
+	get axisIds(): number[] {
+		return childElements(this.group)
+			.filter((child) => child.localName === 'axId')
+			.map((axId) => numberValue(attr(axId, 'val')))
+			.filter((id): id is number => id !== null)
+	}
+
+	/** A bar group's direction (`c:barDir`): `bar` (horizontal) or `col` (vertical). */
+	get barDirection(): string | null {
+		return this.#value('c:barDir')
+	}
+
+	/** How the series stack (`c:grouping`): `clustered`, `stacked`, `percentStacked` or `standard`. */
+	get grouping(): string | null {
+		return this.#value('c:grouping')
+	}
+
+	/** The gap between bar clusters as a percentage of a bar's width (`c:gapWidth`). */
+	get gapWidthPct(): number | null {
+		return this.#number('c:gapWidth')
+	}
+
+	/** How far bars in a cluster overlap, -100 to 100 percent (`c:overlap`). */
+	get overlapPct(): number | null {
+		return this.#number('c:overlap')
+	}
+
+	/** Whether stacked bars are joined by series lines (`c:serLines`). */
+	get seriesLines(): boolean {
+		return firstChild(this.group, 'c:serLines') !== null
+	}
+
+	/** The series lines' stroke (`c:serLines/c:spPr/a:ln`), or `null` when they state none. */
+	get seriesLinesLine(): ChartLine | null {
+		return spPrLine(firstChild(this.group, 'c:serLines'))
+	}
+
+	/** The depth gap of a 3-D bar group, as a percentage (`c:gapDepth`). */
+	get gapDepthPct(): number | null {
+		return this.#number('c:gapDepth')
+	}
+
+	/** The group-wide 3-D bar shape (`c:shape`); a series can state its own ({@link ChartSeries.shape}). */
+	get shape(): string | null {
+		return this.#value('c:shape')
+	}
+
+	/** The angle of a pie's first slice, 0 to 360 degrees (`c:firstSliceAng`). */
+	get firstSliceAngle(): number | null {
+		return this.#number('c:firstSliceAng')
+	}
+
+	/** A doughnut's hole, 10 to 90 percent of its size (`c:holeSize`). */
+	get holeSizePct(): number | null {
+		return this.#number('c:holeSize')
+	}
+
+	/** A radar's style (`c:radarStyle`): `standard`, `marker` or `filled`. */
+	get radarStyle(): string | null {
+		return this.#value('c:radarStyle')
+	}
+
+	/** Whether a surface is drawn as a wireframe (`c:wireframe`). */
+	get wireframe(): boolean | null {
+		const element = firstChild(this.group, 'c:wireframe')
+		return element ? boolValue(attr(element, 'val')) : null
+	}
+
+	/** Whether a line or stock group draws up/down bars (`c:upDownBars`). */
+	get upDownBars(): boolean {
+		return firstChild(this.group, 'c:upDownBars') !== null
+	}
+
+	/** Escape hatch: the underlying plot-group element. After mutating it call {@link markDirty}, or `save()` writes the original bytes. */
+	get element_(): Element {
+		return this.group
+	}
+
+	/** Mark the owning chart part dirty so `save()` reserializes it. Call after mutating {@link element_}. */
+	markDirty(): void {
+		this.part.markDirty()
+	}
+
+	/** The `@val` of a named child, or `null`. */
+	#value(qname: string): string | null {
+		const element = firstChild(this.group, qname)
+		return element ? attr(element, 'val') : null
+	}
+
+	/** The `@val` of a named child as a number, or `null`. */
+	#number(qname: string): number | null {
+		const element = firstChild(this.group, qname)
+		return element ? numberValue(attr(element, 'val')) : null
 	}
 }
 
@@ -348,6 +786,95 @@ export class ChartAxis {
 		return el ? numberValue(attr(el, 'val')) : null
 	}
 
+	/** The tick labels' text formatting and rotation (`c:txPr`), or `null` when the axis states none. */
+	get labelStyle(): ChartTextStyle | null {
+		return readTextStyle(firstChild(this.ax, 'c:txPr'))
+	}
+
+	/** The axis title's formatting (`c:title/c:tx/c:rich`), or `null` when it has no rich title. */
+	get titleStyle(): ChartTextStyle | null {
+		return readTitleStyle(firstChild(this.ax, 'c:title'))
+	}
+
+	/** Where this axis crosses the other one, as a value on it (`c:crossesAt`), or `null`. */
+	get crossesAt(): number | null {
+		const element = firstChild(this.ax, 'c:crossesAt')
+		return element ? numberValue(attr(element, 'val')) : null
+	}
+
+	/** Where this axis crosses the other one, as a rule (`c:crosses`: `autoZero`, `max`, `min`), or `null`. */
+	get crosses(): string | null {
+		const element = firstChild(this.ax, 'c:crosses')
+		return element ? attr(element, 'val') : null
+	}
+
+	/** Whether a value axis crosses between categories or on them (`c:crossBetween`: `between`, `midCat`). */
+	get crossBetween(): string | null {
+		const element = firstChild(this.ax, 'c:crossBetween')
+		return element ? attr(element, 'val') : null
+	}
+
+	/** A value axis' display units (`c:dispUnits`), or `null` when it shows plain values. */
+	get displayUnits(): ChartDisplayUnits | null {
+		const units = firstChild(this.ax, 'c:dispUnits')
+		if (!units) return null
+		const builtIn = firstChild(units, 'c:builtInUnit')
+		const custom = firstChild(units, 'c:custUnit')
+		return {
+			builtIn: builtIn ? attr(builtIn, 'val') : null,
+			custom: custom ? numberValue(attr(custom, 'val')) : null,
+			showLabel: firstChild(units, 'c:dispUnitsLbl') !== null,
+		}
+	}
+
+	/** How many categories pass between two labels (`c:tickLblSkip`), or `null` when automatic. */
+	get labelSkip(): number | null {
+		const element = firstChild(this.ax, 'c:tickLblSkip')
+		return element ? numberValue(attr(element, 'val')) : null
+	}
+
+	/** Whether a category axis flattens a multi-level category list (`c:noMultiLvlLbl`), or `null` when unstated. */
+	get noMultiLevelLabels(): boolean | null {
+		const element = firstChild(this.ax, 'c:noMultiLvlLbl')
+		return element ? boolValue(attr(element, 'val')) : null
+	}
+
+	/** A date axis' base unit (`c:baseTimeUnit`: `days`, `months`, `years`), or `null`. */
+	get baseTimeUnit(): string | null {
+		return this.#value('c:baseTimeUnit')
+	}
+
+	/** A date axis' major unit scale (`c:majorTimeUnit`), or `null`. */
+	get majorTimeUnit(): string | null {
+		return this.#value('c:majorTimeUnit')
+	}
+
+	/** A date axis' minor unit scale (`c:minorTimeUnit`), or `null`. */
+	get minorTimeUnit(): string | null {
+		return this.#value('c:minorTimeUnit')
+	}
+
+	/** The axis line's own stroke (`c:spPr/a:ln`), or `null` when it states none. */
+	get line(): ChartLine | null {
+		const spPr = firstChild(this.ax, 'c:spPr')
+		const ln = spPr && firstChild(spPr, 'a:ln')
+		return ln ? readChartLine(ln) : null
+	}
+
+	/** The major gridlines' stroke (`c:majorGridlines/c:spPr/a:ln`), or `null` when they state none. */
+	get majorGridlinesLine(): ChartLine | null {
+		const gridlines = firstChild(this.ax, 'c:majorGridlines')
+		const spPr = gridlines && firstChild(gridlines, 'c:spPr')
+		const ln = spPr && firstChild(spPr, 'a:ln')
+		return ln ? readChartLine(ln) : null
+	}
+
+	/** The `@val` of a named child, or `null`. */
+	#value(qname: string): string | null {
+		const element = firstChild(this.ax, qname)
+		return element ? attr(element, 'val') : null
+	}
+
 	/** Escape hatch: the underlying axis element. After mutating it call {@link markDirty}, or `save()` writes the original bytes. */
 	get element_(): Element {
 		return this.ax
@@ -390,9 +917,7 @@ export class ChartSeries {
 		const spPr = firstChild(this.ser, 'c:spPr')
 		const ln = spPr && firstChild(spPr, 'a:ln')
 		if (!ln) return null
-		// The chart part is read without a theme, so the colour stays unresolved.
-		const { widthPt, dash, colorRef, noFill } = readLineBasics(ln, null)
-		return { widthPt, dash, colorRef, noFill }
+		return readChartLine(ln)
 	}
 
 	/** Series index (`c:idx/@val`), or `null` if absent. */
@@ -449,6 +974,17 @@ export class ChartSeries {
 		return this.#numbers('c:yVal')
 	}
 
+	/**
+	 * The number format the series' values are cached in (`c:numCache/c:formatCode` under `c:val`, or
+	 * under `c:yVal` on a scatter or bubble series), or `null` when the cache states none. PowerPoint
+	 * paints a source-linked data label and a data table in it.
+	 */
+	get valueFormatCode(): string | null {
+		const cache = findCache(firstChild(this.ser, 'c:val') ?? firstChild(this.ser, 'c:yVal'))
+		const formatCode = cache && firstChild(cache, 'c:formatCode')
+		return formatCode ? (formatCode.textContent ?? null) : null
+	}
+
 	/** Cached bubble sizes of a bubble series (`c:bubbleSize`); non-numeric or missing points are `null`. */
 	get bubbleSizes(): (number | null)[] {
 		return this.#numbers('c:bubbleSize')
@@ -485,6 +1021,117 @@ export class ChartSeries {
 		return readDataLabels(firstChild(this.ser, 'c:dLbls'))
 	}
 
+	/**
+	 * The series' labels that state their own text (`c:ser/c:dLbls/c:dLbl` with `c:tx/c:rich`), in
+	 * document order. A label that only formats or deletes its point has no text and is left out.
+	 */
+	get customLabels(): ChartPointLabel[] {
+		const dLbls = firstChild(this.ser, 'c:dLbls')
+		if (!dLbls) return []
+		const labels: ChartPointLabel[] = []
+		for (const dLbl of childElements(dLbls)) {
+			if (dLbl.localName !== 'dLbl') continue
+			const idx = firstChild(dLbl, 'c:idx')
+			const index = idx ? numberValue(attr(idx, 'val')) : null
+			const tx = firstChild(dLbl, 'c:tx')
+			const rich = tx && firstChild(tx, 'c:rich')
+			if (index === null || !rich) continue
+			const runs: ChartLabelRun[] = []
+			for (const paragraph of childElements(rich)) {
+				if (paragraph.localName !== 'p') continue
+				for (const run of childElements(paragraph)) {
+					if (run.localName !== 'r' && run.localName !== 'fld') continue
+					const text = firstChild(run, 'a:t')?.textContent ?? ''
+					runs.push({ text, field: run.localName === 'fld' ? attr(run, 'type') : null })
+				}
+			}
+			labels.push({ index, runs })
+		}
+		return labels
+	}
+
+	/** The series' gradient fill (`c:spPr/a:gradFill`), or `null`. */
+	get gradientFill(): GradientFill | null {
+		const spPr = firstChild(this.ser, 'c:spPr')
+		return spPr ? readGradientFill(spPr, NO_THEME) : null
+	}
+
+	/** The series' pattern fill (`c:spPr/a:pattFill`), or `null`. */
+	get patternFill(): PatternFill | null {
+		const spPr = firstChild(this.ser, 'c:spPr')
+		return spPr ? readPatternFill(spPr, NO_THEME) : null
+	}
+
+	/** The series' outer shadow (`c:spPr/a:effectLst/a:outerShdw`), or `null`. */
+	get shadow(): OuterShadow | null {
+		const spPr = firstChild(this.ser, 'c:spPr')
+		return readOuterShadow(spPr && firstChild(spPr, 'a:effectLst'), NO_THEME)
+	}
+
+	/** The series' inner shadow (`c:spPr/a:effectLst/a:innerShdw`), or `null`. */
+	get innerShadow(): InnerShadow | null {
+		const spPr = firstChild(this.ser, 'c:spPr')
+		return readInnerShadow(spPr && firstChild(spPr, 'a:effectLst'), NO_THEME)
+	}
+
+	/** Whether a line or scatter series is smoothed (`c:smooth`), or `null` when unstated. */
+	get smooth(): boolean | null {
+		const element = firstChild(this.ser, 'c:smooth')
+		return element ? boolValue(attr(element, 'val')) : null
+	}
+
+	/** The series' data-point marker (`c:marker`), or `null` when it states none. */
+	get marker(): ChartMarker | null {
+		const marker = firstChild(this.ser, 'c:marker')
+		if (!marker) return null
+		const symbol = firstChild(marker, 'c:symbol')
+		const size = firstChild(marker, 'c:size')
+		const spPr = firstChild(marker, 'c:spPr')
+		const ln = spPr && firstChild(spPr, 'a:ln')
+		return {
+			symbol: symbol ? attr(symbol, 'val') : null,
+			size: size ? numberValue(attr(size, 'val')) : null,
+			fill: spPr ? readSolidFill(spPr) : null,
+			line: ln ? readChartLine(ln) : null,
+		}
+	}
+
+	/**
+	 * The points this series formats on its own (`c:dPt`), in document order: a bar's per-point
+	 * colours, a pie's slice colours. A `c:dPt` with no `c:idx` is left out.
+	 */
+	get dataPoints(): ChartDataPoint[] {
+		const points: ChartDataPoint[] = []
+		for (const dPt of childElements(this.ser)) {
+			if (dPt.localName !== 'dPt') continue
+			const idx = firstChild(dPt, 'c:idx')
+			const index = idx ? numberValue(attr(idx, 'val')) : null
+			if (index === null) continue
+			const invert = firstChild(dPt, 'c:invertIfNegative')
+			const spPr = firstChild(dPt, 'c:spPr')
+			points.push({
+				index,
+				invertIfNegative: invert ? boolValue(attr(invert, 'val')) : null,
+				fill: spPr ? readSolidFill(spPr) : null,
+				patternFill: spPr ? readPatternFill(spPr, NO_THEME) : null,
+				line: spPrLine(dPt),
+			})
+		}
+		return points
+	}
+
+	/** Whether a bar series paints a negative bar inverted (`c:invertIfNegative`), or `null` when unstated. */
+	get invertIfNegative(): boolean | null {
+		const element = firstChild(this.ser, 'c:invertIfNegative')
+		return element ? boolValue(attr(element, 'val')) : null
+	}
+
+	/** A 3-D bar series' own shape (`c:shape`: `box`, `cylinder`, `cone`, …), or `null` when unstated. */
+	get shape(): string | null {
+		const element = firstChild(this.ser, 'c:shape')
+		return element ? attr(element, 'val') : null
+	}
+
 	/** Escape hatch: the underlying `c:ser` element. After mutating it call {@link markDirty}, or `save()` writes the original bytes. */
 	get element_(): Element {
 		return this.ser
@@ -499,6 +1146,36 @@ export class ChartSeries {
 	#numbers(qname: string): (number | null)[] {
 		const container = firstChild(this.ser, qname)
 		return readPoints(container && findCache(container)).map(numberValue)
+	}
+}
+
+/** The size, in points, a chart text block (`c:txPr`) sets on its first paragraph's `a:defRPr`. */
+function readTextSizePt(txPr: Element | null): number | null {
+	const paragraph = txPr && firstChild(txPr, 'a:p')
+	const pPr = paragraph && firstChild(paragraph, 'a:pPr')
+	const defRPr = pPr && firstChild(pPr, 'a:defRPr')
+	const size = defRPr ? numberValue(attr(defRPr, 'sz')) : null
+	return size === null ? null : size / 100
+}
+
+/**
+ * A chart stroke (`a:ln`): {@link readLineBasics}' width, dash, colour and no-fill, then the cap and
+ * the colour's `a:alpha`, which a chart part read without a theme leaves unresolved otherwise.
+ */
+function readChartLine(ln: Element): ChartLine {
+	const { widthPt, dash, colorRef, noFill } = readLineBasics(ln, null)
+	const solidFill = firstChild(ln, 'a:solidFill')
+	const color = solidFill && firstChildElement(solidFill)
+	const alpha = color && firstChild(color, 'a:alpha')
+	const alphaValue = alpha ? numberValue(attr(alpha, 'val')) : null
+	return {
+		widthPt,
+		dash,
+		colorRef,
+		noFill,
+		cap: attr(ln, 'cap') ?? null,
+		alpha: alphaValue === null ? null : alphaValue / 100000,
+		colorTransformed: color ? childElements(color).some((child) => child.localName !== 'alpha') : false,
 	}
 }
 
@@ -520,7 +1197,64 @@ function readDataLabels(dLbls: Element | null): ChartDataLabels | null {
 		showLeaderLines: flag('c:showLeaderLines'),
 		position: pos ? attr(pos, 'val') : null,
 		numberFormat: readNumberFormat(dLbls),
+		textStyle: readTextStyle(firstChild(dLbls, 'c:txPr')),
+		fill: spPrFill(dLbls),
+		leaderLines: spPrLine(firstChild(dLbls, 'c:leaderLines')),
 	}
+}
+
+/** The size, in 1/60000 of a degree, of the `@rot` PowerPoint writes for an upright default. */
+const MAX_TEXT_ROTATION = 5400000
+
+/** Read a chart text block, a `c:txPr` or a title's `c:rich`; see {@link ChartTextStyle}. */
+function readTextStyle(block: Element | null): ChartTextStyle | null {
+	if (!block) return null
+	const bodyPr = firstChild(block, 'a:bodyPr')
+	const paragraph = firstChild(block, 'a:p')
+	const pPr = paragraph && firstChild(paragraph, 'a:pPr')
+	const defRPr = pPr && firstChild(pPr, 'a:defRPr')
+	const run = paragraph && firstChild(paragraph, 'a:r')
+	const rPr = run && firstChild(run, 'a:rPr')
+	// The run's own properties win over the paragraph's defaults, as they do when PowerPoint draws it.
+	const props = [rPr, defRPr].filter((element): element is Element => element !== null)
+	const first = (name: string): string | null => {
+		for (const element of props) {
+			const value = attr(element, name)
+			if (value !== null) return value
+		}
+		return null
+	}
+	const child = (qname: string): Element | null => {
+		for (const element of props) {
+			const found = firstChild(element, qname)
+			if (found) return found
+		}
+		return null
+	}
+	const solidFill = child('a:solidFill')
+	const colorElement = solidFill && firstChildElement(solidFill)
+	const latin = child('a:latin')
+	const size = numberValue(first('sz'))
+	const rot = bodyPr ? numberValue(attr(bodyPr, 'rot')) : null
+	return {
+		sizePt: size === null ? null : size / 100,
+		bold: boolValue(first('b')),
+		italic: boolValue(first('i')),
+		underline: first('u'),
+		color: colorElement ? readColorRef(colorElement, null) : null,
+		colorTransformed: colorElement
+			? childElements(colorElement).some((transform) => transform.localName !== 'alpha')
+			: false,
+		fontName: latin ? attr(latin, 'typeface') : null,
+		rotationDeg: rot === null || Math.abs(rot) > MAX_TEXT_ROTATION ? null : rot / 60000,
+		align: pPr ? attr(pPr, 'algn') : null,
+	}
+}
+
+/** A `c:title`'s formatting, off its `c:tx/c:rich`. */
+function readTitleStyle(title: Element | null): ChartTextStyle | null {
+	const tx = title && firstChild(title, 'c:tx')
+	return readTextStyle(tx && firstChild(tx, 'c:rich'))
 }
 
 /**
@@ -576,7 +1310,78 @@ function readSolidFill(container: Element): ChartFill | null {
 	const solidFill = firstChild(container, 'a:solidFill')
 	const noFill = !!firstChild(container, 'a:noFill')
 	if (!solidFill && !noFill) return null
-	return { colorRef: readColorRef(solidFill ? firstChildElement(solidFill) : null, null), noFill }
+	const color = solidFill ? firstChildElement(solidFill) : null
+	return { colorRef: readColorRef(color, null), noFill, alpha: colorAlpha(color) }
+}
+
+/** The `a:alpha` of a colour element, 0 to 1, or `null`. */
+function colorAlpha(color: Element | null): number | null {
+	const alpha = color && firstChild(color, 'a:alpha')
+	const value = alpha ? numberValue(attr(alpha, 'val')) : null
+	return value === null ? null : value / 100000
+}
+
+/**
+ * The colour context a chart part's fills resolve against: none. A literal resolves with its
+ * transforms; a scheme colour does not, since the part is read without its slide's theme.
+ */
+const NO_THEME: ColorContext = { clrMap: new Map(), clrScheme: new Map() }
+
+/** The solid fill of an element's `c:spPr`, or `null`. */
+function spPrFill(parent: Element | null): ChartFill | null {
+	const spPr = parent && firstChild(parent, 'c:spPr')
+	return spPr ? readSolidFill(spPr) : null
+}
+
+/** The stroke of an element's `c:spPr/a:ln`, or `null`. */
+function spPrLine(parent: Element | null): ChartLine | null {
+	const spPr = parent && firstChild(parent, 'c:spPr')
+	const ln = spPr && firstChild(spPr, 'a:ln')
+	return ln ? readChartLine(ln) : null
+}
+
+/** A `c:layout`'s manual layout, or `null` when it has none. */
+function readManualLayout(layout: Element | null): ChartManualLayout | null {
+	const manual = layout && firstChild(layout, 'c:manualLayout')
+	if (!manual) return null
+	const value = (qname: string): string | null => {
+		const element = firstChild(manual, qname)
+		return element ? attr(element, 'val') : null
+	}
+	const number = (qname: string): number | null => numberValue(value(qname))
+	return {
+		target: value('c:layoutTarget'),
+		xMode: value('c:xMode'),
+		yMode: value('c:yMode'),
+		x: number('c:x'),
+		y: number('c:y'),
+		w: number('c:w'),
+		h: number('c:h'),
+	}
+}
+
+/** A chart surface's `c:spPr` and `c:layout` as a {@link ChartAreaFormat}. */
+function readAreaFormat(spPr: Element | null, layout: Element | null, rels: Relationships | null): ChartAreaFormat {
+	const solidFill = spPr && firstChild(spPr, 'a:solidFill')
+	const color = solidFill && firstChildElement(solidFill)
+	const ln = spPr && firstChild(spPr, 'a:ln')
+	return {
+		fillNoFill: spPr ? firstChild(spPr, 'a:noFill') !== null : false,
+		hasOwnFill: hasFillChoice(spPr),
+		fillColor: colorValueOf(color, 'srgbClr'),
+		fillSchemeColor: colorValueOf(color, 'schemeClr'),
+		resolvedFill: color && color.localName === 'srgbClr' ? resolveColorElement(color, NO_THEME) : null,
+		gradientFill: spPr ? readGradientFill(spPr, NO_THEME) : null,
+		patternFill: spPr ? readPatternFill(spPr, NO_THEME) : null,
+		pictureFill: spPr ? readPictureFill(spPr, rels) : null,
+		border: ln ? readChartLine(ln) : null,
+		layout: readManualLayout(layout),
+	}
+}
+
+/** The `@val` of a colour element of the given local name, or `null`. */
+function colorValueOf(color: Element | null, localName: string): string | null {
+	return color && color.localName === localName ? attr(color, 'val') : null
 }
 
 /** Resolve a `c:cat`/`c:val`/`c:tx` container to its cache element (`c:numCache`/`c:strCache`/literal). */

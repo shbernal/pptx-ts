@@ -9,6 +9,89 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **A layout placeholder definition takes `idx` and any `ST_PlaceholderType`.** In
+  `defineSlideMaster({ objects: [{ placeholder: { options } }] })`, `idx` is written as `p:ph/@idx`
+  (it was always 100 plus the object's position; `0` writes none, as PowerPoint writes a title), and
+  `type` takes `ctrTitle`, `subTitle`, `obj`, `dt`, `ftr`, `sldNum` and the rest beside the six
+  friendly types. A slide object bound by type alone fills an `idx`-0 definition of that type, so no
+  empty copy is seeded beside it ([#165](https://github.com/shbernal/pptx-ts/issues/165)).
+- **`Paragraph` resolves what it inherits.** `resolvedAlign`, `resolvedMarginLeftPt`,
+  `resolvedIndentPt`, `resolvedLineSpacing`, `resolvedSpaceBeforePt`, `resolvedSpaceAfterPt` and
+  `resolvedBulletDetail` walk the paragraph's own `a:pPr`, then the text body's, layout's and
+  master's list styles, the master's `p:txStyles` and `p:defaultTextStyle` at its level, the chain
+  `Run`'s resolved getters walk ([#143](https://github.com/shbernal/pptx-ts/issues/143)).
+- **`CustomGeometry` reads its guides, adjust handles and connection sites.** `guides`,
+  `adjustHandles` (XY and polar) and `connectionSites`, each position a number in the shape's EMU
+  space or a guide name. `readModelToIr` carries them onto `addShape`'s `guides`, `adjustHandles` and
+  `connectionSites`, so a connector glued to a freeform's site keeps its target; on a picture or a
+  freeform holding text, which take no such options, `shape.custGeom.guides` now says `unwritable`
+  ([#78](https://github.com/shbernal/pptx-ts/issues/78)).
+- **A chart's areas, manual layouts and series effects read back.** `Chart.chartArea` and
+  `Chart.plotArea` (`ChartAreaFormat`: solid, gradient, pattern and picture fills read as a shape's
+  are, the border, the plot's manual layout), `Chart.roundedCorners`, `Chart.titleLayout`,
+  `ChartLegend.layout`, `ChartSeries.shadow` / `innerShadow` / `gradientFill` / `patternFill`, a
+  `ChartFill`'s `alpha`, `ChartDataLabels.fill` and `leaderLines`, and `ChartPlotGroup.seriesLinesLine`.
+  `readModelToIr` maps them onto `chartArea`, `plotArea`, `layout`, `legendLayout`,
+  `chartColorsOpacity`, `shadow`, `lineCap`, `dataBorder`, `dataLabelBkgrdColors`, `leaderLine*` and
+  `barSeriesLine`, and notes a title layout and a series gradient or pattern, which no option spells
+  ([#134](https://github.com/shbernal/pptx-ts/issues/134)).
+- **Chart text formatting reads as `ChartTextStyle`.** `Chart.titleStyle`, `ChartLegend.textStyle`,
+  `ChartDataLabels.textStyle`, `ChartAxis.labelStyle` and `ChartAxis.titleStyle` read size, bold,
+  italic, underline, colour, typeface, rotation and alignment, and `Chart.language` the language the
+  text is tagged with. `readModelToIr` maps each onto its `title*`, `legend*`, `dataLabel*`,
+  `*AxisLabel*`, `*AxisTitle*` and `lang` options, a series' own label font onto `seriesOptions`
+  ([#133](https://github.com/shbernal/pptx-ts/issues/133)).
+- **`ChartAxis` reads where it crosses, its display units, label skip, time units and strokes.**
+  `crossesAt`, `crosses`, `crossBetween`, `displayUnits`, `labelSkip`, `noMultiLevelLabels`,
+  `baseTimeUnit` / `majorTimeUnit` / `minorTimeUnit`, `line` and `majorGridlinesLine`. A `ChartLine`
+  now reads its `cap`, its colour's `alpha`, and whether the colour carries a theme transform the
+  chart part cannot apply. `readModelToIr` maps each onto its `addChart` option, carries a date axis
+  as one instead of as text, and gives axis and gridline strokes their colour, width, dash, cap and
+  transparency ([#132](https://github.com/shbernal/pptx-ts/issues/132)).
+- **`Chart.plotGroups`, `Chart.view3D` and `Chart.displayBlanksAs`.** A `ChartPlotGroup` reads its
+  type, its series and what it sets on all of them: bar direction, grouping, gap width, overlap,
+  series lines, 3-D gap depth and shape, a pie's first-slice angle, a doughnut's hole, a radar's
+  style, a surface's wireframe and up/down bars. `ChartSeries` reads `smooth`, `marker`,
+  `invertIfNegative` and `shape`. `readModelToIr` maps each onto its `addChart` option where it
+  differs from the writer's default, so a horizontal or stacked bar, a doughnut's hole or a smoothed
+  line no longer comes back as the default, and notes an inverted negative bar, which no option writes
+  ([#131](https://github.com/shbernal/pptx-ts/issues/131)).
+- **`Chart.dataTable` and `Chart.metadata`.** The first reads the data table under the plot
+  (`c:dTable`: its border, outline and key flags and its text size), the second the key/value map
+  `addChart`'s `metadata` option writes. `readModelToIr` carries both back onto `addChart`, so
+  `metadata` survives the round trip its documentation promises
+  ([#135](https://github.com/shbernal/pptx-ts/issues/135)).
+- **`SlideIr.notesRuns` carries speaker notes as `NotesProps[]`.** When a notes run is bold,
+  italic, underlined, coloured, sized, set in its own face or links to a URL, `readModelToIr`
+  carries the runs with those options and `printScript` prints `addNotes([...])`. Plain notes
+  still carry as `notesText`
+  ([#129](https://github.com/shbernal/pptx-ts/issues/129)).
+- **`objectLock` takes `noUngrp` on a group**, the lock that stops PowerPoint ungrouping it
+  (`a:grpSpLocks/@noUngrp`). `readModelToIr` reads it back
+  ([#126](https://github.com/shbernal/pptx-ts/issues/126)).
+- **`CellBorder.cap` reads a table cell edge's or diagonal's line cap** (`@cap`) as its raw token,
+  `flat`, `rnd` or `sq`, or `null` when unset.
+- **`placeholder` takes a binding: `{ name?, type?, idx? }`.** On `addText`, `addImage` and
+  `addTable`, a stated `type` or `idx` writes that `p:ph` whether or not the deck defines a layout
+  placeholder to match, so a slide can fill placeholder `idx="1"` of a template layout it is
+  appended to. `type` takes any `ST_PlaceholderType` value (`ctrTitle`, `subTitle`, `ftr`, …).
+  `name` binds as the string form does, and a stated `idx` or `type` wins over the named
+  placeholder's. A binding to a layout placeholder's `idx` fills it, so no empty copy is stamped.
+  A bad `idx` or `type` throws `placeholder/invalid-idx` or `placeholder/invalid-type`
+  ([#112](https://github.com/shbernal/pptx-ts/issues/112)).
+- **`addChart` takes `placeholder`.** A name or a `{ name?, type?, idx? }` binding, as on
+  `addImage` and `addTable`: a chart naming a layout placeholder takes its frame for any of
+  `x`/`y`/`w`/`h` it leaves unstated, and writes its `p:ph`. `readModelToIr` carries a chart in a
+  placeholder as that binding instead of noting it as `shape.placeholder`.
+- **`crop` takes a negative inset.** A negative edge pads the source with empty space on that side,
+  the way PowerPoint's Fit crop and `sizing: 'contain'` write `a:srcRect`. It threw
+  `image/crop-inset-out-of-range` before, on a picture, a picture fill and a picture background.
+  `readModelToIr` now carries such a crop as `crop` instead of dropping it with a note
+  ([#110](https://github.com/shbernal/pptx-ts/issues/110)).
+- **`Paragraph.endLanguage` reads the language of a paragraph's end mark** (`a:endParaRPr/@lang`),
+  or `null` when it states none.
+- **`Picture.recolors` reads every blip effect on a picture**, in document order. `recolor` reads
+  only the first, so a picture with `transparency` and a recolour reported the transparency alone.
 - **A `next` channel of unreleased builds.** Every commit on `main` that passes CI is published as
   a prerelease of `pptx-ts` under the `next` dist-tag (`pnpm add pptx-ts@next`), versioned
   `<base>-next.<run>.g<sha>`. `latest` and caret ranges are unaffected.
@@ -36,6 +119,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Breaking: a placeholder definition inherits the master's bullet and margins.** A
+  `defineSlideMaster({ objects })` placeholder that sets no `bullet`, `paraMarginLeft` or
+  `paraIndent` wrote `<a:buNone/>` plus `marL="0" indent="0"` into its layout's level-1 list style,
+  which overrode the master's `textStyles` on every slide that used it. It now states nothing there,
+  and text filling the placeholder with no `bullet` of its own takes the same silence, so both pick
+  up the master's level-1 bullet and hanging indent. Without `textStyles` that is the built-in
+  `•` at 0.375in. Set `bullet: false` on the definition to keep the old output for its slides, or
+  on the slide text for one paragraph ([#174](https://github.com/shbernal/pptx-ts/issues/174)).
 - **`baseline` is a percent.** It counted twentieths of a percent (written as
   `Math.round(baseline * 50)` thousandths), unlike `bullet.size`, `fit.fontScale`,
   `Run.baselinePct` and every other percentage in the API
@@ -71,6 +162,197 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A slide's unfilled layout placeholder writes a bare text body.** The empty copy a slide gets for
+  a placeholder it leaves unfilled wrote a list style and an empty run stamped `lang="en-US"`, where
+  `addShape` bound to the same placeholder, and PowerPoint for an empty one, write
+  `<a:lstStyle/><a:p><a:endParaRPr/></a:p>`. So `readModelToIr`'s replay of it differed with no
+  note. The layout's placeholder still carries the language, and desktop PowerPoint renders both forms
+  the same.
+- **A combo chart carries through `readModelToIr` as a combo.** `ChartPlotGroup.axisIds` reads the
+  axes a plot group plots against. `readModelToIr` replays an area, bar, line and scatter combo
+  through `addChart`'s multi-type form: each plot's type, series and own settings, `secondaryValAxis`
+  and `secondaryCatAxis` for a plot on the secondary axes, and the secondary axes' own settings as the
+  second `valAxes` and `catAxes` entries. It was flattened to its first type under `chart.combo`
+  `unsupported`; a combo of other plots still is, now noted `unwritable`
+  ([#191](https://github.com/shbernal/pptx-ts/issues/191)).
+- **A chart title's manual layout comes back as `titlePos`.** `readModelToIr` declared every title
+  layout `chart.layout` unwritable, though `titlePos` writes it: each edge-mode coordinate now unfolds
+  into the offset the writer folds into it. `chart.layout` is left for what `titlePos` cannot state, a
+  factor-mode coordinate or a size ([#187](https://github.com/shbernal/pptx-ts/issues/187)).
+- **A bar series' per-point colours carry through `readModelToIr`.** `ChartSeries.dataPoints` reads a
+  series' own data points (`c:dPt`: index, inverted-negative flag, fill, pattern and outline), which
+  had no accessor, so the per-point fills `invertedColors` writes were dropped with no note. On a bar
+  chart each point's literal fill comes back as the series' `pointStyles`, which write the same
+  points; a point formatted beyond that is noted under `chart.dataPoints`
+  ([#184](https://github.com/shbernal/pptx-ts/issues/184)).
+- **A pie's slice colours and a line, area or scatter series' own points carry through
+  `readModelToIr`.** They were dropped with no note, so a pie's slices came back in the default
+  palette. A pie's or doughnut's slice fills come back as `chartColors` when they colour every slice,
+  and as `pointStyles` otherwise; a line, area or scatter series' point fills come back as its
+  `pointStyles`. A slice outline unlike the series' own is noted under `chart.dataPoints`, and so is a
+  radar's or bubble's data point, which `addChart` does not write
+  ([#197](https://github.com/shbernal/pptx-ts/issues/197)).
+- **A chart's marker outline and a series shadow's `rotateWithShape` carry through `readModelToIr`.**
+  The marker outline (`c:marker/c:spPr/a:ln`) comes back as `lineDataSymbolLineSize` and, where it is
+  not the series' own colour, `lineDataSymbolLineColor`
+  ([#188](https://github.com/shbernal/pptx-ts/issues/188)). A series shadow written with
+  `rotateWithShape: false` keeps it; the copy wrote the default `rotWithShape="1"`
+  ([#185](https://github.com/shbernal/pptx-ts/issues/185)).
+- **A chart's number formats carry through `readModelToIr`.** `ChartSeries.valueFormatCode` reads
+  the format a series caches its values in (`c:numCache/c:formatCode`), which `valLabelFormatCode`
+  and `dataTableFormatCode` write and nothing read, so both came back lost; it now comes back as
+  `valLabelFormatCode` ([#189](https://github.com/shbernal/pptx-ts/issues/189)). A scatter's or
+  bubble's X axis format comes back as `catAxisLabelFormatCode`, not as the Y axis'
+  `valAxisLabelFormatCode: 'General'`, which is now left out when it is the default
+  ([#190](https://github.com/shbernal/pptx-ts/issues/190)).
+- **A chart or plot area with no fill of its own comes back as `fill: { type: 'inherit' }`.**
+  `ChartAreaFormat.hasOwnFill` reads whether the area states any fill. `readModelToIr` left such an
+  area's `fill` out, and the writer spells an absent fill `a:noFill`, so the copy stated no fill
+  where its source inherited one ([#186](https://github.com/shbernal/pptx-ts/issues/186)).
+- **`readModelToIr` spells an outline-less `addShape` as `line: { type: 'none' }`.** `addShape`
+  writes an absent `line` that way, so a shape stating no outline, such as a placeholder the writer
+  seeds empty, came back from its own copy with a line its source's IR did not state, and the
+  standalone round trip reported it ([#177](https://github.com/shbernal/pptx-ts/issues/177)).
+- **A scatter's own data labels carry through `readModelToIr`.** `ChartSeries.customLabels` reads a
+  series' per-point labels that state their own text, with any `a:fld` fields, and `chartCall` maps
+  them onto `dataLabelFormatScatter` (`custom` or `customXY`) and each series' `labels`; a series
+  block showing the value and the category name maps onto `XY`. A scatter came back with no labels
+  and no note. Label text on any other chart type is now noted under `chart.labels`
+  ([#166](https://github.com/shbernal/pptx-ts/issues/166)).
+- **`addNotes` writes a run's `hyperlink.slide` and `hyperlink.action`.** `NotesTextOptions` typed
+  both, but only `url` was written: a slide jump was dropped with a warning and a show jump without
+  one. A slide jump is now a slide relationship of the notes part, which `appendSlides` repoints at
+  the appended slide (`ExtractedNotes.slideLinks`), and a link past the last slide is refused on
+  write. `readModelToIr` carries both onto the notes runs instead of noting them as unwritable
+  ([#168](https://github.com/shbernal/pptx-ts/issues/168)).
+
+- **`readModelToIr` re-declares a layout's placeholders.** Every definition was dropped under
+  `master.placeholders`. Each one every slide on its layout fills now carries as a `{ placeholder }`
+  object with its source name, type, `idx`, frame and custom prompt; one a slide leaves out is still
+  dropped and noted, since the write path would seed an empty copy onto that slide
+  ([#165](https://github.com/shbernal/pptx-ts/issues/165)).
+- **An unknown `hyperlink.action` throws `hyperlink/invalid-action`.** It was written into
+  `ppaction://hlinkshowjump?jump=…` as given, and PowerPoint refused the deck as corrupt
+  (`0x80070570`). `'prevslide'` in plain JavaScript is the usual slip; the jump is `'previousslide'`
+  ([#149](https://github.com/shbernal/pptx-ts/issues/149)).
+- **A chart's embedded workbook no longer stamps the clock.** Its own `docProps/core.xml` carried
+  `dcterms:created` and `dcterms:modified`, so two writes of a deck with a chart differed inside the
+  workbook, a part a consumer comparing packages cannot exclude by name. The workbook now states no
+  timestamp; the deck's `docProps/core.xml` keeps its dates
+  ([#145](https://github.com/shbernal/pptx-ts/issues/145)).
+- **A one-entry multi-type `addChart` array writes a bubble chart.** Every bubble entry threw
+  `chart/bubble-in-combo`, a one-entry array that combines nothing included, so `type[].data[].sizes`
+  could never be written. A single bubble entry is now written as the standalone chart, its options
+  over the chart-level ones; a real combo still refuses one
+  ([#140](https://github.com/shbernal/pptx-ts/issues/140)).
+- **`addChart` warns for the text keys it does not read.** `ChartOpts` takes every
+  `TextBaseProps` key (`bold`, `fontFace`, `align`, `bullet`, …) through `ChartPropsTitle`, and the
+  chart writer reads none but `lang`, so a chart given them was byte-identical to one without. They
+  are now named in one `chart/option-not-supported` warning; a chart's text is styled through its
+  own options ([#138](https://github.com/shbernal/pptx-ts/issues/138)).
+- **`textWarp` on a table or cell warns `table/option-not-supported`.** A cell took it from
+  `TextBaseProps` and wrote nothing, with nothing reported; PowerPoint has no text transform in a
+  table cell ([#84](https://github.com/shbernal/pptx-ts/issues/84)).
+- **A chart or plot area paints a picture fill.** `chartArea.fill` and `plotArea.fill` with
+  `type: 'image'` wrote no fill and warned that the caller's `image.data` was missing. The chart part
+  now declares the picture and writes an `a:blipFill`, through `write()`, `extractSlides()` and
+  `appendSlides()` alike ([#139](https://github.com/shbernal/pptx-ts/issues/139)).
+- **`catAxes[n]` and `valAxes[n]` write `catAxisCrossesAt`, `valAxisCrossesAt` and
+  `valLabelFormatCode`.** Each entry's crossing now lands on the axis it crosses, as the flat key's
+  does, and a value-axis entry's format sets the series caches of the plots on that axis. All three
+  wrote nothing from an entry ([#142](https://github.com/shbernal/pptx-ts/issues/142)).
+- **`readModelToIr` carries the chart settings the read model reads.** A series outline
+  (`dataBorder` on a bar, area or pie; `lineSize`, `lineDash`, `lineDashValues` and a per-series
+  `seriesOptions[n].lineSize` on a stroked series), each axis' orientation, tick marks, label
+  position and gridlines, the value axis' log base and minor unit, the series axis' hidden flag,
+  title and format, `showBubbleSize`, and a series' own data-label format came back as the
+  writer's defaults with no note. An axis title now carries the `show*AxisTitle` flag that draws
+  it ([#130](https://github.com/shbernal/pptx-ts/issues/130)).
+- **`notes.formatting` names what `addNotes` cannot write, with cause `unwritable`.** It fired as
+  `unsupported` for every formatted note, though the write side authors most of it. It now fires
+  only for an indent level, a bullet, strikethrough, a highlight, character spacing or a link that
+  is not a URL ([#129](https://github.com/shbernal/pptx-ts/issues/129)).
+- **`addChart` writes `objectLock`.** The chart frame wrote a bare `p:cNvGraphicFramePr` and
+  dropped every flag without a warning. It now writes `a:graphicFrameLocks` as a table's frame does,
+  warns for a flag a frame cannot carry, and `readModelToIr` carries the locks back
+  ([#137](https://github.com/shbernal/pptx-ts/issues/137)).
+- **`readModelToIr` reads a scatter's or bubble's Y axis as its value axis.** Both axes of those
+  charts are `c:valAx`, and the X axis was taken for the value axis: its bounds came back as
+  `valAxisMinVal` / `valAxisMaxVal`, and the Y axis' bounds and title were lost. The X axis now
+  maps to the `catAxis*` options, its bounds included
+  ([#154](https://github.com/shbernal/pptx-ts/issues/154)).
+- **`readModelToIr` keeps a table cell border's `cap` and `transparency`.** Both came back as the
+  writer's defaults with no note, on an edge and on a diagonal
+  ([#81](https://github.com/shbernal/pptx-ts/issues/81)).
+- **`readModelToIr` leaves the runs of a linked shape uncoloured.** A text box with a shape-level
+  `hyperlink: { action }` came back with `color: '000000'` on its run, which `addText` leaves
+  uncoloured, so the replay added a black fill the source never had
+  ([#128](https://github.com/shbernal/pptx-ts/issues/128)).
+- **`readModelToIr` gives every chart series its own category labels.** Only the first series
+  carried `labels`, and `addChart` writes no `c:cat` for a series without them, so a rebuilt chart
+  plotted every later series against 1, 2, 3 ([#141](https://github.com/shbernal/pptx-ts/issues/141)).
+- **A table cell writes `hyperlink.action` and `bullet.image`.** A show-jump link on a cell wrote
+  no `a:hlinkClick`, leaving underlined text that went nowhere, and a picture bullet fell back to
+  a `•` glyph with `bullet/image-embed-failed`. Both are now written as `addText` writes them
+  ([#82](https://github.com/shbernal/pptx-ts/issues/82)).
+- **A picture bullet no longer writes its relationship id into the caller's `bullet` object.**
+  Reused in a second deck, that object carried an `r:embed` the deck never declared
+  ([#83](https://github.com/shbernal/pptx-ts/issues/83)).
+- **A slide object filling a layout placeholder no longer writes `hasCustomPrompt`.** `addText`
+  and `addImage` with `placeholder` copied the flag from the layout's definition onto the slide's
+  `p:ph`, so a filled shape claimed its own text was prompt text. Only the layout or master
+  placeholder carries it now.
+- **A layout placeholder with no prompt text no longer writes `hasCustomPrompt`.** A
+  `defineSlideMaster` placeholder with `text: ''` or no `text` flagged an empty custom prompt, a
+  state PowerPoint does not write: it drops the flag when a prompt is cleared. Only a definition
+  with prompt text carries it now, so the slide shows PowerPoint's default prompt, as `text`
+  documents. `text: ' '` still writes the flag.
+- **`readModelToIr` keeps a placeholder's layout binding.** A text placeholder bound by `idx`
+  (every body placeholder) and a picture or table in a placeholder came back as plain objects
+  under a `shape.placeholder` note. They now carry the source's `p:ph` as a `placeholder: { type,
+  idx }` binding, in both printed scripts ([#111](https://github.com/shbernal/pptx-ts/issues/111),
+  [#112](https://github.com/shbernal/pptx-ts/issues/112)).
+- **`textStyles` `bullet: true` writes a bullet.** On a slide-master level it wrote nothing, so the
+  title, whose default is no bullet, could not be given one without a `characterCode`. It now
+  writes the level's own glyph, or `•` where the level has none, as `addText`'s `bullet: true` does
+  ([#113](https://github.com/shbernal/pptx-ts/issues/113)).
+- **A text run's `hyperlink: { action }` writes its jump.** The run was underlined and linked
+  nowhere, with no warning. It now writes `a:hlinkClick` with the show jump on the run, as
+  PowerPoint does, and `readModelToIr` carries a run's jump as `hyperlink.action` instead of
+  noting it unwritable ([#114](https://github.com/shbernal/pptx-ts/issues/114)).
+- **`readModelToIr` keeps a group's rotation and flips on the group.** They were baked into each
+  child, which moved and rotated it in their place, under a `group.transform` note. The group now
+  carries `rotate`, `flipH` and `flipV`, and its children keep their own transforms
+  ([#116](https://github.com/shbernal/pptx-ts/issues/116)).
+- **`Shape.placeholder` reads a picture's or graphic frame's `p:ph`.** It was `null` for every
+  shape but a `p:sp`, so a filled picture placeholder read as a free picture, and `readModelToIr`
+  dropped its layout binding with no note. It now reads the binding, and `readModelToIr` declares
+  it lost under `shape.placeholder` ([#111](https://github.com/shbernal/pptx-ts/issues/111)).
+- **`readModelToIr` keeps the language a text's paragraphs end in.** `addText('bonjour', { lang:
+  'fr-FR' })` writes `fr-FR` on the run and on `a:endParaRPr`. The IR carried it on the run only,
+  so the replay ended the paragraph in `en-US`. When every paragraph end agrees, the language is
+  now `lang` on the text. When they disagree, `text.endParagraph.lang` notes it
+  ([#102](https://github.com/shbernal/pptx-ts/issues/102)).
+- **`readModelToIr` keeps a picture's recolour and transparency.** `grayscale`, `biLevel`,
+  `duotone`, `clrChange` and `transparency` were all dropped under an `image.recolor` note saying
+  none had a write option. Each now maps to its `addImage` option
+  ([#109](https://github.com/shbernal/pptx-ts/issues/109)).
+- **`readModelToIr` keeps a picture background's transparency.** A background picture with
+  `a:alphaModFix` came back opaque, with no note. It now carries `transparency` beside the
+  picture ([#107](https://github.com/shbernal/pptx-ts/issues/107)).
+- **`readModelToIr` keeps a connector's route and bindings.** Every connector came back as
+  `type: 'straight'` and unbound, with no note for the route. It now carries `type`, `bends` and
+  `adj` from the preset, and `startShape`/`endShape` with their sites when the bound shape's name
+  is unique on the slide. A route `addConnector` cannot write is noted as `connector.route`
+  ([#108](https://github.com/shbernal/pptx-ts/issues/108)).
+- **A hyperlink in one table cell no longer strips the black text default from the others.** Any
+  link in the grid turned the default off for every cell, so a cell's output depended on its
+  neighbours. Only the cell holding the link is now left to the link colour
+  ([#101](https://github.com/shbernal/pptx-ts/issues/101)).
+- **`readModelToIr` leaves a placeholder's uncoloured runs uncoloured.** A run with no colour of
+  its own in a shape that carries as `placeholder` came back with its inherited colour baked in,
+  under a `text.color.inherited` note, though the writer leaves such a run to its layout
+  ([#100](https://github.com/shbernal/pptx-ts/issues/100)).
 - **A picture background applies `transparency`.** `background: { data, transparency: 50 }`
   wrote the picture fully opaque, with no warning. It now writes `a:alphaModFix` on the picture,
   as a shape's picture fill does ([#98](https://github.com/shbernal/pptx-ts/issues/98)).

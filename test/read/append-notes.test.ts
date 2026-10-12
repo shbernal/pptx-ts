@@ -190,6 +190,38 @@ describe('appendSlides carries speaker notes', () => {
 		assertEqual(rels.resolveTarget(link.id), second.partName, 'and targets the second appended slide')
 	})
 
+	// A notes run's slide jump is a slide relationship of the notes part, which has to be repointed
+	// at the appended slide as a body's is. A show jump takes no relationship (#168).
+	test("a notes run's jump to another slide targets the appended slide", async () => {
+		const { reread } = await appendOnto('placeholder-inherit.pptx', (pptx) => {
+			pptx.addSlide().addText('first', { x: 1, y: 1, w: 4, h: 1 })
+			pptx.addSlide().addNotes([
+				{ text: 'back ', options: { hyperlink: { slide: 1 } } },
+				{ text: 'next', options: { hyperlink: { action: 'nextslide' } } },
+			])
+		})
+		const [first, second] = take(reread.slides, 2)
+		const slideRels = reread.opc.relationshipsFor(second.partName)
+		const notesPartName = slideRels.resolveTarget(defined([...slideRels].find((r) => r.type === NOTES_SLIDE_REL)).id)
+		const notesRels = reread.opc.relationshipsFor(notesPartName)
+		const link = defined(
+			[...notesRels].find((r) => r.id === 'rId3'),
+			'the notes part declares rId3'
+		)
+		assertEqual(link.type, SLIDE_REL, 'as a slide relationship')
+		assertEqual(notesRels.resolveTarget(link.id), first.partName, 'to the first appended slide')
+		assert(![...notesRels].some((r) => r.type.endsWith('/hyperlink')), 'and declares no hyperlink relationship')
+		const runs = defined(second.notesTextFrame).paragraphs.flatMap((paragraph) => paragraph.runs)
+		assertEqual(
+			JSON.stringify(runs.map((run) => [run.hyperlink?.action, run.hyperlink?.targetPartName ?? null])),
+			JSON.stringify([
+				['ppaction://hlinksldjump', first.partName],
+				['ppaction://hlinkshowjump?jump=nextslide', null],
+			]),
+			'both runs read back with their links'
+		)
+	})
+
 	test('every notes part is content-type registered', async () => {
 		const { out } = await appendOnto('placeholder-inherit.pptx', (pptx) => {
 			const slide = pptx.addSlide()

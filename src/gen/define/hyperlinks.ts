@@ -16,6 +16,7 @@ import type {
 } from '../../types/internal.js'
 import { getNewRelId, heldRelIds } from '../utils.js'
 import { InvalidOptionError } from '../../errors.js'
+import { SHOW_JUMPS } from '../../ooxml/show-jumps.js'
 
 /**
  * The relationship record one hyperlink serializes to.
@@ -78,6 +79,13 @@ export function validateHyperlink(hyperlink: unknown, call: string): asserts hyp
 		throw new InvalidOptionError(
 			'hyperlink/missing-target',
 			`${call}: \`hyperlink\` requires either \`url\`, \`slide\`, or \`action\``
+		)
+	// The action is written into `ppaction://hlinkshowjump?jump=…` as given, and PowerPoint refuses a
+	// deck whose jump it does not know as corrupt (0x80070570), whatever else the link says.
+	if (action && !(SHOW_JUMPS as readonly string[]).includes(action))
+		throw new InvalidOptionError(
+			'hyperlink/invalid-action',
+			`${call}: \`hyperlink.action\` is one of ${SHOW_JUMPS.join(', ')}, got ${JSON.stringify(action)}.`
 		)
 }
 

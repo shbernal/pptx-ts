@@ -1,7 +1,6 @@
 import JSZip from 'jszip'
 import {
 	PptxTs,
-	setDiagnosticHandler,
 	captureDiagnostics,
 	defineRegressionSuite,
 	build,
@@ -11,11 +10,22 @@ import {
 	assertIncludes,
 	assertNotIncludes,
 	caughtSync,
+	caught,
 } from '../../helpers.ts'
 
 /** A package's entry by name, from a written deck. */
 async function entryOf(pres: PptxTs, name: string) {
 	return readEntry(await JSZip.loadAsync(await pres.toBytes()), name)
+}
+
+/** {@link build}, with the diagnostics the build and the write raised. */
+async function buildWithDiagnostics(fn: (pres: PptxTs) => void) {
+	const { result, diagnostics } = await captureDiagnostics(async () => {
+		const pres = new PptxTs()
+		fn(pres)
+		return JSZip.loadAsync(await pres.toBytes())
+	})
+	return { zip: result, diagnostics }
 }
 
 /** The `code` `fn` throws, or `null`. */
@@ -108,26 +118,49 @@ defineRegressionSuite('Speaker notes hyperlinks & rich runs', [
 		},
 	},
 	{
-		name: 'notes hyperlink `slide` target is ignored (url-only support)',
+		// Only `url` was written. A `slide` target was dropped with a warning and an `action` was
+		// dropped without one, though `NotesTextOptions` types both (#168).
+		name: 'a notes run jumps to a slide over a slide relationship of the notes part',
 		fn: async () => {
-			const warnings: string[] = []
-			setDiagnosticHandler((d) => warnings.push(d.message))
-			try {
-				const { zip } = await build((p) => {
-					p.addSlide()
-					p.addSlide().addNotes([{ text: 'jump', options: { hyperlink: { slide: 1 } } }])
-				})
-				const xml = await readEntry(zip, NOTES_XML(2))
-				assertNotIncludes(xml, '<a:hlinkClick', 'slide-target hyperlink not emitted in notes')
-				const rels = await readEntry(zip, NOTES_RELS(2))
-				assertNotIncludes(rels, HYPERLINK_REL_TYPE, 'no hyperlink rel for slide target')
-				assert(
-					warnings.some((w) => w.includes('notes hyperlinks support `url` only')),
-					`expected a warning about url-only notes hyperlinks; got: ${JSON.stringify(warnings)}`
-				)
-			} finally {
-				setDiagnosticHandler(null)
-			}
+			const { zip, diagnostics } = await buildWithDiagnostics((p) => {
+				p.addSlide()
+				p.addSlide().addNotes([{ text: 'jump', options: { hyperlink: { slide: 1, tooltip: 'Back' } } }])
+			})
+			assertIncludes(
+				await readEntry(zip, NOTES_XML(2)),
+				'<a:hlinkClick r:id="rId3" action="ppaction://hlinksldjump" tooltip="Back"/>',
+				'the run links over rId3'
+			)
+			const rels = await readEntry(zip, NOTES_RELS(2))
+			assert(
+				/<Relationship Id="rId3" Type="[^"]*\/relationships\/slide" Target="..\/slides\/slide1.xml"\/>/.test(rels),
+				`rId3 is a slide relationship to slide 1; got ${rels}`
+			)
+			assertNotIncludes(rels, HYPERLINK_REL_TYPE, 'and no hyperlink relationship')
+			assertEqual(diagnostics.length, 0, `nothing warns; got ${JSON.stringify(diagnostics)}`)
+		},
+	},
+	{
+		name: 'a notes run carries a show jump with no relationship',
+		fn: async () => {
+			const { zip, diagnostics } = await buildWithDiagnostics((p) => {
+				p.addSlide().addNotes([{ text: 'next', options: { hyperlink: { action: 'nextslide' } } }])
+			})
+			assertIncludes(
+				await readEntry(zip, NOTES_XML(1)),
+				'<a:hlinkClick r:id="" action="ppaction://hlinkshowjump?jump=nextslide" tooltip=""/>',
+				'the run states the jump'
+			)
+			assertNotIncludes(await readEntry(zip, NOTES_RELS(1)), 'Id="rId3"', 'and the notes part declares no link')
+			assertEqual(diagnostics.length, 0, `nothing warns; got ${JSON.stringify(diagnostics)}`)
+		},
+	},
+	{
+		name: 'a notes run linking past the last slide is refused when the deck is written',
+		fn: async () => {
+			const pres = new PptxTs()
+			pres.addSlide().addNotes([{ text: 'jump', options: { hyperlink: { slide: 2 } } }])
+			assertEqual((await caught(() => pres.toBytes()))?.code ?? null, 'slide/link-past-last-slide', 'the write throws')
 		},
 	},
 	{

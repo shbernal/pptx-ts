@@ -9,6 +9,8 @@ import {
 	defined,
 } from '../../helpers.ts'
 import type JSZip from 'jszip'
+import { Presentation } from '../../../dist/read.js'
+import { readModelToIr } from '../../../dist/script.js'
 import type { PlaceholderProps, SlideMasterProps } from '../../../dist/node.js'
 
 // A slide seeds every layout placeholder it leaves empty with a copy of that placeholder's options.
@@ -89,7 +91,11 @@ defineRegressionSuite('Seeded layout placeholders keep their own rels', [
 
 defineRegressionSuite('Slide master placeholders [legacy bug-18]', [
 	{
-		name: 'master with title+body, only title populated → body stub emitted as placeholder (non-empty <a:lstStyle>)',
+		// The stub writes the bare body `addShape` writes for a text-less placeholder, and PowerPoint
+		// for an empty one (#183). It once stamped a list style and an empty run with `lang`, on a
+		// claim that a bare body drew the "Click to add text" hint over populated content. Desktop
+		// PowerPoint 16.0.20430 rendered both forms identically, and the stub kept the layout's language.
+		name: 'master with title+body, only title populated → body stub is a bare body placeholder',
 		fn: async () => {
 			const { zip } = await build((p) => {
 				p.defineSlideMaster({
@@ -112,17 +118,44 @@ defineRegressionSuite('Slide master placeholders [legacy bug-18]', [
 			// Locate the body stub: the <p:sp> with <p:ph type="body".
 			const bodyStub = spBlocks.find((sp) => /<p:ph[^>]*type="body"/.test(sp))
 			assert(bodyStub, 'expected a <p:sp> with <p:ph type="body" .../> in the body stub; got: ' + xml)
-			// Critical: body stub must NOT have a self-closing <a:lstStyle/>.
-			// It must have the placeholder branch's <a:lstStyle>...</a:lstStyle> with paragraph properties.
 			assert(
-				bodyStub.indexOf('<a:lstStyle/>') === -1,
-				'expected non-empty <a:lstStyle>...</a:lstStyle> in body stub (placeholder branch); got self-closing <a:lstStyle/>: ' +
-					bodyStub
+				bodyStub.includes('<a:lstStyle/><a:p><a:endParaRPr/></a:p></p:txBody>'),
+				'expected the bare body <a:lstStyle/><a:p><a:endParaRPr/></a:p> in the body stub; got: ' + bodyStub
 			)
-			assert(
-				/<a:lstStyle>[\s\S]+?<\/a:lstStyle>/.test(bodyStub),
-				'expected <a:lstStyle>...</a:lstStyle> with content in body stub; got: ' + bodyStub
+		},
+	},
+	{
+		name: 'an unfilled placeholder writes the same text body as addShape bound to it (#183)',
+		fn: async () => {
+			const MASTER = {
+				title: 'M183',
+				objects: [{ placeholder: { options: { name: 'body', type: 'body' as const, x: 1, y: 3, w: 5, h: 1 } } }],
+			}
+			const txBody = async (zip: JSZip) =>
+				defined(
+					(await readEntry(zip, 'ppt/slides/slide1.xml')).match(
+						/<p:ph[^>]*type="body"[\s\S]*?(<p:txBody>[\s\S]*?<\/p:txBody>)/
+					)?.[1],
+					'body placeholder txBody'
+				)
+			const seeded = await build((p) => {
+				p.defineSlideMaster(MASTER)
+				p.addSlide({ masterTitle: 'M183' })
+			})
+			// The call `readModelToIr` replays the seeded placeholder as: `addShape` bound to it.
+			const ir = readModelToIr(await Presentation.load(await seeded.zip.generateAsync({ type: 'uint8array' })))
+			const call = defined(
+				ir.slides[0]?.calls.find((c) => c.method === 'addShape'),
+				'the replayed addShape call'
 			)
+			const bound = await build((p) => {
+				p.defineSlideMaster(MASTER)
+				const slide = p.addSlide({ masterTitle: 'M183' }) as unknown as Record<string, (...args: unknown[]) => unknown>
+				defined(slide[call.method], call.method).apply(slide, call.args)
+			})
+			const a = await txBody(seeded.zip)
+			const b = await txBody(bound.zip)
+			assert(a === b, 'expected the seeded and bound bodies to match;\nseeded: ' + a + '\nbound:  ' + b)
 		},
 	},
 	{

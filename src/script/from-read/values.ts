@@ -17,7 +17,8 @@
  *   `0.5000000001`-style noise trades a cosmetic problem for a real geometry loss.
  */
 import type { IrValue } from '../ir.js'
-import type { Shape } from '../../read.js'
+import type { AbsoluteFrame, GroupShape, Shape } from '../../read.js'
+import { composeGroupFrame, type GroupTransform } from '../../read/api/shapes/group-transform.js'
 import type { NoteScope, RecordableConstruct } from '../fidelity.js'
 import { FIXED_PCT_PER_PERCENT, PERCENT_SCALE, POINTS_PER_INCH } from '../../units.js'
 // Re-exported so this module stays the one import the mappers reach for; it lives in
@@ -289,6 +290,58 @@ export function alphaToTransparency(alpha: number | null | undefined): number | 
 	return transparency > 0 ? transparency : undefined
 }
 
+/**
+ * Where a shape inside groups sits once each group carries its own transform: its own `a:xfrm`
+ * mapped through every enclosing group's child space (`a:chOff`/`a:chExt` onto `a:off`/`a:ext`),
+ * with the groups' rotations and flips left out, since `addGroup` writes those itself. The
+ * rotation and flips are the shape's own. `null` when the shape has no transform of its own or a
+ * group's child space is degenerate.
+ *
+ * `absoluteFrame` composes the groups' rotations and flips in as well, which is right for a shape
+ * replayed on its own and wrong inside a replayed group: the group would apply them a second time.
+ * Children used to take it, so the group's transform was baked into them instead (#116).
+ * @param groups - the enclosing groups, innermost first
+ */
+export function groupSpaceFrame(shape: Shape, groups: readonly GroupTransform[]): AbsoluteFrame | null {
+	const { left, top, width, height } = shape
+	if (left === null || top === null || width === null || height === null) return null
+	const frame = composeGroupFrame(
+		{
+			box: { x: left, y: top, cx: width, cy: height },
+			rotation: shape.rotation ?? 0,
+			flipH: shape.flipH,
+			flipV: shape.flipV,
+		},
+		groups.map((group) => ({ ...group, rotation: 0, flipH: false, flipV: false }))
+	)
+	if (!frame) return null
+	return {
+		left: Math.round(frame.box.x),
+		top: Math.round(frame.box.y),
+		width: Math.round(frame.box.cx),
+		height: Math.round(frame.box.cy),
+		rotation: frame.rotation,
+		flipH: frame.flipH,
+		flipV: frame.flipV,
+	}
+}
+
+/**
+ * A group's `a:xfrm` as the {@link GroupTransform} its children are placed through, or `null`
+ * when it states no frame or no child space.
+ */
+export function groupTransformOf(group: GroupShape): GroupTransform | null {
+	const { left, top, width, height, childFrame } = group
+	if (left === null || top === null || width === null || height === null || !childFrame) return null
+	return {
+		outer: { x: left, y: top, cx: width, cy: height },
+		child: { x: childFrame.offsetX, y: childFrame.offsetY, cx: childFrame.extentX, cy: childFrame.extentY },
+		rotation: group.rotation ?? 0,
+		flipH: group.flipH,
+		flipV: group.flipV,
+	}
+}
+
 /** A shape's box in EMU, as {@link frameOf} resolves it. */
 export interface ShapeBox {
 	left: number
@@ -301,9 +354,9 @@ export interface ShapeBox {
  * Where a shape sits on the slide, or `null` when nothing places it — in which case a
  * `shape.frameUnresolved` note has been recorded and the caller drops the shape.
  *
- * `absoluteFrame` rather than the raw `left`/`top`: a shape inside a group is positioned in
- * its group's child coordinate space, which a flattened call list cannot express, so the
- * group transform has to be composed in here. For a top-level shape the two are identical.
+ * `absoluteFrame` rather than the raw `left`/`top` for a top-level shape, where the two are
+ * identical. Inside groups (`groups`), the frame in the groups' child space, since each group
+ * carries its own rotation and flips; see {@link groupSpaceFrame}.
  *
  * Neither frame resolves for a shape with no `a:xfrm` of its own that is not a placeholder, or a
  * placeholder whose layout and master define no geometry either. The mappers used to part ways
@@ -318,8 +371,8 @@ export interface ShapeBox {
  * whenever an enclosing group lacks a usable transform, so a table inside such a group emitted
  * `addTable(rows, { objectName, tableStyle })` with no geometry at all.
  */
-export function frameOf(shape: Shape, notes: NoteScope): ShapeBox | null {
-	const frame = shape.absoluteFrame
+export function frameOf(shape: Shape, notes: NoteScope, groups?: readonly GroupTransform[]): ShapeBox | null {
+	const frame = groups ? groupSpaceFrame(shape, groups) : shape.absoluteFrame
 	if (frame) return frame
 
 	// No usable absolute frame — a placeholder taking its geometry from the layout or master, or

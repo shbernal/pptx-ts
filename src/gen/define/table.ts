@@ -25,7 +25,7 @@ import type {
 	TablePropsInternal,
 } from '../../types/internal.js'
 import { getSlidesForTableRows } from '../table/autopage.js'
-import { tableHasHyperlink, withCheckedSpans } from '../table/spans.js'
+import { withCheckedSpans } from '../table/spans.js'
 import { tableColCount, walkTableGrid } from '../table/grid.js'
 import {
 	getSmartParseNumber,
@@ -34,9 +34,10 @@ import {
 	usableTableWidthEmu,
 } from '../../units-internal.js'
 import { resolveObjectName } from './object-name.js'
-import { placeholderFrame } from './layout-placeholder.js'
+import { checkPlaceholderBinding, placeholderFrame } from './layout-placeholder.js'
 import { EMU_PER_INCH } from '../../units.js'
 import { createHyperlinkRels } from './hyperlinks.js'
+import { createBulletImageRels } from './text.js'
 import { resolveFillKind } from '../drawingml/fill.js'
 import { registerImageFillMedia } from './image.js'
 import { InvalidOptionError } from '../../errors.js'
@@ -137,6 +138,30 @@ function applyTableHeaderColumnSugar(tableRows: TableRow[], opt: TablePropsInter
 		})
 	}
 	return srcRows
+}
+
+/**
+ * Report and drop `textWarp` from the table and its cells, once per call.
+ *
+ * `TableCellProps` takes it from `TextBaseProps`, and a cell's `a:bodyPr` was written empty whatever
+ * it said (#84). PowerPoint has nowhere to put it: setting `TextFrame2.WarpFormat` on a cell throws
+ * "The specified value is out of range" over COM, and a saved cell carries an empty `a:bodyPr`.
+ * (`fit` is different: `'shrink'` is baked into the runs by the measured-fit pass.)
+ * @param rows - the normalized rows, whose option bags are this module's own copies
+ * @param opt - the table's options, also this module's own
+ */
+function dropCellTextWarp(rows: TableCellInternal[][], opt: TablePropsInternal): void {
+	let stated = false
+	for (const bag of [opt, ...rows.flatMap((row) => row.map((cell) => cell.options ?? {}))]) {
+		if (bag.textWarp === undefined) continue
+		stated = true
+		delete bag.textWarp
+	}
+	if (stated)
+		warn(
+			'table/option-not-supported',
+			'addTable: `textWarp` has no effect in a table cell, which PowerPoint does not warp; it was ignored.'
+		)
 }
 
 /**
@@ -395,6 +420,7 @@ export function addTableDefinition(
 	// the table fills the placeholder geometry rather than the default 1in/full-width fallback.
 	// An axis stated as `null` is unstated here, as it is for an image; it used to be kept and later
 	// became the half-inch default.
+	checkPlaceholderBinding(opt.placeholder, 'addTable')
 	if (opt.placeholder) {
 		const placeholder = placeholderFrame(slideLayout, opt.placeholder)
 		// A placeholder that states none of its own leaves the gap open for the fallback
@@ -474,6 +500,7 @@ export function addTableDefinition(
 		delete opt.border
 	}
 	const arrRows = normalizeTableRows(srcRows, opt)
+	dropCellTextWarp(arrRows, opt)
 
 	// STEP 3: Set options
 	// Keep x/y/w/h as raw user `Coord` (inches/percent/unit-string). They are resolved to EMU
@@ -486,12 +513,12 @@ export function addTableDefinition(
 	opt.margin = resolveCellMarginsInches(opt.margin)
 	// The slide's colour, else black, lands on every cell that has no colour of its own
 	// (`gen/slide/objects/table.ts`), as direct formatting. It is resolved when the slide is
-	// written, so `slide.color` set after this call still reaches the table (#88). One thing
-	// stands it down: a hyperlink anywhere in the grid, because the default paints the whole run,
-	// so the words *after* a link come out black instead of following the link colour. That run
-	// is then emitted with no `<a:solidFill>` and PowerPoint resolves the text from the theme's
+	// written, so `slide.color` set after this call still reaches the table (#88). A cell holding
+	// a hyperlink is left out (`cellHasHyperlink`), because the default paints the whole run, so
+	// the words *after* a link would come out black instead of following the link colour. That
+	// cell is emitted with no `<a:solidFill>` and PowerPoint resolves its text from the theme's
 	// `tx1`.
-	if (!tableHasHyperlink(arrRows) && !opt.color) {
+	if (!opt.color) {
 		// table option > the slide's `color` > black. An empty `color` is unstated, as it was when
 		// black was written over it here.
 		delete opt.color
@@ -651,6 +678,15 @@ export function addTableDefinition(
 		// Same timing rule as the hyperlink rels above: resolve cell image fills to media rels
 		// on the slide this table actually landed on.
 		registerTableImageFills(target, arrRows, opt)
+
+		// And the picture bullets, on a cell or on one of its runs, the way `addText` registers them.
+		// Left out, a cell's `bullet.image` fell back to a glyph (#82).
+		createBulletImageRels(
+			target,
+			arrRows.flatMap((row) =>
+				row.flatMap((cell) => [cell.options, ...(Array.isArray(cell.text) ? cell.text.map((run) => run.options) : [])])
+			)
+		)
 
 		// Add slideObjects (NOTE: Use `extend` to avoid mutation)
 		// `columns` (per-column TableCellProps[]) is consumed in STEP 1.5 and baked into cells;

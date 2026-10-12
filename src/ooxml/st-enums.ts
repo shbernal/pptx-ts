@@ -394,6 +394,31 @@ export const EMBEDDED_FONT_SLOTS = ['regular', 'bold', 'italic', 'boldItalic'] a
 export type LineEndType = (typeof LINE_END_TYPES)[number]
 
 /**
+ * `ST_PlaceholderType` — the kind of placeholder a `p:ph` fills (`p:ph/@type`). Absent, it means
+ * `obj`.
+ * @see ECMA-376 Part 1 §19.7.10
+ */
+export const PLACEHOLDER_TYPES = [
+	'title',
+	'body',
+	'ctrTitle',
+	'subTitle',
+	'dt',
+	'sldNum',
+	'ftr',
+	'hdr',
+	'obj',
+	'chart',
+	'tbl',
+	'clipArt',
+	'dgm',
+	'media',
+	'sldImg',
+	'pic',
+] as const
+export type PlaceholderXmlType = (typeof PLACEHOLDER_TYPES)[number]
+
+/**
  * `ST_TextShapeType` — the preset path text is bent along (`a:prstTxWarp/@prst`), which
  * PowerPoint calls WordArt.
  *

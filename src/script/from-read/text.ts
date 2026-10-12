@@ -25,6 +25,7 @@
  * renders correctly, in preference to staying faithful in the IR and wrong on the slide.
  */
 import type { BodyProperties, BulletDetail, BulletStyle, Paragraph, Run, TextFrame } from '../../read/api/text.js'
+import { SHOW_JUMPS } from '../../ooxml/show-jumps.js'
 import type { Hyperlink } from '../../read/api/hyperlink.js'
 import type { AnyShape } from '../../read/api/shapes.js'
 import { BODY_INSET_DEFAULTS_PT } from '../../ooxml/body-insets.js'
@@ -245,7 +246,12 @@ function bulletColor(bullet: BulletStyle, notes: NoteScope): string | undefined 
  * enumeration in its own right (ECMA-376 §20.1.10.81 / §20.1.10.78) and would be redundant
  * with omission otherwise.
  */
-export function runOptions(run: Run, ctx: MapContext): Record<string, IrValue> | undefined {
+export function runOptions(
+	run: Run,
+	ctx: MapContext,
+	leftUncoloured = false,
+	textLang?: string
+): Record<string, IrValue> | undefined {
 	const { notes } = ctx
 	const underline = run.underline
 	const hyperlink = hyperlinkOption(run, ctx)
@@ -262,10 +268,10 @@ export function runOptions(run: Run, ctx: MapContext): Record<string, IrValue> |
 		)
 	}
 
-	const color = runColor(run, hyperlink !== undefined, notes)
+	const color = runColor(run, hyperlink !== undefined || leftUncoloured, notes)
 	return compact({
-		// `en-US` is what the write path states on a run that sets no `lang`, so it is left implied.
-		lang: run.language === null || run.language === 'en-US' ? undefined : run.language,
+		// A run that sets no `lang` takes the text's, else `en-US`, so that one is left implied.
+		lang: runLanguage(run.language ?? 'en-US', textLang ?? 'en-US'),
 		bold: orUndefined(run.bold),
 		italic: orUndefined(run.italic),
 		underline: underlineOption(run, underline, notes),
@@ -284,6 +290,11 @@ export function runOptions(run: Run, ctx: MapContext): Record<string, IrValue> |
 		...spacingOptions(run, notes),
 		hyperlink,
 	})
+}
+
+/** A run's `lang`, or `undefined` when it is the one the run inherits on the write path. */
+function runLanguage(language: string, inherited: string): string | undefined {
+	return language === inherited ? undefined : language
 }
 
 /** The underline style, with its own colour (`a:uFill`) when it has one. */
@@ -382,17 +393,21 @@ function spacingOptions(run: Run, notes: NoteScope): Record<string, IrValue> {
  * covers survive as tokens; the other seven degrade to a literal hex there anyway, so
  * passing one through unchanged would produce a silently different colour.
  */
-function runColor(run: Run, linked: boolean, notes: NoteScope): string | undefined {
+function runColor(run: Run, leftUncoloured: boolean, notes: NoteScope): string | undefined {
 	const scheme = run.schemeColor
 	if (scheme !== null)
 		return schemeColorOption(scheme, run.resolvedColor?.effectiveHex ?? null, notes, 'text.color.schemeToken', 'run')
 	if (run.color !== null) return literalColor(run.color)
 
-	// The one uncoloured run the write path does leave uncoloured: a link, which `addText` and
-	// `addTable` write with no fill so PowerPoint paints it in the theme's hlink colour. Baking the
-	// resolved colour in replayed a hlink-coloured link black. `linked` means the link itself
-	// carries; a dropped link leaves plain text, which the write path does paint black.
-	if (linked) return undefined
+	// The uncoloured runs the write path does leave uncoloured: a link, which `addText` and
+	// `addTable` write with no fill so PowerPoint paints it in the theme's hlink colour, and a run in
+	// a shape written back as a `placeholder`, which inherits from its layout. Baking the resolved
+	// colour in replayed a hlink-coloured link black, and froze a placeholder's (#100). A link counts
+	// only when the link itself carries; a dropped link leaves plain text, which the write path does
+	// paint black. A shape's own link counts for its runs, which `addText` leaves uncoloured too:
+	// a show jump stated on the shape is written on its `p:cNvPr` alone, so its runs state no link
+	// of their own (#128).
+	if (leftUncoloured) return undefined
 
 	// A run with no colour of its own inherits one, and leaving the option out does *not* pass
 	// that inheritance along: `addText` fills an uncoloured non-placeholder run with
@@ -423,33 +438,29 @@ function runColor(run: Run, linked: boolean, notes: NoteScope): string | undefin
 const SLIDE_JUMP = 'ppaction://hlinksldjump'
 
 /**
- * A run's hyperlink: a URL, or a jump to another slide of this deck by its number.
+ * A run's hyperlink: a URL, a jump to another slide of this deck by its number, or a show jump
+ * such as "next slide" as `action`.
  *
  * The read model reports a slide jump as the target's part name, and the write API takes a slide
  * number, which {@link MapContext.slideNumberOf} resolves. Anything else a run can link to has no
- * run-level spelling (a show jump such as "next slide", which the write side emits at shape level
- * only; a custom show; another file; a slide jump from a layout's shape) and is noted. A slide
+ * run-level spelling (a custom show; another file; a slide jump from a layout's shape) and is
+ * noted. A slide
  * jump used to be dropped with a comment saying the deck-level walk handled it, which it did not,
  * so the text kept its link formatting and went nowhere.
  */
-function hyperlinkOption(run: Run, ctx: MapContext): IrValue | undefined {
+export function hyperlinkOption(run: Run, ctx: MapContext): IrValue | undefined {
 	return linkOption(run.hyperlink, ctx, RUN_LINK)
 }
 
 /** The show-jump actions `HyperlinkProps.action` spells, by the `@action` each one is written as. */
 const SHOW_JUMP_ACTIONS: ReadonlyMap<string, string> = new Map(
-	['firstslide', 'previousslide', 'nextslide', 'lastslide', 'lastslideviewed', 'endshow'].map((jump) => [
-		`ppaction://hlinkshowjump?jump=${jump}`,
-		jump,
-	])
+	SHOW_JUMPS.map((jump) => [`ppaction://hlinkshowjump?jump=${jump}`, jump])
 )
 
 /** What {@link linkOption} can spell where the link hangs, and how to describe a loss there. */
 interface LinkSite {
 	/** The fidelity note's construct key. */
 	construct: 'text.hyperlink' | 'shape.hyperlink'
-	/** Whether this site's option takes `action`; only a shape's does. */
-	takesAction: boolean
 	/** Names the thing that carries the link, opening the note. */
 	subject: string
 	/** What the option can spell, for the note. */
@@ -460,16 +471,13 @@ interface LinkSite {
 
 const RUN_LINK: LinkSite = {
 	construct: 'text.hyperlink',
-	takesAction: false,
 	subject: "this run's hyperlink",
-	spells:
-		"all a run's hyperlink option spells (a show jump, a custom show, another file, or a slide jump from a layout's shape)",
+	spells: "all a run's hyperlink option spells (a custom show, another file, or a slide jump from a layout's shape)",
 	loss: 'the text keeps its formatting and links nowhere',
 }
 
 const SHAPE_LINK: LinkSite = {
 	construct: 'shape.hyperlink',
-	takesAction: false,
 	subject: "this shape's hyperlink",
 	spells: "all a shape's hyperlink option spells (a custom show, another file, or a slide jump from a layout's shape)",
 	loss: 'the shape is emitted without it and clicking it does nothing',
@@ -486,13 +494,13 @@ const MEDIA_ACTION = 'ppaction://media'
 export function shapeHyperlinkOption(shape: AnyShape, ctx: MapContext): IrValue | undefined {
 	const link = shape.hyperlink
 	if (link?.action === MEDIA_ACTION) return undefined
-	return linkOption(link, ctx, { ...SHAPE_LINK, takesAction: true })
+	return linkOption(link, ctx, SHAPE_LINK)
 }
 
 /**
- * One reading of a click hyperlink for both sites that carry one. A run and a shape take the same
- * `HyperlinkProps` apart from `action`, which only a shape's is written as, so the difference is a
- * flag rather than a second copy of the mapping.
+ * One reading of a click hyperlink for both sites that carry one, which take the same
+ * `HyperlinkProps`. A run's show jump (`action`) used to be noted as unwritable, because the write
+ * path wrote it nowhere; it now writes it on the run (#114).
  */
 function linkOption(link: Hyperlink | null, ctx: MapContext, site: LinkSite): IrValue | undefined {
 	if (!link) return undefined
@@ -501,7 +509,7 @@ function linkOption(link: Hyperlink | null, ctx: MapContext, site: LinkSite): Ir
 	const slide = link.action === SLIDE_JUMP && link.targetPartName ? ctx.slideNumberOf(link.targetPartName) : null
 	if (slide !== null) return compact({ slide, tooltip })
 	const jump = link.action === null ? undefined : SHOW_JUMP_ACTIONS.get(link.action)
-	if (site.takesAction && jump !== undefined) return compact({ action: jump, tooltip })
+	if (jump !== undefined) return compact({ action: jump, tooltip })
 	ctx.notes.note(
 		site.construct,
 		'dropped',
@@ -661,8 +669,14 @@ function noteUnwritableBreaks(paragraph: Paragraph, notes: NoteScope): void {
  * An empty paragraph becomes an item with empty text and a `breakLine`, which is how a
  * blank line survives — dropping it would silently close up vertical space the author put
  * there deliberately.
+ * @param leftUncoloured - the write path leaves the shape's uncoloured runs uncoloured: the shape is
+ *   written back as a `placeholder`, whose runs inherit from the layout, or it carries a hyperlink,
+ *   whose runs PowerPoint paints in the theme's hlink colour. None of them takes its inherited
+ *   colour baked in
+ * @param textLang - the `lang` the text's options carry (`frameLanguage`), so each run states its own
+ *   only where it differs. A table cell's text has none.
  */
-export function textRuns(frame: TextFrame, ctx: MapContext): IrValue[] {
+export function textRuns(frame: TextFrame, ctx: MapContext, leftUncoloured = false, textLang?: string): IrValue[] {
 	const paragraphs = frame.paragraphs
 	const items: IrValue[] = []
 
@@ -690,7 +704,7 @@ export function textRuns(frame: TextFrame, ctx: MapContext): IrValue[] {
 			delete continuation['bullet']
 			const options = compact({
 				...(runIndex === 0 ? paraOpts : continuation),
-				...runOptions(run, ctx),
+				...runOptions(run, ctx, leftUncoloured, textLang),
 				...(runIndex > 0 && run.breaksBefore > 0 ? { softBreakBefore: true } : {}),
 				...(isLastRun && breaks ? { breakLine: true } : {}),
 			})
@@ -699,6 +713,28 @@ export function textRuns(frame: TextFrame, ctx: MapContext): IrValue[] {
 	})
 
 	return items
+}
+
+/**
+ * The text's `lang` option, from the language its paragraph ends (`a:endParaRPr/@lang`) state.
+ *
+ * The write path states the text's `lang` on every paragraph end and on every run that sets no
+ * language of its own, so it is carried when every end agrees on one other than the `en-US` the
+ * write path states by default. Runs then state their own language only where it differs (see
+ * {@link textRuns}). Ends that disagree have no spelling, and are noted. The IR used to carry the
+ * language on the runs alone, so the replay ended every paragraph in `en-US` (#102).
+ */
+function frameLanguage(frame: TextFrame, notes: NoteScope): string | undefined {
+	const ends = new Set(frame.paragraphs.map((paragraph) => paragraph.endLanguage ?? 'en-US'))
+	const [only] = ends
+	if (ends.size === 1) return only === 'en-US' ? undefined : only
+	notes.note(
+		'text.endParagraph.lang',
+		'approximated',
+		'unwritable',
+		`this text's paragraphs end in different languages (${[...ends].sort().join(', ')}), and lang states one for the whole text, so each paragraph end comes back in en-US`
+	)
+	return undefined
 }
 
 /**
@@ -725,6 +761,7 @@ export function textFrameOptions(frame: TextFrame, notes: NoteScope): Record<str
 
 	return (
 		compact({
+			lang: frameLanguage(frame, notes),
 			// Spelled out even when nothing in the source set it. `resolvedAnchor` returning
 			// null means PowerPoint would default the body to top — but `addText` defaults a
 			// non-placeholder body to *centre*, so leaving the option out re-anchors the text.

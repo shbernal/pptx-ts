@@ -11,7 +11,7 @@ import {
 	at,
 } from '../../helpers.ts'
 import type JSZip from 'jszip'
-import type { TableCellProps, PptxTs } from '../../../dist/node.js'
+import type { HyperlinkProps, TableCellProps, PptxTs } from '../../../dist/node.js'
 
 type BuildFn = (pres: PptxTs) => unknown
 
@@ -500,6 +500,29 @@ defineRegressionSuite('Hyperlink relationship registration', [
 				const error = await failedBuild(buildFn)
 				assertEqual(error?.code, code, label)
 			}
+		},
+	},
+	{
+		// An action is written into `ppaction://hlinkshowjump?jump=…` as given, and PowerPoint refused
+		// a deck whose jump it does not know as corrupt (0x80070570), with nothing said (#149).
+		name: 'an unknown show-jump action is refused wherever the link is authored',
+		fn: async () => {
+			const link = { action: 'prevslide' } as unknown as HyperlinkProps
+			const authors: Record<string, BuildFn> = {
+				shape: (p) => p.addSlide().addShape('rect', { x: 1, y: 1, w: 2, h: 1, hyperlink: link }),
+				run: (p) =>
+					p.addSlide().addText([{ text: 'back', options: { hyperlink: link } }], { x: 1, y: 1, w: 4, h: 0.5 }),
+				'table cell': (p) =>
+					p.addSlide().addTable([[{ text: 'cell', options: { hyperlink: link } }]], { x: 1, y: 1, w: 4 }),
+			}
+			for (const [label, buildFn] of Object.entries(authors)) {
+				const error = await failedBuild(buildFn)
+				assertEqual(error?.code, 'hyperlink/invalid-action', label)
+			}
+			const ok = await failedBuild((p) =>
+				p.addSlide().addText('next', { x: 1, y: 1, w: 4, h: 0.5, hyperlink: { action: 'previousslide' } })
+			)
+			assertEqual(ok, null, 'a known jump still builds')
 		},
 	},
 ])

@@ -10,7 +10,9 @@ import { ChartType, isChartExType } from '../../../enums.js'
 import { prstGeomRect } from '../../drawingml/geometry.js'
 import type { ObjectOptions } from '../../../types/index.js'
 import { genXmlPlaceholder } from '../../drawingml/text-body.js'
-import { el, raw, voidEl } from '../../oxml/el.js'
+import { statedPlaceholderBinding } from '../../define/layout-placeholder.js'
+import { el, elOrVoid, raw, voidEl } from '../../oxml/el.js'
+import { genXmlObjectLock, GRAPHIC_FRAME_LOCK_ATTRS } from '../../drawingml/locks.js'
 import { alternateContentEl } from '../../oxml/alternate-content.js'
 import { cNvPrEl, graphicFrameEl, type RenderContext, xfrmEl } from './shared.js'
 import { OOXML_NS } from '../../../ooxml/namespaces.js'
@@ -80,8 +82,19 @@ export function renderChartObject(ctx: RenderContext): string {
 			null,
 			[
 				raw(cNvPrEl(shapeId, itemOpts.objectName, itemOpts.altText || '', undefined, { openPrefix: '   ' })),
-				raw(voidEl('p:cNvGraphicFramePr', null, { openPrefix: '   ' })),
-				raw(el('p:nvPr', null, raw(genXmlPlaceholder(placeholderObj)), { openPrefix: '   ' })),
+				raw(
+					elOrVoid(
+						'p:cNvGraphicFramePr',
+						null,
+						genXmlObjectLock('a:graphicFrameLocks', GRAPHIC_FRAME_LOCK_ATTRS, itemOpts.objectLock, itemOpts.objectName),
+						{ openPrefix: '   ' }
+					)
+				),
+				raw(
+					el('p:nvPr', null, raw(genXmlPlaceholder(placeholderObj, statedPlaceholderBinding(itemOpts.placeholder))), {
+						openPrefix: '   ',
+					})
+				),
 			],
 			{ openPrefix: ' ', closePrefix: ' ' }
 		),

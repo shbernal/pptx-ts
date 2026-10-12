@@ -194,4 +194,25 @@ defineRegressionSuite('Combo chart axes [legacy bug-06]', [
 			}
 		},
 	},
+	{
+		// A one-entry array combines nothing, and every bubble entry was refused as a combo, so
+		// `type[].data[].sizes` type-checked and could never be written (#140).
+		name: 'a one-entry bubble array writes the bubble chart the standalone form writes',
+		fn: async () => {
+			const data = [
+				{ name: 'X', values: [1, 2, 3] },
+				{ name: 'Y', values: [4, 5, 6], sizes: [7, 8, 9] },
+			]
+			const frame = { x: 1, y: 1, w: 6, h: 4 }
+			const { zip: standalone } = await build((p) => {
+				p.addSlide().addChart(data, { ...frame, type: ChartType.bubble, showValue: true })
+			})
+			const { zip: array } = await build((p) => {
+				p.addSlide().addChart([{ type: ChartType.bubble, data, options: { showValue: true } }], frame)
+			})
+			const expected = await readEntry(standalone, 'ppt/charts/chart1.xml')
+			assert(expected.includes('<c:bubbleSize>'), 'the standalone chart writes its sizes')
+			assertEqual(await readEntry(array, 'ppt/charts/chart1.xml'), expected, 'the array form writes the same part')
+		},
+	},
 ])

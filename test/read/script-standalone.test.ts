@@ -407,9 +407,16 @@ describe('standalone printer — cases the fixture corpus does not contain', () 
 			'diagram.all,slide.carried',
 			'the template-anchored tier reports only the copy and the construct that forced it'
 		)
+		// The title's runs state no colour of their own and carry as a `placeholder`, so neither tier
+		// bakes the inherited colour in (#100). The standalone tier rebuilds the master without its
+		// text styles, which is where that colour comes from, and says so.
 		assert(
-			printed.notes.some((note) => note.slideNumber === 2 && note.construct === 'text.color.inherited'),
-			'while the standalone tier, which transcribes the placeholder, still reports its baked colour'
+			!printed.notes.some((note) => note.slideNumber === 2 && note.construct === 'text.color.inherited'),
+			'the standalone tier does not bake the placeholder title its colour'
+		)
+		assert(
+			printed.notes.some((note) => note.slideNumber === null && note.construct === 'master.txStyles'),
+			'and reports the master text styles the title inherits it from as lost'
 		)
 		const title = defined(ir.slides[1]?.calls.find((call) => call.sourceName === 'Titre 1'))
 		assert(
@@ -466,9 +473,8 @@ describe('standalone printer — the fidelity contract', () => {
 })
 
 describe('standalone printer — picture crop', () => {
-	test('a picture whose crop `crop` cannot hold prints a script that runs', async () => {
-		// A negative inset used to reach the script as `crop: { l: -5 }`, and the script threw
-		// `image/crop-inset-out-of-range` at `addImage`. It is left off and noted now.
+	// Authors a 1x1 picture, rewrites its srcRect, and runs the standalone script printed from it.
+	async function printedWithSrcRect(srcRect: string) {
 		const zip = await JSZip.loadAsync(
 			await authored((pptx) => {
 				pptx.addSlide().addImage({
@@ -482,10 +488,24 @@ describe('standalone printer — picture crop', () => {
 			})
 		)
 		const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
-		const bled = slideXml.replace(/<a:srcRect[^>]*\/>/, '<a:srcRect l="-5000"/>')
-		assert(bled !== slideXml, 'the authored srcRect was found and made negative')
-		zip.file('ppt/slides/slide1.xml', bled)
-		const { printed, report } = await runStandalone(await zip.generateAsync({ type: 'nodebuffer' }))
+		const edited = slideXml.replace(/<a:srcRect[^>]*\/>/, srcRect)
+		assert(edited !== slideXml, 'the authored srcRect was found and rewritten')
+		zip.file('ppt/slides/slide1.xml', edited)
+		return runStandalone(await zip.generateAsync({ type: 'nodebuffer' }))
+	}
+
+	test('a negative inset carries as a padded crop', async () => {
+		// PowerPoint's Fit crop, and `sizing: 'contain'`, pad the source with negative insets.
+		const { printed, report } = await printedWithSrcRect('<a:srcRect l="-5000" r="-5000"/>')
+		assert(printed.code.includes('crop: { l: -5, r: -5 }'), 'the padded crop reaches the script')
+		assert(!printed.notes.some((note) => note.construct === 'image.crop'), 'the crop is not noted as lost')
+		assertEqual(report.undeclared.length, 0, `no undeclared difference, got ${JSON.stringify(report.undeclared)}`)
+	})
+
+	test('a picture whose crop `crop` cannot hold prints a script that runs', async () => {
+		// Opposite insets that leave no source area have no `crop` spelling; carried, the script
+		// would throw `image/crop-insets-exceed-extent` at `addImage`. It is left off and noted.
+		const { printed, report } = await printedWithSrcRect('<a:srcRect l="60000" r="60000"/>')
 		assert(
 			printed.notes.some((note) => note.construct === 'image.crop'),
 			'the uncarried crop is noted in the script'

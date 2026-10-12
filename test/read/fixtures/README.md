@@ -64,6 +64,7 @@ are stored byte-for-byte as saved by PowerPoint.
 | `smartart-families.pptx` | Microsoft Office PowerPoint  | 16.0000    | 4      |
 | `smartart-hyperlink.pptx` | Microsoft Office PowerPoint | 16.0000   | 1      |
 | `tags.pptx`            | Microsoft Office PowerPoint    | 16.0000    | 2      |
+| `text-run-show-jump.pptx` | Microsoft Office PowerPoint | 16.0000   | 2      |
 | `template.potx`        | Microsoft Office PowerPoint    | 16.0000    | 0      |
 
 #### Authoring oracles (inspection only — not loaded by `test:read`)
@@ -128,6 +129,7 @@ by the `pptx-ts/read` harness. Two groups:
 | `notes-slide-image.pptx`      | Microsoft Office PowerPoint | 16.0000    | 1      |
 | `bar-chart-data-labels.pptx`  | Microsoft Office PowerPoint | 16.0000    | 1      |
 | `chart-series-shapes.pptx`    | Microsoft Office PowerPoint | 16.0000    | 8      |
+| `chart-formatting.pptx`       | Microsoft Office PowerPoint | 16.0000    | 8      |
 | `math-omml.pptx`              | Microsoft Office PowerPoint | 16.0000    | 1      |
 | `math-omml-inline.pptx`       | Microsoft Office PowerPoint | 16.0000    | 1      |
 | `av-media.pptx`               | Microsoft Office PowerPoint | 16.0000    | 2      |
@@ -179,6 +181,7 @@ f18ae67b1df1cc1cf7dc616451c3e548a4ea0c80f807c06a87521b010597af75  table-placehol
 2f41c301147518686fb63e262ea1eb2ede6873fdc22d913dc869d8a924190fc7  notes-slide-image.pptx
 edeb1dafe790edf45152485753245928a06786d923364d7647354393d891a74f  bar-chart-data-labels.pptx
 ab5fea0f0a13c2833ef7b376643b019b02b4a7c35001c5f3f96ac6e55d0a15ca  chart-series-shapes.pptx
+f63b18735a870c025b1b2953146f5db9df07cfcd480775653c1827e4c2c79d26  chart-formatting.pptx
 d88cb77b480d3c84a16307cbe503e9ee64f5fa8bdfee6d7b5a7167847d1cb8e6  math-omml.pptx
 74ef4bd84b39fb8668277c0300372b13bdc984f311a0e2783d630ac5b8c9f7f8  math-omml-inline.pptx
 39aafb02e448a860136c20c46daf89d446d1d34140de1c533b1fe537dee6f0af  av-media.pptx
@@ -207,6 +210,7 @@ eb315cc06511f0bb37c0ba17cad7bb077f0e84f4a847271ecc4b8ec4c9873a65  slide-jump-lin
 77fbb00343006a8c0fb6a9120959e489dadf411f62010ea053abb9de95d6c8aa  read-stress.pptx
 d0755d060f2af1b8836f2b0846a9b0fd30d44b65d70497cece1d75cbdcfa2b3d  tags.pptx
 b8f5d1f8c794ec8afca15d35bfb13317b34d15827124c6e6e54323caeac146d2  picture-custgeom.pptx
+9b99b067fb463b7e8fdda939d19bbf72ac4ed28615b2d0379eefd6a3681964c9  text-run-show-jump.pptx
 ```
 
 ### Embedded font faces (`fonts/`)
@@ -798,6 +802,22 @@ d0349b049dec32cce83e2f04967e94e4484801cb6a7a972db3d9bf5c33a69996  media/tiny.mp4
   `Sheet1!$A$2:$A$5`, numCache values `10`/`25`/`18`/`30` at `Sheet1!$B$2:$B$5`,
   workbook in `ppt/embeddings/`). Pins the exact per-point `c:dPt`/`c:dLbl`
   ordering inside `CT_BarSer` plus the cache the labels derive from.
+- `chart-formatting.pptx` — **read oracle** for what a chart part says beyond its type, series and
+  cached values, authored by `authoring/author-chart-formatting.ps1`. Eight slides, one chart each:
+  `stacked-bar-chart` (`c:barChart` with `barDir="bar"`, `grouping="stacked"`, `gapWidth` 80,
+  `overlap` 100 and `c:serLines`; a `c:dTable` with keys and no vertical borders at 12pt; a solid
+  chart-area fill F0C808 with a 2pt 9B1B30 border and a DDE3F0 plot area; manual layouts on the plot
+  area and the legend; a bold italic 24pt Georgia title in 9B1B30; a value axis with
+  `dispUnits` thousands and a label, a 1.5pt 9B1B30 axis line, dashed 9B1B30 gridlines and a title;
+  a category axis crossed at 2 with `tickLblSkip` 2 and 14pt labels rotated -45°; the first series
+  filled 250F6B at 40% transparency with an outer shadow and bold white `0.0` labels on a 9B1B30
+  fill); `line-marker-chart` (`c:lineChart` over a `c:dateAx` in months, a smoothed series with
+  12pt diamond markers, `c:upDownBars`, `dispBlanksAs="zero"` over a blank point);
+  `doughnut-chart` (`holeSize` 75, `firstSliceAng` 90); `column-3d-chart` (`c:bar3DChart` with
+  `gapDepth` 300, cylinder shapes, `c:view3D` rotX 20 / rotY 60 / perspective 40 / `rAngAx` 0, and a
+  titled `c:serAx`); `radar-filled-chart` (`radarStyle="filled"`); `surface-wire-chart`
+  (`c:surface3DChart` with `wireframe`); `invert-column-chart` (`invertIfNegative` over negative
+  values); and `pie-leader-chart` (outside-end labels with 9B1B30 `c:leaderLines`).
 - `chart-series-shapes.pptx` — **read oracle** for the chart caches that are not a
   `c:val` beside a flat `c:cat`, authored by `authoring/author-chart-series-shapes.ps1`.
   Eight slides, one chart each: `scatter-chart` (`c:scatterChart`, one series `Y`
@@ -1236,6 +1256,7 @@ fixtures opened clean with no repair prompt:
 - [x] `notes-slide-image.pptx` — Windows desktop PowerPoint, 2026-06-19 (authored + opened clean via COM)
 - [x] `bar-chart-data-labels.pptx` — Windows desktop PowerPoint, 2026-06-19 (authored + opened clean via COM)
 - [x] `chart-series-shapes.pptx` — Windows desktop PowerPoint, 2026-09-13 (authored + reopened clean via COM, no repair prompt)
+- [x] `chart-formatting.pptx` — PowerPoint 16.0.20430.20146 on the worker VM, 2026-10-12 (authored + reopened clean via COM, no repair prompt)
 - [x] `math-omml.pptx` — Windows desktop PowerPoint, 2026-06-19 (authored via Word→PowerPoint paste + opened clean via COM)
 - [x] `math-omml-inline.pptx` — Windows desktop PowerPoint, 2026-07-07 (authored via Word→PowerPoint paste + opened clean via COM, no repair prompt)
 - [x] `table-styles.pptx` — Windows desktop PowerPoint, 2026-07-15 (COM-authored, then the default table style set interactively — no COM surface exists for it — and re-saved; reopened clean via COM, no repair prompt)
@@ -1327,6 +1348,15 @@ opened clean with no repair prompt:
 - [x] `table.edited-cells.pptx` — PowerPoint for the web, 2026-06-13
 - [ ] `empty.imported-image-slide.pptx` — not yet performed (added 2026-06-14 for importSlide)
 - [ ] `empty.imported-table-slide.pptx` — not yet performed (added 2026-06-14 for importSlide)
+
+- `text-run-show-jump.pptx`: a two-slide deck whose slide 1 holds two text boxes with show
+  jumps on their runs rather than their shapes, the evidence for the run-level `hyperlink.action`
+  `addText` writes (issue #114) and read by `script-ir.test.ts`. `NextText` reads "Next plain"
+  with its first word set to Next Slide; `LastText` reads "Last", set to Last Slide. PowerPoint
+  writes each on the run's `a:rPr` as `<a:hlinkClick r:id="" action="ppaction://hlinkshowjump?jump=…"/>`,
+  registers no relationship, writes no `u`, and puts nothing on `p:cNvPr`. Authored via
+  PowerPoint COM through the worker (2026-10-12, `authoring/author-text-run-show-jump.ps1`,
+  PowerPoint 16.0.20430.20146). Opens clean with no repair.
 
 ## Replacing fixtures
 

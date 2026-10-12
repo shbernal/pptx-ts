@@ -47,8 +47,11 @@ import type {
 	OptsChartData,
 	OptsChartGridLine,
 	PositionProps,
+	TextBaseProps,
 } from '../../types/index.js'
 import { scrubGridLine } from '../chart/chart-stroke.js'
+import { resolveFillKind } from '../drawingml/fill.js'
+import { registerImageFillMedia } from './image.js'
 import type {
 	ChartErrorBarInternal,
 	ChartMultiInternal,
@@ -56,11 +59,14 @@ import type {
 	ChartOptsOverrides,
 	OptsChartDataInternal,
 	PresSlideInternal,
+	ShapeFillPropsInternal,
 	SlideObject,
+	SlideRelMedia,
 } from '../../types/internal.js'
 import { getNewRelId } from '../utils.js'
 import { resolveObjectName } from './object-name.js'
 import { resolveAuthoredFrame } from './frame.js'
+import { checkPlaceholderBinding, placeholderFrame } from './layout-placeholder.js'
 import { setOrClear } from '../../options-internal.js'
 import { normalizeShadowOptions } from '../drawingml/effect.js'
 import { clampRangedInput, lineWidthToEmu, mapStated } from '../../units-internal.js'
@@ -1025,6 +1031,83 @@ function normalizeComboSubchartOptions(
 }
 
 /**
+ * The `TextBaseProps` keys `ChartOpts` takes through `ChartPropsTitle` and the chart writer reads
+ * none of: every one but `lang`. The chart's text is styled through its own spellings
+ * (`titleBold`, `legendFontSize`, `dataLabelColor`, …).
+ */
+const UNREAD_TEXT_BASE_KEYS = [
+	'align',
+	'bold',
+	'breakLine',
+	'bullet',
+	'caps',
+	'color',
+	'fontFace',
+	'fontFaceEA',
+	'fontSize',
+	'highlight',
+	'italic',
+	'paraIndent',
+	'paraMarginLeft',
+	'softBreakBefore',
+	'tabStops',
+	'textDirection',
+	'textWarp',
+	'transparency',
+	'underline',
+	'valign',
+] as const satisfies ReadonlyArray<keyof TextBaseProps>
+
+/**
+ * Name the `TextBaseProps` keys a chart was given, which write nothing (#138). A chart written with
+ * `bold` or `fontFace` was byte-identical to one written without, and nothing said so; autocomplete
+ * offers them on `addChart`.
+ * @param options - the chart's options as the caller stated them
+ */
+function reportTextBaseKeys(options: ChartOptsInternal): void {
+	const stated = UNREAD_TEXT_BASE_KEYS.filter((key) => options[key] !== undefined)
+	if (stated.length === 0) return
+	warn(
+		'chart/option-not-supported',
+		`addChart: ${stated.map((key) => `"${key}"`).join(', ')} ${stated.length === 1 ? 'has' : 'have'} no effect on a chart, whose text is styled through its own options (titleBold, legendFontSize, dataLabelColor, catAxisLabelFontFace, …).`
+	)
+}
+
+/**
+ * Register a chart or plot area's picture fill, so the chart part can reference it.
+ *
+ * The fill wrote nothing and warned that its `image.data` was missing, because a picture fill needs
+ * a media relationship and nothing gave the chart part one (#139). The picture is registered on the
+ * slide, marked {@link SlideRelMedia.chartOwned}, so it is loaded, deduped and written like any other
+ * picture, and the chart part declares it from `rId2` on: its `rId1` is the embedded workbook. The
+ * fill each area keeps is a copy carrying that chart-part id.
+ * @param target - the slide, layout or master the chart is on
+ * @param options - the chart's normalized options, whose `chartArea` and `plotArea` are its own copies
+ * @returns the pictures the chart part references, in relationship-id order
+ */
+function registerAreaPictures(
+	target: PresSlideInternal,
+	options: ChartOptsInternal
+): Array<{ rId: number; rel: SlideRelMedia }> {
+	const media: Array<{ rId: number; rel: SlideRelMedia }> = []
+	for (const area of [options.chartArea, options.plotArea]) {
+		const fill = area?.fill
+		if (!area || !fill || typeof fill !== 'object' || resolveFillKind(fill) !== 'image') continue
+		const own: ShapeFillPropsInternal = { ...fill }
+		const before = target._relsMedia.length
+		registerImageFillMedia(target, own)
+		const rel = target._relsMedia[before]
+		if (rel && own.type === 'image') {
+			rel.chartOwned = true
+			own._imgRid = media.length + 2
+			media.push({ rId: own._imgRid, rel })
+		}
+		area.fill = own
+	}
+	return media
+}
+
+/**
  * Generate the chart based on input data.
  * OOXML Chart Spec: ISO/IEC 29500-1:2016(E)
  *
@@ -1055,6 +1138,15 @@ export function addChartDefinition(
 	data: OptsChartData[] | ChartOpts,
 	opt?: ChartOptsInternal
 ): object {
+	// A one-entry array combines nothing, and for a bubble chart it is the only way the multi-type
+	// form could ever be written: any bubble entry is refused as a combo below, so `type[].data[].sizes`
+	// type-checked and could never reach a deck (#140). It is written as the standalone chart, its
+	// options over the chart-level ones, as a combo subchart's are.
+	const [only] = Array.isArray(type) && type.length === 1 ? type : []
+	if (only && isChartType(only.type) && isBubbleChart(asChartType(only.type))) {
+		const chartOpts = !Array.isArray(data) && data && typeof data === 'object' ? data : opt
+		return addChartDefinition(target, only.type, only.data, { ...chartOpts, ...only.options })
+	}
 	// Placeholder part identity, unique only within this target. The authoritative,
 	// package-unique chart part filename is assigned at write time by a per-presentation
 	// pass in `buildPackageParts` (`package/assemble.ts`, STEP 2). A module-global counter
@@ -1126,12 +1218,30 @@ export function addChartDefinition(
 	}
 	// Before `_type` and any default lands on the copy, so it holds exactly what the caller stated.
 	if (!tmpTypes && isChartExType(type)) reportChartExOptions(options, asChartType(type as CHART_NAME))
+	reportTextBaseKeys(options)
 	options._type = tmpTypes ?? asChartType(type as CHART_NAME)
 	// Default only what the caller omitted. The guard used to be `!isNaN(Number(x))`, which is
 	// false for every `Coord` that is not a bare number — so `x: '50%'` and `x: '2in'` were
 	// thrown away and replaced by 1 inch, and a `NaN` was too, silently. `getSmartParseNumber`
 	// is what vets a coordinate, and it reports a bad one instead of guessing.
-	Object.assign(options, resolveAuthoredFrame(options, { x: 1, y: 1, w: '50%', h: '50%' }, 'addChart'))
+	//
+	// A chart naming a layout placeholder takes the placeholder's axes for those it leaves unstated,
+	// as an image and a table do.
+	checkPlaceholderBinding(options.placeholder, 'addChart')
+	const placeholder = placeholderFrame(target._slideLayout, options.placeholder)
+	Object.assign(
+		options,
+		resolveAuthoredFrame(
+			{
+				x: options.x ?? placeholder.x,
+				y: options.y ?? placeholder.y,
+				w: options.w ?? placeholder.w,
+				h: options.h ?? placeholder.h,
+			},
+			{ x: 1, y: 1, w: '50%', h: '50%' },
+			'addChart'
+		)
+	)
 	// Was the one definer still counting `_slideObjects` for its default name, which numbers a
 	// chart by how many charts are *currently* on the slide rather than by how many have been
 	// added — the difference `nextObjectNameIdx` exists for.
@@ -1232,6 +1342,10 @@ export function addChartDefinition(
 	// STEP 4: Set props
 	resultObject._type = SlideObjectType.chart
 	resultObject.options = options
+	// The pictures first: each takes a slide relationship id, and `chartRid` has to be the id the
+	// chart's own relationship is pushed under below.
+	const isChartEx = isChartExType(options._type)
+	const media = isChartEx ? [] : registerAreaPictures(target, options)
 	resultObject.chartRid = getNewRelId(target)
 
 	// STEP 5: Add this chart to this Slide Rels (rId/rels count spans all slides! Count all images to get next rId)
@@ -1240,7 +1354,6 @@ export function addChartDefinition(
 	// authoritative, package-unique filename is (re)assigned at write time in
 	// `buildPackageParts` (`package/assemble.ts`); this placeholder mirrors the same
 	// Ex-prefix rule so a single-chart deck is already correct.
-	const isChartEx = isChartExType(options._type)
 	const { fileName, target: chartTarget } = chartPartNames(chartId, isChartEx)
 	target._relsChart.push({
 		rId: getNewRelId(target),
@@ -1251,6 +1364,7 @@ export function addChartDefinition(
 		isChartEx,
 		fileName,
 		Target: chartTarget,
+		...(media.length > 0 ? { media } : {}),
 	})
 
 	target._slideObjects.push(resultObject)

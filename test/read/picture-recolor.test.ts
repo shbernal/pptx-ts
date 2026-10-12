@@ -70,6 +70,18 @@ describe('Picture recolour — write→read fidelity (T1.1)', () => {
 		assertEqual(defined(recolor.to).srgb, null, 'a scheme clrTo carries no explicit hex')
 	})
 
+	test('recolors lists every effect a faded, recoloured picture carries', async () => {
+		// `transparency` is written as `a:alphaModFix` before the recolour, and `recolor` reports the
+		// first effect only, so the greyscale was invisible to the read model (#109).
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addImage({ data: PNG_1x1, x: 1, y: 1, w: 2, h: 2, transparency: 40, grayscale: true })
+		})
+		const picture = firstShape(presentation, (s) => s.shapeType === 'picture')
+		assert(picture !== null && isPicture(picture), 'the authored image is read back as a picture')
+		assertEqual(picture.recolors.map((effect) => effect.kind).join(), 'alphaModFix,grayscale', 'both effects, in order')
+		assertEqual(picture.recolor?.kind, 'alphaModFix', 'recolor is still the first')
+	})
+
 	test.skipIf(!validatorInstalled)('all three authored recolour decks are schema-valid', async () => {
 		const { buf: grayBuf } = await recolorOf({ grayscale: true })
 		assertEqual((await schemaErrors(grayBuf)).length, 0, 'grayscale deck validates')

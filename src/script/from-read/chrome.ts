@@ -39,13 +39,18 @@
 import type { Presentation } from '../../read/api/presentation.js'
 import type { SlideLayout, SlideMaster, Theme } from '../../read/api/chrome.js'
 import { isGroupShape, type AnyShape } from '../../read/api/shapes.js'
-import { uniqueTitle, type ChromeIr, type IrValue, type MasterIr, type ThemeIr } from '../ir.js'
+import { uniqueTitle, type ChromeIr, type IrValue, type MasterIr, type SlideIr, type ThemeIr } from '../ir.js'
 import { layoutShapeScope, type NoteScope } from '../fidelity.js'
 import { masterObject } from './shape.js'
 import { forShape, type MapContext } from './context.js'
 import { hasDecorativeShapes, hasFormatScheme, hasTextStyles, isPlaceholderShape } from './detect.js'
 import { backgroundIr, MASTER_BACKGROUND } from './background.js'
-import { compact, literalColor, orUndefined } from './values.js'
+import { compact, emu, literalColor, orUndefined } from './values.js'
+import { attr, childElements, firstChild, type Element } from '../../read/oxml/dom.js'
+import { PlaceholderType } from '../../enums.js'
+
+/** The placeholder types a slide binds to by the bare type string; see {@link placeholderDefinitions}. */
+const WRITABLE_PLACEHOLDER_TYPES: ReadonlySet<string> = new Set(Object.values(PlaceholderType))
 import { DEFAULT_COLOR_MAP } from '../../ooxml/st-enums.js'
 
 /** Build the chrome IR for a deck. */
@@ -149,12 +154,6 @@ function layoutsToIr(masters: SlideMaster[], ctx: MapContext): MasterIr[] {
 	const { notes, assets } = ctx
 	const out: MasterIr[] = []
 	const used = new Set<string>()
-	// Rolled up rather than noted per layout: a 12-layout deck loses the placeholder definitions
-	// on most of them, and twelve near-identical paragraphs at the top of the emitted script bury
-	// the per-shape notes underneath that a reader can actually act on.
-	let placeholderCount = 0
-	let placeholderLayouts = 0
-
 	const renamed: string[] = []
 	const collided: string[] = []
 
@@ -168,12 +167,6 @@ function layoutsToIr(masters: SlideMaster[], ctx: MapContext): MasterIr[] {
 			if (title !== base) collided.push(`${JSON.stringify(base)} → ${JSON.stringify(title)}`)
 			used.add(title)
 
-			const placeholders = layout.placeholders.length
-			if (placeholders > 0) {
-				placeholderCount += placeholders
-				placeholderLayouts++
-			}
-
 			// The layout's own background if it has one, else the master's — which is what a slide
 			// bound to that layout actually shows, and the only tier the write API can set it at.
 			// The cast is the one `print/common.ts` makes for the same value: a `BackgroundIr` is
@@ -181,7 +174,7 @@ function layoutsToIr(masters: SlideMaster[], ctx: MapContext): MasterIr[] {
 			const background = backgroundIr(layout.background ?? master.background, notes, assets, MASTER_BACKGROUND) as
 				| IrValue
 				| undefined
-			const objects = layoutObjects(layout, ctx)
+			const objects = [...placeholderDefinitions(layout), ...layoutObjects(layout, ctx)]
 			out.push({
 				layoutIndex: index,
 				props: compact({
@@ -209,16 +202,130 @@ function layoutsToIr(masters: SlideMaster[], ctx: MapContext): MasterIr[] {
 			`${renamed.length} layout name(s) contain a line break or tab, which cannot survive as a layout title: the write path emits the name as a literal XML attribute value rather than a character reference, and XML normalises whitespace in an attribute to spaces. Collapsed here so the emitted script says what the output will contain — ${renamed.join('; ')}`
 		)
 	}
-	if (placeholderCount > 0) {
+	return out
+}
+
+/**
+ * A layout's placeholders as `defineSlideMaster` placeholder definitions: the source name, type,
+ * `idx` and frame, and the prompt where the layout states its own (`hasCustomPrompt`).
+ *
+ * The name a slide binds to by name is the type, for the placeholders whose binding the slide
+ * mapper spells as the bare type string (an `idx` 0 placeholder of one of the six friendly types);
+ * any other binds by `idx`, and keeps its source name. Which of these a slide re-declares is
+ * decided once the slides are mapped: see {@link pruneUnfilledPlaceholders}.
+ */
+function placeholderDefinitions(layout: SlideLayout): IrValue[] {
+	const frames = new Map(layout.shapes.map((shape) => [shape.element_, shape.resolvedFrame] as const))
+	return layout.placeholders.map((placeholder) => {
+		const type = placeholder.type ?? 'obj'
+		const idx = Number(placeholder.idx ?? '0')
+		const frame = frames.get(placeholder.element_) ?? null
+		const ph = placeholderElement(placeholder.element_)
+		// An empty custom prompt is no prompt: PowerPoint drops the flag when a prompt is cleared.
+		const promptText = ph && attr(ph, 'hasCustomPrompt') === '1' ? (placeholder.textFrame?.text ?? '') : ''
+		const prompt = promptText === '' ? undefined : promptText
+		const name = idx === 0 && WRITABLE_PLACEHOLDER_TYPES.has(type) ? type : placeholder.name || `${type} ${idx}`
+		return {
+			placeholder: compact({
+				options: compact({
+					name,
+					type,
+					idx,
+					x: frame ? emu(frame.left) : undefined,
+					y: frame ? emu(frame.top) : undefined,
+					w: frame ? emu(frame.width) : undefined,
+					h: frame ? emu(frame.height) : undefined,
+				}),
+				text: prompt,
+			}) as IrValue,
+		}
+	})
+}
+
+/** A placeholder `p:sp`'s `p:ph`, or `null`. */
+function placeholderElement(sp: Element): Element | null {
+	for (const nv of childElements(sp)) {
+		const nvPr = firstChild(nv, 'p:nvPr')
+		const ph = nvPr && firstChild(nvPr, 'p:ph')
+		if (ph) return ph
+	}
+	return null
+}
+
+/**
+ * Drop the layout placeholder definitions a slide on that layout leaves unfilled, and say so.
+ *
+ * The write path seeds every slide with each layout placeholder it does not fill, as an empty
+ * shape. A source slide that left one out (a deleted subtitle, a footer the deck never shows)
+ * would gain it in the copy, so a definition is re-declared only when every slide bound to its
+ * layout fills it, by the rule the writer's seeding matches with: the name, the `idx`, or, for a
+ * binding with no `idx`, the type of an `idx`-0 definition. A layout no slide uses keeps them all.
+ */
+export function pruneUnfilledPlaceholders(chrome: ChromeIr, slides: SlideIr[], notes: NoteScope): void {
+	let dropped = 0
+	const layouts = new Set<number>()
+	for (const master of chrome.masters) {
+		const objects = master.props['objects']
+		if (!Array.isArray(objects)) continue
+		const bound = slides.filter((slide) => slide.layout?.index === master.layoutIndex)
+		if (bound.length === 0) continue
+		const bindings = bound.map((slide) => slide.calls.flatMap((call) => placeholderBindingsOf(call.args)))
+		const kept = objects.filter((object) => {
+			const definition = definitionOf(object)
+			if (!definition) return true
+			const filled = bindings.every((slideBindings) => slideBindings.some((binding) => fills(binding, definition)))
+			if (!filled) {
+				dropped++
+				layouts.add(master.layoutIndex)
+			}
+			return filled
+		})
+		if (kept.length > 0) master.props['objects'] = kept
+		else delete master.props['objects']
+	}
+	if (dropped > 0) {
 		notes.note(
 			'master.placeholders',
 			'dropped',
 			'unsupported',
-			`the ${placeholderCount} placeholder definition(s) across ${placeholderLayouts} slide layout(s) are not reproduced: the write path seeds every slide with each layout placeholder the slide did not populate, and since every source shape is authored here as concrete content rather than into a placeholder, re-declaring them would add an empty shape to every slide rather than a prompt`
+			`${dropped} placeholder definition(s) across ${layouts.size} slide layout(s) are not reproduced: a slide on the layout leaves the placeholder out, and the write path seeds every slide with each layout placeholder it does not fill, so re-declaring it would add an empty shape to that slide`
 		)
 	}
+}
 
-	return out
+/** A re-declared placeholder's identity, as the writer's seeding matches it. */
+interface DefinitionKey {
+	name: string
+	type: string
+	idx: number
+}
+
+/** The identity of a `{ placeholder }` object, or `null` for any other layout object. */
+function definitionOf(object: IrValue): DefinitionKey | null {
+	if (object === null || typeof object !== 'object' || Array.isArray(object) || !('placeholder' in object)) return null
+	const placeholder = object['placeholder']
+	if (placeholder === null || typeof placeholder !== 'object' || Array.isArray(placeholder)) return null
+	const options = (placeholder as Record<string, IrValue>)['options'] as Record<string, IrValue>
+	return { name: String(options['name']), type: String(options['type']), idx: Number(options['idx'] ?? 0) }
+}
+
+/** Every `placeholder` option among a call's arguments. */
+function placeholderBindingsOf(args: IrValue[]): IrValue[] {
+	return args.flatMap((arg) =>
+		arg !== null && typeof arg === 'object' && !Array.isArray(arg) && 'placeholder' in arg
+			? [(arg as Record<string, IrValue>)['placeholder'] ?? null]
+			: []
+	)
+}
+
+/** Whether a slide object's `placeholder` option fills a definition, as the writer's seeding decides. */
+function fills(binding: IrValue, definition: DefinitionKey): boolean {
+	if (typeof binding === 'string') return binding === definition.name
+	if (binding === null || typeof binding !== 'object' || Array.isArray(binding)) return false
+	const { name, type, idx } = binding as Record<string, IrValue>
+	if (name !== undefined && type === undefined && idx === undefined) return name === definition.name
+	if (idx !== undefined) return idx === definition.idx
+	return definition.idx === 0 && type === definition.type
 }
 
 /**

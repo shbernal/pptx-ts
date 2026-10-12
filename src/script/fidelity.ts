@@ -94,6 +94,9 @@ const TEMPLATE_ONLY = ['template'] as const
  * to list it. An entry without `tiers` no longer satisfies the catalogue's type.
  */
 export const NOTE_CONSTRUCTS = {
+	// An axis setting no ChartOpts key spells: a crossing at the other axis' max or min, a custom
+	// display unit. Absent from both IRs.
+	'chart.axis': { fields: [], tiers: BOTH_TIERS },
 	'chart.blanks': { fields: ['values'], tiers: BOTH_TIERS },
 	'chart.combo': { fields: ['type'], tiers: BOTH_TIERS },
 	// A chart with no cached plottable series is not emitted at all, so the whole frame is
@@ -103,6 +106,23 @@ export const NOTE_CONSTRUCTS = {
 	// Label flags the writer has no spelling for: the legend key on any plot, the category name on any
 	// but a pie or a doughnut. Absent from the IR on both sides, so there is nothing to exclude.
 	'chart.labels': { fields: [], tiers: BOTH_TIERS },
+	// The part of a title's manual layout titlePos cannot state (a factor-mode coordinate, a size).
+	// Absent from both IRs; the part it can state is carried as titlePos.
+	'chart.layout': { fields: [], tiers: BOTH_TIERS },
+	// A series' gradient or pattern fill, which no addChart option spells. Absent from both IRs.
+	'chart.series.fill': { fields: [], tiers: BOTH_TIERS },
+	// A data point formatted beyond a literal fill (a theme colour, a pattern, an outline of its own),
+	// which its `pointStyles` entry leaves out on both sides, or a radar's or bubble's point, which
+	// neither IR carries, so the IRs agree without it.
+	'chart.dataPoints': { fields: [], tiers: BOTH_TIERS },
+	// A bar series' c:invertIfNegative, which no addChart option writes. Absent from both IRs.
+	'chart.invertIfNegative': { fields: [], tiers: BOTH_TIERS },
+	// A series outline the chart writer cannot dash as the source did, rebuilt solid. Both IRs carry
+	// the solid stroke, so the source dash is in neither.
+	'chart.series.line': { fields: [], tiers: BOTH_TIERS },
+	// A chart stroke's scheme colour outside the writable tokens, which a chart part read without a
+	// theme cannot bake either. Absent from both IRs.
+	'chart.schemeToken': { fields: [], tiers: BOTH_TIERS },
 	'chart.type': { fields: ['type'], tiers: BOTH_TIERS },
 	// A 3-D line, area or pie rebuilt flat: `type` names the flat chart on both sides, and the 3-D
 	// view is in neither IR.
@@ -115,9 +135,10 @@ export const NOTE_CONSTRUCTS = {
 	'chart.xLabels': { fields: [], tiers: BOTH_TIERS },
 	'chart.workbook': { fields: ['*'], tiers: BOTH_TIERS },
 	'chartEx.all': { fields: ['*'], tiers: BOTH_TIERS },
-	'connector.binding': { fields: [], tiers: BOTH_TIERS },
+	'connector.binding': { fields: ['startShape', 'startShapeIdx', 'endShape', 'endShapeIdx'], tiers: BOTH_TIERS },
 	'connector.line': { fields: ['color', 'width', 'dashType', 'beginArrowType', 'endArrowType'], tiers: BOTH_TIERS },
 	'connector.rotation': { fields: ['rotate'], tiers: BOTH_TIERS },
+	'connector.route': { fields: ['type', 'bends', 'adj'], tiers: BOTH_TIERS },
 	// Empty, and the temptation to list title/author/subject/revision here has to be
 	// resisted: this note is about the *other* seven docProps, which have no setter and are
 	// absent from the IR. Listing the four that do have setters would excuse a printer that
@@ -162,11 +183,17 @@ export const NOTE_CONSTRUCTS = {
 	'group.child': { fields: ['*'], tiers: BOTH_TIERS },
 	'group.childSpace': { fields: ['x', 'y', 'w', 'h', 'rotate', 'flipH', 'flipV'], tiers: BOTH_TIERS },
 	'group.empty': { fields: ['*'], tiers: BOTH_TIERS },
-	'group.transform': { fields: ['rotate', 'flipH', 'flipV'], tiers: BOTH_TIERS },
+	// `group.transform` used to live here, for a group's own rotation and flips baked into its
+	// children. The group carries them as `addGroup` options and its children are placed in its
+	// child space (`groupSpaceFrame`), so the note is gone rather than unmapped (#116).
 	// A picture crop with no `crop` spelling is left off, so the difference lands on the option.
 	'image.crop': { fields: ['crop'], tiers: BOTH_TIERS },
 	'image.data': { fields: ['data', '$asset'], tiers: BOTH_TIERS },
 	'image.recolor': { fields: ['duotone', 'grayscale', 'biLevel', 'clrChange'], tiers: BOTH_TIERS },
+	'image.recolor.schemeToken': {
+		fields: ['duotone.shadow', 'duotone.highlight', 'clrChange.from', 'clrChange.to'],
+		tiers: BOTH_TIERS,
+	},
 	// Covers the picture's bytes, not just an `svg` option: an SVG picture's raster fallback
 	// is regenerated rather than carried, so the blip the round trip compares is a different
 	// image from the source's — which is precisely the loss this note is about.
@@ -227,7 +254,7 @@ export const NOTE_CONSTRUCTS = {
 	'line.schemeToken': { fields: ['line.color'], tiers: BOTH_TIERS },
 	'line.width': { fields: ['line.width'], tiers: BOTH_TIERS },
 	'media.audioVideo': { fields: ['*'], tiers: BOTH_TIERS },
-	'notes.formatting': { fields: ['notesText'], tiers: BOTH_TIERS },
+	'notes.formatting': { fields: ['notesText', 'notesRuns'], tiers: BOTH_TIERS },
 	'shadow.schemeToken': { fields: ['shadow.color'], tiers: BOTH_TIERS },
 	'shape.custGeom.guides': { fields: ['points'], tiers: BOTH_TIERS },
 	'shape.effects': { fields: ['shadow', 'glow'], tiers: BOTH_TIERS },
@@ -319,6 +346,7 @@ export const NOTE_CONSTRUCTS = {
 	'table.rowAuto': { fields: ['rowH'], tiers: BOTH_TIERS },
 	'table.style': { fields: ['tableStyle'], tiers: BOTH_TIERS },
 	'text.align': { fields: ['align'], tiers: BOTH_TIERS },
+	'text.endParagraph.lang': { fields: [], tiers: BOTH_TIERS },
 	// `text.bullet.numberStartAt` and `text.bullet.style` used to live here, for
 	// `a:buAutoNum/@startAt` and for a bullet's own font/size/colour. `Paragraph.bulletDetail`
 	// reads all four, so the mapper emits `numberStartAt` / `fontFace` / `size` / `color` and

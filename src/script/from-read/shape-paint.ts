@@ -14,7 +14,8 @@ import type { NoteScope } from '../fidelity.js'
 import { type IrValue } from '../ir.js'
 import { LINE_END_TYPES } from '../../ooxml/st-enums.js'
 import { LINE_CAP_BY_TOKEN } from '../../ooxml/line-cap.js'
-import { alphaToTransparency, colorOption, compact, orUndefined, WRITABLE_DASHES } from './values.js'
+import { alphaToTransparency, colorOption, compact, groupSpaceFrame, orUndefined, WRITABLE_DASHES } from './values.js'
+import type { GroupTransform } from '../../read/api/shapes/group-transform.js'
 import { type FillSubject, gradientStops, patternOption, surfaceFill } from './surface-fill.js'
 import { type MapContext } from './context.js'
 
@@ -39,10 +40,14 @@ export function noteHidden(notes: NoteScope): void {
 
 /**
  * Rotation and flips. Taken from `absoluteFrame`, which composes enclosing group rotations
- * and XOR-composes group flips — the same reason position is absolute.
+ * and XOR-composes group flips — the same reason position is absolute. Inside a group that
+ * carries its own transform (`groups`), the shape's own, from {@link groupSpaceFrame}.
  */
-export function transformOptions(shape: AnyShape): Record<string, IrValue | undefined> {
-	const frame = shape.absoluteFrame
+export function transformOptions(
+	shape: AnyShape,
+	groups?: readonly GroupTransform[]
+): Record<string, IrValue | undefined> {
+	const frame = groups ? groupSpaceFrame(shape, groups) : shape.absoluteFrame
 	const rotate = frame ? frame.rotation : (shape.rotation ?? 0)
 	return {
 		rotate: rotate === 0 ? undefined : rotate,

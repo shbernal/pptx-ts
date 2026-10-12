@@ -13,6 +13,7 @@
 
 import type { AssetRef } from '../ir.js'
 import type { NoteScope } from '../fidelity.js'
+import type { GroupTransform } from '../../read/api/shapes/group-transform.js'
 
 /** Resolves an image/media part name to bytes the deck-level walk has registered. */
 export interface AssetResolver {
@@ -41,6 +42,20 @@ export interface MapContext {
 	 * layout's shapes are re-authored under `defineSlideMaster`, where a slide link does not resolve.
 	 */
 	readonly slideNumberOf: (partName: string) => number | null
+	/**
+	 * Whether `name` names exactly one shape in the slide being mapped, groups included. The write
+	 * path binds a connector end to a shape by `objectName`, taking the first match, so only a unique
+	 * name binds the replay to the shape the source did. Absent where shapes cannot be bound by name
+	 * (a layout's shapes), which leaves every binding there unwritable.
+	 */
+	readonly isUniqueShapeName?: (name: string) => boolean
+	/**
+	 * The groups enclosing the shapes being mapped, innermost first, with each one's rotation and
+	 * flips: a group carries its own transform as `addGroup` options, so its children are placed in
+	 * its child space mapped to the slide by offset and scale alone (`groupSpaceFrame`). Absent at
+	 * the top of a slide, where a shape's frame is its slide-absolute one.
+	 */
+	readonly groups?: readonly GroupTransform[]
 }
 
 /**

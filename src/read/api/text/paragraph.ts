@@ -40,6 +40,7 @@ import {
 	type TextContext,
 } from './run.js'
 import { setParagraphText } from './edit.js'
+import { lstStyleLevel, placeholderInheritedLevels } from '../../oxml/placeholder-inherit.js'
 /** One paragraph (`a:p`) of a text frame. */
 export class Paragraph {
 	constructor(
@@ -98,6 +99,16 @@ export class Paragraph {
 		}
 	}
 
+	/**
+	 * The language of the paragraph's end mark (`a:endParaRPr/@lang`, e.g. `fr-FR`), or `null` when
+	 * unset. It is what text typed at the end of the paragraph, or into an empty one, is spelled in.
+	 * The write side states it from the text's `lang` option.
+	 */
+	get endLanguage(): string | null {
+		const end = firstChild(this.element, 'a:endParaRPr')
+		return end ? attr(end, 'lang') : null
+	}
+
 	/** Indent level (`a:pPr/@lvl`), 0 when unset. */
 	get level(): number {
 		const pPr = firstChild(this.element, 'a:pPr')
@@ -109,8 +120,7 @@ export class Paragraph {
 	 * `dist` | `thaiDist`), or `null` when unset (inherited from the list style).
 	 */
 	get align(): string | null {
-		const pPr = firstChild(this.element, 'a:pPr')
-		return pPr ? attr(pPr, 'algn') : null
+		return alignOf(this.#pPr())
 	}
 
 	/**
@@ -119,12 +129,12 @@ export class Paragraph {
 	 * (`a:spcPct`, which has no fixed point value).
 	 */
 	get spaceBeforePt(): number | null {
-		return this.#spacingPt('a:spcBef')
+		return spacingPt(this.#pPr(), 'a:spcBef')
 	}
 
 	/** Space after the paragraph in points; see {@link spaceBeforePt} for the percentage caveat. */
 	get spaceAfterPt(): number | null {
-		return this.#spacingPt('a:spcAft')
+		return spacingPt(this.#pPr(), 'a:spcAft')
 	}
 
 	/**
@@ -133,32 +143,100 @@ export class Paragraph {
 	 * `null` when unset (inherited from the list style). See {@link LineSpacing}.
 	 */
 	get lineSpacing(): LineSpacing | null {
-		const pPr = firstChild(this.element, 'a:pPr')
-		const lnSpc = pPr && firstChild(pPr, 'a:lnSpc')
-		if (!lnSpc) return null
-		const pts = firstChild(lnSpc, 'a:spcPts')
-		if (pts) {
-			const val = numberValue(attr(pts, 'val'))
-			return val === null ? null : { type: 'points', valuePt: val / HUNDREDTHS_PER_POINT }
-		}
-		const pct = firstChild(lnSpc, 'a:spcPct')
-		if (pct) {
-			// `ST_TextSpacingPercentOrPercentString`: the name says it, and the string half is the
-			// only spelling Strict has.
-			const val = pctPointsAttr(pct, 'val')
-			return val === null ? null : { type: 'percent', percent: val }
-		}
-		return null
+		return lineSpacingOf(this.#pPr())
 	}
 
 	/** Left margin of the paragraph in points (`a:pPr/@marL` is EMU; 12700 EMU = 1pt), or `null` when unset. */
 	get marginLeftPt(): number | null {
-		return this.#emuAttrPt('marL')
+		return emuAttrPt(this.#pPr(), 'marL')
 	}
 
 	/** First-line indent in points (`a:pPr/@indent` is EMU; negative for a hanging indent), or `null` when unset. */
 	get indentPt(): number | null {
-		return this.#emuAttrPt('indent')
+		return emuAttrPt(this.#pPr(), 'indent')
+	}
+
+	/**
+	 * The alignment the paragraph renders with: its own, else the first its level inherits through
+	 * the text body's `a:lstStyle`, the placeholder's layout and master list styles, the master's
+	 * `p:txStyles` and the presentation's `p:defaultTextStyle`, the chain {@link Run.resolvedSizePt}
+	 * walks. `null` when nothing in the chain states one (PowerPoint then aligns left).
+	 */
+	get resolvedAlign(): string | null {
+		return this.#resolved(alignOf)
+	}
+
+	/** The left margin in points the paragraph renders with, resolved as {@link resolvedAlign} is. */
+	get resolvedMarginLeftPt(): number | null {
+		return this.#resolved((pPr) => emuAttrPt(pPr, 'marL'))
+	}
+
+	/** The first-line indent in points the paragraph renders with, resolved as {@link resolvedAlign} is. */
+	get resolvedIndentPt(): number | null {
+		return this.#resolved((pPr) => emuAttrPt(pPr, 'indent'))
+	}
+
+	/** The line spacing the paragraph renders with, resolved as {@link resolvedAlign} is. */
+	get resolvedLineSpacing(): LineSpacing | null {
+		return this.#resolved(lineSpacingOf)
+	}
+
+	/** The space before the paragraph in points, resolved as {@link resolvedAlign} is. */
+	get resolvedSpaceBeforePt(): number | null {
+		return this.#resolved((pPr) => spacingPt(pPr, 'a:spcBef'))
+	}
+
+	/** The space after the paragraph in points, resolved as {@link resolvedAlign} is. */
+	get resolvedSpaceAfterPt(): number | null {
+		return this.#resolved((pPr) => spacingPt(pPr, 'a:spcAft'))
+	}
+
+	/**
+	 * The bullet the paragraph renders with: its own {@link bulletDetail}, else the first bullet its
+	 * level inherits, resolved as {@link resolvedAlign} is. A picture bullet from an inherited tier
+	 * reads with `imagePartName: null`, its image being a relationship of the layout or master.
+	 * `null` when nothing in the chain names one.
+	 */
+	get resolvedBulletDetail(): BulletDetail | null {
+		const own = this.bulletDetail
+		if (own) return own
+		for (const tier of this.#inheritedLevels()) {
+			const detail = this.#bulletDetailOf(tier, false)
+			if (detail) return detail
+		}
+		return null
+	}
+
+	/** The paragraph's own `a:pPr`, or `null`. */
+	#pPr(): Element | null {
+		return firstChild(this.element, 'a:pPr')
+	}
+
+	/**
+	 * The level elements the paragraph inherits paragraph properties from, most specific first: the
+	 * text body's `a:lstStyle`, then for a placeholder its layout and master list styles and the
+	 * master's `p:txStyles`, then `p:defaultTextStyle`. Empty for text that inherits through nothing.
+	 */
+	#inheritedLevels(): Element[] {
+		const inherit = this.context.inherit
+		if (!inherit) return []
+		const level = this.level
+		const { ctx } = this.context
+		const tiers: (Element | null)[] = [lstStyleLevel(this.slideLstStyle, level)]
+		if (inherit.ph) tiers.push(...placeholderInheritedLevels(inherit.ph.type, inherit.ph.idx, level, ctx))
+		tiers.push(lstStyleLevel(ctx.defaultTextStyle ?? null, level))
+		return tiers.filter((tier): tier is Element => tier !== null)
+	}
+
+	/** The first value `read` finds in the paragraph's own `a:pPr`, then down {@link inheritedLevels}. */
+	#resolved<T>(read: (pPr: Element | null) => T | null): T | null {
+		const own = read(this.#pPr())
+		if (own !== null) return own
+		for (const tier of this.#inheritedLevels()) {
+			const value = read(tier)
+			if (value !== null) return value
+		}
+		return null
 	}
 
 	/**
@@ -197,7 +275,15 @@ export class Paragraph {
 	 * `n` bullet on every converted deck, silently. See {@link BulletDetail}.
 	 */
 	get bulletDetail(): BulletDetail | null {
-		const pPr = firstChild(this.element, 'a:pPr')
+		return this.#bulletDetailOf(this.#pPr(), true)
+	}
+
+	/**
+	 * The bullet a paragraph-properties element names, or `null`.
+	 * @param resolveImage - resolve a picture bullet's image through this slide's relationships,
+	 *   which only holds for the paragraph's own `a:pPr`
+	 */
+	#bulletDetailOf(pPr: Element | null, resolveImage: boolean): BulletDetail | null {
 		if (!pPr) return null
 		if (firstChild(pPr, 'a:buNone')) return { kind: 'none' }
 
@@ -216,7 +302,8 @@ export class Paragraph {
 		}
 
 		const buBlip = firstChild(pPr, 'a:buBlip')
-		if (buBlip) return { kind: 'picture', imagePartName: this.#bulletImagePartName(buBlip), ...style }
+		if (buBlip)
+			return { kind: 'picture', imagePartName: resolveImage ? this.#bulletImagePartName(buBlip) : null, ...style }
 
 		return null
 	}
@@ -252,22 +339,6 @@ export class Paragraph {
 	#bulletImagePartName(buBlip: Element): string | null {
 		const blip = firstChild(buBlip, 'a:blip')
 		return resolvePartName(blip && attr(blip, 'r:embed'), this.context.rels)
-	}
-
-	/** Points from a spacing child's `a:spcPts/@val` (hundredths of a point), or `null`. */
-	#spacingPt(qname: string): number | null {
-		const pPr = firstChild(this.element, 'a:pPr')
-		const spc = pPr && firstChild(pPr, qname)
-		const pts = spc && firstChild(spc, 'a:spcPts')
-		const val = pts ? numberValue(attr(pts, 'val')) : null
-		return ptFromHundredths(val)
-	}
-
-	/** Points from an EMU-valued `a:pPr` attribute (`marL` / `indent`), or `null`. */
-	#emuAttrPt(name: string): number | null {
-		const pPr = firstChild(this.element, 'a:pPr')
-		const emu = pPr ? numberValue(attr(pPr, name)) : null
-		return ptFromEmu(emu)
 	}
 
 	/**
@@ -311,3 +382,41 @@ export class Paragraph {
 }
 
 /** A shape's text frame (`p:txBody`): an ordered list of paragraphs. */
+
+/** `@algn` of a paragraph-properties element (`a:pPr` or a list-style level), or `null`. */
+function alignOf(pPr: Element | null): string | null {
+	return pPr ? attr(pPr, 'algn') : null
+}
+
+/** Points from a spacing child's `a:spcPts/@val` (hundredths of a point), or `null`. */
+function spacingPt(pPr: Element | null, qname: string): number | null {
+	const spc = pPr && firstChild(pPr, qname)
+	const pts = spc && firstChild(spc, 'a:spcPts')
+	const val = pts ? numberValue(attr(pts, 'val')) : null
+	return ptFromHundredths(val)
+}
+
+/** Points from an EMU-valued paragraph-properties attribute (`marL` / `indent`), or `null`. */
+function emuAttrPt(pPr: Element | null, name: string): number | null {
+	const emu = pPr ? numberValue(attr(pPr, name)) : null
+	return ptFromEmu(emu)
+}
+
+/** The `a:lnSpc` of a paragraph-properties element as a {@link LineSpacing}, or `null`. */
+function lineSpacingOf(pPr: Element | null): LineSpacing | null {
+	const lnSpc = pPr && firstChild(pPr, 'a:lnSpc')
+	if (!lnSpc) return null
+	const pts = firstChild(lnSpc, 'a:spcPts')
+	if (pts) {
+		const val = numberValue(attr(pts, 'val'))
+		return val === null ? null : { type: 'points', valuePt: val / HUNDREDTHS_PER_POINT }
+	}
+	const pct = firstChild(lnSpc, 'a:spcPct')
+	if (pct) {
+		// `ST_TextSpacingPercentOrPercentString`: the name says it, and the string half is the
+		// only spelling Strict has.
+		const val = pctPointsAttr(pct, 'val')
+		return val === null ? null : { type: 'percent', percent: val }
+	}
+	return null
+}

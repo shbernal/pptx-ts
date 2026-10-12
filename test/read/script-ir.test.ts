@@ -17,7 +17,14 @@ import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import type { BackgroundProps, SlideNumberProps } from '../../dist/index.js'
 import { Presentation, isAutoShape, type TransitionInput } from '../../dist/read.js'
-import { canonicalDeckIr, readModelToIr, type CallIr, type DeckIr, type IrValue } from '../../dist/script.js'
+import {
+	canonicalDeckIr,
+	printScript,
+	readModelToIr,
+	type CallIr,
+	type DeckIr,
+	type IrValue,
+} from '../../dist/script.js'
 import { PNG_1X1, assert, assertEqual, defined, expectDefined, readEntry, at as atIndex, take } from '../helpers.ts'
 import { authorRead } from './authored.ts'
 import { fixtureNames, freshIr, irFor, readFixture, readOracle } from './corpus.ts'
@@ -335,9 +342,125 @@ describe('deck IR — connectors', () => {
 			}
 		}
 	})
+
+	// Every connector used to come back `type: 'straight'` and unbound, with no note for the route,
+	// though the read model reports the preset, its adjust guides and both bindings (issue #108).
+	const connectorOf = (ir: DeckIr) =>
+		objectOf(defined(allCalls(ir).find((call) => call.method === 'addConnector')).args[0])
+	const cxnXml = (xml: string) => defined(xml.match(/<p:cxnSp>.*?<\/p:cxnSp>/s)?.[0])
+
+	test('an elbow connector keeps its route, bends and both shape bindings', async () => {
+		const { presentation, buf } = await authorRead((pres) => {
+			const slide = pres.addSlide()
+			slide.addShape('rect', { x: 0.5, y: 0.5, w: 1, h: 1, objectName: 'from' })
+			slide.addShape('rect', { x: 4.5, y: 2.5, w: 1, h: 1, objectName: 'to' })
+			slide.addConnector({
+				x1: 1,
+				y1: 1,
+				x2: 5,
+				y2: 3,
+				type: 'elbow',
+				bends: 2,
+				adj: [30, 70],
+				startShape: 'from',
+				endShape: 'to',
+				endShapeIdx: 2,
+			})
+		})
+		const ir = readModelToIr(presentation)
+		const connector = connectorOf(ir)
+		assertEqual(connector['type'], 'elbow', 'the route')
+		assertEqual(connector['bends'], 2, 'the bend count')
+		assertEqual(JSON.stringify(connector['adj']), '[30,70]', 'the bend positions')
+		assertEqual(connector['startShape'], 'from', 'the start binding')
+		assertEqual(connector['startShapeIdx'], undefined, 'site 0 is the default')
+		assertEqual(connector['endShape'], 'to', 'the end binding')
+		assertEqual(connector['endShapeIdx'], 2, 'the end site')
+		assert(!constructs(ir).has('connector.binding'), 'and no binding is declared lost')
+
+		const sourceXml = await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml')
+		const { buf: replayed } = await authorRead((pres) => {
+			const slide = pres.addSlide()
+			for (const call of allCalls(ir)) {
+				;(slide as unknown as Record<string, (...args: unknown[]) => unknown>)[call.method]?.(...call.args)
+			}
+		})
+		const replayXml = await readEntry(await JSZip.loadAsync(replayed), 'ppt/slides/slide1.xml')
+		assertEqual(cxnXml(replayXml), cxnXml(sourceXml), 'the replay writes the same connector')
+	})
+
+	test('a one-bend curved connector keeps its route and bend position', async () => {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addConnector({ x1: 1, y1: 1, x2: 5, y2: 3, type: 'curved', adj: 25 })
+		})
+		const connector = connectorOf(readModelToIr(presentation))
+		assertEqual(connector['type'], 'curved', 'the route')
+		assertEqual(connector['bends'], undefined, 'one bend is the default')
+		assertEqual(connector['adj'], 25, 'the bend position')
+	})
+
+	test('a route addConnector cannot write is noted', async () => {
+		const { buf } = await authorRead((pres) => {
+			pres.addSlide().addConnector({ x1: 1, y1: 1, x2: 5, y2: 3, type: 'elbow' })
+		})
+		const deck = await Presentation.load(buf)
+		const shape = defined(deck.slides[0]?.shapes.find((candidate) => candidate.constructor.name === 'Connector'))
+		const geom = defined(shape.element_.getElementsByTagNameNS(A_NS, 'prstGeom').item(0))
+		geom.setAttribute('prst', 'bentConnector2')
+		shape.markDirty()
+		const ir = readModelToIr(await Presentation.load(await deck.save()))
+		assertEqual(connectorOf(ir)['type'], 'straight', 'it is written straight')
+		assert(constructs(ir).has('connector.route'), 'and says so')
+	})
+
+	test('a binding to a shape whose name is not unique on the slide is noted', async () => {
+		const { presentation } = await authorRead((pres) => {
+			const slide = pres.addSlide()
+			slide.addShape('rect', { x: 0.5, y: 0.5, w: 1, h: 1, objectName: 'box' })
+			slide.addShape('rect', { x: 4.5, y: 2.5, w: 1, h: 1, objectName: 'box' })
+			slide.addConnector({ x1: 1, y1: 1, x2: 5, y2: 3, startShape: 'box' })
+		})
+		const ir = readModelToIr(presentation)
+		assertEqual(connectorOf(ir)['startShape'], undefined, 'the name would bind the replay to either shape')
+		assert(constructs(ir).has('connector.binding'), 'so the binding is declared lost')
+	})
 })
 
 describe('deck IR — groups', () => {
+	// A group's own rotation and flips were baked into its children, under a `group.transform` note
+	// blaming addGroup, though `GroupProps` takes all three (issue #116). The replay must write the
+	// same group and child transforms.
+	test('a rotated, flipped group keeps its transform, and its children theirs', async () => {
+		const { presentation, buf } = await authorRead((pres) => {
+			pres.addSlide().addGroup(
+				[
+					{ rect: { x: 1, y: 1, w: 1, h: 1, rotate: 15 } },
+					{ rect: { x: 4, y: 1, w: 1, h: 1 } },
+					{
+						group: {
+							children: [{ shape: { type: 'ellipse', options: { x: 2, y: 3, w: 1, h: 0.5 } } }],
+							options: { rotate: 45, flipH: true },
+						},
+					},
+				],
+				{ objectName: 'grp', rotate: 30, flipH: true, flipV: true }
+			)
+		})
+		const ir = readModelToIr(presentation)
+		assert(!constructs(ir).has('group.transform'), 'nothing is declared lost')
+		const call = defined(allCalls(ir).find((c) => c.method === 'addGroup'))
+		assertEqual(at(call.args[1], 'rotate'), 30, 'the group keeps its rotation')
+		assertEqual(at(call.args[1], 'flipH'), true, 'and its flips')
+
+		const xfrms = (xml: string) => [...xml.matchAll(/<a:xfrm[^>]*>.*?<\/a:xfrm>/gs)].map((m) => m[0]).join('\n')
+		const { buf: replayed } = await authorRead((pres) => {
+			;(pres.addSlide().addGroup as (...args: unknown[]) => unknown)(...call.args)
+		})
+		const source = xfrms(await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml'))
+		const replay = xfrms(await readEntry(await JSZip.loadAsync(replayed), 'ppt/slides/slide1.xml'))
+		assertEqual(replay, source, 'the replay writes the same transforms')
+	})
+
 	test('a nested group nests rather than flattening', async () => {
 		const ir = await irFor('group-transform.pptx')
 		const nested = allCalls(ir).find((call) => call.sourceName === 'nested-rot-in-scale')
@@ -758,6 +881,119 @@ describe('deck IR — a hyperlinked run with no colour of its own', () => {
 		assert(!cell.includes('"color"'), `the cell states no colour: ${cell}`)
 		assert(!constructs(ir).has('text.color.inherited'), 'and declares no loss')
 	})
+
+	test('the cell beside a linked cell keeps the black it was written with', async () => {
+		// The writer used to drop the black default from every cell once one held a link, and the
+		// IR then baked that cell's inherited colour in under a note blaming the writer (#100, #101).
+		const { presentation } = await authorRead((pres) => {
+			pres
+				.addSlide()
+				.addTable([[{ text: 'a', options: { hyperlink: { url: 'https://example.com/' } } }, { text: 'b' }]], {
+					x: 1,
+					y: 1,
+					w: 4,
+				})
+		})
+		const ir = readModelToIr(presentation)
+		const cells = JSON.stringify(defined(allCalls(ir).find((c) => c.method === 'addTable')).args)
+		assert(cells.includes('"color":"000000"'), `the plain cell keeps its black: ${cells}`)
+		assert(!constructs(ir).has('text.color.inherited'), 'and declares no loss, because it was stated')
+	})
+
+	test('a show jump on the shape or on a cell leaves the runs uncoloured', async () => {
+		// The shape's jump is written on its `p:cNvPr` alone, so its run states no link and was
+		// coloured black; the cell's was written nowhere until #82 (#128).
+		const box = { x: 1, y: 1, w: 4, h: 1 }
+		const { presentation } = await authorRead((pres) => {
+			const slide = pres.addSlide()
+			slide.addText('next', { ...box, hyperlink: { action: 'nextslide' } })
+			slide.addTable([[{ text: 'a', options: { hyperlink: { action: 'nextslide' } } }]], { ...box, y: 3 })
+			pres.addSlide()
+		})
+		const ir = readModelToIr(presentation)
+		for (const method of ['addText', 'addTable']) {
+			const args = JSON.stringify(defined(allCalls(ir).find((c) => c.method === method)).args)
+			assert(!args.includes('"color"'), `${method} states no colour: ${args}`)
+		}
+		assert(!constructs(ir).has('text.color.inherited'), 'and declares no loss')
+	})
+})
+
+describe('deck IR — a table cell border keeps its cap and transparency', () => {
+	// `cap` had no accessor and the stroke alpha was read but not mapped, so both came back as the
+	// writer's defaults, with no note (#81).
+	test('on an edge and on a diagonal', async () => {
+		const line = { type: 'solid' as const, color: '9B1B30', width: 2 }
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addTable(
+				[
+					[
+						{
+							text: 'a',
+							options: {
+								border: [{ ...line, cap: 'round' }, { ...line, transparency: 40 }, line, line],
+								diagonal: { tlToBr: { ...line, cap: 'square', transparency: 40 } },
+							},
+						},
+					],
+				],
+				{ x: 1, y: 1, w: 5 }
+			)
+		})
+		const ir = readModelToIr(presentation)
+		const options = at(defined(allCalls(ir).find((c) => c.method === 'addTable')).args[0], 0, 0, 'options')
+		assertEqual(at(options, 'border', 0, 'cap'), 'round', 'the top edge keeps its round cap')
+		assertEqual(at(options, 'border', 1, 'transparency'), 40, 'the right edge keeps its transparency')
+		assertEqual(opt(options, 'border', 2, 'cap'), undefined, "a flat cap, the writer's own, is left implied")
+		assertEqual(at(options, 'diagonal', 'tlToBr', 'cap'), 'square', 'the diagonal keeps its cap')
+		assertEqual(at(options, 'diagonal', 'tlToBr', 'transparency'), 40, 'and its transparency')
+	})
+})
+
+describe('deck IR — a run that jumps in the slide show', () => {
+	// PowerPoint writes a run's Next Slide / Last Slide action on the run's own a:rPr, and the IR
+	// noted it unwritable, because addText wrote a run's `action` nowhere (issue #114).
+	test('carries as hyperlink.action and replays the same jump', async () => {
+		const ir = await irFor('text-run-show-jump.pptx')
+		const runs = allCalls(ir)
+			.filter((call) => call.method === 'addText')
+			.flatMap((call) => arrayOf(call.args[0]).map((run) => at(run, 'options')))
+		const actions = runs.map((options) => JSON.stringify(at(options, 'hyperlink') ?? null))
+		assertEqual(actions.join(), '{"action":"nextslide"},null,{"action":"lastslide"}', 'each run keeps its own jump')
+		assert(!constructs(ir).has('text.hyperlink'), 'and nothing is declared lost')
+
+		const { buf } = await authorRead((pres) => {
+			const slide = pres.addSlide()
+			for (const call of allCalls(ir).filter((c) => c.method === 'addText')) {
+				slide.addText(...(call.args as Parameters<typeof slide.addText>))
+			}
+			pres.addSlide()
+		})
+		const xml = await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml')
+		const jumps = [...xml.matchAll(/action="ppaction:\/\/hlinkshowjump\?jump=(\w+)"/g)].map((m) => m[1])
+		assertEqual(jumps.join(), 'nextslide,lastslide', 'the replay writes both jumps on their runs')
+	})
+})
+
+describe('deck IR — a placeholder run with no colour of its own', () => {
+	// The writer leaves a run in a `placeholder` shape uncoloured, so it inherits from the layout.
+	// `readModelToIr` baked the inherited colour in under a note saying the writer paints it black,
+	// which it does not there (issue #100).
+
+	test('stays uncoloured, so the replay leaves it to the layout', async () => {
+		const { presentation, buf } = await authorRead((pres) => {
+			pres.addSlide().addText('body text', { x: 1, y: 1, w: 6, h: 1, placeholder: 'body' })
+		})
+		const runXml = (xml: string) => defined(xml.match(/<a:r>.*?<\/a:r>/)?.[0])
+		const sourceRun = runXml(await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml'))
+		assert(!sourceRun.includes('a:solidFill'), `the writer leaves the placeholder run uncoloured: ${sourceRun}`)
+
+		const ir = readModelToIr(presentation)
+		assertEqual(at(runOptionsOf(ir)[0], 'color'), undefined, 'the IR states no colour on the run')
+		assert(!constructs(ir).has('text.color.inherited'), 'and declares no loss, because there is none')
+		const replayed = runXml(await replay(ir))
+		assert(!replayed.includes('a:solidFill'), `and the replay leaves it uncoloured too: ${replayed}`)
+	})
 })
 
 describe('deck IR — shape paint details', () => {
@@ -818,6 +1054,18 @@ describe('deck IR — text options the read model could not see', () => {
 	// and the replay must write the same fragment.
 	const cases: [string, unknown, Record<string, unknown>, RegExp][] = [
 		['lang', 'T', { lang: 'fr-FR' }, /<a:rPr[^>]*>/],
+		// The end-of-paragraph mark takes the shape's `lang`, which the IR put on the run only (#102).
+		['lang on the paragraph end', 'T', { lang: 'fr-FR' }, /<a:p>.*?<\/a:p>/],
+		[
+			'lang on the paragraph end beside runs in other languages',
+			[
+				{ text: 'A', options: { lang: 'de-DE' } },
+				{ text: 'B', options: { breakLine: true } },
+				{ text: 'C', options: { lang: 'en-US' } },
+			],
+			{ lang: 'fr-FR' },
+			/<p:txBody>.*?<\/p:txBody>/,
+		],
 		['glow', 'T', { glow: { size: 8, opacity: 0.5, color: 'FF00FF' } }, /<a:effectLst>.*?<\/a:effectLst>/],
 		['outline', 'T', { outline: { color: '9B1B30', size: 1.5 } }, /<a:ln w[^>]*>.*?<\/a:ln>/],
 		['transparency', 'T', { color: '000000', transparency: 40 }, /<a:rPr.*?<\/a:rPr>/],
@@ -839,6 +1087,40 @@ describe('deck IR — text options the read model could not see', () => {
 		const source = fragment(await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml'))
 		const ir = readModelToIr(presentation)
 		assertEqual(fragment(await replay(ir)), source, 'the replayed fragment')
+	})
+})
+
+describe('deck IR — paragraph-end languages', () => {
+	test('paragraph ends in different languages are noted, as lang states one for the whole text', async () => {
+		const { buf } = await authorRead((pres) => {
+			pres.addSlide().addText([{ text: 'A', options: { breakLine: true } }, { text: 'B' }], {
+				x: 1,
+				y: 1,
+				w: 5,
+				h: 1,
+				lang: 'fr-FR',
+			})
+		})
+		const zip = await JSZip.loadAsync(buf)
+		const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
+		const mixed = xml.replace(/(<a:endParaRPr lang=")fr-FR(")/, '$1de-DE$2')
+		assert(mixed !== xml, 'the first paragraph now ends in German')
+		zip.file('ppt/slides/slide1.xml', mixed)
+		const ir = readModelToIr(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
+		const call = defined(allCalls(ir).find((c) => c.method === 'addText'))
+		assertEqual(at(call.args[1], 'lang'), undefined, 'no one language is stated for the text')
+		assertEqual(at(runOptionsOf(ir)[0], 'lang'), 'fr-FR', 'the runs keep their own')
+		assert(constructs(ir).has('text.endParagraph.lang'), 'and the paragraph ends are noted')
+	})
+
+	test('a table cell keeps its own lang, since a cell carries no text-level one', async () => {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addTable([[{ text: 'bonjour', options: { lang: 'fr-FR' } }]], { x: 1, y: 1, w: 4 })
+		})
+		const cell = JSON.stringify(
+			defined(allCalls(readModelToIr(presentation)).find((c) => c.method === 'addTable')).args
+		)
+		assert(cell.includes('"lang":"fr-FR"'), `the cell keeps fr-FR: ${cell}`)
 	})
 })
 
@@ -911,6 +1193,26 @@ describe('deck IR — shape locks', () => {
 		assertEqual((await replayLocks(ir)).join(''), source.join(''), 'the replay')
 	})
 
+	test("a chart's frame locks and a group's noUngrp carry", async () => {
+		const { presentation } = await authorRead((pres) => {
+			const slide = pres.addSlide()
+			slide.addChart([{ name: 'S', labels: ['A', 'B'], values: [1, 2] }], {
+				type: 'bar',
+				x: 1,
+				y: 1,
+				w: 4,
+				h: 3,
+				objectLock: { noDrilldown: true, noMove: true },
+			})
+			slide.addGroup([{ rect: { x: 6, y: 1, w: 2, h: 1 } }], { objectLock: { noUngrp: true } })
+		})
+		const ir = readModelToIr(presentation)
+		const lockOf = (method: string) =>
+			JSON.stringify(at(defined(allCalls(ir).find((c) => c.method === method)).args[1], 'objectLock'))
+		assertEqual(lockOf('addChart'), '{"noDrilldown":true,"noMove":true}', 'the chart locks')
+		assertEqual(lockOf('addGroup'), '{"noUngrp":true}', 'the group noUngrp')
+	})
+
 	test('a picture without noChangeAspect and a table without noGrp do not gain them', async () => {
 		const { presentation, buf } = await authorRead((pres) => {
 			const slide = pres.addSlide()
@@ -963,13 +1265,28 @@ describe('deck IR — slide placeholders', () => {
 		assertEqual(ph(await replay(ir)), source, 'the replay writes the same p:ph')
 	})
 
-	test('a placeholder bound by idx is flattened, and the note names the missing idx', async () => {
-		// PowerPoint numbers a layout's body placeholders with `idx`, and `placeholder` writes none.
+	test('a placeholder bound by idx carries its idx, and the replay writes the same p:ph', async () => {
+		// PowerPoint numbers a layout's body placeholders with `idx`. The string form writes none, so
+		// this placeholder was flattened under a note (#112); a `{ type, idx }` binding writes it.
 		const ir = await irFor('placeholder-inherit.pptx')
-		const note = ir.fidelity.find((n) => n.construct === 'shape.placeholder')
-		assert(note, 'an idx-bound placeholder is still declared')
-		assertEqual(note.cause, 'unwritable', 'the write option has no idx')
-		assert(note.detail.includes('idx'), `the note names the idx: ${note.detail}`)
+		assert(!constructs(ir).has('shape.placeholder'), `no loss is declared: ${JSON.stringify(ir.fidelity)}`)
+		const options = allCalls(ir)
+			.filter((call) => call.method === 'addText')
+			.map((call) => objectOf(call.args[1]).placeholder)
+		assertEqual(JSON.stringify(options), '["title",{"idx":1,"type":"body"}]', 'the title as a type, the body by idx')
+		const { buf } = await authorRead((pres) => {
+			const slide = pres.addSlide()
+			for (const call of allCalls(ir).filter((candidate) => candidate.method === 'addText'))
+				slide.addText(...(call.args as Parameters<typeof slide.addText>))
+		})
+		const phs = (await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml'))
+			.match(/<p:ph[^>]*>/g)
+			?.map((ph) => ph.replace(/\s+/g, ' '))
+		assertEqual(
+			JSON.stringify(phs),
+			JSON.stringify(['<p:ph type="title" />', '<p:ph idx="1" type="body" />']),
+			'with no layout defining idx 1'
+		)
 	})
 })
 
@@ -1131,6 +1448,102 @@ describe('deck IR — slide transitions', () => {
 
 		// Slide 3: the stop-previous form, which references no part at all.
 		assertEqual(JSON.stringify(third), '{"stopPrevious":true}', 'p:endSnd maps to stopPrevious alone')
+	})
+})
+
+describe('deck IR — a picture in a placeholder', () => {
+	// The picture's `p:ph` had no accessor, so the IR dropped its layout binding with no note
+	// (issue #111). `addImage({ placeholder })` takes it as a `{ type, idx }` binding, which writes
+	// the source's `p:ph` with no layout placeholder defined by name in the printed script (#112).
+	test('carries its layout binding as a placeholder binding', async () => {
+		const { presentation, buf } = await authorRead((pres) => {
+			pres.defineSlideMaster({
+				title: 'PICTURE_MASTER',
+				objects: [{ placeholder: { options: { name: 'pic', type: 'pic', x: 1, y: 1, w: 5, h: 1.5 }, text: '' } }],
+			})
+			pres
+				.addSlide({ masterTitle: 'PICTURE_MASTER' })
+				.addImage({ data: PNG_1X1, x: 1, y: 1, w: 5, h: 1.5, placeholder: 'pic' })
+		})
+		const source = defined(
+			(await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml')).match(/<p:ph[^>]*>/)?.[0]
+		)
+		const ir = readModelToIr(presentation)
+		assert(!constructs(ir).has('shape.placeholder'), `no loss is declared: ${JSON.stringify(ir.fidelity)}`)
+		const image = objectOf(defined(allCalls(ir).find((call) => call.method === 'addImage')).args[0])
+		assertEqual(JSON.stringify(image.placeholder), '{"idx":100,"type":"pic"}', `the binding carries, from ${source}`)
+
+		const { buf: replayed } = await authorRead((pres) => {
+			pres.addSlide().addImage({ ...(image as object), data: PNG_1X1 })
+		})
+		const ph = defined(
+			(await readEntry(await JSZip.loadAsync(replayed), 'ppt/slides/slide1.xml')).match(/<p:ph[^>]*>/)?.[0]
+		)
+		assertEqual(ph.replace(/\s+/g, ' '), '<p:ph idx="100" type="pic" />', 'and the replay writes it')
+	})
+
+	test('a chart in a placeholder carries its layout binding', async () => {
+		const data = [{ name: 'S', labels: ['a'], values: [1] }]
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addChart(data, { type: 'bar', x: 1, y: 1, w: 4, h: 3, placeholder: { type: 'chart', idx: 2 } })
+		})
+		const ir = readModelToIr(presentation)
+		assert(!constructs(ir).has('shape.placeholder'), `no loss is declared: ${JSON.stringify(ir.fidelity)}`)
+		const chart = objectOf(defined(allCalls(ir).find((call) => call.method === 'addChart')).args[1])
+		assertEqual(JSON.stringify(chart.placeholder), '{"idx":2,"type":"chart"}', 'the binding carries')
+	})
+})
+
+describe('deck IR — picture recolour and transparency', () => {
+	// `addImage` writes all five blip effects the read model reports, and `readModelToIr` dropped
+	// every one under an `image.recolor` note saying none had a write option (issue #109). The
+	// replay must write the same `a:blip`.
+	const blipOf = (xml: string) =>
+		defined(/<a:blip [^>]*>.*?<\/a:blip>|<a:blip [^>]*\/>/s.exec(xml))[0].replace(/r:embed="[^"]*"/, '')
+	const cases: [string, Record<string, unknown>][] = [
+		['grayscale', { grayscale: true }],
+		['biLevel', { biLevel: { threshold: 0.3 } }],
+		['duotone', { duotone: { shadow: '250F6B', highlight: 'accent2' } }],
+		['clrChange', { clrChange: { from: '000000', to: '9B1B30' } }],
+		['transparency', { transparency: 40 }],
+		['transparency with a recolour', { transparency: 40, grayscale: true }],
+	]
+
+	test.for(cases)('%s carries and replays the same a:blip', async ([, options]) => {
+		const { presentation, buf } = await authorRead((pres) => {
+			pres.addSlide().addImage({ data: PNG_1X1, x: 1, y: 1, w: 5, h: 1.5, ...options })
+		})
+		const ir = readModelToIr(presentation)
+		assert(!constructs(ir).has('image.recolor'), 'nothing is declared lost')
+		const call = defined(allCalls(ir).find((c) => c.method === 'addImage'))
+		const { data: _data, ...args } = objectOf(call.args[0])
+		const { buf: replayed } = await authorRead((pres) => {
+			pres
+				.addSlide()
+				.addImage({ ...(args as Record<string, unknown>), data: PNG_1X1 } as Parameters<
+					ReturnType<typeof pres.addSlide>['addImage']
+				>[0])
+		})
+		const source = blipOf(await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml'))
+		const replay = blipOf(await readEntry(await JSZip.loadAsync(replayed), 'ppt/slides/slide1.xml'))
+		assertEqual(replay, source, 'the replayed blip')
+	})
+
+	test('a colour change to a transparent colour is noted', async () => {
+		// PowerPoint's Set Transparent Color writes an `a:alpha` on `a:clrTo`, which `clrChange.to`
+		// cannot carry.
+		const { buf } = await authorRead((pres) => {
+			pres.addSlide().addImage({ data: PNG_1X1, x: 1, y: 1, w: 5, h: 1.5, clrChange: { from: 'FFFFFF', to: 'FFFFFF' } })
+		})
+		const zip = await JSZip.loadAsync(buf)
+		const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
+		const faded = xml.replace(/(<a:clrTo><a:srgbClr val="FFFFFF")\/>/, '$1><a:alpha val="0"/></a:srgbClr>')
+		assert(faded !== xml, 'the target colour is made transparent')
+		zip.file('ppt/slides/slide1.xml', faded)
+		const ir = readModelToIr(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
+		const call = objectOf(defined(allCalls(ir).find((c) => c.method === 'addImage')).args[0])
+		assertEqual(JSON.stringify(call['clrChange']), '{"from":"FFFFFF","to":"FFFFFF"}', 'the colour change carries')
+		assert(constructs(ir).has('image.recolor'), 'and its lost transparency is noted')
 	})
 })
 
@@ -1314,10 +1727,8 @@ describe('deck IR — picture fills', () => {
 		)
 	})
 
-	test('a source crop the write path would refuse stays uncarried, with a note that says why', async () => {
-		// A negative inset is how a `contain`-style fill bleeds its source past the surface.
-		// `image.crop` takes 0–100 only, so carrying it would emit a script that throws when
-		// it is run — the note is the honest answer instead.
+	test('a negative source crop carries as `image.crop`', async () => {
+		// A negative inset is how a `contain`-style fill pads its source inside the surface.
 		const { buf } = await authorRead((pres) => {
 			pres.addSlide().addText('img', {
 				x: 1,
@@ -1331,6 +1742,35 @@ describe('deck IR — picture fills', () => {
 		const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
 		const bled = slideXml.replace('<a:srcRect l="0" t="25000" r="0" b="25000"/>', '<a:srcRect t="-25000" b="25000"/>')
 		assert(bled !== slideXml, 'the authored srcRect was found and made negative')
+		zip.file('ppt/slides/slide1.xml', bled)
+		const ir = readModelToIr(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
+
+		const fill = at(defined(allCalls(ir).find((call) => call.method === 'addText')).args[1], 'fill')
+		assertEqual(JSON.stringify(at(at(fill, 'image'), 'crop')), '{"b":25,"t":-25}', 'the padded crop carries')
+		assertEqual(
+			ir.fidelity.filter((note) => note.construct === 'fill.picture.geometry').length,
+			0,
+			'and nothing is noted as lost'
+		)
+	})
+
+	test('a source crop the write path would refuse stays uncarried, with a note that says why', async () => {
+		// Opposite insets summing to 100% or more leave no source area. `image.crop` refuses them,
+		// so carrying them would emit a script that throws when it is run — the note is the honest
+		// answer instead.
+		const { buf } = await authorRead((pres) => {
+			pres.addSlide().addText('img', {
+				x: 1,
+				y: 1,
+				w: 3,
+				h: 1,
+				fill: { type: 'image', image: { data: PNG_1X1, crop: { t: 25, b: 25 } } },
+			})
+		})
+		const zip = await JSZip.loadAsync(buf)
+		const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
+		const bled = slideXml.replace('<a:srcRect l="0" t="25000" r="0" b="25000"/>', '<a:srcRect t="60000" b="60000"/>')
+		assert(bled !== slideXml, 'the authored srcRect was found and made degenerate')
 		zip.file('ppt/slides/slide1.xml', bled)
 		const ir = readModelToIr(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
 
@@ -1397,14 +1837,23 @@ describe('deck IR — picture fills', () => {
 		)
 		assertEqual(JSON.stringify(kept.crop), '{"l":12.5,"t":33.333}', 'a crop in range carries, zero edges left out')
 
-		// PowerPoint writes a negative inset for a fit crop. Passed through, it put `{ l: -5 }` in
-		// the IR with no note, and the printed script threw at `addImage`.
+		// PowerPoint writes a negative inset for a fit crop, and `crop` takes it.
 		const zip = await JSZip.loadAsync(buf)
 		const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
-		const bled = slideXml.replace(/<a:srcRect[^>]*\/>/, '<a:srcRect l="-5000"/>')
-		assert(bled !== slideXml, 'the authored srcRect was found and made negative')
-		zip.file('ppt/slides/slide1.xml', bled)
-		const ir = readModelToIr(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
+		const withSrcRect = async (srcRect: string) => {
+			const edited = slideXml.replace(/<a:srcRect[^>]*\/>/, srcRect)
+			assert(edited !== slideXml, 'the authored srcRect was found and rewritten')
+			zip.file('ppt/slides/slide1.xml', edited)
+			return readModelToIr(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
+		}
+		const padded = await withSrcRect('<a:srcRect l="-5000"/>')
+		const fit = objectOf(defined(allCalls(padded).find((call) => call.method === 'addImage')).args[0])
+		assertEqual(JSON.stringify(fit.crop), '{"l":-5}', 'a negative inset carries')
+		assertEqual(padded.fidelity.filter((note) => note.construct === 'image.crop').length, 0, 'with no note')
+
+		// Opposite insets that leave no source area have no `crop` spelling. Passed through, they
+		// would put a crop in the IR that made the printed script throw at `addImage`.
+		const ir = await withSrcRect('<a:srcRect l="60000" r="60000"/>')
 		const image = objectOf(defined(allCalls(ir).find((call) => call.method === 'addImage')).args[0])
 		assertEqual(
 			'crop' in image,
@@ -1501,12 +1950,23 @@ describe('deck IR — text links, freeform text and fields', () => {
 			'the jump carries its slide number'
 		)
 
-		// A show jump ("next slide") has no run-level spelling on the write side.
-		const ir = await irWithPart(buf, 'ppt/slides/slide1.xml', (xml) =>
+		// A show jump ("next slide") carries as `action`, which addText writes on the run (#114).
+		const shown = await irWithPart(buf, 'ppt/slides/slide1.xml', (xml) =>
 			xml.replace('ppaction://hlinksldjump', 'ppaction://hlinkshowjump?jump=nextslide')
 		)
+		const next = firstRun(atIndex(atIndex(atIndex(shown.slides, 0).calls, 0).args, 0))
+		assertEqual(
+			JSON.stringify(at(next.options, 'hyperlink')),
+			'{"action":"nextslide","tooltip":"Two"}',
+			'a show jump carries as action'
+		)
+
+		// A custom show has no run-level spelling on the write side.
+		const ir = await irWithPart(buf, 'ppt/slides/slide1.xml', (xml) =>
+			xml.replace('ppaction://hlinksldjump', 'ppaction://customshow?id=0')
+		)
 		const jumped = firstRun(atIndex(atIndex(atIndex(ir.slides, 0).calls, 0).args, 0))
-		assertEqual('hyperlink' in objectOf(jumped.options), false, 'the show jump is not written as a run link')
+		assertEqual('hyperlink' in objectOf(jumped.options), false, 'the custom show is not written as a run link')
 		assertEqual(ir.fidelity.filter((note) => note.construct === 'text.hyperlink').length, 1, 'and its loss is declared')
 	})
 
@@ -1552,20 +2012,83 @@ describe('deck IR — text links, freeform text and fields', () => {
 		assert(kinds.has('text.field'), "and the text box's still is")
 	})
 
-	test('speaker notes formatting beyond bold and italic is noted, and plain notes raise nothing', async () => {
+	test('speaker notes formatting beyond bold and italic carries, what addNotes cannot write is noted, and plain notes raise nothing', async () => {
 		const { buf } = await authorRead((pres) => {
 			pres.addSlide().addNotes('underlined note')
 		})
-		// The run properties immediately before the note's text, and no others.
-		const ir = await irWithPart(buf, 'ppt/notesSlides/notesSlide1.xml', (xml) =>
-			xml.replace(/<a:rPr([^>]*?)(\/?)>(?=(?:(?!<a:rPr)[^])*<a:t>underlined note)/, '<a:rPr$1 u="sng"$2>')
+		/** The notes part with `attrs` added to the run properties right before the note's text. */
+		const withRunAttrs = (attrs: string) =>
+			irWithPart(buf, 'ppt/notesSlides/notesSlide1.xml', (xml) =>
+				xml.replace(/<a:rPr([^>]*?)(\/?)>(?=(?:(?!<a:rPr)[^])*<a:t>underlined note)/, `<a:rPr$1 ${attrs}$2>`)
+			)
+		const underlined = await withRunAttrs('u="sng"')
+		assertEqual(
+			JSON.stringify(atIndex(underlined.slides, 0).notesRuns),
+			JSON.stringify([{ text: 'underlined note', options: { underline: { style: 'sng' } } }]),
+			'an underlined note carries its underline'
 		)
-		assert(constructs(ir).has('notes.formatting'), 'an underlined note is noted')
+		assert(!constructs(underlined).has('notes.formatting'), 'and is not noted')
+		const struck = await withRunAttrs('strike="sngStrike"')
+		const note = defined(struck.fidelity.find((one) => one.construct === 'notes.formatting'))
+		assertEqual(note.cause, 'unwritable', 'a struck note is noted as unwritable')
 		const { presentation: plainDeck } = await authorRead((pres) => {
 			pres.addSlide().addNotes('plain note')
 		})
 		const plain = readModelToIr(plainDeck)
 		assert(!constructs(plain).has('notes.formatting'), 'plain notes are not')
+		assertEqual(atIndex(plain.slides, 0).notesText, 'plain note', 'and carry as plain text')
+	})
+
+	test('speaker notes runs carry the formatting addNotes(NotesProps[]) writes, and print in that form', async () => {
+		// The IR held notes as plain text and declared their formatting unsupported, though
+		// addNotes writes every option below and the read model reads each back (#129).
+		const runs = [
+			{ text: 'Bold ', options: { bold: true, italic: true, color: '9B1B30' } },
+			{
+				text: 'sized\n',
+				options: { fontSize: 20, fontFace: 'Georgia', underline: { style: 'dbl' as const, color: '9B1B30' } },
+			},
+			{ text: 'link', options: { hyperlink: { url: 'https://example.com/', tooltip: 'Example' } } },
+		]
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addNotes(runs)
+		})
+		const ir = readModelToIr(presentation)
+		const carried = defined(atIndex(ir.slides, 0).notesRuns)
+		assertEqual(carried.map((run) => at(run, 'text')).join(''), 'Bold sized\nlink', 'the text and its paragraph break')
+		assertEqual(
+			JSON.stringify(at(carried, 0, 'options')),
+			JSON.stringify({ bold: true, color: '9B1B30', italic: true })
+		)
+		assertEqual(
+			JSON.stringify(at(carried, 1, 'options')),
+			JSON.stringify({ fontFace: 'Georgia', fontSize: 20, underline: { color: '9B1B30', style: 'dbl' } })
+		)
+		assertEqual(
+			JSON.stringify(at(carried, 2, 'options', 'hyperlink')),
+			JSON.stringify({ tooltip: 'Example', url: 'https://example.com/' })
+		)
+		assert(!constructs(ir).has('notes.formatting'), 'nothing is declared lost')
+		assert(/slide1\.addNotes\(\s*\[\s*\{/.test(printScript(ir).code), 'the script prints the array form')
+	})
+
+	test("a notes run's jump to a slide or a show jump carries, as a slide run's does", async () => {
+		// Notes carried a `url` link only, and declared any other link unwritable because addNotes
+		// wrote no other (#168).
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide()
+			pres.addSlide().addNotes([
+				{ text: 'back ', options: { hyperlink: { slide: 1, tooltip: 'Back' } } },
+				{ text: 'next', options: { hyperlink: { action: 'nextslide' } } },
+			])
+		})
+		const ir = readModelToIr(presentation)
+		const carried = defined(atIndex(ir.slides, 1).notesRuns)
+		assertEqual(
+			JSON.stringify(carried.map((run) => at(run, 'options', 'hyperlink'))),
+			JSON.stringify([{ slide: 1, tooltip: 'Back' }, { action: 'nextslide' }])
+		)
+		assert(!constructs(ir).has('notes.formatting'), 'nothing is declared lost')
 	})
 })
 
@@ -1756,6 +2279,28 @@ describe('deck IR — slide background', () => {
 		const background = objectOf(defined(atIndex(readModelToIr(presentation).slides, 0).background) as IrValue)
 		assertEqual(Object.keys(background).join(','), 'data', 'no image key: ' + JSON.stringify(background))
 	})
+
+	// A picture background's `a:alphaModFix` read back as an opaque picture, with no note (issue #107).
+	test.for([
+		['a bare picture', { data: PNG_1X1, transparency: 50 }],
+		['a cropped picture', { image: { data: PNG_1X1, crop: { l: 10, t: 0, r: 0, b: 0 } }, transparency: 50 }],
+	] as const)('%s background carries its transparency', async ([, written]) => {
+		const { presentation, buf } = await authorRead((pres) => {
+			pres.addSlide().background = written
+		})
+		const ir = readModelToIr(presentation)
+		const background = defined(atIndex(ir.slides, 0).background)
+		assertEqual(background.transparency, 50, 'the transparency: ' + JSON.stringify(background))
+
+		const source = /<p:bg>.*?<\/p:bg>/.exec(await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml'))
+		// The IR carries the bytes as an asset reference; the printed script inlines them.
+		const replayable = JSON.parse(JSON.stringify(background).replace(/\{"\$asset":"[^"]+"\}/, JSON.stringify(PNG_1X1)))
+		const { buf: replayed } = await authorRead((pres) => {
+			pres.addSlide().background = replayable as BackgroundProps
+		})
+		const xml = await readEntry(await JSZip.loadAsync(replayed), 'ppt/slides/slide1.xml')
+		assertEqual(/<p:bg>.*?<\/p:bg>/.exec(xml)?.[0], source?.[0], 'and the replay writes the same p:bg')
+	})
 })
 
 describe('deck IR — slide number', () => {
@@ -1843,5 +2388,78 @@ describe('deck IR — slide number', () => {
 		const slide = atIndex(ir.slides, 0)
 		assertEqual(slide.slideNumber, undefined, 'it is not a slide number the option can write')
 		assert(constructs(ir).has('text.field'), 'and the field it drops is noted')
+	})
+})
+
+describe('deck IR — what the write options cannot state', () => {
+	/** The IR of `buf` with its first slide's XML put through `rewrite`. */
+	async function rewritten(buf: Uint8Array, rewrite: (xml: string) => string): Promise<DeckIr> {
+		const zip = await JSZip.loadAsync(buf)
+		const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
+		const next = rewrite(xml)
+		assert(next !== xml, 'the rewrite applied')
+		zip.file('ppt/slides/slide1.xml', next)
+		return readModelToIr(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
+	}
+
+	test.for([
+		[
+			'a second effect of one kind',
+			{ grayscale: true },
+			(xml: string) => xml.replace('<a:grayscl/>', '<a:grayscl/><a:grayscl/>'),
+		],
+		[
+			'a black-and-white split with no threshold',
+			{ biLevel: { threshold: 0.3 } },
+			(xml: string) => xml.replace(/ thresh="\d+"/, ''),
+		],
+		[
+			'a duotone with one colour',
+			{ duotone: { shadow: '250F6B', highlight: 'F0C808' } },
+			(xml: string) => xml.replace('<a:srgbClr val="F0C808"/>', ''),
+		],
+		[
+			'a colour change with no source colour',
+			{ clrChange: { from: '000000', to: '9B1B30' } },
+			(xml: string) => xml.replace(/<a:clrFrom>.*?<\/a:clrFrom>/, '<a:clrFrom/>'),
+		],
+	] as const)('%s is noted as a recolour loss', async ([, options, rewrite]) => {
+		const { buf } = await authorRead((pres) => {
+			pres.addSlide().addImage({ data: PNG_1X1, x: 1, y: 1, w: 5, h: 1.5, ...options })
+		})
+		const ir = await rewritten(buf, rewrite)
+		assert(constructs(ir).has('image.recolor'), 'the loss is declared')
+	})
+
+	test('a connector bend given as a formula takes the preset default, and is noted', async () => {
+		const { buf } = await authorRead((pres) => {
+			pres.addSlide().addConnector({ x1: 1, y1: 1, x2: 5, y2: 3, type: 'elbow', adj: 30 })
+		})
+		const ir = await rewritten(buf, (xml) => xml.replace('fmla="val 30000"', 'fmla="*/ h 1 2"'))
+		const connector = objectOf(defined(allCalls(ir).find((c) => c.method === 'addConnector')).args[0])
+		assertEqual(connector['adj'], undefined, 'no bend position is stated')
+		assert(constructs(ir).has('connector.route'), 'and the formula is noted')
+	})
+
+	test('a group with no child space leaves its children to their slide-absolute frames', async () => {
+		const { buf } = await authorRead((pres) => {
+			pres.addSlide().addGroup([{ rect: { x: 1, y: 1, w: 1, h: 1 } }, { rect: { x: 4, y: 1, w: 1, h: 1 } }], {
+				objectName: 'grp',
+			})
+		})
+		const ir = await rewritten(buf, (xml) =>
+			xml.replace(/(<p:grpSp>.*?<a:ext [^>]*\/>)<a:chOff [^>]*\/><a:chExt [^>]*\/>/s, '$1')
+		)
+		assert(constructs(ir).has('shape.frameInherited'), 'each child is placed by its own frame, and says so')
+	})
+
+	test('a child with no transform of its own inside a group falls back to its resolved frame', async () => {
+		const { buf } = await authorRead((pres) => {
+			pres.addSlide().addGroup([{ rect: { x: 1, y: 1, w: 1, h: 1 } }, { rect: { x: 4, y: 1, w: 1, h: 1 } }], {
+				objectName: 'grp',
+			})
+		})
+		const ir = await rewritten(buf, (xml) => xml.replace(/(<p:sp>.*?<p:spPr>)<a:xfrm>.*?<\/a:xfrm>/s, '$1'))
+		assert(constructs(ir).has('shape.frameUnresolved'), 'the child with nothing to place it is dropped, and says so')
 	})
 })
