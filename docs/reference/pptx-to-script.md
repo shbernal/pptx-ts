@@ -160,7 +160,7 @@ The counts come from `pnpm run script:census`, run in a clone of the repository 
 
 A count is the number of fixtures that raise the note at least once. Each fixture targets a few constructs, so a count shows what the corpus exercises, not how often a construct occurs in real decks. The table lists only constructs some fixture raises. [`knownNoteConstructs()`](api/script/functions/knownNoteConstructs.md) returns the full catalogue.
 
-The Output column says where the note fires. A construct that fires in both outputs has the same count in each. A construct under the `layout.` prefix is the slide construct of the same name, raised while re-authoring a layout's shapes. Across the corpus the standalone output raises 903 notes and the template-anchored output 461, which is 3 to 12 more per deck.
+The Output column says where the note fires. A construct that fires in both outputs has the same count in each. A construct under the `layout.` prefix is the slide construct of the same name, raised while re-authoring a layout's shapes. Across the corpus the standalone output raises 905 notes and the template-anchored output 463, which is 3 to 12 more per deck.
 
 | Construct | Output | Cause | What happens | Fixtures |
 | --- | --- | --- | --- | --- |
@@ -177,6 +177,7 @@ The Output column says where the note fires. A construct that fires in both outp
 | `chart.xLabels` | Both | unwritable | A scatter or bubble chart plotted against text X labels plots at the same positions, and the labels are gone | 2/60 |
 | `group.childSpace` | Both | unsupported | The children of a group that scales them are printed pre-scaled, so resizing the group no longer rescales them | 2/60 |
 | `shape.empty` | Both | unsupported | A shape with no text and no geometry of its own, such as an unfilled placeholder, is omitted | 2/60 |
+| `slide.comment.modern` | Both | unwritable | Modern (`p188`) review comments are dropped. Legacy comments carry as `addComment` | 2/60 |
 | `text.equation` | Both | unread | An OMML equation is dropped from its shape | 2/60 |
 | `chart.axis` | Both | unwritable | An axis crossing at the other axis' maximum or minimum crosses at zero, and a custom display unit is dropped. A combo's secondary axis takes a setting its primary axis states and it does not | 1/60 |
 | `chart.blanks` | Both | unwritable | A blank cached data point becomes 0, so a line chart dips to the axis where the source showed a break | 1/60 |
@@ -245,6 +246,7 @@ These constructs carry in both outputs and raise no note.
 | A group's rotation and flips | `rotate`, `flipH` and `flipV` on `addGroup`, with the children in the group's own space |
 | A picture's crop | `crop` on `addImage` |
 | Embedded audio and video (`a:audioFile`, `a:videoFile`) and its loop timing | `addMedia` with `type`, `data`, `extn`, `cover` from the poster frame, and `loop` or `loopCount`. An online video is `type: 'online'` with its `link`. A rotation or flip is dropped under `media.formatting` |
+| A slide's legacy review comments (`p:cm`) | `addComment` with `author`, `initials`, `text`, `x`, `y` and `date`, after the slide's shapes |
 | A picture's recolour and transparency (`a:grayscl`, `a:biLevel`, `a:duotone`, `a:clrChange`, `a:alphaModFix`) | `grayscale`, `biLevel`, `duotone`, `clrChange` and `transparency` on `addImage`. A colour change to a transparent colour (Set Transparent Color) keeps the colour and loses the transparency, under `image.recolor` |
 | A background picture's crop and transparency (`a:alphaModFix`) | `background: { image: { data, crop }, transparency }` |
 | A connector's route, bends and bend positions (`bentConnector3`-`5`, `curvedConnector3`-`5`) | `type`, `bends` and `adj` on `addConnector`. Any other route prints straight under `connector.route` |

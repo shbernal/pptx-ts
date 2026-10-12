@@ -280,6 +280,9 @@ export const NOTE_CONSTRUCTS = {
 	// A solid background's own scheme token, the twin of `fill.schemeToken` on a shape.
 	'slide.background.schemeToken': { fields: ['background'], tiers: BOTH_TIERS },
 	'slide.carried': { fields: ['*'], tiers: TEMPLATE_ONLY },
+	// A review comment `addComment` would refuse, and modern (`p188`) comments, which it cannot write.
+	'slide.comment': { fields: [], tiers: BOTH_TIERS },
+	'slide.comment.modern': { fields: [], tiers: BOTH_TIERS },
 	'slide.layout': { fields: ['layoutName'], tiers: BOTH_TIERS },
 	'slide.name': { fields: [], tiers: BOTH_TIERS },
 	// A transition the write vocabulary cannot name is dropped whole, so the difference lands
