@@ -329,6 +329,30 @@ describe('chart options are spelled the way ChartOpts spells them', () => {
 		)
 	})
 
+	test("a scatter's X axis is the catAxis options and its Y axis the valAxis ones", async () => {
+		// Both axes of a scatter are `c:valAx`, and the first is X: it was read as the value axis,
+		// and the Y axis was never read (#154).
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addChart(XY, {
+				type: ChartType.scatter,
+				x: 1,
+				y: 1,
+				w: 6,
+				h: 4,
+				catAxisMinVal: 0,
+				catAxisMaxVal: 5,
+				valAxisMinVal: 2,
+				valAxisMaxVal: 9,
+				valAxisTitle: 'Y',
+				showValAxisTitle: true,
+			})
+		})
+		const options = chartOptions(readModelToIr(presentation))
+		expect([options.catAxisMinVal, options.catAxisMaxVal], 'the X bounds').toEqual([0, 5])
+		expect([options.valAxisMinVal, options.valAxisMaxVal], 'the Y bounds').toEqual([2, 9])
+		assertEqual(options.valAxisTitle, 'Y', 'and the Y axis title')
+	})
+
 	test('a 2-D surface stays flat', async () => {
 		// The write side's `surface` draws the 3-D one unless `surface3D` is false.
 		const flat = await chartDeck(ChartType.surface, { surface3D: false })
