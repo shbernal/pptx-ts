@@ -35,6 +35,7 @@ Each cell comes from `package.json`, `lefthook.yml` or a workflow under `.github
 | `docs:api` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
 | `docs:check` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
 | `comparison:check` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
+| `census:check` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
 | `test` | ✓ | | | | | `test` (Node 26.x) | every change, through `verify` |
 | `test:coverage` | | ✓ | | | | `test` (Node 24.x) | CI; `coverage:probe` while editing |
 | `docs:build` | | | | | | `docs.yml` `build`, and `browser` | a change to `docs/.vitepress/`, `www/` or a docs generator |
@@ -81,8 +82,8 @@ pnpm run check:package  # what CI's package job runs
 can be reproduced by its own command.
 
 - `check:core` is the one list of cheap checks: the four typechecks, `raw-xml:check`,
-  `ooxml-literals:check`, `test-imports:check`, `path-refs:check`, `docs:api`, `docs:check` and
-  `comparison:check`.
+  `ooxml-literals:check`, `test-imports:check`, `path-refs:check`, `docs:api`, `docs:check`,
+  `comparison:check` and `census:check`.
   `docs:api` regenerates the API reference, so `docs:check` validates current pages.
 - `verify` is `ensure-dist`, `check:core` and `test`. `check:static` is `lint`, `lint:chars`,
   `format:check` and `check:core`.
@@ -505,12 +506,13 @@ gap, and an absent one is not proof of coverage.
 ### The note census
 
 `script:census` prints both printers' notes for every deck without running the scripts, and
-counts the fixtures that raise each construct at least once. It gates nothing. The round trip
-cannot tell a note that excuses a difference from one that never fires, so these counts drift
-as reader gaps close and fixtures land. They are published in the guide's
-[Known losses](../reference/pptx-to-script.md#known-losses) tables, with the corpus size and the
-per-deck note totals. Rerun the census after closing a reader gap, retiring a note or landing a
-fixture, and update those tables in the same commit. On the fixture corpus the counts measure
+counts the fixtures that raise each construct at least once. The round trip cannot tell a note
+that excuses a difference from one that never fires, so these counts drift as reader gaps close
+and fixtures land. They are published in the guide's
+[Known losses](../reference/pptx-to-script.md#known-losses) table, with the corpus size and the
+note totals. `census:check` runs the census with `--check`, which compares that table and those
+totals with the fixture corpus and fails on any difference. Rerun the census after closing a
+reader gap, retiring a note or landing a fixture, and update the table in the same commit. On the fixture corpus the counts measure
 coverage. `--dir` over a folder of real decks measures frequency.
 
 ## Coverage gate
