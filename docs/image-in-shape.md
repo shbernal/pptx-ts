@@ -35,7 +35,7 @@ await pptx.writeFile({ fileName: 'avatar.pptx' })
 | `rectRadius` | `number`, inches | the preset's own radius | Corner radius for `'roundRect'` and the other rounded presets. |
 | `shapeAdjust` | `ShapeAdjustValue` or an array | none | The preset's adjustment handles, each value a 0 to 1 fraction. A value past a handle's limit is written as given, and PowerPoint draws the shape at that limit. |
 | `sizing` | `{ type, x?, y?, w?, h? }` | none | How the source fills the box: `cover`, `contain`, `crop` or `stretch`. |
-| `crop` | `{ l?, t?, r?, b? }` | none | Percent trimmed off each edge of the source. Wins over `sizing`. |
+| `crop` | `{ l?, t?, r?, b? }` | none | Percent trimmed off each edge of the source. A negative edge pads it instead. Wins over `sizing`. |
 | `line` | `ShapeLineProps` | none | Outline drawn along the clip. |
 | `shadow` | `ShadowProps` | none | Shadow under the picture. |
 | `transparency` | `number`, 0 to 100 | `0` | Picture transparency in percent. |
@@ -129,8 +129,10 @@ slide.addImage({ path: 'photo.jpg', x: 1, y: 1, w: 4, h: 3, sizing: { type: 'cro
   use the box's own ratio and warn.
 - `sizing: { type: 'crop' }` measures its window in inches on the image as drawn at `w` by `h`,
   and the picture shrinks to the window.
-- The `crop` option trims the source by percentages, so it works on any format. With both `crop`
-  and `sizing` set, `crop` applies and `sizing` is ignored with a warning.
+- The `crop` option trims the source by percentages, so it works on any format. A negative edge
+  pads the source with empty space on that side, as PowerPoint's Fit crop does, so
+  `crop: { l: -25, r: -25 }` shrinks the image to half the box width. With both `crop` and
+  `sizing` set, `crop` applies and `sizing` is ignored with a warning.
 
 ## Place an SVG at its own aspect ratio
 
@@ -270,7 +272,7 @@ slide.addImage({
 | `cover` or `contain` cannot read the source's natural size | warns, uses the box's ratio | `image/unmeasurable-natural-size` |
 | Both `crop` and `sizing` are set | warns, ignores `sizing` | `image/crop-and-sizing-conflict` |
 | A `sizing: { type: 'crop' }` window reaches past the image | throws on write | `InvalidOptionError` `image/crop-window-overflows` |
-| A `crop` edge is outside 0 to 100 | throws on write | `InvalidOptionError` `image/crop-inset-out-of-range` |
+| A `crop` edge is over 100 or not finite | throws on write | `InvalidOptionError` `image/crop-inset-out-of-range` |
 | `crop` `l` plus `r`, or `t` plus `b`, reaches 100 | throws on write | `InvalidOptionError` `image/crop-insets-exceed-extent` |
 | `biLevel.threshold` is outside 0 to 1 | warns, clamps it | `image/bilevel-threshold-out-of-range` |
 | `biLevel.threshold` is not a number | throws on write | `InvalidOptionError` `percent/non-finite` |
