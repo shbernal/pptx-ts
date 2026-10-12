@@ -13,7 +13,7 @@ import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { Presentation, type OpcPackage } from '../../dist/read.js'
 import {
-	TsPptx,
+	PptxTs,
 	captureDiagnostics,
 	throws,
 	assert,
@@ -143,7 +143,7 @@ describe('Presentation.removeSlide', () => {
 		// The removed slide's name is free for the next slide added, so a relationship left pointing at
 		// it would silently retarget the link onto that slide. The relationship cannot go alone:
 		// PowerPoint refuses a deck whose `a:hlinkClick` names an `r:id` the slide does not hold.
-		const pres = new TsPptx()
+		const pres = new PptxTs()
 		pres.addSlide().addText('one', { x: 1, y: 1, w: 3, h: 1 })
 		pres.addSlide().addText('back', { x: 1, y: 1, w: 3, h: 1, hyperlink: { slide: 1 } })
 		const deck = await Presentation.load(await pres.toBytes())

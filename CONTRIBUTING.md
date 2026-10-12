@@ -159,7 +159,7 @@ lists what this package turns down however good the case is.
 
 Most code that uses this library is written by an agent, and an agent that hits a
 library defect will usually route around it silently. The defect is never reported and
-never fixed. `ts-pptx-upstream` is a skill that turns that moment into a filed issue
+never fixed. `pptx-ts-upstream` is a skill that turns that moment into a filed issue
 with a minimal reproduction, which is what becomes a permanent regression test here. It
 ships inside the package, so it is already on disk:
 
@@ -177,7 +177,7 @@ seventy of them, and leaves an `agent/` directory at your repository root for ru
 nobody there uses. Name the ones you have.
 
 Two things about living with the installed copy. It is a copy, so **a version bump does
-not update it**: re-run the command above, or `npx skills update ts-pptx-upstream`, in
+not update it**: re-run the command above, or `npx skills update pptx-ts-upstream`, in
 the same commit as the bump. And if you track it, track `skills-lock.json` and ignore
 the copy: `skills experimental_install` restores the file from that lock but creates
 none of the runtime links, so it is a record, not a restore command.

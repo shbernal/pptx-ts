@@ -27,7 +27,7 @@ if (-not (Test-Path $key)) { New-Item $key -Force | Out-Null }
 
 # AddFontResource makes a face visible to processes started from now on in this session; the
 # HKCU value is what loads it at every later logon.
-Add-Type -Namespace TsPptx -Name Gdi -MemberDefinition '[DllImport("gdi32.dll", CharSet = CharSet.Unicode)] public static extern int AddFontResourceW(string file);'
+Add-Type -Namespace PptxTs -Name Gdi -MemberDefinition '[DllImport("gdi32.dll", CharSet = CharSet.Unicode)] public static extern int AddFontResourceW(string file);'
 
 $count = 0
 foreach ($file in Get-ChildItem $unpacked -Recurse -Filter '*.ttf') {
@@ -38,7 +38,7 @@ foreach ($file in Get-ChildItem $unpacked -Recurse -Filter '*.ttf') {
 	# The file names spell the full font name with hyphens: Aptos-SemiBold-Italic.ttf.
 	$name = $file.BaseName -replace '-', ' '
 	Set-ItemProperty $key -Name "$name (TrueType)" -Value $target
-	[void][TsPptx.Gdi]::AddFontResourceW($target)
+	[void][PptxTs.Gdi]::AddFontResourceW($target)
 	$count++
 }
 Remove-Item $zip, $unpacked -Recurse -Force

@@ -186,8 +186,8 @@ editing a job.
 | Variable | Set in | Effect |
 | --- | --- | --- |
 | `FONT_ORACLES=required`, `FONT_ORACLES_GENUINE` | `test`, `font-oracles` | a face with no source fails the suite; see [Font oracles](#font-oracles) |
-| `TSPPTX_RENDER_ORACLE=required` | `render-oracle` | `test:lo` fails when LibreOffice or `pdftotext` is absent |
-| `TSPPTX_COM_SMOKE=required` | no job | `test:com` fails when neither the worker nor a local PowerPoint is available |
+| `PPTXTS_RENDER_ORACLE=required` | `render-oracle` | `test:lo` fails when LibreOffice or `pdftotext` is absent |
+| `PPTXTS_COM_SMOKE=required` | no job | `test:com` fails when neither the worker nor a local PowerPoint is available |
 | `CI` | every job | the read suites fail instead of skipping when the OOXML oracle cannot be fetched |
 
 ### The Windows leg
@@ -919,13 +919,13 @@ Each deck goes to PowerPoint as one job, through whichever transport is at hand:
 
 | Transport | When | Setup |
 | --- | --- | --- |
-| The PowerPoint worker | `TSPPTX_POWERPOINT_URL` is set, in the environment or in the VM's `.env` | On Linux, the Windows VM in `tools/powerpoint-vm/`; `pnpm ppt:health` checks it |
+| The PowerPoint worker | `PPTXTS_POWERPOINT_URL` is set, in the environment or in the VM's `.env` | On Linux, the Windows VM in `tools/powerpoint-vm/`; `pnpm ppt:health` checks it |
 | This machine's PowerPoint | no worker URL, on Windows with PowerPoint registered for COM | none |
 | none | neither | the run is a SKIP |
 
-`TSPPTX_POWERPOINT_TOKEN` carries the worker's bearer token and falls back to the same `.env`.
+`PPTXTS_POWERPOINT_TOKEN` carries the worker's bearer token and falls back to the same `.env`.
 A worker URL that is set but unreachable, or that refuses the token, fails the run rather than
-skipping it. `TSPPTX_COM_SMOKE=required` makes the skip a failure too. No CI job runs it. The
+skipping it. `PPTXTS_COM_SMOKE=required` makes the skip a failure too. No CI job runs it. The
 `powerpoint-desktop-smoke` skill covers running it and bisecting a deck PowerPoint rejects.
 
 Run it after changing markup inside `mc:Choice`, actions, connectors, OLE objects, 3D models or
@@ -1016,9 +1016,9 @@ oracle cannot see them. The header of `PAIRS` records that probe.
 LibreOffice's fidelity is its own. The check proves that content is drawn and what it says,
 never that a slide looks right.
 
-A missing tool is a skip. `TSPPTX_SOFFICE` and `TSPPTX_PDFTOTEXT` point the script at either
+A missing tool is a skip. `PPTXTS_SOFFICE` and `PPTXTS_PDFTOTEXT` point the script at either
 binary, and a set variable that names nothing is an error. CI's `render-oracle` job installs
-`libreoffice-impress` and `poppler-utils` with apt and sets `TSPPTX_RENDER_ORACLE=required`. On
+`libreoffice-impress` and `poppler-utils` with apt and sets `PPTXTS_RENDER_ORACLE=required`. On
 Windows neither tool needs admin rights. `pdftotext` ships with Git for Windows, and the
 `powerpoint-fixture-authoring` skill has the LibreOffice extract recipe.
 
@@ -1383,7 +1383,7 @@ font metrics load `opentype.js` through a dynamic import that runs only when a f
 registered. Charging a program for a chunk it may never fetch is as wrong as hiding one it might,
 so there is no single figure.
 
-The programs come in two shapes. The three `new TsPptx()` programs are cumulative: `text` writes
+The programs come in two shapes. The three `new PptxTs()` programs are cumulative: `text` writes
 one slide with one text box, `text-shape-image` adds a shape and a base64 image, and `full` adds a
 chart, a table and an embedded video. The two `composed` programs are one `createPresentation`
 program with and without the chart family, so their difference is what that family costs. They

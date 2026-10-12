@@ -302,7 +302,7 @@ export interface TableCellProps extends TextBaseProps {
 	 *   autofit (`normAutofit`) inside table cells, so there is no font-scale flag to
 	 *   set; the size itself is lowered, which both PowerPoint and LibreOffice render
 	 *   identically with no edit/resize.
-	 * - Requires the cell font registered via {@link TsPptx.registerFontMetrics}. With no
+	 * - Requires the cell font registered via {@link PptxTs.registerFontMetrics}. With no
 	 *   metrics registered at all it is a silent no-op (the cell keeps its authored size); once
 	 *   any face is registered, an unregistered face is estimated and warns once per write.
 	 * - Only triggers when the cell's row has a **fixed** height that the text exceeds.

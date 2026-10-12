@@ -15,9 +15,9 @@ doc_type: "guide"
 `slide.addOleObject()` embeds a file in the `.pptx` and places it on the slide as an OLE object, the kind PowerPoint's Insert > Object > Create from File makes. Double-clicking it in PowerPoint opens the embedded file in the application its `progId` names.
 
 ```ts
-import TsPptx from 'pptx-ts'
+import PptxTs from 'pptx-ts'
 
-const pptx = new TsPptx()
+const pptx = new PptxTs()
 pptx.addSlide().addOleObject({
   path: 'assets/quarterly-budget.xlsx',
   cover: { path: 'assets/quarterly-budget.png' },

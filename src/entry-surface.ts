@@ -2,7 +2,7 @@
  * pptx-ts: the authoring surface shared by the three main entries
  *
  * `index.ts` (runtime-agnostic), `node.ts` and `browser.ts` publish exactly the same API. They
- * differ only in which {@link RuntimeAdapter} their `TsPptx` subclass is constructed with —
+ * differ only in which {@link RuntimeAdapter} their `PptxTs` subclass is constructed with —
  * and, on the browser entry, one extra live-DOM method. Everything else is this module.
  *
  * The three used to carry a verbatim copy of the list below. Sharing it means adding to the

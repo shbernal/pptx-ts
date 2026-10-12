@@ -5,7 +5,7 @@
  * manual check in test/read/fixtures/README.md).
  *
  * Output goes to .tmp/roundtrip/ (gitignored) by default; override with the
- * first CLI arg or TSPPTX_READ_EMIT_DIR. Assumes a current build — the
+ * first CLI arg or PPTXTS_READ_EMIT_DIR. Assumes a current build — the
  * test:read:emit script ensures `dist/` is current first.
  */
 import fs from 'node:fs/promises'
@@ -22,7 +22,7 @@ This is a GENERATOR, not a gate: it writes decks for a human to open in desktop
 PowerPoint and confirm no repair prompt. Nothing here asserts on the output.
 
 Arguments:
-  <out-dir>   where to write (default .tmp/roundtrip, or $TSPPTX_READ_EMIT_DIR)
+  <out-dir>   where to write (default .tmp/roundtrip, or $PPTXTS_READ_EMIT_DIR)
 
 Options:
   -h, --help  show this message`,
@@ -30,7 +30,7 @@ Options:
 	options: {},
 })
 
-const outDir = positionals[0] || process.env.TSPPTX_READ_EMIT_DIR || path.join(ROOT, '.tmp', 'roundtrip')
+const outDir = positionals[0] || process.env.PPTXTS_READ_EMIT_DIR || path.join(ROOT, '.tmp', 'roundtrip')
 
 const { OpcPackage } = await requireDist('read.js', 'test:read:emit')
 

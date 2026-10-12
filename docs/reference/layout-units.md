@@ -28,9 +28,9 @@ PowerPoint stores geometry in EMU (English Metric Units), 914400 to the inch. Th
 Each entry carries `widthIn`, `heightIn`, `widthEmu` and `heightEmu`. `LAYOUT_WIDE` is 40/3 inches wide, which converts to exactly 12192000 EMU. A width typed as `13.333` converts to 12191695 EMU, so use the preset.
 
 ```ts
-import TsPptx, { STANDARD_LAYOUTS, inchesToEmu } from "pptx-ts"
+import PptxTs, { STANDARD_LAYOUTS, inchesToEmu } from "pptx-ts"
 
-const pptx = new TsPptx()
+const pptx = new PptxTs()
 pptx.layout = STANDARD_LAYOUTS.LAYOUT_WIDE // the same as pptx.layout = "LAYOUT_WIDE"
 
 const wide = STANDARD_LAYOUTS.LAYOUT_WIDE

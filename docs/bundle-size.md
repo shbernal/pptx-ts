@@ -3,7 +3,7 @@ doc-schema-version: 1
 title: "Smaller bundles"
 summary: "Starting a deck with createPresentation and only the construct families a program uses, what each family authors, and what a browser program downloads either way."
 read_when:
-  - Choosing between TsPptx and createPresentation
+  - Choosing between PptxTs and createPresentation
   - Working out which construct families a program needs
   - Cutting what a browser program downloads
 doc_type: "guide"
@@ -11,7 +11,7 @@ doc_type: "guide"
 
 # Smaller bundles
 
-Every entry offers two ways to start a deck. `new TsPptx()` can author everything the library
+Every entry offers two ways to start a deck. `new PptxTs()` can author everything the library
 supports, and a program built on it downloads all of it. `createPresentation({ use })` starts from a
 small core and adds only the construct families you name. A family you do not name is not in your
 bundle:
@@ -42,13 +42,13 @@ registered.
 | --- | --- | --- |
 | `createPresentation()`, one text box | 59.4 KiB | 138.2 KiB |
 | `createPresentation({ use: [charts] })`, plus a chart | 80.5 KiB | 159.3 KiB |
-| `new TsPptx()`, one text box | 98.7 KiB | 177.4 KiB |
-| `new TsPptx()`, plus a shape and an image | 98.9 KiB | 177.6 KiB |
-| `new TsPptx()`, plus a chart, a table and a video | 99.0 KiB | 177.7 KiB |
+| `new PptxTs()`, one text box | 98.7 KiB | 177.4 KiB |
+| `new PptxTs()`, plus a shape and an image | 98.9 KiB | 177.6 KiB |
+| `new PptxTs()`, plus a chart, a table and a video | 99.0 KiB | 177.7 KiB |
 
 A text-only program downloads 59.4 KiB composed against 98.7 KiB through the class, so composing saves
 39.3 KiB before the first line runs. The chart family costs 21.1 KiB to the program that asks for it and
-nothing to one that does not. The three `TsPptx` rows sit within 0.3 KiB of each other, because the
+nothing to one that does not. The three `PptxTs` rows sit within 0.3 KiB of each other, because the
 class carries every family whatever the program calls.
 
 The [comparison page](comparison.md) reports 98.6 KiB for a hello world. That is a separate

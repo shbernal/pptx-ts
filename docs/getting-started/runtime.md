@@ -30,9 +30,9 @@ the one Node builds from the same code. They are identical.
 
 | Subpath | Import | What it is for | Runs in | Guide |
 | --- | --- | --- | --- | --- |
-| `pptx-ts` | `import TsPptx from "pptx-ts"` | Writing decks: `TsPptx`, `createPresentation`, enums, types and unit helpers | Every runtime, through [the build for that runtime](#which-build-the-bare-import-gives-you) | [Your first deck](first-deck.md), [API reference](../reference/api/index.md) |
-| `pptx-ts/node` | `import TsPptx from "pptx-ts/node"` | The Node build, whatever the resolver's conditions | Node | [API reference](../reference/api/index.md) |
-| `pptx-ts/browser` | `import TsPptx from "pptx-ts/browser"` | The browser build, whatever the resolver's conditions | Browsers | [API reference](../reference/api/index.md) |
+| `pptx-ts` | `import PptxTs from "pptx-ts"` | Writing decks: `PptxTs`, `createPresentation`, enums, types and unit helpers | Every runtime, through [the build for that runtime](#which-build-the-bare-import-gives-you) | [Your first deck](first-deck.md), [API reference](../reference/api/index.md) |
+| `pptx-ts/node` | `import PptxTs from "pptx-ts/node"` | The Node build, whatever the resolver's conditions | Node | [API reference](../reference/api/index.md) |
+| `pptx-ts/browser` | `import PptxTs from "pptx-ts/browser"` | The browser build, whatever the resolver's conditions | Browsers | [API reference](../reference/api/index.md) |
 | `pptx-ts/families` | `import { charts } from "pptx-ts/families"` | Construct families for `createPresentation({ use })` | Every runtime | [Smaller bundles](../bundle-size.md) |
 | `pptx-ts/read` | `import { Presentation } from "pptx-ts/read"` | Opening, editing and saving an existing deck | Every runtime. Loading from a file path needs Node | [Read and edit a deck](../reading/read-and-edit.md) |
 | `pptx-ts/inspect` | `import { inspectPptx } from "pptx-ts/inspect"` | Reporting what a package holds without building the full model | Every runtime | [Inspect a package](../reference/pptx-inspection.md) |
@@ -44,7 +44,7 @@ the one Node builds from the same code. They are identical.
 
 ## Which build the bare import gives you
 
-`import TsPptx from "pptx-ts"` resolves through export conditions, so the file you get depends on the
+`import PptxTs from "pptx-ts"` resolves through export conditions, so the file you get depends on the
 runtime doing the resolving:
 
 | The resolver sets | You get | `writeFile` |
@@ -60,9 +60,9 @@ directly.
 ## `require()` from CommonJS
 
 ```js
-const { default: TsPptx, ShapeType } = require("pptx-ts")
+const { default: PptxTs, ShapeType } = require("pptx-ts")
 
-const pptx = new TsPptx()
+const pptx = new PptxTs()
 ```
 
 Node loads ES modules through `require()` from version 22.12, and the package requires Node 24, so
@@ -76,9 +76,9 @@ script:
 
 ```html
 <script type="module">
-  import TsPptx from "https://esm.sh/pptx-ts/browser"
+  import PptxTs from "https://esm.sh/pptx-ts/browser"
 
-  const pptx = new TsPptx()
+  const pptx = new PptxTs()
   pptx.addSlide().addText("Built in the browser", { x: 1, y: 1, w: 8, h: 1 })
   await pptx.writeFile({ fileName: "example.pptx" })
 </script>
@@ -123,10 +123,10 @@ and the bytes are the response body. With Node's own `http` module:
 
 ```ts
 import { createServer } from "node:http"
-import TsPptx from "pptx-ts"
+import PptxTs from "pptx-ts"
 
 createServer(async (_request, response) => {
-  const pptx = new TsPptx()
+  const pptx = new PptxTs()
   pptx.addSlide().addText("Generated for this request", { x: 1, y: 1, w: 8, h: 1 })
   const bytes = await pptx.toBytes()
 

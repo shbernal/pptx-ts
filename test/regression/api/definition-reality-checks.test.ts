@@ -1,4 +1,4 @@
-import { defineRegressionSuite, TsPptx, assert, assertEqual } from '../../helpers.ts'
+import { defineRegressionSuite, PptxTs, assert, assertEqual } from '../../helpers.ts'
 import { InvalidOptionError } from '../../../dist/node.js'
 
 // The reality-checks in `gen/define/` that used to write straight to `console.error` /
@@ -38,7 +38,7 @@ function assertRejects(fn: () => unknown, code: string) {
 }
 
 /** A one-slide deck to define objects on. */
-const slide = () => new TsPptx().addSlide()
+const slide = () => new PptxTs().addSlide()
 
 defineRegressionSuite('Definition reality-checks', [
 	{

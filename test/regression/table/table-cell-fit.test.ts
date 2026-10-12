@@ -10,10 +10,10 @@
 import { readFileSync } from 'node:fs'
 import { describe, test, expect } from 'vitest'
 import JSZip from 'jszip'
-import TsPptx from '../../../dist/node.js'
+import PptxTs from '../../../dist/node.js'
 import { readEntry } from '../../helpers.ts'
 
-async function slide1Xml(pres: TsPptx) {
+async function slide1Xml(pres: PptxTs) {
 	const buf = await pres.toBytes()
 	const zip = await JSZip.loadAsync(buf)
 	return readEntry(zip, 'ppt/slides/slide1.xml')
@@ -27,7 +27,7 @@ const CELL_FONT = new Uint8Array(readFileSync('test/read/fixtures/fonts/Silkscre
 
 describe('measured fit: TableCellProps.fit', () => {
 	test('no registered metrics → cell font size unchanged (no-op)', async () => {
-		const pres = new TsPptx()
+		const pres = new PptxTs()
 		const slide = pres.addSlide()
 		slide.addTable([[{ text: LONG, options: { fontFace: 'Aptos', fontSize: 18, fit: 'shrink' } }]], {
 			x: 0.5,
@@ -42,7 +42,7 @@ describe('measured fit: TableCellProps.fit', () => {
 	})
 
 	test('registered metrics + overflow in a fixed-height row → baked size < authored', async () => {
-		const pres = new TsPptx()
+		const pres = new PptxTs()
 		await pres.registerFontMetrics('CellFont', CELL_FONT)
 		const slide = pres.addSlide()
 		slide.addTable([[{ text: LONG, options: { fontFace: 'CellFont', fontSize: 18, fit: 'shrink' } }]], {
@@ -60,7 +60,7 @@ describe('measured fit: TableCellProps.fit', () => {
 	})
 
 	test('auto-height row (no rowH / table h) → no shrink (the row grows instead)', async () => {
-		const pres = new TsPptx()
+		const pres = new PptxTs()
 		await pres.registerFontMetrics('CellFont', CELL_FONT)
 		const slide = pres.addSlide()
 		// No `h` and no `rowH` → unconstrained height → nothing to shrink against.
@@ -82,7 +82,7 @@ describe('measured fit: TableCellProps.fit', () => {
 		console.warn = (...args) => warnings.push(String(args[0]))
 		let sizes
 		try {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			await pres.registerFontMetrics('CellFont', CELL_FONT)
 			const slide = pres.addSlide()
 			slide.addTable([[{ text: LONG, options: { fontFace: 'CellFont', fontSize: 1, fit: 'shrink' } }]], {
@@ -104,7 +104,7 @@ describe('measured fit: TableCellProps.fit', () => {
 	})
 
 	test('table-level fit:shrink cascades to a cell with no explicit fit', async () => {
-		const pres = new TsPptx()
+		const pres = new PptxTs()
 		await pres.registerFontMetrics('CellFont', CELL_FONT)
 		const slide = pres.addSlide()
 		slide.addTable([[{ text: LONG, options: { fontFace: 'CellFont', fontSize: 18 } }]], {

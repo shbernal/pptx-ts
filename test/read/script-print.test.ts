@@ -112,7 +112,7 @@ describe('script printer — corpus invariants', () => {
 		// manifest rather than to a literal anyone can re-guess.
 		const manifest = JSON.parse(await readFile(path.join(REPO, 'package.json'), 'utf8'))
 		const { code } = printScript(await irFor('empty.pptx'))
-		assert(code.includes(`import TsPptx from '${manifest.name}'`), `write-half import is not ${manifest.name}`)
+		assert(code.includes(`import PptxTs from '${manifest.name}'`), `write-half import is not ${manifest.name}`)
 		assert(code.includes(`from '${manifest.name}/read'`), `read-half import is not ${manifest.name}/read`)
 	})
 })

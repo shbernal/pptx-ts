@@ -155,7 +155,7 @@ A slide's notes live in a separate notes slide part. Three getters read it:
 | [`slide.notesSlide`](../reference/api/read/classes/Slide.md#notesslide) | the whole notes slide as a [`NotesSlide`](../reference/api/read/classes/NotesSlide.md), with its slide image, body and slide number placeholders | yes | the slide has no notes part |
 
 - A notes part with an empty body gives `notesText === ''`. So does a notes part with no body text frame, for which `notesTextFrame` is `null`.
-- Every slide `TsPptx` writes has a notes part, so its `notesText` is `''` rather than `null` when it has no notes. A slide imported without `importNotes` has no notes part.
+- Every slide `PptxTs` writes has a notes part, so its `notesText` is `''` rather than `null` when it has no notes. A slide imported without `importNotes` has no notes part.
 - A notes run reports `resolvedColor`, `resolvedSizePt`, `resolvedFontFace` and `resolvedBold` through the deck's notes master and its theme.
 - A notes hyperlink resolves `run.hyperlink.url` through the notes part's own relationships.
 

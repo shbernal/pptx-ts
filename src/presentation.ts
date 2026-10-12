@@ -117,7 +117,7 @@ function layoutSideInches(value: number | undefined, side: 'width' | 'height'): 
 
 /**
  * Main presentation class and package export flow — the public entry point consumers
- * instantiate (`new TsPptx()`). Owns presentation-level state and metadata, collects
+ * instantiate (`new PptxTs()`). Owns presentation-level state and metadata, collects
  * slides, and drives `write`/`writeFile`/`stream`. The actual OOXML string building is
  * delegated to the `gen-*` modules; runtime file/stream output goes through the injected
  * `RuntimeAdapter`. Enums (`AlignH`, `ChartType`, `ShapeType`, …) are imported from the
@@ -660,7 +660,7 @@ export default class PresentationCore {
 	 * Measure how tall text wraps at a given width, using the **same** calibrated wrap
 	 * model the export-time autofit bake uses — so a layout-time prediction matches the
 	 * value `fit:'shrink'`/`'resize'` would bake. Synchronous: register the face's metrics
-	 * first with {@link TsPptx.registerFontMetrics} (lookup is sync).
+	 * first with {@link PptxTs.registerFontMetrics} (lookup is sync).
 	 *
 	 * Lets a consumer size its own geometry before export — grow a card to fit its text,
 	 * reflow a grid, or detect overflow at layout time. Heights err **tall** (conservative),
@@ -695,8 +695,8 @@ export default class PresentationCore {
 	 * cells. Column widths (cell `x`/`w`) are exact, derived from the same logic the
 	 * writer uses. Row heights (`y`/`h`) are exact when pinned by `rowH` (array or
 	 * scalar) or table `h`; an auto-height row is estimated with the same conservative
-	 * (tall) text model as {@link TsPptx.measureText} and flagged `heightExact:false`
-	 * (register the cell font via {@link TsPptx.registerFontMetrics} for an exact
+	 * (tall) text model as {@link PptxTs.measureText} and flagged `heightExact:false`
+	 * (register the cell font via {@link PptxTs.registerFontMetrics} for an exact
 	 * estimate). Geometry is for a single, un-paginated table — `autoPage` paging is
 	 * not modeled.
 	 * @param {TableRow[]} rows - the same `rows` passed to `slide.addTable`
@@ -938,7 +938,7 @@ export default class PresentationCore {
 		//
 		// Two things here cannot be recovered, and both throw. A non-object used to warn and then
 		// throw a raw `TypeError` on the next line's `layout.name`, breaking the contract that
-		// every failure this library raises is a `TsPptxError`. A missing `name` is the same kind
+		// every failure this library raises is a `PptxTsError`. A missing `name` is the same kind
 		// of unrecoverable: the registration is keyed on it, so warning and carrying on registered
 		// a layout literally called `"undefined"` -- selectable as `pptx.layout = 'undefined'`,
 		// carrying `name: undefined` into `<p:sldSz>`, and silently overwritten by the next

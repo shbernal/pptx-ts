@@ -9,7 +9,7 @@
 
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
-import TsPptx from '../../dist/node.js'
+import PptxTs from '../../dist/node.js'
 import { Presentation, type OpcPackage } from '../../dist/read.js'
 import {
 	throws,
@@ -548,23 +548,23 @@ describe('Presentation.importSlide({ at })', () => {
 })
 
 // Generate → read bridge: interior slides are authored with the generate API
-// (`new TsPptx()`), then bookends are imported on the read/import model
-// (`Presentation`). This pins that the two APIs compose: a TsPptx-generated
+// (`new PptxTs()`), then bookends are imported on the read/import model
+// (`Presentation`). This pins that the two APIs compose: a PptxTs-generated
 // package loads into Presentation, accepts an importSlide from a fixture, and
 // re-saves without dangling relationships or schema errors.
 describe('generate → read import bridge', () => {
 	async function generatedDeckBytes() {
 		// LAYOUT_WIDE is 12192000×6858000 EMU, matching the `image` read fixture so
-		// importSlide's equal-size pre-flight passes (the TsPptx default is the
+		// importSlide's equal-size pre-flight passes (the PptxTs default is the
 		// narrower LAYOUT_16x9, 9144000×5143500).
-		const pres = new TsPptx()
+		const pres = new PptxTs()
 		pres.layout = 'LAYOUT_WIDE'
 		pres.addSlide().addText('interior slide one', { x: 1, y: 1, w: 6, h: 1 })
 		pres.addSlide().addText('interior slide two', { x: 1, y: 1, w: 6, h: 1 })
 		return pres.toBytes()
 	}
 
-	test('a TsPptx-generated deck loads and accepts an imported bookend', async () => {
+	test('a PptxTs-generated deck loads and accepts an imported bookend', async () => {
 		const deck = await Presentation.load(await generatedDeckBytes())
 		const interiorCount = deck.slides.length
 		assertEqual(interiorCount, 2, 'the generated interior has two slides')

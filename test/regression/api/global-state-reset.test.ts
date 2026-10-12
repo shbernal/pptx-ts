@@ -5,7 +5,7 @@ import {
 	captureDiagnostics,
 	assert,
 	assertEqual,
-	type TsPptx,
+	type PptxTs,
 } from '../../helpers.ts'
 import { resetDiagnosticState } from '../../../dist/node.js'
 
@@ -27,12 +27,12 @@ import { resetDiagnosticState } from '../../../dist/node.js'
 // property the shuffle exists to deny. This is the deterministic half of that proof.
 
 /** A deck that trips exactly one `warnOnce` condition (a table margin >= 1 reads as legacy points). */
-function legacyMargin(p: TsPptx) {
+function legacyMargin(p: PptxTs) {
 	p.addSlide().addTable([[{ text: 'x' }]], { x: 1, y: 1, w: 4, margin: 10 })
 }
 
 /** A deck that trips exactly one known condition (`columns` must be 1-16). */
-function badColumns(p: TsPptx) {
+function badColumns(p: PptxTs) {
 	p.addSlide().addText('x', { x: 1, y: 1, w: 2, h: 1, columns: 99 })
 }
 

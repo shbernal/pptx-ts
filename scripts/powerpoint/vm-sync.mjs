@@ -9,7 +9,7 @@
 // `ts-pptx-worker/` from there to `C:\ts-pptx-worker\` every time it starts the worker, so the
 // files here are the only copy anyone edits.
 //
-// Generates `TSPPTX_POWERPOINT_TOKEN` into `tools/powerpoint-vm/.env` when it is not set there.
+// Generates `PPTXTS_POWERPOINT_TOKEN` into `tools/powerpoint-vm/.env` when it is not set there.
 
 import { randomBytes } from 'node:crypto'
 import fs from 'node:fs'
@@ -42,12 +42,12 @@ Options:
  * @returns {string}
  */
 function ensureToken() {
-	const existing = readVmEnv().TSPPTX_POWERPOINT_TOKEN
+	const existing = readVmEnv().PPTXTS_POWERPOINT_TOKEN
 	if (existing) return existing
 	const token = randomBytes(32).toString('hex')
 	const prefix = fs.existsSync(VM_ENV_FILE) && !fs.readFileSync(VM_ENV_FILE, 'utf8').endsWith('\n') ? '\n' : ''
-	fs.appendFileSync(VM_ENV_FILE, `${prefix}TSPPTX_POWERPOINT_TOKEN=${token}\n`)
-	console.log(`Generated TSPPTX_POWERPOINT_TOKEN into ${repoRel(VM_ENV_FILE)}.`)
+	fs.appendFileSync(VM_ENV_FILE, `${prefix}PPTXTS_POWERPOINT_TOKEN=${token}\n`)
+	console.log(`Generated PPTXTS_POWERPOINT_TOKEN into ${repoRel(VM_ENV_FILE)}.`)
 	return token
 }
 

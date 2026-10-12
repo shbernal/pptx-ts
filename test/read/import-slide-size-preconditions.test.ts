@@ -10,13 +10,13 @@
 // pins both halves at every entry point, because "they all agree" is the whole claim.
 import { describe, test } from 'vitest'
 import JSZip from 'jszip'
-import TsPptx from '../../dist/node.js'
+import PptxTs from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
 import { assertEqual, readEntry, caught, at } from '../helpers.ts'
 
 /** A one-page deck at the given layout. */
 async function deck(layout = 'LAYOUT_16x9') {
-	const pptx = new TsPptx()
+	const pptx = new PptxTs()
 	pptx.layout = layout
 	pptx.addSlide().addText('page', { x: 1, y: 1, w: 4, h: 1 })
 	return pptx.write({ outputType: 'uint8array' })
@@ -50,7 +50,7 @@ describe('slide-size preconditions agree across every import entry point', () =>
 
 	/** A generator deck at the given layout — what `appendSlides` takes as its source. */
 	function generator(layout = 'LAYOUT_16x9') {
-		const pptx = new TsPptx()
+		const pptx = new PptxTs()
 		pptx.layout = layout
 		pptx.addSlide().addText('page', { x: 1, y: 1, w: 4, h: 1 })
 		return pptx

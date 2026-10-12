@@ -45,7 +45,7 @@
  * a picture too, which is what leaves that whole block diffed.
  */
 import { Window } from 'happy-dom'
-import TsPptx, { ShapeType } from '../../dist/node.js'
+import PptxTs, { ShapeType } from '../../dist/node.js'
 import { tableToSlides } from '../../dist/html.js'
 
 const TITLE = { x: 0.3, y: 0.15, w: 12.7, h: 0.4, fontSize: 14, bold: true }
@@ -177,7 +177,7 @@ const CASES = [
 ]
 
 async function compose() {
-	const pptx = new TsPptx()
+	const pptx = new PptxTs()
 	pptx.layout = 'LAYOUT_WIDE'
 	pptx.author = 'pptx-ts byte-identity gate'
 	pptx.title = 'HTML table conversion matrix'

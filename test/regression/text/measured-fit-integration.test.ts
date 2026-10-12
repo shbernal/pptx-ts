@@ -12,7 +12,7 @@
 // rejects it, and on Windows, where there is no `fc-match` to answer at all.
 import { readFileSync } from 'node:fs'
 import { describe, test, expect } from 'vitest'
-import TsPptx from '../../../dist/node.js'
+import PptxTs from '../../../dist/node.js'
 import { expectDefined, partXml } from '../../helpers.ts'
 import { resolveGenuineFontFile } from '../../read/font-oracle.ts'
 
@@ -46,7 +46,7 @@ const FACE_FILE = APTOS ?? 'test/read/fixtures/fonts/Silkscreen-Regular.ttf'
 
 describe("measured fit: fit:'shrink' integration", () => {
 	test('no registered metrics → bare <a:normAutofit/> (unchanged behavior)', async () => {
-		const pres = new TsPptx()
+		const pres = new PptxTs()
 		const slide = pres.addSlide()
 		slide.addText(OVERFLOW, { x: 1, y: 1, w: 3, h: 1, fontFace: 'Aptos', fontSize: 18, fit: 'shrink' })
 		const xml = await partXml(await pres.toBytes(), SLIDE1)
@@ -60,7 +60,7 @@ describe("measured fit: fit:'shrink' integration", () => {
 		// nothing, while measureText is a read-only query that stays useful with zero setup.
 		// Pinned so the asymmetry cannot change silently; approximatedFaces is how a caller
 		// that needs exact numbers detects it.
-		const pres = new TsPptx()
+		const pres = new PptxTs()
 		const m = pres.measureText(OVERFLOW, { wIn: 3, fontSize: 18, fontFace: 'Aptos' })
 		expect(m.measurable).toBe(true)
 		expect(m.approximatedFaces).toEqual(['Aptos']) // nothing registered → the face was guessed
@@ -74,7 +74,7 @@ describe("measured fit: fit:'shrink' integration", () => {
 	})
 
 	test('registered metrics for a DIFFERENT named face → heuristic shrink (P3: approximate, no throw)', async () => {
-		const pres = new TsPptx()
+		const pres = new PptxTs()
 		// The deck has opted into measured fit (some face registered), so an unregistered
 		// *named* face now falls back to the conservative average-advance heuristic and
 		// still bakes an approximate fontScale rather than degrading to the bare flag.
@@ -87,7 +87,7 @@ describe("measured fit: fit:'shrink' integration", () => {
 	})
 
 	test('unnamed (theme-default) face stays unmeasurable → bare flag (heuristic does not guess the face)', async () => {
-		const pres = new TsPptx()
+		const pres = new PptxTs()
 		await pres.registerFontMetrics(FACE, FACE_FILE)
 		const slide = pres.addSlide()
 		// No fontFace → we cannot know which face the theme resolves to, so no heuristic.
@@ -98,7 +98,7 @@ describe("measured fit: fit:'shrink' integration", () => {
 	})
 
 	test('registered metrics + overflow → baked fontScale < 100%', async () => {
-		const pres = new TsPptx()
+		const pres = new PptxTs()
 		await pres.registerFontMetrics(FACE, FACE_FILE)
 		const slide = pres.addSlide()
 		slide.addText(OVERFLOW, { x: 1, y: 1, w: 3, h: 1, fontFace: FACE, fontSize: 18, fit: 'shrink' })
@@ -113,7 +113,7 @@ describe("measured fit: fit:'shrink' integration", () => {
 	})
 
 	test('wrap:false single line too wide → horizontal fontScale baked (dn-autofit-shrink-horizontal)', async () => {
-		const pres = new TsPptx()
+		const pres = new PptxTs()
 		await pres.registerFontMetrics(FACE, FACE_FILE)
 		const slide = pres.addSlide()
 		// One long line, no wrap, in a box that is plenty TALL (2in) but too NARROW
@@ -132,7 +132,7 @@ describe("measured fit: fit:'shrink' integration", () => {
 	})
 
 	test('registered metrics + text that fits → bare flag (no needless shrink)', async () => {
-		const pres = new TsPptx()
+		const pres = new PptxTs()
 		await pres.registerFontMetrics(FACE, FACE_FILE)
 		const slide = pres.addSlide()
 		slide.addText('Hi', { x: 1, y: 1, w: 6, h: 3, fontFace: FACE, fontSize: 18, fit: 'shrink' })
@@ -142,7 +142,7 @@ describe("measured fit: fit:'shrink' integration", () => {
 	})
 
 	test('bytes source works (registerFontMetrics accepts Uint8Array)', async () => {
-		const pres = new TsPptx()
+		const pres = new PptxTs()
 		await pres.registerFontMetrics(FACE, new Uint8Array(readFileSync(FACE_FILE)))
 		const slide = pres.addSlide()
 		slide.addText(OVERFLOW, { x: 1, y: 1, w: 3, h: 1, fontFace: FACE, fontSize: 18, fit: 'shrink' })
@@ -153,7 +153,7 @@ describe("measured fit: fit:'shrink' integration", () => {
 
 describe("measured fit: fit:'resize' integration", () => {
 	test('no registered metrics → bare <a:spAutoFit/>, authored height unchanged', async () => {
-		const pres = new TsPptx()
+		const pres = new PptxTs()
 		const slide = pres.addSlide()
 		slide.addText(OVERFLOW, { x: 1, y: 1, w: 3, h: 1, fontFace: 'Aptos', fontSize: 18, fit: 'resize' })
 		const xml = await partXml(await pres.toBytes(), SLIDE1)
@@ -162,7 +162,7 @@ describe("measured fit: fit:'resize' integration", () => {
 	})
 
 	test('registered metrics + overflow → box grows past the authored height', async () => {
-		const pres = new TsPptx()
+		const pres = new PptxTs()
 		await pres.registerFontMetrics(FACE, FACE_FILE)
 		const slide = pres.addSlide()
 		slide.addText(OVERFLOW, { x: 1, y: 1, w: 3, h: 1, fontFace: FACE, fontSize: 18, fit: 'resize', valign: 'top' })
@@ -174,7 +174,7 @@ describe("measured fit: fit:'resize' integration", () => {
 	})
 
 	test('registered metrics + short text → box shrinks to fit (spAutoFit semantics)', async () => {
-		const pres = new TsPptx()
+		const pres = new PptxTs()
 		await pres.registerFontMetrics(FACE, FACE_FILE)
 		const slide = pres.addSlide()
 		slide.addText('Hi', { x: 1, y: 2, w: 6, h: 3, fontFace: FACE, fontSize: 18, fit: 'resize', valign: 'top' })
@@ -187,7 +187,7 @@ describe("measured fit: fit:'resize' integration", () => {
 	})
 
 	test('centered anchor splits the height delta across off.y', async () => {
-		const pres = new TsPptx()
+		const pres = new PptxTs()
 		await pres.registerFontMetrics(FACE, FACE_FILE)
 		const slide = pres.addSlide()
 		// Default (no valign) resolves to centered anchor → origin shifts by half the delta.
@@ -203,7 +203,7 @@ describe("measured fit: fit:'resize' integration", () => {
 		// write skipped the text box's object-form `fit` and measured the resized box and the shrunk cell
 		// from the first write's result, so a face registered between the writes never reached them.
 		const LATER = 'LaterFace'
-		const build = (pres: TsPptx) => {
+		const build = (pres: PptxTs) => {
 			const slide = pres.addSlide()
 			slide.addText(OVERFLOW, { x: 1, y: 1, w: 3, h: 1, fontFace: LATER, fontSize: 18, fit: 'shrink' })
 			slide.addText(OVERFLOW, { x: 5, y: 1, w: 3, h: 1, fontFace: LATER, fontSize: 18, fit: 'resize' })
@@ -216,7 +216,7 @@ describe("measured fit: fit:'resize' integration", () => {
 			})
 		}
 
-		const pres = new TsPptx()
+		const pres = new PptxTs()
 		await pres.registerFontMetrics(FACE, FACE_FILE)
 		build(pres)
 		// LATER has no metrics yet, so this write estimates it.
@@ -224,7 +224,7 @@ describe("measured fit: fit:'resize' integration", () => {
 		await pres.registerFontMetrics(LATER, FACE_FILE)
 		const second = await partXml(await pres.toBytes(), SLIDE1)
 
-		const fresh = new TsPptx()
+		const fresh = new PptxTs()
 		await fresh.registerFontMetrics(FACE, FACE_FILE)
 		await fresh.registerFontMetrics(LATER, FACE_FILE)
 		build(fresh)

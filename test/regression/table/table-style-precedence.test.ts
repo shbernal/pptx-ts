@@ -1,5 +1,5 @@
 import {
-	TsPptx,
+	PptxTs,
 	defineRegressionSuite,
 	build,
 	readEntry,
@@ -267,7 +267,7 @@ defineRegressionSuite('Table styling: built-in styles and the direct-formatting 
 			// TypeScript already refuses the call, which the directive pins, and this pins the runtime
 			// half for a plain-JS consumer.
 			// @ts-expect-error defineTableStyle is gone from the type too
-			assertEqual(typeof new TsPptx().defineTableStyle, 'undefined', 'no defineTableStyle method')
+			assertEqual(typeof new PptxTs().defineTableStyle, 'undefined', 'no defineTableStyle method')
 		},
 	},
 	{

@@ -32,7 +32,7 @@
 // titles/labels), native math (OMML/LaTeX), bullets, groups, transitions/animations,
 // theme & fonts, notes/comments, and value-clamp/metadata edge cases.
 
-import TsPptx, {
+import PptxTs, {
 	ChartType,
 	SchemeColor,
 	ShapeType,
@@ -1203,7 +1203,7 @@ export default [
 		fn: async () => {
 			const reg = await readFile(path.join(fontsDir, 'Silkscreen-Regular.ttf'))
 			const bold = await readFile(path.join(fontsDir, 'Silkscreen-Bold.ttf'))
-			const p = new TsPptx()
+			const p = new PptxTs()
 			await p.embedFont({ data: new Uint8Array(reg), typeface: 'Silkscreen' })
 			await p.embedFont({ data: new Uint8Array(bold), typeface: 'Silkscreen', style: 'bold' })
 			p.addSlide().addText('Silkscreen', { x: 1, y: 1, w: 8, h: 1, fontFace: 'Silkscreen', fontSize: 24 })
@@ -2008,7 +2008,7 @@ export default [
 	},
 	{
 		// chart-metadata-extlst: custom chart-level metadata rides in the schema-valid extension
-		// list on the chart space (CT_ChartSpace/c:extLst, the LAST child) under a stable TsPptx
+		// list on the chart space (CT_ChartSpace/c:extLst, the LAST child) under a stable PptxTs
 		// vendor GUID, NOT as an invalid c:meta sibling PowerPoint would strip/repair. Each entry is
 		// a foreign-namespace <pgm:item key="" value=""/> inside the lax-processed CT_Extension
 		// wildcard. Lock in: schema-valid, extLst is last, payload escaped, and invalid entries drop.
@@ -4910,7 +4910,7 @@ export default [
 		name: 'a table edited through the read-path setters and structural edits stays valid',
 		fn: async () => {
 			const { Presentation, isGraphicFrame } = await import('../dist/read.js')
-			const authored = new TsPptx()
+			const authored = new PptxTs()
 			authored.addSlide().addTable(
 				[
 					[{ text: 'A1' }, { text: 'B1' }, { text: 'C1' }],
@@ -4977,7 +4977,7 @@ export default [
 		// without its unknown attribute, and a slide without a transition it cannot name.
 		name: 'bullet codes, bullet starts, revision and transitions a caller gets wrong still validate',
 		fn: async () => {
-			const pptx = new TsPptx()
+			const pptx = new PptxTs()
 			pptx.revision = 'a<b&c'
 			pptx.defineSlideMaster({
 				title: 'GUARDED',
@@ -5000,7 +5000,7 @@ export default [
 		fn: async () => {
 			const tokens = await import('../src/ooxml/st-enums.ts')
 			const { Presentation } = await import('../dist/read.js')
-			const pptx = new TsPptx()
+			const pptx = new PptxTs()
 			const slide = pptx.addSlide()
 			slide.addText(
 				[

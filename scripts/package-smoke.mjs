@@ -35,7 +35,7 @@ const EXPORT_MATRIX = [
 		subpath: '',
 		hasDefault: true,
 		exports: {
-			TsPptx: 'function',
+			PptxTs: 'function',
 			createPresentation: 'function',
 			ShapeType: 'object',
 			inchesToEmu: 'function',
@@ -90,12 +90,12 @@ const EXPORT_MATRIX = [
 	{
 		subpath: '/node',
 		hasDefault: true,
-		exports: { TsPptx: 'function', createPresentation: 'function', ShapeType: 'object' },
+		exports: { PptxTs: 'function', createPresentation: 'function', ShapeType: 'object' },
 	},
 	{
 		subpath: '/browser',
 		hasDefault: true,
-		exports: { TsPptx: 'function', createPresentation: 'function', ShapeType: 'object' },
+		exports: { PptxTs: 'function', createPresentation: 'function', ShapeType: 'object' },
 	},
 ]
 
@@ -190,7 +190,7 @@ async function bundleForNode(fixtureDir) {
 			// Every check above is satisfiable by a binding that resolved to nothing useful.
 			// Building a deck is what proves the bundled graph is wired: the zip writer, the
 			// XML serializers and the Node runtime adapter all have to be present and reachable.
-			`const pptx = new e0_TsPptx()`,
+			`const pptx = new e0_PptxTs()`,
 			`pptx.addSlide().addText('bundled', { x: 1, y: 1, w: 2, h: 0.5 })`,
 			`const bytes = await pptx.toBytes()`,
 			`if (bytes[0] !== 0x50 || bytes[1] !== 0x4b) throw new Error('bundled build did not emit a zip')`,
@@ -340,8 +340,8 @@ const other = await import(NAME + distinctFrom)
 
 // Identity, not a feature probe: all three artifacts expose the same API surface, so only
 // module identity can tell which chunk "." actually resolved to.
-if (root.TsPptx !== same.TsPptx) throw new Error(label + ': "." did not resolve to ' + sameAs)
-if (root.TsPptx === other.TsPptx) throw new Error(label + ': "." is indistinguishable from ' + distinctFrom)
+if (root.PptxTs !== same.PptxTs) throw new Error(label + ': "." did not resolve to ' + sameAs)
+if (root.PptxTs === other.PptxTs) throw new Error(label + ': "." is indistinguishable from ' + distinctFrom)
 console.log('  conditions [' + label + ']: "." -> ' + sameAs)
 `
 	)
@@ -349,14 +349,15 @@ console.log('  conditions [' + label + ']: "." -> ' + sameAs)
 	await fs.writeFile(
 		path.join(fixtureDir, 'esm-smoke.mjs'),
 		[
-			`import TsPptx, { ChartType, EMU_PER_INCH, STANDARD_LAYOUTS, ShapeType, inchesToEmu, pixelsToEmu } from ${JSON.stringify(packageImport())}`,
-			`import NodeTsPptx from ${JSON.stringify(packageImport('/node'))}`,
-			`import BrowserTsPptx from ${JSON.stringify(packageImport('/browser'))}`,
+			`import PptxTs, { ChartType, EMU_PER_INCH, STANDARD_LAYOUTS, ShapeType, TsPptx, inchesToEmu, pixelsToEmu } from ${JSON.stringify(packageImport())}`,
+			`import NodePptxTs from ${JSON.stringify(packageImport('/node'))}`,
+			`import BrowserPptxTs from ${JSON.stringify(packageImport('/browser'))}`,
 			`import { boxAnchor, inspectPptx, overlapArea } from ${JSON.stringify(packageImport('/inspect'))}`,
-			'const pptx = new TsPptx()',
+			'const pptx = new PptxTs()',
 			"if (typeof pptx.version !== 'string') throw new Error('missing version')",
-			"if (NodeTsPptx !== TsPptx) throw new Error('node entry mismatch')",
-			"if (typeof new BrowserTsPptx().version !== 'string') throw new Error('browser entry missing version')",
+			"if (NodePptxTs !== PptxTs) throw new Error('node entry mismatch')",
+			"if (TsPptx !== PptxTs) throw new Error('deprecated TsPptx alias is not the PptxTs class')",
+			"if (typeof new BrowserPptxTs().version !== 'string') throw new Error('browser entry missing version')",
 			"if (ShapeType.rect !== 'rect') throw new Error('missing ShapeType export')",
 			"if (ChartType.bar !== 'bar') throw new Error('missing ChartType export')",
 			"if (EMU_PER_INCH !== 914400) throw new Error('missing EMU_PER_INCH export')",
@@ -405,13 +406,13 @@ console.log('  require(esm): ' + MATRIX.length + ' subpaths loaded from CommonJS
 	await fs.writeFile(
 		path.join(fixtureDir, 'type-smoke.ts'),
 		[
-			`import TsPptx, { EMU_PER_INCH, ShapeType, STANDARD_LAYOUTS, inchesToEmu, pixelsToEmu, type ChartMulti, type Slide, type StandardLayoutName, type ThemeProps, type WriteFileProps } from ${JSON.stringify(packageImport())}`,
-			`import NodeTsPptx from ${JSON.stringify(packageImport('/node'))}`,
-			`import BrowserTsPptx from ${JSON.stringify(packageImport('/browser'))}`,
+			`import PptxTs, { EMU_PER_INCH, ShapeType, STANDARD_LAYOUTS, inchesToEmu, pixelsToEmu, type ChartMulti, type Slide, type StandardLayoutName, type ThemeProps, type WriteFileProps } from ${JSON.stringify(packageImport())}`,
+			`import NodePptxTs from ${JSON.stringify(packageImport('/node'))}`,
+			`import BrowserPptxTs from ${JSON.stringify(packageImport('/browser'))}`,
 			`import { inspectPptx, type PptxSlideElement, type PptxSlideSize } from ${JSON.stringify(packageImport('/inspect'))}`,
-			'const pptx = new TsPptx()',
-			'const nodePptx = new NodeTsPptx()',
-			'const browserPptx = new BrowserTsPptx()',
+			'const pptx = new PptxTs()',
+			'const nodePptx = new NodePptxTs()',
+			'const browserPptx = new BrowserPptxTs()',
 			'const slide = pptx.addSlide()',
 			"const theme: ThemeProps = { headFontFace: 'Aptos', bodyFontFace: 'Aptos' }",
 			"const options: WriteFileProps = { fileName: 'smoke.pptx' }",

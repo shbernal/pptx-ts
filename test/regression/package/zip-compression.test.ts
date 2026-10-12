@@ -1,4 +1,4 @@
-import TsPptx from '../../../dist/node.js'
+import PptxTs from '../../../dist/node.js'
 import { PNG_1X1_DATA_URI, defineRegressionSuite, assert, at } from '../../helpers.ts'
 
 // Exports previously defaulted to STORE (and the typed-output `write()` branch
@@ -39,13 +39,13 @@ function localHeaderEntries(buf: Uint8Array) {
 }
 
 async function buildPresWithImage() {
-	const pres = new TsPptx()
+	const pres = new PptxTs()
 	pres.addSlide().addImage({ data: PNG_1X1_DATA_URI, x: 1, y: 1, w: 1, h: 1 })
 	return pres
 }
 
 async function buildPres() {
-	const pres = new TsPptx()
+	const pres = new PptxTs()
 	pres.addSlide().addText('compression default check', { x: 1, y: 1, w: 6, h: 1 })
 	return pres
 }

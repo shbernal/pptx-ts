@@ -82,7 +82,7 @@ export { resetProgramData }
  * @type {Record<string, {import: string, construct: string}>}
  */
 export const FRAME = {
-	'pptx-ts': { import: "import TsPptx from 'pptx-ts'", construct: 'const pres = new TsPptx()' },
+	'pptx-ts': { import: "import PptxTs from 'pptx-ts'", construct: 'const pres = new PptxTs()' },
 	pptxgenjs: { import: "import PptxGenJS from 'pptxgenjs'", construct: 'const pres = new PptxGenJS()' },
 }
 

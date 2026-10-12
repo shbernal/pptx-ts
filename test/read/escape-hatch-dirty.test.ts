@@ -10,7 +10,7 @@
 
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
-import TsPptx, { ChartType } from '../../dist/node.js'
+import PptxTs, { ChartType } from '../../dist/node.js'
 import { Presentation, isGraphicFrame, type GraphicFrame } from '../../dist/read.js'
 import { authorRead } from './authored.ts'
 import { bytesEqual, assert, assertEqual, defined, partBodies, at } from '../helpers.ts'
@@ -217,7 +217,7 @@ describe('element_ with markDirty()', () => {
 	test('Chart.markDirty() reserializes the chart part, not the slide', async () => {
 		const { changed } = await saveAfter('bar-chart-data-labels', (presentation) => {
 			const chart = firstFramed(presentation, (shape) => shape.chart)
-			defined(chart.element_).setAttribute('xmlns:tspptx', 'urn:test')
+			defined(chart.element_).setAttribute('xmlns:pptxts', 'urn:test')
 			chart.markDirty()
 		})
 		assertEqual(changed.length, 1, 'exactly one part should be reserialized')
@@ -264,7 +264,7 @@ describe('element_ with markDirty()', () => {
 // chartEx has no checked-in fixture — the writer emits every `cx:` piece, so these
 // author a waterfall in memory and round-trip the writer's own bytes (the same
 // harness test/read/chartex-read.test.ts uses for the getters).
-function authorWaterfall(pres: TsPptx) {
+function authorWaterfall(pres: PptxTs) {
 	pres.addSlide().addChart([{ name: 'Cash Flow', labels: ['Start', 'Q1', 'End'], values: [100, 40, 190] }], {
 		type: ChartType.waterfall,
 		x: 1,
@@ -284,7 +284,7 @@ describe('chartEx element_ / markDirty()', () => {
 	test('a chartEx edit through element_ is dropped without markDirty()', async () => {
 		const { changed } = await saveAfterAuthored(authorWaterfall, (presentation) => {
 			const cx = firstFramed(presentation, (shape) => shape.chartEx)
-			defined(cx.element_).setAttribute('xmlns:tspptx', 'urn:test')
+			defined(cx.element_).setAttribute('xmlns:pptxts', 'urn:test')
 		})
 		assertEqual(changed.length, 0, 'no part should be reserialized without markDirty()')
 	})
@@ -292,7 +292,7 @@ describe('chartEx element_ / markDirty()', () => {
 	test('ChartEx.markDirty() reserializes the chartEx part, not the slide', async () => {
 		const { changed } = await saveAfterAuthored(authorWaterfall, (presentation) => {
 			const cx = firstFramed(presentation, (shape) => shape.chartEx)
-			defined(cx.element_).setAttribute('xmlns:tspptx', 'urn:test')
+			defined(cx.element_).setAttribute('xmlns:pptxts', 'urn:test')
 			cx.markDirty()
 		})
 		assertOneChartPart(changed)
@@ -337,7 +337,7 @@ describe('chartEx element_ / markDirty()', () => {
 
 describe('shared-chrome and notes element_ / markDirty()', () => {
 	/** A deck with a defined master (so master/layout placeholders exist) and notes. */
-	function authorChrome(pres: TsPptx) {
+	function authorChrome(pres: PptxTs) {
 		pres.theme = { headFontFace: 'Georgia' }
 		pres.defineSlideMaster({ title: 'BRANDED', slideNumber: { x: 0.5, y: 7.0 } })
 		pres.addSlide({ masterTitle: 'BRANDED' }).addNotes('a note')
@@ -419,7 +419,7 @@ describe('diagram element_ / markDirty()', () => {
 
 	test('a diagram edit through element_ is dropped without markDirty()', async () => {
 		const { changed } = await saveAfter('mixed', (presentation) => {
-			defined(diagramOf(presentation).element_).setAttribute('xmlns:tspptx', 'urn:test')
+			defined(diagramOf(presentation).element_).setAttribute('xmlns:pptxts', 'urn:test')
 		})
 		assertEqual(changed.length, 0, 'no part should be reserialized without markDirty()')
 	})
@@ -427,7 +427,7 @@ describe('diagram element_ / markDirty()', () => {
 	test('Diagram.markDirty() reserializes the data part, not the slide', async () => {
 		const { changed } = await saveAfter('mixed', (presentation) => {
 			const diagram = diagramOf(presentation)
-			defined(diagram.element_).setAttribute('xmlns:tspptx', 'urn:test')
+			defined(diagram.element_).setAttribute('xmlns:pptxts', 'urn:test')
 			diagram.markDirty()
 		})
 		assertOnlyDataPart(changed)

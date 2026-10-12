@@ -10,11 +10,11 @@
 // come from `p:sldSz@type` (`screen4x3`, `screen16x9`, `screen16x10`), `Widescreen` is what it
 // calls 13.333in x 7.5in from the dimensions alone, and anything else is `Custom`.
 
-import type { TsPptx } from '../../../dist/node.js'
+import type { PptxTs } from '../../../dist/node.js'
 import { defineRegressionSuite, build, readEntry, assert, assertEqual, defined } from '../../helpers.ts'
 
 /** `docProps/app.xml` for a deck at `layout`, with `hidden` slide numbers hidden. */
-async function appXml(buildFn: (pres: TsPptx) => unknown) {
+async function appXml(buildFn: (pres: PptxTs) => unknown) {
 	const { zip } = await build(buildFn)
 	return readEntry(zip, 'docProps/app.xml')
 }

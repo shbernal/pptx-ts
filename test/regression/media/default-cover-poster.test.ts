@@ -10,7 +10,7 @@
  * bytes are asserted at the part, not the rel.
  */
 import JSZip from 'jszip'
-import { TsPptx, assert, assertEqual, build, defineRegressionSuite, defined, at } from '../../helpers.ts'
+import { PptxTs, assert, assertEqual, build, defineRegressionSuite, defined, at } from '../../helpers.ts'
 
 /** Smaller than the play-button artwork (14,484 bytes), far larger than any 1x1 test PNG (69). */
 const POSTER_FLOOR = 5_000
@@ -74,7 +74,7 @@ defineRegressionSuite('Default video poster', [
 		fn: async () => {
 			// The media pass skips a rel that already has data, so a second write must find the
 			// bytes the first one left rather than re-resolving into an empty rel.
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			pres.addSlide().addMedia({ type: 'video', data: 'video/mp4;base64,AAAA', x: 1, y: 1, w: 4, h: 3 })
 
 			const first = await pngParts(await JSZip.loadAsync(await pres.toBytes()))

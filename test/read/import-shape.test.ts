@@ -17,7 +17,7 @@ import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { Presentation, type AnyShape, type OpcPackage, type Slide } from '../../dist/read.js'
 import {
-	TsPptx,
+	PptxTs,
 	PNG_1X1,
 	bytesEqual,
 	throws,
@@ -656,7 +656,7 @@ describe('Presentation.importShape({ rescale })', () => {
 		// The picture's media part is missing, so the call is refused. The text box ahead of it used to
 		// go in first, and the slide was not marked dirty: the model showed the text box while a save
 		// wrote the old slide.
-		const authored = new TsPptx()
+		const authored = new PptxTs()
 		const slide = authored.addSlide()
 		slide.addText('carried', { x: 1, y: 1, w: 3, h: 1 })
 		slide.addImage({ data: `image/png;base64,${PNG_1X1}`, x: 4, y: 1, w: 1, h: 1 })
@@ -666,7 +666,7 @@ describe('Presentation.importShape({ rescale })', () => {
 		const text = findShapeIndex(at(source.slides, 0), (s) => s.shapeType !== 'picture')
 		const picture = findShapeIndex(at(source.slides, 0), (s) => s.shapeType === 'picture')
 
-		const host = new TsPptx()
+		const host = new PptxTs()
 		host.addSlide().addText('host', { x: 1, y: 3, w: 3, h: 1 })
 		const target = await Presentation.load(await host.toBytes())
 		const before = await target.save()

@@ -3,7 +3,7 @@ import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { describe, expect, test } from 'vitest'
 import { liveFences, wrapSnippet } from '../../../www/live/snippet.ts'
-import { captureDiagnostics, TsPptx } from '../../helpers.ts'
+import { captureDiagnostics, PptxTs } from '../../helpers.ts'
 import { validateBuf, validatorInstalled } from '../../validator.ts'
 
 /**
@@ -43,7 +43,7 @@ mkdirSync(OUT, { recursive: true })
 /** What `wrapSnippet` compiles a fence into. */
 interface LiveModule {
 	ownsSlide: boolean
-	default: (pptx: TsPptx, slide?: ReturnType<TsPptx['addSlide']>) => Promise<void>
+	default: (pptx: PptxTs, slide?: ReturnType<PptxTs['addSlide']>) => Promise<void>
 }
 
 describe('live examples', () => {
@@ -59,7 +59,7 @@ describe('live examples', () => {
 			// Serialization inside the capture too: some warnings (a clamped gradient centre) are
 			// raised while the package is written, not when the option is passed.
 			const { result: bytes, codes } = await captureDiagnostics(async () => {
-				const pptx = new TsPptx()
+				const pptx = new PptxTs()
 				await snippet.default(pptx, snippet.ownsSlide ? undefined : pptx.addSlide())
 				return await pptx.toBytes()
 			})

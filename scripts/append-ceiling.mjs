@@ -23,7 +23,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { ROOT, parseCliOrExit } from './script-utils.mjs'
-import TsPptx from '../dist/node.js'
+import PptxTs from '../dist/node.js'
 import { Presentation, isAutoShape, isGraphicFrame } from '../dist/read.js'
 
 const DEFAULT_TEMPLATE = path.join('test', 'read', 'fixtures', 'placeholder-inherit.pptx')
@@ -49,7 +49,7 @@ const TEMPLATE = path.join(ROOT, values.template ?? DEFAULT_TEMPLATE)
 const templateBytes = await fs.readFile(TEMPLATE)
 
 /** @typedef {import('../dist/node.js').Slide} WriteSlide */
-/** @typedef {import('../dist/node.js').TsPptx} WriteDeck */
+/** @typedef {import('../dist/node.js').PptxTs} WriteDeck */
 /** @typedef {import('../dist/read.js').Slide} ReadSlide */
 /** @typedef {import('../dist/read.js').Presentation} ReadDeck */
 /** @typedef {(slide: WriteSlide, pptx: WriteDeck) => void} Author */
@@ -65,7 +65,7 @@ async function roundTrip(author) {
 	const deck = await Presentation.fromTemplate(templateBytes)
 	const size = deck.slideSize
 	if (!size) throw new Error(`template ${TEMPLATE} declares no slide size`)
-	const pptx = new TsPptx()
+	const pptx = new PptxTs()
 	pptx.defineLayout({ name: 'MATCH', width: size.widthEmu / 914400, height: size.heightEmu / 914400 })
 	pptx.layout = 'MATCH'
 	const slide = pptx.addSlide()

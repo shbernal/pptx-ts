@@ -20,7 +20,7 @@ checkout. Nothing in this directory is published to npm (`package.json` `files: 
 
 All scripts resolve their own paths from `$PSScriptRoot` / `import.meta.url`, so they can
 be invoked from anywhere. `pnpm ppt:run` runs a recipe wherever PowerPoint is: on the
-worker when `TSPPTX_POWERPOINT_URL` is set (on Linux, the VM in
+worker when `PPTXTS_POWERPOINT_URL` is set (on Linux, the VM in
 [`tools/powerpoint-vm/`](../../../../tools/powerpoint-vm/README.md), whose `.env` sets it),
 otherwise on this Windows machine's PowerPoint. Either way it writes what the recipe
 produced back to this tree and `.tmp/`:

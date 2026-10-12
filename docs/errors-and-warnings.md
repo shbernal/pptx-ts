@@ -17,14 +17,14 @@ When pptx-ts meets input it cannot use as given, it either warns or throws. What
 flowchart TD
   input["Input the library cannot use as given"] --> question{"Can it still produce the deck you asked for?"}
   question -- "yes, by ignoring, clamping or falling back" --> warning["Warning: a Diagnostic goes to the handler and the call carries on"]
-  question -- "no, the request would be dropped" --> error["Error: a TsPptxError subclass is thrown"]
+  question -- "no, the request would be dropped" --> error["Error: a PptxTsError subclass is thrown"]
 ```
 
 `shadow: { transparency: 120 }` is a warning, and the shadow paints at 100. `addImage()` with neither `data` nor `path` is an error, because there is nothing to place.
 
 ## Codes
 
-Errors and warnings share one vocabulary, `TsPptxCode`. A code names a condition in `area/condition` form, such as `media/load-failed`.
+Errors and warnings share one vocabulary, `PptxTsCode`. A code names a condition in `area/condition` form, such as `media/load-failed`.
 
 - The code is API. Adding a code is back-compatible. Removing or renaming one is a breaking change, and the changelog records it.
 - The message is not API. Its wording can change in any release. Do not parse it, and do not assert on it in tests.
@@ -34,16 +34,18 @@ Errors and warnings share one vocabulary, `TsPptxCode`. A code names a condition
 
 ## Errors
 
-Every failure pptx-ts raises is a `TsPptxError`, thrown as one of five subclasses. Each one is also an `Error`, so a `catch` that only knows `Error` keeps working.
+Every failure pptx-ts raises is a `PptxTsError`, thrown as one of five subclasses. Each one is also an `Error`, so a `catch` that only knows `Error` keeps working.
 
 ```ts
-class TsPptxError extends Error {
+class PptxTsError extends Error {
 	readonly code: ErrorCode
 	readonly detail?: Readonly<Record<string, unknown>>
 }
 ```
 
 `name` is the subclass name, so a stack trace labels the error `InvalidOptionError` rather than `Error`. `detail` holds structured context when the throwing site has any. Most sites give none.
+
+`TsPptxError`, `TsPptxErrorOptions` and `TsPptxCode` are deprecated names for `PptxTsError`, `PptxTsErrorOptions` and `PptxTsCode`, as `TsPptx` is for `PptxTs`. They are the same class and types, so `instanceof TsPptxError` still matches, and they are removed in v5.
 
 ### The error classes
 
@@ -62,7 +64,7 @@ An area can appear under several classes, so match the whole code rather than it
 Branch on `instanceof` and on `code`, never on the message.
 
 ```ts
-import { MediaError, PackageReadError, TsPptxError } from 'pptx-ts'
+import { MediaError, PackageReadError, PptxTsError } from 'pptx-ts'
 
 try {
 	await buildDeck()
@@ -71,7 +73,7 @@ try {
 		// an image, font or media file did not load: substitute it or retry
 	} else if (err instanceof PackageReadError) {
 		// the input is not a readable .pptx: reject the upload
-	} else if (err instanceof TsPptxError && err.code === 'image/missing-source') {
+	} else if (err instanceof PptxTsError && err.code === 'image/missing-source') {
 		// one specific condition
 	} else {
 		throw err
@@ -110,7 +112,7 @@ The project's bar is output that opens cleanly in Microsoft PowerPoint. It appli
 
 Open an issue from the [new-issue chooser](https://github.com/shbernal/pptx-ts/issues/new/choose). Issues are public, so describe your project's need without its data.
 
-The package ships the `ts-pptx-upstream` skill in its `skills` directory, and `npx skills add shbernal/pptx-ts` installs it. The skill walks through triage, reducing the failure to a script that builds its own deck, and filing the issue.
+The package ships the `pptx-ts-upstream` skill in its `skills` directory, and `npx skills add shbernal/pptx-ts` installs it. The skill walks through triage, reducing the failure to a script that builds its own deck, and filing the issue.
 
 ### The originating failure is kept on `cause`
 
@@ -205,4 +207,4 @@ The record keeps one entry per distinct message until you clear it, and most of 
 - [Core concepts](getting-started/concepts.md)
 - [Troubleshooting](troubleshooting.md)
 - [Errors and diagnostics](https://github.com/shbernal/pptx-ts/blob/main/docs/contributing/development.md#errors-and-diagnostics), for adding a throw or warning site to the library
-- API reference: [`TsPptxError`](reference/api/index/classes/TsPptxError.md), [`TsPptxCode`](reference/api/index/type-aliases/TsPptxCode.md), [`ErrorCode`](reference/api/index/type-aliases/ErrorCode.md), [`Diagnostic`](reference/api/index/interfaces/Diagnostic.md), [`DiagnosticCode`](reference/api/index/type-aliases/DiagnosticCode.md), [`setDiagnosticHandler`](reference/api/index/functions/setDiagnosticHandler.md), [`resetDiagnosticState`](reference/api/index/functions/resetDiagnosticState.md)
+- API reference: [`PptxTsError`](reference/api/index/classes/PptxTsError.md), [`PptxTsCode`](reference/api/index/type-aliases/PptxTsCode.md), [`ErrorCode`](reference/api/index/type-aliases/ErrorCode.md), [`Diagnostic`](reference/api/index/interfaces/Diagnostic.md), [`DiagnosticCode`](reference/api/index/type-aliases/DiagnosticCode.md), [`setDiagnosticHandler`](reference/api/index/functions/setDiagnosticHandler.md), [`resetDiagnosticState`](reference/api/index/functions/resetDiagnosticState.md)

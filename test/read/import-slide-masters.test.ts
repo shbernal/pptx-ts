@@ -13,7 +13,7 @@
 import { readFile } from 'node:fs/promises'
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
-import TsPptx from '../../dist/node.js'
+import PptxTs from '../../dist/node.js'
 import { Presentation, type ImportSlideMastersOptions, type OpcPackage } from '../../dist/read.js'
 import {
 	throws,
@@ -574,7 +574,7 @@ describe('generate → read slide-master graft bridge', () => {
 	async function generatedDeckBytes() {
 		// LAYOUT_WIDE (12192000×6858000 EMU) matches the `image` fixture so the
 		// equal-size guard passes (pptx-ts's default is the narrower LAYOUT_16x9).
-		const pres = new TsPptx()
+		const pres = new PptxTs()
 		pres.layout = 'LAYOUT_WIDE'
 		pres.addSlide().addText('interior one', { x: 1, y: 1, w: 6, h: 1 })
 		pres.addSlide().addText('interior two', { x: 1, y: 1, w: 6, h: 1 })

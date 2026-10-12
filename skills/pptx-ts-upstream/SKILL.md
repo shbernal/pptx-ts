@@ -1,5 +1,5 @@
 ---
-name: ts-pptx-upstream
+name: pptx-ts-upstream
 description: Report a pptx-ts bug, gap, or wrong output to its GitHub tracker from a project that depends on it. Use when pptx-ts throws an InternalError or an error whose message points at the issue tracker, when it cannot read a .pptx that opens cleanly in PowerPoint, when it writes a deck PowerPoint repairs or renders wrong, when a construct does not survive a round trip, when its types block correct code, or whenever you are about to write a workaround for pptx-ts behaving incorrectly. Filing the bug is the fix; the workaround is the stopgap.
 ---
 
@@ -17,7 +17,7 @@ builds its own deck.** Everything below is in service of that.
 
 ## 1. Decide whether it is actually ours
 
-Every failure pptx-ts raises is a `TsPptxError` in one of five classes, and the class
+Every failure pptx-ts raises is a `PptxTsError` in one of five classes, and the class
 already answers *whose problem is this*. Catch it and read `err.name` and `err.code`.
 `code` is a stable `area/condition` string and is API; the message is not, so never
 branch on its wording.
@@ -115,10 +115,10 @@ anonymously, never its name, its deck or client names, or a path from its tree.
 Instead, write a self-contained script that *constructs* its input and fails:
 
 ```ts
-import TsPptx from 'pptx-ts'
+import PptxTs from 'pptx-ts'
 
 // build the smallest deck that shows the problem
-const pptx = new TsPptx()
+const pptx = new PptxTs()
 const slide = pptx.addSlide()
 slide.addText('x', { x: 1, y: 1, w: 8, h: 1 /* the option that triggers it */ })
 
@@ -272,7 +272,7 @@ which means re-reading the issue and re-deriving the reproduction someone alread
 Write the comment so that verifying the fix is running one line:
 
 ```ts
-// Workaround for ts-pptx#<N>: https://github.com/shbernal/pptx-ts/issues/<N>
+// Workaround for pptx-ts#<N>: https://github.com/shbernal/pptx-ts/issues/<N>
 //
 // <what the library does instead, as an observable: the XML it emits, the value the
 //  accessor returns, the option it ignores.>
@@ -281,8 +281,8 @@ Write the comment so that verifying the fix is running one line:
 // part containing the right element> holds, and write <the code this becomes> instead.
 ```
 
-Keep `ts-pptx#` in that literal spelling wherever you mark one. It is the token that
-makes `rg 'ts-pptx#'` list every stopgap in the project at once, and step 7 is exactly
+Keep `pptx-ts#` in that literal spelling wherever you mark one. It is the token that
+makes `rg 'pptx-ts#'` list every stopgap in the project at once, and step 7 is exactly
 the moment someone needs that list.
 
 ## 7. When the fix ships, delete the workaround
@@ -295,7 +295,7 @@ fix.
 ```bash
 npm view pptx-ts version                          # what is out
 gh issue list --repo shbernal/pptx-ts --state closed --limit 30
-rg 'ts-pptx#'                                     # every stopgap here
+rg 'pptx-ts#'                                     # every stopgap here
 ```
 
 **A closed issue is not a released fix.** A fix can sit merged and unreleased for weeks,
@@ -332,7 +332,7 @@ installed version. The copy in an agent directory is a *copy*, and a version bum
 not move it. Refresh it in the same commit as the bump, which is step 7's commit:
 
 ```bash
-npx skills update ts-pptx-upstream
+npx skills update pptx-ts-upstream
 ```
 
 If that reports nothing to do but the skill is not loading, the runtime link is missing

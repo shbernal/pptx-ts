@@ -13,7 +13,7 @@
 
 import { describe, test } from 'vitest'
 import JSZip from 'jszip'
-import TsPptx from '../../dist/node.js'
+import PptxTs from '../../dist/node.js'
 import { Presentation, type TextFrame } from '../../dist/read.js'
 import { assert, assertEqual, defined, readEntry, at } from '../helpers.ts'
 
@@ -25,7 +25,7 @@ const SLIDE_PATH = 'ppt/slides/slide1.xml'
  * @param edit - rewrite applied to `ppt/slides/slide1.xml`
  */
 async function frameFrom(edit?: (xml: string) => string) {
-	const pres = new TsPptx()
+	const pres = new PptxTs()
 	pres.addSlide().addText('probe', {
 		x: 1,
 		y: 1,

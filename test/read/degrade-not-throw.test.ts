@@ -5,7 +5,7 @@
 
 import { describe, test } from 'vitest'
 import JSZip from 'jszip'
-import TsPptx from '../../dist/node.js'
+import PptxTs from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
 import { assert, assertEqual, defined, at } from '../helpers.ts'
 
@@ -26,7 +26,7 @@ async function pictureDeck({
 	editSlide,
 	editRels,
 }: { editSlide?: (xml: string) => string; editRels?: (xml: string) => string } = {}) {
-	const pres = new TsPptx()
+	const pres = new PptxTs()
 	pres.addSlide().addImage({ data: PNG, x: 1, y: 1, w: 1, h: 1 })
 	const zip = await JSZip.loadAsync(await pres.toBytes())
 	if (editSlide) await rewrite(zip, SLIDE_PATH, editSlide)
@@ -94,7 +94,7 @@ describe('Picture partnames degrade like their picture-fill twin', () => {
 describe('A p:spTree/p:extLst is the tree own child, not a shape', () => {
 	/** Author a deck whose every layout and master carries a `p:spTree/p:extLst` of its own. */
 	async function deckWithSpTreeExtLst() {
-		const pres = new TsPptx()
+		const pres = new PptxTs()
 		pres.defineSlideMaster({
 			title: 'CARRY',
 			objects: [{ text: { text: 'decoration', options: { x: 1, y: 1, w: 3, h: 1 } } }],
@@ -119,7 +119,7 @@ describe('A p:spTree/p:extLst is the tree own child, not a shape', () => {
 	test('an importSlide carrying master graphics does not carry the extLst into the shape tree', async () => {
 		const { bytes } = await deckWithSpTreeExtLst()
 		const source = await Presentation.load(bytes)
-		const target = await Presentation.load(await new TsPptx().toBytes())
+		const target = await Presentation.load(await new PptxTs().toBytes())
 		target.importSlide(source, 0, { theme: 'preserve', carryMasterGraphics: true })
 		const saved = await target.save()
 		const zip = await JSZip.loadAsync(saved)
@@ -148,7 +148,7 @@ describe('A p:spTree/p:extLst is the tree own child, not a shape', () => {
 describe('One reading per fact', () => {
 	/** Author a one-table deck, rewrite its slide XML, and return the loaded cell (0, 0). */
 	async function cellFrom(edit: (xml: string) => string) {
-		const pres = new TsPptx()
+		const pres = new PptxTs()
 		pres.addSlide().addTable([[{ text: 'a' }, { text: 'b' }]], { x: 1, y: 1, w: 6 })
 		const zip = await JSZip.loadAsync(await pres.toBytes())
 		await rewrite(zip, SLIDE_PATH, edit)

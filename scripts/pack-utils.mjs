@@ -20,8 +20,8 @@ import { ROOT, run } from './script-utils.mjs'
  *
  * Both package gates spelled this sequence out, each with a keep variable of its own, and only
  * the smoke test let the temporary root be moved. One pair now serves both:
- * `TSPPTX_PACKAGE_TMPDIR` for where the directory is made (the OS temporary directory by
- * default), and `TSPPTX_KEEP_PACKAGE_TMP=1` to leave it behind for inspection.
+ * `PPTXTS_PACKAGE_TMPDIR` for where the directory is made (the OS temporary directory by
+ * default), and `PPTXTS_KEEP_PACKAGE_TMP=1` to leave it behind for inspection.
  * @template T
  * @param {string} label - which gate is packing, for the directory name and the keep message
  * @param {(packInfo: Awaited<ReturnType<typeof packPackage>>, tmp: string) => Promise<T>} fn -
@@ -29,13 +29,13 @@ import { ROOT, run } from './script-utils.mjs'
  * @returns {Promise<T>}
  */
 export async function withPackedTarball(label, fn) {
-	const tmpRoot = process.env.TSPPTX_PACKAGE_TMPDIR || os.tmpdir()
+	const tmpRoot = process.env.PPTXTS_PACKAGE_TMPDIR || os.tmpdir()
 	await fs.mkdir(tmpRoot, { recursive: true })
 	const tmp = await fs.mkdtemp(path.join(tmpRoot, `.pptx-ts-${label}-`))
 	try {
 		return await fn(await packPackage(path.join(tmp, 'pack')), tmp)
 	} finally {
-		if (process.env.TSPPTX_KEEP_PACKAGE_TMP === '1') console.log(`Keeping ${label} temp directory: ${tmp}`)
+		if (process.env.PPTXTS_KEEP_PACKAGE_TMP === '1') console.log(`Keeping ${label} temp directory: ${tmp}`)
 		else await fs.rm(tmp, { recursive: true, force: true })
 	}
 }

@@ -1,4 +1,4 @@
-import type TsPptx from '../../../dist/node.js'
+import type PptxTs from '../../../dist/node.js'
 import type { FillOption } from '../../../dist/node.js'
 import { assert, assertEqual, build, defineRegressionSuite, readEntry, slideXml } from '../../helpers.ts'
 
@@ -32,7 +32,7 @@ function colors(block: string) {
  * @param part the package part to compare, e.g. `ppt/slides/slide1.xml`
  * @param buildFn takes the fill to use and returns a deck builder
  */
-async function agreesWithObjectForm(part: string, buildFn: (fill: FillOption) => (pres: TsPptx) => unknown) {
+async function agreesWithObjectForm(part: string, buildFn: (fill: FillOption) => (pres: PptxTs) => unknown) {
 	const { zip: shortZip } = await build(buildFn(RED))
 	const { zip: longZip } = await build(buildFn({ color: RED }))
 	const short = await readEntry(shortZip, part)

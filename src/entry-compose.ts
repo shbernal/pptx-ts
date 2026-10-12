@@ -10,7 +10,7 @@
  * three-condition treatment `.` gets, so three more source entries, three more `dist` files, three
  * more budget rows and a second place for the entries to diverge -- and it would buy nothing that
  * export-level shaking does not already give. `pptx-ts` is an intermediate module in a consumer's
- * graph: a program that imports only `createPresentation` drops the `TsPptx` class beside it and,
+ * graph: a program that imports only `createPresentation` drops the `PptxTs` class beside it and,
  * with it, every family that class names.
  */
 

@@ -385,7 +385,7 @@
 	},
 	"hygiene": {
 		"frame": {
-			"pptx-ts": "import TsPptx from 'pptx-ts'\n\nconst pres = new TsPptx()\n// the program goes here\n\nconsole.log(await pres.write({ outputType: 'arraybuffer' }))",
+			"pptx-ts": "import PptxTs from 'pptx-ts'\n\nconst pres = new PptxTs()\n// the program goes here\n\nconsole.log(await pres.write({ outputType: 'arraybuffer' }))",
 			"pptxgenjs": "import PptxGenJS from 'pptxgenjs'\n\nconst pres = new PptxGenJS()\n// the program goes here\n\nconsole.log(await pres.write({ outputType: 'arraybuffer' }))"
 		},
 		"programs": [

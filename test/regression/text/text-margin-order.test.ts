@@ -1,8 +1,8 @@
 import JSZip from 'jszip'
-import TsPptx from '../../../dist/node.js'
+import PptxTs from '../../../dist/node.js'
 import { defineRegressionSuite, assert, xmlOpeningTags, xmlAttributes } from '../../helpers.ts'
 
-async function buildSlideXml(pres: TsPptx) {
+async function buildSlideXml(pres: PptxTs) {
 	const buf = await pres.toBytes()
 	const zip = await JSZip.loadAsync(buf)
 	const entry = zip.file('ppt/slides/slide1.xml')
@@ -18,7 +18,7 @@ defineRegressionSuite('Text box margin array order [upstream-pr-1248]', [
 	{
 		name: 'margin [T,R,B,L] maps each value to the correct bodyPr inset',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			// Four distinct values (inches, all < 1 to avoid the legacy-points warning) so any
 			// transposition (e.g. swapping Top/Left) is caught.
 			pres.addSlide().addText('hi', { x: 1, y: 1, w: 4, h: 1, margin: [0.1, 0.2, 0.3, 0.4] })

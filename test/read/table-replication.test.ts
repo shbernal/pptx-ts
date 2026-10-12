@@ -8,7 +8,7 @@
 // looking option the writer ignores would still fail here.
 
 import { describe, test } from 'vitest'
-import TsPptx, {
+import PptxTs, {
 	TableStyle,
 	type FillOption,
 	type ShapeFillProps,
@@ -56,7 +56,7 @@ function constructs(ir: DeckIr) {
 
 /** Replay an IR `addTable` call through the write API and return the slide part. */
 async function replay(call: CallIr) {
-	const pres = new TsPptx()
+	const pres = new PptxTs()
 	pres.addSlide().addTable(rowsOf(call), optionsOf(call))
 	const buf = await pres.toBytes()
 	const zip = await JSZip.loadAsync(buf)
@@ -64,7 +64,7 @@ async function replay(call: CallIr) {
 }
 
 /** Author `build`, read it back, and convert to the deck IR. */
-async function irFor(build: (pres: TsPptx) => unknown) {
+async function irFor(build: (pres: PptxTs) => unknown) {
 	const { buf } = await authorRead(build)
 	return readModelToIr(await Presentation.load(buf))
 }
@@ -74,7 +74,7 @@ async function irFor(build: (pres: TsPptx) => unknown) {
  * `MEDIUM_STYLE_2_ACCENT_1` resolves a style that really does band its rows. The write API
  * cannot define one — see `authorReadWithFixtureStyles`.
  */
-async function irForStyled(build: (pres: TsPptx) => unknown) {
+async function irForStyled(build: (pres: PptxTs) => unknown) {
 	const { buf } = await authorReadWithFixtureStyles(build)
 	return readModelToIr(await Presentation.load(buf))
 }

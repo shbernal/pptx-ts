@@ -20,7 +20,7 @@ import { describe, test } from 'vitest'
 import { DOMParser, type Node } from '@xmldom/xmldom'
 import JSZip from 'jszip'
 import { CHILD_SEQUENCES } from '../../../src/ooxml/sequence.ts'
-import { TsPptx, ChartType } from '../../../dist/node.js'
+import { PptxTs, ChartType } from '../../../dist/node.js'
 import { assert, readEntry } from '../../helpers.ts'
 
 type Sequence = (typeof CHILD_SEQUENCES)[string]
@@ -80,7 +80,7 @@ function coveredElements(xml: string) {
  * picture, a group, and charts, whose `c:spPr` is the same complexType a slide's is.
  */
 async function richDeck() {
-	const pres = new TsPptx()
+	const pres = new PptxTs()
 	const slide = pres.addSlide()
 	slide.addShape('rect', {
 		x: 0.5,

@@ -2,7 +2,7 @@
  * Reproduce an existing HTML `<table>` as a PowerPoint table, as a free
  * function that works anywhere there is a DOM.
  *
- * The same conversion is available as `TsPptx.prototype.tableToSlides(id, options)` on the
+ * The same conversion is available as `PptxTs.prototype.tableToSlides(id, options)` on the
  * browser build. Reach for *that* when you are in a browser and have a table id; reach for
  * *this* when either of those is not true:
  *
@@ -12,7 +12,7 @@
  *   that document.
  * - **You already have the element.** Passing it skips the id lookup, and skips the class of
  *   bug where an id that is not a valid CSS identifier resolves to nothing.
- * - **Your presentation is not a `TsPptx`.** The `pptx` parameter is structural
+ * - **Your presentation is not a `PptxTs`.** The `pptx` parameter is structural
  *   ({@link TableToSlidesHost}: `addSlide` + `presLayout`), so anything shaped like a
  *   presentation works, including the Node build.
  *
@@ -33,14 +33,14 @@
  * as the rows need — works the same wherever it runs.
  * @example
  * ```ts
- * import { TsPptx } from 'pptx-ts'
+ * import { PptxTs } from 'pptx-ts'
  * import { tableToSlides } from 'pptx-ts/html'
  * import { Window } from 'happy-dom'
  *
  * const win = new Window()
  * win.document.body.innerHTML = '<table id="report">…</table>'
  *
- * const pptx = new TsPptx()
+ * const pptx = new PptxTs()
  * tableToSlides(pptx, win.document.getElementById('report'), { autoPage: true })
  * await pptx.writeFile({ fileName: 'report.pptx' })
  * ```

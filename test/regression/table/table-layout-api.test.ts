@@ -7,7 +7,7 @@
 import { describe, test, expect } from 'vitest'
 import { computeTableLayout } from '../../../src/measure/table-fit.ts'
 import { FontMetricsRegistry, type FontMetrics } from '../../../src/measure/font-metrics.ts'
-import TsPptx, { type TableLayoutResult } from '../../../dist/node.js'
+import PptxTs, { type TableLayoutResult } from '../../../dist/node.js'
 import { defined } from '../../helpers.ts'
 
 // Monospace synthetic metrics: every code point advances `emPerChar` ems.
@@ -135,7 +135,7 @@ describe('computeTableLayout core — auto-height estimation', () => {
 
 describe('pptx.tableLayout() instance method (through dist)', () => {
 	test('returns per-cell geometry using the default layout, no metrics required', () => {
-		const pptx = new TsPptx()
+		const pptx = new PptxTs()
 		const rows = [[{ text: 'one' }, { text: 'two' }, { text: 'three' }]]
 		const res = pptx.tableLayout(rows, { x: 1, y: 1, w: 8, colW: [2, 3, 3], rowH: 0.5 })
 		expect(res.cells).toHaveLength(3)

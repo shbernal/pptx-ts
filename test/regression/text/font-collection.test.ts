@@ -22,7 +22,7 @@
 import { readFileSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, test, expect } from 'vitest'
-import TsPptx from '../../../dist/node.js'
+import PptxTs from '../../../dist/node.js'
 import {
 	parseFontMetrics,
 	listFontFaces,
@@ -393,28 +393,28 @@ describe('a malformed collection is refused, not read into garbage', () => {
 
 describe('pptx.registerFontMetrics accepts a collection', () => {
 	test('with no font option the deck-side face name selects the member', async () => {
-		const pptx = new TsPptx()
+		const pptx = new PptxTs()
 		await pptx.registerFontMetrics('Silkscreen', TTC)
 		const measured = pptx.measureText('WWWWWWWWWW', { wIn: 1, fontSize: 18, fontFace: 'Silkscreen' })
 		expect(measured.measurable).toBe(true)
 	})
 
 	test('a face naming no member throws instead of silently measuring the first', async () => {
-		const pptx = new TsPptx()
+		const pptx = new PptxTs()
 		const err = await pptx.registerFontMetrics('MS PGothic', TTC).catch((e) => e)
 		expect(err).toBeInstanceOf(InvalidOptionError)
 		expect(err.code).toBe('font/collection-face-not-found')
 	})
 
 	test('an explicit font option overrides the face name', async () => {
-		const pptx = new TsPptx()
+		const pptx = new PptxTs()
 		// The deck calls it 'Pixel'; the file calls it Silkscreen-Bold.
 		await pptx.registerFontMetrics('Pixel', TTC, { font: 'Silkscreen-Bold' })
 		expect(pptx.measureText('W', { wIn: 4, fontSize: 18, fontFace: 'Pixel' }).measurable).toBe(true)
 	})
 
 	test('a plain TTF still registers under any face name (no name matching there)', async () => {
-		const pptx = new TsPptx()
+		const pptx = new PptxTs()
 		await pptx.registerFontMetrics('Anything At All', REG_BYTES)
 		expect(pptx.measureText('W', { wIn: 4, fontSize: 18, fontFace: 'Anything At All' }).measurable).toBe(true)
 	})
@@ -425,9 +425,9 @@ describe('pptx.registerFontMetrics accepts a collection', () => {
 		const buffer = new ArrayBuffer(TTC.byteLength)
 		new Uint8Array(buffer).set(TTC)
 		expect(buffer).toBeInstanceOf(ArrayBuffer)
-		const fromBuffer = new TsPptx()
+		const fromBuffer = new PptxTs()
 		await fromBuffer.registerFontMetrics('Silkscreen', buffer)
-		const fromView = new TsPptx()
+		const fromView = new PptxTs()
 		await fromView.registerFontMetrics('Silkscreen', TTC)
 		const opts = { wIn: 4, fontSize: 18, fontFace: 'Silkscreen' }
 		expect(fromBuffer.measureText('WWWWWWWWWW', opts).widestLineIn).toBe(

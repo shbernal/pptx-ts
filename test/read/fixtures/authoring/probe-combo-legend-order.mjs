@@ -42,7 +42,7 @@
 //
 // That ranking and its tiebreak are what `legendOrder` in `src/gen/chart/chart-xml.ts` encodes.
 import fs from 'node:fs'
-import TsPptx, { ChartType } from '../../../../dist/node.js'
+import PptxTs, { ChartType } from '../../../../dist/node.js'
 
 /** @import { ChartMulti, ChartOpts } from '../../../../dist/node.js' */
 
@@ -162,7 +162,7 @@ for (const [first, second] of pairs) {
 
 const refused = []
 for (const [name, { types, secondaryAxes }] of Object.entries(decks)) {
-	const pres = new TsPptx()
+	const pres = new PptxTs()
 	try {
 		pres.addSlide().addChart(types, {
 			x: 0.5,

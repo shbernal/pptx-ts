@@ -13,7 +13,7 @@
  * hands them over as paths under Node and as URLs on the site, so the same module builds the
  * deck in both.
  */
-import TsPptx, { ChartType, ShapeType } from 'pptx-ts'
+import PptxTs, { ChartType, ShapeType } from 'pptx-ts'
 import { image, imageDataUri, media } from '../lib/assets.mjs'
 import { CONTENT_W, MARGIN, WIDE, columns } from '../lib/layout.mjs'
 import {
@@ -1330,7 +1330,7 @@ function addClose(pptx) {
  * page previews the deck from it, and `build` writes it to a file.
  */
 export async function compose() {
-	const pptx = new TsPptx()
+	const pptx = new PptxTs()
 
 	pptx.title = 'Nightjar — Series A'
 	pptx.subject = 'Investor pitch'

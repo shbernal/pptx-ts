@@ -10,7 +10,7 @@
  * Checked through the read model, which reports each cell's `rowSpan` against the rows its own
  * table actually has, so the assertion is about the emitted structure and not about the pager.
  */
-import TsPptx, { type TableRow } from '../../../dist/node.js'
+import PptxTs, { type TableRow } from '../../../dist/node.js'
 import { Presentation } from '../../../dist/read.js'
 import { assert, captureDiagnostics, defineRegressionSuite } from '../../helpers.ts'
 
@@ -18,7 +18,7 @@ const WORDS = Array.from({ length: 40 }, (_unused, i) => `word${i}`).join(' ')
 
 /** Every page's table, read back, with each origin cell's rowSpan checked against the page. */
 async function spanProblems(rows: TableRow[]) {
-	const pres = new TsPptx()
+	const pres = new PptxTs()
 	pres.addSlide().addTable(rows, { x: 0.5, y: 0.5, colW: [1, 1], autoPage: true })
 	const presentation = await Presentation.load(await pres.toBytes())
 	const problems: string[] = []

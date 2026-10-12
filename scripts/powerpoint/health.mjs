@@ -13,8 +13,8 @@ const USAGE = `Report the PowerPoint worker's health.
   pnpm ppt:health
 
 Environment:
-  TSPPTX_POWERPOINT_URL     the worker's base URL (default http://127.0.0.1:8765)
-  TSPPTX_POWERPOINT_TOKEN   its bearer token
+  PPTXTS_POWERPOINT_URL     the worker's base URL (default http://127.0.0.1:8765)
+  PPTXTS_POWERPOINT_TOKEN   its bearer token
 Both fall back to tools/powerpoint-vm/.env.`
 
 /** @returns {Promise<number>} */
@@ -22,7 +22,7 @@ async function main() {
 	parseCli(process.argv.slice(2), { usage: USAGE, options: {} })
 	const { url, token } = resolveConnection()
 	if (!token) {
-		console.error('No token: set TSPPTX_POWERPOINT_TOKEN, or run `pnpm ppt:vm:sync` to generate one.')
+		console.error('No token: set PPTXTS_POWERPOINT_TOKEN, or run `pnpm ppt:vm:sync` to generate one.')
 		return 1
 	}
 	let res

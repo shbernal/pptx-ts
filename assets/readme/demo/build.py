@@ -139,7 +139,7 @@ def tokens(line):
                 kind = "fn"
             elif rest.startswith(":") and not rest.startswith("::"):
                 kind = "prop"
-            elif val == "TsPptx":
+            elif val == "PptxTs":
                 kind = "fn"
             else:
                 kind = "text"

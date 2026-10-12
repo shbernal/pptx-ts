@@ -1,6 +1,6 @@
 import {
 	defineRegressionSuite,
-	TsPptx,
+	PptxTs,
 	captureDiagnostics,
 	build,
 	readEntry,
@@ -24,7 +24,7 @@ import { InvalidOptionError } from '../../../dist/node.js'
 // a clamp rather than a rejection.
 
 /** The `<p:sldSz .../>` element of a deck built under `layoutName`. */
-async function slideSize(defineFn: (pres: TsPptx) => void, layoutName: string) {
+async function slideSize(defineFn: (pres: PptxTs) => void, layoutName: string) {
 	const { zip } = await build((pres) => {
 		defineFn(pres)
 		pres.layout = layoutName
@@ -38,17 +38,17 @@ async function slideSize(defineFn: (pres: TsPptx) => void, layoutName: string) {
 
 defineRegressionSuite('Slide size bounds', [
 	{
-		name: 'defineLayout throws a TsPptxError rather than a raw TypeError on a non-object',
+		name: 'defineLayout throws a PptxTsError rather than a raw TypeError on a non-object',
 		fn: async () => {
 			// It used to warn `layout/invalid-definition` and then die on the next line's
 			// `layout.name`, so the caller got a `TypeError` describing a property access — after
 			// a warning describing the very input that could not survive. `docs/errors-and-warnings.md` says
-			// every failure this library raises is a `TsPptxError`.
+			// every failure this library raises is a `PptxTsError`.
 			for (const bad of [undefined, null, 'LAYOUT_WIDE', 42]) {
 				let err: unknown = null
 				try {
 					// @ts-expect-error none of these is a layout
-					new TsPptx().defineLayout(bad)
+					new PptxTs().defineLayout(bad)
 				} catch (ex) {
 					err = ex
 				}

@@ -373,7 +373,7 @@ export function printPreamble(packageName: string, imports: { fs: readonly strin
 	return [
 		...(imports.fs.length > 0 ? [`import { ${imports.fs.join(', ')} } from 'node:fs/promises'`] : []),
 		"import { fileURLToPath } from 'node:url'",
-		`import TsPptx from ${printString(packageName)}`,
+		`import PptxTs from ${printString(packageName)}`,
 		...(imports.read ? [`import { Presentation } from ${printString(`${packageName}/read`)}`] : []),
 		'',
 		'/** Resolve a path against this script rather than against the working directory. */',
@@ -397,7 +397,7 @@ export function printPreamble(packageName: string, imports: { fs: readonly strin
  */
 export function printLayoutSetup(size: { widthEmu: number; heightEmu: number }, indent = ''): string[] {
 	return [
-		`${indent}const pptx = new TsPptx()`,
+		`${indent}const pptx = new PptxTs()`,
 		`${indent}pptx.defineLayout({ name: 'source', width: ${inches(size.widthEmu)}, height: ${inches(size.heightEmu)} })`,
 		`${indent}pptx.layout = 'source'`,
 	]

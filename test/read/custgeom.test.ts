@@ -13,7 +13,7 @@
 // - preset-rect: <a:prstGeom prst="rect"> — the negative case (customGeometry === null).
 
 import { describe, test } from 'vitest'
-import TsPptx from '../../dist/node.js'
+import PptxTs from '../../dist/node.js'
 import { Presentation, type CustomGeometryPath, type Slide } from '../../dist/read.js'
 import { readModelToIr } from '../../dist/script.js'
 
@@ -137,7 +137,7 @@ describe('Shape.customGeometry guides, adjust handles and connection sites', () 
 	})
 
 	test('an authored custGeom carries all three lists through readModelToIr', async () => {
-		const pptx = new TsPptx()
+		const pptx = new PptxTs()
 		pptx.addSlide().addShape('custGeom', {
 			x: 1,
 			y: 1,

@@ -119,7 +119,7 @@ describe('a printed script parses whatever the deck names hold', () => {
 // once printed would run with the script.
 
 /** The global a payload that ran would set. */
-const PAYLOAD_GLOBAL = '__tsPptxContentTypePayload'
+const PAYLOAD_GLOBAL = '__pptxTsContentTypePayload'
 const PAYLOAD = `image/png;\${globalThis.${PAYLOAD_GLOBAL}=1}`
 /** `globalThis` with the slot a payload that ran would set. */
 const globals = globalThis as typeof globalThis & { [PAYLOAD_GLOBAL]?: unknown }

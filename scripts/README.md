@@ -87,7 +87,7 @@ are in every aggregate the repo has.
 | `com/contract.mjs` | Library | The shape names, `ProgID`s and `PpActionType` values the COM decks, VBScripts and verifiers all have to agree on | `powerpoint-com-smoke.mjs` |
 | `com/decks.mjs` | Library | Builds the four decks the COM smoke drives, from the current `dist/` | `powerpoint-com-smoke.mjs` |
 | `com/vbs.mjs` | Library | The VBScript sources that drive desktop PowerPoint, one per deck; each finds its deck beside itself, so it runs in any job workspace | `powerpoint-com-smoke.mjs` |
-| `powerpoint/client.mjs` | Library | Runs a PowerPoint job on whichever PowerPoint is at hand: the worker when `TSPPTX_POWERPOINT_URL` is set, else this Windows machine's own | `powerpoint-com-smoke.mjs`; unit-tested |
+| `powerpoint/client.mjs` | Library | Runs a PowerPoint job on whichever PowerPoint is at hand: the worker when `PPTXTS_POWERPOINT_URL` is set, else this Windows machine's own | `powerpoint-com-smoke.mjs`; unit-tested |
 | `powerpoint/connection.mjs` | Library | The worker's URL and token, from the environment or `tools/powerpoint-vm/.env` | `powerpoint/client.mjs`, `powerpoint/health.mjs`, `powerpoint/vm-sync.mjs` |
 | `powerpoint/health.mjs` | Gate | Asks the worker for its health and prints the PowerPoint build it drives; fails when the worker is unreachable or sees no PowerPoint | manual (`ppt:health`) |
 | `powerpoint/job.mjs` | Library | The PowerPoint worker's job and result shapes, and the validation a job passes before anything touches the disk | `powerpoint/worker.mjs`; unit-tested |

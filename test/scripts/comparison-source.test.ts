@@ -142,8 +142,8 @@ describe('the bundle corpus', () => {
 	test('a compiled program carries the frame, the constants and the body', () => {
 		const program = defined(PROGRAMS.find((entry) => entry.id === 'full-deck'))
 		const module = programModule(program, 'pptx-ts')
-		expect(module.startsWith("import TsPptx from 'pptx-ts'\n")).toBe(true)
-		expect(module).toContain('const pres = new TsPptx()')
+		expect(module.startsWith("import PptxTs from 'pptx-ts'\n")).toBe(true)
+		expect(module).toContain('const pres = new PptxTs()')
 		expect(module.trimEnd().endsWith("console.log(await pres.write({ outputType: 'arraybuffer' }))")).toBe(true)
 	})
 

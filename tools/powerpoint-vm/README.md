@@ -70,7 +70,7 @@ To add the fonts to a VM built before this step existed, run the script as a job
 | `pnpm ppt:health` | Reports the worker's PowerPoint build, or why it cannot be reached |
 | `pnpm run test:com` | Runs the PowerPoint COM smoke through the worker |
 
-`.env` sets `TSPPTX_POWERPOINT_URL`, which sends `test:com` to the worker instead of looking for
+`.env` sets `PPTXTS_POWERPOINT_URL`, which sends `test:com` to the worker instead of looking for
 a local PowerPoint. The environment variable of the same name overrides it.
 
 ### Re-syncing the worker

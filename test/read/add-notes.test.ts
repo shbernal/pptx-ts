@@ -15,7 +15,7 @@
 
 import type { Element } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
-import TsPptx, { type Slide } from '../../dist/node.js'
+import PptxTs, { type Slide } from '../../dist/node.js'
 import { Presentation, type OpcPackage } from '../../dist/read.js'
 import { assert, assertEqual, bytesEqual, defined, caughtSync, at } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
@@ -37,7 +37,7 @@ const SLIDE_MASTER_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/
 
 /** A one-slide generator deck, loaded through the read model. */
 async function authoredDeck(build?: (slide: Slide) => unknown) {
-	const pptx = new TsPptx()
+	const pptx = new PptxTs()
 	const slide = pptx.addSlide()
 	slide.addText('body', { x: 1, y: 1, w: 4, h: 1 })
 	if (build) build(slide)

@@ -1,8 +1,8 @@
-import TsPptx, { ShapeType } from '../../../dist/node.js'
+import PptxTs, { ShapeType } from '../../../dist/node.js'
 import JSZip from 'jszip'
 import { defineRegressionSuite, assert } from '../../helpers.ts'
 
-async function buildSlide1(pres: TsPptx) {
+async function buildSlide1(pres: PptxTs) {
 	const buf = await pres.toBytes()
 	const zip = await JSZip.loadAsync(buf)
 	const entry = zip.file('ppt/slides/slide1.xml')
@@ -18,7 +18,7 @@ defineRegressionSuite('Shadow scheme colors [shadow-consolidation]', [
 	{
 		name: 'shape shadow with scheme color emits <a:schemeClr> (not srgbClr) inside effectLst',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			const slide = pres.addSlide()
 			slide.addShape(ShapeType.rect, {
 				x: 1,
@@ -45,7 +45,7 @@ defineRegressionSuite('Shadow scheme colors [shadow-consolidation]', [
 	{
 		name: 'image shadow with scheme color emits <a:schemeClr> inside effectLst',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			const slide = pres.addSlide()
 			const png =
 				'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkAAIAAAoAAv/lxKUAAAAASUVORK5CYII='

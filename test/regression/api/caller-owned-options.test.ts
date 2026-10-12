@@ -9,7 +9,7 @@ import {
 	assertEqual,
 	assertIncludes,
 	assertNonVisualDrawingProperty,
-	type TsPptx,
+	type PptxTs,
 	at,
 } from '../../helpers.ts'
 
@@ -37,7 +37,7 @@ import {
 // (each object gets its own identity). The last two are what breaks without the first.
 
 /** Build, capturing library diagnostics as `{ code, message }` pairs. */
-async function buildCapturingLogs(buildFn: (pres: TsPptx) => unknown) {
+async function buildCapturingLogs(buildFn: (pres: PptxTs) => unknown) {
 	const warnings: Diagnostic[] = []
 	setDiagnosticHandler((d) => warnings.push(d))
 	try {

@@ -39,13 +39,13 @@ beforeEach(() => {
 			'',
 			'## Classes',
 			'',
-			'- [TsPptx](classes/TsPptx.md)',
+			'- [PptxTs](classes/PptxTs.md)',
 			'- [~~Old\\_Name~~](classes/Old_Name.md)',
 			'',
 		].join('\n')
 	)
 	write('index/interfaces/SlideProps.md')
-	write('index/classes/TsPptx.md')
+	write('index/classes/PptxTs.md')
 	write('index/classes/Old_Name.md')
 	write(
 		'read/README.md',
@@ -82,7 +82,7 @@ describe('apiSidebar', () => {
 					text: 'Classes',
 					collapsed: true,
 					items: [
-						{ text: 'TsPptx', link: '/reference/api/index/classes/TsPptx' },
+						{ text: 'PptxTs', link: '/reference/api/index/classes/PptxTs' },
 						{ text: '<s>Old_Name</s>', link: '/reference/api/index/classes/Old_Name' },
 					],
 				},
@@ -93,8 +93,8 @@ describe('apiSidebar', () => {
 	})
 
 	test('throws when a README links a page that was not generated', () => {
-		rmSync(path.join(outDir, 'index', 'classes', 'TsPptx.md'))
-		expect(() => apiSidebar(outDir, modules)).toThrow(/index\/README\.md links classes\/TsPptx\.md/)
+		rmSync(path.join(outDir, 'index', 'classes', 'PptxTs.md'))
+		expect(() => apiSidebar(outDir, modules)).toThrow(/index\/README\.md links classes\/PptxTs\.md/)
 	})
 
 	test('throws when a generated page is reached by neither the sidebar nor the README', () => {

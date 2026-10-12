@@ -3,7 +3,7 @@
  *
  * A **code** names a *condition*, in `area/condition` form. The same condition keeps the same code
  * whichever way it reaches the consumer: as a non-fatal {@link Diagnostic} (see `diagnostics.ts`)
- * or as a thrown {@link TsPptxError} (see `errors.ts`). `coord/non-finite` means "a coordinate was
+ * or as a thrown {@link PptxTsError} (see `errors.ts`). `coord/non-finite` means "a coordinate was
  * `NaN`/`Infinity`" in both directions, and a consumer that special-cases it only has to learn the
  * one string.
  *
@@ -14,7 +14,7 @@
  * the condition is genuinely the same, even if the wording differs and even if it is reported from
  * a different entry point.
  *
- * The error codes are grouped by the {@link TsPptxError} subclass that carries them, not by area,
+ * The error codes are grouped by the {@link PptxTsError} subclass that carries them, not by area,
  * because that pairing is type-enforced: `new MediaError('coord/non-finite', …)` does not compile.
  * A condition that can genuinely arrive under two different classes needs two codes, because the
  * class is part of what the consumer branches on.
@@ -516,7 +516,7 @@ export type InternalErrorCode =
 	| 'oxml/node-has-no-parent'
 
 /**
- * Every condition the library can throw. See {@link TsPptxCode} for the whole vocabulary.
+ * Every condition the library can throw. See {@link PptxTsCode} for the whole vocabulary.
  *
  * **Which of these is worth reporting upstream.** An `InternalErrorCode` always is, and the error
  * carrying it says so at runtime. A `PackageReadErrorCode` on a file that opens cleanly in
@@ -536,4 +536,4 @@ export type ErrorCode =
 	| InternalErrorCode
 
 /** Every condition the library can report, warned or thrown. */
-export type TsPptxCode = DiagnosticCode | ErrorCode
+export type PptxTsCode = DiagnosticCode | ErrorCode

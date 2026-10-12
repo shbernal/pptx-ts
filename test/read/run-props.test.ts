@@ -9,10 +9,10 @@ import { describe, test } from 'vitest'
 import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.ts'
 import { Presentation, isGraphicFrame, type Run } from '../../dist/read.js'
 import { readFixture } from './corpus.ts'
-import { assert, assertEqual, defined, type TsPptx, at } from '../helpers.ts'
+import { assert, assertEqual, defined, type PptxTs, at } from '../helpers.ts'
 
 /** A text box whose runs each carry one character-formatting property. */
-function formattedRuns(pres: TsPptx) {
+function formattedRuns(pres: PptxTs) {
 	pres.addSlide().addText(
 		[
 			{ text: 'Struck', options: { strike: true } },

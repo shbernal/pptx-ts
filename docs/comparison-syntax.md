@@ -50,8 +50,8 @@ same code.
 
 ## What changes around the calls
 
-- **The import.** `import TsPptx from "pptx-ts"` in place of `import pptxgen from
-  "pptxgenjs"`. From CommonJS, `const { default: TsPptx } = require("pptx-ts")`: the
+- **The import.** `import PptxTs from "pptx-ts"` in place of `import pptxgen from
+  "pptxgenjs"`. From CommonJS, `const { default: PptxTs } = require("pptx-ts")`: the
   package is an ES module, so `require()` returns its namespace and the class is on
   `.default`.
 - **Node.js 24 or later.** pptx-ts declares `>=24`; pptxgenjs runs on older releases.
@@ -61,7 +61,7 @@ same code.
 - **No upstream file paths.** Code that loads `dist/pptxgen.cjs.js`, `dist/pptxgen.js`,
   `dist/pptxgen.es.js`, `dist/pptxgen.bundle.js` or `dist/pptxgen.min.js` by path imports
   the package instead, and the global the classic-script bundle defined has no equivalent.
-  A page with no build step uses `import TsPptx from "https://esm.sh/pptx-ts/browser"` in
+  A page with no build step uses `import PptxTs from "https://esm.sh/pptx-ts/browser"` in
   a module script.
 
 ## How to read a snippet
@@ -76,9 +76,9 @@ Each block is the body of a build function. The harness puts the same frame arou
 one of them, so this page states the frame once rather than repeating it on every intent:
 
 ```js
-import TsPptx from 'pptx-ts/node'
+import PptxTs from 'pptx-ts/node'
 
-const pres = new TsPptx()
+const pres = new PptxTs()
 // the snippet goes here
 await pres.writeFile({ fileName: 'probe.pptx' })
 ```
@@ -443,9 +443,9 @@ The frame is a consumer program rather than the probe harness, so it imports the
 root and keeps the exported bytes:
 
 ```js
-import TsPptx from 'pptx-ts'
+import PptxTs from 'pptx-ts'
 
-const pres = new TsPptx()
+const pres = new PptxTs()
 // the program goes here
 
 console.log(await pres.write({ outputType: 'arraybuffer' }))

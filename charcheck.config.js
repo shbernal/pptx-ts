@@ -64,7 +64,7 @@ export default {
 			// The include list is the published docs, the three root files, `www/`, and
 			// `skills/`. The first three are what a contributor reads before anything else.
 			// `skills/` is in `package.json`'s `files`, so a consumer's agent reads
-			// `ts-pptx-upstream/SKILL.md` rather than anyone here. Each set was cleaned in one
+			// `pptx-ts-upstream/SKILL.md` rather than anyone here. Each set was cleaned in one
 			// pass and joined the gate in the same commit, so the rule is what keeps them
 			// clean rather than a backlog to work off. Still outside it: `CHANGELOG.md` (a
 			// historical record, not prose to reword) and the `test/` and `scripts/` notes.

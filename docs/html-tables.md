@@ -16,7 +16,7 @@ doc_type: "guide"
 many slides as the rows need. It runs in a browser, and under Node with any DOM implementation.
 
 ```ts
-import { TsPptx } from 'pptx-ts'
+import { PptxTs } from 'pptx-ts'
 import { tableToSlides } from 'pptx-ts/html'
 import { Window } from 'happy-dom'
 
@@ -27,7 +27,7 @@ win.document.body.innerHTML = `
     <tbody><tr><td>Bolts</td><td>40</td></tr></tbody>
   </table>`
 
-const pptx = new TsPptx()
+const pptx = new PptxTs()
 tableToSlides(pptx, 'report', { document: win.document })
 await pptx.writeFile({ fileName: 'report.pptx' })
 ```

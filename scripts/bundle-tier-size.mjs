@@ -43,7 +43,7 @@
  * gap is the claim — the absolutes have moved since, and the rows the gate prints are the
  * current ones. It is here for the day the gap stops falling `dist/`'s way.
  *
- * **Two program shapes, not one.** The three `new TsPptx()` rows measure the default class,
+ * **Two program shapes, not one.** The three `new PptxTs()` rows measure the default class,
  * which is composed with every family and always will be. The `composed-*` rows measure
  * `createPresentation`, which is composed with the core tier plus what it names — the surface
  * the whole split exists to make possible. Both shapes are real programs a consumer writes,
@@ -183,7 +183,7 @@ function entrySpecifier(tier, file = DIST_ENTRY) {
  * One tier's program source.
  *
  * A {@link COMPOSED} name prints a `createPresentation` program that names its own families; a
- * {@link TIERS} name prints a `TsPptx` program accumulating every tier declared before it.
+ * {@link TIERS} name prints a `PptxTs` program accumulating every tier declared before it.
  * @param {string} tier - a name in {@link TIER_NAMES}
  * @returns {string}
  */
@@ -205,8 +205,8 @@ export function programFor(tier) {
 	const upto = keys.indexOf(tier)
 	if (upto < 0) throw new Error(`no such tier: ${tier}`)
 	return [
-		`import TsPptx from ${JSON.stringify(entrySpecifier(tier))}`,
-		'const pres = new TsPptx()',
+		`import PptxTs from ${JSON.stringify(entrySpecifier(tier))}`,
+		'const pres = new PptxTs()',
 		'const slide = pres.addSlide()',
 		...keys.slice(0, upto + 1).flatMap((key) => TIERS[key] ?? []),
 		`globalThis.${SINK} = await pres.write({ outputType: 'arraybuffer' })`,

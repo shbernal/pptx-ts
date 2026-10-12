@@ -1,7 +1,7 @@
 import JSZip from 'jszip'
 import { defineRegressionSuite, build, readEntry, assert, assertEqual, defined } from '../../helpers.ts'
 import { readFixture } from '../../read/corpus.ts'
-import type { TsPptx } from '../../../dist/node.js'
+import type { PptxTs } from '../../../dist/node.js'
 
 // What wins when an object names a placeholder AND states options of its own.
 //
@@ -41,7 +41,7 @@ async function frameOf(zip: JSZip) {
 const EMU = 914400
 
 /** A master whose `body` placeholder sits at (1, 1) and is 8 x 4 inches. */
-function withBodyPlaceholder(p: TsPptx) {
+function withBodyPlaceholder(p: PptxTs) {
 	p.defineSlideMaster({
 		title: 'PH_FRAME',
 		objects: [{ placeholder: { options: { name: 'body', type: 'body', x: 1, y: 1, w: 8, h: 4 }, text: '' } }],

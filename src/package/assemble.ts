@@ -3,7 +3,7 @@
  * OOXML package parts and hand the bytes to the ZIP writer. This is the write-side
  * "packaging" layer — `[Content_Types].xml`, the `_rels` graph, docProps, theme, the
  * per-slide/layout/master parts, and media rels — split out of the authoring class
- * (`TsPptx`) so that class stays a façade over slide authoring. The parts a construct
+ * (`PptxTs`) so that class stays a façade over slide authoring. The parts a construct
  * family adds on top of that skeleton — charts, comments, notes — come from the part
  * contributors it is handed, so nothing here names a family.
  *

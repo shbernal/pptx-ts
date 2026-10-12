@@ -10,7 +10,7 @@ import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import JSZip from 'jszip'
 import { describe, test, beforeAll } from 'vitest'
-import TsPptx from '../../dist/node.js'
+import PptxTs from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
 import { assert, assertEqual, readEntry } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
@@ -33,7 +33,7 @@ async function openTarget() {
 
 /** A generator deck sized to LAYOUT_WIDE (matches theme-colors), embedding Silkscreen. */
 async function fontGenerator() {
-	const pptx = new TsPptx()
+	const pptx = new PptxTs()
 	pptx.layout = 'LAYOUT_WIDE'
 	await pptx.embedFont({ data: regular, typeface: 'Silkscreen' })
 	await pptx.embedFont({ data: bold, typeface: 'Silkscreen', style: 'bold' })
@@ -105,7 +105,7 @@ describe('Presentation.appendSlides — embedded fonts', () => {
 
 	test('no embedded fonts on the generator leaves the deck font-free', async () => {
 		const target = await openTarget()
-		const pptx = new TsPptx()
+		const pptx = new PptxTs()
 		pptx.layout = 'LAYOUT_WIDE'
 		pptx.addSlide().addText('hi', { x: 1, y: 1, w: 4, h: 1 })
 		await target.appendSlides(pptx, { layout: 'Blank' })

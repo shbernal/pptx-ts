@@ -32,8 +32,8 @@ body:
         [api-gap](https://github.com/shbernal/pptx-ts/issues/new?template=api-gap.yml) for
         OOXML the API cannot reach. If none fits, a blank issue is fine.
 
-        The `ts-pptx-upstream` skill walks through all of this:
-        `npx skills add shbernal/pptx-ts --skill ts-pptx-upstream`
+        The `pptx-ts-upstream` skill walks through all of this:
+        `npx skills add shbernal/pptx-ts --skill pptx-ts-upstream`
 
   - type: input
     id: version-pptx-ts

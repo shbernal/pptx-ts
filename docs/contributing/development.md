@@ -25,7 +25,7 @@ covers setting up the repository, the gate to run locally, and the git hooks.
 - `scripts/`: build, gate, package and demo automation. `scripts/powerpoint/` is the PowerPoint
   job runner: the worker that runs COM jobs on Windows, and the client that `test:com` and
   `ppt:run` send jobs through.
-- `skills/`: the `ts-pptx-upstream` skill, which ships in the package. Skills for working on this
+- `skills/`: the `pptx-ts-upstream` skill, which ships in the package. Skills for working on this
   repository are under `.agents/skills/`. Each sets `metadata.internal: true`, which keeps
   `npx skills add shbernal/pptx-ts` from offering it to a consumer (it walks `.claude/skills/`,
   a symlink to that tree). `INSTALL_INTERNAL_SKILLS=1` installs them anyway.

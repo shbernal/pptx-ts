@@ -6,7 +6,7 @@ import {
 	captureDiagnostics,
 	defined,
 	setDiagnosticHandler,
-	type TsPptx,
+	type PptxTs,
 } from '../../helpers.ts'
 
 // The diagnostics seam: every library warning is a structured `{ code, message }` delivered to a
@@ -18,7 +18,7 @@ import {
 // console handler owns that).
 
 /** A tiny deck that trips exactly one known condition. */
-function badColumns(p: TsPptx) {
+function badColumns(p: PptxTs) {
 	// `columns` must be 1-16; 99 is rejected and the option ignored.
 	p.addSlide().addText('x', { x: 1, y: 1, w: 2, h: 1, columns: 99 })
 }

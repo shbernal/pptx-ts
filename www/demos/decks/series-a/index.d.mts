@@ -7,7 +7,7 @@
  * Hand-written rather than generated — the deck is plain `.mjs` and the exported surface is
  * three values, so a build step to produce a handful of lines would cost more than it saves.
  */
-import type TsPptx from 'pptx-ts'
+import type PptxTs from 'pptx-ts'
 
 /**
  * Assemble the deck and return the presentation, having written nothing.
@@ -15,7 +15,7 @@ import type TsPptx from 'pptx-ts'
  * What a caller that needs the *bytes* uses — the preview feeds them to a reader. `build`
  * is the same deck with a destination attached.
  */
-export function compose(): Promise<TsPptx>
+export function compose(): Promise<PptxTs>
 
 /** Build the deck and write it to `outFile`. Returns the written file name. */
 export function build(outFile: string): Promise<string>

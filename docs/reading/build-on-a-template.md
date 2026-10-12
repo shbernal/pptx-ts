@@ -1,7 +1,7 @@
 ---
 doc-schema-version: 1
 title: "Build on a template"
-summary: "Open a PowerPoint template with Presentation.fromTemplate, list its layouts, and add slides generated with TsPptx bound to a named layout, keeping the template's masters, layouts and theme byte for byte. Works for .potx and .pptx files and for decks that already have slides."
+summary: "Open a PowerPoint template with Presentation.fromTemplate, list its layouts, and add slides generated with PptxTs bound to a named layout, keeping the template's masters, layouts and theme byte for byte. Works for .potx and .pptx files and for decks that already have slides."
 read_when:
   - Generating slides on a corporate template instead of rebuilding its masters in code
   - Turning a .potx template into an editable .pptx
@@ -12,17 +12,17 @@ doc_type: "guide"
 
 # Build on a template
 
-`Presentation.fromTemplate(input)` opens a template with its sample slides removed. `appendSlides` then adds slides you generate with `TsPptx`, each bound to one of the template's layouts:
+`Presentation.fromTemplate(input)` opens a template with its sample slides removed. `appendSlides` then adds slides you generate with `PptxTs`, each bound to one of the template's layouts:
 
 ```ts
 import { readFile, writeFile } from 'node:fs/promises'
-import { TsPptx } from 'pptx-ts'
+import { PptxTs } from 'pptx-ts'
 import { Presentation } from 'pptx-ts/read'
 
 const deck = await Presentation.fromTemplate(await readFile('brand.potx'))
 console.log(deck.layouts().map((layout) => layout.name))
 
-const pptx = new TsPptx()
+const pptx = new PptxTs()
 pptx.layout = 'LAYOUT_WIDE'
 pptx.addSlide().addText('Hello', { x: 1, y: 1, w: 6, h: 1 })
 
@@ -63,7 +63,7 @@ if (layout) await deck.appendSlides(pptx, { layout, at: 0 })
 
 ## Add generated slides
 
-`deck.appendSlides(pptx, options)` builds the slides of a `TsPptx` and adds them to the deck. It returns a promise of the new slides. [`AppendSlidesOptions`](../reference/api/read/interfaces/AppendSlidesOptions.md) has three options:
+`deck.appendSlides(pptx, options)` builds the slides of a `PptxTs` and adds them to the deck. It returns a promise of the new slides. [`AppendSlidesOptions`](../reference/api/read/interfaces/AppendSlidesOptions.md) has three options:
 
 | Option | Default | Effect |
 | --- | --- | --- |
@@ -73,7 +73,7 @@ if (layout) await deck.appendSlides(pptx, { layout, at: 0 })
 
 - Each new slide's layout relationship points at the existing layout part. The call creates no master, layout or theme.
 - Text, tables, images, charts with their workbooks, chartEx charts with their style and colour parts, embedded and linked audio and video, and speaker notes come across.
-- A hyperlink to another slide of the same `TsPptx` points at the matching new slide. A link to a slide the call does not add throws `import/unresolved-slide-link`, before the deck changes.
+- A hyperlink to another slide of the same `PptxTs` points at the matching new slide. A link to a slide the call does not add throws `import/unresolved-slide-link`, before the deck changes.
 - Fonts embedded with `pptx.embedFont` merge into the deck. [Carry fonts when importing slides](../embedded-fonts.md#carry-fonts-when-importing-slides) has the merge rules.
 - Speaker notes bind to the deck's notes master. The generator's notes master is added only when the deck has none, as [One notes master per deck](read-and-edit.md#one-notes-master-per-deck) sets out.
 
@@ -87,7 +87,7 @@ The generator's slide size must equal the deck's, or `appendSlides` throws `impo
 const size = deck.slideSize
 if (!size) throw new Error('the template declares no slide size')
 
-const pptx = new TsPptx()
+const pptx = new PptxTs()
 pptx.defineLayout({ name: 'TEMPLATE', width: size.widthIn, height: size.heightIn })
 pptx.layout = 'TEMPLATE'
 ```
@@ -99,7 +99,7 @@ pptx.layout = 'TEMPLATE'
 ```ts
 const deck = await Presentation.load(await readFile('deck.pptx'))
 
-const pptx = new TsPptx()
+const pptx = new PptxTs()
 pptx.layout = 'LAYOUT_16x9'
 pptx.addSlide().addText('Appendix', { x: 1, y: 1, w: 6, h: 1 })
 

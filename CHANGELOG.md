@@ -140,6 +140,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   holding one field, with no list marker, no breaks between runs and no tab characters
   ([#90](https://github.com/shbernal/pptx-ts/issues/90)). Remove them from a `slideNumber`
   object; the output does not change.
+- **The shipped agent skill is now `pptx-ts-upstream`.** It was `ts-pptx-upstream`. An installed
+  copy keeps the old name, and `npx skills update ts-pptx-upstream` no longer finds it: remove it
+  and run `npx skills add shbernal/pptx-ts --skill pptx-ts-upstream`. The skill now marks a
+  workaround with `pptx-ts#<N>` and sweeps for it with `rg 'pptx-ts#'`, so a marker written as
+  `ts-pptx#<N>` no longer turns up: rename the existing ones when you switch skills.
+- **An embedded chart workbook names `pptx-ts` as its creator.** Its `docProps/core.xml` wrote
+  `TsPptx` as `dc:creator` and `cp:lastModifiedBy`; it now writes the package name, as the deck's
+  own `core.xml` does. Every chart's embedded workbook changes in those two elements and nothing
+  else.
+- **Contributors: the `TSPPTX_*` environment variables are now `PPTXTS_*`.** The old names are not
+  read. Rename the keys in `tools/powerpoint-vm/.env` and in any shell export.
+
+### Deprecated
+
+- **`TsPptx` and its error names.** The class is now `PptxTs`, and `TsPptxError`,
+  `TsPptxErrorOptions` and `TsPptxCode` are now `PptxTsError`, `PptxTsErrorOptions` and
+  `PptxTsCode`. The old names are still exported from every entry, as the same class and the same
+  types, so `instanceof TsPptxError` keeps matching. They carry `@deprecated` and are removed in v5.
+  A default import (`import PptxTs from 'pptx-ts'`) names the class itself and is unaffected.
 
 ### Fixed
 

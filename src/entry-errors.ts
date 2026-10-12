@@ -14,21 +14,33 @@
  * members again, so adding an error class publishes it everywhere in one edit.
  */
 
+import { PptxTsError, type PptxTsErrorOptions } from './errors.js'
+import type { PptxTsCode } from './codes.js'
+
 export {
-	TsPptxError,
+	PptxTsError,
 	InvalidOptionError,
 	UnsupportedFeatureError,
 	PackageReadError,
 	MediaError,
 	InternalError,
-	type TsPptxErrorOptions,
+	type PptxTsErrorOptions,
 } from './errors.js'
 export type {
 	ErrorCode,
-	TsPptxCode,
+	PptxTsCode,
 	InvalidOptionErrorCode,
 	UnsupportedFeatureErrorCode,
 	PackageReadErrorCode,
 	MediaErrorCode,
 	InternalErrorCode,
 } from './codes.js'
+
+/** @deprecated Renamed to {@link PptxTsError}. This alias is removed in v5. */
+export const TsPptxError = PptxTsError
+/** @deprecated Renamed to {@link PptxTsError}. This alias is removed in v5. */
+export type TsPptxError = PptxTsError
+/** @deprecated Renamed to {@link PptxTsErrorOptions}. This alias is removed in v5. */
+export type TsPptxErrorOptions = PptxTsErrorOptions
+/** @deprecated Renamed to {@link PptxTsCode}. This alias is removed in v5. */
+export type TsPptxCode = PptxTsCode

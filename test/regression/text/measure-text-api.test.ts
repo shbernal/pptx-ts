@@ -19,7 +19,7 @@ import {
 	type FontMetrics,
 } from '../../../src/measure/font-metrics.ts'
 import { solveResize, solveShrink, HEIGHT_SAFETY_FACTOR, WIDTH_SAFETY_FACTOR } from '../../../src/measure/text-fit.ts'
-import TsPptx from '../../../dist/node.js'
+import PptxTs from '../../../dist/node.js'
 import { resolveGenuineFontFile } from '../../read/font-oracle.ts'
 import { fixturePath } from '../../read/corpus.ts'
 
@@ -388,7 +388,7 @@ describe('FontMetricsRegistry.hasCodepoint (face-keyed coverage)', () => {
 
 describe('pptx.measureText() / overflowsBox() instance methods (heuristic path)', () => {
 	test('named face is measurable via the heuristic even with no metrics registered', () => {
-		const pptx = new TsPptx()
+		const pptx = new PptxTs()
 		const m = pptx.measureText('A heading that is reasonably long', { wIn: 2, fontSize: 18, fontFace: 'Arial' })
 		expect(m.measurable).toBe(true)
 		expect(m.heightIn).toBeGreaterThan(0)
@@ -398,19 +398,19 @@ describe('pptx.measureText() / overflowsBox() instance methods (heuristic path)'
 	})
 
 	test('unnamed face returns measurable:false', () => {
-		const pptx = new TsPptx()
+		const pptx = new PptxTs()
 		expect(pptx.measureText('text', { wIn: 5, fontSize: 12 }).measurable).toBe(false)
 	})
 
 	test('overflowsBox: tall text in a tiny box overflows; short text does not', () => {
-		const pptx = new TsPptx()
+		const pptx = new PptxTs()
 		const long = 'The quick brown fox jumps over the lazy dog. '.repeat(6)
 		expect(pptx.overflowsBox(long, { wIn: 2, hIn: 0.5, fontSize: 18, fontFace: 'Arial' })).toBe(true)
 		expect(pptx.overflowsBox('hi', { wIn: 5, hIn: 3, fontSize: 12, fontFace: 'Arial' })).toBe(false)
 	})
 
 	test('overflowsBox reports false for an unmeasurable (unnamed) face', () => {
-		const pptx = new TsPptx()
+		const pptx = new PptxTs()
 		expect(pptx.overflowsBox('x'.repeat(500), { wIn: 1, hIn: 0.2, fontSize: 40 })).toBe(false)
 	})
 })

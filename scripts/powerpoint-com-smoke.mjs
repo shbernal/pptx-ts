@@ -46,10 +46,10 @@
  *   node scripts/powerpoint-com-smoke.mjs --file out/*.pptx # ...on every deck the glob names
  *
  * Each deck runs as one PowerPoint job (`powerpoint/client.mjs`): the deck and its VBScript go
- * in, the script's stdout and any PNG it exported come back. With `TSPPTX_POWERPOINT_URL` set the
+ * in, the script's stdout and any PNG it exported come back. With `PPTXTS_POWERPOINT_URL` set the
  * job goes to the worker, typically the VM in `tools/powerpoint-vm/` on a Linux host; otherwise
  * it runs against this machine's own PowerPoint, on Windows. With neither, the run is a SKIP,
- * or a failure under `TSPPTX_COM_SMOKE=required`. A worker that is set but unreachable, or that
+ * or a failure under `PPTXTS_COM_SMOKE=required`. A worker that is set but unreachable, or that
  * refuses the token, is always a failure.
  */
 import os from 'node:os'
@@ -104,9 +104,9 @@ Options:
   -h, --help      show this message
 
 Environment:
-  TSPPTX_COM_SMOKE          set to "required" to fail, not SKIP, when PowerPoint is unavailable
-  TSPPTX_POWERPOINT_URL     drive the PowerPoint worker at this URL instead of a local PowerPoint
-  TSPPTX_POWERPOINT_TOKEN   the worker's token
+  PPTXTS_COM_SMOKE          set to "required" to fail, not SKIP, when PowerPoint is unavailable
+  PPTXTS_POWERPOINT_URL     drive the PowerPoint worker at this URL instead of a local PowerPoint
+  PPTXTS_POWERPOINT_TOKEN   the worker's token
 The last two fall back to tools/powerpoint-vm/.env.`
 
 const { values, positionals } = parseCliOrExit(process.argv.slice(2), {
@@ -449,7 +449,7 @@ async function main() {
 		console.error('PowerPoint COM smoke cannot run: ' + e.message)
 		process.exit(1)
 	}
-	if (transport.kind === 'none') process.exit(skipOrFail('TSPPTX_COM_SMOKE', transport.reason))
+	if (transport.kind === 'none') process.exit(skipOrFail('PPTXTS_COM_SMOKE', transport.reason))
 	console.log(
 		transport.kind === 'remote'
 			? `Driving PowerPoint through the worker at ${transport.url}.`
@@ -552,7 +552,7 @@ async function main() {
 			// passed, which is the one thing a gate must never do.
 			if (index === 0) {
 				process.exit(
-					skipOrFail('TSPPTX_COM_SMOKE', 'PowerPoint is not installed / not COM-registered on this machine.')
+					skipOrFail('PPTXTS_COM_SMOKE', 'PowerPoint is not installed / not COM-registered on this machine.')
 				)
 			}
 			failures.push(

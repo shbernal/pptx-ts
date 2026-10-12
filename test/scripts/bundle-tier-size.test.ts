@@ -32,9 +32,10 @@ describe('programFor', () => {
 		const core = programFor('composed')
 		const withCharts = programFor('composed-charts')
 
-		// Not `new TsPptx()`: the whole point of the row is that the class, and the families it names,
+		// Not `new PptxTs()`: the whole point of the row is that the class, and the families it names,
 		// are never reached.
 		expect(core).toContain('createPresentation({ use: [] })')
+		expect(core).not.toContain('PptxTs')
 		expect(core).not.toContain('TsPptx')
 		expect(core).not.toContain('dist/families.js')
 		expect(core).not.toContain('addChart(')
@@ -60,7 +61,7 @@ describe('programFor', () => {
 	// `C:` as a URL scheme. The gate runs each program before measuring it, so the one
 	// specifier has to satisfy both.
 	test('names the built entry relatively, so Node can run the program too', () => {
-		const specifier = /import TsPptx from "([^"]+)"/.exec(programFor('text'))?.[1]
+		const specifier = /import PptxTs from "([^"]+)"/.exec(programFor('text'))?.[1]
 		expect(specifier).toMatch(/^\.\.?\//)
 		expect(specifier).toContain('dist/browser.js')
 		expect(specifier).not.toMatch(/^[A-Za-z]:/)

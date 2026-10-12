@@ -22,7 +22,7 @@ import { createNeutralRuntime } from './runtime/neutral.js'
  * to. Live-DOM `tableToSlides` is likewise absent — it is defined on the browser entry, and the
  * DOM-agnostic form is the free `tableToSlides` on `pptx-ts/html`.
  */
-export class TsPptx extends PresentationCore {
+export class PptxTs extends PresentationCore {
 	constructor() {
 		super(createNeutralRuntime(), ALL_CONSTRUCT_FAMILIES)
 	}
@@ -31,7 +31,7 @@ export class TsPptx extends PresentationCore {
 /**
  * Compose a presentation from the construct families it needs, on the runtime-agnostic adapter.
  *
- * The counterpart to {@link TsPptx}, which is composed with every family there is. This one costs
+ * The counterpart to {@link PptxTs}, which is composed with every family there is. This one costs
  * what it carries: the core tier (text, shapes, images, groups, speaker notes) plus whatever
  * `use` names, and nothing else reaches the bundle.
  * @param {ComposeOptions} opts - the families to compose in, from `pptx-ts/families`
@@ -46,5 +46,11 @@ export function createPresentation<const Fs extends readonly ConstructFamily[] =
 	return composePresentation(createNeutralRuntime(), opts)
 }
 
-export { TsPptx as default }
+export { PptxTs as default }
+
+/** @deprecated Renamed to {@link PptxTs}. This alias is removed in v5. */
+export const TsPptx = PptxTs
+/** @deprecated Renamed to {@link PptxTs}. This alias is removed in v5. */
+export type TsPptx = PptxTs
+
 export * from './entry-surface.js'

@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, test } from 'vitest'
-import TsPptx from '../dist/node.js'
+import PptxTs from '../dist/node.js'
 import { isInstalled, validateBuf } from './validator.ts'
 import cases, { type SchemaCase } from './schema-cases.ts'
 
@@ -18,7 +18,7 @@ beforeAll(async () => {
 				'see docs/contributing/testing.md if this machine cannot reach it.'
 		)
 	}
-	const pres = new TsPptx()
+	const pres = new PptxTs()
 	pres.addSlide()
 	await validateBuf(await pres.toBytes())
 })
@@ -72,7 +72,7 @@ const exclusiveCases = cases.filter(needsExclusiveProcess)
 // The marker is load-bearing now, so an unmarked warn-capturer has to be a failure rather
 // than a case that quietly rejoins the concurrent block. Its own suite, and sequential, so
 // it reports as itself rather than as one more flake among the fixtures it is describing.
-describe('TsPptx schema validation fixtures (quarantine)', { concurrent: false }, () => {
+describe('PptxTs schema validation fixtures (quarantine)', { concurrent: false }, () => {
 	test('every fixture that captures console.warn is marked exclusive', () => {
 		const unmarked = concurrentCases.filter((c) => WARN_CAPTURE.test(String(c.fn))).map((c) => c.name)
 		const hint = `add \`exclusive: true\` to these fixtures in test/schema-cases.ts:\n  ${unmarked.join('\n  ')}`
@@ -80,7 +80,7 @@ describe('TsPptx schema validation fixtures (quarantine)', { concurrent: false }
 	})
 })
 
-describe.concurrent('TsPptx schema validation fixtures', () => {
+describe.concurrent('PptxTs schema validation fixtures', () => {
 	for (const fixture of concurrentCases) {
 		test(fixture.name, async () => {
 			await fixture.fn()
@@ -90,7 +90,7 @@ describe.concurrent('TsPptx schema validation fixtures', () => {
 
 // Sibling suites run in order, so nothing from the concurrent block above is still
 // in flight once this one starts.
-describe('TsPptx schema validation fixtures (exclusive process globals)', { concurrent: false }, () => {
+describe('PptxTs schema validation fixtures (exclusive process globals)', { concurrent: false }, () => {
 	for (const fixture of exclusiveCases) {
 		test(fixture.name, async () => {
 			await fixture.fn()

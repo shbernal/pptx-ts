@@ -9,7 +9,7 @@
  * Each output is named for the edit it performs (added-textbox, added-picture,
  * deleted-shape, cloned-slide, edited-table-cells, imported-*-slide). Output goes to
  * .tmp/read-edits/ (gitignored) by default; override with the first CLI arg or
- * TSPPTX_READ_EDITS_DIR. Assumes a current build — the
+ * PPTXTS_READ_EDITS_DIR. Assumes a current build — the
  * test:read:emit:edits script ensures `dist/` is current first.
  */
 import fs from 'node:fs/promises'
@@ -26,7 +26,7 @@ This is a GENERATOR, not a gate: every deck exercises one editing capability and
 written for a human to open in desktop PowerPoint. Nothing here asserts on the output.
 
 Arguments:
-  <out-dir>   where to write (default .tmp/read-edits, or $TSPPTX_READ_EDITS_DIR)
+  <out-dir>   where to write (default .tmp/read-edits, or $PPTXTS_READ_EDITS_DIR)
 
 Options:
   -h, --help  show this message`,
@@ -34,7 +34,7 @@ Options:
 	options: {},
 })
 
-const outDir = positionals[0] || process.env.TSPPTX_READ_EDITS_DIR || path.join(ROOT, '.tmp', 'read-edits')
+const outDir = positionals[0] || process.env.PPTXTS_READ_EDITS_DIR || path.join(ROOT, '.tmp', 'read-edits')
 
 const { Presentation, isGraphicFrame } = /** @type {typeof import('../dist/read.js')} */ (
 	await requireDist('read.js', 'test:read:emit:edits')

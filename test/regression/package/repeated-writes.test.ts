@@ -1,8 +1,8 @@
-import TsPptx, { ShapeType, type ShadowProps } from '../../../dist/node.js'
+import PptxTs, { ShapeType, type ShadowProps } from '../../../dist/node.js'
 import JSZip from 'jszip'
 import { defineRegressionSuite, assert } from '../../helpers.ts'
 
-async function buildOnce(pres: TsPptx) {
+async function buildOnce(pres: PptxTs) {
 	const buf = await pres.toBytes()
 	const zip = await JSZip.loadAsync(buf)
 	const entry = zip.file('ppt/slides/slide1.xml')
@@ -14,7 +14,7 @@ defineRegressionSuite('Repeated presentation writes [legacy bug-04]', [
 	{
 		name: 'two writes on same Presentation produce identical slide1.xml (text/shape branch)',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			const slide = pres.addSlide()
 			// The caller's own `ShadowProps`; the writer normalizes a COPY and leaves this one alone.
 			const shadow: ShadowProps & { _alpha?: number } = {
@@ -39,7 +39,7 @@ defineRegressionSuite('Repeated presentation writes [legacy bug-04]', [
 		// `_alpha` lives on the definer's copy, which is what the emitter reads.
 		name: 'user shadow object is not mutated across two writes',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			const slide = pres.addSlide()
 			// The caller's own `ShadowProps`; the writer normalizes a COPY and leaves this one alone.
 			const shadow: ShadowProps & { _alpha?: number } = {
@@ -64,7 +64,7 @@ defineRegressionSuite('Repeated presentation writes [legacy bug-04]', [
 	{
 		name: 'two writes on same Presentation produce identical slide1.xml (image branch)',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			const slide = pres.addSlide()
 			// 1x1 transparent PNG, base64
 			const png =
@@ -96,7 +96,7 @@ defineRegressionSuite('Repeated presentation writes [legacy bug-04]', [
 	{
 		name: 'regression - single write still emits sane shadow EMU values',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			const slide = pres.addSlide()
 			slide.addShape(ShapeType.rect, {
 				x: 1,

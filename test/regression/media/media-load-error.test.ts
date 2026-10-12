@@ -3,7 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import JSZip from 'jszip'
 import { describe, expect, test } from 'vitest'
-import TsPptx, { type Slide } from '../../../dist/node.js'
+import PptxTs, { type Slide } from '../../../dist/node.js'
 import { assert, assertRejects, captureDiagnostics, readEntry, at } from '../../helpers.ts'
 
 const BROKEN_SVG = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../browser/harness/broken.svg')
@@ -16,7 +16,7 @@ const BROKEN_SVG = path.join(path.dirname(fileURLToPath(import.meta.url)), '../.
 const BAD_PATH = '/definitely/does/not/exist/missing-image.png'
 
 function deckWithMissingImage() {
-	const pptx = new TsPptx()
+	const pptx = new PptxTs()
 	pptx.addSlide().addImage({ path: BAD_PATH, x: 1, y: 1, w: 2, h: 2 })
 	return pptx
 }
@@ -52,7 +52,7 @@ describe('media load failure policy', () => {
 		{ kind: '3D model', add: (slide: Slide) => slide.addModel3d({ path: '/definitely/does/not/exist/model.glb' }) },
 	]) {
 		test(`onMediaError:'placeholder' still rejects for a missing ${kind} payload`, async () => {
-			const pptx = new TsPptx()
+			const pptx = new PptxTs()
 			add(pptx.addSlide())
 			await assertRejects(
 				() => pptx.write({ outputType: 'nodebuffer', onMediaError: 'placeholder' }),
@@ -72,7 +72,7 @@ describe('SVG preview on a runtime with no rasterizer', () => {
 		{ label: 'inline', image: { svg: 'this is not SVG either' } },
 	]) {
 		test(`an SVG given ${label} is written with its own bytes and no warning`, async () => {
-			const pptx = new TsPptx()
+			const pptx = new PptxTs()
 			pptx.addSlide().addImage({ ...image, x: 1, y: 1, w: 1, h: 1 })
 			const { result, codes } = await captureDiagnostics(() =>
 				pptx.write({ outputType: 'nodebuffer', onMediaError: 'placeholder' })

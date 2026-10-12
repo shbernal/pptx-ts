@@ -53,9 +53,9 @@
  *
  * Requirements: LibreOffice and `pdftotext` (xpdf-tools or poppler-utils). Both are looked
  * up on PATH, then at the usual per-platform locations, and both can be pointed at
- * explicitly with `TSPPTX_SOFFICE` / `TSPPTX_PDFTOTEXT`. Missing either is a clean SKIP on a
+ * explicitly with `PPTXTS_SOFFICE` / `PPTXTS_PDFTOTEXT`. Missing either is a clean SKIP on a
  * workstation, where not every machine has LibreOffice — but a failure under
- * `TSPPTX_RENDER_ORACLE=required`, which is how the CI lane runs it, because a lane that
+ * `PPTXTS_RENDER_ORACLE=required`, which is how the CI lane runs it, because a lane that
  * installs the tools and then skips would be green without checking anything.
  *
  * It does run in CI, on `ubuntu-24.04`, unlike the COM smoke it sits beside. Measured on a
@@ -82,9 +82,9 @@ Options:
   -h, --help      show this message
 
 Environment:
-  TSPPTX_SOFFICE         path to soffice (skips the search)
-  TSPPTX_PDFTOTEXT       path to pdftotext (skips the search)
-  TSPPTX_RENDER_ORACLE   set to "required" to fail, not SKIP, when a tool is missing`
+  PPTXTS_SOFFICE         path to soffice (skips the search)
+  PPTXTS_PDFTOTEXT       path to pdftotext (skips the search)
+  PPTXTS_RENDER_ORACLE   set to "required" to fail, not SKIP, when a tool is missing`
 
 const { values } = parseCliOrExit(process.argv.slice(2), {
 	usage: USAGE,
@@ -318,7 +318,7 @@ async function firstExisting(candidates) {
 /**
  * An explicit override, validated.
  *
- * Deliberately *not* one more entry in the candidate list: someone who sets `TSPPTX_SOFFICE`
+ * Deliberately *not* one more entry in the candidate list: someone who sets `PPTXTS_SOFFICE`
  * has said which binary to use, so a typo in it must be an error naming the path they gave.
  * Letting it fall through to the search would run a different binary than the one they asked
  * for, or SKIP as though they had never set anything.
@@ -358,7 +358,7 @@ async function findSoffice() {
 	const local = process.env.LOCALAPPDATA
 	const win = process.platform === 'win32'
 	return (
-		(await overrideFrom('TSPPTX_SOFFICE')) ??
+		(await overrideFrom('PPTXTS_SOFFICE')) ??
 		(await firstExisting([
 			win ? onPath('soffice.com') : onPath('soffice'),
 			win ? undefined : onPath('libreoffice'),
@@ -378,7 +378,7 @@ async function findPdfToText() {
 	const local = process.env.LOCALAPPDATA
 	const win = process.platform === 'win32'
 	return (
-		(await overrideFrom('TSPPTX_PDFTOTEXT')) ??
+		(await overrideFrom('PPTXTS_PDFTOTEXT')) ??
 		(await firstExisting([
 			onPath(win ? 'pdftotext.exe' : 'pdftotext'),
 			win && local ? path.join(local, 'Programs', 'xpdf-tools', 'bin', 'pdftotext.exe') : undefined,
@@ -489,8 +489,8 @@ async function buildDeck(testCase, fixture, outDir) {
  * @returns {Promise<string>}
  */
 async function buildPairDeck(pair, side, outDir) {
-	const { TsPptx } = await import(pathToFileURL(path.join(ROOT, 'dist', 'node.js')).href)
-	const pptx = new TsPptx()
+	const { PptxTs } = await import(pathToFileURL(path.join(ROOT, 'dist', 'node.js')).href)
+	const pptx = new PptxTs()
 	const slide = pptx.addSlide()
 	slide.addText(CANARY, { x: 0.6, y: 0.4, w: 8.5, h: 0.6, fontSize: 18, fontFace: 'Arial' })
 	pair[side](slide)
@@ -549,18 +549,18 @@ async function main() {
 	// for why a missing oracle cannot simply be an error.
 	/** @param {string} message */
 	const missing = (message) => {
-		const code = skipOrFail('TSPPTX_RENDER_ORACLE', message)
+		const code = skipOrFail('PPTXTS_RENDER_ORACLE', message)
 		if (code !== 0) process.exitCode = code
 	}
 
 	const soffice = await findSoffice()
 	if (!soffice) {
-		missing('LibreOffice not found. Set TSPPTX_SOFFICE to its soffice binary to run this check.')
+		missing('LibreOffice not found. Set PPTXTS_SOFFICE to its soffice binary to run this check.')
 		return
 	}
 	const pdftotext = await findPdfToText()
 	if (!pdftotext) {
-		missing('pdftotext not found (xpdf-tools or poppler-utils). Set TSPPTX_PDFTOTEXT to run this check.')
+		missing('pdftotext not found (xpdf-tools or poppler-utils). Set PPTXTS_PDFTOTEXT to run this check.')
 		return
 	}
 	console.log('LibreOffice: ' + soffice)

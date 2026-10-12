@@ -393,7 +393,7 @@ export interface TextPropsOptions extends PositionProps, DataOrPathProps, TextBa
 	 * - 'resize' = Resize shape to fit text
 	 *
 	 * **Measured fit:** if you register the box's font with
-	 * {@link TsPptx.registerFontMetrics}, both `'shrink'` and `'resize'` are
+	 * {@link PptxTs.registerFontMetrics}, both `'shrink'` and `'resize'` are
 	 * **measured at export time**, so the text renders correctly in headless renderers
 	 * and on plain file-open (no edit/resize needed):
 	 * - `'shrink'` computes the largest `fontScale` at which the wrapped text fits and
@@ -598,9 +598,9 @@ export interface TextProps {
 }
 
 /**
- * Options for layout-time text measurement ({@link TsPptx.measureText}).
+ * Options for layout-time text measurement ({@link PptxTs.measureText}).
  * Inches for width, points for type/spacing — the consumer-facing units. The
- * measured face must have metrics registered via {@link TsPptx.registerFontMetrics}
+ * measured face must have metrics registered via {@link PptxTs.registerFontMetrics}
  * (a named face without exact metrics uses a conservative heuristic; an unnamed
  * theme-default face is unmeasurable).
  */
@@ -628,7 +628,7 @@ export interface MeasureTextOptions {
 }
 
 /**
- * Result of {@link TsPptx.measureText}. Heights err **tall** (conservative) —
+ * Result of {@link PptxTs.measureText}. Heights err **tall** (conservative) —
  * they match the value the export-time autofit bake uses, so the laid-out height is
  * ≥ what PowerPoint/LibreOffice render. Use it to grow a container; for an overflow
  * check it may slightly over-report (good for a warning, not a hard gate).
@@ -653,7 +653,7 @@ export interface TextMeasurement {
 	 * when every run was measured exactly (and for an unmeasurable result, which
 	 * guessed nothing). The numbers stay conservative (they err tall/wide), but a
 	 * non-empty list means they are an approximation, not a measurement; register
-	 * the face via {@link TsPptx.registerFontMetrics} for an exact result.
+	 * the face via {@link PptxTs.registerFontMetrics} for an exact result.
 	 */
 	approximatedFaces: string[]
 	/**
@@ -680,14 +680,14 @@ export interface TextMeasurement {
 	shrinkScaleFor: (hIn: number) => number
 }
 
-/** Options for {@link TsPptx.overflowsBox}: a measure plus the box inner height to test against. */
+/** Options for {@link PptxTs.overflowsBox}: a measure plus the box inner height to test against. */
 export interface OverflowBoxOptions extends MeasureTextOptions {
 	/** Box inner height in inches to test for overflow. */
 	hIn: number
 }
 
 /**
- * One cell's computed rectangle from {@link TsPptx.tableLayout}. All values are
+ * One cell's computed rectangle from {@link PptxTs.tableLayout}. All values are
  * inches; `x`/`y` are absolute (offset from the table's `x`/`y`). For a merged cell,
  * `row`/`col` are the top-left origin and `wIn`/`hIn` cover the whole span; the
  * cells it covers are not emitted separately.
@@ -712,13 +712,13 @@ export interface TableCellLayout {
 	/**
 	 * `true` when `hIn`/`yIn` are pinned by an explicit `rowH` (array or scalar) or
 	 * table `h`; `false` when the row is auto-height and the value is a conservative
-	 * (tall) estimate from the same text model as {@link TsPptx.measureText}.
+	 * (tall) estimate from the same text model as {@link PptxTs.measureText}.
 	 */
 	heightExact: boolean
 }
 
 /**
- * Result of {@link TsPptx.tableLayout}: per-cell geometry plus overall table
+ * Result of {@link PptxTs.tableLayout}: per-cell geometry plus overall table
  * bounds, for placing images/shapes over a table without rendering it. Geometry is
  * for a single, un-paginated table laid out at `opts.x`/`y`/`w`; `autoPage` paging
  * is not modeled. Widths are exact; auto-height row heights are conservative

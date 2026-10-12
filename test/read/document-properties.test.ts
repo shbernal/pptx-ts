@@ -8,14 +8,14 @@
 
 import { describe, test } from 'vitest'
 import JSZip from 'jszip'
-import TsPptx from '../../dist/node.js'
+import PptxTs from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
 import { assert, assertEqual } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 /** Build a deck with the given setup, serialize, and reload as a Presentation. */
-async function roundTrip(setup: (pptx: TsPptx) => void) {
-	const pptx = new TsPptx()
+async function roundTrip(setup: (pptx: PptxTs) => void) {
+	const pptx = new PptxTs()
 	setup(pptx)
 	pptx.addSlide().addText('hello', { x: 1, y: 1, w: 4, h: 1 })
 	const buf = await pptx.toBytes()
@@ -99,7 +99,7 @@ describe('Presentation.appProperties', () => {
 		// strip it from a written deck and reload. The rel and the content-type override are
 		// left dangling on purpose — that is what a producer that omitted the part looks like,
 		// and neither lookup may resolve to anything.
-		const pptx = new TsPptx()
+		const pptx = new PptxTs()
 		pptx.company = 'gone'
 		pptx.addSlide().addText('hello', { x: 1, y: 1, w: 4, h: 1 })
 		const zip = await JSZip.loadAsync(await pptx.toBytes())

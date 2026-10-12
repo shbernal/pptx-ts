@@ -11,13 +11,13 @@
 
 import { describe, test } from 'vitest'
 import JSZip from 'jszip'
-import type TsPptx from '../../dist/node.js'
+import type PptxTs from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
 import { authorRead, firstTable, schemaErrors, validatorInstalled } from './authored.ts'
 import { assert, assertEqual, defined, readEntry, at } from '../helpers.ts'
 
 /** A one-cell table carrying every new `a:tcPr` construct at once. */
-function decoratedTable(pres: TsPptx) {
+function decoratedTable(pres: PptxTs) {
 	pres.addSlide().addTable(
 		[
 			[

@@ -8,7 +8,7 @@
 import { readFile } from 'node:fs/promises'
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
-import TsPptx, { ShapeType } from '../../dist/node.js'
+import PptxTs, { ShapeType } from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
 import {
 	throws,
@@ -119,7 +119,7 @@ describe('Shape.delete', () => {
 	// PowerPoint keeps a binding to a missing id through its own save, and a shape later given
 	// that id would inherit the connector.
 	test('unbinds a connector from the deleted shape and keeps its other end', async () => {
-		const pptx = new TsPptx()
+		const pptx = new PptxTs()
 		const s = pptx.addSlide()
 		s.addShape(ShapeType.rect, { x: 1, y: 1, w: 2, h: 1, objectName: 'A' })
 		s.addShape(ShapeType.rect, { x: 6, y: 3, w: 2, h: 1, objectName: 'B' })
@@ -136,7 +136,7 @@ describe('Shape.delete', () => {
 	})
 
 	test('deleting a group removes the animations of the shapes inside it', async () => {
-		const pptx = new TsPptx()
+		const pptx = new PptxTs()
 		const s = pptx.addSlide()
 		s.addGroup([{ rect: { x: 1, y: 1, w: 2, h: 1, objectName: 'Inside' } }], { objectName: 'Outer' })
 		s.addShape(ShapeType.rect, { x: 6, y: 3, w: 2, h: 1, objectName: 'Outside' })

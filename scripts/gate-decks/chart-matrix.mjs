@@ -41,7 +41,7 @@
  * real bug and gets a unit test during the migration of the file that owns it, not a
  * fixture here.
  */
-import TsPptx, { ChartType } from '../../dist/node.js'
+import PptxTs, { ChartType } from '../../dist/node.js'
 
 const LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
 /** One series over the shared weekday labels. @param {string} name @param {number[]} values */
@@ -540,7 +540,7 @@ const CASES = [
 ]
 
 async function compose() {
-	const pptx = new TsPptx()
+	const pptx = new PptxTs()
 	pptx.layout = 'LAYOUT_WIDE'
 	pptx.author = 'pptx-ts byte-identity gate'
 	pptx.title = 'Chart emitter matrix'

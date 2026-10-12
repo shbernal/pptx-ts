@@ -20,7 +20,7 @@
 
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
-import TsPptx from '../../dist/node.js'
+import PptxTs from '../../dist/node.js'
 import { Presentation, type OpcPackage, type Slide } from '../../dist/read.js'
 import { assert, assertEqual, bytesEqual, defined, readEntry, caughtSync, at, take } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
@@ -104,7 +104,7 @@ function catchCode(fn: () => unknown) {
 
 /** A two-page 4x3 deck: a source on a canvas the 16x9 destinations do not share. */
 async function otherCanvasDeck() {
-	const wide = new TsPptx()
+	const wide = new PptxTs()
 	wide.layout = 'LAYOUT_4x3'
 	wide.addSlide().addText('other canvas', { x: 1, y: 1, w: 4, h: 1 })
 	wide.addSlide().addText('and another', { x: 2, y: 2, w: 4, h: 1 })
@@ -123,7 +123,7 @@ function offsetsOf(slide: Slide) {
  * to route.
  */
 async function generatedDeck(firstLinksToSecond = false) {
-	const pptx = new TsPptx()
+	const pptx = new PptxTs()
 	const first = pptx.addSlide()
 	first.addText('first', { x: 1, y: 1, w: 4, h: 1 })
 	first.addText('outward', { x: 1, y: 2, w: 4, h: 1, hyperlink: { url: 'https://example.invalid/' } })
@@ -215,7 +215,7 @@ describe('Presentation.importSlides', () => {
 			// The rebind builds its page itself and did not enter it in the copy registry before
 			// following its links, so a jump link back to the page was a registry miss and `copyPart`
 			// copied the source page a second time, as a slide part in no `p:sldIdLst`.
-			const pptx = new TsPptx()
+			const pptx = new PptxTs()
 			pptx.addSlide().addText('self', { x: 1, y: 1, w: 4, h: 1, hyperlink: { slide: 1 } })
 			const source = await Presentation.load(await pptx.write({ outputType: 'uint8array' }))
 			const target = await generatedDeck(false)
@@ -588,7 +588,7 @@ describe('Presentation.importSlides', () => {
 	})
 
 	test('a link between two selected pages is rewritten to the imported parts', async () => {
-		const targetDeck = new TsPptx()
+		const targetDeck = new PptxTs()
 		targetDeck.addSlide().addText('a', { x: 1, y: 1, w: 2, h: 1 })
 		targetDeck.addSlide().addText('b', { x: 1, y: 1, w: 2, h: 1 })
 		const target = await Presentation.load(await targetDeck.write({ outputType: 'uint8array' }))
@@ -617,7 +617,7 @@ describe('Presentation.importSlides', () => {
 		// The rule is not "selected in this batch" but "already in this deck from
 		// this source": importing the link target first has to satisfy it, and the
 		// registry must hand back the earlier copy rather than a second one.
-		const targetDeck = new TsPptx()
+		const targetDeck = new PptxTs()
 		targetDeck.addSlide().addText('own', { x: 1, y: 1, w: 2, h: 1 })
 		const target = await Presentation.load(await targetDeck.write({ outputType: 'uint8array' }))
 		const source = await generatedDeck(true)

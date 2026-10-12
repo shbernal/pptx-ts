@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import JSZip from 'jszip'
-import TsPptx, { ChartType } from '../../../dist/node.js'
+import PptxTs, { ChartType } from '../../../dist/node.js'
 import { listEntries } from '../../helpers.ts'
 
 // Every embedded chart workbook stamped the wall clock into its own `docProps/core.xml`, so two
@@ -11,7 +11,7 @@ import { listEntries } from '../../helpers.ts'
 async function workbookAt(when: string): Promise<Uint8Array> {
 	vi.useFakeTimers({ toFake: ['Date'] })
 	vi.setSystemTime(new Date(when))
-	const pptx = new TsPptx()
+	const pptx = new PptxTs()
 	pptx.addSlide().addChart([{ name: 'North', labels: ['Q1', 'Q2', 'Q3'], values: [4, 7, 5] }], {
 		type: ChartType.bar,
 		x: 1,

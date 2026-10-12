@@ -1,4 +1,4 @@
-import TsPptx, { InvalidOptionError, ShapeType, type ChartOpts, type ShapeProps } from '../../../dist/node.js'
+import PptxTs, { InvalidOptionError, ShapeType, type ChartOpts, type ShapeProps } from '../../../dist/node.js'
 import {
 	defineRegressionSuite,
 	build,
@@ -16,7 +16,7 @@ import {
 // cannot represent and asserts it refuses, plus the one case that is representable and was being
 // mangled: an angle past a full turn.
 
-type Author = (p: TsPptx) => unknown
+type Author = (p: PptxTs) => unknown
 
 /** The `err.code` of whatever building this deck throws, or `null` if it built. */
 async function codeFrom(buildFn: Author) {
@@ -378,7 +378,7 @@ defineRegressionSuite('Numeric conversion guards', [
 		// the split, and the reason both converters exist.
 		name: 'an unreadable line width still collapses to zero rather than throwing',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			// @ts-expect-error a line width is a number
 			pres.addSlide().addShape('rect', { ...BOX, line: { color: 'FF0000', width: 'wide' } })
 			const buf = await pres.toBytes()

@@ -1,6 +1,6 @@
 // One way to run a PowerPoint job, whichever PowerPoint is at hand.
 //
-//   - remote: a worker (`worker.mjs`), usually the Linux host's VM, when `TSPPTX_POWERPOINT_URL`
+//   - remote: a worker (`worker.mjs`), usually the Linux host's VM, when `PPTXTS_POWERPOINT_URL`
 //     is set. Its token is required alongside it.
 //   - local: this machine's own desktop PowerPoint, on Windows, through the same runner the
 //     worker uses, in-process.
@@ -50,7 +50,7 @@ function powerpointRegistered() {
 /**
  * Which PowerPoint a job would run against.
  *
- * `TSPPTX_POWERPOINT_URL` and `TSPPTX_POWERPOINT_TOKEN` come from the environment, or from
+ * `PPTXTS_POWERPOINT_URL` and `PPTXTS_POWERPOINT_TOKEN` come from the environment, or from
  * `tools/powerpoint-vm/.env`, where `pnpm ppt:vm:sync` writes the token. Only an explicit URL
  * selects the remote transport, so a Windows contributor with a stray `.env` token still runs
  * locally.
@@ -68,19 +68,19 @@ export function resolveTransport({
 	platform = process.platform,
 	comRegistered = powerpointRegistered,
 } = {}) {
-	const url = env.TSPPTX_POWERPOINT_URL || fileEnv.TSPPTX_POWERPOINT_URL
+	const url = env.PPTXTS_POWERPOINT_URL || fileEnv.PPTXTS_POWERPOINT_URL
 	if (url) {
-		const token = env.TSPPTX_POWERPOINT_TOKEN || fileEnv.TSPPTX_POWERPOINT_TOKEN
+		const token = env.PPTXTS_POWERPOINT_TOKEN || fileEnv.PPTXTS_POWERPOINT_TOKEN
 		if (!token)
 			throw new TransportError(
-				`TSPPTX_POWERPOINT_URL is set to ${url}, but TSPPTX_POWERPOINT_TOKEN is not. Set it, or run \`pnpm ppt:vm:sync\` to generate one.`
+				`PPTXTS_POWERPOINT_URL is set to ${url}, but PPTXTS_POWERPOINT_TOKEN is not. Set it, or run \`pnpm ppt:vm:sync\` to generate one.`
 			)
 		return { kind: 'remote', url: url.replace(/\/+$/, ''), token }
 	}
 	if (platform !== 'win32')
 		return {
 			kind: 'none',
-			reason: `there is no PowerPoint on ${platform}; set TSPPTX_POWERPOINT_URL to drive one through the worker (see tools/powerpoint-vm/README.md).`,
+			reason: `there is no PowerPoint on ${platform}; set PPTXTS_POWERPOINT_URL to drive one through the worker (see tools/powerpoint-vm/README.md).`,
 		}
 	if (!comRegistered())
 		return { kind: 'none', reason: 'PowerPoint is not installed / not COM-registered on this machine.' }
