@@ -236,3 +236,89 @@ describe('ChartAxis crossing, display units, label skip, time units and strokes'
 		expect(stated).toEqual([])
 	})
 })
+
+describe('chart text formatting', () => {
+	// The read model returned chart text as plain strings and read none of its formatting, so
+	// readModelToIr rebuilt every title, legend, label and axis title in the writer's default font,
+	// size and colour, unrotated (#133).
+
+	test("PowerPoint's title, legend, axis labels, axis title and data labels read their formatting", async () => {
+		const bar = chartNamed(await openFixture('chart-formatting'), 'stacked-bar-chart')
+		expect(bar.titleStyle).toMatchObject({ sizePt: 24, bold: true, italic: true, fontName: 'Georgia' })
+		expect(bar.titleStyle?.color?.srgb).toBe('9B1B30')
+		expect(bar.legend?.textStyle?.sizePt).toBe(14)
+		expect(bar.categoryAxis?.labelStyle).toMatchObject({ sizePt: 14, rotationDeg: -45, color: { srgb: '9B1B30' } })
+		expect(bar.valueAxis?.titleStyle?.color?.srgb).toBe('9B1B30')
+		expect(bar.series[0]?.dataLabels?.textStyle).toMatchObject({ bold: true, color: { srgb: 'FFFFFF' } })
+		expect(bar.language).toBe('en-US')
+	})
+
+	test("readModelToIr rebuilds PowerPoint's chart text", async () => {
+		const ir = readModelToIr(await openFixture('chart-formatting'))
+		const bar = rebuiltOptions(ir, 'stacked-bar-chart')
+		expect(bar).toMatchObject({
+			titleBold: true,
+			titleItalic: true,
+			titleFontSize: 24,
+			titleColor: '9B1B30',
+			titleFontFace: 'Georgia',
+			legendFontSize: 14,
+			catAxisLabelFontSize: 14,
+			catAxisLabelColor: '9B1B30',
+			catAxisLabelRotate: -45,
+			valAxisTitleColor: '9B1B30',
+		})
+		expect(bar.seriesOptions?.[0]).toMatchObject({ dataLabelFontBold: true, dataLabelColor: 'FFFFFF' })
+	})
+
+	const textCases: ChartOpts[] = [
+		{ showTitle: true, title: 'T', titleBold: true, titleColor: '9B1B30', titleFontSize: 28 },
+		{
+			showTitle: true,
+			title: 'T',
+			titleItalic: true,
+			titleUnderline: true,
+			titleFontFace: 'Georgia',
+			titleAlign: 'left',
+		},
+		{ showTitle: true, title: 'T', titleRotate: 20 },
+		{ showLegend: true, legendFontSize: 18, legendColor: '9B1B30', legendFontFace: 'Georgia' },
+		{ showValue: true, dataLabelFontBold: true, dataLabelColor: '9B1B30', dataLabelFontSize: 9 },
+		{ catAxisLabelFontSize: 18, catAxisLabelRotate: 45, catAxisLabelColor: '9B1B30', catAxisLabelFontItalic: true },
+		{ valAxisLabelFontFace: 'Georgia', valAxisLabelFontBold: true, valAxisLabelRotate: -30 },
+		{ showValAxisTitle: true, valAxisTitle: 'V', valAxisTitleColor: '9B1B30', valAxisTitleFontSize: 16 },
+		{ showCatAxisTitle: true, catAxisTitle: 'C', catAxisTitleFontFace: 'Georgia', catAxisTitleRotate: 10 },
+		{ lang: 'fr-FR' },
+	]
+	test.each(textCases)('%j comes back from readModelToIr', async (options) => {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addChart(SERIES, { type: 'bar', x: 1, y: 1, w: 6, h: 4, objectName: 'probe', ...options })
+		})
+		expect(rebuiltOptions(readModelToIr(presentation), 'probe')).toMatchObject(options)
+	})
+
+	test('a default chart states no text formatting', async () => {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addChart(SERIES, {
+				type: 'bar',
+				x: 1,
+				y: 1,
+				w: 6,
+				h: 4,
+				objectName: 'probe',
+				showTitle: true,
+				title: 'T',
+				showLegend: true,
+				showValue: true,
+			})
+		})
+		const rebuilt = rebuiltOptions(readModelToIr(presentation), 'probe')
+		const stated = Object.keys(rebuilt).filter((key) =>
+			/^(title(Font|Color|Bold|Italic|Underline|Align|Rotate)|legendFont|legendColor|dataLabelFont|dataLabelColor|.*AxisLabel(Font|Color|Rotate)|.*AxisTitle(Font|Color|Rotate)|lang$)/.test(
+				key
+			)
+		)
+		expect(stated).toEqual([])
+		expect(rebuilt.seriesOptions).toBeUndefined()
+	})
+})
