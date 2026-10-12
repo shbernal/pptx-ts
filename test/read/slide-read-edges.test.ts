@@ -87,6 +87,22 @@ describe('Slide misc read/edit edges', () => {
 		assertEqual(slide.placeholder('nonexistent-type'), undefined, 'no matching placeholder → undefined')
 	})
 
+	test('a picture in a picture placeholder reports its p:ph', async () => {
+		// A filled picture placeholder is a `p:pic` carrying `p:ph`, and `Picture.placeholder` was
+		// `null` for every picture (issue #111).
+		const { presentation } = await authorRead((pres) => {
+			pres.defineSlideMaster({
+				title: 'PICTURE_MASTER',
+				objects: [{ placeholder: { options: { name: 'pic', type: 'pic', x: 1, y: 1, w: 5, h: 1.5 }, text: '' } }],
+			})
+			pres
+				.addSlide({ masterTitle: 'PICTURE_MASTER' })
+				.addImage({ data: PNG_1PX, x: 1, y: 1, w: 5, h: 1.5, placeholder: 'pic' })
+		})
+		const picture = defined(at(presentation.slides, 0).shapes.find((shape) => shape.shapeType === 'picture'))
+		assertEqual(JSON.stringify(picture.placeholder), '{"type":"pic","idx":"100"}', 'the picture placeholder')
+	})
+
 	test('name reads p:cSld/@name (null when the slide is unnamed)', async () => {
 		const slide = at((await openFixture('empty')).slides, 0)
 		// The getter must not throw; an unnamed slide reads null.

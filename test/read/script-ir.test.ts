@@ -1301,6 +1301,27 @@ describe('deck IR — slide transitions', () => {
 	})
 })
 
+describe('deck IR — a picture in a placeholder', () => {
+	// The picture's `p:ph` had no accessor, so the IR dropped its layout binding with no note
+	// (issue #111). `addImage({ placeholder })` binds only to a layout placeholder defined in the
+	// same deck by name, which neither printed script defines, so the binding is declared lost.
+	test('declares its layout binding lost', async () => {
+		const { presentation } = await authorRead((pres) => {
+			pres.defineSlideMaster({
+				title: 'PICTURE_MASTER',
+				objects: [{ placeholder: { options: { name: 'pic', type: 'pic', x: 1, y: 1, w: 5, h: 1.5 }, text: '' } }],
+			})
+			pres
+				.addSlide({ masterTitle: 'PICTURE_MASTER' })
+				.addImage({ data: PNG_1X1, x: 1, y: 1, w: 5, h: 1.5, placeholder: 'pic' })
+		})
+		const ir = readModelToIr(presentation)
+		const note = ir.fidelity.find((n) => n.slideNumber === 1 && n.construct === 'shape.placeholder')
+		assert(note, 'the binding is declared: ' + JSON.stringify(ir.fidelity))
+		assertEqual(note.cause, 'unwritable', 'as one the write API cannot reproduce')
+	})
+})
+
 describe('deck IR — picture recolour and transparency', () => {
 	// `addImage` writes all five blip effects the read model reports, and `readModelToIr` dropped
 	// every one under an `image.recolor` note saying none had a write option (issue #109). The

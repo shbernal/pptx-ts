@@ -79,9 +79,9 @@ export function shapeCall(shape: AnyShape, ctx: MapContext): CallIr | null {
 	}
 
 	if (isGroupShape(shape)) return groupCall(shape, scoped)
-	if (isPicture(shape)) return pictureCall(shape, scoped)
+	if (isPicture(shape)) return withPlaceholderLoss(shape, pictureCall(shape, scoped), scoped.notes)
 	if (isConnector(shape)) return connectorCall(shape, scoped)
-	if (isGraphicFrame(shape)) return graphicFrameCall(shape, scoped)
+	if (isGraphicFrame(shape)) return withPlaceholderLoss(shape, graphicFrameCall(shape, scoped), scoped.notes)
 	if (isAutoShape(shape)) return autoShapeCall(shape, scoped)
 
 	// Unreachable: the five guards above exhaust `AnyShape`, which is why `shape` narrows to
@@ -106,6 +106,28 @@ function autoShapeText(shape: AutoShape, notes: NoteScope): TextFrame | null {
 	const frame = shape.hasTextFrame ? shape.textFrame : null
 	if (frame === null) return null
 	return noteUnreadText(frame, shape.element_, notes, 'shape').length > 0 ? frame : null
+}
+
+/**
+ * A picture, table or chart placeholder's call, with its layout binding declared lost.
+ *
+ * `addImage`, `addTable` and `addChart` take `placeholder` as the name of a layout placeholder
+ * defined in the same deck, and write no `p:ph` when there is none by that name. Neither printed
+ * script defines the source's layout placeholders (`master.placeholders`), so the object keeps
+ * its frame and no longer follows its layout. It used to be dropped with no note at all, because
+ * the read model reported a placeholder on a `p:sp` only (#111).
+ */
+function withPlaceholderLoss(shape: Picture | GraphicFrame, call: CallIr | null, notes: NoteScope): CallIr | null {
+	const ph = shape.placeholder
+	if (call && ph) {
+		notes.note(
+			'shape.placeholder',
+			'flattened',
+			'unwritable',
+			`this ${shape.shapeType === 'picture' ? 'picture' : 'graphic frame'} fills a placeholder (p:ph type="${ph.type ?? 'obj'}" idx="${ph.idx}") and is emitted as a plain object with its frame baked in, so it no longer follows its layout; the placeholder option binds only to a layout placeholder the script defines by name, and the source's are not reproduced`
+		)
+	}
+	return call
 }
 
 /** The `lang` a text's options carry, which its runs then state only where they differ. */
