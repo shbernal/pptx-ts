@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`Chart.plotGroups`, `Chart.view3D` and `Chart.displayBlanksAs`.** A `ChartPlotGroup` reads its
+  type, its series and what it sets on all of them: bar direction, grouping, gap width, overlap,
+  series lines, 3-D gap depth and shape, a pie's first-slice angle, a doughnut's hole, a radar's
+  style, a surface's wireframe and up/down bars. `ChartSeries` reads `smooth`, `marker`,
+  `invertIfNegative` and `shape`. `readModelToIr` maps each onto its `addChart` option where it
+  differs from the writer's default, so a horizontal or stacked bar, a doughnut's hole or a smoothed
+  line no longer comes back as the default, and notes an inverted negative bar, which no option writes
+  ([#131](https://github.com/shbernal/pptx-ts/issues/131)).
 - **`Chart.dataTable` and `Chart.metadata`.** The first reads the data table under the plot
   (`c:dTable`: its border, outline and key flags and its text size), the second the key/value map
   `addChart`'s `metadata` option writes. `readModelToIr` carries both back onto `addChart`, so

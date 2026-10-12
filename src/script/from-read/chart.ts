@@ -149,6 +149,7 @@ export function chartCall(frame: GraphicFrame, chart: Chart, notes: NoteScope): 
 		...labelOptions(chart, type, notes),
 		...axisOptions(chart, type),
 		...seriesLineOptions(chart, type, notes),
+		...plotGroupOptions(chart, type, notes),
 		chartColors: seriesColors(chart),
 		...dataTableOptions(chart),
 		metadata: metadataOption(chart),
@@ -549,6 +550,101 @@ function seriesOverrides(chart: Chart, type: string, notes: NoteScope): IrValue 
 /** The number format a series' own label block states, or `null`. */
 function seriesLabelFormat(series: ChartSeries): string | null {
 	return series.dataLabels?.numberFormat?.formatCode ?? null
+}
+
+/** The plot types whose series take markers and `lineSmooth` from the chart-level options. */
+const MARKED_TYPES: ReadonlySet<string> = new Set(['line', 'radar', 'scatter'])
+
+/** What the writer writes for each plot-group option left out. */
+const PLOT_DEFAULTS = {
+	gapWidth: 150,
+	stackedGapWidth: 50,
+	gapDepth: 150,
+	shape: 'box',
+	symbol: 'circle',
+	symbolSize: 6,
+	rotX: 30,
+	rotY: 30,
+	perspective: 30,
+	firstSliceAng: 0,
+	holeSize: 50,
+	radarStyle: 'standard',
+	displayBlanksAs: 'gap',
+}
+
+/** A number, or `undefined` when it is `null` or the writer's own `fallback`. */
+function differsNumber(value: number | null | undefined, fallback: number): number | undefined {
+	return value === null || value === undefined || value === fallback ? undefined : value
+}
+
+/**
+ * What the first plot group sets on all its series, the 3-D view and how blanks plot, as `ChartOpts`.
+ * Each is stated only where it differs from what the writer writes when it is left out, which for
+ * the gap width and overlap depends on whether the group stacks.
+ *
+ * A 3-D bar's shape is read off its series first: PowerPoint writes the chosen shape on every
+ * `c:ser` and leaves the group's at `box`.
+ */
+function plotGroupOptions(chart: Chart, type: string, notes: NoteScope): Record<string, IrValue | undefined> {
+	const group = chart.plotGroups[0]
+	if (!group) return {}
+	const series = group.series
+	const grouping = group.grouping
+	const stacked = grouping === 'stacked' || grouping === 'percentStacked'
+	const bar = type === 'bar' || type === 'bar3D'
+	const options: Record<string, IrValue | undefined> = {
+		displayBlanksAs: differs(chart.displayBlanksAs, PLOT_DEFAULTS.displayBlanksAs),
+	}
+
+	if (bar) {
+		options['barDir'] = group.barDirection === 'bar' ? 'bar' : undefined
+		options['barGrouping'] = differs(grouping, type === 'bar' ? 'clustered' : 'standard')
+		options['barGapWidthPct'] = differsNumber(
+			group.gapWidthPct,
+			stacked ? PLOT_DEFAULTS.stackedGapWidth : PLOT_DEFAULTS.gapWidth
+		)
+	} else if (type === 'line' || type === 'area') {
+		options['barGrouping'] = stacked ? (grouping ?? undefined) : undefined
+	}
+	if (type === 'bar') {
+		options['barOverlapPct'] = differsNumber(group.overlapPct, stacked ? 100 : 0)
+		options['barSeriesLine'] = group.seriesLines ? true : undefined
+	}
+	if (type === 'bar3D') {
+		options['barGapDepthPct'] = differsNumber(group.gapDepthPct, PLOT_DEFAULTS.gapDepth)
+		const shapes = series.map((one) => one.shape ?? group.shape)
+		const shape = shapes.every((one) => one === shapes[0]) ? shapes[0] : group.shape
+		options['bar3DShape'] = differs(shape, PLOT_DEFAULTS.shape)
+	}
+	if (type === 'bar3D') {
+		const view = chart.view3D
+		options['v3DRotX'] = differsNumber(view?.rotX, PLOT_DEFAULTS.rotX)
+		options['v3DRotY'] = differsNumber(view?.rotY, PLOT_DEFAULTS.rotY)
+		options['v3DPerspective'] = differsNumber(view?.perspective, PLOT_DEFAULTS.perspective)
+		options['v3DRAngAx'] = view?.rightAngleAxes ? true : undefined
+	}
+	if (MARKED_TYPES.has(type)) {
+		options['lineSmooth'] = series.length > 0 && series.every((one) => one.smooth === true) ? true : undefined
+		const marker = series[0]?.marker
+		options['lineDataSymbol'] = differs(marker?.symbol, PLOT_DEFAULTS.symbol)
+		options['lineDataSymbolSize'] = differsNumber(marker?.size, PLOT_DEFAULTS.symbolSize)
+	}
+	if (type === 'pie' || type === 'doughnut')
+		options['firstSliceAng'] = differsNumber(group.firstSliceAngle, PLOT_DEFAULTS.firstSliceAng)
+	if (type === 'doughnut') options['holeSize'] = differsNumber(group.holeSizePct, PLOT_DEFAULTS.holeSize)
+	if (type === 'radar') options['radarStyle'] = differs(group.radarStyle, PLOT_DEFAULTS.radarStyle)
+	if (type === 'surface') options['surfaceWireframe'] = group.wireframe ? true : undefined
+	if (type === 'stock' && group.upDownBars) options['stockStyle'] = series.length >= 4 ? 'ohlc' : undefined
+
+	if (series.some((one) => one.invertIfNegative === true)) {
+		notes.note(
+			'chart.invertIfNegative',
+			'dropped',
+			'unwritable',
+			"a series inverts its negative bars (c:invertIfNegative); addChart has no option for it, so the bars come back in the series' colour"
+		)
+	}
+	return options
 }
 
 /** The size, in points, the writer gives a data table's text when `dataTableFontSize` is left out. */
