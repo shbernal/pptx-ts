@@ -938,7 +938,7 @@ export default class PresentationCore {
 		//
 		// Two things here cannot be recovered, and both throw. A non-object used to warn and then
 		// throw a raw `TypeError` on the next line's `layout.name`, breaking the contract that
-		// every failure this library raises is a `TsPptxError`. A missing `name` is the same kind
+		// every failure this library raises is a `PptxTsError`. A missing `name` is the same kind
 		// of unrecoverable: the registration is keyed on it, so warning and carrying on registered
 		// a layout literally called `"undefined"` -- selectable as `pptx.layout = 'undefined'`,
 		// carrying `name: undefined` into `<p:sldSz>`, and silently overwritten by the next

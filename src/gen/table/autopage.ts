@@ -532,7 +532,7 @@ export function getSlidesForTableRows(
 	if (!tablePropW && Array.isArray(tableProps.colW)) {
 		// The `0` seed is what `colW: []` needs: an empty array is truthy, so it reached an
 		// unseeded `reduce` and threw a raw `TypeError` — a failure this library did not raise as
-		// a `TsPptxError`. Seeded, it totals `0`, which falls through to `usableTableWidthEmu`
+		// a `PptxTsError`. Seeded, it totals `0`, which falls through to `usableTableWidthEmu`
 		// exactly where `colW: undefined` lands. That is the reading intended: an empty array is a
 		// caller stating no columns, not a table of width zero.
 		tableCalcW = tableProps.colW.reduce((p, n) => p + n, 0) * EMU_PER_INCH

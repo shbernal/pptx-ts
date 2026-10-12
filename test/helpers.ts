@@ -339,12 +339,12 @@ function throws(fn: () => unknown): boolean {
 	}
 }
 
-/** What a test reads off a thrown error: an `Error`, with the `code` a `TsPptxError` carries. */
+/** What a test reads off a thrown error: an `Error`, with the `code` a `PptxTsError` carries. */
 type ThrownError = Error & { code?: string }
 
 /**
  * A thrown value narrowed to an `Error`, failing when something else was thrown. `code` is read
- * off a `TsPptxError`; any other `Error` leaves it `undefined`.
+ * off a `PptxTsError`; any other `Error` leaves it `undefined`.
  */
 function asError(err: unknown): ThrownError {
 	assert(err instanceof Error, `expected an Error to be thrown; got: ${String(err)}`)

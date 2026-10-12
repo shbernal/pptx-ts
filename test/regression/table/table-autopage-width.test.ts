@@ -115,7 +115,7 @@ defineRegressionSuite('Table autoPage width arithmetic', [
 	{
 		// The other unseeded `.reduce` in the same function, and the same failure in principle:
 		// an empty array is truthy, so `colW: []` reached it and threw a raw `TypeError` rather
-		// than the `TsPptxError` this library promises is the only thing it raises.
+		// than the `PptxTsError` this library promises is the only thing it raises.
 		//
 		// It is called here rather than through `addTable` because `addTable` cannot reach it:
 		// `gen/define/table.ts` rejects a `colW` whose length does not match the column count and

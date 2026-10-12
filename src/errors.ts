@@ -1,7 +1,7 @@
 /**
  * The library's error taxonomy.
  *
- * Every failure pptx-ts raises is a {@link TsPptxError} carrying a stable {@link ErrorCode}, so a
+ * Every failure pptx-ts raises is a {@link PptxTsError} carrying a stable {@link ErrorCode}, so a
  * consumer can tell *"you passed a bad coordinate"* from *"this font file is corrupt"* from
  * *"these bytes are not a package"* without matching on message substrings. The classes are a
  * deliberately flat, coarse bucket — five of them — and the code carries the specificity. Do not
@@ -41,8 +41,8 @@ import type {
 	UnsupportedFeatureErrorCode,
 } from './codes.js'
 
-/** Extra context accepted by every {@link TsPptxError} constructor. */
-export interface TsPptxErrorOptions extends ErrorOptions {
+/** Extra context accepted by every {@link PptxTsError} constructor. */
+export interface PptxTsErrorOptions extends ErrorOptions {
 	/**
 	 * Structured context for the condition, when a site has any to give. Mirrors `Diagnostic.detail`
 	 * so the same condition looks the same whether it was warned or thrown.
@@ -54,10 +54,10 @@ export interface TsPptxErrorOptions extends ErrorOptions {
  * Base class for every error pptx-ts throws.
  *
  * Catch this to catch anything from the library; narrow with `instanceof` on a subclass, or branch
- * on {@link TsPptxError.code}, to react to something specific. It is never thrown directly — every
+ * on {@link PptxTsError.code}, to react to something specific. It is never thrown directly — every
  * site picks one of the five subclasses.
  */
-export class TsPptxError extends Error {
+export class PptxTsError extends Error {
 	/** Stable condition identifier — see {@link ErrorCode}. Branch on this, not on the text. */
 	readonly code: ErrorCode
 
@@ -69,7 +69,7 @@ export class TsPptxError extends Error {
 	 * @param message - explanation for a human reading a stack trace; not part of the contract
 	 * @param options - standard `cause`, plus optional structured `detail`
 	 */
-	constructor(code: ErrorCode, message: string, options?: TsPptxErrorOptions) {
+	constructor(code: ErrorCode, message: string, options?: PptxTsErrorOptions) {
 		super(message, options)
 		// `name` drives how a stack trace and `console.log` label the error, and the default from
 		// `Error` would say "Error" for every subclass. Derive it from the constructor so a subclass
@@ -88,9 +88,9 @@ export class TsPptxError extends Error {
  * result (a zero-size shape, a silently dropped option) hides the mistake, so the library refuses
  * instead. Reaching one means the calling code needs to change.
  */
-export class InvalidOptionError extends TsPptxError {
+export class InvalidOptionError extends PptxTsError {
 	declare readonly code: InvalidOptionErrorCode
-	constructor(code: InvalidOptionErrorCode, message: string, options?: TsPptxErrorOptions) {
+	constructor(code: InvalidOptionErrorCode, message: string, options?: PptxTsErrorOptions) {
 		super(code, message, options)
 	}
 }
@@ -104,9 +104,9 @@ export class InvalidOptionError extends TsPptxError {
  * "not here", not "not like that" — and the fix is usually to install something or pick a different
  * approach rather than to correct a value.
  */
-export class UnsupportedFeatureError extends TsPptxError {
+export class UnsupportedFeatureError extends PptxTsError {
 	declare readonly code: UnsupportedFeatureErrorCode
-	constructor(code: UnsupportedFeatureErrorCode, message: string, options?: TsPptxErrorOptions) {
+	constructor(code: UnsupportedFeatureErrorCode, message: string, options?: PptxTsErrorOptions) {
 		super(code, message, options)
 	}
 }
@@ -119,9 +119,9 @@ export class UnsupportedFeatureError extends TsPptxError {
  * Always about *input*. A problem with something the library is being asked to produce is an
  * {@link InvalidOptionError}.
  */
-export class PackageReadError extends TsPptxError {
+export class PackageReadError extends PptxTsError {
 	declare readonly code: PackageReadErrorCode
-	constructor(code: PackageReadErrorCode, message: string, options?: TsPptxErrorOptions) {
+	constructor(code: PackageReadErrorCode, message: string, options?: PptxTsErrorOptions) {
 		super(code, message, options)
 	}
 }
@@ -133,9 +133,9 @@ export class PackageReadError extends TsPptxError {
  * at*, not in the package structure — a broken URL, an unreadable path, a corrupt font file — and
  * a consumer typically retries or substitutes rather than rejecting the deck.
  */
-export class MediaError extends TsPptxError {
+export class MediaError extends PptxTsError {
 	declare readonly code: MediaErrorCode
-	constructor(code: MediaErrorCode, message: string, options?: TsPptxErrorOptions) {
+	constructor(code: MediaErrorCode, message: string, options?: PptxTsErrorOptions) {
 		super(code, message, options)
 	}
 }
@@ -166,12 +166,12 @@ const REPORT_NOTICE =
  * outcome for a library that reads untrusted files, and a "report this" banner on each corrupt
  * input would train callers to ignore the one banner that always means something.
  *
- * This does not make the message API — see the class doc on {@link TsPptxError}. Branch on
+ * This does not make the message API — see the class doc on {@link PptxTsError}. Branch on
  * `instanceof` or on {@link InternalError.code}, never on the text.
  */
-export class InternalError extends TsPptxError {
+export class InternalError extends PptxTsError {
 	declare readonly code: InternalErrorCode
-	constructor(code: InternalErrorCode, message: string, options?: TsPptxErrorOptions) {
+	constructor(code: InternalErrorCode, message: string, options?: PptxTsErrorOptions) {
 		super(code, `${message}\n\n${REPORT_NOTICE}`, options)
 	}
 }

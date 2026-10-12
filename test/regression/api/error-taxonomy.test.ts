@@ -1,19 +1,21 @@
 import { defineRegressionSuite, assert, assertEqual, defined, caught } from '../../helpers.ts'
 import PptxTs, {
-	TsPptxError,
+	PptxTsError,
 	InvalidOptionError,
 	UnsupportedFeatureError,
 	PackageReadError,
 	InternalError,
+	TsPptxError,
 } from '../../../dist/node.js'
 import {
 	readZip,
 	PackageReadError as PackageReadErrorFromZip,
+	PptxTsError as PptxTsErrorFromZip,
 	TsPptxError as TsPptxErrorFromZip,
 } from '../../../dist/zip.js'
-import { TsPptxError as TsPptxErrorFromRead } from '../../../dist/read.js'
+import { PptxTsError as PptxTsErrorFromRead } from '../../../dist/read.js'
 
-// The error taxonomy: every failure the library raises is a `TsPptxError` carrying a stable
+// The error taxonomy: every failure the library raises is a `PptxTsError` carrying a stable
 // `code`, so a consumer can classify it without matching on message substrings.
 //
 // What is pinned here is the CONTRACT, not the wording. The class and the `code` are API; the
@@ -35,7 +37,7 @@ defineRegressionSuite('Error taxonomy', [
 		},
 	},
 	{
-		name: 'every library error is a TsPptxError and an Error',
+		name: 'every library error is a PptxTsError and an Error',
 		fn: async () => {
 			// `typeface` is required at the type level, so only an untyped caller reaches the runtime
 			// guard — which is exactly the caller the taxonomy exists for.
@@ -45,7 +47,7 @@ defineRegressionSuite('Error taxonomy', [
 			// A consumer catching broadly must still be able to catch this, and a consumer catching
 			// only pptx-ts failures must be able to say so in one `instanceof`.
 			assert(err instanceof Error, 'every library error remains an Error')
-			assert(err instanceof TsPptxError, 'every library error is a TsPptxError')
+			assert(err instanceof PptxTsError, 'every library error is a PptxTsError')
 			assert(err instanceof InvalidOptionError, 'a missing required option is an invalid option')
 			assertEqual(err.code, 'font/missing-typeface')
 		},
@@ -78,12 +80,25 @@ defineRegressionSuite('Error taxonomy', [
 			// Re-exported from ten entries, but resolved from one shared module — otherwise an
 			// `instanceof` in a consumer that imports `pptx-ts/read` would silently fail against an
 			// error thrown through `pptx-ts`.
-			assert(TsPptxErrorFromZip === TsPptxError, 'pptx-ts/zip exports the same TsPptxError')
-			assert(TsPptxErrorFromRead === TsPptxError, 'pptx-ts/read exports the same TsPptxError')
+			assert(PptxTsErrorFromZip === PptxTsError, 'pptx-ts/zip exports the same PptxTsError')
+			assert(PptxTsErrorFromRead === PptxTsError, 'pptx-ts/read exports the same PptxTsError')
 			assert(PackageReadErrorFromZip === PackageReadError, 'pptx-ts/zip exports the same PackageReadError')
 
 			const err = await caught(() => readZip(new Uint8Array([1, 2, 3, 4])))
 			assert(err instanceof PackageReadErrorFromZip, 'the thrown error matches the subpath-imported class')
+		},
+	},
+	{
+		name: 'the deprecated TsPptxError alias is the PptxTsError class',
+		fn: async () => {
+			/* oxlint-disable typescript/no-deprecated -- the deprecated alias is what this case pins. */
+			assert(TsPptxError === PptxTsError, 'pptx-ts exports TsPptxError as PptxTsError')
+			assert(TsPptxErrorFromZip === PptxTsError, 'pptx-ts/zip exports TsPptxError as PptxTsError')
+
+			const err = await caught(() => readZip(new Uint8Array([1, 2, 3, 4])))
+			assert(err instanceof PptxTsError, 'a library error is a PptxTsError')
+			assert(err instanceof TsPptxError, 'and still a TsPptxError')
+			/* oxlint-enable typescript/no-deprecated */
 		},
 	},
 	{
@@ -102,7 +117,7 @@ defineRegressionSuite('Error taxonomy', [
 			// No Node-reachable site trips this synchronously (the sites are a missing optional peer
 			// and a browser-only filesystem gap), so the contract pinned here is the shape.
 			const err = new UnsupportedFeatureError('math/missing-optional-peer', 'x')
-			assert(err instanceof TsPptxError, 'it is a TsPptxError')
+			assert(err instanceof PptxTsError, 'it is a PptxTsError')
 			assert(!(err instanceof InvalidOptionError), 'it is not an InvalidOptionError')
 			assertEqual(err.name, 'UnsupportedFeatureError')
 			assertEqual(err.code, 'math/missing-optional-peer')
