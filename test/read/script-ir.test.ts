@@ -892,6 +892,55 @@ describe('deck IR — a hyperlinked run with no colour of its own', () => {
 		assert(cells.includes('"color":"000000"'), `the plain cell keeps its black: ${cells}`)
 		assert(!constructs(ir).has('text.color.inherited'), 'and declares no loss, because it was stated')
 	})
+
+	test('a show jump on the shape or on a cell leaves the runs uncoloured', async () => {
+		// The shape's jump is written on its `p:cNvPr` alone, so its run states no link and was
+		// coloured black; the cell's was written nowhere until #82 (#128).
+		const box = { x: 1, y: 1, w: 4, h: 1 }
+		const { presentation } = await authorRead((pres) => {
+			const slide = pres.addSlide()
+			slide.addText('next', { ...box, hyperlink: { action: 'nextslide' } })
+			slide.addTable([[{ text: 'a', options: { hyperlink: { action: 'nextslide' } } }]], { ...box, y: 3 })
+			pres.addSlide()
+		})
+		const ir = readModelToIr(presentation)
+		for (const method of ['addText', 'addTable']) {
+			const args = JSON.stringify(defined(allCalls(ir).find((c) => c.method === method)).args)
+			assert(!args.includes('"color"'), `${method} states no colour: ${args}`)
+		}
+		assert(!constructs(ir).has('text.color.inherited'), 'and declares no loss')
+	})
+})
+
+describe('deck IR — a table cell border keeps its cap and transparency', () => {
+	// `cap` had no accessor and the stroke alpha was read but not mapped, so both came back as the
+	// writer's defaults, with no note (#81).
+	test('on an edge and on a diagonal', async () => {
+		const line = { type: 'solid' as const, color: '9B1B30', width: 2 }
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addTable(
+				[
+					[
+						{
+							text: 'a',
+							options: {
+								border: [{ ...line, cap: 'round' }, { ...line, transparency: 40 }, line, line],
+								diagonal: { tlToBr: { ...line, cap: 'square', transparency: 40 } },
+							},
+						},
+					],
+				],
+				{ x: 1, y: 1, w: 5 }
+			)
+		})
+		const ir = readModelToIr(presentation)
+		const options = at(defined(allCalls(ir).find((c) => c.method === 'addTable')).args[0], 0, 0, 'options')
+		assertEqual(at(options, 'border', 0, 'cap'), 'round', 'the top edge keeps its round cap')
+		assertEqual(at(options, 'border', 1, 'transparency'), 40, 'the right edge keeps its transparency')
+		assertEqual(opt(options, 'border', 2, 'cap'), undefined, "a flat cap, the writer's own, is left implied")
+		assertEqual(at(options, 'diagonal', 'tlToBr', 'cap'), 'square', 'the diagonal keeps its cap')
+		assertEqual(at(options, 'diagonal', 'tlToBr', 'transparency'), 40, 'and its transparency')
+	})
 })
 
 describe('deck IR — a run that jumps in the slide show', () => {
