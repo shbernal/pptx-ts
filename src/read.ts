@@ -162,6 +162,8 @@ export {
 	type ChartView3D,
 	type ChartLegend,
 	type ChartDataLabels,
+	type ChartLabelRun,
+	type ChartPointLabel,
 	type ChartDataTable,
 	type ChartFill,
 	type ChartLine,

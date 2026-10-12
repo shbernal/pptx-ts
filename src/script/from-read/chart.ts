@@ -21,6 +21,7 @@ import type {
 	Chart,
 	ChartAreaFormat,
 	ChartAxis,
+	ChartLabelRun,
 	ChartLine,
 	ChartManualLayout,
 	ChartSeries,
@@ -129,7 +130,8 @@ export function chartCall(frame: GraphicFrame, chart: Chart, ctx: MapContext): C
 	}
 
 	const xy = XY_TYPES.has(type)
-	const data = xy ? xyData(chart, type, notes) : seriesData(chart, notes)
+	const ownLabels = customLabelOptions(chart, type, notes)
+	const data = xy ? xyData(chart, type, notes, ownLabels.labels) : seriesData(chart, notes)
 	// Series that all read no points plot nothing either. `addChart` would draw an empty frame the
 	// source never showed as a chart, and checking only for zero series let those through.
 	if (data.length === 0 || chart.series.every((series) => (xy ? series.yValues : series.values).length === 0)) {
@@ -162,6 +164,7 @@ export function chartCall(frame: GraphicFrame, chart: Chart, ctx: MapContext): C
 		...titleOptions(chart),
 		...legendOptions(chart),
 		...labelOptions(chart, type, notes),
+		...ownLabels.options,
 		...axisOptions(chart, type, notes),
 		...seriesLineOptions(chart, type, notes),
 		...plotGroupOptions(chart, type, notes),
@@ -212,7 +215,7 @@ function seriesData(chart: Chart, notes: NoteScope): IrValue[] {
  * `c:xVal` of its own. The first series' X values are taken, and a series whose own differ is noted.
  * @param type - the write-API chart type the chart is rebuilt as
  */
-function xyData(chart: Chart, type: string, notes: NoteScope): IrValue[] {
+function xyData(chart: Chart, type: string, notes: NoteScope, labels: readonly (string[] | undefined)[]): IrValue[] {
 	const series = chart.series
 	const first = series[0]
 	if (!first) return []
@@ -222,7 +225,7 @@ function xyData(chart: Chart, type: string, notes: NoteScope): IrValue[] {
 
 	const rows: IrValue[] = [{ values: dense(xValues) }]
 	let ownX = false
-	for (const one of series) {
+	for (const [index, one] of series.entries()) {
 		const own = plottedX(one)
 		if (own.length !== xValues.length || own.some((value, i) => value !== xValues[i])) ownX = true
 		const values = dense(one.yValues)
@@ -231,6 +234,7 @@ function xyData(chart: Chart, type: string, notes: NoteScope): IrValue[] {
 				name: orUndefined(one.name),
 				values,
 				sizes: withSizes ? dense(one.bubbleSizes) : undefined,
+				labels: labels[index],
 			}) ?? { values }
 		)
 	}
@@ -355,6 +359,95 @@ function labelOptions(chart: Chart, type: string, notes: NoteScope): Record<stri
 		// `xlLabelPositionBestFit` for them), and the writer spells an unset pie position `ctr`.
 		dataLabelPosition: orUndefined(labels.position) ?? (type === 'pie' ? 'bestFit' : undefined),
 		dataLabelFormatCode: labels.numberFormat?.formatCode ?? undefined,
+	}
+}
+
+/** The runs `dataLabelFormatScatter: 'customXY'` appends to a label: ` (`, the X value, `, `, the Y value, `)`. */
+const XY_SUFFIX: readonly ChartLabelRun[] = [
+	{ text: ' (', field: null },
+	{ text: '', field: 'XVALUE' },
+	{ text: ', ', field: null },
+	{ text: '', field: 'YVALUE' },
+	{ text: ')', field: null },
+]
+
+/** Whether `runs` end with {@link XY_SUFFIX}; a field's own text is whatever it last showed, so only its type counts. */
+function endsWithXY(runs: readonly ChartLabelRun[]): boolean {
+	const tail = runs.slice(-XY_SUFFIX.length)
+	return (
+		tail.length === XY_SUFFIX.length &&
+		tail.every((run, i) => {
+			const want = XY_SUFFIX[i]
+			return want !== undefined && run.field === want.field && (want.field !== null || run.text === want.text)
+		})
+	)
+}
+
+/**
+ * A chart's labels that state their own text, as `dataLabelFormatScatter` and each series' `labels`.
+ *
+ * `addChart` writes a scatter's labels three ways: `custom` gives each point a `c:dLbl` holding the
+ * series' `labels` entry, `customXY` appends the X and Y value fields to every label that is not
+ * blank, and `XY` is a series block showing the value and the category name, which on a scatter are
+ * the Y and X values. None of them was read, so a scatter came back with no labels and no note
+ * (#166). Label text on any other chart type has no option to carry it, and is noted.
+ * @param type - the write-API chart type the chart is rebuilt as
+ * @returns the label options, and the `labels` of each series in order (`undefined` for none)
+ */
+function customLabelOptions(
+	chart: Chart,
+	type: string,
+	notes: NoteScope
+): { options: Record<string, IrValue | undefined>; labels: (string[] | undefined)[] } {
+	const series = chart.series
+	const custom = series.map((one) => one.customLabels)
+	if (custom.every((labels) => labels.length === 0)) {
+		const xy =
+			type === 'scatter' &&
+			series.length > 0 &&
+			series.every((one) => one.dataLabels?.showValue === true && one.dataLabels.showCategoryName === true)
+		return { options: xy ? { showLabel: true, dataLabelFormatScatter: 'XY' } : {}, labels: [] }
+	}
+	if (type !== 'scatter') {
+		notes.note(
+			'chart.labels',
+			'dropped',
+			'unwritable',
+			`data labels on this ${type} chart state their own text, which addChart writes for a scatter chart only (dataLabelFormatScatter), so they come back showing what the chart's label options show`
+		)
+		return { options: {}, labels: [] }
+	}
+
+	let withXY = false
+	let withoutXY = false
+	let otherFields = false
+	const labels = series.map((one, index) => {
+		const own = custom[index] ?? []
+		if (own.length === 0) return undefined
+		const texts = Array.from({ length: one.yValues.length }, () => '')
+		for (const label of own) {
+			const xy = endsWithXY(label.runs)
+			const runs = xy ? label.runs.slice(0, -XY_SUFFIX.length) : label.runs
+			if (runs.some((run) => run.field !== null)) otherFields = true
+			const text = runs.map((run) => (run.field === null ? run.text : '')).join('')
+			if (xy) withXY = true
+			else if (text.trim() !== '') withoutXY = true
+			if (label.index < texts.length) texts[label.index] = text
+		}
+		return texts
+	})
+
+	if (otherFields || (withXY && withoutXY)) {
+		notes.note(
+			'chart.labels',
+			'approximated',
+			'unwritable',
+			"this scatter chart's data labels mix their own text with fields that dataLabelFormatScatter does not write (only the X and Y values after the text, on every label that has text), so they come back as their text, with the X and Y values on all of them or none"
+		)
+	}
+	return {
+		options: { showLabel: true, dataLabelFormatScatter: withXY ? 'customXY' : 'custom' },
+		labels,
 	}
 }
 
