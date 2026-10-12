@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **A layout placeholder definition takes `idx` and any `ST_PlaceholderType`.** In
+  `defineSlideMaster({ objects: [{ placeholder: { options } }] })`, `idx` is written as `p:ph/@idx`
+  (it was always 100 plus the object's position; `0` writes none, as PowerPoint writes a title), and
+  `type` takes `ctrTitle`, `subTitle`, `obj`, `dt`, `ftr`, `sldNum` and the rest beside the six
+  friendly types. A slide object bound by type alone fills an `idx`-0 definition of that type, so no
+  empty copy is seeded beside it ([#165](https://github.com/shbernal/pptx-ts/issues/165)).
+- **`Paragraph` resolves what it inherits.** `resolvedAlign`, `resolvedMarginLeftPt`,
+  `resolvedIndentPt`, `resolvedLineSpacing`, `resolvedSpaceBeforePt`, `resolvedSpaceAfterPt` and
+  `resolvedBulletDetail` walk the paragraph's own `a:pPr`, then the text body's, layout's and
+  master's list styles, the master's `p:txStyles` and `p:defaultTextStyle` at its level, the chain
+  `Run`'s resolved getters walk ([#143](https://github.com/shbernal/pptx-ts/issues/143)).
 - **`CustomGeometry` reads its guides, adjust handles and connection sites.** `guides`,
   `adjustHandles` (XY and polar) and `connectionSites`, each position a number in the shape's EMU
   space or a guide name. `readModelToIr` carries them onto `addShape`'s `guides`, `adjustHandles` and
@@ -131,6 +142,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   write. `readModelToIr` carries both onto the notes runs instead of noting them as unwritable
   ([#168](https://github.com/shbernal/pptx-ts/issues/168)).
 
+- **`readModelToIr` re-declares a layout's placeholders.** Every definition was dropped under
+  `master.placeholders`. Each one every slide on its layout fills now carries as a `{ placeholder }`
+  object with its source name, type, `idx`, frame and custom prompt; one a slide leaves out is still
+  dropped and noted, since the write path would seed an empty copy onto that slide
+  ([#165](https://github.com/shbernal/pptx-ts/issues/165)).
+- **An unknown `hyperlink.action` throws `hyperlink/invalid-action`.** It was written into
+  `ppaction://hlinkshowjump?jump=…` as given, and PowerPoint refused the deck as corrupt
+  (`0x80070570`). `'prevslide'` in plain JavaScript is the usual slip; the jump is `'previousslide'`
+  ([#149](https://github.com/shbernal/pptx-ts/issues/149)).
 - **A chart's embedded workbook no longer stamps the clock.** Its own `docProps/core.xml` carried
   `dcterms:created` and `dcterms:modified`, so two writes of a deck with a chart differed inside the
   workbook, a part a consumer comparing packages cannot exclude by name. The workbook now states no

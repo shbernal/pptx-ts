@@ -302,6 +302,7 @@ export type InvalidOptionErrorCode =
 	| 'hyperlink/missing-target'
 	| 'hyperlink/conflicting-targets'
 	| 'hyperlink/invalid-slide'
+	| 'hyperlink/invalid-action'
 	| 'slide/link-past-last-slide'
 	// Text
 	| 'text/invalid-text'
