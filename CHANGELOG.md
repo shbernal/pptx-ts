@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`Paragraph` resolves what it inherits.** `resolvedAlign`, `resolvedMarginLeftPt`,
+  `resolvedIndentPt`, `resolvedLineSpacing`, `resolvedSpaceBeforePt`, `resolvedSpaceAfterPt` and
+  `resolvedBulletDetail` walk the paragraph's own `a:pPr`, then the text body's, layout's and
+  master's list styles, the master's `p:txStyles` and `p:defaultTextStyle` at its level, the chain
+  `Run`'s resolved getters walk ([#143](https://github.com/shbernal/pptx-ts/issues/143)).
 - **`CustomGeometry` reads its guides, adjust handles and connection sites.** `guides`,
   `adjustHandles` (XY and polar) and `connectionSites`, each position a number in the shape's EMU
   space or a guide name. `readModelToIr` carries them onto `addShape`'s `guides`, `adjustHandles` and
