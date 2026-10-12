@@ -25,6 +25,7 @@
  * renders correctly, in preference to staying faithful in the IR and wrong on the slide.
  */
 import type { BodyProperties, BulletDetail, BulletStyle, Paragraph, Run, TextFrame } from '../../read/api/text.js'
+import { SHOW_JUMPS } from '../../ooxml/show-jumps.js'
 import type { Hyperlink } from '../../read/api/hyperlink.js'
 import type { AnyShape } from '../../read/api/shapes.js'
 import { BODY_INSET_DEFAULTS_PT } from '../../ooxml/body-insets.js'
@@ -453,10 +454,7 @@ function hyperlinkOption(run: Run, ctx: MapContext): IrValue | undefined {
 
 /** The show-jump actions `HyperlinkProps.action` spells, by the `@action` each one is written as. */
 const SHOW_JUMP_ACTIONS: ReadonlyMap<string, string> = new Map(
-	['firstslide', 'previousslide', 'nextslide', 'lastslide', 'lastslideviewed', 'endshow'].map((jump) => [
-		`ppaction://hlinkshowjump?jump=${jump}`,
-		jump,
-	])
+	SHOW_JUMPS.map((jump) => [`ppaction://hlinkshowjump?jump=${jump}`, jump])
 )
 
 /** What {@link linkOption} can spell where the link hangs, and how to describe a loss there. */

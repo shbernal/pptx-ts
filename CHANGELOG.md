@@ -103,6 +103,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **An unknown `hyperlink.action` throws `hyperlink/invalid-action`.** It was written into
+  `ppaction://hlinkshowjump?jump=…` as given, and PowerPoint refused the deck as corrupt
+  (`0x80070570`). `'prevslide'` in plain JavaScript is the usual slip; the jump is `'previousslide'`
+  ([#149](https://github.com/shbernal/pptx-ts/issues/149)).
 - **A one-entry multi-type `addChart` array writes a bubble chart.** Every bubble entry threw
   `chart/bubble-in-combo`, a one-entry array that combines nothing included, so `type[].data[].sizes`
   could never be written. A single bubble entry is now written as the standalone chart, its options
