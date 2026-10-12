@@ -338,3 +338,30 @@ export type Recolor =
 	| { kind: 'grayscale' }
 	| { kind: 'biLevel'; threshold: number | null }
 	| { kind: 'alphaModFix'; amount: number }
+
+/**
+ * The audio or video a picture plays, as {@link Picture.media} reads it. PowerPoint authors
+ * embedded media as a `p:pic` whose blip is the poster frame and whose `p:nvPr` carries an
+ * `a:audioFile` or `a:videoFile`, bound to the media part twice: by the element's `r:link` and by
+ * the `p14:media` extension's `r:embed`.
+ */
+export interface PictureMedia {
+	/** `audio` for `a:audioFile`, `video` for `a:videoFile`. */
+	kind: 'audio' | 'video'
+	/**
+	 * Absolute partname of the media in the package: the `p14:media` `r:embed`, else the element's
+	 * own `r:link` when it targets a part. `null` for linked or online media, whose target is
+	 * outside the package ({@link link}).
+	 */
+	partName: string | null
+	/** The media part's content type, or `null` when there is no part. */
+	contentType: string | null
+	/** The external target of linked or online media (an `r:link` with `TargetMode="External"`), or `null`. */
+	link: string | null
+	/**
+	 * How many times the media plays, from the media node the slide's `p:timing` aims at this picture
+	 * (`p:cMediaNode/p:cTn/@repeatCount`, in thousandths): `'indefinite'` loops until stopped, and
+	 * `null` states none, which plays once.
+	 */
+	repeatCount: number | 'indefinite' | null
+}

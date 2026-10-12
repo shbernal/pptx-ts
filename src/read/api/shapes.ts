@@ -54,6 +54,7 @@ export type {
 	LineEnds,
 	OuterShadow,
 	PatternFill,
+	PictureMedia,
 	Recolor,
 	Reflection,
 	ShapeType,

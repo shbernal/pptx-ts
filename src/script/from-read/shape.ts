@@ -35,6 +35,7 @@ import {
 	type GraphicFrame,
 	type GroupShape,
 	type Picture,
+	type PictureMedia,
 	type Recolor,
 } from '../../read/api/shapes.js'
 import type { ColorRef } from '../../read/api/theme-context.js'
@@ -450,22 +451,37 @@ function customGeometryPoints(box: ShapeBox, custom: CustomGeometry): IrValue {
  * A `Picture` becomes `addImage`, with its bytes carried as an asset.
  *
  * PowerPoint authors embedded audio and video as a picture too — the poster frame is the
- * blip, and the media itself hangs off `p:nvPr` as `a:videoFile`/`a:audioFile`. The read
- * model surfaces only the poster (`mediaKind` separates raster from SVG, not still from
- * moving), so a video would otherwise convert to a static image with nothing to show it had
- * ever moved. The write API has `addMedia`, so this is a read-side gap, and it is declared
- * rather than silently flattened.
+ * blip, and the media itself hangs off `p:nvPr` as `a:videoFile`/`a:audioFile`. That becomes
+ * `addMedia` ({@link mediaCall}). Media `addMedia` cannot author, linked from outside the package,
+ * is declared and kept as its poster frame.
  */
 function pictureCall(shape: Picture, ctx: MapContext): CallIr | null {
 	const { notes, assets } = ctx
 	const box = frameOf(shape, notes, ctx.groups)
 	if (!box) return null
-	if (isAudioVideo(shape.element_)) {
+	const media = shape.media
+	if (media && ctx.mediaAsImage) {
+		notes.note(
+			'media.audioVideo',
+			'flattened',
+			'unwritable',
+			'this audio or video is a group child or a layout object, and neither takes a media entry, so it is emitted as a still image of its poster frame'
+		)
+	} else if (media) {
+		const call = mediaCall(shape, media, box, ctx)
+		if (call) return call
+		notes.note(
+			'media.audioVideo',
+			'flattened',
+			'unwritable',
+			'this audio or video is linked from outside the package, which addMedia does not author (it embeds a clip, or links an online video), so it is emitted as a still image of its poster frame'
+		)
+	} else if (isAudioVideo(shape.element_)) {
 		notes.note(
 			'media.audioVideo',
 			'flattened',
 			'unread',
-			'this is embedded audio or video: no accessor reports the media part or its kind, only the poster frame, so it is emitted as a still image even though addMedia could author it'
+			'this audio or video names no media element the reader recognises, so it is emitted as a still image of its poster frame'
 		)
 	}
 
@@ -536,6 +552,52 @@ function pictureCall(shape: Picture, ctx: MapContext): CallIr | null {
 		crop,
 	})
 	return { method: 'addImage', args: [{ ...options, data: asset }], ...nameOf(shape) }
+}
+
+/**
+ * Embedded audio or video as `addMedia` (#202): its media part as `data` with the part's own
+ * extension as `extn`, an online video's link, the poster frame as `cover`, and the slide timing's
+ * repeat count as `loop` or `loopCount`. `null` for media `addMedia` cannot author: a clip linked
+ * from outside the package, or a part missing from it.
+ *
+ * `addMedia` takes the frame, name, alt text and locks, and none of the picture formatting
+ * `addImage` would: a rotation or flip is noted, and the crop, outline, shadow and recolour PowerPoint
+ * lets a clip carry are not read for one.
+ */
+function mediaCall(shape: Picture, media: PictureMedia, box: ShapeBox, ctx: MapContext): CallIr | null {
+	const { notes, assets } = ctx
+	let source: Record<string, IrValue>
+	if (media.partName !== null) {
+		const data = assets.assetFor(media.partName)
+		if (!data) return null
+		const extn = /\.([A-Za-z0-9]+)$/.exec(media.partName)?.[1]?.toLowerCase()
+		source = { type: media.kind, data, ...(extn ? { extn } : {}) }
+	} else if (media.kind === 'video' && media.link !== null && /^https?:\/\//i.test(media.link)) {
+		source = { type: 'online', link: media.link }
+	} else return null
+
+	const transform = transformOptions(shape, ctx.groups)
+	if (Object.values(transform).some((value) => value !== undefined)) {
+		notes.note(
+			'media.formatting',
+			'dropped',
+			'unwritable',
+			'this audio or video is rotated or flipped, and addMedia takes no rotate, flipH or flipV, so the clip comes back upright'
+		)
+	}
+	const poster = shape.imagePartName ?? shape.svgPartName
+	const repeat = source['type'] === 'online' ? null : media.repeatCount
+	const options = compact({
+		...positionOptions(box),
+		...identityOptions(shape),
+		// `addMedia` writes `noChangeAspect` unless `objectLock` turns it off, as `addImage` does.
+		objectLock: lockOption(shape, PICTURE_LOCK_ATTRS, ['noChangeAspect']),
+		...source,
+		cover: poster === null ? undefined : (assets.assetFor(poster) ?? undefined),
+		loop: repeat === 'indefinite' ? true : undefined,
+		loopCount: typeof repeat === 'number' && repeat !== 1 ? repeat : undefined,
+	})
+	return { method: 'addMedia', args: [options ?? source], ...nameOf(shape) }
 }
 
 /**
@@ -888,7 +950,7 @@ function groupCall(shape: GroupShape, ctx: MapContext): CallIr | null {
 	// slide-absolute frames, which then fail too and fall back as such a frame does.
 	const own = groupTransformOf(shape)
 	const { groups: _outer, ...rest } = ctx
-	const inner: MapContext = own ? { ...ctx, groups: [own, ...(ctx.groups ?? [])] } : rest
+	const inner: MapContext = { ...(own ? { ...ctx, groups: [own, ...(ctx.groups ?? [])] } : rest), mediaAsImage: true }
 	const children: IrValue[] = []
 	for (const child of shape.shapes) {
 		// `addConnector` has no group child variant, and a connector child used to be dropped.
@@ -1031,7 +1093,7 @@ export function masterObject(shape: AnyShape, ctx: MapContext): IrValue | null {
 		return drawn && lineShape(drawn.options)
 	}
 
-	const call = shapeCall(shape, ctx)
+	const call = shapeCall(shape, { ...ctx, mediaAsImage: true })
 	if (!call) return null
 
 	const shared = commonShapeVariant(call)

@@ -127,6 +127,7 @@ describe('deck IR — corpus invariants', () => {
 		addText: 2,
 		addShape: 2,
 		addImage: 1,
+		addMedia: 1,
 		addTable: 2,
 		addChart: 2,
 		addConnector: 1,
@@ -565,9 +566,16 @@ describe('deck IR — losses the read model cannot see', () => {
 		)
 	})
 
-	test('embedded audio/video is reported, not silently emitted as a still image', async () => {
+	test('embedded audio/video is rebuilt with addMedia, not emitted as a still image (#202)', async () => {
 		const ir = await irFor('av-media.pptx')
-		assert(constructs(ir).has('media.audioVideo'), 'av-media.pptx should report its media as flattened')
+		assert(!constructs(ir).has('media.audioVideo'), 'av-media.pptx embeds its media, which addMedia authors')
+		const media = allCalls(ir).filter((call) => call.method === 'addMedia')
+		assertEqual(media.length, 2, 'the video and the audio are each an addMedia call')
+	})
+
+	test('linked audio/video is reported, not silently emitted as a still image', async () => {
+		const ir = await irFor('online-video.pptx')
+		assert(constructs(ir).has('media.audioVideo'), 'online-video.pptx links a local file, which addMedia cannot author')
 		// It still emits something, so the slide is not left blank.
 		assert(allCalls(ir).length > 0, 'the poster frame should still be emitted')
 	})

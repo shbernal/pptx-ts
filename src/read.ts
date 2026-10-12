@@ -113,6 +113,7 @@ export {
 	type AbsoluteFrame,
 	type AbsoluteFrameFailure,
 	type ChildFrame,
+	type PictureMedia,
 	type Recolor,
 } from './read/api/shapes.js'
 export { type Hyperlink } from './read/api/hyperlink.js'

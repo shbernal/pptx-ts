@@ -262,6 +262,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   chart writer reads none but `lang`, so a chart given them was byte-identical to one without. They
   are now named in one `chart/option-not-supported` warning; a chart's text is styled through its
   own options ([#138](https://github.com/shbernal/pptx-ts/issues/138)).
+- **Embedded audio and video carry through `readModelToIr` as `addMedia`.** A clip was read back
+  as an `addImage` of its poster frame, because no accessor reported the media part, its kind or
+  its loop timing. The new `Picture.media` reads them (`kind`, `partName`, `contentType`, `link`,
+  `repeatCount`), and the clip comes back as `addMedia` with its `type`, media `data`, `extn`, the
+  poster as `cover`, and `loop` or `loopCount`; an online video comes back with its `link`. A clip
+  linked from outside the package, or inside a group or on a layout, still becomes its poster frame
+  under `media.audioVideo`, and a rotated or flipped clip notes `media.formatting`
+  ([#202](https://github.com/shbernal/pptx-ts/issues/202)).
 - **`link` on embedded audio or video warns `media/option-not-supported`.** `MediaProps` typed it
   as "video embed link metadata" on the embedded arm, and it wrote nothing, with nothing reported.
   Only `type: 'online'` reads `link`; an embedded clip links its own media part, so there is nowhere
