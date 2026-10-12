@@ -300,6 +300,29 @@ export default [
 		},
 	},
 	{
+		name: 'chart axis entries with crossings and a per-axis value format',
+		fn: async () => {
+			const data = [{ name: 'S', labels: ['A', 'B', 'C'], values: [1, 2, 3] }]
+			const { buf } = await build((p) => {
+				p.addSlide().addChart(
+					[
+						{ type: 'bar', data, options: {} },
+						{ type: 'line', data, options: { secondaryValAxis: true, secondaryCatAxis: true } },
+					],
+					{
+						x: 1,
+						y: 1,
+						w: 6,
+						h: 4,
+						catAxes: [{ catAxisCrossesAt: 2 }, {}],
+						valAxes: [{ valAxisCrossesAt: 1, valLabelFormatCode: '0.0' }, { valLabelFormatCode: '0%' }],
+					}
+				)
+			})
+			await expectNoSchemaErrors(buf, 'chart-axis-entries')
+		},
+	},
+	{
 		name: 'object locks on a chart frame and a group',
 		fn: async () => {
 			const { buf } = await build((p) => {
