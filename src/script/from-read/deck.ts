@@ -38,6 +38,7 @@ import { shapeCall, unwritableFramePayload } from './shape.js'
 import type { AssetResolver, MapContext } from './context.js'
 import { chromeToIr, pruneUnfilledPlaceholders } from './chrome.js'
 import { transitionToIr } from './transition.js'
+import { animationCalls } from './animation.js'
 import { slideNumberIr } from './slide-number.js'
 import { compact, inches, literalColor, orUndefined, schemeColorOption } from './values.js'
 import { hyperlinkOption, underlineOption } from './text.js'
@@ -276,9 +277,8 @@ function slideToIr(
 	// Comments are no shapes and draw nothing, so they follow the shapes.
 	calls.push(...commentCalls(slide, notes))
 
-	// Build animations are recorded once per slide rather than per shape, since they live in a
-	// slide-scoped element with no shape to attribute them to.
-	recordAnimationLoss(slide, notes)
+	// Build effects name their targets, so they follow the shapes they animate.
+	calls.push(...animationCalls(slide, ctx))
 
 	return {
 		...base,
@@ -446,24 +446,4 @@ function commentCalls(slide: Slide, notes: NoteScope): CallIr[] {
 		)
 	}
 	return calls
-}
-
-/**
- * Build animations, which live in a slide-scoped `p:timing` element rather than in any
- * shape's subtree.
- *
- * The transition next door used to be recorded here for the same reason and is now mapped
- * instead (`from-read/transition.ts`), which leaves this the one genuinely slide-scoped
- * loss: there is no structural reader for `p:timing` at all, only spid manipulation for the
- * deck-to-deck import path, so a build sequence is invisible to this converter.
- */
-function recordAnimationLoss(slide: Slide, notes: NoteScope): void {
-	if (slide.hasAnimations) {
-		notes.note(
-			'slide.animation',
-			'dropped',
-			'unread',
-			'build animations have no structural reader (p:timing is only manipulated by spid for the deck-to-deck import path), so every shape on this slide lands static'
-		)
-	}
 }

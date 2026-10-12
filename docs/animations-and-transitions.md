@@ -142,6 +142,10 @@ A slide opened through `pptx-ts/read` exposes:
   `sound`, or `null`. It is also settable, so `slide.transition = { ...slide.transition, speed: "slow" }`
   changes the speed and keeps the rest, and `slide.transition = null` removes the transition.
 - `slide.hasAnimations`: whether the slide has build animations.
+- `slide.animations`: each build effect in the slide's timing, in document order: the sequence it plays
+  in (`main`, `interactive` or `other`), its `presetClass`, `presetId` and `presetSubtype`, its `trigger`,
+  `durationMs`, the `delayMs` of its step, and the `shapeId` it targets. `readModelToIr` replays an effect
+  in the main sequence that matches one of the eight presets as `addAnimation`.
 - `slide.flattenAnimations()`: removes them.
 
 See [Read object model](reference/read-object-model.md#slide).

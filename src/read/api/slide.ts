@@ -33,7 +33,15 @@ import {
 	type TransitionInfo,
 	type TransitionInput,
 } from './transition.js'
-import { enumerateSpids, flattenAnimations, hasAnimations, pruneSpids, remapSpids } from './animation.js'
+import {
+	enumerateSpids,
+	flattenAnimations,
+	hasAnimations,
+	pruneSpids,
+	readBuildEffects,
+	remapSpids,
+	type BuildEffect,
+} from './animation.js'
 import { IMAGE_REL, NOTES_SLIDE_REL, SLIDE_LAYOUT_REL } from '../../ooxml/rel-types.js'
 import { SLIDE_AFTER_TRANSITION } from '../../ooxml/sequence.js'
 import { imageFormatForBytes } from '../../media/image-formats.js'
@@ -259,6 +267,16 @@ export class Slide implements ShapeHost {
 	get hasAnimations(): boolean {
 		const root = this.part.dom.documentElement
 		return root ? hasAnimations(root) : false
+	}
+
+	/**
+	 * The slide's build effects: every time node in its `p:timing` with a `presetClass`, in document
+	 * order, with the sequence it plays in, its preset, trigger, duration, step delay and target shape
+	 * id. `[]` when the slide has no timing. Read-only: see {@link BuildEffect}.
+	 */
+	get animations(): BuildEffect[] {
+		const root = this.part.dom.documentElement
+		return root ? readBuildEffects(root) : []
 	}
 
 	/**

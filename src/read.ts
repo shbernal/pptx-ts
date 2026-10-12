@@ -39,6 +39,7 @@ export type {
 } from './read/api/presentation-types.js'
 export type { EmbeddedFont, EmbeddedFontFace, EmbeddedFontSlot } from './embedded-fonts.js'
 export { Slide, type AddTextBoxOptions, type AddPictureOptions } from './read/api/slide.js'
+export type { BuildEffect, BuildSequence } from './read/api/animation.js'
 export { NotesSlide, NotesPlaceholder } from './read/api/notes.js'
 export {
 	Theme,

@@ -11,6 +11,7 @@ import type { SlideObject } from '../../types/internal.js'
 import { warn } from '../../diagnostics.js'
 import { el, raw, voidEl } from '../oxml/el.js'
 import { renderedSlideObjects, resolveObjectNameToId } from '../slide/shape-ids.js'
+import { ANIM_PRESET_IDENTITY, type AnimPresetIdentity } from '../../ooxml/anim-presets.js'
 
 /**
  * Resolved animation target's shape id (`spid`), or `null` when it cannot be resolved — in which
@@ -83,11 +84,7 @@ export function hasKnownAnimationPreset(anim: AnimationProps): boolean {
 	return false
 }
 
-interface AnimPresetMeta {
-	presetID: number
-	presetClass: 'entr' | 'emph' | 'exit'
-	presetSubtype: number
-	defaultDurationMs: number
+interface AnimPresetMeta extends AnimPresetIdentity {
 	/** Emit the effect's behavior nodes (each `<p:cTn>` consumes one id via `next`). */
 	behaviors: (spid: number, dur: number, next: () => number) => string
 }
@@ -192,41 +189,26 @@ const ANIM_FLY_AXIS = (
 
 const ANIM_PRESETS: Record<string, AnimPresetMeta> = {
 	fadeIn: {
-		presetID: 10,
-		presetClass: 'entr',
-		presetSubtype: 0,
-		defaultDurationMs: 500,
+		...ANIM_PRESET_IDENTITY.fadeIn,
 		behaviors: (spid, dur, next) => ANIM_SET_VISIBLE(spid, next) + ANIM_FADE('in', spid, dur, next),
 	},
 	flyIn: {
-		presetID: 2,
-		presetClass: 'entr',
-		presetSubtype: 4,
-		defaultDurationMs: 500,
+		...ANIM_PRESET_IDENTITY.flyIn,
 		behaviors: (spid, dur, next) =>
 			ANIM_SET_VISIBLE(spid, next) +
 			ANIM_FLY_AXIS('in', 'x', spid, dur, next) +
 			ANIM_FLY_AXIS('in', 'y', spid, dur, next),
 	},
 	appear: {
-		presetID: 1,
-		presetClass: 'entr',
-		presetSubtype: 0,
-		defaultDurationMs: 500,
+		...ANIM_PRESET_IDENTITY.appear,
 		behaviors: (spid, _dur, next) => ANIM_SET_VISIBLE(spid, next),
 	},
 	wipe: {
-		presetID: 22,
-		presetClass: 'entr',
-		presetSubtype: 4,
-		defaultDurationMs: 500,
+		...ANIM_PRESET_IDENTITY.wipe,
 		behaviors: (spid, dur, next) => ANIM_SET_VISIBLE(spid, next) + ANIM_EFFECT('in', 'wipe(down)', spid, dur, next),
 	},
 	grow: {
-		presetID: 6,
-		presetClass: 'emph',
-		presetSubtype: 0,
-		defaultDurationMs: 2000,
+		...ANIM_PRESET_IDENTITY.grow,
 		behaviors: (spid, dur, next) =>
 			el('p:animScale', null, [
 				raw(
@@ -239,10 +221,7 @@ const ANIM_PRESETS: Record<string, AnimPresetMeta> = {
 			]),
 	},
 	spin: {
-		presetID: 8,
-		presetClass: 'emph',
-		presetSubtype: 0,
-		defaultDurationMs: 2000,
+		...ANIM_PRESET_IDENTITY.spin,
 		behaviors: (spid, dur, next) =>
 			el('p:animRot', { by: 21600000 }, [
 				raw(
@@ -255,17 +234,11 @@ const ANIM_PRESETS: Record<string, AnimPresetMeta> = {
 			]),
 	},
 	fadeOut: {
-		presetID: 10,
-		presetClass: 'exit',
-		presetSubtype: 0,
-		defaultDurationMs: 500,
+		...ANIM_PRESET_IDENTITY.fadeOut,
 		behaviors: (spid, dur, next) => ANIM_FADE('out', spid, dur, next) + ANIM_SET_HIDDEN(spid, dur, next),
 	},
 	flyOut: {
-		presetID: 2,
-		presetClass: 'exit',
-		presetSubtype: 4,
-		defaultDurationMs: 500,
+		...ANIM_PRESET_IDENTITY.flyOut,
 		behaviors: (spid, dur, next) =>
 			ANIM_FLY_AXIS('out', 'x', spid, dur, next) +
 			ANIM_FLY_AXIS('out', 'y', spid, dur, next) +
