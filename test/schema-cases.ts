@@ -281,6 +281,26 @@ export default [
 		},
 	},
 	{
+		name: 'object locks on a chart frame and a group',
+		fn: async () => {
+			const { buf } = await build((p) => {
+				const s = p.addSlide()
+				s.addChart([{ name: 'S', labels: ['A', 'B'], values: [1, 2] }], {
+					type: 'bar',
+					x: 1,
+					y: 1,
+					w: 4,
+					h: 3,
+					objectLock: { noGrp: true, noDrilldown: true, noMove: true, noResize: true },
+				})
+				s.addGroup([{ rect: { x: 6, y: 1, w: 1, h: 1 } }, { rect: { x: 8, y: 1, w: 1, h: 1 } }], {
+					objectLock: { noGrp: true, noUngrp: true },
+				})
+			})
+			await expectNoSchemaErrors(buf, 'chart-group-locks')
+		},
+	},
+	{
 		name: 'shape line with round cap',
 		fn: async () => {
 			const { buf } = await build((p) => {
