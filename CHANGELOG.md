@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **A chart's areas, manual layouts and series effects read back.** `Chart.chartArea` and
+  `Chart.plotArea` (`ChartAreaFormat`: solid, gradient, pattern and picture fills read as a shape's
+  are, the border, the plot's manual layout), `Chart.roundedCorners`, `Chart.titleLayout`,
+  `ChartLegend.layout`, `ChartSeries.shadow` / `innerShadow` / `gradientFill` / `patternFill`, a
+  `ChartFill`'s `alpha`, `ChartDataLabels.fill` and `leaderLines`, and `ChartPlotGroup.seriesLinesLine`.
+  `readModelToIr` maps them onto `chartArea`, `plotArea`, `layout`, `legendLayout`,
+  `chartColorsOpacity`, `shadow`, `lineCap`, `dataBorder`, `dataLabelBkgrdColors`, `leaderLine*` and
+  `barSeriesLine`, and notes a title layout and a series gradient or pattern, which no option spells
+  ([#134](https://github.com/shbernal/pptx-ts/issues/134)).
 - **Chart text formatting reads as `ChartTextStyle`.** `Chart.titleStyle`, `ChartLegend.textStyle`,
   `ChartDataLabels.textStyle`, `ChartAxis.labelStyle` and `ChartAxis.titleStyle` read size, bold,
   italic, underline, colour, typeface, rotation and alignment, and `Chart.language` the language the

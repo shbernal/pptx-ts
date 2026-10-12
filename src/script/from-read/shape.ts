@@ -769,7 +769,7 @@ function graphicFrameCall(shape: GraphicFrame, ctx: MapContext): CallIr | null {
 	if (table) return tableCall(shape, table, ctx)
 
 	const chart = shape.chart
-	if (chart) return chartCall(shape, chart, notes)
+	if (chart) return chartCall(shape, chart, ctx)
 
 	// Everything below emits no call. Reached even when the deck-level walk already marked the
 	// slide `carried`, because the standalone tier has no source package to copy from and needs
