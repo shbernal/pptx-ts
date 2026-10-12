@@ -11,6 +11,7 @@ import type { Part } from '../opc/part.js'
 import {
 	attr,
 	boolValue,
+	childElements,
 	concatDrawingMLText,
 	type Element,
 	ELEMENT_NODE,
@@ -20,6 +21,7 @@ import {
 	numberValue,
 	OOXML_NS,
 } from '../oxml/dom.js'
+import { CHART_METADATA_EXT_URI, CHART_METADATA_NS } from '../../ooxml/chart-metadata.js'
 import { readIndexedPoints } from '../oxml/point-cache.js'
 import { readLineBasics } from './line.js'
 import { readColorRef, type ColorRef } from './theme-context.js'
@@ -60,6 +62,20 @@ export interface ChartDataLabels {
 	position: string | null
 	/** Label number format (`c:numFmt`), or `null` when absent. */
 	numberFormat: AxisNumberFormat | null
+}
+
+/** A chart's data table (`c:plotArea/c:dTable`), the grid of values drawn under the plot. */
+export interface ChartDataTable {
+	/** Horizontal cell borders (`c:showHorzBorder`), or `null` when unstated. */
+	showHorizontalBorder: boolean | null
+	/** Vertical cell borders (`c:showVertBorder`), or `null` when unstated. */
+	showVerticalBorder: boolean | null
+	/** The outline around the table (`c:showOutline`), or `null` when unstated. */
+	showOutline: boolean | null
+	/** The legend keys beside each series' row (`c:showKeys`), or `null` when unstated. */
+	showKeys: boolean | null
+	/** The table text's size in points (`c:txPr`'s first `a:defRPr/@sz`), or `null` when unstated. */
+	fontSizePt: number | null
 }
 
 /** A series' solid fill (`c:ser/c:spPr`). */
@@ -170,6 +186,50 @@ export class Chart {
 	get dataLabels(): ChartDataLabels | null {
 		const group = this.#chartGroups()[0]
 		return readDataLabels(group ? firstChild(group, 'c:dLbls') : null)
+	}
+
+	/** The data table under the plot (`c:plotArea/c:dTable`), or `null` when the chart draws none. */
+	get dataTable(): ChartDataTable | null {
+		const plotArea = this.#plotArea()
+		const table = plotArea && firstChild(plotArea, 'c:dTable')
+		if (!table) return null
+		const flag = (qname: string): boolean | null => {
+			const element = firstChild(table, qname)
+			return element ? boolValue(attr(element, 'val')) : null
+		}
+		return {
+			showHorizontalBorder: flag('c:showHorzBorder'),
+			showVerticalBorder: flag('c:showVertBorder'),
+			showOutline: flag('c:showOutline'),
+			showKeys: flag('c:showKeys'),
+			fontSizePt: readTextSizePt(firstChild(table, 'c:txPr')),
+		}
+	}
+
+	/**
+	 * The key/value annotations `addChart`'s `metadata` option writes: the pptx-ts extension on
+	 * `c:chartSpace/c:extLst` (uri `{094A432E-1F6C-499B-95B8-B57DC9536949}`). `null` when the chart
+	 * carries no such extension; an extension with no item reads as an empty map.
+	 */
+	get metadata(): Record<string, string> | null {
+		const root = this.part.dom.documentElement
+		const extLst = root ? firstChild(root, 'c:extLst') : null
+		const ext = extLst
+			? getElements(extLst, 'c:ext').find((element) => attr(element, 'uri') === CHART_METADATA_EXT_URI)
+			: undefined
+		const payload = ext
+			? childElements(ext).find(
+					(element) => element.namespaceURI === CHART_METADATA_NS && element.localName === 'metadata'
+				)
+			: undefined
+		if (!payload) return null
+		const out: Record<string, string> = {}
+		for (const item of childElements(payload)) {
+			if (item.namespaceURI !== CHART_METADATA_NS || item.localName !== 'item') continue
+			const key = attr(item, 'key')
+			if (key) out[key] = attr(item, 'value') ?? ''
+		}
+		return out
 	}
 
 	/** The data series (`c:ser`) across all chart groups, in document order. */
@@ -500,6 +560,15 @@ export class ChartSeries {
 		const container = firstChild(this.ser, qname)
 		return readPoints(container && findCache(container)).map(numberValue)
 	}
+}
+
+/** The size, in points, a chart text block (`c:txPr`) sets on its first paragraph's `a:defRPr`. */
+function readTextSizePt(txPr: Element | null): number | null {
+	const paragraph = txPr && firstChild(txPr, 'a:p')
+	const pPr = paragraph && firstChild(paragraph, 'a:pPr')
+	const defRPr = pPr && firstChild(pPr, 'a:defRPr')
+	const size = defRPr ? numberValue(attr(defRPr, 'sz')) : null
+	return size === null ? null : size / 100
 }
 
 /** Read a `c:dLbls` block's show flags, position and number format, or `null` when there is no block. */

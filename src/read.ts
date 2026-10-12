@@ -151,6 +151,7 @@ export {
 	type AxisNumberFormat,
 	type ChartLegend,
 	type ChartDataLabels,
+	type ChartDataTable,
 	type ChartFill,
 	type ChartLine,
 } from './read/api/chart.js'

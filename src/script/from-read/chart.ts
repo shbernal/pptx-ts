@@ -150,6 +150,8 @@ export function chartCall(frame: GraphicFrame, chart: Chart, notes: NoteScope): 
 		...axisOptions(chart, type),
 		...seriesLineOptions(chart, type, notes),
 		chartColors: seriesColors(chart),
+		...dataTableOptions(chart),
+		metadata: metadataOption(chart),
 		seriesOptions: seriesOverrides(chart, type, notes),
 	})
 
@@ -547,6 +549,34 @@ function seriesOverrides(chart: Chart, type: string, notes: NoteScope): IrValue 
 /** The number format a series' own label block states, or `null`. */
 function seriesLabelFormat(series: ChartSeries): string | null {
 	return series.dataLabels?.numberFormat?.formatCode ?? null
+}
+
+/** The size, in points, the writer gives a data table's text when `dataTableFontSize` is left out. */
+const DEFAULT_DATA_TABLE_FONT_SIZE = 12
+
+/**
+ * The data table under the plot. Each border flag and the key swatches are written off unless
+ * stated, so only an on flag is carried, and the text size only where it is not the writer's 12pt.
+ */
+function dataTableOptions(chart: Chart): Record<string, IrValue | undefined> {
+	const table = chart.dataTable
+	if (!table) return {}
+	const on = (flag: boolean | null) => (flag === true ? true : undefined)
+	const size = table.fontSizePt
+	return {
+		showDataTable: true,
+		showDataTableHorzBorder: on(table.showHorizontalBorder),
+		showDataTableVertBorder: on(table.showVerticalBorder),
+		showDataTableOutline: on(table.showOutline),
+		showDataTableKeys: on(table.showKeys),
+		dataTableFontSize: size === null || size === DEFAULT_DATA_TABLE_FONT_SIZE ? undefined : size,
+	}
+}
+
+/** `addChart`'s `metadata`, read back off the extension it writes; an empty map writes nothing, so it is left out. */
+function metadataOption(chart: Chart): IrValue | undefined {
+	const metadata = chart.metadata
+	return metadata && Object.keys(metadata).length > 0 ? metadata : undefined
 }
 
 /**

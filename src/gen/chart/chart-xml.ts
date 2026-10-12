@@ -53,6 +53,7 @@ import { makeSurfacePlot, makeSurfaceScene } from './plot-surface.js'
 import { InternalError, InvalidOptionError } from '../../errors.js'
 import { isScatterChart, isXyChart } from './chart-kind.js'
 import { OOXML_NS } from '../../ooxml/namespaces.js'
+import { CHART_METADATA_EXT_URI, CHART_METADATA_NS } from '../../ooxml/chart-metadata.js'
 import { xsdBool } from '../../ooxml/xsd-boolean.js'
 
 /** The three namespaces every `<c:chartSpace>` declares, in the order PowerPoint writes them. */
@@ -660,16 +661,6 @@ export function makeXmlCharts(rel: SlideRelChart): string {
 		])
 	)
 }
-
-/**
- * Stable pptx-ts vendor GUID identifying the chart-metadata extension on `c:chartSpace/c:extLst`.
- * Custom data rides under this URI in a foreign namespace so PowerPoint preserves it (the extLst
- * mechanism) instead of stripping/repairing it as it would an unrecognised sibling element.
- */
-const CHART_METADATA_EXT_URI = '{094A432E-1F6C-499B-95B8-B57DC9536949}'
-
-/** Foreign namespace for the chart-metadata extension payload. */
-const CHART_METADATA_NS = 'http://ts-pptx.com/schema/chart/metadata'
 
 /**
  * Create the chart-space extension-list XML carrying custom `metadata` key/value annotations.
