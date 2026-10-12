@@ -86,6 +86,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`textWarp` on a table or cell warns `table/option-not-supported`.** A cell took it from
   `TextBaseProps` and wrote nothing, with nothing reported; PowerPoint has no text transform in a
   table cell ([#84](https://github.com/shbernal/pptx-ts/issues/84)).
+- **A chart or plot area paints a picture fill.** `chartArea.fill` and `plotArea.fill` with
+  `type: 'image'` wrote no fill and warned that the caller's `image.data` was missing. The chart part
+  now declares the picture and writes an `a:blipFill`, through `write()`, `extractSlides()` and
+  `appendSlides()` alike ([#139](https://github.com/shbernal/pptx-ts/issues/139)).
+- **`catAxes[n]` and `valAxes[n]` write `catAxisCrossesAt`, `valAxisCrossesAt` and
+  `valLabelFormatCode`.** Each entry's crossing now lands on the axis it crosses, as the flat key's
+  does, and a value-axis entry's format sets the series caches of the plots on that axis. All three
+  wrote nothing from an entry ([#142](https://github.com/shbernal/pptx-ts/issues/142)).
 - **`readModelToIr` carries the chart settings the read model reads.** A series outline
   (`dataBorder` on a bar, area or pie; `lineSize`, `lineDash`, `lineDashValues` and a per-series
   `seriesOptions[n].lineSize` on a stroked series), each axis' orientation, tick marks, label

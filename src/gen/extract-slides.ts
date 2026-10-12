@@ -118,7 +118,7 @@ function relExtension(rel: { extn?: string; Target: string }, fallback: string):
  */
 function imageMediaOf(slide: PresSlideInternal, avPreviewRids: ReadonlySet<number>): ExtractedSlide['media'] {
 	return slide._relsMedia
-		.filter((rel) => rel.type.toLowerCase().includes('image') && !avPreviewRids.has(rel.rId))
+		.filter((rel) => rel.type.toLowerCase().includes('image') && !avPreviewRids.has(rel.rId) && !rel.chartOwned)
 		.map((rel) => {
 			// `decodeBase64ToBytes` takes a bare payload and a `data:` URI alike, so there is no prefix to
 			// normalize. The one this used to add changed no decoded byte.
