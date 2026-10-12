@@ -248,7 +248,7 @@ function bulletColor(bullet: BulletStyle, notes: NoteScope): string | undefined 
 export function runOptions(
 	run: Run,
 	ctx: MapContext,
-	inPlaceholder = false,
+	leftUncoloured = false,
 	textLang?: string
 ): Record<string, IrValue> | undefined {
 	const { notes } = ctx
@@ -267,7 +267,7 @@ export function runOptions(
 		)
 	}
 
-	const color = runColor(run, hyperlink !== undefined || inPlaceholder, notes)
+	const color = runColor(run, hyperlink !== undefined || leftUncoloured, notes)
 	return compact({
 		// A run that sets no `lang` takes the text's, else `en-US`, so that one is left implied.
 		lang: runLanguage(run.language ?? 'en-US', textLang ?? 'en-US'),
@@ -403,7 +403,9 @@ function runColor(run: Run, leftUncoloured: boolean, notes: NoteScope): string |
 	// a shape written back as a `placeholder`, which inherits from its layout. Baking the resolved
 	// colour in replayed a hlink-coloured link black, and froze a placeholder's (#100). A link counts
 	// only when the link itself carries; a dropped link leaves plain text, which the write path does
-	// paint black.
+	// paint black. A shape's own link counts for its runs, which `addText` leaves uncoloured too:
+	// a show jump stated on the shape is written on its `p:cNvPr` alone, so its runs state no link
+	// of their own (#128).
 	if (leftUncoloured) return undefined
 
 	// A run with no colour of its own inherits one, and leaving the option out does *not* pass
@@ -669,12 +671,14 @@ function noteUnwritableBreaks(paragraph: Paragraph, notes: NoteScope): void {
  * An empty paragraph becomes an item with empty text and a `breakLine`, which is how a
  * blank line survives — dropping it would silently close up vertical space the author put
  * there deliberately.
- * @param inPlaceholder - the shape is written back as a `placeholder`, so the write path leaves its
- *   uncoloured runs to the layout and none of them takes its inherited colour baked in
+ * @param leftUncoloured - the write path leaves the shape's uncoloured runs uncoloured: the shape is
+ *   written back as a `placeholder`, whose runs inherit from the layout, or it carries a hyperlink,
+ *   whose runs PowerPoint paints in the theme's hlink colour. None of them takes its inherited
+ *   colour baked in
  * @param textLang - the `lang` the text's options carry (`frameLanguage`), so each run states its own
  *   only where it differs. A table cell's text has none.
  */
-export function textRuns(frame: TextFrame, ctx: MapContext, inPlaceholder = false, textLang?: string): IrValue[] {
+export function textRuns(frame: TextFrame, ctx: MapContext, leftUncoloured = false, textLang?: string): IrValue[] {
 	const paragraphs = frame.paragraphs
 	const items: IrValue[] = []
 
@@ -702,7 +706,7 @@ export function textRuns(frame: TextFrame, ctx: MapContext, inPlaceholder = fals
 			delete continuation['bullet']
 			const options = compact({
 				...(runIndex === 0 ? paraOpts : continuation),
-				...runOptions(run, ctx, inPlaceholder, textLang),
+				...runOptions(run, ctx, leftUncoloured, textLang),
 				...(runIndex > 0 && run.breaksBefore > 0 ? { softBreakBefore: true } : {}),
 				...(isLastRun && breaks ? { breakLine: true } : {}),
 			})
