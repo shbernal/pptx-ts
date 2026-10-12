@@ -56,6 +56,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`textStyles` `bullet: true` writes a bullet.** On a slide-master level it wrote nothing, so the
+  title, whose default is no bullet, could not be given one without a `characterCode`. It now
+  writes the level's own glyph, or `•` where the level has none, as `addText`'s `bullet: true` does
+  ([#113](https://github.com/shbernal/pptx-ts/issues/113)).
 - **A text run's `hyperlink: { action }` writes its jump.** The run was underlined and linked
   nowhere, with no warning. It now writes `a:hlinkClick` with the show jump on the run, as
   PowerPoint does, and `readModelToIr` carries a run's jump as `hyperlink.action` instead of

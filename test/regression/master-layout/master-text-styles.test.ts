@@ -93,6 +93,27 @@ defineRegressionSuite('Master text styles', [
 		},
 	},
 	{
+		// `true` was typed and documented nowhere, and wrote nothing: on the title, whose level default
+		// is `a:buNone`, it gave the same bytes as leaving it unset (issue #113). It asks for a bullet,
+		// as `addText`'s `bullet: true` does: the level's own glyph, else the default one.
+		name: 'bullet:true gives a level a bullet, the default glyph where the level has none',
+		fn: async () => {
+			const { zip } = await build((p) => {
+				p.defineSlideMaster({
+					title: 'BULLET_MASTER',
+					textStyles: { title: { bullet: true }, body: [{ bullet: true }] },
+				})
+				p.addSlide({ masterTitle: 'BULLET_MASTER' })
+			})
+			const xml = await masterXml(zip)
+			const title = xml.slice(xml.indexOf('<p:titleStyle>'), xml.indexOf('</p:titleStyle>'))
+			assertIncludes(title, '<a:buChar char="•"/>', 'the title level gets the default bullet')
+			assertNotIncludes(title, '<a:buNone/>', 'and no longer suppresses it')
+			const lvl1 = xml.slice(xml.indexOf('<a:lvl1pPr marL="342900"'), xml.indexOf('<a:lvl2pPr'))
+			assertIncludes(lvl1, '<a:buChar char="•"/>', 'a body level keeps its own glyph')
+		},
+	},
+	{
 		name: 'bullet:false suppresses the level bullet (a:buNone)',
 		fn: async () => {
 			const { zip } = await build((p) => {

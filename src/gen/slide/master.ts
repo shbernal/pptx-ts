@@ -148,6 +148,10 @@ function masterBulletXml(
 ): string {
 	// Explicit override
 	if (bulletOverride === false) return voidEl('a:buNone')
+	// `true` asks for a bullet, as `addText`'s does: the level's own glyph where it has one, else the
+	// default character bullet an empty object writes. It used to mean "keep the level default", so
+	// on the title, whose default is no bullet, it wrote nothing (#113).
+	if (bulletOverride === true && (base === 'none' || base === undefined)) return masterBulletXml({}, base)
 	if (bulletOverride && typeof bulletOverride === 'object') {
 		const font = bulletOverride.fontFace ? voidEl('a:buFont', { typeface: bulletOverride.fontFace }) : ''
 		if (bulletOverride.type === 'number') {
@@ -160,7 +164,7 @@ function masterBulletXml(
 			: voidEl('a:buFont', { typeface: 'Arial', pitchFamily: 34, charset: 0 })
 		return buFont + buCharEl(bulletOverride.characterCode, '•', 'master textStyles bullet')
 	}
-	// No override (undefined / true): keep the level's default bullet
+	// No override, or `true` on a level that has a glyph: keep the level's default bullet
 	if (base === 'none') return voidEl('a:buNone')
 	if (base && typeof base === 'object')
 		return (
