@@ -164,6 +164,7 @@ export type DiagnosticCode =
 	| 'media/svg-preview-failed'
 	| 'model3d/preview-missing'
 	| 'media/invalid-loop-count'
+	| 'media/option-not-supported'
 	| 'theme/invalid-color-override'
 	| 'master/invalid-text-style-font-size'
 	| 'master/invalid-text-style-length'

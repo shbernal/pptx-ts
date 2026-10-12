@@ -262,6 +262,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   chart writer reads none but `lang`, so a chart given them was byte-identical to one without. They
   are now named in one `chart/option-not-supported` warning; a chart's text is styled through its
   own options ([#138](https://github.com/shbernal/pptx-ts/issues/138)).
+- **`link` on embedded audio or video warns `media/option-not-supported`.** `MediaProps` typed it
+  as "video embed link metadata" on the embedded arm, and it wrote nothing, with nothing reported.
+  Only `type: 'online'` reads `link`; an embedded clip links its own media part, so there is nowhere
+  to put another ([#203](https://github.com/shbernal/pptx-ts/issues/203)).
 - **`textWarp` on a table or cell warns `table/option-not-supported`.** A cell took it from
   `TextBaseProps` and wrote nothing, with nothing reported; PowerPoint has no text transform in a
   table cell ([#84](https://github.com/shbernal/pptx-ts/issues/84)).
