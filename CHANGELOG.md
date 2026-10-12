@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   carries the runs with those options and `printScript` prints `addNotes([...])`. Plain notes
   still carry as `notesText`
   ([#129](https://github.com/shbernal/pptx-ts/issues/129)).
+- **`objectLock` takes `noUngrp` on a group**, the lock that stops PowerPoint ungrouping it
+  (`a:grpSpLocks/@noUngrp`). `readModelToIr` reads it back
+  ([#126](https://github.com/shbernal/pptx-ts/issues/126)).
 - **`CellBorder.cap` reads a table cell edge's or diagonal's line cap** (`@cap`) as its raw token,
   `flat`, `rnd` or `sq`, or `null` when unset.
 - **`placeholder` takes a binding: `{ name?, type?, idx? }`.** On `addText`, `addImage` and
@@ -84,6 +87,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `unsupported` for every formatted note, though the write side authors most of it. It now fires
   only for an indent level, a bullet, strikethrough, a highlight, character spacing or a link that
   is not a URL ([#129](https://github.com/shbernal/pptx-ts/issues/129)).
+- **`addChart` writes `objectLock`.** The chart frame wrote a bare `p:cNvGraphicFramePr` and
+  dropped every flag without a warning. It now writes `a:graphicFrameLocks` as a table's frame does,
+  warns for a flag a frame cannot carry, and `readModelToIr` carries the locks back
+  ([#137](https://github.com/shbernal/pptx-ts/issues/137)).
 - **`readModelToIr` reads a scatter's or bubble's Y axis as its value axis.** Both axes of those
   charts are `c:valAx`, and the X axis was taken for the value axis: its bounds came back as
   `valAxisMinVal` / `valAxisMaxVal`, and the Y axis' bounds and title were lost. The X axis now

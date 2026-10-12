@@ -1193,6 +1193,26 @@ describe('deck IR — shape locks', () => {
 		assertEqual((await replayLocks(ir)).join(''), source.join(''), 'the replay')
 	})
 
+	test("a chart's frame locks and a group's noUngrp carry", async () => {
+		const { presentation } = await authorRead((pres) => {
+			const slide = pres.addSlide()
+			slide.addChart([{ name: 'S', labels: ['A', 'B'], values: [1, 2] }], {
+				type: 'bar',
+				x: 1,
+				y: 1,
+				w: 4,
+				h: 3,
+				objectLock: { noDrilldown: true, noMove: true },
+			})
+			slide.addGroup([{ rect: { x: 6, y: 1, w: 2, h: 1 } }], { objectLock: { noUngrp: true } })
+		})
+		const ir = readModelToIr(presentation)
+		const lockOf = (method: string) =>
+			JSON.stringify(at(defined(allCalls(ir).find((c) => c.method === method)).args[1], 'objectLock'))
+		assertEqual(lockOf('addChart'), '{"noDrilldown":true,"noMove":true}', 'the chart locks')
+		assertEqual(lockOf('addGroup'), '{"noUngrp":true}', 'the group noUngrp')
+	})
+
 	test('a picture without noChangeAspect and a table without noGrp do not gain them', async () => {
 		const { presentation, buf } = await authorRead((pres) => {
 			const slide = pres.addSlide()

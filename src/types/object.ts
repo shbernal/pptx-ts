@@ -106,6 +106,8 @@ export interface ObjectNameProps {
 export interface ObjectLockProps {
 	/** Disallow grouping/ungrouping with other objects. (shapes, images, tables) */
 	noGrp?: boolean
+	/** Disallow ungrouping the group (`a:grpSpLocks/@noUngrp`). (groups only) */
+	noUngrp?: boolean
 	/** Disallow selecting the object. (shapes, images, tables) */
 	noSelect?: boolean
 	/** Disallow moving the object. (shapes, images, tables) */
