@@ -1,0 +1,17 @@
+{
+	"name": "pptx-ts",
+	"build": { "dockerfile": "Dockerfile" },
+	"remoteUser": "node",
+	// The same switches CI sets: with the tools installed, a missing font source or
+	// renderer is a failure here rather than a SKIP.
+	"containerEnv": {
+		"FONT_ORACLES": "required",
+		"PPTXTS_RENDER_ORACLE": "required"
+	},
+	// `gh attestation verify` needs a token to check the OOXML oracle's provenance on its
+	// first download. Without GH_TOKEN on the host, run `gh auth login` inside instead.
+	"remoteEnv": {
+		"GH_TOKEN": "${localEnv:GH_TOKEN}"
+	},
+	"postCreateCommand": "pnpm install --frozen-lockfile && pnpm exec playwright install --with-deps chromium"
+}

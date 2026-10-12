@@ -44,6 +44,17 @@ A change to the package boundary (exports, entry points, shipped artifacts) is g
 `package` job. `pnpm run check:package` runs the same gates locally when you want an answer before
 the pull request has one.
 
+### Dev container
+
+[`.devcontainer/`](.devcontainer/devcontainer.json) gives the same toolchain on every machine:
+Node 24, `pnpm` through corepack, and the LibreOffice Impress, poppler and Liberation fonts that
+CI's render oracle uses. On create it runs `pnpm install` and installs Playwright's Chromium, so
+`verify`, `test:lo` and `test:browser` all run inside it. It sets `FONT_ORACLES` and
+`PPTXTS_RENDER_ORACLE` to `required`, as CI does, so a missing tool fails instead of skipping.
+The image includes the GitHub CLI, because the schema suite's first download of `ooxml-validate`
+checks its provenance with `gh attestation verify`. Set `GH_TOKEN` on the host, which the container
+passes through, or run `gh auth login` inside it.
+
 ### PowerPoint
 
 `verify` never needs PowerPoint. Two tasks do: `pnpm run test:com`, which opens decks in desktop
