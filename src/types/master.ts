@@ -96,7 +96,11 @@ export interface MasterTextStyleLevel {
 	marginLeft?: number
 	/** First-line indent in inches (`a:lvlNpPr@indent`); negative produces a hanging bullet. */
 	indent?: number
-	/** Bullet config: `false` emits `a:buNone`; an object configures a char/number bullet. Unset keeps the level default. */
+	/**
+	 * Bullet config: `false` emits `a:buNone`; `true` gives the level a bullet, its own glyph where
+	 * the level default has one and `•` where it has none (the title); an object configures a
+	 * char/number bullet. Unset keeps the level default.
+	 */
 	bullet?: boolean | MasterBulletProps
 }
 /**
