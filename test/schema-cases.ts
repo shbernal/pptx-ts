@@ -2773,6 +2773,26 @@ export default [
 		},
 	},
 	{
+		name: 'table cell picture bullet and show-jump link',
+		fn: async () => {
+			const png =
+				'image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+			const { buf } = await build((p) => {
+				p.addSlide().addTable(
+					[
+						[
+							{ text: 'picture', options: { bullet: { image: { data: png } } } },
+							{ text: 'next', options: { hyperlink: { action: 'nextslide' } } },
+						],
+					],
+					{ x: 1, y: 1, w: 6, h: 1 }
+				)
+				p.addSlide()
+			})
+			await expectNoSchemaErrors(buf, 'table-cell-picture-bullet-action')
+		},
+	},
+	{
 		name: 'SVG image with a hyperlink (three distinct relationship ids)',
 		fn: async () => {
 			// An SVG picture takes two rels and its hyperlink takes a third. The hyperlink used to
