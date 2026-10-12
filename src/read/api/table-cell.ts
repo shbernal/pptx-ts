@@ -119,6 +119,12 @@ export interface CellBorder {
 	colorRef: ColorRef
 	/** `true` when the edge is an explicit no-border (`a:noFill`) — a deliberately suppressed side. */
 	noFill: boolean
+	/**
+	 * The line end cap (`@cap`) as the raw OOXML token (`flat`, `rnd`, `sq`), or `null` when unset.
+	 * PowerPoint writes `flat` on every edge it draws; the write side's `BorderProps.cap` is the
+	 * same attribute.
+	 */
+	cap: string | null
 }
 
 /**
@@ -589,7 +595,7 @@ export class TableCell {
 		const decode = (qname: string): CellBorder | null => {
 			const ln = firstChild(tcPr, qname)
 			if (!ln) return null
-			return readLineBasics(ln, this.themeContext)
+			return { ...readLineBasics(ln, this.themeContext), cap: attr(ln, 'cap') ?? null }
 		}
 		const borders: CellBorders = {
 			left: decode('a:lnL'),
