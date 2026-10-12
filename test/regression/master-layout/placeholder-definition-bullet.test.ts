@@ -1,20 +1,21 @@
 import type JSZip from 'jszip'
-import type TsPptx from '../../../src/index.ts'
 import { defineRegressionSuite, build, readEntry, assert, assertIncludes, assertNotIncludes } from '../../helpers.ts'
 
 // #174: a placeholder definition with no paragraph options wrote `a:buNone` plus `marL="0"
 // indent="0"` into its layout `a:lstStyle`, the tier above the master's `p:bodyStyle`, so the
 // master's `textStyles` never reached a slide. Omission now states nothing there.
 
-type PlaceholderOptions = Parameters<TsPptx['defineSlideMaster']>[0]['objects']
-
-function deck(placeholder: Record<string, unknown>, fill: (slide: ReturnType<TsPptx['addSlide']>) => void) {
+/** A deck whose master defines a body placeholder, and one slide that fills it with `text`, if given. */
+function deck(definition: { bullet?: false }, text?: { text: string; bullet?: false }) {
 	return build((p) => {
-		const objects: PlaceholderOptions = [
-			{ placeholder: { options: { name: 'body', type: 'body', x: 1, y: 1, w: 6, h: 2, ...placeholder }, text: '' } },
-		]
-		p.defineSlideMaster({ title: 'M', objects })
-		fill(p.addSlide({ masterTitle: 'M' }))
+		p.defineSlideMaster({
+			title: 'M',
+			objects: [
+				{ placeholder: { options: { name: 'body', type: 'body', x: 1, y: 1, w: 6, h: 2, ...definition }, text: '' } },
+			],
+		})
+		const slide = p.addSlide({ masterTitle: 'M' })
+		if (text) slide.addText(text.text, { placeholder: 'body', ...(text.bullet === false ? { bullet: false } : {}) })
 	})
 }
 
@@ -30,7 +31,7 @@ defineRegressionSuite('Placeholder definition bullet', [
 	{
 		name: 'a definition with no paragraph options states no bullet or margins',
 		fn: async () => {
-			const { zip } = await deck({}, () => {})
+			const { zip } = await deck({})
 			const layout = await bodyLayoutXml(zip)
 			assertIncludes(layout, '<a:lstStyle><a:lvl1pPr><a:defRPr', 'the layout level states nothing')
 			assertNotIncludes(layout, '<a:buNone/>', 'no bullet override on the layout')
@@ -43,7 +44,7 @@ defineRegressionSuite('Placeholder definition bullet', [
 	{
 		name: 'text filling the placeholder takes its unstated bullet',
 		fn: async () => {
-			const { zip } = await deck({}, (s) => s.addText('Filled', { placeholder: 'body' }))
+			const { zip } = await deck({}, { text: 'Filled' })
 			const slide = await readEntry(zip, 'ppt/slides/slide1.xml')
 			assertIncludes(slide, '<a:t>Filled</a:t>', 'the text is written')
 			assertNotIncludes(slide, '<a:buNone/>', 'no bullet override on the slide paragraph')
@@ -53,7 +54,7 @@ defineRegressionSuite('Placeholder definition bullet', [
 	{
 		name: 'bullet:false on the definition still turns the bullet off, for its slides too',
 		fn: async () => {
-			const { zip } = await deck({ bullet: false }, (s) => s.addText('Filled', { placeholder: 'body' }))
+			const { zip } = await deck({ bullet: false }, { text: 'Filled' })
 			const layout = await bodyLayoutXml(zip)
 			assertIncludes(layout, '<a:lvl1pPr indent="0" marL="0"><a:buNone/>', 'the layout states the off')
 			const slide = await readEntry(zip, 'ppt/slides/slide1.xml')
@@ -63,7 +64,7 @@ defineRegressionSuite('Placeholder definition bullet', [
 	{
 		name: 'bullet:false on the slide text overrides an inheriting definition',
 		fn: async () => {
-			const { zip } = await deck({}, (s) => s.addText('Plain', { placeholder: 'body', bullet: false }))
+			const { zip } = await deck({}, { text: 'Plain', bullet: false })
 			const slide = await readEntry(zip, 'ppt/slides/slide1.xml')
 			assert(slide.includes('<a:buNone/>'), 'the slide paragraph states the off')
 		},
