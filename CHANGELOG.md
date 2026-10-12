@@ -262,6 +262,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   chart writer reads none but `lang`, so a chart given them was byte-identical to one without. They
   are now named in one `chart/option-not-supported` warning; a chart's text is styled through its
   own options ([#138](https://github.com/shbernal/pptx-ts/issues/138)).
+- **Build animations carry through `readModelToIr` as `addAnimation`.** The read model's only view
+  of `p:timing` was `Slide.hasAnimations`, so every effect was dropped under `slide.animation`. The new
+  `Slide.animations` reads each effect's sequence, preset, trigger, duration, step delay and target,
+  and an effect in the main sequence that matches one of the eight presets `addAnimation` writes
+  comes back with its `preset`, the target's `objectName`, `trigger` and `durationMs`. An effect it
+  cannot write is noted: one in an interactive sequence, another preset, or a target with no unique
+  name ([#209](https://github.com/shbernal/pptx-ts/issues/209)).
 - **A slide's review comments carry through `readModelToIr` as `addComment`.** They were dropped
   with no note, though `Slide.comments` reads every field `addComment` writes, so a round trip lost
   them with a clean report. Each legacy comment comes back with its author, initials, text, marker

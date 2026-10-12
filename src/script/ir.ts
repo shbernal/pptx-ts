@@ -97,6 +97,7 @@ export interface CallIr {
 		| 'addConnector'
 		| 'addGroup'
 		| 'addComment'
+		| 'addAnimation'
 		| 'addNotes'
 	args: IrValue[]
 	/**

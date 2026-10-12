@@ -160,17 +160,17 @@ The counts come from `pnpm run script:census`, run in a clone of the repository 
 
 A count is the number of fixtures that raise the note at least once. Each fixture targets a few constructs, so a count shows what the corpus exercises, not how often a construct occurs in real decks. The table lists only constructs some fixture raises. [`knownNoteConstructs()`](api/script/functions/knownNoteConstructs.md) returns the full catalogue.
 
-The Output column says where the note fires. A construct that fires in both outputs has the same count in each. A construct under the `layout.` prefix is the slide construct of the same name, raised while re-authoring a layout's shapes. Across the corpus the standalone output raises 905 notes and the template-anchored output 463, which is 3 to 12 more per deck.
+The Output column says where the note fires. A construct that fires in both outputs has the same count in each. A construct under the `layout.` prefix is the slide construct of the same name, raised while re-authoring a layout's shapes. Across the corpus the standalone output raises 899 notes and the template-anchored output 457, which is 3 to 12 more per deck.
 
 | Construct | Output | Cause | What happens | Fixtures |
 | --- | --- | --- | --- | --- |
 | `text.color.inherited` | Both | unsupported | A run with no colour of its own gets its inherited colour baked in, because the write path paints an uncoloured run black. It stops following theme changes. A link, a run in a shape that carries a link of its own, and a run in a shape that carries as a `placeholder` are the exceptions: the write path leaves those uncoloured too, so a link keeps the theme hyperlink colour and a placeholder run its layout's | 35/60 |
 | `line.width` | Both | unread | An outline taken from the theme line style (`p:style/a:lnRef`) keeps its colour and loses its width and dash | 10/60 |
 | `shape.frameInherited` | Both | unsupported | A shape positioned by its layout or master gets that position baked in, and stops following edits to the layout or master | 9/60 |
-| `slide.animation` | Both | unread | Build animations are dropped and every shape lands static | 7/60 |
 | `chart.workbook` | Both | unsupported | The chart is rebuilt from its cached values. The plotted numbers match, and the workbook's formulas, extra columns and formatting are gone | 5/60 |
 | `chart.schemeToken` | Both | unwritable | A chart line or text colour outside the ten mapped scheme tokens, or one with a theme transform such as `a:lumMod`, takes the default colour | 4/60 |
 | `diagram.all` | Both | unwritable | No write API builds SmartArt. The template-anchored output copies the slide, and the standalone output drops the diagram | 3/60 |
+| `slide.animation` | Both | unwritable | A build effect `addAnimation` cannot write is dropped: one in an interactive sequence, such as PowerPoint's click-to-play media trigger, a preset other than the eight `addAnimation` writes, or one whose target has no name unique on its slide. An after-previous step that starts at a delay of its own plays when the step before it ends | 3/60 |
 | `text.endParagraph.lang` | Both | unwritable | Paragraphs that end in different languages (`a:endParaRPr/@lang`) all end in `en-US`. Their runs keep their languages | 3/60 |
 | `text.hyperlink.underline` | Both | unwritable | A link that states no underline comes back stating `u="sng"`. It looks the same | 3/60 |
 | `chart.dataPoints` | Both | unwritable | A data point or pie slice in a theme colour, a pattern or an outline of its own comes back in the series' colour or its own literal fill. A radar's or bubble's own points are dropped | 2/60 |
@@ -247,6 +247,7 @@ These constructs carry in both outputs and raise no note.
 | A picture's crop | `crop` on `addImage` |
 | Embedded audio and video (`a:audioFile`, `a:videoFile`) and its loop timing | `addMedia` with `type`, `data`, `extn`, `cover` from the poster frame, and `loop` or `loopCount`. An online video is `type: 'online'` with its `link`. A rotation or flip is dropped under `media.formatting` |
 | A slide's legacy review comments (`p:cm`) | `addComment` with `author`, `initials`, `text`, `x`, `y` and `date`, after the slide's shapes |
+| A slide's build effects (`p:timing` main sequence) in the eight presets `addAnimation` writes | `addAnimation` with `preset`, the target's `objectName`, `trigger` and `durationMs`, after the slide's shapes |
 | A picture's recolour and transparency (`a:grayscl`, `a:biLevel`, `a:duotone`, `a:clrChange`, `a:alphaModFix`) | `grayscale`, `biLevel`, `duotone`, `clrChange` and `transparency` on `addImage`. A colour change to a transparent colour (Set Transparent Color) keeps the colour and loses the transparency, under `image.recolor` |
 | A background picture's crop and transparency (`a:alphaModFix`) | `background: { image: { data, crop }, transparency }` |
 | A connector's route, bends and bend positions (`bentConnector3`-`5`, `curvedConnector3`-`5`) | `type`, `bends` and `adj` on `addConnector`. Any other route prints straight under `connector.route` |
@@ -265,7 +266,6 @@ A crop with a negative inset, or with opposite insets that add up to 100% or mor
 
 - The theme's format scheme (`a:fmtScheme`), and with it the width and dash of an outline taken from the theme
 - Master text styles (`p:txStyles`)
-- Build animations
 - OMML equations and text fields
 - Freeform guides, adjust handles and connection sites
 - Graphic frames other than tables, charts and SmartArt

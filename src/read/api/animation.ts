@@ -50,6 +50,103 @@ export function hasAnimations(root: Element): boolean {
 	return false
 }
 
+/** Which time-node sequence a {@link BuildEffect} plays in. */
+export type BuildSequence = 'main' | 'interactive' | 'other'
+
+/**
+ * One preset effect in a slide's `p:timing`, as {@link Slide.animations} reads it: a time node with a
+ * `presetClass`, the shape it targets, and how and when it starts.
+ */
+export interface BuildEffect {
+	/**
+	 * The sequence the effect plays in: `main` for the slide's click-through build (`nodeType="mainSeq"`),
+	 * `interactive` for one a click on a shape triggers (`interactiveSeq`), `other` for anywhere else.
+	 */
+	sequence: BuildSequence
+	/** `@presetClass`: `entr`, `emph`, `exit`, `path`, `verb` or `mediacall`. */
+	presetClass: string
+	/** `@presetID`, or `null` when it states none. */
+	presetId: number | null
+	/** `@presetSubtype`, or `null` when it states none. */
+	presetSubtype: number | null
+	/**
+	 * How the effect starts (`@nodeType`): `clickEffect` is `onClick`, `withEffect` is `withPrevious`,
+	 * `afterEffect` is `afterPrevious`, and anything else is `null`.
+	 */
+	trigger: 'onClick' | 'withPrevious' | 'afterPrevious' | null
+	/** The longest `@dur` among the effect's behaviours, in milliseconds, or `null` when none states one. */
+	durationMs: number | null
+	/**
+	 * The delay of the step the effect sits in, from the click that starts it (`p:cond/@delay` on the
+	 * effect's parent time node), in milliseconds, or `null` when it is not a number.
+	 */
+	delayMs: number | null
+	/** The target shape's `p:cNvPr` id (the first `p:spTgt/@spid` under the effect), or `null`. */
+	shapeId: number | null
+	/** Whether the effect targets a range of the shape's text (`p:spTgt/p:txEl`) rather than the whole shape. */
+	textRange: boolean
+}
+
+const TRIGGERS: Record<string, BuildEffect['trigger']> = {
+	clickEffect: 'onClick',
+	withEffect: 'withPrevious',
+	afterEffect: 'afterPrevious',
+}
+
+/**
+ * The time node enclosing `cTn`: its `p:par` (or `p:seq`) sits in a `p:childTnLst`, whose parent is
+ * the enclosing `p:cTn`. `null` at the top of the tree.
+ */
+function parentTimeNode(cTn: Element): Element | null {
+	const parent = cTn.parentNode?.parentNode?.parentNode
+	if (!parent || parent.nodeType !== 1) return null
+	const element = parent as Element
+	return element.localName === 'cTn' && element.namespaceURI === P_NS ? element : null
+}
+
+/** A number of milliseconds from a time attribute, or `null` for `indefinite` and anything else. */
+function millis(value: string | null): number | null {
+	if (value === null || !/^\d+$/.test(value)) return null
+	return Number(value)
+}
+
+/** Every preset effect in the slide's `p:timing`, in document order. See {@link BuildEffect}. */
+export function readBuildEffects(root: Element): BuildEffect[] {
+	const timing = firstChild(root, 'p:timing')
+	if (!timing) return []
+	const out: BuildEffect[] = []
+	for (const cTn of timing.getElementsByTagNameNS(P_NS, 'cTn')) {
+		const presetClass = attr(cTn, 'presetClass')
+		if (presetClass === null) continue
+		let sequence: BuildSequence = 'other'
+		for (let node = parentTimeNode(cTn); node; node = parentTimeNode(node)) {
+			const type = attr(node, 'nodeType')
+			if (type === 'mainSeq') sequence = 'main'
+			else if (type === 'interactiveSeq') sequence = 'interactive'
+			else continue
+			break
+		}
+		const durations = [...cTn.getElementsByTagNameNS(P_NS, 'cTn')].map((node) => millis(attr(node, 'dur')))
+		const stated = durations.filter((dur): dur is number => dur !== null)
+		const step = parentTimeNode(cTn)
+		const stCondLst = step && firstChild(step, 'p:stCondLst')
+		const cond = stCondLst && firstChild(stCondLst, 'p:cond')
+		const spTgt = cTn.getElementsByTagNameNS(P_NS, 'spTgt')[0] ?? null
+		out.push({
+			sequence,
+			presetClass,
+			presetId: numberValue(attr(cTn, 'presetID')),
+			presetSubtype: numberValue(attr(cTn, 'presetSubtype')),
+			trigger: TRIGGERS[attr(cTn, 'nodeType') ?? ''] ?? null,
+			durationMs: stated.length > 0 ? Math.max(...stated) : null,
+			delayMs: cond ? millis(attr(cond, 'delay')) : null,
+			shapeId: spTgt ? numberValue(attr(spTgt, 'spid')) : null,
+			textRange: spTgt !== null && firstChild(spTgt, 'p:txEl') !== null,
+		})
+	}
+	return out
+}
+
 /** The sorted, de-duplicated set of `spid`s referenced by the slide's animations. */
 export function enumerateSpids(root: Element): number[] {
 	const seen = new Set<number>()

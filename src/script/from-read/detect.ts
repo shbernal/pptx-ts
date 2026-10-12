@@ -76,18 +76,6 @@ function children(element: ElementLike | null): ElementLike[] {
 }
 
 /**
- * `true` when this shape is an embedded audio or video rather than a still picture.
- *
- * PowerPoint authors media as a `p:pic` whose `p:nvPr` carries an `a:videoFile` or
- * `a:audioFile`, with the poster frame as the picture's own blip. The read model reports
- * only the poster — `mediaKind` distinguishes raster from SVG, not still from moving — so
- * without this check a video converts to a static image that looks deliberate.
- */
-export function isAudioVideo(element: unknown): boolean {
-	return has(element, OOXML_NS.a, 'videoFile') || has(element, OOXML_NS.a, 'audioFile')
-}
-
-/**
  * `true` when this shape's text body contains an OMML equation.
  *
  * An equation lives in `m:oMath` inside an `a14:m` run, which contributes nothing to

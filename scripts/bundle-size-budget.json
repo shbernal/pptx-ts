@@ -3,11 +3,11 @@
 	"families.js": 98304,
 	"html.js": 17408,
 	"index.js": 132096,
-	"inspect.js": 87040,
+	"inspect.js": 88064,
 	"math.js": 2048,
 	"measure.js": 19456,
 	"node.js": 132096,
-	"read.js": 84992,
-	"script.js": 82944,
+	"read.js": 86016,
+	"script.js": 84992,
 	"zip.js": 2048
 }
