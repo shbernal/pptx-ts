@@ -135,6 +135,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A scatter's own data labels carry through `readModelToIr`.** `ChartSeries.customLabels` reads a
+  series' per-point labels that state their own text, with any `a:fld` fields, and `chartCall` maps
+  them onto `dataLabelFormatScatter` (`custom` or `customXY`) and each series' `labels`; a series
+  block showing the value and the category name maps onto `XY`. A scatter came back with no labels
+  and no note. Label text on any other chart type is now noted under `chart.labels`
+  ([#166](https://github.com/shbernal/pptx-ts/issues/166)).
 - **`addNotes` writes a run's `hyperlink.slide` and `hyperlink.action`.** `NotesTextOptions` typed
   both, but only `url` was written: a slide jump was dropped with a warning and a show jump without
   one. A slide jump is now a slide relationship of the notes part, which `appendSlides` repoints at

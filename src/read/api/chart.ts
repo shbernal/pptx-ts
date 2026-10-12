@@ -109,6 +109,22 @@ export interface ChartDataLabels {
 	leaderLines: ChartLine | null
 }
 
+/** One stretch of a data label's own text: a run, or a field PowerPoint fills in (`a:fld`). */
+export interface ChartLabelRun {
+	/** The text, which for a field is what it showed when the chart was saved. */
+	text: string
+	/** The field type (`a:fld/@type`: `XVALUE`, `YVALUE`, `CELLRANGE`, …), or `null` for a plain run. */
+	field: string | null
+}
+
+/** A data label that states its own text (`c:dLbl` with `c:tx/c:rich`), as a scatter's custom labels do. */
+export interface ChartPointLabel {
+	/** The index of the point it labels (`c:idx`). */
+	index: number
+	/** Its runs and fields, in order, across its paragraphs. */
+	runs: ChartLabelRun[]
+}
+
 /** The 3-D view of a chart (`c:chart/c:view3D`). Every field is `null` when the element leaves it unstated. */
 export interface ChartView3D {
 	/** Tilt in degrees (`c:rotX`), -90 to 90. */
@@ -961,6 +977,35 @@ export class ChartSeries {
 	 */
 	get dataLabels(): ChartDataLabels | null {
 		return readDataLabels(firstChild(this.ser, 'c:dLbls'))
+	}
+
+	/**
+	 * The series' labels that state their own text (`c:ser/c:dLbls/c:dLbl` with `c:tx/c:rich`), in
+	 * document order. A label that only formats or deletes its point has no text and is left out.
+	 */
+	get customLabels(): ChartPointLabel[] {
+		const dLbls = firstChild(this.ser, 'c:dLbls')
+		if (!dLbls) return []
+		const labels: ChartPointLabel[] = []
+		for (const dLbl of childElements(dLbls)) {
+			if (dLbl.localName !== 'dLbl') continue
+			const idx = firstChild(dLbl, 'c:idx')
+			const index = idx ? numberValue(attr(idx, 'val')) : null
+			const tx = firstChild(dLbl, 'c:tx')
+			const rich = tx && firstChild(tx, 'c:rich')
+			if (index === null || !rich) continue
+			const runs: ChartLabelRun[] = []
+			for (const paragraph of childElements(rich)) {
+				if (paragraph.localName !== 'p') continue
+				for (const run of childElements(paragraph)) {
+					if (run.localName !== 'r' && run.localName !== 'fld') continue
+					const text = firstChild(run, 'a:t')?.textContent ?? ''
+					runs.push({ text, field: run.localName === 'fld' ? attr(run, 'type') : null })
+				}
+			}
+			labels.push({ index, runs })
+		}
+		return labels
 	}
 
 	/** The series' gradient fill (`c:spPr/a:gradFill`), or `null`. */
