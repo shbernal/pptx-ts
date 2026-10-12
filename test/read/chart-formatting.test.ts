@@ -65,6 +65,31 @@ describe('Chart.dataTable and Chart.metadata', () => {
 		expect(rebuilt.showDataTableVertBorder, 'a border left off stays implied').toBeUndefined()
 	})
 
+	// Both options write only the series values' source format (`c:numCache/c:formatCode`), which had
+	// no accessor, so readModelToIr dropped it (#189). The part cannot tell the two apart, and
+	// `valLabelFormatCode` is the one that wins over the label format, so both come back as it.
+	test.each<[string, ChartOpts]>([
+		['valLabelFormatCode', { valLabelFormatCode: '0.0%' }],
+		['dataTableFormatCode', { showDataTable: true, dataTableFormatCode: '0.0%' }],
+	])("a series' source format written by %s comes back", async (_key, options) => {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addChart(SERIES, { type: 'bar', x: 1, y: 1, w: 6, h: 4, objectName: 'probe', ...options })
+		})
+		expect(chartNamed(presentation, 'probe').series.map((one) => one.valueFormatCode)).toEqual(['0.0%', '0.0%'])
+		expect(rebuiltOptions(readModelToIr(presentation), 'probe').valLabelFormatCode).toBe('0.0%')
+	})
+
+	test("a scatter's source format comes back, and a default one stays implied", async () => {
+		const scatter = (options: ChartOpts) =>
+			authorRead((pres) => {
+				pres.addSlide().addChart(SERIES, { type: 'scatter', x: 1, y: 1, w: 6, h: 4, objectName: 'probe', ...options })
+			})
+		const stated = await scatter({ valLabelFormatCode: '0.00' })
+		expect(rebuiltOptions(readModelToIr(stated.presentation), 'probe').valLabelFormatCode).toBe('0.00')
+		const plain = await scatter({})
+		expect(rebuiltOptions(readModelToIr(plain.presentation), 'probe').valLabelFormatCode).toBeUndefined()
+	})
+
 	test('a chart without either reads null and rebuilds without them', async () => {
 		const { presentation } = await authorRead((pres) => {
 			pres.addSlide().addChart(SERIES, { type: 'bar', x: 1, y: 1, w: 6, h: 4, objectName: 'plain' })
@@ -224,6 +249,25 @@ describe('ChartAxis crossing, display units, label skip, time units and strokes'
 			pres.addSlide().addChart(SERIES, { type: 'bar', x: 1, y: 1, w: 6, h: 4, objectName: 'probe', ...options })
 		})
 		expect(rebuiltOptions(readModelToIr(presentation), 'probe')).toMatchObject(options)
+	})
+
+	// A scatter's X axis is a `c:valAx` the `catAxis*` options write, and its format came back as the
+	// Y axis' `valAxisLabelFormatCode: 'General'` (#190).
+	test("a scatter's X axis format comes back as catAxisLabelFormatCode", async () => {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addChart(SERIES, {
+				type: 'scatter',
+				x: 1,
+				y: 1,
+				w: 6,
+				h: 4,
+				objectName: 'probe',
+				catAxisLabelFormatCode: '0.00',
+			})
+		})
+		const rebuilt = rebuiltOptions(readModelToIr(presentation), 'probe')
+		expect(rebuilt.catAxisLabelFormatCode).toBe('0.00')
+		expect(rebuilt.valAxisLabelFormatCode, "the Y axis' default stays implied").toBeUndefined()
 	})
 
 	test('a default bar chart states no axis stroke, crossing or unit', async () => {
