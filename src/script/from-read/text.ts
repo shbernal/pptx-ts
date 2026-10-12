@@ -435,12 +435,13 @@ function runColor(run: Run, leftUncoloured: boolean, notes: NoteScope): string |
 const SLIDE_JUMP = 'ppaction://hlinksldjump'
 
 /**
- * A run's hyperlink: a URL, or a jump to another slide of this deck by its number.
+ * A run's hyperlink: a URL, a jump to another slide of this deck by its number, or a show jump
+ * such as "next slide" as `action`.
  *
  * The read model reports a slide jump as the target's part name, and the write API takes a slide
  * number, which {@link MapContext.slideNumberOf} resolves. Anything else a run can link to has no
- * run-level spelling (a show jump such as "next slide", which the write side emits at shape level
- * only; a custom show; another file; a slide jump from a layout's shape) and is noted. A slide
+ * run-level spelling (a custom show; another file; a slide jump from a layout's shape) and is
+ * noted. A slide
  * jump used to be dropped with a comment saying the deck-level walk handled it, which it did not,
  * so the text kept its link formatting and went nowhere.
  */
@@ -460,8 +461,6 @@ const SHOW_JUMP_ACTIONS: ReadonlyMap<string, string> = new Map(
 interface LinkSite {
 	/** The fidelity note's construct key. */
 	construct: 'text.hyperlink' | 'shape.hyperlink'
-	/** Whether this site's option takes `action`; only a shape's does. */
-	takesAction: boolean
 	/** Names the thing that carries the link, opening the note. */
 	subject: string
 	/** What the option can spell, for the note. */
@@ -472,16 +471,13 @@ interface LinkSite {
 
 const RUN_LINK: LinkSite = {
 	construct: 'text.hyperlink',
-	takesAction: false,
 	subject: "this run's hyperlink",
-	spells:
-		"all a run's hyperlink option spells (a show jump, a custom show, another file, or a slide jump from a layout's shape)",
+	spells: "all a run's hyperlink option spells (a custom show, another file, or a slide jump from a layout's shape)",
 	loss: 'the text keeps its formatting and links nowhere',
 }
 
 const SHAPE_LINK: LinkSite = {
 	construct: 'shape.hyperlink',
-	takesAction: false,
 	subject: "this shape's hyperlink",
 	spells: "all a shape's hyperlink option spells (a custom show, another file, or a slide jump from a layout's shape)",
 	loss: 'the shape is emitted without it and clicking it does nothing',
@@ -498,13 +494,13 @@ const MEDIA_ACTION = 'ppaction://media'
 export function shapeHyperlinkOption(shape: AnyShape, ctx: MapContext): IrValue | undefined {
 	const link = shape.hyperlink
 	if (link?.action === MEDIA_ACTION) return undefined
-	return linkOption(link, ctx, { ...SHAPE_LINK, takesAction: true })
+	return linkOption(link, ctx, SHAPE_LINK)
 }
 
 /**
- * One reading of a click hyperlink for both sites that carry one. A run and a shape take the same
- * `HyperlinkProps` apart from `action`, which only a shape's is written as, so the difference is a
- * flag rather than a second copy of the mapping.
+ * One reading of a click hyperlink for both sites that carry one, which take the same
+ * `HyperlinkProps`. A run's show jump (`action`) used to be noted as unwritable, because the write
+ * path wrote it nowhere; it now writes it on the run (#114).
  */
 function linkOption(link: Hyperlink | null, ctx: MapContext, site: LinkSite): IrValue | undefined {
 	if (!link) return undefined
@@ -513,7 +509,7 @@ function linkOption(link: Hyperlink | null, ctx: MapContext, site: LinkSite): Ir
 	const slide = link.action === SLIDE_JUMP && link.targetPartName ? ctx.slideNumberOf(link.targetPartName) : null
 	if (slide !== null) return compact({ slide, tooltip })
 	const jump = link.action === null ? undefined : SHOW_JUMP_ACTIONS.get(link.action)
-	if (site.takesAction && jump !== undefined) return compact({ action: jump, tooltip })
+	if (jump !== undefined) return compact({ action: jump, tooltip })
 	ctx.notes.note(
 		site.construct,
 		'dropped',

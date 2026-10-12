@@ -894,6 +894,31 @@ describe('deck IR — a hyperlinked run with no colour of its own', () => {
 	})
 })
 
+describe('deck IR — a run that jumps in the slide show', () => {
+	// PowerPoint writes a run's Next Slide / Last Slide action on the run's own a:rPr, and the IR
+	// noted it unwritable, because addText wrote a run's `action` nowhere (issue #114).
+	test('carries as hyperlink.action and replays the same jump', async () => {
+		const ir = await irFor('text-run-show-jump.pptx')
+		const runs = allCalls(ir)
+			.filter((call) => call.method === 'addText')
+			.flatMap((call) => arrayOf(call.args[0]).map((run) => at(run, 'options')))
+		const actions = runs.map((options) => JSON.stringify(at(options, 'hyperlink') ?? null))
+		assertEqual(actions.join(), '{"action":"nextslide"},null,{"action":"lastslide"}', 'each run keeps its own jump')
+		assert(!constructs(ir).has('text.hyperlink'), 'and nothing is declared lost')
+
+		const { buf } = await authorRead((pres) => {
+			const slide = pres.addSlide()
+			for (const call of allCalls(ir).filter((c) => c.method === 'addText')) {
+				slide.addText(...(call.args as Parameters<typeof slide.addText>))
+			}
+			pres.addSlide()
+		})
+		const xml = await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml')
+		const jumps = [...xml.matchAll(/action="ppaction:\/\/hlinkshowjump\?jump=(\w+)"/g)].map((m) => m[1])
+		assertEqual(jumps.join(), 'nextslide,lastslide', 'the replay writes both jumps on their runs')
+	})
+})
+
 describe('deck IR — a placeholder run with no colour of its own', () => {
 	// The writer leaves a run in a `placeholder` shape uncoloured, so it inherits from the layout.
 	// `readModelToIr` baked the inherited colour in under a note saying the writer paints it black,
@@ -1776,12 +1801,23 @@ describe('deck IR — text links, freeform text and fields', () => {
 			'the jump carries its slide number'
 		)
 
-		// A show jump ("next slide") has no run-level spelling on the write side.
-		const ir = await irWithPart(buf, 'ppt/slides/slide1.xml', (xml) =>
+		// A show jump ("next slide") carries as `action`, which addText writes on the run (#114).
+		const shown = await irWithPart(buf, 'ppt/slides/slide1.xml', (xml) =>
 			xml.replace('ppaction://hlinksldjump', 'ppaction://hlinkshowjump?jump=nextslide')
 		)
+		const next = firstRun(atIndex(atIndex(atIndex(shown.slides, 0).calls, 0).args, 0))
+		assertEqual(
+			JSON.stringify(at(next.options, 'hyperlink')),
+			'{"action":"nextslide","tooltip":"Two"}',
+			'a show jump carries as action'
+		)
+
+		// A custom show has no run-level spelling on the write side.
+		const ir = await irWithPart(buf, 'ppt/slides/slide1.xml', (xml) =>
+			xml.replace('ppaction://hlinksldjump', 'ppaction://customshow?id=0')
+		)
 		const jumped = firstRun(atIndex(atIndex(atIndex(ir.slides, 0).calls, 0).args, 0))
-		assertEqual('hyperlink' in objectOf(jumped.options), false, 'the show jump is not written as a run link')
+		assertEqual('hyperlink' in objectOf(jumped.options), false, 'the custom show is not written as a run link')
 		assertEqual(ir.fidelity.filter((note) => note.construct === 'text.hyperlink').length, 1, 'and its loss is declared')
 	})
 

@@ -134,6 +134,11 @@ export interface TextPropsOptionsInternal extends TextPropsOptions {
 	 * colour is read when the slide is written, not when the text is added (#88).
 	 */
 	_slideColor?: true
+	/**
+	 * Set by the emitter on a run whose `hyperlink` it took from the shape, so the run writes no
+	 * show jump of its own: the shape's lives on its `p:cNvPr`.
+	 */
+	_shapeHyperlink?: true
 }
 
 /**

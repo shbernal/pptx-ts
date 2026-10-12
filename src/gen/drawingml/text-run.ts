@@ -494,10 +494,23 @@ export function genXmlTextRunProperties(opts: ObjectOptions | TextPropsOptions, 
 				`A run reached the emitter with a hyperlink its definer should have refused: ${(err as Error).message}`
 			)
 		}
-		// An action-only hyperlink (an action-button navigation) lives on the shape's `<p:cNvPr>`
-		// (see `cNvPrHyperlink`), NOT on the text run — a labeled action button emits no run-level
-		// `<a:hlinkClick>`.
-		if (opts.hyperlink.url || opts.hyperlink.slide) {
+		// A show jump (`action`) the shape states lives on the shape's `<p:cNvPr>` (see
+		// `cNvPrHyperlink`): a labeled action button repeats it on no run, which inherits only the
+		// link's underline. One the run states itself is written on the run, relationship-less, as
+		// PowerPoint writes it (`text-run-show-jump.pptx`). It used to be written nowhere, so the
+		// text was underlined and went nowhere (#114).
+		if (
+			opts.hyperlink.action &&
+			!opts.hyperlink.url &&
+			!opts.hyperlink.slide &&
+			!(opts as TextPropsOptionsInternal)._shapeHyperlink
+		) {
+			runProps += voidEl('a:hlinkClick', {
+				'r:id': '',
+				action: `ppaction://hlinkshowjump?jump=${opts.hyperlink.action}`,
+				tooltip: opts.hyperlink.tooltip ?? '',
+			})
+		} else if (opts.hyperlink.url || opts.hyperlink.slide) {
 			const link: HyperlinkPropsInternal = opts.hyperlink
 			// runProps += '<a:uFill>'+ genXmlColorSelection('0000FF') +'</a:uFill>'; // Breaks PPT2010!
 			// NOTE: `tooltip` is escaped by the builder now (the manual `encodeXmlEntities` is gone), and
@@ -826,6 +839,14 @@ export function renderTextParagraphsXml(
 				if (key === 'color' && textObj.options.hyperlink) return
 				setOrClear(textOptions, key, textOptions[key] ?? shapeOptions[key])
 			})
+			// A link taken from the shape is the shape's object, so the emitter can tell it from the
+			// run's own: a shape's show jump is written on the shape alone. Recomputed on every write,
+			// since the inheritance above leaves the shape's link on the run's bag.
+			setOrClear(
+				textOptions,
+				'_shapeHyperlink',
+				textOptions.hyperlink !== undefined && textOptions.hyperlink === shapeOptions.hyperlink ? true : undefined
+			)
 
 			// D: Add formatted textrun
 			// When this paragraph emits bullet markup (`bullet:true` or any object

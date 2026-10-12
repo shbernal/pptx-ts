@@ -64,6 +64,7 @@ are stored byte-for-byte as saved by PowerPoint.
 | `smartart-families.pptx` | Microsoft Office PowerPoint  | 16.0000    | 4      |
 | `smartart-hyperlink.pptx` | Microsoft Office PowerPoint | 16.0000   | 1      |
 | `tags.pptx`            | Microsoft Office PowerPoint    | 16.0000    | 2      |
+| `text-run-show-jump.pptx` | Microsoft Office PowerPoint | 16.0000   | 2      |
 | `template.potx`        | Microsoft Office PowerPoint    | 16.0000    | 0      |
 
 #### Authoring oracles (inspection only — not loaded by `test:read`)
@@ -207,6 +208,7 @@ eb315cc06511f0bb37c0ba17cad7bb077f0e84f4a847271ecc4b8ec4c9873a65  slide-jump-lin
 77fbb00343006a8c0fb6a9120959e489dadf411f62010ea053abb9de95d6c8aa  read-stress.pptx
 d0755d060f2af1b8836f2b0846a9b0fd30d44b65d70497cece1d75cbdcfa2b3d  tags.pptx
 b8f5d1f8c794ec8afca15d35bfb13317b34d15827124c6e6e54323caeac146d2  picture-custgeom.pptx
+9b99b067fb463b7e8fdda939d19bbf72ac4ed28615b2d0379eefd6a3681964c9  text-run-show-jump.pptx
 ```
 
 ### Embedded font faces (`fonts/`)
@@ -1327,6 +1329,15 @@ opened clean with no repair prompt:
 - [x] `table.edited-cells.pptx` — PowerPoint for the web, 2026-06-13
 - [ ] `empty.imported-image-slide.pptx` — not yet performed (added 2026-06-14 for importSlide)
 - [ ] `empty.imported-table-slide.pptx` — not yet performed (added 2026-06-14 for importSlide)
+
+- `text-run-show-jump.pptx`: a two-slide deck whose slide 1 holds two text boxes with show
+  jumps on their runs rather than their shapes, the evidence for the run-level `hyperlink.action`
+  `addText` writes (issue #114) and read by `script-ir.test.ts`. `NextText` reads "Next plain"
+  with its first word set to Next Slide; `LastText` reads "Last", set to Last Slide. PowerPoint
+  writes each on the run's `a:rPr` as `<a:hlinkClick r:id="" action="ppaction://hlinkshowjump?jump=…"/>`,
+  registers no relationship, writes no `u`, and puts nothing on `p:cNvPr`. Authored via
+  PowerPoint COM through the worker (2026-10-12, `authoring/author-text-run-show-jump.ps1`,
+  PowerPoint 16.0.20430.20146). Opens clean with no repair.
 
 ## Replacing fixtures
 
