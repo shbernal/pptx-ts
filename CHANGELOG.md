@@ -135,6 +135,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`readModelToIr` spells an outline-less `addShape` as `line: { type: 'none' }`.** `addShape`
+  writes an absent `line` that way, so a shape stating no outline, such as a placeholder the writer
+  seeds empty, came back from its own copy with a line its source's IR did not state, and the
+  standalone round trip reported it ([#177](https://github.com/shbernal/pptx-ts/issues/177)).
+
 - **`readModelToIr` re-declares a layout's placeholders.** Every definition was dropped under
   `master.placeholders`. Each one every slide on its layout fills now carries as a `{ placeholder }`
   object with its source name, type, `idx`, frame and custom prompt; one a slide leaves out is still
