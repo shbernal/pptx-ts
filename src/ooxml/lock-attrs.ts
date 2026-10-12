@@ -39,6 +39,14 @@ export const GRAPHIC_FRAME_LOCK_ATTRS = [
 	'noMove',
 	'noResize',
 ] as const
-export const GROUP_SHAPE_LOCK_ATTRS = ['noGrp', 'noSelect', 'noRot', 'noChangeAspect', 'noMove', 'noResize'] as const
+export const GROUP_SHAPE_LOCK_ATTRS = [
+	'noGrp',
+	'noUngrp',
+	'noSelect',
+	'noRot',
+	'noChangeAspect',
+	'noMove',
+	'noResize',
+] as const
 
 /** Every attribute name the four tables between them list. */

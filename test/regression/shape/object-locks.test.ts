@@ -232,4 +232,52 @@ defineRegressionSuite('Object locks', [
 			)
 		},
 	},
+	{
+		// The chart frame wrote a bare p:cNvGraphicFramePr whatever objectLock said (#137).
+		name: 'chart objectLock lands on its graphicFrameLocks, and a frame-invalid flag warns',
+		fn: async () => {
+			const data = [{ name: 'North', labels: ['Q1', 'Q2', 'Q3'], values: [4, 7, 5] }]
+			const { zip: bare } = await build((p) => {
+				p.addSlide().addChart(data, { type: 'bar', x: 1, y: 1, w: 5, h: 4 })
+			})
+			assert(/<p:cNvGraphicFramePr\/>/.test(await readEntry(bare, 'ppt/slides/slide1.xml')), 'no lock, no element')
+			const warnings: string[] = []
+			setDiagnosticHandler((d) => warnings.push(d.code))
+			try {
+				const { zip } = await build((p) => {
+					p.addSlide().addChart(data, {
+						type: 'bar',
+						x: 1,
+						y: 1,
+						w: 5,
+						h: 4,
+						objectLock: { noMove: true, noResize: true, noSelect: true, noRot: true },
+					})
+				})
+				const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
+				assert(
+					/<p:cNvGraphicFramePr><a:graphicFrameLocks noSelect="1" noMove="1" noResize="1"\/><\/p:cNvGraphicFramePr>/.test(
+						xml
+					),
+					'expected the chart locks; got: ' + xml
+				)
+			} finally {
+				setDiagnosticHandler(null)
+			}
+			assert(warnings.includes('object-lock/unsupported-on-shape'), 'noRot warns on a frame')
+		},
+	},
+	{
+		// CT_GroupLocking defines noUngrp, and the group lock table left it out (#126).
+		name: 'group objectLock writes noUngrp',
+		fn: async () => {
+			const { zip } = await build((p) => {
+				p.addSlide().addGroup([{ rect: { x: 1, y: 1, w: 1, h: 1 } }, { rect: { x: 4, y: 1, w: 1, h: 1 } }], {
+					objectLock: { noGrp: true, noUngrp: true },
+				})
+			})
+			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
+			assert(/<a:grpSpLocks noGrp="1" noUngrp="1"\/>/.test(xml), 'expected noUngrp; got: ' + xml)
+		},
+	},
 ])
