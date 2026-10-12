@@ -62,7 +62,7 @@ are in every aggregate the repo has.
 | `generate-llms-docs.mjs` | Generator | `docs/public/llms*.txt` | `docs:prepare` |
 | `install-hooks.mjs` | Library | Installs lefthook, skipping where it cannot | `prepare` |
 | `libreoffice-render-smoke.mjs` | Gate | Renders decks in LibreOffice, the one renderer here with no SmartArt layout engine, and reads the painted text back | manual, needs LibreOffice + `pdftotext` (`test:lo`) |
-| `note-census.mjs` | Diagnostic | How many fixtures raise each declared fidelity note, per tier | manual (`script:census`) |
+| `note-census.mjs` | Diagnostic + Gate | How many fixtures raise each declared fidelity note, per tier; `--check` compares the Known losses section of `docs/reference/pptx-to-script.md` with the counts and fails on drift | manual (`script:census`); `--check` in `check:core` (`census:check`) |
 | `ooxml-version-probe.mjs` | Diagnostic | Validator error counts across Office versions; fails on a count that decreases, a target with no row, or a control row with a zero | manual (`schema:versions`); `verdict` unit-tested |
 | `pack-utils.mjs` | Library | `pnpm pack` helpers for the two package gates | — |
 | `package-lint.mjs` | Gate | `publint` + `attw` on the packed tarball | `verify:full`, `check:package` |
