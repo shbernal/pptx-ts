@@ -36,7 +36,7 @@ import {
 } from '../../ooxml/rel-types.js'
 import { OOXML_NS } from '../../ooxml/namespaces.js'
 import { relationshipEl, relationshipsEl } from '../opc/rels.js'
-import { CORE_PROPS_NS, coreTimestamp } from '../opc/core.js'
+import { CORE_PROPS_NS } from '../opc/core.js'
 import { dataLabels, getExcelColName, labelSeries, type WorksheetLayout, worksheetLayout } from './data-refs.js'
 import { makeXmlCharts } from './chart-xml.js'
 import { makeXmlChartEx } from './chartex-xml.js'
@@ -164,18 +164,16 @@ export function buildEmbeddedWorksheet(chartObject: SlideRelChart): Uint8Array {
 					) +
 					'\n'
 			)
-			// One reading of the clock for both stamps: two calls make `created` and `modified`
-			// disagree whenever the build crosses a millisecond, which no reader notices and
-			// every byte-diff does.
-			const now = coreTimestamp()
+			// No `dcterms:created` / `dcterms:modified`: both are optional, nobody reads an embedded
+			// workbook's creation time, and stamping the clock here made every write of a deck with a
+			// chart differ from the last inside a part a consumer cannot exclude by name (#145). The
+			// deck's own `docProps/core.xml` keeps its dates.
 			zipExcel.add(
 				'docProps/core.xml',
 				XML_DECL +
 					el('cp:coreProperties', CORE_PROPS_NS, [
 						raw(el('dc:creator', null, 'TsPptx')),
 						raw(el('cp:lastModifiedBy', null, 'TsPptx')),
-						raw(el('dcterms:created', { 'xsi:type': 'dcterms:W3CDTF' }, now)),
-						raw(el('dcterms:modified', { 'xsi:type': 'dcterms:W3CDTF' }, now)),
 					])
 			)
 			zipExcel.add(
