@@ -75,6 +75,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`catAxes[n]` and `valAxes[n]` write `catAxisCrossesAt`, `valAxisCrossesAt` and
+  `valLabelFormatCode`.** Each entry's crossing now lands on the axis it crosses, as the flat key's
+  does, and a value-axis entry's format sets the series caches of the plots on that axis. All three
+  wrote nothing from an entry ([#142](https://github.com/shbernal/pptx-ts/issues/142)).
 - **`readModelToIr` reads a scatter's or bubble's Y axis as its value axis.** Both axes of those
   charts are `c:valAx`, and the X axis was taken for the value axis: its bounds came back as
   `valAxisMinVal` / `valAxisMaxVal`, and the Y axis' bounds and title were lost. The X axis now
