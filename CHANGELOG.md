@@ -160,6 +160,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   chart each point's literal fill comes back as the series' `pointStyles`, which write the same
   points; a point formatted beyond that is noted under `chart.dataPoints`
   ([#184](https://github.com/shbernal/pptx-ts/issues/184)).
+- **A pie's slice colours and a line, area or scatter series' own points carry through
+  `readModelToIr`.** They were dropped with no note, so a pie's slices came back in the default
+  palette. A pie's or doughnut's slice fills come back as `chartColors` when they colour every slice,
+  and as `pointStyles` otherwise; a line, area or scatter series' point fills come back as its
+  `pointStyles`. A slice outline unlike the series' own is noted under `chart.dataPoints`, and so is a
+  radar's or bubble's data point, which `addChart` does not write
+  ([#197](https://github.com/shbernal/pptx-ts/issues/197)).
 - **A chart's marker outline and a series shadow's `rotateWithShape` carry through `readModelToIr`.**
   The marker outline (`c:marker/c:spPr/a:ln`) comes back as `lineDataSymbolLineSize` and, where it is
   not the series' own colour, `lineDataSymbolLineColor`

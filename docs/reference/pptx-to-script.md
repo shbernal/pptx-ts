@@ -160,7 +160,7 @@ The counts come from `pnpm run script:census`, run in a clone of the repository 
 
 A count is the number of fixtures that raise the note at least once. Each fixture targets a few constructs, so a count shows what the corpus exercises, not how often a construct occurs in real decks. The table lists only constructs some fixture raises. [`knownNoteConstructs()`](api/script/functions/knownNoteConstructs.md) returns the full catalogue.
 
-The Output column says where the note fires. A construct that fires in both outputs has the same count in each. A construct under the `layout.` prefix is the slide construct of the same name, raised while re-authoring a layout's shapes. Across the corpus the standalone output raises 902 notes and the template-anchored output 460, which is 3 to 12 more per deck.
+The Output column says where the note fires. A construct that fires in both outputs has the same count in each. A construct under the `layout.` prefix is the slide construct of the same name, raised while re-authoring a layout's shapes. Across the corpus the standalone output raises 905 notes and the template-anchored output 463, which is 3 to 12 more per deck.
 
 | Construct | Output | Cause | What happens | Fixtures |
 | --- | --- | --- | --- | --- |
@@ -173,6 +173,7 @@ The Output column says where the note fires. A construct that fires in both outp
 | `diagram.all` | Both | unwritable | No write API builds SmartArt. The template-anchored output copies the slide, and the standalone output drops the diagram | 3/60 |
 | `text.endParagraph.lang` | Both | unwritable | Paragraphs that end in different languages (`a:endParaRPr/@lang`) all end in `en-US`. Their runs keep their languages | 3/60 |
 | `text.hyperlink.underline` | Both | unwritable | A link that states no underline comes back stating `u="sng"`. It looks the same | 3/60 |
+| `chart.dataPoints` | Both | unwritable | A data point or pie slice in a theme colour, a pattern or an outline of its own comes back in the series' colour or its own literal fill. A radar's or bubble's own points are dropped | 2/60 |
 | `chart.xLabels` | Both | unwritable | A scatter or bubble chart plotted against text X labels plots at the same positions, and the labels are gone | 2/60 |
 | `group.childSpace` | Both | unsupported | The children of a group that scales them are printed pre-scaled, so resizing the group no longer rescales them | 2/60 |
 | `media.audioVideo` | Both | unread | Embedded audio or video becomes a still image of its poster frame | 2/60 |
