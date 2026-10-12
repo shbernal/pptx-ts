@@ -143,6 +143,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A combo chart carries through `readModelToIr` as a combo.** `ChartPlotGroup.axisIds` reads the
+  axes a plot group plots against. `readModelToIr` replays an area, bar, line and scatter combo
+  through `addChart`'s multi-type form: each plot's type, series and own settings, `secondaryValAxis`
+  and `secondaryCatAxis` for a plot on the secondary axes, and the secondary axes' own settings as the
+  second `valAxes` and `catAxes` entries. It was flattened to its first type under `chart.combo`
+  `unsupported`; a combo of other plots still is, now noted `unwritable`
+  ([#191](https://github.com/shbernal/pptx-ts/issues/191)).
 - **A chart title's manual layout comes back as `titlePos`.** `readModelToIr` declared every title
   layout `chart.layout` unwritable, though `titlePos` writes it: each edge-mode coordinate now unfolds
   into the offset the writer folds into it. `chart.layout` is left for what `titlePos` cannot state, a

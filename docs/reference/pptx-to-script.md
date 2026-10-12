@@ -160,7 +160,7 @@ The counts come from `pnpm run script:census`, run in a clone of the repository 
 
 A count is the number of fixtures that raise the note at least once. Each fixture targets a few constructs, so a count shows what the corpus exercises, not how often a construct occurs in real decks. The table lists only constructs some fixture raises. [`knownNoteConstructs()`](api/script/functions/knownNoteConstructs.md) returns the full catalogue.
 
-The Output column says where the note fires. A construct that fires in both outputs has the same count in each. A construct under the `layout.` prefix is the slide construct of the same name, raised while re-authoring a layout's shapes. Across the corpus the standalone output raises 899 notes and the template-anchored output 457, which is 3 to 12 more per deck.
+The Output column says where the note fires. A construct that fires in both outputs has the same count in each. A construct under the `layout.` prefix is the slide construct of the same name, raised while re-authoring a layout's shapes. Across the corpus the standalone output raises 902 notes and the template-anchored output 460, which is 3 to 12 more per deck.
 
 | Construct | Output | Cause | What happens | Fixtures |
 | --- | --- | --- | --- | --- |
@@ -173,15 +173,16 @@ The Output column says where the note fires. A construct that fires in both outp
 | `diagram.all` | Both | unwritable | No write API builds SmartArt. The template-anchored output copies the slide, and the standalone output drops the diagram | 3/60 |
 | `text.endParagraph.lang` | Both | unwritable | Paragraphs that end in different languages (`a:endParaRPr/@lang`) all end in `en-US`. Their runs keep their languages | 3/60 |
 | `text.hyperlink.underline` | Both | unwritable | A link that states no underline comes back stating `u="sng"`. It looks the same | 3/60 |
+| `chart.xLabels` | Both | unwritable | A scatter or bubble chart plotted against text X labels plots at the same positions, and the labels are gone | 2/60 |
 | `group.childSpace` | Both | unsupported | The children of a group that scales them are printed pre-scaled, so resizing the group no longer rescales them | 2/60 |
 | `media.audioVideo` | Both | unread | Embedded audio or video becomes a still image of its poster frame | 2/60 |
 | `shape.empty` | Both | unsupported | A shape with no text and no geometry of its own, such as an unfilled placeholder, is omitted | 2/60 |
 | `text.equation` | Both | unread | An OMML equation is dropped from its shape | 2/60 |
+| `chart.axis` | Both | unwritable | An axis crossing at the other axis' maximum or minimum crosses at zero, and a custom display unit is dropped. A combo's secondary axis takes a setting its primary axis states and it does not | 1/60 |
 | `chart.blanks` | Both | unwritable | A blank cached data point becomes 0, so a line chart dips to the axis where the source showed a break | 1/60 |
-| `chart.combo` | Both | unsupported | A combo chart becomes a single bar chart | 1/60 |
+| `chart.combo` | Both | unwritable | A combo whose plots `addChart` cannot combine becomes a single chart of its first plot's type. A combo it can combine (area, bar, line and scatter plots) keeps its plots, and numbers its series plot by plot, so a source that numbers them otherwise changes its legend and colour order | 1/60 |
 | `chart.invertIfNegative` | Both | unwritable | A series that inverts its negative bars (`c:invertIfNegative`) draws them in the series' colour | 1/60 |
 | `chart.labels` | Both | unwritable | Data labels lose a legend key, a category name on any chart but a pie or doughnut, and text of their own on any chart but a scatter | 1/60 |
-| `chart.xLabels` | Both | unwritable | A scatter or bubble chart plotted against text X labels plots at the same positions, and the labels are gone | 1/60 |
 | `connector.binding` | Both | unsupported | A connector bound to a shape with no name, a name another shape on the slide shares, or one that is not written, no longer follows it | 1/60 |
 | `fill.gradient.path` | Both | unwritable | A `rect` path gradient becomes radial | 1/60 |
 | `fill.schemeToken` | Both | unwritable | A fill colour outside the ten mapped scheme tokens is baked to hex | 1/60 |
