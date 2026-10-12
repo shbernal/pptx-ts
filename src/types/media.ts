@@ -118,8 +118,10 @@ export interface ImageBaseProps extends PositionProps, ObjectNameProps {
 	/**
 	 * Crop the source image to a sub-region by percentage edge insets, emitted verbatim
 	 * as OOXML `<a:srcRect>`.
-	 * - each value is the percent (0–100) trimmed off that edge of the *source* image, the
+	 * - each value is the percent (at most 100) trimmed off that edge of the *source* image, the
 	 *   same model PowerPoint's Picture Format > Crop uses; `l`+`r` and `t`+`b` must each be < 100
+	 * - a negative value pads that edge with empty space instead, as PowerPoint's Fit crop and
+	 *   `sizing: 'contain'` do
 	 * - the remaining sub-region is stretched to fill the picture's displayed `w`×`h` box, so this
 	 *   is the faithful way to reproduce a deck that maps several icons out of one composite raster
 	 * - operates on the source image directly (independent of natural-pixel measurement), so unlike
@@ -128,13 +130,13 @@ export interface ImageBaseProps extends PositionProps, ObjectNameProps {
 	 * @example { l: 0, t: 0, r: 50, b: 50 } // keep the top-left quadrant of the source image
 	 */
 	crop?: {
-		/** Percent (0–100) trimmed from the left edge of the source image. @default 0 */
+		/** Percent trimmed from the left edge of the source image; negative pads it. @default 0 */
 		l?: number
-		/** Percent (0–100) trimmed from the top edge of the source image. @default 0 */
+		/** Percent trimmed from the top edge of the source image; negative pads it. @default 0 */
 		t?: number
-		/** Percent (0–100) trimmed from the right edge of the source image. @default 0 */
+		/** Percent trimmed from the right edge of the source image; negative pads it. @default 0 */
 		r?: number
-		/** Percent (0–100) trimmed from the bottom edge of the source image. @default 0 */
+		/** Percent trimmed from the bottom edge of the source image; negative pads it. @default 0 */
 		b?: number
 	}
 	/**

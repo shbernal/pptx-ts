@@ -134,14 +134,31 @@ defineRegressionSuite('Image (blip) fills', [
 		},
 	},
 	{
+		name: 'shape image fill writes a negative crop inset as a padded edge',
+		fn: async () => {
+			const { zip } = await build((p) => {
+				const s = p.addSlide()
+				s.addShape(ShapeType.triangle, {
+					x: 1,
+					y: 1,
+					w: 3,
+					h: 2,
+					fill: { type: 'image', image: { data: PNG_1X1, crop: { l: -5 } } },
+				})
+			})
+			const shapeBlock = firstXmlBlock(await readEntry(zip, 'ppt/slides/slide1.xml'), 'p:sp', 'shape')
+			assertIncludes(shapeBlock, '<a:srcRect l="-5000" t="0" r="0" b="0"/>', 'padded source crop')
+		},
+	},
+	{
 		// The fill route reaches the same validation as `addImage`'s `crop`, so a degenerate
 		// srcRect — which renders as an empty shape rather than as an error — fails loudly here
 		// too. Mirrors the addImage cases in `image-crop-srcrect.test.ts`.
 		name: 'an invalid shape image fill crop throws rather than emitting a degenerate srcRect',
 		fn: async () => {
 			const cases = [
-				{ crop: { l: -5 }, why: 'negative' },
 				{ crop: { r: 150 }, why: 'over 100' },
+				{ crop: { l: -Infinity }, why: 'infinite' },
 				{ crop: { l: 60, r: 60 }, why: 'l+r >= 100' },
 				{ crop: { t: 50, b: 50 }, why: 't+b >= 100' },
 				{ crop: { l: NaN }, why: 'NaN' },

@@ -79,12 +79,23 @@ defineRegressionSuite('Image explicit crop (srcRect percentage insets)', [
 		},
 	},
 	{
+		// A negative inset pads that edge, as `sizing: 'contain'` does, and is written as given.
+		name: 'a negative inset is written as a padded edge',
+		fn: async () => {
+			const r = await srcRectFor({ data: PNG_1X1, x: 1, y: 1, w: 2, h: 2, crop: { l: -5, r: -50, t: 10 } })
+			assert(
+				r.l === -5000 && r.r === -50000 && r.t === 10000 && r.b === 0,
+				`expected l=-5000 t=10000 r=-50000 b=0; got ${JSON.stringify(r)}`
+			)
+		},
+	},
+	{
 		// Out-of-range / overlapping insets fail loudly rather than emitting a degenerate srcRect.
-		name: 'invalid insets throw (out of range, overlap, NaN)',
+		name: 'invalid insets throw (over 100, infinite, overlap, NaN)',
 		fn: async () => {
 			const cases = [
-				{ crop: { l: -5 }, why: 'negative' },
 				{ crop: { r: 150 }, why: 'over 100' },
+				{ crop: { l: -Infinity }, why: 'infinite' },
 				{ crop: { l: 60, r: 60 }, why: 'l+r >= 100' },
 				{ crop: { t: 50, b: 50 }, why: 't+b >= 100' },
 				{ crop: { l: NaN }, why: 'NaN' },

@@ -115,12 +115,12 @@ export function isRectSet(rect: FillRect | null): boolean {
  * path emits with no `crop` at all, so carrying zeros would add an option that changes
  * nothing and take the fill off its byte-identical path for no reason.
  *
- * Two shapes of rect are legal in a source and not expressible as `crop`, and both belong
- * to the write path rather than to this mapper (`gen/drawingml/src-rect.ts` throws on
- * each): a **negative** inset, which is how a `contain`-style fill bleeds the source past
- * the surface, and a pair of opposite insets summing to 100% or more, which leaves no
- * source area. Carrying either would emit a script that throws when it is run, so they
- * stay uncarried and keep their note.
+ * A negative inset carries: it is how a `contain`-style fill pads the source inside the
+ * surface, and `crop` takes it. Two shapes of rect are legal in a source and not expressible
+ * as `crop`, and both belong to the write path rather than to this mapper
+ * (`gen/drawingml/src-rect.ts` throws on each): an inset over 100%, and a pair of opposite
+ * insets summing to 100% or more, which leaves no source area. Carrying either would emit a
+ * script that throws when it is run, so they stay uncarried and keep their note.
  */
 export function cropOption(srcRect: FillRect | null): IrValue | undefined {
 	if (!isRectSet(srcRect) || srcRect === null) return undefined
@@ -131,7 +131,7 @@ export function cropOption(srcRect: FillRect | null): IrValue | undefined {
 		r: fractionToPercent(srcRect.right),
 		t: fractionToPercent(srcRect.top),
 	}
-	if (Object.values(edges).some((v) => v < 0 || v > 100)) return undefined
+	if (Object.values(edges).some((v) => v > 100)) return undefined
 	if (edges.l + edges.r >= 100 || edges.t + edges.b >= 100) return undefined
 	// A zero edge is the option's own default, so it is left out rather than spelled.
 	return compact({
@@ -160,7 +160,7 @@ function noteUncarriedGeometry(
 	const lost: string[] = []
 	if (picture.mode === 'tile' || picture.tile !== null) lost.push('tiling (a:tile)')
 	if (isRectSet(picture.srcRect) && !cropCarried)
-		lost.push('the source crop (a:srcRect), whose insets fall outside the 0–100% `image.crop` accepts')
+		lost.push('the source crop (a:srcRect), whose insets fall outside what `image.crop` accepts')
 	if (isRectSet(picture.fillRect)) lost.push('the destination inset (a:stretch/a:fillRect)')
 	if (picture.dpi !== null && picture.dpi !== 0) lost.push(`the render resolution (@dpi="${picture.dpi}")`)
 	// Only the explicit `0`. Unset means "whatever the application defaults to", which is
