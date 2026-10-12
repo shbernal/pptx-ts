@@ -94,6 +94,9 @@ const TEMPLATE_ONLY = ['template'] as const
  * to list it. An entry without `tiers` no longer satisfies the catalogue's type.
  */
 export const NOTE_CONSTRUCTS = {
+	// An axis setting no ChartOpts key spells: a crossing at the other axis' max or min, a custom
+	// display unit. Absent from both IRs.
+	'chart.axis': { fields: [], tiers: BOTH_TIERS },
 	'chart.blanks': { fields: ['values'], tiers: BOTH_TIERS },
 	'chart.combo': { fields: ['type'], tiers: BOTH_TIERS },
 	// A chart with no cached plottable series is not emitted at all, so the whole frame is
@@ -108,6 +111,9 @@ export const NOTE_CONSTRUCTS = {
 	// A series outline the chart writer cannot dash as the source did, rebuilt solid. Both IRs carry
 	// the solid stroke, so the source dash is in neither.
 	'chart.series.line': { fields: [], tiers: BOTH_TIERS },
+	// A chart stroke's scheme colour outside the writable tokens, which a chart part read without a
+	// theme cannot bake either. Absent from both IRs.
+	'chart.schemeToken': { fields: [], tiers: BOTH_TIERS },
 	'chart.type': { fields: ['type'], tiers: BOTH_TIERS },
 	// A 3-D line, area or pie rebuilt flat: `type` names the flat chart on both sides, and the 3-D
 	// view is in neither IR.

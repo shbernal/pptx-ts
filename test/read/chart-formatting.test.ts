@@ -167,3 +167,72 @@ describe('Chart.plotGroups, Chart.view3D, Chart.displayBlanksAs and series marke
 		}
 	})
 })
+
+describe('ChartAxis crossing, display units, label skip, time units and strokes', () => {
+	// None had an accessor, so readModelToIr rebuilt every axis without them, and a date axis as a
+	// text axis (#132).
+
+	test("PowerPoint's axes read them", async () => {
+		const deck = await openFixture('chart-formatting')
+		const bar = chartNamed(deck, 'stacked-bar-chart')
+		const category = defined(bar.categoryAxis)
+		const value = defined(bar.valueAxis)
+		// Crossing the category axis at its second category is stated on the value axis, which crosses.
+		expect([value.crossesAt, category.crosses, category.labelSkip]).toEqual([2, 'autoZero', 2])
+		expect(value.displayUnits).toEqual({ builtIn: 'thousands', custom: null, showLabel: true })
+		expect(value.line).toMatchObject({ widthPt: 1.5, colorRef: { srgb: '9B1B30' }, colorTransformed: false })
+		expect(value.majorGridlinesLine).toMatchObject({ dash: 'dash', colorRef: { srgb: '9B1B30' } })
+		expect(category.line).toMatchObject({ colorRef: { scheme: 'tx1' }, colorTransformed: true })
+		const dates = defined(chartNamed(deck, 'line-marker-chart').categoryAxis)
+		expect([dates.kind, dates.baseTimeUnit, dates.majorTimeUnit]).toEqual(['date', 'months', 'months'])
+	})
+
+	test("readModelToIr rebuilds PowerPoint's axis settings, leaving a lightened colour to the writer's grey", async () => {
+		const ir = readModelToIr(await openFixture('chart-formatting'))
+		const bar = rebuiltOptions(ir, 'stacked-bar-chart')
+		expect(bar).toMatchObject({
+			catAxisCrossesAt: 2,
+			catAxisLabelFrequency: 2,
+			valAxisDisplayUnit: 'thousands',
+			valAxisDisplayUnitLabel: true,
+			valAxisLine: { color: '9B1B30', width: 1.5 },
+			valGridLine: { color: '9B1B30', dashType: 'dash' },
+		})
+		expect(bar.catAxisLine).toEqual({ width: 0.75 })
+		expect(ir.fidelity.some((note) => note.construct === 'chart.schemeToken')).toBe(true)
+		expect(rebuiltOptions(ir, 'line-marker-chart')).toMatchObject({
+			catLabelFormatCode: 'General',
+			catAxisBaseTimeUnit: 'months',
+			catAxisMajorTimeUnit: 'months',
+		})
+	})
+
+	const axisCases: ChartOpts[] = [
+		{ catAxisCrossesAt: 2 },
+		{ valAxisCrossesAt: 3 },
+		{ valAxisCrossBetween: 'midCat' },
+		{ valAxisDisplayUnit: 'thousands', valAxisDisplayUnitLabel: true },
+		{ catAxisLabelFrequency: 2 },
+		{ catAxisMultiLevelLabels: true },
+		{ catAxisLine: { color: '9B1B30', width: 3 } },
+		{ valAxisLine: { type: 'none' } },
+		{ valGridLine: { color: '9B1B30', width: 3, dashType: 'dash' } },
+		{ catGridLine: { color: '9B1B30' } },
+	]
+	test.each(axisCases)('%j comes back from readModelToIr', async (options) => {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addChart(SERIES, { type: 'bar', x: 1, y: 1, w: 6, h: 4, objectName: 'probe', ...options })
+		})
+		expect(rebuiltOptions(readModelToIr(presentation), 'probe')).toMatchObject(options)
+	})
+
+	test('a default bar chart states no axis stroke, crossing or unit', async () => {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addChart(SERIES, { type: 'bar', x: 1, y: 1, w: 6, h: 4, objectName: 'probe' })
+		})
+		const stated = Object.keys(rebuiltOptions(readModelToIr(presentation), 'probe')).filter((key) =>
+			/CrossesAt|CrossBetween|DisplayUnit|LabelFrequency|MultiLevel|TimeUnit|AxisLine|GridLine/.test(key)
+		)
+		expect(stated).toEqual([])
+	})
+})

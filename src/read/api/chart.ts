@@ -123,6 +123,26 @@ export interface ChartLine {
 	colorRef: ColorRef
 	/** Whether the line is explicitly suppressed (`a:noFill`). */
 	noFill: boolean
+	/** The line end cap (`@cap`) as its raw token (`flat`, `rnd`, `sq`), or `null` when unset. */
+	cap: string | null
+	/** The opacity of the stroke's colour, 0 to 1 (its `a:alpha`), or `null` when it states none. */
+	alpha: number | null
+	/**
+	 * Whether the stroke's colour carries a transform besides `a:alpha` (`a:lumMod`, `a:shade`, …).
+	 * A chart part is read without a theme, so {@link colorRef} does not apply it: PowerPoint's
+	 * default axis line, `tx1` lightened to a grey, reads as the bare `tx1` token.
+	 */
+	colorTransformed: boolean
+}
+
+/** The display units of a value axis (`c:dispUnits`). */
+export interface ChartDisplayUnits {
+	/** A built-in unit (`c:builtInUnit`: `hundreds`, `thousands`, …, `trillions`), or `null`. */
+	builtIn: string | null
+	/** A custom divisor (`c:custUnit`), or `null`. */
+	custom: number | null
+	/** Whether the unit is labelled on the axis (`c:dispUnitsLbl`). */
+	showLabel: boolean
 }
 
 /** A chart graphic-frame's chart, backed by its chart part. */
@@ -572,6 +592,85 @@ export class ChartAxis {
 		return el ? numberValue(attr(el, 'val')) : null
 	}
 
+	/** Where this axis crosses the other one, as a value on it (`c:crossesAt`), or `null`. */
+	get crossesAt(): number | null {
+		const element = firstChild(this.ax, 'c:crossesAt')
+		return element ? numberValue(attr(element, 'val')) : null
+	}
+
+	/** Where this axis crosses the other one, as a rule (`c:crosses`: `autoZero`, `max`, `min`), or `null`. */
+	get crosses(): string | null {
+		const element = firstChild(this.ax, 'c:crosses')
+		return element ? attr(element, 'val') : null
+	}
+
+	/** Whether a value axis crosses between categories or on them (`c:crossBetween`: `between`, `midCat`). */
+	get crossBetween(): string | null {
+		const element = firstChild(this.ax, 'c:crossBetween')
+		return element ? attr(element, 'val') : null
+	}
+
+	/** A value axis' display units (`c:dispUnits`), or `null` when it shows plain values. */
+	get displayUnits(): ChartDisplayUnits | null {
+		const units = firstChild(this.ax, 'c:dispUnits')
+		if (!units) return null
+		const builtIn = firstChild(units, 'c:builtInUnit')
+		const custom = firstChild(units, 'c:custUnit')
+		return {
+			builtIn: builtIn ? attr(builtIn, 'val') : null,
+			custom: custom ? numberValue(attr(custom, 'val')) : null,
+			showLabel: firstChild(units, 'c:dispUnitsLbl') !== null,
+		}
+	}
+
+	/** How many categories pass between two labels (`c:tickLblSkip`), or `null` when automatic. */
+	get labelSkip(): number | null {
+		const element = firstChild(this.ax, 'c:tickLblSkip')
+		return element ? numberValue(attr(element, 'val')) : null
+	}
+
+	/** Whether a category axis flattens a multi-level category list (`c:noMultiLvlLbl`), or `null` when unstated. */
+	get noMultiLevelLabels(): boolean | null {
+		const element = firstChild(this.ax, 'c:noMultiLvlLbl')
+		return element ? boolValue(attr(element, 'val')) : null
+	}
+
+	/** A date axis' base unit (`c:baseTimeUnit`: `days`, `months`, `years`), or `null`. */
+	get baseTimeUnit(): string | null {
+		return this.#value('c:baseTimeUnit')
+	}
+
+	/** A date axis' major unit scale (`c:majorTimeUnit`), or `null`. */
+	get majorTimeUnit(): string | null {
+		return this.#value('c:majorTimeUnit')
+	}
+
+	/** A date axis' minor unit scale (`c:minorTimeUnit`), or `null`. */
+	get minorTimeUnit(): string | null {
+		return this.#value('c:minorTimeUnit')
+	}
+
+	/** The axis line's own stroke (`c:spPr/a:ln`), or `null` when it states none. */
+	get line(): ChartLine | null {
+		const spPr = firstChild(this.ax, 'c:spPr')
+		const ln = spPr && firstChild(spPr, 'a:ln')
+		return ln ? readChartLine(ln) : null
+	}
+
+	/** The major gridlines' stroke (`c:majorGridlines/c:spPr/a:ln`), or `null` when they state none. */
+	get majorGridlinesLine(): ChartLine | null {
+		const gridlines = firstChild(this.ax, 'c:majorGridlines')
+		const spPr = gridlines && firstChild(gridlines, 'c:spPr')
+		const ln = spPr && firstChild(spPr, 'a:ln')
+		return ln ? readChartLine(ln) : null
+	}
+
+	/** The `@val` of a named child, or `null`. */
+	#value(qname: string): string | null {
+		const element = firstChild(this.ax, qname)
+		return element ? attr(element, 'val') : null
+	}
+
 	/** Escape hatch: the underlying axis element. After mutating it call {@link markDirty}, or `save()` writes the original bytes. */
 	get element_(): Element {
 		return this.ax
@@ -614,9 +713,7 @@ export class ChartSeries {
 		const spPr = firstChild(this.ser, 'c:spPr')
 		const ln = spPr && firstChild(spPr, 'a:ln')
 		if (!ln) return null
-		// The chart part is read without a theme, so the colour stays unresolved.
-		const { widthPt, dash, colorRef, noFill } = readLineBasics(ln, null)
-		return { widthPt, dash, colorRef, noFill }
+		return readChartLine(ln)
 	}
 
 	/** Series index (`c:idx/@val`), or `null` if absent. */
@@ -727,7 +824,7 @@ export class ChartSeries {
 			symbol: symbol ? attr(symbol, 'val') : null,
 			size: size ? numberValue(attr(size, 'val')) : null,
 			fill: spPr ? readSolidFill(spPr) : null,
-			line: ln ? readLineBasics(ln, null) : null,
+			line: ln ? readChartLine(ln) : null,
 		}
 	}
 
@@ -767,6 +864,27 @@ function readTextSizePt(txPr: Element | null): number | null {
 	const defRPr = pPr && firstChild(pPr, 'a:defRPr')
 	const size = defRPr ? numberValue(attr(defRPr, 'sz')) : null
 	return size === null ? null : size / 100
+}
+
+/**
+ * A chart stroke (`a:ln`): {@link readLineBasics}' width, dash, colour and no-fill, then the cap and
+ * the colour's `a:alpha`, which a chart part read without a theme leaves unresolved otherwise.
+ */
+function readChartLine(ln: Element): ChartLine {
+	const { widthPt, dash, colorRef, noFill } = readLineBasics(ln, null)
+	const solidFill = firstChild(ln, 'a:solidFill')
+	const color = solidFill && firstChildElement(solidFill)
+	const alpha = color && firstChild(color, 'a:alpha')
+	const alphaValue = alpha ? numberValue(attr(alpha, 'val')) : null
+	return {
+		widthPt,
+		dash,
+		colorRef,
+		noFill,
+		cap: attr(ln, 'cap') ?? null,
+		alpha: alphaValue === null ? null : alphaValue / 100000,
+		colorTransformed: color ? childElements(color).some((child) => child.localName !== 'alpha') : false,
+	}
 }
 
 /** Read a `c:dLbls` block's show flags, position and number format, or `null` when there is no block. */
