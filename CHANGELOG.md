@@ -73,6 +73,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`readModelToIr` leaves the runs of a linked shape uncoloured.** A text box with a shape-level
+  `hyperlink: { action }` came back with `color: '000000'` on its run, which `addText` leaves
+  uncoloured, so the replay added a black fill the source never had
+  ([#128](https://github.com/shbernal/pptx-ts/issues/128)).
 - **`readModelToIr` gives every chart series its own category labels.** Only the first series
   carried `labels`, and `addChart` writes no `c:cat` for a series without them, so a rebuilt chart
   plotted every later series against 1, 2, 3 ([#141](https://github.com/shbernal/pptx-ts/issues/141)).
