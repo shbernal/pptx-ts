@@ -40,7 +40,7 @@ import { chromeToIr, pruneUnfilledPlaceholders } from './chrome.js'
 import { transitionToIr } from './transition.js'
 import { slideNumberIr } from './slide-number.js'
 import { compact, inches, literalColor, orUndefined, schemeColorOption } from './values.js'
-import { underlineOption } from './text.js'
+import { hyperlinkOption, underlineOption } from './text.js'
 import { ABSENT_SLIDE_SIZE_EMU } from '../../ooxml/slide-size.js'
 import { assetFilenameExtension } from '../../media/content-type.js'
 
@@ -243,7 +243,7 @@ function slideToIr(
 		hidden: slide.hidden,
 		...(slide.name ? { name: slide.name } : {}),
 		...backgroundOf(slide, notes, assets),
-		...notesOf(slide, notes),
+		...notesOf(slide, ctx),
 	}
 
 	const transition = transitionToIr(slide, ctx)
@@ -317,7 +317,8 @@ function backgroundOf(slide: Slide, notes: NoteScope, assets: AssetResolver): { 
 	return ir ? { background: ir } : {}
 }
 
-function notesOf(slide: Slide, notes: NoteScope): { notesText?: string; notesRuns?: IrValue[] } {
+function notesOf(slide: Slide, ctx: MapContext): { notesText?: string; notesRuns?: IrValue[] } {
+	const { notes } = ctx
 	const text = slide.notesText
 	if (!text) return {}
 	const frame = slide.notesTextFrame
@@ -331,7 +332,7 @@ function notesOf(slide: Slide, notes: NoteScope): { notesText?: string; notesRun
 			`speaker notes state ${andList([...new Set(unwritable)])}, which addNotes cannot write, and the notes slide's own placeholder geometry does not carry`
 		)
 	}
-	const runs = notesRuns(frame.paragraphs, notes)
+	const runs = notesRuns(frame.paragraphs, ctx)
 	return runs ? { notesRuns: runs } : { notesText: text }
 }
 
@@ -340,13 +341,13 @@ function notesOf(slide: Slide, notes: NoteScope): { notesText?: string; notesRun
  * anything that form carries over the plain string. A paragraph break rides on the last run of
  * every paragraph but the final one as a `\n`, which is how `addNotes` splits paragraphs.
  */
-function notesRuns(paragraphs: Paragraph[], notes: NoteScope): IrValue[] | undefined {
+function notesRuns(paragraphs: Paragraph[], ctx: MapContext): IrValue[] | undefined {
 	const runs: IrValue[] = []
 	let formatted = false
 	paragraphs.forEach((paragraph, index) => {
 		const breaks = index < paragraphs.length - 1 ? '\n' : ''
 		const items = paragraph.runs.map((run) => {
-			const options = notesRunOptions(run, notes)
+			const options = notesRunOptions(run, ctx)
 			if (options) formatted = true
 			return { text: run.text, ...(options ? { options } : {}) }
 		})
@@ -359,8 +360,8 @@ function notesRuns(paragraphs: Paragraph[], notes: NoteScope): IrValue[] | undef
 }
 
 /** A notes run's options, as far as `NotesTextOptions` spells them. */
-function notesRunOptions(run: Run, notes: NoteScope): Record<string, IrValue> | undefined {
-	const link = run.hyperlink
+function notesRunOptions(run: Run, ctx: MapContext): Record<string, IrValue> | undefined {
+	const { notes } = ctx
 	return compact({
 		bold: run.bold === true ? true : undefined,
 		italic: run.italic === true ? true : undefined,
@@ -378,13 +379,14 @@ function notesRunOptions(run: Run, notes: NoteScope): Record<string, IrValue> | 
 					),
 		fontSize: orUndefined(run.fontSizePt),
 		fontFace: orUndefined(run.fontName),
-		hyperlink: link?.url ? (compact({ url: link.url, tooltip: orUndefined(link.tooltip) }) ?? undefined) : undefined,
+		hyperlink: hyperlinkOption(run, ctx),
 	})
 }
 
 /**
  * What a speaker-notes paragraph states that `addNotes` cannot write: an indent level, a bullet,
- * and on a run strike, highlight, character spacing or a link that is not a URL.
+ * and on a run strike, highlight or character spacing. A link `addNotes` cannot write is noted by
+ * {@link hyperlinkOption}, as on a slide.
  *
  * An explicit off (`strike="noStrike"`, a suppressed bullet) is how plain text reads anyway, so it
  * does not count. Reads accessors only.
@@ -398,7 +400,6 @@ function unwritableNotesFormatting(paragraph: Paragraph): string[] {
 		if (run.strike !== null && run.strike !== 'noStrike') found.push('strikethrough')
 		if (run.highlight !== null) found.push('a highlight')
 		if (run.charSpacingPt) found.push('character spacing')
-		if (run.hyperlink !== null && !run.hyperlink.url) found.push('a link that is not a URL')
 	}
 	return found
 }

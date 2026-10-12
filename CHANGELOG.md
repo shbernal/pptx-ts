@@ -141,6 +141,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   block showing the value and the category name maps onto `XY`. A scatter came back with no labels
   and no note. Label text on any other chart type is now noted under `chart.labels`
   ([#166](https://github.com/shbernal/pptx-ts/issues/166)).
+- **`addNotes` writes a run's `hyperlink.slide` and `hyperlink.action`.** `NotesTextOptions` typed
+  both, but only `url` was written: a slide jump was dropped with a warning and a show jump without
+  one. A slide jump is now a slide relationship of the notes part, which `appendSlides` repoints at
+  the appended slide (`ExtractedNotes.slideLinks`), and a link past the last slide is refused on
+  write. `readModelToIr` carries both onto the notes runs instead of noting them as unwritable
+  ([#168](https://github.com/shbernal/pptx-ts/issues/168)).
 
 - **`readModelToIr` re-declares a layout's placeholders.** Every definition was dropped under
   `master.placeholders`. Each one every slide on its layout fills now carries as a `{ placeholder }`

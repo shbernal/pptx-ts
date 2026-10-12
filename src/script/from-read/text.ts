@@ -448,7 +448,7 @@ const SLIDE_JUMP = 'ppaction://hlinksldjump'
  * jump used to be dropped with a comment saying the deck-level walk handled it, which it did not,
  * so the text kept its link formatting and went nowhere.
  */
-function hyperlinkOption(run: Run, ctx: MapContext): IrValue | undefined {
+export function hyperlinkOption(run: Run, ctx: MapContext): IrValue | undefined {
 	return linkOption(run.hyperlink, ctx, RUN_LINK)
 }
 

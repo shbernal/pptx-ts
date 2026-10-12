@@ -736,8 +736,8 @@ export interface TableLayoutResult {
 
 /**
  * Per-run options for a speaker-notes text run.
- * A focused subset of `TextPropsOptions`: inline formatting plus an (external URL) hyperlink.
- * Notes hyperlinks support `url` only; `slide` targets are not yet supported.
+ * A focused subset of `TextPropsOptions`: inline formatting plus a hyperlink, which takes a
+ * `url`, a `slide` or an `action` as on a slide.
  */
 export type NotesTextOptions = Pick<
 	TextPropsOptions,
