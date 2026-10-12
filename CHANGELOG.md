@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`SlideIr.notesRuns` carries speaker notes as `NotesProps[]`.** When a notes run is bold,
+  italic, underlined, coloured, sized, set in its own face or links to a URL, `readModelToIr`
+  carries the runs with those options and `printScript` prints `addNotes([...])`. Plain notes
+  still carry as `notesText`
+  ([#129](https://github.com/shbernal/pptx-ts/issues/129)).
 - **`objectLock` takes `noUngrp` on a group**, the lock that stops PowerPoint ungrouping it
   (`a:grpSpLocks/@noUngrp`). `readModelToIr` reads it back
   ([#126](https://github.com/shbernal/pptx-ts/issues/126)).
@@ -78,6 +83,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`notes.formatting` names what `addNotes` cannot write, with cause `unwritable`.** It fired as
+  `unsupported` for every formatted note, though the write side authors most of it. It now fires
+  only for an indent level, a bullet, strikethrough, a highlight, character spacing or a link that
+  is not a URL ([#129](https://github.com/shbernal/pptx-ts/issues/129)).
 - **`addChart` writes `objectLock`.** The chart frame wrote a bare `p:cNvGraphicFramePr` and
   dropped every flag without a warning. It now writes `a:graphicFrameLocks` as a table's frame does,
   warns for a flag a frame cannot carry, and `readModelToIr` carries the locks back
