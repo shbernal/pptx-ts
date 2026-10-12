@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`CustomGeometry` reads its guides, adjust handles and connection sites.** `guides`,
+  `adjustHandles` (XY and polar) and `connectionSites`, each position a number in the shape's EMU
+  space or a guide name. `readModelToIr` carries them onto `addShape`'s `guides`, `adjustHandles` and
+  `connectionSites`, so a connector glued to a freeform's site keeps its target; on a picture or a
+  freeform holding text, which take no such options, `shape.custGeom.guides` now says `unwritable`
+  ([#78](https://github.com/shbernal/pptx-ts/issues/78)).
 - **A chart's areas, manual layouts and series effects read back.** `Chart.chartArea` and
   `Chart.plotArea` (`ChartAreaFormat`: solid, gradient, pattern and picture fills read as a shape's
   are, the border, the plot's manual layout), `Chart.roundedCorners`, `Chart.titleLayout`,
