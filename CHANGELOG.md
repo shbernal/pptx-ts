@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `resolvedBulletDetail` walk the paragraph's own `a:pPr`, then the text body's, layout's and
   master's list styles, the master's `p:txStyles` and `p:defaultTextStyle` at its level, the chain
   `Run`'s resolved getters walk ([#143](https://github.com/shbernal/pptx-ts/issues/143)).
+- **`CustomGeometry` reads its guides, adjust handles and connection sites.** `guides`,
+  `adjustHandles` (XY and polar) and `connectionSites`, each position a number in the shape's EMU
+  space or a guide name. `readModelToIr` carries them onto `addShape`'s `guides`, `adjustHandles` and
+  `connectionSites`, so a connector glued to a freeform's site keeps its target; on a picture or a
+  freeform holding text, which take no such options, `shape.custGeom.guides` now says `unwritable`
+  ([#78](https://github.com/shbernal/pptx-ts/issues/78)).
 - **A chart's areas, manual layouts and series effects read back.** `Chart.chartArea` and
   `Chart.plotArea` (`ChartAreaFormat`: solid, gradient, pattern and picture fills read as a shape's
   are, the border, the plot's manual layout), `Chart.roundedCorners`, `Chart.titleLayout`,
@@ -123,6 +129,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A chart's embedded workbook no longer stamps the clock.** Its own `docProps/core.xml` carried
+  `dcterms:created` and `dcterms:modified`, so two writes of a deck with a chart differed inside the
+  workbook, a part a consumer comparing packages cannot exclude by name. The workbook now states no
+  timestamp; the deck's `docProps/core.xml` keeps its dates
+  ([#145](https://github.com/shbernal/pptx-ts/issues/145)).
 - **A one-entry multi-type `addChart` array writes a bubble chart.** Every bubble entry threw
   `chart/bubble-in-combo`, a one-entry array that combines nothing included, so `type[].data[].sizes`
   could never be written. A single bubble entry is now written as the standalone chart, its options
