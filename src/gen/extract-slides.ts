@@ -13,7 +13,7 @@
  */
 
 import { SlideObjectType } from '../enums.js'
-import type { PresentationPropsInternal, PresSlideInternal } from '../types/internal.js'
+import type { PresentationPropsInternal, PresSlideInternal, SlideRel } from '../types/internal.js'
 import type { ExtractedSlide, ExtractedSlides } from '../read/api/presentation-types.js'
 import type { RuntimeAdapter } from '../runtime/types.js'
 import type { FontMetricsRegistry } from '../measure/font-metrics.js'
@@ -178,8 +178,8 @@ function hyperlinksOf(slide: PresSlideInternal): ExtractedSlide['hyperlinks'] {
  * subsystem later. `addText` writes this Target itself, so the condition is a defect on this
  * side rather than bad input — an {@link InternalError}, like the chart router's own.
  */
-function slideLinksOf(slide: PresSlideInternal): ExtractedSlide['slideLinks'] {
-	return slide._rels
+function slideLinksOf(rels: readonly SlideRel[]): ExtractedSlide['slideLinks'] {
+	return rels
 		.filter((rel) => isHyperlinkRel(rel) && rel.data === 'slide')
 		.map((rel) => {
 			const sourceSlideNumber = Number(rel.Target)
@@ -204,8 +204,9 @@ function notesOf(slide: PresSlideInternal): ExtractedSlide['notes'] {
 	return {
 		xml: makeXmlNotesSlide(slide, notes),
 		hyperlinks: notes.rels
-			.filter((rel) => typeof rel.Target === 'string' && rel.Target)
+			.filter((rel) => rel.data !== 'slide' && typeof rel.Target === 'string' && rel.Target)
 			.map((rel) => ({ rId: rel.rId, target: rel.Target })),
+		slideLinks: slideLinksOf(notes.rels),
 	}
 }
 
@@ -249,7 +250,7 @@ export async function extractSlides(
 				media: imageMediaOf(slide, new Set(avMedia.map((item) => item.previewRid))),
 				hyperlinks: hyperlinksOf(slide),
 				charts: source.extract.charts?.(slide) ?? [],
-				slideLinks: slideLinksOf(slide),
+				slideLinks: slideLinksOf(slide._rels),
 				avMedia,
 				onlineMedia: onlineMediaOf(slide, relByRid),
 				...(notes ? { notes } : {}),
