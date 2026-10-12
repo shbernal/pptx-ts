@@ -12,7 +12,6 @@ import { lvlPPr, themeFontDefRPr } from '../drawingml/list-style.js'
 import { CRLF, LEVEL_MARGINS_EMU, SLDNUMFLDID, XML_DECL } from '../../constants-internal.js'
 import type { TextProps } from '../../types/index.js'
 import type { HyperlinkPropsInternal, PresSlideInternal, SlideRel } from '../../types/internal.js'
-import { warn } from '../../diagnostics.js'
 import { genXmlTextRun } from '../drawingml/text-run.js'
 import { el, raw, voidEl } from '../oxml/el.js'
 import { NOTES_MASTER_REL, SLIDE_REL, THEME_REL } from '../../ooxml/rel-types.js'
@@ -56,8 +55,8 @@ export interface NotesSlideContent {
  * can be written twice or gain notes between writes. Each notes-part writer computes this once and
  * hands the result to both the body and the rels file, which is what keeps the two in agreement.
  *
- * Only external `url` hyperlinks are supported; any other target is left off the copy, and a
- * `slide` target says so.
+ * A `url` takes a hyperlink relationship and a `slide` a slide relationship, as on a slide; a show
+ * jump (`action`) takes none.
  * @param {PresSlideInternal} slide - the slide object
  * @return {NotesSlideContent} the notes hyperlink relationships and the runs referencing them
  */
@@ -68,15 +67,8 @@ export function buildNotesSlideRels(slide: PresSlideInternal): NotesSlideContent
 
 	const runs = getNotesRuns(slide).map((run): TextProps => {
 		const hyperlink: HyperlinkPropsInternal | undefined = run.options?.hyperlink
-		if (!hyperlink || !run.options) return run
-		if (!hyperlink.url) {
-			// Dropped from the copy so the run serializer doesn't emit a dangling <a:hlinkClick> with no
-			// matching relationship.
-			if (hyperlink.slide)
-				warn('notes/hyperlink-slide-unsupported', 'notes hyperlinks support `url` only (ignoring `slide` target)')
-			const { hyperlink: _unsupported, ...options } = run.options
-			return { ...run, options }
-		}
+		// A show jump (`action` alone) is written on the run with no relationship, as on a slide.
+		if (!hyperlink || !run.options || !(hyperlink.url || hyperlink.slide)) return run
 
 		lastRid++
 		rels.push(hyperlinkRel(lastRid, hyperlink))
@@ -437,7 +429,13 @@ export function makeXmlNotesSlideSkeleton(bodyParagraphsXml: string, slideNum: n
  */
 export function makeXmlNotesSlideRel(notes: NotesSlideContent, slideNumber: number): string {
 	// Flat: the hyperlink rels run together on one line, after the indented rId1/rId2 pair.
-	const hlinkRels = notes.rels.map((rel) => externalHyperlinkRel(rel.rId, rel.Target)).join('')
+	const hlinkRels = notes.rels
+		.map((rel) =>
+			rel.data === 'slide'
+				? relationshipEl(rel.rId, SLIDE_REL, targetFromPptSubpart(slidePath(Number(rel.Target))))
+				: externalHyperlinkRel(rel.rId, rel.Target)
+		)
+		.join('')
 
 	return (
 		XML_DECL +

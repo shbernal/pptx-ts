@@ -40,6 +40,7 @@
  */
 
 import { InvalidOptionError } from '../errors.js'
+import { SlideObjectType } from '../enums.js'
 import { applyMeasuredFit } from '../measure/fit.js'
 import type { FontMetricsRegistry } from '../measure/font-metrics.js'
 import type { RuntimeAdapter } from '../runtime/types.js'
@@ -79,16 +80,29 @@ export function requireSlideLinksInDeck(
 		...layouts.map((layout, idx) => ({ label: `Slide layout ${idx + 1}`, part: layout })),
 		...(master ? [{ label: 'The slide master', part: master }] : []),
 	]
+	const refuse = (label: string, target: unknown): never => {
+		throw new InvalidOptionError(
+			'slide/link-past-last-slide',
+			`${label} links to slide ${String(target)}, but the deck has ${slides.length} slide${slides.length === 1 ? '' : 's'}.`
+		)
+	}
 	for (const { label, part } of sources) {
 		for (const rel of part._rels) {
 			if (!isHyperlinkRel(rel) || rel.data !== 'slide') continue
 			// Negated so a target that is not a number at all passes on to the internal assertion
 			// `extractSlides` makes, rather than being blamed on the caller here.
-			if (!(Number(rel.Target) > slides.length)) continue
-			throw new InvalidOptionError(
-				'slide/link-past-last-slide',
-				`${label} links to slide ${String(rel.Target)}, but the deck has ${slides.length} slide${slides.length === 1 ? '' : 's'}.`
-			)
+			if (Number(rel.Target) > slides.length) refuse(label, rel.Target)
+		}
+	}
+	// A notes run's link is given its relationship only as the notes part is written, so it is
+	// read from the run.
+	for (const slide of slides) {
+		for (const obj of slide._slideObjects) {
+			if (obj._type !== SlideObjectType.notes) continue
+			for (const run of obj.text ?? []) {
+				const target = run.options?.hyperlink?.slide
+				if (target !== undefined && target > slides.length) refuse(`The notes of slide ${slide._slideNum}`, target)
+			}
 		}
 	}
 }

@@ -2071,6 +2071,25 @@ describe('deck IR — text links, freeform text and fields', () => {
 		assert(!constructs(ir).has('notes.formatting'), 'nothing is declared lost')
 		assert(/slide1\.addNotes\(\s*\[\s*\{/.test(printScript(ir).code), 'the script prints the array form')
 	})
+
+	test("a notes run's jump to a slide or a show jump carries, as a slide run's does", async () => {
+		// Notes carried a `url` link only, and declared any other link unwritable because addNotes
+		// wrote no other (#168).
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide()
+			pres.addSlide().addNotes([
+				{ text: 'back ', options: { hyperlink: { slide: 1, tooltip: 'Back' } } },
+				{ text: 'next', options: { hyperlink: { action: 'nextslide' } } },
+			])
+		})
+		const ir = readModelToIr(presentation)
+		const carried = defined(atIndex(ir.slides, 1).notesRuns)
+		assertEqual(
+			JSON.stringify(carried.map((run) => at(run, 'options', 'hyperlink'))),
+			JSON.stringify([{ slide: 1, tooltip: 'Back' }, { action: 'nextslide' }])
+		)
+		assert(!constructs(ir).has('notes.formatting'), 'nothing is declared lost')
+	})
 })
 
 describe('deck IR — connector strokes and grouped connectors', () => {
