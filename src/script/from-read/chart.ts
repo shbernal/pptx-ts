@@ -164,6 +164,7 @@ export function chartCall(frame: GraphicFrame, chart: Chart, ctx: MapContext): C
 		...titleOptions(chart),
 		...legendOptions(chart),
 		...labelOptions(chart, type, notes),
+		valLabelFormatCode: sourceFormatOption(chart, type, notes),
 		...ownLabels.options,
 		...axisOptions(chart, type, notes),
 		...seriesLineOptions(chart, type, notes),
@@ -362,6 +363,31 @@ function labelOptions(chart: Chart, type: string, notes: NoteScope): Record<stri
 	}
 }
 
+/** The format the writer caches values in when neither a source nor a label format is stated. */
+const DEFAULT_SOURCE_FORMAT = '#,##0'
+
+/**
+ * The series values' source format (`c:numCache/c:formatCode`) as `valLabelFormatCode`, where it
+ * differs from the one the writer would cache them in: the data-label format, else `#,##0`.
+ * `dataTableFormatCode` writes the same element and nothing else, so it comes back as this too (#189).
+ * @param type - the write-API chart type the chart is rebuilt as
+ */
+function sourceFormatOption(chart: Chart, type: string, notes: NoteScope): string | undefined {
+	const formats = chart.series.map((series) => series.valueFormatCode)
+	const format = formats[0] ?? null
+	if (formats.some((one) => one !== format)) {
+		notes.note(
+			'chart.labels',
+			'approximated',
+			'unwritable',
+			"the series cache their values in different number formats, and valLabelFormatCode sets one for every series, so all of them take the first series' format"
+		)
+	}
+	const labels = (CATEGORY_NAME_TYPES.has(type) ? chart.series[0]?.dataLabels : null) ?? chart.dataLabels
+	const implied = labels?.numberFormat?.formatCode || DEFAULT_SOURCE_FORMAT
+	return format === null || format === implied ? undefined : format
+}
+
 /** The runs `dataLabelFormatScatter: 'customXY'` appends to a label: ` (`, the X value, `, `, the Y value, `)`. */
 const XY_SUFFIX: readonly ChartLabelRun[] = [
 	{ text: ' (', field: null },
@@ -507,6 +533,10 @@ function axisOptions(chart: Chart, type: string, notes: NoteScope): Record<strin
 		// The writer forces a scatter's tick marks to none, and its value labels next to the axis.
 		...(scatter ? {} : tickOptions('cat', cat)),
 		catAxisLabelPos: differs(cat?.tickLabelPosition, scatter ? 'nextTo' : 'low'),
+		// A scatter's or bubble's X axis takes its format from `catAxisLabelFormatCode`, written unlinked;
+		// left out, the axis is linked to its source (#190).
+		catAxisLabelFormatCode:
+			xy && cat?.numberFormat?.sourceLinked === false ? (cat.numberFormat.formatCode ?? undefined) : undefined,
 		// A crossing is stated on the axis that crosses: the value axis' is where it meets the
 		// category axis, which the writer spells `catAxisCrossesAt`, and the other way round.
 		catAxisCrossesAt: crossing(val, notes),
@@ -527,7 +557,8 @@ function axisOptions(chart: Chart, type: string, notes: NoteScope): Record<strin
 		valAxisLogScaleBase: val?.logBase ?? undefined,
 		valAxisMajorUnit: val?.majorUnit ?? undefined,
 		valAxisMinorUnit: val?.minorUnit ?? undefined,
-		valAxisLabelFormatCode: val?.numberFormat?.formatCode ?? undefined,
+		// The writer writes `General` when the option is left out.
+		valAxisLabelFormatCode: differs(val?.numberFormat?.formatCode, 'General'),
 		...(scatter ? {} : tickOptions('val', val)),
 		valAxisLabelPos: scatter ? undefined : differs(val?.tickLabelPosition, 'nextTo'),
 		valAxisCrossBetween: differs(val?.crossBetween, scatter ? 'midCat' : 'between'),

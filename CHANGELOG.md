@@ -143,6 +143,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A chart's number formats carry through `readModelToIr`.** `ChartSeries.valueFormatCode` reads
+  the format a series caches its values in (`c:numCache/c:formatCode`), which `valLabelFormatCode`
+  and `dataTableFormatCode` write and nothing read, so both came back lost; it now comes back as
+  `valLabelFormatCode` ([#189](https://github.com/shbernal/pptx-ts/issues/189)). A scatter's or
+  bubble's X axis format comes back as `catAxisLabelFormatCode`, not as the Y axis'
+  `valAxisLabelFormatCode: 'General'`, which is now left out when it is the default
+  ([#190](https://github.com/shbernal/pptx-ts/issues/190)).
 - **A chart or plot area with no fill of its own comes back as `fill: { type: 'inherit' }`.**
   `ChartAreaFormat.hasOwnFill` reads whether the area states any fill. `readModelToIr` left such an
   area's `fill` out, and the writer spells an absent fill `a:noFill`, so the copy stated no fill

@@ -949,6 +949,17 @@ export class ChartSeries {
 		return this.#numbers('c:yVal')
 	}
 
+	/**
+	 * The number format the series' values are cached in (`c:numCache/c:formatCode` under `c:val`, or
+	 * under `c:yVal` on a scatter or bubble series), or `null` when the cache states none. PowerPoint
+	 * paints a source-linked data label and a data table in it.
+	 */
+	get valueFormatCode(): string | null {
+		const cache = findCache(firstChild(this.ser, 'c:val') ?? firstChild(this.ser, 'c:yVal'))
+		const formatCode = cache && firstChild(cache, 'c:formatCode')
+		return formatCode ? (formatCode.textContent ?? null) : null
+	}
+
 	/** Cached bubble sizes of a bubble series (`c:bubbleSize`); non-numeric or missing points are `null`. */
 	get bubbleSizes(): (number | null)[] {
 		return this.#numbers('c:bubbleSize')
