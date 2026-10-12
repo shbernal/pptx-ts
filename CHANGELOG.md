@@ -83,6 +83,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`textWarp` on a table or cell warns `table/option-not-supported`.** A cell took it from
+  `TextBaseProps` and wrote nothing, with nothing reported; PowerPoint has no text transform in a
+  table cell ([#84](https://github.com/shbernal/pptx-ts/issues/84)).
 - **`readModelToIr` carries the chart settings the read model reads.** A series outline
   (`dataBorder` on a bar, area or pie; `lineSize`, `lineDash`, `lineDashValues` and a per-series
   `seriesOptions[n].lineSize` on a stroked series), each axis' orientation, tick marks, label

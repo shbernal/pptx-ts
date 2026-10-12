@@ -100,6 +100,7 @@ export type DiagnosticCode =
 	| 'table/invalid-row-height'
 	| 'table/invalid-margin'
 	| 'table/invalid-header-row-count'
+	| 'table/option-not-supported'
 	// Text and bullets
 	| 'text/invalid-valign'
 	| 'text/invalid-vertical'

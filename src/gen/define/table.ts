@@ -141,6 +141,30 @@ function applyTableHeaderColumnSugar(tableRows: TableRow[], opt: TablePropsInter
 }
 
 /**
+ * Report and drop `textWarp` from the table and its cells, once per call.
+ *
+ * `TableCellProps` takes it from `TextBaseProps`, and a cell's `a:bodyPr` was written empty whatever
+ * it said (#84). PowerPoint has nowhere to put it: setting `TextFrame2.WarpFormat` on a cell throws
+ * "The specified value is out of range" over COM, and a saved cell carries an empty `a:bodyPr`.
+ * (`fit` is different: `'shrink'` is baked into the runs by the measured-fit pass.)
+ * @param rows - the normalized rows, whose option bags are this module's own copies
+ * @param opt - the table's options, also this module's own
+ */
+function dropCellTextWarp(rows: TableCellInternal[][], opt: TablePropsInternal): void {
+	let stated = false
+	for (const bag of [opt, ...rows.flatMap((row) => row.map((cell) => cell.options ?? {}))]) {
+		if (bag.textWarp === undefined) continue
+		stated = true
+		delete bag.textWarp
+	}
+	if (stated)
+		warn(
+			'table/option-not-supported',
+			'addTable: `textWarp` has no effect in a table cell, which PowerPoint does not warp; it was ignored.'
+		)
+}
+
+/**
  * A text shadow normalized the way `addText` normalizes one, on a bag this module already owns.
  * The run emitter reads `_alpha`, which only {@link normalizeShadowOptions} derives from
  * `transparency` or an RGBA colour; skipped, a cell's shadow painted at the default alpha
@@ -476,6 +500,7 @@ export function addTableDefinition(
 		delete opt.border
 	}
 	const arrRows = normalizeTableRows(srcRows, opt)
+	dropCellTextWarp(arrRows, opt)
 
 	// STEP 3: Set options
 	// Keep x/y/w/h as raw user `Coord` (inches/percent/unit-string). They are resolved to EMU
