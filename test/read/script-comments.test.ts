@@ -3,9 +3,11 @@
 // report (#207). Modern (`p188`) comments have no write option, so they are noted instead.
 
 import { describe, expect, test } from 'vitest'
-import type { Presentation } from '../../dist/read.js'
+import JSZip from 'jszip'
+import { Presentation } from '../../dist/read.js'
 import { readModelToIr, type DeckIr } from '../../dist/script.js'
 import type { CommentProps } from '../../dist/node.js'
+import { defined } from '../helpers.ts'
 import { authorRead } from './authored.ts'
 import { openFixture } from './corpus.ts'
 
@@ -42,6 +44,18 @@ describe('readModelToIr replays slide comments as addComment', () => {
 			for (const [options] of commentCalls(ir)[0] as [CommentProps][]) slide.addComment(options)
 		})
 		expect(comments(copy.presentation)).toEqual(comments(presentation))
+	})
+
+	test('a comment whose author the deck does not register is noted', async () => {
+		const { buf } = await authorRead((pres) => {
+			pres.addSlide().addComment({ author: 'Ada Probe', text: 'Orphan', x: 1, y: 1 })
+		})
+		const zip = await JSZip.loadAsync(buf)
+		const name = defined(Object.keys(zip.files).find((file) => /^ppt\/comments\/comment\d+\.xml$/.test(file)))
+		zip.file(name, (await defined(zip.file(name)).async('string')).replace(/authorId="\d+"/, 'authorId="99"'))
+		const ir = readModelToIr(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
+		expect(commentCalls(ir).flat()).toEqual([])
+		expect(ir.fidelity.some((note) => note.construct === 'slide.comment')).toBe(true)
 	})
 
 	test("PowerPoint's modern comments are noted, not dropped silently", async () => {

@@ -5,7 +5,8 @@
 // writes.
 
 import { describe, expect, test } from 'vitest'
-import { isPicture, type Picture, type Presentation } from '../../dist/read.js'
+import JSZip from 'jszip'
+import { Presentation, isPicture, type Picture } from '../../dist/read.js'
 import { readModelToIr, type CallIr, type DeckIr } from '../../dist/script.js'
 import type { MediaProps } from '../../dist/node.js'
 import { defined } from '../helpers.ts'
@@ -114,5 +115,37 @@ describe('readModelToIr replays embedded media as addMedia', () => {
 		expect(video.method).toBe('addMedia')
 		expect(video.args[0]).toMatchObject({ type: 'video', extn: 'mp4' })
 		expect(callNamed(ir, 'EmbeddedAudio').args[0]).toMatchObject({ type: 'audio', extn: 'mp3' })
+	})
+})
+
+describe('embedded media addMedia cannot rebuild as it stands', () => {
+	/** A deck with a looping clip named `clip` and a group of one image, its slide XML rewritten by `edit`. */
+	async function edited(edit: (xml: string) => string): Promise<DeckIr> {
+		const { buf } = await authorRead((pres) => {
+			const slide = pres.addSlide()
+			slide.addMedia({ type: 'audio', data: WAV, loop: true, ...BOX, objectName: 'clip' })
+			slide.addGroup([{ image: { data: 'image/png;base64,iVBORw0KGgo=', ...BOX, objectName: 'still' } }])
+		})
+		const zip = await JSZip.loadAsync(buf)
+		const name = 'ppt/slides/slide1.xml'
+		zip.file(name, edit(await defined(zip.file(name)).async('string')))
+		return readModelToIr(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
+	}
+
+	test('a clip in a group stays its poster frame, noted', async () => {
+		const ir = await edited((xml) => {
+			const clip = defined(/<p:pic>(?:(?!<\/p:pic>)[\s\S])*?audioFile[\s\S]*?<\/p:pic>/.exec(xml))[0]
+			return xml.replace(clip, '').replace('</p:grpSp>', `${clip}</p:grpSp>`)
+		})
+		expect(ir.fidelity.filter((note) => note.construct === 'media.audioVideo')).toHaveLength(1)
+		expect(ir.slides[0]?.calls.map((call) => call.method)).toEqual(['addGroup'])
+	})
+
+	test('a rotated clip comes back upright, noted', async () => {
+		const ir = await edited((xml) =>
+			xml.replace(/(<p:pic>(?:(?!<\/p:pic>)[\s\S])*?audioFile[\s\S]*?<a:xfrm)/, '$1 rot="5400000"')
+		)
+		expect(ir.fidelity.filter((note) => note.construct === 'media.formatting')).toHaveLength(1)
+		expect(callNamed(ir, 'clip').method).toBe('addMedia')
 	})
 })

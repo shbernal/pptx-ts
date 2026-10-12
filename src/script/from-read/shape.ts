@@ -58,7 +58,7 @@ import {
 	positionOptions,
 	type ShapeBox,
 } from './values.js'
-import { hasIdentityChildSpace, isAudioVideo, isTextBox } from './detect.js'
+import { hasIdentityChildSpace, isTextBox } from './detect.js'
 import { noteUnreadText, shapeHyperlinkOption, textFrameOptions, textRuns } from './text.js'
 import type { TextFrame } from '../../read/api/text.js'
 import { tableCall } from './table.js'
@@ -475,13 +475,6 @@ function pictureCall(shape: Picture, ctx: MapContext): CallIr | null {
 			'flattened',
 			'unwritable',
 			'this audio or video is linked from outside the package, which addMedia does not author (it embeds a clip, or links an online video), so it is emitted as a still image of its poster frame'
-		)
-	} else if (isAudioVideo(shape.element_)) {
-		notes.note(
-			'media.audioVideo',
-			'flattened',
-			'unread',
-			'this audio or video names no media element the reader recognises, so it is emitted as a still image of its poster frame'
 		)
 	}
 
