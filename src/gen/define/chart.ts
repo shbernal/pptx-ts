@@ -50,6 +50,8 @@ import type {
 	TextBaseProps,
 } from '../../types/index.js'
 import { scrubGridLine } from '../chart/chart-stroke.js'
+import { resolveFillKind } from '../drawingml/fill.js'
+import { registerImageFillMedia } from './image.js'
 import type {
 	ChartErrorBarInternal,
 	ChartMultiInternal,
@@ -57,7 +59,9 @@ import type {
 	ChartOptsOverrides,
 	OptsChartDataInternal,
 	PresSlideInternal,
+	ShapeFillPropsInternal,
 	SlideObject,
+	SlideRelMedia,
 } from '../../types/internal.js'
 import { getNewRelId } from '../utils.js'
 import { resolveObjectName } from './object-name.js'
@@ -1070,6 +1074,40 @@ function reportTextBaseKeys(options: ChartOptsInternal): void {
 }
 
 /**
+ * Register a chart or plot area's picture fill, so the chart part can reference it.
+ *
+ * The fill wrote nothing and warned that its `image.data` was missing, because a picture fill needs
+ * a media relationship and nothing gave the chart part one (#139). The picture is registered on the
+ * slide, marked {@link SlideRelMedia.chartOwned}, so it is loaded, deduped and written like any other
+ * picture, and the chart part declares it from `rId2` on: its `rId1` is the embedded workbook. The
+ * fill each area keeps is a copy carrying that chart-part id.
+ * @param target - the slide, layout or master the chart is on
+ * @param options - the chart's normalized options, whose `chartArea` and `plotArea` are its own copies
+ * @returns the pictures the chart part references, in relationship-id order
+ */
+function registerAreaPictures(
+	target: PresSlideInternal,
+	options: ChartOptsInternal
+): Array<{ rId: number; rel: SlideRelMedia }> {
+	const media: Array<{ rId: number; rel: SlideRelMedia }> = []
+	for (const area of [options.chartArea, options.plotArea]) {
+		const fill = area?.fill
+		if (!area || !fill || typeof fill !== 'object' || resolveFillKind(fill) !== 'image') continue
+		const own: ShapeFillPropsInternal = { ...fill }
+		const before = target._relsMedia.length
+		registerImageFillMedia(target, own)
+		const rel = target._relsMedia[before]
+		if (rel && own.type === 'image') {
+			rel.chartOwned = true
+			own._imgRid = media.length + 2
+			media.push({ rId: own._imgRid, rel })
+		}
+		area.fill = own
+	}
+	return media
+}
+
+/**
  * Generate the chart based on input data.
  * OOXML Chart Spec: ISO/IEC 29500-1:2016(E)
  *
@@ -1295,6 +1333,10 @@ export function addChartDefinition(
 	// STEP 4: Set props
 	resultObject._type = SlideObjectType.chart
 	resultObject.options = options
+	// The pictures first: each takes a slide relationship id, and `chartRid` has to be the id the
+	// chart's own relationship is pushed under below.
+	const isChartEx = isChartExType(options._type)
+	const media = isChartEx ? [] : registerAreaPictures(target, options)
 	resultObject.chartRid = getNewRelId(target)
 
 	// STEP 5: Add this chart to this Slide Rels (rId/rels count spans all slides! Count all images to get next rId)
@@ -1303,7 +1345,6 @@ export function addChartDefinition(
 	// authoritative, package-unique filename is (re)assigned at write time in
 	// `buildPackageParts` (`package/assemble.ts`); this placeholder mirrors the same
 	// Ex-prefix rule so a single-chart deck is already correct.
-	const isChartEx = isChartExType(options._type)
 	const { fileName, target: chartTarget } = chartPartNames(chartId, isChartEx)
 	target._relsChart.push({
 		rId: getNewRelId(target),
@@ -1314,6 +1355,7 @@ export function addChartDefinition(
 		isChartEx,
 		fileName,
 		Target: chartTarget,
+		...(media.length > 0 ? { media } : {}),
 	})
 
 	target._slideObjects.push(resultObject)
