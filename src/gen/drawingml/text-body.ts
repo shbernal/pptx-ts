@@ -10,7 +10,7 @@ import { PlaceholderType, SlideObjectType } from '../../enums.js'
 import { CRLF, DEF_FONT_COLOR } from '../../constants-internal.js'
 import { warn } from '../../diagnostics.js'
 import { checkEnumOrWarn } from '../../ooxml/check-enum.js'
-import { TEXT_SHAPE_TYPES, TEXT_VERTICAL } from '../../ooxml/st-enums.js'
+import { PLACEHOLDER_TYPES, TEXT_SHAPE_TYPES, TEXT_VERTICAL } from '../../ooxml/st-enums.js'
 import type { ObjectOptions, PlaceholderBinding, TextProps, TextPropsOptions } from '../../types/index.js'
 import type { SlideObject, TableCellInternal } from '../../types/internal.js'
 import { el, raw, voidEl, type XmlAttrs } from '../oxml/el.js'
@@ -309,7 +309,11 @@ export function genXmlPlaceholder(
 		binding?.type ??
 		(PLACEHOLDER_TYPE_MAP[placeholderTyp]
 			? PLACEHOLDER_TYPE_MAP[placeholderTyp].toString()
-			: (Object.values(PlaceholderType) as string[]).includes(placeholderTyp)
+			: (Object.values(PlaceholderType) as string[]).includes(placeholderTyp) ||
+				  // A layout definition states any ST_PlaceholderType value; a slide object's own name is
+				  // not a type, so only the six friendly ones reach `p:ph` from it.
+				  (placeholderObj?._type === SlideObjectType.placeholder &&
+						(PLACEHOLDER_TYPES as readonly string[]).includes(placeholderTyp))
 				? placeholderTyp
 				: '')
 

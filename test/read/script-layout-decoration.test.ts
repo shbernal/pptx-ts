@@ -108,8 +108,14 @@ function tagOf(object: IrValue | undefined): string {
 	return atIndex(Object.keys(objectOf(object)), 0)
 }
 
-function objectsOfLayout(ir: DeckIr, index: number): IrValue[] {
+/** Every object of a layout's `defineSlideMaster` call, its placeholder definitions included. */
+function allObjectsOfLayout(ir: DeckIr, index: number): IrValue[] {
 	return arrayOf(ir.chrome.masters.find((master) => master.layoutIndex === index)?.props.objects ?? [])
+}
+
+/** A layout's decoration objects: everything but its `{ placeholder }` definitions. */
+function objectsOfLayout(ir: DeckIr, index: number): IrValue[] {
+	return allObjectsOfLayout(ir, index).filter((object) => tagOf(object) !== 'placeholder')
 }
 
 /** Author a deck through the write API and return its bytes. */
@@ -144,11 +150,12 @@ async function runStandalone(bytes: Uint8Array) {
 }
 
 describe('layout decoration — the IR, read against the deck rather than the converter', () => {
-	test('a layout’s decoration reaches its objects, one per shape, placeholders excluded', async () => {
+	test('a layout’s decoration reaches its objects, one per shape, and its placeholders as definitions', async () => {
 		// `mixed.pptx`'s title layout is the shape of the problem in miniature: seven decorative
-		// rectangles buried two groups deep, and five placeholders alongside them that must *not*
-		// come across — the write path seeds those onto every slide from the far side, so
-		// re-declaring one here would put an empty ghost on every slide bound to the layout.
+		// rectangles buried two groups deep, and five placeholders alongside them. The decoration is
+		// mapped one object per shape. A placeholder becomes a `{ placeholder }` definition only when
+		// every slide on the layout fills it: the write path seeds an unfilled one onto each slide, so
+		// re-declaring one a slide left out would put an empty ghost on it (#165).
 		const presentation = await load('mixed.pptx')
 		const layout = atIndex(layoutsOf(presentation), 0)
 		assertEqual(layout.name, 'Diapositive de titre', 'the fixture layout this test is about')
@@ -157,15 +164,28 @@ describe('layout decoration — the IR, read against the deck rather than the co
 		const placeholders = layout.shapes.filter(isPlaceholder)
 		assert(decoration.length > 0 && placeholders.length > 0, 'the layout has both kinds to tell apart')
 
-		const objects = objectsOfLayout(readModelToIr(presentation), 0)
+		const ir = readModelToIr(presentation)
+		const objects = allObjectsOfLayout(ir, 0)
 		assertEqual(
-			objects.map(nameOfObject).join(', '),
+			objectsOfLayout(ir, 0).map(nameOfObject).join(', '),
 			decoration.map((shape) => shape.name).join(', '),
-			'every decorative leaf, in tree order, and nothing else'
+			'every decorative leaf, in tree order'
 		)
-		for (const placeholder of placeholders) {
-			assert(!objects.some((object) => nameOfObject(object) === placeholder.name), `${placeholder.name} stayed out`)
+		const definitions = objects.filter((object) => tagOf(object) === 'placeholder')
+		const bound = ir.slides.filter((slide) => slide.layout?.index === 0)
+		for (const definition of definitions) {
+			const idx = at(definition, 'placeholder', 'options', 'idx')
+			for (const slide of bound) {
+				const fills = slide.calls.some((call) =>
+					call.args.some((arg) => {
+						const binding = opt(arg, 'placeholder')
+						return binding === at(definition, 'placeholder', 'options', 'name') || opt(binding, 'idx') === idx
+					})
+				)
+				assert(fills || idx === 0, `slide ${slide.number} fills re-declared placeholder idx ${String(idx)}`)
+			}
 		}
+		assert(definitions.length <= placeholders.length, 'no placeholder is invented')
 	})
 
 	test('a flattened group keeps every child where the group put it, and says it flattened', async () => {
@@ -487,5 +507,49 @@ describe('layout decoration — kinds the fixture corpus does not contain', () =
 			ir.fidelity.some((note) => note.construct === `${LAYOUT_NOTE_PREFIX}decoration` && note.shapeName === 'Grid'),
 			'and the drop is declared against the shape by name'
 		)
+	})
+})
+
+describe('layout placeholder definitions', () => {
+	// readModelToIr dropped every layout placeholder definition under `master.placeholders`, though a
+	// slide's placeholders carry as bindings since #112, so re-declaring one the slides fill adds no
+	// shape (#165).
+	const MASTER = {
+		title: 'M',
+		objects: [{ placeholder: { options: { name: 'body', type: 'body' as const, x: 1, y: 3, w: 5, h: 1 } } }],
+	}
+
+	test('a definition every slide fills is re-declared, and the standalone copy adds no shape', async () => {
+		const bytes = await authored((pptx) => {
+			pptx.defineSlideMaster(MASTER)
+			pptx.addSlide({ masterTitle: 'M' }).addText('Probe text', { x: 1, y: 1, w: 5, h: 1.5 })
+		})
+		const { ir, output, report } = await runStandalone(bytes)
+		const definitions = allObjectsOfLayout(ir, defined(atIndex(ir.slides, 0).layout).index).filter(
+			(object) => tagOf(object) === 'placeholder'
+		)
+		assertEqual(definitions.length, 1, 'the body definition is re-declared')
+		assertEqual(at(definitions[0], 'placeholder', 'options', 'type'), 'body', 'with its type')
+		assert(!ir.fidelity.some((note) => note.construct === 'master.placeholders'), 'and nothing is declared lost')
+		assertEqual(atIndex(output.slides, 0).shapes.length, 2, 'the copy has the text and the filled placeholder, no more')
+		// The one difference left is the seeded placeholder's empty `a:ln` coming back as `line: none`,
+		// which draws the same and predates this change (#177).
+		const others = report.undeclared.filter((difference) => difference.field !== 'line')
+		assertEqual(others.length, 0, 'and rebuilds the deck: ' + JSON.stringify(others))
+	})
+
+	test("a PowerPoint layout's definitions a slide leaves out stay out, and are noted", async () => {
+		// placeholder-inherit.pptx's one slide is on "Title and Text", which also defines a date, a
+		// footer and a slide number the slide does not show; its other layouts are unused.
+		const ir = readModelToIr(await load('placeholder-inherit.pptx'))
+		const used = defined(atIndex(ir.slides, 0).layout).index
+		const typesOf = (index: number) =>
+			allObjectsOfLayout(ir, index)
+				.filter((object) => tagOf(object) === 'placeholder')
+				.map((object) => at(object, 'placeholder', 'options', 'type'))
+		assertEqual(typesOf(used).join(','), 'title,body', 'the slide fills the title and the body')
+		assert(typesOf(0).includes('ctrTitle') && typesOf(0).includes('sldNum'), 'an unused layout keeps all of its own')
+		const note = ir.fidelity.find((one) => one.construct === 'master.placeholders')
+		assert(note?.detail?.startsWith('3 placeholder definition(s) across 1 slide layout(s)'), String(note?.detail))
 	})
 })

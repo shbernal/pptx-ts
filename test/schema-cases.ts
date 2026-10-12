@@ -323,6 +323,30 @@ export default [
 		},
 	},
 	{
+		name: 'layout placeholder definitions with a stated idx and any ST_PlaceholderType',
+		fn: async () => {
+			const { buf } = await build((p) => {
+				p.defineSlideMaster({
+					title: 'TYPED',
+					objects: [
+						{ placeholder: { options: { name: 'title', type: 'ctrTitle', idx: 0, x: 1, y: 1, w: 8, h: 1 } } },
+						{ placeholder: { options: { name: 'Content 2', type: 'obj', idx: 1, x: 1, y: 2, w: 8, h: 2 } } },
+						{ placeholder: { options: { name: 'Date 3', type: 'dt', idx: 10, x: 1, y: 5, w: 2, h: 0.4 } } },
+						{ placeholder: { options: { name: 'Number 4', type: 'sldNum', idx: 12, x: 7, y: 5, w: 2, h: 0.4 } } },
+					],
+				})
+				p.addSlide({ masterTitle: 'TYPED' }).addText('Title', {
+					x: 1,
+					y: 1,
+					w: 8,
+					h: 1,
+					placeholder: { type: 'ctrTitle' },
+				})
+			})
+			await expectNoSchemaErrors(buf, 'layout-placeholder-definitions')
+		},
+	},
+	{
 		name: 'object locks on a chart frame and a group',
 		fn: async () => {
 			const { buf } = await build((p) => {

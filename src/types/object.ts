@@ -18,7 +18,17 @@ import type { TextBaseProps, TextProps, TextPropsOptions } from './text.js'
 export interface PlaceholderProps
 	extends PositionProps, TextBaseProps, ObjectNameProps, Pick<TextPropsOptions, 'fill' | 'hyperlink'> {
 	name: string
-	type: PLACEHOLDER_TYPE
+	/**
+	 * `p:ph/@type`: one of the six friendly types, or any `ST_PlaceholderType` value (`ctrTitle`,
+	 * `subTitle`, `obj`, `dt`, `ftr`, `sldNum`, …).
+	 */
+	type: PLACEHOLDER_TYPE | PlaceholderXmlType
+	/**
+	 * `p:ph/@idx`, a non-negative integer a slide object binds to by stating the same `idx`.
+	 * Omitted, it is 100 plus the object's position in `objects`. `0` writes none, as PowerPoint
+	 * writes for a title.
+	 */
+	idx?: number
 	/**
 	 * margin (inches) — text-frame internal margin; a value `>= 1` warns as a likely legacy points value
 	 */

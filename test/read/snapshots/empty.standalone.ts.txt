@@ -28,10 +28,9 @@
  *   a layout title: the write path emits the name as a literal XML attribute value rather than a character
  *   reference, and XML normalises whitespace in an attribute to spaces. Collapsed here so the emitted script
  *   says what the output will contain — "Abschnitts-\nüberschrift" → "Abschnitts- überschrift"
- * - master.placeholders [dropped, unsupported] — the 58 placeholder definition(s) across 11 slide layout(s) are
- *   not reproduced: the write path seeds every slide with each layout placeholder the slide did not populate,
- *   and since every source shape is authored here as concrete content rather than into a placeholder,
- *   re-declaring them would add an empty shape to every slide rather than a prompt
+ * - master.placeholders [dropped, unsupported] — 5 placeholder definition(s) across 1 slide layout(s) are not
+ *   reproduced: a slide on the layout leaves the placeholder out, and the write path seeds every slide with each
+ *   layout placeholder it does not fill, so re-declaring it would add an empty shape to that slide
  * - deck.docProps [dropped, unwritable] — only title, author, subject, revision and company round-trip;
  *   keywords, description, category, content status and last-modified-by have no write-API setter
  * - master.default (DEFAULT) [approximated, unsupported] — the write path seeds every presentation with a blank
@@ -87,16 +86,703 @@ pptx.title = 'Test'
 // One master per source layout, carrying its name, background and decoration. What a
 // layout does not bring across is its placeholder definitions; see the fidelity notes.
 pptx.defineSlideMaster({ background: { color: 'FFFFFF' }, title: 'Titelfolie' })
-pptx.defineSlideMaster({ background: { color: 'FFFFFF' }, title: 'Titel und Inhalt' })
-pptx.defineSlideMaster({ background: { color: 'FFFFFF' }, title: 'Abschnitts- überschrift' })
-pptx.defineSlideMaster({ background: { color: 'FFFFFF' }, title: 'Zwei Inhalte' })
-pptx.defineSlideMaster({ background: { color: 'FFFFFF' }, title: 'Vergleich' })
-pptx.defineSlideMaster({ background: { color: 'FFFFFF' }, title: 'Nur Titel' })
-pptx.defineSlideMaster({ background: { color: 'FFFFFF' }, title: 'Leer' })
-pptx.defineSlideMaster({ background: { color: 'FFFFFF' }, title: 'Inhalt mit Überschrift' })
-pptx.defineSlideMaster({ background: { color: 'FFFFFF' }, title: 'Bild mit Überschrift' })
-pptx.defineSlideMaster({ background: { color: 'FFFFFF' }, title: 'Titel und vertikaler Text' })
-pptx.defineSlideMaster({ background: { color: 'FFFFFF' }, title: 'Vertikaler Titel und Text' })
+pptx.defineSlideMaster(
+	{
+		background: { color: 'FFFFFF' },
+		objects: [
+			{
+				placeholder: {
+					options: { h: '1325563emu', idx: 0, name: 'title', type: 'title', w: '10515600emu', x: '838200emu', y: '365125emu' },
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '4351338emu',
+						idx: 1,
+						name: 'Inhaltsplatzhalter 2',
+						type: 'obj',
+						w: '10515600emu',
+						x: '838200emu',
+						y: '1825625emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 10,
+						name: 'Datumsplatzhalter 3',
+						type: 'dt',
+						w: '2743200emu',
+						x: '838200emu',
+						y: '6356350emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 11,
+						name: 'Fußzeilenplatzhalter 4',
+						type: 'ftr',
+						w: '4114800emu',
+						x: '4038600emu',
+						y: '6356350emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 12,
+						name: 'Foliennummernplatzhalter 5',
+						type: 'sldNum',
+						w: '2743200emu',
+						x: '8610600emu',
+						y: '6356350emu',
+					},
+				},
+			},
+		],
+		title: 'Titel und Inhalt',
+	}
+)
+pptx.defineSlideMaster(
+	{
+		background: { color: 'FFFFFF' },
+		objects: [
+			{
+				placeholder: {
+					options: { h: '2852737emu', idx: 0, name: 'title', type: 'title', w: '10515600emu', x: '831850emu', y: '1709738emu' },
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '1500187emu',
+						idx: 1,
+						name: 'Textplatzhalter 2',
+						type: 'body',
+						w: '10515600emu',
+						x: '831850emu',
+						y: '4589463emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 10,
+						name: 'Datumsplatzhalter 3',
+						type: 'dt',
+						w: '2743200emu',
+						x: '838200emu',
+						y: '6356350emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 11,
+						name: 'Fußzeilenplatzhalter 4',
+						type: 'ftr',
+						w: '4114800emu',
+						x: '4038600emu',
+						y: '6356350emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 12,
+						name: 'Foliennummernplatzhalter 5',
+						type: 'sldNum',
+						w: '2743200emu',
+						x: '8610600emu',
+						y: '6356350emu',
+					},
+				},
+			},
+		],
+		title: 'Abschnitts- überschrift',
+	}
+)
+pptx.defineSlideMaster(
+	{
+		background: { color: 'FFFFFF' },
+		objects: [
+			{
+				placeholder: {
+					options: { h: '1325563emu', idx: 0, name: 'title', type: 'title', w: '10515600emu', x: '838200emu', y: '365125emu' },
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '4351338emu',
+						idx: 1,
+						name: 'Inhaltsplatzhalter 2',
+						type: 'obj',
+						w: '5181600emu',
+						x: '838200emu',
+						y: '1825625emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '4351338emu',
+						idx: 2,
+						name: 'Inhaltsplatzhalter 3',
+						type: 'obj',
+						w: '5181600emu',
+						x: '6172200emu',
+						y: '1825625emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 10,
+						name: 'Datumsplatzhalter 4',
+						type: 'dt',
+						w: '2743200emu',
+						x: '838200emu',
+						y: '6356350emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 11,
+						name: 'Fußzeilenplatzhalter 5',
+						type: 'ftr',
+						w: '4114800emu',
+						x: '4038600emu',
+						y: '6356350emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 12,
+						name: 'Foliennummernplatzhalter 6',
+						type: 'sldNum',
+						w: '2743200emu',
+						x: '8610600emu',
+						y: '6356350emu',
+					},
+				},
+			},
+		],
+		title: 'Zwei Inhalte',
+	}
+)
+pptx.defineSlideMaster(
+	{
+		background: { color: 'FFFFFF' },
+		objects: [
+			{
+				placeholder: {
+					options: { h: '1325563emu', idx: 0, name: 'title', type: 'title', w: '10515600emu', x: '839788emu', y: '365125emu' },
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '823912emu',
+						idx: 1,
+						name: 'Textplatzhalter 2',
+						type: 'body',
+						w: '5157787emu',
+						x: '839788emu',
+						y: '1681163emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '3684588emu',
+						idx: 2,
+						name: 'Inhaltsplatzhalter 3',
+						type: 'obj',
+						w: '5157787emu',
+						x: '839788emu',
+						y: '2505075emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '823912emu',
+						idx: 3,
+						name: 'Textplatzhalter 4',
+						type: 'body',
+						w: '5183188emu',
+						x: '6172200emu',
+						y: '1681163emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '3684588emu',
+						idx: 4,
+						name: 'Inhaltsplatzhalter 5',
+						type: 'obj',
+						w: '5183188emu',
+						x: '6172200emu',
+						y: '2505075emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 10,
+						name: 'Datumsplatzhalter 6',
+						type: 'dt',
+						w: '2743200emu',
+						x: '838200emu',
+						y: '6356350emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 11,
+						name: 'Fußzeilenplatzhalter 7',
+						type: 'ftr',
+						w: '4114800emu',
+						x: '4038600emu',
+						y: '6356350emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 12,
+						name: 'Foliennummernplatzhalter 8',
+						type: 'sldNum',
+						w: '2743200emu',
+						x: '8610600emu',
+						y: '6356350emu',
+					},
+				},
+			},
+		],
+		title: 'Vergleich',
+	}
+)
+pptx.defineSlideMaster(
+	{
+		background: { color: 'FFFFFF' },
+		objects: [
+			{
+				placeholder: {
+					options: { h: '1325563emu', idx: 0, name: 'title', type: 'title', w: '10515600emu', x: '838200emu', y: '365125emu' },
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 10,
+						name: 'Datumsplatzhalter 2',
+						type: 'dt',
+						w: '2743200emu',
+						x: '838200emu',
+						y: '6356350emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 11,
+						name: 'Fußzeilenplatzhalter 3',
+						type: 'ftr',
+						w: '4114800emu',
+						x: '4038600emu',
+						y: '6356350emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 12,
+						name: 'Foliennummernplatzhalter 4',
+						type: 'sldNum',
+						w: '2743200emu',
+						x: '8610600emu',
+						y: '6356350emu',
+					},
+				},
+			},
+		],
+		title: 'Nur Titel',
+	}
+)
+pptx.defineSlideMaster(
+	{
+		background: { color: 'FFFFFF' },
+		objects: [
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 10,
+						name: 'Datumsplatzhalter 1',
+						type: 'dt',
+						w: '2743200emu',
+						x: '838200emu',
+						y: '6356350emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 11,
+						name: 'Fußzeilenplatzhalter 2',
+						type: 'ftr',
+						w: '4114800emu',
+						x: '4038600emu',
+						y: '6356350emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 12,
+						name: 'Foliennummernplatzhalter 3',
+						type: 'sldNum',
+						w: '2743200emu',
+						x: '8610600emu',
+						y: '6356350emu',
+					},
+				},
+			},
+		],
+		title: 'Leer',
+	}
+)
+pptx.defineSlideMaster(
+	{
+		background: { color: 'FFFFFF' },
+		objects: [
+			{
+				placeholder: {
+					options: { h: '1600200emu', idx: 0, name: 'title', type: 'title', w: '3932237emu', x: '839788emu', y: '457200emu' },
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '4873625emu',
+						idx: 1,
+						name: 'Inhaltsplatzhalter 2',
+						type: 'obj',
+						w: '6172200emu',
+						x: '5183188emu',
+						y: '987425emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '3811588emu',
+						idx: 2,
+						name: 'Textplatzhalter 3',
+						type: 'body',
+						w: '3932237emu',
+						x: '839788emu',
+						y: '2057400emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 10,
+						name: 'Datumsplatzhalter 4',
+						type: 'dt',
+						w: '2743200emu',
+						x: '838200emu',
+						y: '6356350emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 11,
+						name: 'Fußzeilenplatzhalter 5',
+						type: 'ftr',
+						w: '4114800emu',
+						x: '4038600emu',
+						y: '6356350emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 12,
+						name: 'Foliennummernplatzhalter 6',
+						type: 'sldNum',
+						w: '2743200emu',
+						x: '8610600emu',
+						y: '6356350emu',
+					},
+				},
+			},
+		],
+		title: 'Inhalt mit Überschrift',
+	}
+)
+pptx.defineSlideMaster(
+	{
+		background: { color: 'FFFFFF' },
+		objects: [
+			{
+				placeholder: {
+					options: { h: '1600200emu', idx: 0, name: 'title', type: 'title', w: '3932237emu', x: '839788emu', y: '457200emu' },
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '4873625emu',
+						idx: 1,
+						name: 'Bildplatzhalter 2',
+						type: 'pic',
+						w: '6172200emu',
+						x: '5183188emu',
+						y: '987425emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '3811588emu',
+						idx: 2,
+						name: 'Textplatzhalter 3',
+						type: 'body',
+						w: '3932237emu',
+						x: '839788emu',
+						y: '2057400emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 10,
+						name: 'Datumsplatzhalter 4',
+						type: 'dt',
+						w: '2743200emu',
+						x: '838200emu',
+						y: '6356350emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 11,
+						name: 'Fußzeilenplatzhalter 5',
+						type: 'ftr',
+						w: '4114800emu',
+						x: '4038600emu',
+						y: '6356350emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 12,
+						name: 'Foliennummernplatzhalter 6',
+						type: 'sldNum',
+						w: '2743200emu',
+						x: '8610600emu',
+						y: '6356350emu',
+					},
+				},
+			},
+		],
+		title: 'Bild mit Überschrift',
+	}
+)
+pptx.defineSlideMaster(
+	{
+		background: { color: 'FFFFFF' },
+		objects: [
+			{
+				placeholder: {
+					options: { h: '1325563emu', idx: 0, name: 'title', type: 'title', w: '10515600emu', x: '838200emu', y: '365125emu' },
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '4351338emu',
+						idx: 1,
+						name: 'Vertikaler Textplatzhalter 2',
+						type: 'body',
+						w: '10515600emu',
+						x: '838200emu',
+						y: '1825625emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 10,
+						name: 'Datumsplatzhalter 3',
+						type: 'dt',
+						w: '2743200emu',
+						x: '838200emu',
+						y: '6356350emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 11,
+						name: 'Fußzeilenplatzhalter 4',
+						type: 'ftr',
+						w: '4114800emu',
+						x: '4038600emu',
+						y: '6356350emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 12,
+						name: 'Foliennummernplatzhalter 5',
+						type: 'sldNum',
+						w: '2743200emu',
+						x: '8610600emu',
+						y: '6356350emu',
+					},
+				},
+			},
+		],
+		title: 'Titel und vertikaler Text',
+	}
+)
+pptx.defineSlideMaster(
+	{
+		background: { color: 'FFFFFF' },
+		objects: [
+			{
+				placeholder: {
+					options: { h: '5811838emu', idx: 0, name: 'title', type: 'title', w: '2628900emu', x: '8724900emu', y: '365125emu' },
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '5811838emu',
+						idx: 1,
+						name: 'Vertikaler Textplatzhalter 2',
+						type: 'body',
+						w: '7734300emu',
+						x: '838200emu',
+						y: '365125emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 10,
+						name: 'Datumsplatzhalter 3',
+						type: 'dt',
+						w: '2743200emu',
+						x: '838200emu',
+						y: '6356350emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 11,
+						name: 'Fußzeilenplatzhalter 4',
+						type: 'ftr',
+						w: '4114800emu',
+						x: '4038600emu',
+						y: '6356350emu',
+					},
+				},
+			},
+			{
+				placeholder: {
+					options: {
+						h: '365125emu',
+						idx: 12,
+						name: 'Foliennummernplatzhalter 5',
+						type: 'sldNum',
+						w: '2743200emu',
+						x: '8610600emu',
+						y: '6356350emu',
+					},
+				},
+			},
+		],
+		title: 'Vertikaler Titel und Text',
+	}
+)
 
 // Slide 1 — master "Titelfolie"
 const slide1 = pptx.addSlide({ masterTitle: 'Titelfolie' })

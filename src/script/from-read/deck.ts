@@ -36,7 +36,7 @@ import {
 } from '../ir.js'
 import { shapeCall, unwritableFramePayload } from './shape.js'
 import type { AssetResolver, MapContext } from './context.js'
-import { chromeToIr } from './chrome.js'
+import { chromeToIr, pruneUnfilledPlaceholders } from './chrome.js'
 import { transitionToIr } from './transition.js'
 import { slideNumberIr } from './slide-number.js'
 import { compact, inches, literalColor, orUndefined, schemeColorOption } from './values.js'
@@ -137,6 +137,7 @@ export function readModelToIr(pres: Presentation): DeckIr {
 	const slides = pres.slides.map((slide, index) =>
 		slideToIr(slide, index + 1, collector, { assets, slideNumberOf }, layouts)
 	)
+	pruneUnfilledPlaceholders(chrome, slides, deckScope)
 
 	return {
 		slideSize: size ? { widthEmu: size.widthEmu, heightEmu: size.heightEmu } : { ...ABSENT_SLIDE_SIZE_EMU },
