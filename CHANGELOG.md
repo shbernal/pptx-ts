@@ -124,6 +124,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **An unknown `hyperlink.action` throws `hyperlink/invalid-action`.** It was written into
+  `ppaction://hlinkshowjump?jump=…` as given, and PowerPoint refused the deck as corrupt
+  (`0x80070570`). `'prevslide'` in plain JavaScript is the usual slip; the jump is `'previousslide'`
+  ([#149](https://github.com/shbernal/pptx-ts/issues/149)).
 - **A chart's embedded workbook no longer stamps the clock.** Its own `docProps/core.xml` carried
   `dcterms:created` and `dcterms:modified`, so two writes of a deck with a chart differed inside the
   workbook, a part a consumer comparing packages cannot exclude by name. The workbook now states no
