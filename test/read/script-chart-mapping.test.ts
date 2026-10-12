@@ -467,3 +467,72 @@ describe('chart settings the read model reads come back as their options', () =>
 		expect(own.seriesOptions).toEqual([{ dataLabelFormatCode: '0.0' }, { dataLabelFormatCode: '0%' }])
 	})
 })
+
+describe("chart mapping: a scatter's own data labels", () => {
+	/** A scatter of one labelled Y series and one plain one, authored with `options`, read back. */
+	async function scatterIr(options: ChartOpts, labels = ['a', '', 'c']) {
+		const data = [
+			{ name: 'X', values: [1, 2, 3] },
+			{ name: 'Y1', values: [4, 5, 6], labels },
+			{ name: 'Y2', values: [7, 8, 9] },
+		]
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addChart(data, { type: ChartType.scatter, x: 1, y: 1, w: 5, h: 4, showLabel: true, ...options })
+		})
+		return readModelToIr(presentation)
+	}
+
+	// A scatter came back with no labels and no `dataLabelFormatScatter`, and no note said so (#166).
+	for (const format of ['custom', 'customXY'] as const) {
+		test(`'${format}' carries its format and each series' label text`, async () => {
+			const ir = await scatterIr({ dataLabelFormatScatter: format })
+			const call = chartCall(ir)
+			expect(optionsOf(call)).toMatchObject({ showLabel: true, dataLabelFormatScatter: format })
+			expect(seriesOf(call).map((row) => row.labels)).toEqual([undefined, ['a', '', 'c'], undefined])
+			expect(ir.fidelity.filter((note) => note.construct === 'chart.labels')).toEqual([])
+		})
+	}
+
+	test("'XY' carries as the series' value and category-name labels", async () => {
+		const ir = await scatterIr({ dataLabelFormatScatter: 'XY' }, [])
+		expect(optionsOf(chartCall(ir))).toMatchObject({ showLabel: true, dataLabelFormatScatter: 'XY' })
+	})
+
+	test('the read model reports each label, its text and its fields', async () => {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addChart(
+				[
+					{ name: 'X', values: [1, 2] },
+					{ name: 'Y', values: [3, 4], labels: ['a', 'b'] },
+				],
+				{ type: ChartType.scatter, x: 1, y: 1, w: 5, h: 4, showLabel: true, dataLabelFormatScatter: 'customXY' }
+			)
+		})
+		const frame = defined(at(presentation.slides, 0).shapes.find((shape) => 'chart' in shape && shape.chart))
+		const series = at(defined((frame as { chart: { series: { customLabels: unknown }[] } }).chart).series, 0)
+		expect(series.customLabels).toEqual(
+			[0, 1].map((index) => ({
+				index,
+				runs: [
+					{ text: index === 0 ? 'a' : 'b', field: null },
+					{ text: ' (', field: null },
+					{ text: '[Y', field: 'XVALUE' },
+					{ text: ', ', field: null },
+					{ text: '[Y]', field: 'YVALUE' },
+					{ text: ')', field: null },
+				],
+			}))
+		)
+	})
+
+	test('label text on a bar chart is noted, since only a scatter writes it', async () => {
+		const { buf } = await authorRead((pres) => {
+			pres.addSlide().addChart(SERIES, { type: ChartType.bar, x: 1, y: 1, w: 5, h: 4, showValue: true })
+		})
+		const label =
+			'<c:dLbl><c:idx val="0"/><c:tx><c:rich><a:bodyPr/><a:p><a:r><a:t>own</a:t></a:r></a:p></c:rich></c:tx><c:showLegendKey val="0"/><c:showVal val="1"/><c:showCatName val="0"/><c:showSerName val="0"/><c:showPercent val="0"/><c:showBubbleSize val="0"/></c:dLbl>'
+		const ir = await irWithChartXml(buf, (xml) => xml.replace(/(<c:ser>(?:(?!<\/c:ser>)[^])*?<c:dLbls>)/, `$1${label}`))
+		const note = ir.fidelity.find((one) => one.construct === 'chart.labels')
+		expect(note?.disposition).toBe('dropped')
+	})
+})

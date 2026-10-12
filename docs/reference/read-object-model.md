@@ -443,6 +443,7 @@ A run's own getters and its resolved getters answer different questions:
 - [`chartType`](api/read/classes/Chart.md#charttype) is the first plot group's type. [`chartTypes`](api/read/classes/Chart.md#charttypes) lists every group, several for a combo chart.
 - [`Chart.categories`](api/read/classes/Chart.md#categories) and [`categoryLevels`](api/read/classes/Chart.md#categorylevels) come from the first series.
 - [`Chart.dataLabels`](api/read/classes/Chart.md#datalabels) is the first plot group's labels block. [`ChartSeries.dataLabels`](api/read/classes/ChartSeries.md#datalabels) is the series' own. A pie keeps the flags the user set on the series, and an all-off block on the group.
+- [`ChartSeries.customLabels`](api/read/classes/ChartSeries.md#customlabels) lists the labels that state their own text (`c:dLbl` with `c:tx/c:rich`), such as a scatter's custom labels, each with its point index and its runs. A field (`a:fld`) reads as a run with its `field` type, `XVALUE` or `YVALUE` for the values `dataLabelFormatScatter: 'customXY'` appends.
 - A bar or area series has no `a:ln` by default, so its [`line`](api/read/classes/ChartSeries.md#line) reads `null`.
 
 | Series | Where the data is |
