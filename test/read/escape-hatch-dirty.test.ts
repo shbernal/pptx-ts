@@ -217,7 +217,7 @@ describe('element_ with markDirty()', () => {
 	test('Chart.markDirty() reserializes the chart part, not the slide', async () => {
 		const { changed } = await saveAfter('bar-chart-data-labels', (presentation) => {
 			const chart = firstFramed(presentation, (shape) => shape.chart)
-			defined(chart.element_).setAttribute('xmlns:tspptx', 'urn:test')
+			defined(chart.element_).setAttribute('xmlns:pptxts', 'urn:test')
 			chart.markDirty()
 		})
 		assertEqual(changed.length, 1, 'exactly one part should be reserialized')
@@ -284,7 +284,7 @@ describe('chartEx element_ / markDirty()', () => {
 	test('a chartEx edit through element_ is dropped without markDirty()', async () => {
 		const { changed } = await saveAfterAuthored(authorWaterfall, (presentation) => {
 			const cx = firstFramed(presentation, (shape) => shape.chartEx)
-			defined(cx.element_).setAttribute('xmlns:tspptx', 'urn:test')
+			defined(cx.element_).setAttribute('xmlns:pptxts', 'urn:test')
 		})
 		assertEqual(changed.length, 0, 'no part should be reserialized without markDirty()')
 	})
@@ -292,7 +292,7 @@ describe('chartEx element_ / markDirty()', () => {
 	test('ChartEx.markDirty() reserializes the chartEx part, not the slide', async () => {
 		const { changed } = await saveAfterAuthored(authorWaterfall, (presentation) => {
 			const cx = firstFramed(presentation, (shape) => shape.chartEx)
-			defined(cx.element_).setAttribute('xmlns:tspptx', 'urn:test')
+			defined(cx.element_).setAttribute('xmlns:pptxts', 'urn:test')
 			cx.markDirty()
 		})
 		assertOneChartPart(changed)
@@ -419,7 +419,7 @@ describe('diagram element_ / markDirty()', () => {
 
 	test('a diagram edit through element_ is dropped without markDirty()', async () => {
 		const { changed } = await saveAfter('mixed', (presentation) => {
-			defined(diagramOf(presentation).element_).setAttribute('xmlns:tspptx', 'urn:test')
+			defined(diagramOf(presentation).element_).setAttribute('xmlns:pptxts', 'urn:test')
 		})
 		assertEqual(changed.length, 0, 'no part should be reserialized without markDirty()')
 	})
@@ -427,7 +427,7 @@ describe('diagram element_ / markDirty()', () => {
 	test('Diagram.markDirty() reserializes the data part, not the slide', async () => {
 		const { changed } = await saveAfter('mixed', (presentation) => {
 			const diagram = diagramOf(presentation)
-			defined(diagram.element_).setAttribute('xmlns:tspptx', 'urn:test')
+			defined(diagram.element_).setAttribute('xmlns:pptxts', 'urn:test')
 			diagram.markDirty()
 		})
 		assertOnlyDataPart(changed)

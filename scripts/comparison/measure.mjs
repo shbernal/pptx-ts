@@ -163,9 +163,9 @@ async function publishDate(version) {
  * @returns {Promise<Record<string, () => any>>}
  */
 async function loadSubjects(upstreamRoot) {
-	const tsPptx = await import(pathToFileURL(path.join(ROOT, 'dist', 'node.js')).href)
+	const pptxTs = await import(pathToFileURL(path.join(ROOT, 'dist', 'node.js')).href)
 	const upstream = await import(pathToFileURL(path.join(upstreamRoot, 'dist', 'pptxgen.es.js')).href)
-	const PptxTs = tsPptx.default
+	const PptxTs = pptxTs.default
 	const PptxGenJS = upstream.default
 	return {
 		'pptx-ts': () => new PptxTs(),
