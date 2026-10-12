@@ -1029,6 +1029,8 @@ function seriesShadowOption(series: ChartSeries | null, notes: NoteScope): IrVal
 		offset: source.offsetPt,
 		angle: source.angleDeg,
 		transparency: alphaToTransparency(source.colorRef.resolved?.alpha),
+		// The writer writes `rotWithShape="1"` when it is left out, so only the off state needs saying.
+		rotateWithShape: outer?.rotateWithShape === false ? false : undefined,
 	})
 }
 
@@ -1054,6 +1056,7 @@ const PLOT_DEFAULTS = {
 	shape: 'box',
 	symbol: 'circle',
 	symbolSize: 6,
+	symbolLineSize: 0.75,
 	rotX: 30,
 	rotY: 30,
 	perspective: 30,
@@ -1061,6 +1064,24 @@ const PLOT_DEFAULTS = {
 	holeSize: 50,
 	radarStyle: 'standard',
 	displayBlanksAs: 'gap',
+}
+
+/**
+ * A series marker's outline colour as `lineDataSymbolLineColor`, or `undefined` where it is the
+ * series' own colour, which the writer outlines a marker in when the option is left out (#188).
+ */
+function markerLineColor(series: ChartSeries | null, notes: NoteScope): string | undefined {
+	const line = series?.marker?.line ?? null
+	if (!series || !line || line.noFill || line.colorTransformed) return undefined
+	const own = series.line?.colorRef ?? series.fill?.colorRef ?? null
+	const color = line.colorRef
+	if (own && own.srgb === color.srgb && own.scheme === color.scheme) return undefined
+	return colorOption(
+		{ scheme: color.scheme, ownHex: color.srgb, resolvedHex: null },
+		notes,
+		'chart.schemeToken',
+		'chart marker outline'
+	)
 }
 
 /** A number, or `undefined` when it is `null` or the writer's own `fallback`. */
@@ -1122,6 +1143,10 @@ function plotGroupOptions(chart: Chart, type: string, notes: NoteScope): Record<
 		const marker = series[0]?.marker
 		options['lineDataSymbol'] = differs(marker?.symbol, PLOT_DEFAULTS.symbol)
 		options['lineDataSymbolSize'] = differsNumber(marker?.size, PLOT_DEFAULTS.symbolSize)
+		options['lineDataSymbolLineSize'] = marker?.line?.noFill
+			? undefined
+			: differsNumber(marker?.line?.widthPt, PLOT_DEFAULTS.symbolLineSize)
+		options['lineDataSymbolLineColor'] = markerLineColor(series[0] ?? null, notes)
 	}
 	if (type === 'pie' || type === 'doughnut')
 		options['firstSliceAng'] = differsNumber(group.firstSliceAngle, PLOT_DEFAULTS.firstSliceAng)
