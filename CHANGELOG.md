@@ -88,6 +88,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   workbook, a part a consumer comparing packages cannot exclude by name. The workbook now states no
   timestamp; the deck's `docProps/core.xml` keeps its dates
   ([#145](https://github.com/shbernal/pptx-ts/issues/145)).
+- **`textWarp` on a table or cell warns `table/option-not-supported`.** A cell took it from
+  `TextBaseProps` and wrote nothing, with nothing reported; PowerPoint has no text transform in a
+  table cell ([#84](https://github.com/shbernal/pptx-ts/issues/84)).
 - **A chart or plot area paints a picture fill.** `chartArea.fill` and `plotArea.fill` with
   `type: 'image'` wrote no fill and warned that the caller's `image.data` was missing. The chart part
   now declares the picture and writes an `a:blipFill`, through `write()`, `extractSlides()` and

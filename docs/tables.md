@@ -445,6 +445,7 @@ flowchart TD
 | an empty string as a colour | warns, ignored | `color/empty-string` |
 | an SVG picture fill | warns, ignored | `image-fill/svg-unsupported` |
 | `fit: 'shrink'` on a font it cannot measure | warns | `measure/shrink-unmeasured` |
+| `textWarp` on the table or a cell | warns, ignored | `table/option-not-supported` |
 
 Editing an existing table throws instead of warning. See [Reading it back](#reading-it-back).
 
@@ -452,6 +453,7 @@ Editing an existing table throws instead of warning. See [Reading it back](#read
 
 - Only PowerPoint's built-in table styles render. A custom table style never does.
 - Cell text always wraps. PowerPoint has no per-cell no-wrap.
+- Cell text cannot be warped. PowerPoint has no text transform in a table cell.
 - Screen-reader links from a cell to its header cells cannot be authored. PowerPoint deletes them on the first save, and `hasHeader` is the header marker it keeps.
 - No table-level effects, such as a shadow on the whole table. PowerPoint has no control for one.
 - A span covers at most 1000 columns or rows.
