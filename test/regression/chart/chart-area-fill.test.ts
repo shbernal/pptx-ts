@@ -1,5 +1,14 @@
 import { ChartType, type ChartOpts, type GradientFillProps } from '../../../dist/node.js'
-import { defineRegressionSuite, build, captureDiagnostics, assert, assertEqual } from '../../helpers.ts'
+import {
+	defineRegressionSuite,
+	build,
+	captureDiagnostics,
+	assert,
+	assertEqual,
+	listEntries,
+	readEntry,
+	PNG_1X1,
+} from '../../helpers.ts'
 import { chartXml } from './chart-parts.ts'
 
 // The fill slot of the two `c:spPr` elements a chart part carries: the plot area's (written by
@@ -144,19 +153,32 @@ defineRegressionSuite('Chart area and plot area fills', [
 		},
 	},
 	{
-		// The one kind that cannot work here. A blip fill needs a media relationship on the chart
-		// part and nothing registers one -- `registerImageFillMedia` only runs for shape and slide
-		// fills. The pixels are the same as before the fix; what is new is that you are told.
-		name: "type 'image' is not supported on a chart and says so instead of failing silently",
+		// A blip fill needs a media relationship on the chart part, and nothing registered one, so the
+		// area wrote no fill and warned that the caller's `image.data` was missing (#139). The picture
+		// is now the chart part's: an `a:blipFill` over a relationship the chart part declares, to a
+		// media part the package carries, and the slide declares none for it.
+		name: "type 'image' paints a picture the chart part references",
 		fn: async () => {
 			const { result, codes } = await captureDiagnostics(() =>
-				fillsFor({ chartArea: { fill: { type: 'image', image: { path: 'test/assets/cc_logo.jpg' } } } })
+				build((p) => {
+					p.addSlide().addChart(SERIES, {
+						...BASE,
+						chartArea: { fill: { type: 'image', image: { path: 'test/assets/cc_logo.jpg' } } },
+						plotArea: { fill: { type: 'image', image: { data: PNG_1X1 } } },
+					})
+				})
 			)
-			assertEqual(result.space, '<a:noFill/>', 'the chart area falls back to no fill')
-			assert(
-				codes.includes('image-fill/unresolved-media'),
-				'expected an image-fill/unresolved-media diagnostic; got: ' + JSON.stringify(codes)
-			)
+			assert(!codes.includes('image-fill/unresolved-media'), 'no unresolved-media warning: ' + JSON.stringify(codes))
+			const xml = await chartXml(result.zip)
+			const embeds = [...xml.matchAll(/<a:blipFill\b[^>]*><a:blip r:embed="(rId\d+)"/g)].map((match) => match[1])
+			assertEqual(JSON.stringify(embeds), JSON.stringify(['rId3', 'rId2']), 'the plot area, then the chart area')
+			const rels = await readEntry(result.zip, 'ppt/charts/_rels/chart1.xml.rels')
+			for (const rId of ['rId2', 'rId3']) {
+				const target = new RegExp(`Id="${rId}" Type="[^"]*/image" Target="\\.\\./media/([^"]+)"`).exec(rels)?.[1]
+				assert(target && listEntries(result.zip).includes(`ppt/media/${target}`), `${rId} names a media part: ${rels}`)
+			}
+			const slideRels = await readEntry(result.zip, 'ppt/slides/_rels/slide1.xml.rels')
+			assert(!slideRels.includes('/image"'), 'the slide declares no image of its own: ' + slideRels)
 		},
 	},
 ])

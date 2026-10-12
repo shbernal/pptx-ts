@@ -799,6 +799,8 @@ export function slideObjectRelationsToXml(
 		rels.push(relationshipEl(rel.rId, rel.isChartEx ? CHARTEX_REL : CHART_REL, rel.Target))
 	})
 	;(slide._relsMedia || []).forEach((rel: SlideRelMedia) => {
+		// A chart area's picture: the chart part declares it, and nothing on the slide references it.
+		if (rel.chartOwned) return
 		const relType = rel.type.toLowerCase()
 		// Recorded at the point of emission, never earlier: "first one wins the ECMA type, second
 		// gets the MS type" is the whole pairing rule for audio, video and online video, so the

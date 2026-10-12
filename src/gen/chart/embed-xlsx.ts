@@ -25,6 +25,7 @@ import {
 	CORE_PROPS_REL,
 	EXTENDED_PROPS_CONTENT_TYPE,
 	EXTENDED_PROPS_REL,
+	IMAGE_REL,
 	OFFICE_DOCUMENT_REL,
 	OFFICE_REL,
 	PACKAGE_REL,
@@ -432,14 +433,23 @@ function buildXlsxSheet(data: OptsChartDataInternal[], layout: WorksheetLayout):
 }
 
 /**
- * Build the standalone `.rels` for a classic chart part: a single `rId1` relationship to the
- * chart's embedded workbook (`Target`). Package write path only: `appendSlides` builds a chart's
- * relationships through the package model instead.
+ * Build the standalone `.rels` for a classic chart part: an `rId1` relationship to the chart's
+ * embedded workbook (`Target`), then one per picture an area fill paints. A media `Target` is
+ * `../media/…` from `ppt/slides/` and from `ppt/charts/` alike, so the slide's reads the same here.
+ * Package write path only: `appendSlides` builds a chart's relationships through the package model
+ * instead.
  * @param {string} embeddingTarget - the workbook target, relative to the chart part
+ * @param media - the chart's pictures, {@link SlideRelChart.media}
  * @return {string} the chart part's `.rels` XML
  */
-function buildChartRelsXml(embeddingTarget: string): string {
-	return XML_DECL + relationshipsEl([relationshipEl('rId1', PACKAGE_REL, embeddingTarget)])
+function buildChartRelsXml(embeddingTarget: string, media: SlideRelChart['media']): string {
+	return (
+		XML_DECL +
+		relationshipsEl([
+			relationshipEl('rId1', PACKAGE_REL, embeddingTarget),
+			...(media ?? []).map((picture) => relationshipEl(`rId${picture.rId}`, IMAGE_REL, picture.rel.Target)),
+		])
+	)
 }
 
 /**
@@ -512,7 +522,7 @@ export async function createExcelWorksheet(chartObject: SlideRelChart, zip: ZipW
 			buildChartExRelsXml(embeddingTarget, names.colorsName, names.styleName)
 		)
 	} else {
-		zip.add('ppt/charts/_rels/' + chartObject.fileName + '.rels', buildChartRelsXml(embeddingTarget))
+		zip.add('ppt/charts/_rels/' + chartObject.fileName + '.rels', buildChartRelsXml(embeddingTarget, chartObject.media))
 	}
 	zip.add(`ppt/charts/${chartObject.fileName}`, bodies.chartXml)
 
