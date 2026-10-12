@@ -132,6 +132,7 @@ describe('deck IR — corpus invariants', () => {
 		addChart: 2,
 		addConnector: 1,
 		addGroup: 2,
+		addComment: 1,
 	}
 
 	test.for(fixtureNames)('%s calls only real write-API methods, with their arguments', async (name) => {

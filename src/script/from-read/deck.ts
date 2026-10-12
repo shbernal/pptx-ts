@@ -273,6 +273,9 @@ function slideToIr(
 		if (call) calls.push(call)
 	}
 
+	// Comments are no shapes and draw nothing, so they follow the shapes.
+	calls.push(...commentCalls(slide, notes))
+
 	// Build animations are recorded once per slide rather than per shape, since they live in a
 	// slide-scoped element with no shape to attribute them to.
 	recordAnimationLoss(slide, notes)
@@ -402,6 +405,47 @@ function unwritableNotesFormatting(paragraph: Paragraph): string[] {
 		if (run.charSpacingPt) found.push('character spacing')
 	}
 	return found
+}
+
+/**
+ * A slide's legacy review comments as `addComment` calls, in document order (#207). `Slide.comments`
+ * reads every field `addComment` writes; the marker position is EMU on the read side and inches on
+ * the write side. A comment `addComment` would refuse (no author it can name, or no text) is noted.
+ *
+ * Modern (`p188`) comments have no write option, so they are noted rather than dropped silently.
+ */
+function commentCalls(slide: Slide, notes: NoteScope): CallIr[] {
+	const calls: CallIr[] = []
+	for (const comment of slide.comments) {
+		if (!comment.author || !comment.text) {
+			notes.note(
+				'slide.comment',
+				'dropped',
+				'unwritable',
+				'this review comment names no author the deck registers, or has no text, and addComment takes neither as empty, so it is dropped'
+			)
+			continue
+		}
+		const options = compact({
+			author: comment.author,
+			initials: comment.authorInitials || undefined,
+			text: comment.text,
+			x: comment.x === null ? undefined : inches(comment.x),
+			y: comment.y === null ? undefined : inches(comment.y),
+			date: orUndefined(comment.date),
+		})
+		if (options) calls.push({ method: 'addComment', args: [options] })
+	}
+	const modern = slide.modernComments.length
+	if (modern > 0) {
+		notes.note(
+			'slide.comment.modern',
+			'dropped',
+			'unwritable',
+			`this slide holds ${modern} modern review comment thread(s) (p188:cm), and addComment writes only the legacy kind, so they are dropped`
+		)
+	}
+	return calls
 }
 
 /**

@@ -262,6 +262,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   chart writer reads none but `lang`, so a chart given them was byte-identical to one without. They
   are now named in one `chart/option-not-supported` warning; a chart's text is styled through its
   own options ([#138](https://github.com/shbernal/pptx-ts/issues/138)).
+- **A slide's review comments carry through `readModelToIr` as `addComment`.** They were dropped
+  with no note, though `Slide.comments` reads every field `addComment` writes, so a round trip lost
+  them with a clean report. Each legacy comment comes back with its author, initials, text, marker
+  position and date. Modern (`p188`) comments, which `addComment` cannot write, are noted under
+  `slide.comment.modern` ([#207](https://github.com/shbernal/pptx-ts/issues/207)).
 - **Embedded audio and video carry through `readModelToIr` as `addMedia`.** A clip was read back
   as an `addImage` of its poster frame, because no accessor reported the media part, its kind or
   its loop timing. The new `Picture.media` reads them (`kind`, `partName`, `contentType`, `link`,
