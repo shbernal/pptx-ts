@@ -251,6 +251,23 @@ describe('chart data keeps the shape addChart takes', () => {
 			['North', '', 'South', ''],
 		])
 	})
+
+	test('every series keeps its categories, which the writer gives only a series stating labels', async () => {
+		// The mapper put the labels on the first series alone, and a series with no `labels` is
+		// written with no `c:cat`, so every later series lost its categories on the way back (#141).
+		const data = [
+			{ name: 'North', labels: ['Q1', 'Q2', 'Q3'], values: [4, 7, 5] },
+			{ name: 'South', labels: ['Q1', 'Q2', 'Q3'], values: [3, 5, 8] },
+		]
+		for (const type of [ChartType.bar, ChartType.line, ChartType.area, ChartType.radar]) {
+			const { presentation } = await authorRead((pres) => {
+				pres.addSlide().addChart(data, { type, x: 1, y: 1, w: 6, h: 4 })
+			})
+			const series = seriesOf(chartCall(readModelToIr(presentation)))
+			for (const [index, one] of series.entries())
+				expect(one.labels, `${type} series ${index}`).toEqual(['Q1', 'Q2', 'Q3'])
+		}
+	})
 })
 
 /** The options argument of slide 1's chart call. */

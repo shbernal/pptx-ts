@@ -73,6 +73,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`readModelToIr` gives every chart series its own category labels.** Only the first series
+  carried `labels`, and `addChart` writes no `c:cat` for a series without them, so a rebuilt chart
+  plotted every later series against 1, 2, 3 ([#141](https://github.com/shbernal/pptx-ts/issues/141)).
 - **A slide object filling a layout placeholder no longer writes `hasCustomPrompt`.** `addText`
   and `addImage` with `placeholder` copied the flag from the layout's definition onto the slide's
   `p:ph`, so a filled shape claimed its own text was prompt text. Only the layout or master

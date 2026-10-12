@@ -148,25 +148,23 @@ export function chartCall(frame: GraphicFrame, chart: Chart, notes: NoteScope): 
 }
 
 /**
- * Series as `OptsChartData[]`. Category labels ride on the first series, which is the shape
- * `addChart` expects; the read model reports them per-series but they are shared in
- * practice.
+ * Series as `OptsChartData[]`, each with its own category labels. The writer gives a series
+ * `c:cat` only when it states `labels`, so labels on the first series alone left every later
+ * one plotted against 1, 2, 3 (#141).
  */
 function seriesData(chart: Chart, notes: NoteScope): IrValue[] {
-	// Leaf level first, which is also how `OptsChartData.labels` takes several levels. An outer
-	// level names each group once, and the writer spells the rest of the group as `''`.
-	const levels = chart.categoryLevels.map((level) => level.map((label) => label ?? ''))
-	const labels = levels.length > 1 ? levels : levels[0]
 	const dense = blanksToZero(notes)
 
-	return chart.series.map((series, index) => {
+	return chart.series.map((series) => {
+		// Leaf level first, which is also how `OptsChartData.labels` takes several levels. An outer
+		// level names each group once, and the writer spells the rest of the group as `''`.
+		const levels = series.categoryLevels.map((level) => level.map((label) => label ?? ''))
 		const values = dense(series.values)
 		return (
 			compact({
 				name: orUndefined(series.name),
 				values,
-				// Only the first series carries labels, matching how addChart reads them.
-				labels: index === 0 && levels[0]?.length ? labels : undefined,
+				labels: levels[0]?.length ? (levels.length > 1 ? levels : levels[0]) : undefined,
 			}) ?? { values }
 		)
 	})
