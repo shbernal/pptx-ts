@@ -64,6 +64,30 @@ export interface ChartDataLabels {
 	numberFormat: AxisNumberFormat | null
 }
 
+/** The 3-D view of a chart (`c:chart/c:view3D`). Every field is `null` when the element leaves it unstated. */
+export interface ChartView3D {
+	/** Tilt in degrees (`c:rotX`), -90 to 90. */
+	rotX: number | null
+	/** Turn in degrees (`c:rotY`), 0 to 360. */
+	rotY: number | null
+	/** Field of view (`c:perspective`), 0 to 240, twice the angle in degrees. */
+	perspective: number | null
+	/** Whether the axes stay at right angles (`c:rAngAx`), which turns perspective off. */
+	rightAngleAxes: boolean | null
+}
+
+/** A series' data-point marker (`c:ser/c:marker`). */
+export interface ChartMarker {
+	/** The marker shape (`c:symbol`, `ST_MarkerStyle`: `circle`, `diamond`, `none`, …), or `null` when unstated. */
+	symbol: string | null
+	/** The marker size in points (`c:size`), 2 to 72, or `null` when unstated. */
+	size: number | null
+	/** The marker's solid fill, as {@link ChartSeries.fill} reads a series'. */
+	fill: ChartFill | null
+	/** The marker's outline, as {@link ChartSeries.line} reads a series'. */
+	line: ChartLine | null
+}
+
 /** A chart's data table (`c:plotArea/c:dTable`), the grid of values drawn under the plot. */
 export interface ChartDataTable {
 	/** Horizontal cell borders (`c:showHorzBorder`), or `null` when unstated. */
@@ -232,6 +256,39 @@ export class Chart {
 		return out
 	}
 
+	/**
+	 * The plot groups (`c:barChart`, `c:lineChart`, …) of the plot area, in document order, each
+	 * with what it sets on all its series and the series it plots. A combo chart has several.
+	 */
+	get plotGroups(): ChartPlotGroup[] {
+		return this.#chartGroups().map((group) => new ChartPlotGroup(group, this.part))
+	}
+
+	/** The 3-D view (`c:chart/c:view3D`), or `null` when the chart states none. */
+	get view3D(): ChartView3D | null {
+		const chart = this.#chart()
+		const view = chart && firstChild(chart, 'c:view3D')
+		if (!view) return null
+		const number = (qname: string): number | null => {
+			const element = firstChild(view, qname)
+			return element ? numberValue(attr(element, 'val')) : null
+		}
+		const rAngAx = firstChild(view, 'c:rAngAx')
+		return {
+			rotX: number('c:rotX'),
+			rotY: number('c:rotY'),
+			perspective: number('c:perspective'),
+			rightAngleAxes: rAngAx ? boolValue(attr(rAngAx, 'val')) : null,
+		}
+	}
+
+	/** How blank cells plot (`c:chart/c:dispBlanksAs`): `gap`, `zero` or `span`, or `null` when unstated. */
+	get displayBlanksAs(): string | null {
+		const chart = this.#chart()
+		const element = chart && firstChild(chart, 'c:dispBlanksAs')
+		return element ? attr(element, 'val') : null
+	}
+
 	/** The data series (`c:ser`) across all chart groups, in document order. */
 	get series(): ChartSeries[] {
 		return this.#chartGroups()
@@ -285,6 +342,113 @@ export class Chart {
 			if (element.namespaceURI === OOXML_NS.c && element.localName?.endsWith('Chart')) groups.push(element)
 		}
 		return groups
+	}
+}
+
+/**
+ * One plot group of a chart's plot area (`c:barChart`, `c:lineChart`, `c:pieChart`, …): the series
+ * it plots and what it sets on all of them. Each accessor reads `null` (or `false` for an element
+ * that is either there or not) where the group does not state it, including on a plot type whose
+ * schema has no such element.
+ */
+export class ChartPlotGroup {
+	constructor(
+		private readonly group: Element,
+		/** The owning chart's OPC part, so {@link markDirty} can reach it from {@link element_}. */
+		private readonly part: Part
+	) {}
+
+	/** The plot type, the element's local name less `Chart`: `bar`, `line`, `bar3D`, `doughnut`, … */
+	get type(): string {
+		return (this.group.localName ?? '').replace(/Chart$/, '')
+	}
+
+	/** The series this group plots (`c:ser`), in document order. */
+	get series(): ChartSeries[] {
+		return getElements(this.group, 'c:ser').map((ser) => new ChartSeries(ser, this.part))
+	}
+
+	/** A bar group's direction (`c:barDir`): `bar` (horizontal) or `col` (vertical). */
+	get barDirection(): string | null {
+		return this.#value('c:barDir')
+	}
+
+	/** How the series stack (`c:grouping`): `clustered`, `stacked`, `percentStacked` or `standard`. */
+	get grouping(): string | null {
+		return this.#value('c:grouping')
+	}
+
+	/** The gap between bar clusters as a percentage of a bar's width (`c:gapWidth`). */
+	get gapWidthPct(): number | null {
+		return this.#number('c:gapWidth')
+	}
+
+	/** How far bars in a cluster overlap, -100 to 100 percent (`c:overlap`). */
+	get overlapPct(): number | null {
+		return this.#number('c:overlap')
+	}
+
+	/** Whether stacked bars are joined by series lines (`c:serLines`). */
+	get seriesLines(): boolean {
+		return firstChild(this.group, 'c:serLines') !== null
+	}
+
+	/** The depth gap of a 3-D bar group, as a percentage (`c:gapDepth`). */
+	get gapDepthPct(): number | null {
+		return this.#number('c:gapDepth')
+	}
+
+	/** The group-wide 3-D bar shape (`c:shape`); a series can state its own ({@link ChartSeries.shape}). */
+	get shape(): string | null {
+		return this.#value('c:shape')
+	}
+
+	/** The angle of a pie's first slice, 0 to 360 degrees (`c:firstSliceAng`). */
+	get firstSliceAngle(): number | null {
+		return this.#number('c:firstSliceAng')
+	}
+
+	/** A doughnut's hole, 10 to 90 percent of its size (`c:holeSize`). */
+	get holeSizePct(): number | null {
+		return this.#number('c:holeSize')
+	}
+
+	/** A radar's style (`c:radarStyle`): `standard`, `marker` or `filled`. */
+	get radarStyle(): string | null {
+		return this.#value('c:radarStyle')
+	}
+
+	/** Whether a surface is drawn as a wireframe (`c:wireframe`). */
+	get wireframe(): boolean | null {
+		const element = firstChild(this.group, 'c:wireframe')
+		return element ? boolValue(attr(element, 'val')) : null
+	}
+
+	/** Whether a line or stock group draws up/down bars (`c:upDownBars`). */
+	get upDownBars(): boolean {
+		return firstChild(this.group, 'c:upDownBars') !== null
+	}
+
+	/** Escape hatch: the underlying plot-group element. After mutating it call {@link markDirty}, or `save()` writes the original bytes. */
+	get element_(): Element {
+		return this.group
+	}
+
+	/** Mark the owning chart part dirty so `save()` reserializes it. Call after mutating {@link element_}. */
+	markDirty(): void {
+		this.part.markDirty()
+	}
+
+	/** The `@val` of a named child, or `null`. */
+	#value(qname: string): string | null {
+		const element = firstChild(this.group, qname)
+		return element ? attr(element, 'val') : null
+	}
+
+	/** The `@val` of a named child as a number, or `null`. */
+	#number(qname: string): number | null {
+		const element = firstChild(this.group, qname)
+		return element ? numberValue(attr(element, 'val')) : null
 	}
 }
 
@@ -543,6 +707,40 @@ export class ChartSeries {
 	 */
 	get dataLabels(): ChartDataLabels | null {
 		return readDataLabels(firstChild(this.ser, 'c:dLbls'))
+	}
+
+	/** Whether a line or scatter series is smoothed (`c:smooth`), or `null` when unstated. */
+	get smooth(): boolean | null {
+		const element = firstChild(this.ser, 'c:smooth')
+		return element ? boolValue(attr(element, 'val')) : null
+	}
+
+	/** The series' data-point marker (`c:marker`), or `null` when it states none. */
+	get marker(): ChartMarker | null {
+		const marker = firstChild(this.ser, 'c:marker')
+		if (!marker) return null
+		const symbol = firstChild(marker, 'c:symbol')
+		const size = firstChild(marker, 'c:size')
+		const spPr = firstChild(marker, 'c:spPr')
+		const ln = spPr && firstChild(spPr, 'a:ln')
+		return {
+			symbol: symbol ? attr(symbol, 'val') : null,
+			size: size ? numberValue(attr(size, 'val')) : null,
+			fill: spPr ? readSolidFill(spPr) : null,
+			line: ln ? readLineBasics(ln, null) : null,
+		}
+	}
+
+	/** Whether a bar series paints a negative bar inverted (`c:invertIfNegative`), or `null` when unstated. */
+	get invertIfNegative(): boolean | null {
+		const element = firstChild(this.ser, 'c:invertIfNegative')
+		return element ? boolValue(attr(element, 'val')) : null
+	}
+
+	/** A 3-D bar series' own shape (`c:shape`: `box`, `cylinder`, `cone`, …), or `null` when unstated. */
+	get shape(): string | null {
+		const element = firstChild(this.ser, 'c:shape')
+		return element ? attr(element, 'val') : null
 	}
 
 	/** Escape hatch: the underlying `c:ser` element. After mutating it call {@link markDirty}, or `save()` writes the original bytes. */

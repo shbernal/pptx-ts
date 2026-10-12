@@ -5,7 +5,7 @@
 import { describe, expect, test } from 'vitest'
 import { isGraphicFrame, type Chart, type Presentation } from '../../dist/read.js'
 import { readModelToIr, type CallIr, type DeckIr } from '../../dist/script.js'
-import type { ChartOpts } from '../../dist/node.js'
+import type { CHART_NAME, ChartOpts } from '../../dist/node.js'
 import { assert, defined } from '../helpers.ts'
 import { authorRead } from './authored.ts'
 import { openFixture } from './corpus.ts'
@@ -74,5 +74,96 @@ describe('Chart.dataTable and Chart.metadata', () => {
 		const rebuilt = rebuiltOptions(readModelToIr(presentation), 'plain')
 		assert(!('showDataTable' in rebuilt) && !('metadata' in rebuilt), 'neither is rebuilt')
 		defined(rebuilt.type)
+	})
+})
+
+describe('Chart.plotGroups, Chart.view3D, Chart.displayBlanksAs and series markers', () => {
+	// Nothing set on a plot group, on its series' markers or on the 3-D view had an accessor, so
+	// readModelToIr rebuilt every chart with the writer's defaults for all of it (#131).
+
+	test("PowerPoint's plot groups read what each one sets", async () => {
+		const deck = await openFixture('chart-formatting')
+		const bar = defined(chartNamed(deck, 'stacked-bar-chart').plotGroups[0])
+		expect([bar.type, bar.barDirection, bar.grouping, bar.gapWidthPct, bar.overlapPct, bar.seriesLines]).toEqual([
+			'bar',
+			'bar',
+			'stacked',
+			80,
+			100,
+			true,
+		])
+		const line = chartNamed(deck, 'line-marker-chart')
+		expect(line.displayBlanksAs).toBe('zero')
+		const lineGroup = defined(line.plotGroups[0])
+		expect(lineGroup.upDownBars).toBe(true)
+		const first = defined(lineGroup.series[0])
+		expect([first.smooth, first.marker?.symbol, first.marker?.size]).toEqual([true, 'diamond', 12])
+		const doughnut = defined(chartNamed(deck, 'doughnut-chart').plotGroups[0])
+		expect([doughnut.holeSizePct, doughnut.firstSliceAngle]).toEqual([75, 90])
+		const column3d = chartNamed(deck, 'column-3d-chart')
+		expect(column3d.view3D).toEqual({ rotX: 20, rotY: 60, perspective: 40, rightAngleAxes: false })
+		const group3d = defined(column3d.plotGroups[0])
+		expect([group3d.gapDepthPct, group3d.shape, group3d.series[0]?.shape]).toEqual([300, 'box', 'cylinder'])
+		expect(defined(chartNamed(deck, 'radar-filled-chart').plotGroups[0]).radarStyle).toBe('filled')
+		expect(defined(chartNamed(deck, 'surface-wire-chart').plotGroups[0]).wireframe).toBe(true)
+		expect(defined(chartNamed(deck, 'invert-column-chart').series[0]).invertIfNegative).toBe(true)
+	})
+
+	test("readModelToIr rebuilds PowerPoint's groups with their settings, and notes an inverted bar", async () => {
+		const ir = readModelToIr(await openFixture('chart-formatting'))
+		expect(rebuiltOptions(ir, 'stacked-bar-chart')).toMatchObject({
+			barDir: 'bar',
+			barGrouping: 'stacked',
+			barGapWidthPct: 80,
+			barSeriesLine: true,
+		})
+		expect(rebuiltOptions(ir, 'column-3d-chart')).toMatchObject({
+			bar3DShape: 'cylinder',
+			barGapDepthPct: 300,
+			v3DRotX: 20,
+			v3DRotY: 60,
+			v3DPerspective: 40,
+		})
+		expect(ir.fidelity.some((note) => note.construct === 'chart.invertIfNegative')).toBe(true)
+	})
+
+	const cases: Array<[CHART_NAME, ChartOpts]> = [
+		['bar', { barDir: 'bar' }],
+		['bar', { barGrouping: 'stacked' }],
+		['bar', { barGapWidthPct: 80 }],
+		['bar', { barOverlapPct: -20 }],
+		['bar', { barGrouping: 'stacked', barSeriesLine: true }],
+		['bar3D', { barGapDepthPct: 300 }],
+		['bar3D', { bar3DShape: 'cylinder' }],
+		['bar3D', { v3DRotX: 45, v3DRotY: 60, v3DPerspective: 60, v3DRAngAx: true }],
+		['line', { lineSmooth: true }],
+		['line', { lineDataSymbol: 'diamond', lineDataSymbolSize: 12 }],
+		['line', { displayBlanksAs: 'zero' }],
+		['area', { barGrouping: 'percentStacked' }],
+		['pie', { firstSliceAng: 90 }],
+		['doughnut', { holeSize: 75 }],
+		['radar', { radarStyle: 'filled' }],
+		['surface', { surfaceWireframe: true }],
+	]
+	test.each(cases)('%s %j comes back from readModelToIr', async (type, options) => {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addChart(SERIES, { type, x: 1, y: 1, w: 6, h: 4, objectName: 'probe', ...options })
+		})
+		expect(rebuiltOptions(readModelToIr(presentation), 'probe')).toMatchObject(options)
+	})
+
+	test('a default chart states none of them', async () => {
+		for (const type of ['bar', 'line', 'pie', 'doughnut', 'radar', 'bar3D'] as const) {
+			const { presentation } = await authorRead((pres) => {
+				pres.addSlide().addChart(SERIES, { type, x: 1, y: 1, w: 6, h: 4, objectName: 'probe' })
+			})
+			const rebuilt = rebuiltOptions(readModelToIr(presentation), 'probe')
+			const stated = Object.keys(rebuilt).filter((key) =>
+				/^(bar(Dir|Grouping|GapWidthPct|OverlapPct|SeriesLine|GapDepthPct)|bar3DShape|v3D|lineSmooth|lineDataSymbol|displayBlanksAs|firstSliceAng|holeSize|radarStyle|surfaceWireframe)/.test(
+					key
+				)
+			)
+			expect(stated, type).toEqual([])
+		}
 	})
 })
