@@ -83,6 +83,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`addChart` warns for the text keys it does not read.** `ChartOpts` takes every
+  `TextBaseProps` key (`bold`, `fontFace`, `align`, `bullet`, …) through `ChartPropsTitle`, and the
+  chart writer reads none but `lang`, so a chart given them was byte-identical to one without. They
+  are now named in one `chart/option-not-supported` warning; a chart's text is styled through its
+  own options ([#138](https://github.com/shbernal/pptx-ts/issues/138)).
 - **`catAxes[n]` and `valAxes[n]` write `catAxisCrossesAt`, `valAxisCrossesAt` and
   `valLabelFormatCode`.** Each entry's crossing now lands on the axis it crosses, as the flat key's
   does, and a value-axis entry's format sets the series caches of the plots on that axis. All three

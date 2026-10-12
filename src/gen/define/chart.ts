@@ -47,6 +47,7 @@ import type {
 	OptsChartData,
 	OptsChartGridLine,
 	PositionProps,
+	TextBaseProps,
 } from '../../types/index.js'
 import { scrubGridLine } from '../chart/chart-stroke.js'
 import type {
@@ -1026,6 +1027,49 @@ function normalizeComboSubchartOptions(
 }
 
 /**
+ * The `TextBaseProps` keys `ChartOpts` takes through `ChartPropsTitle` and the chart writer reads
+ * none of: every one but `lang`. The chart's text is styled through its own spellings
+ * (`titleBold`, `legendFontSize`, `dataLabelColor`, …).
+ */
+const UNREAD_TEXT_BASE_KEYS = [
+	'align',
+	'bold',
+	'breakLine',
+	'bullet',
+	'caps',
+	'color',
+	'fontFace',
+	'fontFaceEA',
+	'fontSize',
+	'highlight',
+	'italic',
+	'paraIndent',
+	'paraMarginLeft',
+	'softBreakBefore',
+	'tabStops',
+	'textDirection',
+	'textWarp',
+	'transparency',
+	'underline',
+	'valign',
+] as const satisfies ReadonlyArray<keyof TextBaseProps>
+
+/**
+ * Name the `TextBaseProps` keys a chart was given, which write nothing (#138). A chart written with
+ * `bold` or `fontFace` was byte-identical to one written without, and nothing said so; autocomplete
+ * offers them on `addChart`.
+ * @param options - the chart's options as the caller stated them
+ */
+function reportTextBaseKeys(options: ChartOptsInternal): void {
+	const stated = UNREAD_TEXT_BASE_KEYS.filter((key) => options[key] !== undefined)
+	if (stated.length === 0) return
+	warn(
+		'chart/option-not-supported',
+		`addChart: ${stated.map((key) => `"${key}"`).join(', ')} ${stated.length === 1 ? 'has' : 'have'} no effect on a chart, whose text is styled through its own options (titleBold, legendFontSize, dataLabelColor, catAxisLabelFontFace, …).`
+	)
+}
+
+/**
  * Generate the chart based on input data.
  * OOXML Chart Spec: ISO/IEC 29500-1:2016(E)
  *
@@ -1127,6 +1171,7 @@ export function addChartDefinition(
 	}
 	// Before `_type` and any default lands on the copy, so it holds exactly what the caller stated.
 	if (!tmpTypes && isChartExType(type)) reportChartExOptions(options, asChartType(type as CHART_NAME))
+	reportTextBaseKeys(options)
 	options._type = tmpTypes ?? asChartType(type as CHART_NAME)
 	// Default only what the caller omitted. The guard used to be `!isNaN(Number(x))`, which is
 	// false for every `Coord` that is not a bare number — so `x: '50%'` and `x: '2in'` were
