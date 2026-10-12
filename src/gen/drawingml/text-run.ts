@@ -309,9 +309,9 @@ export function genXmlParagraphProperties(textObj: SlideObject | TextProps, isDe
 			// *overrides* it, which is a different fact even where the inherited style has no
 			// bullet, because a later edit to the master then stops arriving.
 			//
-			// Omission cannot mean this: it has meant `a:buNone` since the writer existed and
-			// every deck authored against it depends on that. Same resolution as `fill: { type:
-			// 'inherit' }` (#10) — name the state that had no name, leave the one that has.
+			// Omission means this on a placeholder definition and on text filling one (#174), where
+			// `addTextDefinition` defaults it; anywhere else omission still means `a:buNone`. Same
+			// resolution as `fill: { type: 'inherit' }` (#10) — name the state that had no name.
 		} else if (opts.bullet) {
 			defaultMarL = bulletHangMarL(bulletMarL, indentLevel)
 			defaultIndent = -bulletMarL
