@@ -6,6 +6,7 @@
  */
 import { SlideObjectType } from '../../enums.js'
 import type { PresSlideInternal } from '../../types/internal.js'
+import { layoutPlaceholderName, statedPlaceholderBinding } from './layout-placeholder.js'
 import { addTextDefinition, placeholderOptionsForSlide } from './text.js'
 
 /**
@@ -20,9 +21,13 @@ export function addPlaceholdersToSlideLayouts(slide: PresSlideInternal): void {
 			// A: Search for this placeholder on Slide before we add
 			// NOTE: Check to ensure a placeholder does not already exist on the Slide
 			// They are created when they have been populated with text (ex: `slide.addText('Hi', { placeholder:'title' });`)
+			// A slide object fills it by naming it, or by stating its `idx` in a binding.
 			if (
 				!slide._slideObjects.some(
-					(slideObj) => slideObj.options && slideObj.options.placeholder === slideLayoutOptions.placeholder
+					(slideObj) =>
+						layoutPlaceholderName(slideObj.options?.placeholder) === slideLayoutOptions.placeholder ||
+						(slideLayoutOptions._placeholderIdx !== undefined &&
+							statedPlaceholderBinding(slideObj.options?.placeholder)?.idx === slideLayoutOptions._placeholderIdx)
 				)
 			) {
 				// A copy whose rel-bearing options are the slide's own, not the layout placeholder's.

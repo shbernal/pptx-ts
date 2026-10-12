@@ -17,7 +17,7 @@ import { getImageSizeFromBase64 } from '../../media/image-size.js'
 import { getSmartParseNumber } from '../../units-internal.js'
 import { resolveObjectName } from './object-name.js'
 import { resolveAuthoredFrame } from './frame.js'
-import { placeholderFrame } from './layout-placeholder.js'
+import { checkPlaceholderBinding, placeholderFrame } from './layout-placeholder.js'
 import { registerImageMediaRel, registerSvgImageRels, resolveImageSource } from './image-rel.js'
 import { registerHyperlinkRel, validateHyperlink } from './hyperlinks.js'
 import { InvalidOptionError } from '../../errors.js'
@@ -97,6 +97,7 @@ export function addImageDefinition(target: PresSlideInternal, opt: ImageProps): 
 	// Explicit `opt` values always win; this only fills the gaps so a picture placeholder no longer
 	// collapses to the image's natural/1in fallback when no dimensions are supplied. Mirrors the
 	// text-object placeholder inheritance in addTextDefinition().
+	checkPlaceholderBinding(opt.placeholder, 'addImage')
 	const placeholder = placeholderFrame(target._slideLayout, opt.placeholder)
 
 	// FIRST: Set vars for this image (object param replaces positional args in 1.1.0)

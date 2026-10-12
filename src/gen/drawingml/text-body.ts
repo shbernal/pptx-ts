@@ -11,7 +11,7 @@ import { CRLF, DEF_FONT_COLOR } from '../../constants-internal.js'
 import { warn } from '../../diagnostics.js'
 import { checkEnumOrWarn } from '../../ooxml/check-enum.js'
 import { TEXT_SHAPE_TYPES, TEXT_VERTICAL } from '../../ooxml/st-enums.js'
-import type { ObjectOptions, TextProps, TextPropsOptions } from '../../types/index.js'
+import type { ObjectOptions, PlaceholderBinding, TextProps, TextPropsOptions } from '../../types/index.js'
 import type { SlideObject, TableCellInternal } from '../../types/internal.js'
 import { el, raw, voidEl, type XmlAttrs } from '../oxml/el.js'
 import { TEXT_ANCHOR_BY_VALIGN, type TextAnchorToken } from '../../ooxml/text-anchor.js'
@@ -286,26 +286,31 @@ export function genXmlTextBody(slideObj: SlideObject | TableCellInternal, slideC
 /**
  * Generate an XML Placeholder
  * @param {SlideObject} placeholderObj
+ * @param binding - the `type` and `idx` the slide object states itself, each winning over
+ *   `placeholderObj`'s; with one, a `p:ph` is written even when `placeholderObj` is `null`
  * @returns XML
  */
-export function genXmlPlaceholder(placeholderObj: SlideObject | null): string {
-	if (!placeholderObj) return ''
+export function genXmlPlaceholder(placeholderObj: SlideObject | null, binding?: PlaceholderBinding): string {
+	if (!placeholderObj && !binding) return ''
 
-	const placeholderIdx = placeholderObj.options?._placeholderIdx ? placeholderObj.options._placeholderIdx : ''
-	const placeholderTyp = placeholderObj.options?._placeholderType ? placeholderObj.options._placeholderType : ''
+	const placeholderIdx = binding?.idx ?? (placeholderObj?.options?._placeholderIdx || '')
+	const placeholderTyp = placeholderObj?.options?._placeholderType ? placeholderObj.options._placeholderType : ''
 	// Normalize to the OOXML ST_PlaceholderType value, accepting either a friendly PlaceholderType
 	// key ('image', 'table') or the mapped value ('pic', 'tbl') - the latter is what `PLACEHOLDER_TYPE`
-	// actually declares. Unknown strings emit no type rather than an invalid attribute.
-	const placeholderType = PLACEHOLDER_TYPE_MAP[placeholderTyp]
-		? PLACEHOLDER_TYPE_MAP[placeholderTyp].toString()
-		: (Object.values(PlaceholderType) as string[]).includes(placeholderTyp)
-			? placeholderTyp
-			: ''
+	// actually declares. Unknown strings emit no type rather than an invalid attribute. A binding's
+	// own `type` is any `ST_PlaceholderType` value, vetted when the object was added.
+	const placeholderType =
+		binding?.type ??
+		(PLACEHOLDER_TYPE_MAP[placeholderTyp]
+			? PLACEHOLDER_TYPE_MAP[placeholderTyp].toString()
+			: (Object.values(PlaceholderType) as string[]).includes(placeholderTyp)
+				? placeholderTyp
+				: '')
 
 	// `hasCustomPrompt` flags a placeholder *definition* (layout/master) that carries custom
 	// prompt text; it must not be set on a populated slide-level text shape promoted to a
 	// placeholder, or PowerPoint would treat the visible text as prompt text.
-	const isPlaceholderDef = placeholderObj._type === SlideObjectType.placeholder
+	const isPlaceholderDef = placeholderObj?._type === SlideObjectType.placeholder
 
 	// NOTE: `placeholderType` is already the mapped OOXML value (e.g. 'pic', 'tbl') validated on
 	// the line above; do NOT re-look it up in PLACEHOLDER_TYPE_MAP (its keys are the input names,
@@ -318,8 +323,8 @@ export function genXmlPlaceholder(placeholderObj: SlideObject | null): string {
 	// absent ones entirely, so this layout is not expressible. 105 baseline parts carry `<p:ph`,
 	// so tidying it is a visible byte change and belongs in its own fixture-gated commit.
 	return `<p:ph
-		${placeholderIdx ? ' idx="' + placeholderIdx.toString() + '"' : ''}
+		${placeholderIdx !== '' ? ' idx="' + placeholderIdx.toString() + '"' : ''}
 		${placeholderType ? ` type="${placeholderType}"` : ''}
-		${isPlaceholderDef && placeholderObj.text && placeholderObj.text.length > 0 ? ' hasCustomPrompt="1"' : ''}
+		${isPlaceholderDef && placeholderObj?.text && placeholderObj.text.length > 0 ? ' hasCustomPrompt="1"' : ''}
 		/>`
 }

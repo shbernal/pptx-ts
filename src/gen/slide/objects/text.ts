@@ -12,6 +12,7 @@ import { createShadowEffectLst } from '../../drawingml/effect.js'
 import { rejectEmptyFill, genXmlColorSelection } from '../../drawingml/fill.js'
 import { genXmlCustGeom, genXmlPresetGeom } from '../../drawingml/geometry.js'
 import { genXmlObjectLock, SHAPE_LOCK_ATTRS } from '../../drawingml/locks.js'
+import { statedPlaceholderBinding } from '../../define/layout-placeholder.js'
 import { genXmlPlaceholder, genXmlTextBody, objectHasMath } from '../../drawingml/text-body.js'
 import { el, elOrVoid, raw, type XmlAttrs } from '../../oxml/el.js'
 import { alternateContentEl } from '../../oxml/alternate-content.js'
@@ -64,7 +65,8 @@ export function renderTextObject(ctx: RenderContext): string {
 			genXmlPlaceholder(
 				slideItemObj._type === SlideObjectType.placeholder || (placeholderObj == null && itemOpts?._placeholderType)
 					? slideItemObj
-					: placeholderObj
+					: placeholderObj,
+				statedPlaceholderBinding(itemOpts.placeholder)
 			)
 		)
 	)

@@ -5,7 +5,7 @@
  */
 import type { SHAPE_NAME } from '../enums.js'
 import type { Color, Coord, DataOrPathProps, DataOrPathRequiredProps, GeometryPoint, PositionProps } from './core.js'
-import type { ObjectNameProps } from './object.js'
+import type { ObjectNameProps, PlaceholderOption } from './object.js'
 import type { ShapeAdjustValue } from './shape.js'
 import type { HyperlinkProps, ShadowProps, ShapeLineProps } from './style.js'
 
@@ -53,14 +53,17 @@ export interface ImageBaseProps extends PositionProps, ObjectNameProps {
 	 */
 	line?: ShapeLineProps
 	/**
-	 * Name of a picture placeholder defined on the slide layout/master to populate
+	 * Name of a picture placeholder defined on the slide layout/master to populate, or a
+	 * {@link PlaceholderBinding} that states the `p:ph` to write
 	 * - when it matches a layout/master placeholder, the image inherits that placeholder's
 	 *   position and size for any of `x`/`y`/`w`/`h` not supplied explicitly;
 	 *   explicit values always win
+	 * - a name that matches none writes no `p:ph`; a binding's `idx` or `type` writes one regardless
 	 * @example 'picph'
+	 * @example { type: 'pic', idx: 13 }
 	 * @see https://docs.microsoft.com/en-us/office/vba/api/powerpoint.ppplaceholdertype
 	 */
-	placeholder?: string
+	placeholder?: PlaceholderOption
 	/**
 	 * Image rotation (degrees)
 	 * - range: -360 to 360

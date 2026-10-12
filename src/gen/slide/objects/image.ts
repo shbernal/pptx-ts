@@ -13,6 +13,7 @@ import { createShadowEffectLst } from '../../drawingml/effect.js'
 import { genXmlCustGeom, genXmlPresetGeom } from '../../drawingml/geometry.js'
 import { genXmlImageCrop, genXmlVectorAspectFit, ImageSizingXml } from '../../drawingml/image.js'
 import { genXmlObjectLock, PICTURE_LOCK_ATTRS } from '../../drawingml/locks.js'
+import { statedPlaceholderBinding } from '../../define/layout-placeholder.js'
 import { genXmlPlaceholder } from '../../drawingml/text-body.js'
 import { el, raw, voidEl, type XmlChild } from '../../oxml/el.js'
 import { OOXML_NS } from '../../../ooxml/namespaces.js'
@@ -76,7 +77,12 @@ export function renderImageObject(ctx: RenderContext): string {
 		),
 		{ openPrefix: '    ' }
 	)
-	strSlideXml += el('p:nvPr', null, raw(genXmlPlaceholder(placeholderObj)), { openPrefix: '    ' })
+	strSlideXml += el(
+		'p:nvPr',
+		null,
+		raw(genXmlPlaceholder(placeholderObj, statedPlaceholderBinding(itemOpts.placeholder))),
+		{ openPrefix: '    ' }
+	)
 	strSlideXml += '  </p:nvPicPr>'
 
 	// The `<a:blip>` image-effect children (CT_Blip), shared by the SVG and raster branches:

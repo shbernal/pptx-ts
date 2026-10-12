@@ -22,7 +22,12 @@ import { imageContentType } from '../../media/content-type.js'
 import { ptsToEmuLenient, resolveInsetsEmu } from '../../units-internal.js'
 import { resolveObjectName } from './object-name.js'
 import { resolveAuthoredFrame } from './frame.js'
-import { findLayoutPlaceholder } from './layout-placeholder.js'
+import {
+	checkPlaceholderBinding,
+	findLayoutPlaceholder,
+	layoutPlaceholderName,
+	statedPlaceholderBinding,
+} from './layout-placeholder.js'
 import { createHyperlinkRels } from './hyperlinks.js'
 import { registerImageFillMedia } from './image.js'
 
@@ -39,6 +44,7 @@ export function addTextDefinition(
 	opts: TextPropsOptions,
 	isPlaceholder: boolean
 ): void {
+	checkPlaceholderBinding(opts.placeholder, 'addText')
 	// Take ownership of the options before touching them. Everything below writes internal state
 	// (`_bodyProp`, `objectName`, `_placeholderType`, defaulted `color`/`line`) onto whatever object
 	// it is handed, and `gen/drawingml/text-run.ts` writes more of it (`_lineIdx`, paragraph props
@@ -317,7 +323,7 @@ export function addTextDefinition(
 	// them `Text N` off the text-box bucket would collide with the slide's real text boxes.
 	const placeholderName = isPlaceholder
 		? String(
-				newObject.options.placeholder ||
+				layoutPlaceholderName(newObject.options.placeholder) ||
 					newObject.options._placeholderType ||
 					`Placeholder ${newObject.options._placeholderIdx ?? target._slideObjects.length}`
 			)
@@ -335,8 +341,12 @@ export function addTextDefinition(
 	// but with a blank/default layout there is no match and no <p:ph> was emitted - so PowerPoint's
 	// accessibility checker reports the slide as having no title. Record the type here so a real
 	// <p:ph type="..."/> is emitted on the slide shape even without a matching layout placeholder.
-	if (!isPlaceholder && newObject.options.placeholder && !newObject.options._placeholderType) {
-		newObject.options._placeholderType = newObject.options.placeholder as PLACEHOLDER_TYPE
+	// A binding that states a `type` or `idx` has its `p:ph` written as given; one that states only
+	// a `name` falls back to it as the string does.
+	const placeholder = newObject.options.placeholder
+	const fallbackType = statedPlaceholderBinding(placeholder) ? undefined : layoutPlaceholderName(placeholder)
+	if (!isPlaceholder && fallbackType && !newObject.options._placeholderType) {
+		newObject.options._placeholderType = fallbackType as PLACEHOLDER_TYPE
 	}
 
 	// STEP 2: Create/Clean text options

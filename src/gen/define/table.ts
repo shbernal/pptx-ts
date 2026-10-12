@@ -34,7 +34,7 @@ import {
 	usableTableWidthEmu,
 } from '../../units-internal.js'
 import { resolveObjectName } from './object-name.js'
-import { placeholderFrame } from './layout-placeholder.js'
+import { checkPlaceholderBinding, placeholderFrame } from './layout-placeholder.js'
 import { EMU_PER_INCH } from '../../units.js'
 import { createHyperlinkRels } from './hyperlinks.js'
 import { resolveFillKind } from '../drawingml/fill.js'
@@ -395,6 +395,7 @@ export function addTableDefinition(
 	// the table fills the placeholder geometry rather than the default 1in/full-width fallback.
 	// An axis stated as `null` is unstated here, as it is for an image; it used to be kept and later
 	// became the half-inch default.
+	checkPlaceholderBinding(opt.placeholder, 'addTable')
 	if (opt.placeholder) {
 		const placeholder = placeholderFrame(slideLayout, opt.placeholder)
 		// A placeholder that states none of its own leaves the gap open for the fallback

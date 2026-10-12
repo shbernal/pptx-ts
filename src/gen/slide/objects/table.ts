@@ -17,6 +17,7 @@ import { genXmlObjectLock, GRAPHIC_FRAME_LOCK_ATTRS } from '../../drawingml/lock
 import { genTableCellBorderXml } from '../../drawingml/table-border.js'
 import { cellHasHyperlink, resolveSpan, withCheckedSpans } from '../../table/spans.js'
 import { genTableCell3DXml } from '../../drawingml/table-cell3d.js'
+import { statedPlaceholderBinding } from '../../define/layout-placeholder.js'
 import { genXmlPlaceholder, genXmlTextBody, resolveTextAnchor } from '../../drawingml/text-body.js'
 import { el, elOrVoid, raw, voidEl, type XmlAttrs } from '../../oxml/el.js'
 import {
@@ -260,7 +261,7 @@ export function renderTableObject(ctx: RenderContext): string {
 				'p:nvPr',
 				null,
 				[
-					raw(genXmlPlaceholder(placeholderObj)),
+					raw(genXmlPlaceholder(placeholderObj, statedPlaceholderBinding(itemOpts.placeholder))),
 					raw(
 						el(
 							'p:extLst',

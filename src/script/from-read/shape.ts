@@ -65,6 +65,7 @@ import { cropOption, isRectSet } from './picture-fill.js'
 import { FIXED_PCT_PER_PERCENT, PERCENT_SCALE } from '../../units.js'
 import { GROUP_SHAPE_LOCK_ATTRS, PICTURE_LOCK_ATTRS, SHAPE_LOCK_ATTRS } from '../../ooxml/lock-attrs.js'
 import { PlaceholderType } from '../../enums.js'
+import { PLACEHOLDER_TYPES } from '../../ooxml/st-enums.js'
 
 import { glowOption, lineOption, noteHidden, shadowOption, styleOptions, transformOptions } from './shape-paint.js'
 
@@ -81,9 +82,9 @@ export function shapeCall(shape: AnyShape, ctx: MapContext): CallIr | null {
 	}
 
 	if (isGroupShape(shape)) return groupCall(shape, scoped)
-	if (isPicture(shape)) return withPlaceholderLoss(shape, pictureCall(shape, scoped), scoped.notes)
+	if (isPicture(shape)) return withPlaceholder(shape, pictureCall(shape, scoped), scoped.notes)
 	if (isConnector(shape)) return connectorCall(shape, scoped)
-	if (isGraphicFrame(shape)) return withPlaceholderLoss(shape, graphicFrameCall(shape, scoped), scoped.notes)
+	if (isGraphicFrame(shape)) return withPlaceholder(shape, graphicFrameCall(shape, scoped), scoped.notes)
 	if (isAutoShape(shape)) return autoShapeCall(shape, scoped)
 
 	// Unreachable: the five guards above exhaust `AnyShape`, which is why `shape` narrows to
@@ -111,24 +112,39 @@ function autoShapeText(shape: AutoShape, notes: NoteScope): TextFrame | null {
 }
 
 /**
- * A picture, table or chart placeholder's call, with its layout binding declared lost.
+ * A picture, table or chart placeholder's call, carrying its layout binding where the call takes one.
  *
- * `addImage`, `addTable` and `addChart` take `placeholder` as the name of a layout placeholder
- * defined in the same deck, and write no `p:ph` when there is none by that name. Neither printed
- * script defines the source's layout placeholders (`master.placeholders`), so the object keeps
- * its frame and no longer follows its layout. It used to be dropped with no note at all, because
- * the read model reported a placeholder on a `p:sp` only (#111).
+ * `addImage` and `addTable` take the source's `p:ph` as a `placeholder` binding (#111). `addChart`
+ * takes no `placeholder`, so a chart keeps its frame and no longer follows its layout, under a note.
+ * It used to be dropped with no note at all, because the read model reported a placeholder on a
+ * `p:sp` only.
  */
-function withPlaceholderLoss(shape: Picture | GraphicFrame, call: CallIr | null, notes: NoteScope): CallIr | null {
+function withPlaceholder(shape: Picture | GraphicFrame, call: CallIr | null, notes: NoteScope): CallIr | null {
 	const ph = shape.placeholder
-	if (call && ph) {
-		notes.note(
-			'shape.placeholder',
-			'flattened',
-			'unwritable',
-			`this ${shape.shapeType === 'picture' ? 'picture' : 'graphic frame'} fills a placeholder (p:ph type="${ph.type ?? 'obj'}" idx="${ph.idx}") and is emitted as a plain object with its frame baked in, so it no longer follows its layout; the placeholder option binds only to a layout placeholder the script defines by name, and the source's are not reproduced`
-		)
+	if (!call || !ph) return call
+	const binding = placeholderBinding(ph, false)
+	// The options bag: `addImage(options)`, `addTable(rows, options)`.
+	const at = call.method === 'addImage' ? 0 : call.method === 'addTable' ? 1 : -1
+	const options = at >= 0 ? call.args[at] : undefined
+	if (
+		binding !== undefined &&
+		options !== null &&
+		typeof options === 'object' &&
+		!Array.isArray(options) &&
+		!isAssetRef(options)
+	) {
+		const args = [...call.args]
+		args[at] = { ...options, placeholder: binding }
+		return { ...call, args }
 	}
+	notes.note(
+		'shape.placeholder',
+		'flattened',
+		'unwritable',
+		binding === undefined
+			? `this ${shape.shapeType === 'picture' ? 'picture' : 'graphic frame'} fills a placeholder (p:ph type="${ph.type ?? 'obj'}" idx="${ph.idx}") whose type or idx has no placeholder spelling, so it is emitted as a plain object with its frame baked in and no longer follows its layout`
+			: `this graphic frame fills a placeholder (p:ph type="${ph.type ?? 'obj'}" idx="${ph.idx}") and is emitted as a plain ${call.method} with its frame baked in, so it no longer follows its layout; ${call.method} takes no placeholder option`
+	)
 	return call
 }
 
@@ -138,27 +154,44 @@ function textLang(options: Record<string, IrValue> | undefined): string | undefi
 	return typeof lang === 'string' ? lang : undefined
 }
 
-/** The `p:ph/@type` values `placeholder` writes back as they are (`genXmlPlaceholder`). */
+/** The `p:ph/@type` values the string form of `placeholder` writes back as they are (`genXmlPlaceholder`). */
 const WRITABLE_PLACEHOLDER_TYPES: ReadonlySet<string> = new Set(Object.values(PlaceholderType))
 
 /**
- * A slide placeholder as the `placeholder` option, when that reproduces its `p:ph`.
+ * A source `p:ph` as the `placeholder` option, or `undefined` when its `type` or `idx` has no spelling.
  *
- * The option takes a type and writes `<p:ph type="…"/>` with no `idx`, so it reproduces a
- * placeholder that has one of the six types it knows and the default `idx` of 0: a title, or text
- * placed with `placeholder` itself. That used to be flattened too, under a note blaming the output
- * tier. A placeholder PowerPoint binds to its layout by `idx` (every body placeholder) cannot be
- * written, so it is still flattened, with its inherited geometry and styling baked in.
+ * On text, a title, or text placed with `placeholder` itself, has one of the six types the string
+ * form knows and the default `idx` of 0, and comes back as that string (`typeString`). An image's
+ * or a table's string names a layout placeholder rather than a type. Anything else comes back as a
+ * `{ type, idx }` binding, which writes the source's `p:ph` whether or not the script defines the
+ * layout placeholder it binds to: a body placeholder PowerPoint matches to its layout by `idx`
+ * stays bound to it (#112). The default `idx` (0) is left out unless it is all the `p:ph` states.
+ */
+function placeholderBinding(ph: { type: string | null; idx: string }, typeString: boolean): IrValue | undefined {
+	if (typeString && ph.idx === '0' && ph.type !== null && WRITABLE_PLACEHOLDER_TYPES.has(ph.type)) return ph.type
+	const idx = Number(ph.idx)
+	if (!/^\d+$/.test(ph.idx) || idx > 0xffffffff) return undefined
+	if (ph.type !== null && !(PLACEHOLDER_TYPES as readonly string[]).includes(ph.type)) return undefined
+	// A bare `<p:ph/>` still needs one of the two stated, or the binding writes nothing.
+	if (ph.type === null) return { idx }
+	return compactRequired({ type: ph.type, idx: idx === 0 ? undefined : idx })
+}
+
+/**
+ * A slide placeholder as the `placeholder` option. Its geometry and styling are baked in as well,
+ * and they win over what it inherits, so the shape looks the same whether or not the layout it
+ * binds to is present.
  */
 function placeholderOption(shape: AutoShape, notes: NoteScope): IrValue | undefined {
 	const ph = shape.placeholder
 	if (!ph) return undefined
-	if (ph.idx === '0' && ph.type !== null && WRITABLE_PLACEHOLDER_TYPES.has(ph.type)) return ph.type
+	const binding = placeholderBinding(ph, true)
+	if (binding !== undefined) return binding
 	notes.note(
 		'shape.placeholder',
 		'flattened',
 		'unwritable',
-		`this placeholder (p:ph type="${ph.type ?? 'body'}" idx="${ph.idx}") is emitted as a plain shape with its inherited geometry and styling baked in, so it no longer follows its layout; the placeholder option names a type and writes no idx, ${ph.idx === '0' ? 'and does not know this type' : 'so it cannot bind to the layout placeholder this one is matched to by idx'}`
+		`this placeholder (p:ph type="${ph.type ?? 'obj'}" idx="${ph.idx}") is emitted as a plain shape with its inherited geometry and styling baked in, so it no longer follows its layout; its type or idx has no placeholder spelling`
 	)
 	return undefined
 }
