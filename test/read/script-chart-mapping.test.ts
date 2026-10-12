@@ -13,7 +13,7 @@ import { describe, expect, test } from 'vitest'
 import JSZip from 'jszip'
 import { Presentation } from '../../dist/read.js'
 import { readModelToIr, type CallIr, type DeckIr } from '../../dist/script.js'
-import { ChartType, type CHART_NAME, type ChartOpts, type OptsChartData } from '../../dist/node.js'
+import { ChartType, type CHART_NAME, type ChartMulti, type ChartOpts, type OptsChartData } from '../../dist/node.js'
 import { assert, assertEqual, defined, readEntry, at } from '../helpers.ts'
 import { authorRead } from './authored.ts'
 import { readFixture } from './corpus.ts'
@@ -100,24 +100,24 @@ describe('the chart mapper declares what it cannot carry', () => {
 		assert(!seen.includes('chart.rebuilt'), 'and not also noted as rebuilt: ' + JSON.stringify(seen))
 	})
 
-	test('a combo chart is flattened to one type, and says which types it had', async () => {
+	// The flattening arm, for a combo the writer cannot build: it has no combo with a radar in it.
+	// A bar and line combo used to land here too (#191); `combo replay` below covers it now.
+	test('a combo the writer cannot combine is flattened to one type, and says which types it had', async () => {
 		const { buf } = await authorRead((pres) => {
 			pres.addSlide().addChart(
 				[
 					{ type: ChartType.bar, data: SERIES, options: {} },
-					{
-						type: ChartType.line,
-						data: [{ name: 'S2', labels: ['A', 'B', 'C'], values: [4, 5, 6] }],
-						options: { secondaryValAxis: true, secondaryCatAxis: true },
-					},
+					{ type: ChartType.line, data: [{ name: 'S2', labels: ['A', 'B', 'C'], values: [4, 5, 6] }], options: {} },
 				],
 				{ x: 1, y: 1, w: 8, h: 4 }
 			)
 		})
-		const ir = readModelToIr(await Presentation.load(buf))
-		assert(constructs(ir).includes('chart.combo'), 'the flattening is noted; got ' + JSON.stringify(constructs(ir)))
+		const ir = await irWithChartXml(buf, (xml) => xml.replaceAll('c:lineChart>', 'c:radarChart>'))
+		const note = ir.fidelity.find((one) => one.construct === 'chart.combo')
+		assert(note, 'the flattening is noted; got ' + JSON.stringify(constructs(ir)))
+		assertEqual(note.cause, 'unwritable', 'the output tier has no such combo, which is no limit of the tier itself')
 		const call = at(ir.slides, 0).calls.find((c) => c.method === 'addChart')
-		assert(call, 'and one chart call is still emitted')
+		assert(call && typeof optionsOf(call).type === 'string', 'and one single-type chart call is still emitted')
 	})
 
 	test('a blank cached point becomes 0, and the dip is declared', async () => {
@@ -534,5 +534,77 @@ describe("chart mapping: a scatter's own data labels", () => {
 		const ir = await irWithChartXml(buf, (xml) => xml.replace(/(<c:ser>(?:(?!<\/c:ser>)[^])*?<c:dLbls>)/, `$1${label}`))
 		const note = ir.fidelity.find((one) => one.construct === 'chart.labels')
 		expect(note?.disposition).toBe('dropped')
+	})
+})
+
+describe('combo replay', () => {
+	// A combo was flattened to its first type and declared `chart.combo` unsupported, though plot groups
+	// are read (#169) and the multi-type form writes one, secondary axes included (#191).
+
+	const TWO = [
+		{ name: 'North', labels: ['Q1', 'Q2', 'Q3'], values: [4, 7, 5] },
+		{ name: 'South', labels: ['Q1', 'Q2', 'Q3'], values: [3, 5, 8] },
+	]
+	const TREND = [{ name: 'Trend', labels: ['Q1', 'Q2', 'Q3'], values: [5, 6, 7] }]
+
+	/** What a combo plots: each group's type, series and axes, and which of those axes show. */
+	async function shapeOf(buf: Uint8Array) {
+		const presentation = await Presentation.load(buf)
+		const chart = defined(presentation.slides[0]?.shapes.find((shape) => 'chart' in shape && shape.chart))
+		const read = defined((chart as { chart: import('../../dist/read.js').Chart }).chart)
+		const shown = new Map(read.axes.map((axis) => [axis.id, !axis.hidden]))
+		return read.plotGroups.map((group) => ({
+			type: group.type,
+			grouping: group.grouping,
+			series: group.series.map((one) => one.name),
+			axes: group.axisIds.map((id) => shown.get(id)),
+		}))
+	}
+
+	/** Author `build`, replay its chart through readModelToIr, and author the replay. */
+	async function roundTrip(build: Parameters<typeof authorRead>[0]) {
+		const source = await authorRead(build)
+		const ir = readModelToIr(source.presentation)
+		const call = chartCall(ir)
+		const copy = await authorRead((pres) => {
+			pres.addSlide().addChart(call.args[0] as never, call.args[1] as never)
+		})
+		return { ir, call, source: await shapeOf(source.buf), copy: await shapeOf(copy.buf) }
+	}
+
+	test.each([{ secondaryValAxis: true }, { secondaryCatAxis: true }, {}])(
+		'a bar and line combo with the line on %j comes back as one',
+		async (secondary) => {
+			const { ir, call, source, copy } = await roundTrip((pres) => {
+				pres.addSlide().addChart(
+					[
+						{ type: ChartType.bar, data: TWO, options: {} },
+						{ type: ChartType.line, data: TREND, options: secondary },
+					],
+					{ x: 1, y: 1, w: 6, h: 4 }
+				)
+			})
+			expect(constructs(ir)).not.toContain('chart.combo')
+			const subcharts = call.args[0] as unknown as ChartMulti[]
+			expect(subcharts.map((one) => one.type)).toEqual(['bar', 'line'])
+			expect(subcharts[1]?.options).toEqual(secondary)
+			expect(copy).toEqual(source)
+		}
+	)
+
+	test("one group's own settings stay with it", async () => {
+		const { call, source, copy } = await roundTrip((pres) => {
+			pres.addSlide().addChart(
+				[
+					{ type: ChartType.bar, data: TWO, options: { barGrouping: 'stacked' } },
+					{ type: ChartType.line, data: TREND, options: { secondaryValAxis: true } },
+				],
+				{ x: 1, y: 1, w: 6, h: 4 }
+			)
+		})
+		const subcharts = call.args[0] as unknown as ChartMulti[]
+		expect(subcharts[0]?.options.barGrouping).toBe('stacked')
+		expect(optionsOf(call).barGrouping, 'not stated for the chart, where the line would take it').toBeUndefined()
+		expect(copy).toEqual(source)
 	})
 })

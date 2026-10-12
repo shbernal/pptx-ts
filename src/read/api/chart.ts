@@ -566,6 +566,17 @@ export class ChartPlotGroup {
 		return getElements(this.group, 'c:ser').map((ser) => new ChartSeries(ser, this.part))
 	}
 
+	/**
+	 * The ids of the axes this group plots against (`c:axId`), as {@link ChartAxis.id} reads them: a
+	 * combo's group on the secondary axes names the secondary pair. Empty for a pie or a doughnut.
+	 */
+	get axisIds(): number[] {
+		return childElements(this.group)
+			.filter((child) => child.localName === 'axId')
+			.map((axId) => numberValue(attr(axId, 'val')))
+			.filter((id): id is number => id !== null)
+	}
+
 	/** A bar group's direction (`c:barDir`): `bar` (horizontal) or `col` (vertical). */
 	get barDirection(): string | null {
 		return this.#value('c:barDir')

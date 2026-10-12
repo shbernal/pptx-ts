@@ -24,6 +24,7 @@ import type {
 	ChartLabelRun,
 	ChartLine,
 	ChartManualLayout,
+	ChartPlotGroup,
 	ChartSeries,
 	ChartTextStyle,
 } from '../../read/api/chart.js'
@@ -122,18 +123,19 @@ export function chartCall(frame: GraphicFrame, chart: Chart, ctx: MapContext): C
 		)
 	}
 
-	if (chart.chartTypes.length > 1) {
-		notes.note(
-			'chart.combo',
-			'flattened',
-			'unsupported',
-			`a combo chart (${chart.chartTypes.join(' + ')}) is emitted as a single ${type} chart; addChart's multi-type form needs a per-series type the read model does not report`
-		)
-	}
-
 	const xy = XY_TYPES.has(type)
 	const ownLabels = customLabelOptions(chart, type, notes)
-	const data = xy ? xyData(chart, type, notes, ownLabels.labels) : seriesData(chart, type, notes)
+	const combo = comboGroups(chart, notes)
+	const data = combo
+		? combo.map(({ group, type: groupType }) => ({
+				type: groupType,
+				data: XY_TYPES.has(groupType)
+					? xyData(group.series, groupType, notes, [])
+					: seriesData(group.series, groupType, notes),
+			}))
+		: xy
+			? xyData(chart.series, type, notes, ownLabels.labels)
+			: seriesData(chart.series, type, notes)
 	// Series that all read no points plot nothing either. `addChart` would draw an empty frame the
 	// source never showed as a chart, and checking only for zero series let those through.
 	if (data.length === 0 || chart.series.every((series) => (xy ? series.yValues : series.values).length === 0)) {
@@ -156,7 +158,8 @@ export function chartCall(frame: GraphicFrame, chart: Chart, ctx: MapContext): C
 	// `addChart(data, options & { type })`. Passing it separately produces a call that
 	// typechecks nowhere and throws "a chart `type` is required" at run time.
 	const options = compact({
-		type,
+		// A combo states each plot's type, and its settings, on that plot's own entry.
+		type: combo ? undefined : type,
 		// `c:surfaceChart` is the 2-D contour; the write side's `surface` draws the 3-D one unless told
 		// otherwise, so a flat surface came back tilted.
 		surface3D: sourceType === 'surface' ? false : undefined,
@@ -170,8 +173,9 @@ export function chartCall(frame: GraphicFrame, chart: Chart, ctx: MapContext): C
 		valLabelFormatCode: sourceFormatOption(chart, type, notes),
 		...ownLabels.options,
 		...axisOptions(chart, type, notes),
-		...seriesLineOptions(chart, type, notes),
-		...plotGroupOptions(chart, type, notes),
+		...(combo ? {} : seriesLineOptions(chart.series, type, notes)),
+		displayBlanksAs: differs(chart.displayBlanksAs, PLOT_DEFAULTS.displayBlanksAs),
+		...(combo ? secondaryAxesOptions(chart, combo, notes) : plotGroupOptions(chart, chart.plotGroups[0], type, notes)),
 		...chartTextOptions(chart, type, notes),
 		...areaOptions(chart, type, ctx),
 		chartColors: seriesColors(chart),
@@ -180,11 +184,152 @@ export function chartCall(frame: GraphicFrame, chart: Chart, ctx: MapContext): C
 		seriesOptions: seriesOverrides(chart, type, notes),
 	})
 
+	const subcharts = combo?.map((entry, index) => ({
+		...(data[index] as Record<string, IrValue>),
+		options:
+			compact({
+				...seriesLineOptions(entry.group.series, entry.type, notes),
+				...plotGroupOptions(chart, entry.group, entry.type, notes),
+				...entry.flags,
+			}) ?? {},
+	}))
 	return {
 		method: 'addChart',
-		args: [data, options ?? { type }],
+		args: [subcharts ?? data, options ?? (combo ? {} : { type })],
 		...nameOf(frame),
 	}
+}
+
+/** A note scope that records nothing, for options worked out again only to compare against. */
+const SILENT: NoteScope = { note: () => undefined, forShape: () => SILENT }
+
+/** The plot types `addChart`'s multi-type form combines. */
+const COMBO_TYPES: ReadonlySet<string> = new Set(['area', 'bar', 'line', 'scatter'])
+
+/** One plot group of a combo, as the multi-type form writes it. */
+interface ComboGroup {
+	group: ChartPlotGroup
+	/** The write-API type the group is rebuilt as. */
+	type: string
+	/** The axes the group plots on, when they are the secondary pair. */
+	secondary: AxisPair | null
+	/** `secondaryValAxis` / `secondaryCatAxis`, for the secondary axis each one shows. */
+	flags: Record<string, IrValue | undefined>
+}
+
+/**
+ * A chart's plot groups as a combo's entries, or `null` for a chart of one group. A combo the
+ * multi-type form cannot write is flattened to its first group's type and noted (#191).
+ *
+ * A group plots on the secondary axes when its `c:axId`s are not the first group's. The writer draws
+ * both secondary axes for it and hides the one no entry asks for, so each flag says which shows.
+ */
+function comboGroups(chart: Chart, notes: NoteScope): ComboGroup[] | null {
+	const groups = chart.plotGroups
+	if (groups.length < 2) return null
+	const types = groups.map((group) => CHART_TYPE[group.type])
+	if (
+		types.some((type) => type === undefined || !COMBO_TYPES.has(type)) ||
+		groups.some((group) => FLATTENED_3D.has(group.type))
+	) {
+		notes.note(
+			'chart.combo',
+			'flattened',
+			'unwritable',
+			`a combo chart (${chart.chartTypes.join(' + ')}) is emitted as a single ${types[0] ?? chart.chartTypes[0]} chart; addChart's multi-type form combines area, bar, line and scatter plots only`
+		)
+		return null
+	}
+	const primary = new Set(groups[0]?.axisIds ?? [])
+	const entries = groups.map((group, index) => {
+		const type = types[index] ?? 'bar'
+		const ids = group.axisIds
+		if (ids.every((id) => primary.has(id))) return { group, type, secondary: null, flags: {} }
+		const secondary = axisPair(
+			chart,
+			XY_TYPES.has(type),
+			chart.axes.filter((axis) => axis.id !== null && ids.includes(axis.id))
+		)
+		const valShown = secondary.val !== null && !secondary.val.hidden
+		const catShown = secondary.cat !== null && !secondary.cat.hidden
+		if (!valShown && !catShown) {
+			notes.note(
+				'chart.axis',
+				'approximated',
+				'unwritable',
+				'a plot of this combo is on secondary axes that are both hidden, and addChart shows the secondary value axis of a plot it moves there'
+			)
+		}
+		return {
+			group,
+			type,
+			secondary,
+			flags: {
+				secondaryValAxis: valShown || !catShown ? true : undefined,
+				secondaryCatAxis: catShown ? true : undefined,
+			},
+		}
+	})
+	// The multi-type form numbers the series in entry order, which is the legend's.
+	const order = entries
+		.flatMap((entry) => entry.group.series.map((series) => series.index))
+		.filter((index): index is number => index !== null)
+	if (order.some((index, at) => index < (order[at - 1] ?? index))) {
+		notes.note(
+			'chart.combo',
+			'approximated',
+			'unwritable',
+			"this combo's series are not numbered in plot order, and addChart numbers a combo's series plot by plot, so the legend and the colour sequence follow the plots"
+		)
+	}
+	return entries
+}
+
+/**
+ * The secondary axes' own settings, as the second `valAxes` and `catAxes` entries. The writer builds
+ * those axes from the chart's options with the entries spread over them, so an entry states only
+ * what differs from the primary pair; a setting of the primary's the secondary does not have cannot
+ * be taken back off it, and is noted. Whether each axis shows is the combo flags' job.
+ */
+function secondaryAxesOptions(
+	chart: Chart,
+	combo: readonly ComboGroup[],
+	notes: NoteScope
+): Record<string, IrValue | undefined> {
+	const second = combo.find((entry) => entry.secondary !== null)
+	if (!second?.secondary) return {}
+	const firstType = combo[0]?.type ?? 'bar'
+	const settings = (type: string, pair: AxisPair, scope: NoteScope) => ({
+		...axisOptions(chart, type, scope, pair),
+		...axisTextOptions('cat', pair.cat, scope),
+		...axisTextOptions('val', pair.val, scope),
+	})
+	// The chart-level options already noted the primary pair's losses.
+	const primary = settings(firstType, axisPair(chart, XY_TYPES.has(firstType)), SILENT)
+	const secondary = settings(second.type, second.secondary, notes)
+	const cat: Record<string, IrValue> = {}
+	const val: Record<string, IrValue> = {}
+	let inherited = false
+	for (const key of new Set([...Object.keys(primary), ...Object.keys(secondary)])) {
+		if (key.endsWith('AxisHidden') || key.startsWith('ser')) continue
+		const own = secondary[key]
+		const shared = primary[key]
+		if (JSON.stringify(own) === JSON.stringify(shared)) continue
+		if (own === undefined) {
+			inherited = true
+			continue
+		}
+		;(/^(cat|showCat)/.test(key) ? cat : val)[key] = own
+	}
+	if (inherited) {
+		notes.note(
+			'chart.axis',
+			'approximated',
+			'unwritable',
+			"a secondary axis of this combo leaves out a setting its primary axis states, and addChart builds the secondary axes from the chart's options, so it takes the primary's"
+		)
+	}
+	return Object.keys(cat).length + Object.keys(val).length === 0 ? {} : { catAxes: [{}, cat], valAxes: [{}, val] }
 }
 
 /**
@@ -192,10 +337,10 @@ export function chartCall(frame: GraphicFrame, chart: Chart, ctx: MapContext): C
  * `c:cat` only when it states `labels`, so labels on the first series alone left every later
  * one plotted against 1, 2, 3 (#141).
  */
-function seriesData(chart: Chart, type: string, notes: NoteScope): IrValue[] {
+function seriesData(all: readonly ChartSeries[], type: string, notes: NoteScope): IrValue[] {
 	const dense = blanksToZero(notes)
 
-	return chart.series.map((series) => {
+	return all.map((series) => {
 		// Leaf level first, which is also how `OptsChartData.labels` takes several levels. An outer
 		// level names each group once, and the writer spells the rest of the group as `''`.
 		const levels = series.categoryLevels.map((level) => level.map((label) => label ?? ''))
@@ -249,8 +394,12 @@ function pointStyles(series: ChartSeries, notes: NoteScope): IrValue[] | undefin
  * `c:xVal` of its own. The first series' X values are taken, and a series whose own differ is noted.
  * @param type - the write-API chart type the chart is rebuilt as
  */
-function xyData(chart: Chart, type: string, notes: NoteScope, labels: readonly (string[] | undefined)[]): IrValue[] {
-	const series = chart.series
+function xyData(
+	series: readonly ChartSeries[],
+	type: string,
+	notes: NoteScope,
+	labels: readonly (string[] | undefined)[]
+): IrValue[] {
 	const first = series[0]
 	if (!first) return []
 	const dense = blanksToZero(notes)
@@ -571,6 +720,12 @@ function customLabelOptions(
 	}
 }
 
+/** A plot's category (or X) axis and value (or Y) axis. */
+interface AxisPair {
+	cat: ChartAxis | null
+	val: ChartAxis | null
+}
+
 /**
  * The axis `catAxis*` options describe and the one `valAxis*` options describe.
  *
@@ -578,10 +733,17 @@ function customLabelOptions(
  * the `catAxis*` options onto the horizontal one. `Chart.valueAxis` is the first `c:valAx`, which
  * on those charts is that X axis, so the Y axis was never read and the X axis was taken for it
  * (#154). Told apart by `c:axPos`, the axis' edge of the plot.
+ * @param axes - the axes to choose from: the chart's, or the pair a combo's secondary group plots on
  */
-function axisPair(chart: Chart, xy: boolean): { cat: ChartAxis | null; val: ChartAxis | null } {
-	if (!xy) return { cat: chart.categoryAxis, val: chart.valueAxis }
-	const values = chart.axes.filter((axis) => axis.kind === 'val')
+function axisPair(chart: Chart, xy: boolean, axes: readonly ChartAxis[] = chart.axes): AxisPair {
+	if (axes === chart.axes && !xy) return { cat: chart.categoryAxis, val: chart.valueAxis }
+	if (!xy) {
+		return {
+			cat: axes.find((axis) => axis.kind === 'cat' || axis.kind === 'date') ?? null,
+			val: axes.find((axis) => axis.kind === 'val') ?? null,
+		}
+	}
+	const values = axes.filter((axis) => axis.kind === 'val')
 	const horizontal = (axis: ChartAxis) => axis.position === 'b' || axis.position === 't'
 	return {
 		cat: values.find(horizontal) ?? values[0] ?? null,
@@ -599,10 +761,15 @@ function axisPair(chart: Chart, xy: boolean): { cat: ChartAxis | null; val: Char
  * rebuilt chart states what its source changed and nothing else.
  * @param type - the write-API chart type the chart is rebuilt as
  */
-function axisOptions(chart: Chart, type: string, notes: NoteScope): Record<string, IrValue | undefined> {
+function axisOptions(
+	chart: Chart,
+	type: string,
+	notes: NoteScope,
+	pair: AxisPair = axisPair(chart, XY_TYPES.has(type))
+): Record<string, IrValue | undefined> {
 	const xy = XY_TYPES.has(type)
 	const scatter = type === 'scatter'
-	const { cat, val } = axisPair(chart, xy)
+	const { cat, val } = pair
 	const ser = chart.axes.find((axis) => axis.kind === 'ser') ?? null
 	// The writer gives a scatter's every axis gridlines, in a lighter grey, and any other chart its
 	// value axis' alone.
@@ -801,8 +968,12 @@ const DEFAULT_LINE_SIZE = 2
  * which the writer paints the same on every series, solid: it is taken from the first series that
  * draws one. Widths that differ between stroked series are {@link seriesOverrides}' job.
  */
-function seriesLineOptions(chart: Chart, type: string, notes: NoteScope): Record<string, IrValue | undefined> {
-	const lines = chart.series.map((series) => series.line)
+function seriesLineOptions(
+	series: readonly ChartSeries[],
+	type: string,
+	notes: NoteScope
+): Record<string, IrValue | undefined> {
+	const lines = series.map((one) => one.line)
 	if (!STROKED_TYPES.has(type)) {
 		const line = lines.find((one) => one !== null && !one.noFill)
 		if (!line) return {}
@@ -1175,23 +1346,25 @@ function differsNumber(value: number | null | undefined, fallback: number): numb
 }
 
 /**
- * What the first plot group sets on all its series, the 3-D view and how blanks plot, as `ChartOpts`.
+ * What a plot group sets on all its series, and the 3-D view, as `ChartOpts`.
  * Each is stated only where it differs from what the writer writes when it is left out, which for
  * the gap width and overlap depends on whether the group stacks.
  *
  * A 3-D bar's shape is read off its series first: PowerPoint writes the chosen shape on every
  * `c:ser` and leaves the group's at `box`.
  */
-function plotGroupOptions(chart: Chart, type: string, notes: NoteScope): Record<string, IrValue | undefined> {
-	const group = chart.plotGroups[0]
+function plotGroupOptions(
+	chart: Chart,
+	group: ChartPlotGroup | undefined,
+	type: string,
+	notes: NoteScope
+): Record<string, IrValue | undefined> {
 	if (!group) return {}
 	const series = group.series
 	const grouping = group.grouping
 	const stacked = grouping === 'stacked' || grouping === 'percentStacked'
 	const bar = type === 'bar' || type === 'bar3D'
-	const options: Record<string, IrValue | undefined> = {
-		displayBlanksAs: differs(chart.displayBlanksAs, PLOT_DEFAULTS.displayBlanksAs),
-	}
+	const options: Record<string, IrValue | undefined> = {}
 
 	if (bar) {
 		options['barDir'] = group.barDirection === 'bar' ? 'bar' : undefined
