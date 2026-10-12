@@ -73,6 +73,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`readModelToIr` carries the chart settings the read model reads.** A series outline
+  (`dataBorder` on a bar, area or pie; `lineSize`, `lineDash`, `lineDashValues` and a per-series
+  `seriesOptions[n].lineSize` on a stroked series), each axis' orientation, tick marks, label
+  position and gridlines, the value axis' log base and minor unit, the series axis' hidden flag,
+  title and format, `showBubbleSize`, and a series' own data-label format came back as the
+  writer's defaults with no note. An axis title now carries the `show*AxisTitle` flag that draws
+  it ([#130](https://github.com/shbernal/pptx-ts/issues/130)).
 - **`readModelToIr` reads a scatter's or bubble's Y axis as its value axis.** Both axes of those
   charts are `c:valAx`, and the X axis was taken for the value axis: its bounds came back as
   `valAxisMinVal` / `valAxisMaxVal`, and the Y axis' bounds and title were lost. The X axis now

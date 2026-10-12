@@ -103,6 +103,9 @@ export const NOTE_CONSTRUCTS = {
 	// Label flags the writer has no spelling for: the legend key on any plot, the category name on any
 	// but a pie or a doughnut. Absent from the IR on both sides, so there is nothing to exclude.
 	'chart.labels': { fields: [], tiers: BOTH_TIERS },
+	// A series outline the chart writer cannot dash as the source did, rebuilt solid. Both IRs carry
+	// the solid stroke, so the source dash is in neither.
+	'chart.series.line': { fields: [], tiers: BOTH_TIERS },
 	'chart.type': { fields: ['type'], tiers: BOTH_TIERS },
 	// A 3-D line, area or pie rebuilt flat: `type` names the flat chart on both sides, and the 3-D
 	// view is in neither IR.
