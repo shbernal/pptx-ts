@@ -163,6 +163,9 @@ describe('Chart.plotGroups, Chart.view3D, Chart.displayBlanksAs and series marke
 		['bar3D', { v3DRotX: 45, v3DRotY: 60, v3DPerspective: 60, v3DRAngAx: true }],
 		['line', { lineSmooth: true }],
 		['line', { lineDataSymbol: 'diamond', lineDataSymbolSize: 12 }],
+		// The marker outline was read and never mapped (#188).
+		['line', { lineDataSymbolLineColor: '9B1B30', lineDataSymbolLineSize: 3 }],
+		['scatter', { lineDataSymbolLineColor: '9B1B30', lineDataSymbolLineSize: 3 }],
 		['line', { displayBlanksAs: 'zero' }],
 		['area', { barGrouping: 'percentStacked' }],
 		['pie', { firstSliceAng: 90 }],
@@ -407,6 +410,8 @@ describe('chart and plot areas, manual layouts and series effects', () => {
 		['bar', { showLegend: true, legendLayout: { x: 0.7, y: 0.3, w: 0.25, h: 0.4 } }],
 		['bar', { chartColorsOpacity: 40 }],
 		['bar', { shadow: { type: 'outer', color: '9B1B30', blur: 4, offset: 2, angle: 45 } }],
+		// The one shadow field the mapper left out (#185).
+		['bar', { shadow: { type: 'outer', rotateWithShape: false } }],
 		['line', { lineCap: 'round' }],
 		['bar', { dataBorder: { color: '9B1B30', width: 2, transparency: 30 } }],
 		['bar', { showValue: true, dataLabelBkgrdColors: true }],

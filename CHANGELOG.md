@@ -143,6 +143,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A chart's marker outline and a series shadow's `rotateWithShape` carry through `readModelToIr`.**
+  The marker outline (`c:marker/c:spPr/a:ln`) comes back as `lineDataSymbolLineSize` and, where it is
+  not the series' own colour, `lineDataSymbolLineColor`
+  ([#188](https://github.com/shbernal/pptx-ts/issues/188)). A series shadow written with
+  `rotateWithShape: false` keeps it; the copy wrote the default `rotWithShape="1"`
+  ([#185](https://github.com/shbernal/pptx-ts/issues/185)).
 - **A chart's number formats carry through `readModelToIr`.** `ChartSeries.valueFormatCode` reads
   the format a series caches its values in (`c:numCache/c:formatCode`), which `valLabelFormatCode`
   and `dataTableFormatCode` write and nothing read, so both came back lost; it now comes back as
