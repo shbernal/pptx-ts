@@ -6,7 +6,7 @@
 
 import { describe, test } from 'vitest'
 import JSZip from 'jszip'
-import TsPptx, { type TableProps, type TableRow } from '../../dist/node.js'
+import PptxTs, { type TableProps, type TableRow } from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
 import { readModelToIr, type DeckIr } from '../../dist/script.js'
 import { assert, assertEqual, captureDiagnostics, defined, readEntry, at } from '../helpers.ts'
@@ -81,7 +81,7 @@ describe('table mapper: row heights', () => {
 		)
 
 		const { result: bytes, codes } = await captureDiagnostics(() => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			pres.addSlide().addTable(call.rows, call.options)
 			return pres.toBytes()
 		})

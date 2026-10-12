@@ -34,7 +34,7 @@
  * the thing to fix before anyone refactors it. 3-D models and embedded video are in
  * `media-matrix.mjs`.
  */
-import TsPptx from '../../dist/node.js'
+import PptxTs from '../../dist/node.js'
 
 /** A 1x1 transparent PNG, inline so this deck reads no asset off disk. */
 const PNG_1PX =
@@ -151,7 +151,7 @@ function chartex(pptx) {
 }
 
 async function compose() {
-	const pptx = new TsPptx()
+	const pptx = new PptxTs()
 	pptx.layout = 'LAYOUT_WIDE'
 	pptx.author = 'pptx-ts byte-identity gate'
 	pptx.title = 'Slide-object construct matrix'

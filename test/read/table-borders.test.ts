@@ -13,12 +13,12 @@
 // table.test.ts instead.
 
 import { describe, test } from 'vitest'
-import { TableStyle, type BorderProps, type TableRow, type TsPptx } from '../../dist/node.js'
+import { TableStyle, type BorderProps, type TableRow, type PptxTs } from '../../dist/node.js'
 import { authorRead, firstTable, schemaErrors, validatorInstalled } from './authored.ts'
 import { assert, assertEqual, defined } from '../helpers.ts'
 
 /** A 2×2 table whose top-left cell carries a full four-side border set. */
-function borderedTable(pres: TsPptx) {
+function borderedTable(pres: PptxTs) {
 	const border: [BorderProps, BorderProps, BorderProps, BorderProps] = [
 		{ type: 'solid', color: 'FF0000', width: 3 }, // top
 		{ type: 'dash', color: '00FF00', width: 1 }, // right

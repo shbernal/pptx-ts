@@ -589,7 +589,7 @@ export class Presentation {
 	 * `.rels`, `[Content_Types].xml`, and the freshly-added slide/media parts
 	 * change), because the existing chrome is never regenerated.
 	 *
-	 * `source` is any slide producer (a `TsPptx` instance); its authored slides
+	 * `source` is any slide producer (a `PptxTs` instance); its authored slides
 	 * are serialized via {@link SlideSource.extractSlides} and spliced in under
 	 * fresh partnames, with each slide's `slideLayout` relationship pointed at the
 	 * layout named by `options.layout` and its image/hyperlink relationships rebuilt

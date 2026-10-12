@@ -136,7 +136,7 @@ export function printScript(ir: DeckIr, options: PrintScriptOptions = {}): Print
 		' * A generator sized to the template. appendSlides compares slide sizes exactly and',
 		' * throws when they differ, so the inches here must round-trip to the source EMU.',
 		' */',
-		'function generator(): TsPptx {',
+		'function generator(): PptxTs {',
 		...printLayoutSetup(ir.slideSize, '\t'),
 		'\treturn pptx',
 		'}',

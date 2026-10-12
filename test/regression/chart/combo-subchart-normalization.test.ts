@@ -1,4 +1,4 @@
-import TsPptx, {
+import PptxTs, {
 	ChartType,
 	InvalidOptionError,
 	type CHART_NAME,
@@ -157,7 +157,7 @@ defineRegressionSuite('Combo subchart normalization', [
 		fn: async () => {
 			let thrown: unknown = null
 			try {
-				new TsPptx().addSlide().addChart(
+				new PptxTs().addSlide().addChart(
 					[
 						{ type: ChartType.bar, data: BAR, options: { chartColorsOpacity: NaN } },
 						{ type: ChartType.line, data: LINE, options: {} },

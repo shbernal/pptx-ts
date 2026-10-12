@@ -1,4 +1,4 @@
-import type TsPptx from '../../../dist/node.js'
+import type PptxTs from '../../../dist/node.js'
 import { defineRegressionSuite, build, readEntry, assert, captureDiagnostics } from '../../helpers.ts'
 
 // Enumerated text tokens a caller supplies reach an attribute only when the schema has them. A token
@@ -8,7 +8,7 @@ import { defineRegressionSuite, build, readEntry, assert, captureDiagnostics } f
 const SLIDE_XML = 'ppt/slides/slide1.xml'
 
 /** Build a one-slide deck, returning its slide XML and the diagnostic codes raised. */
-async function slideWith(build_: (pres: TsPptx) => unknown) {
+async function slideWith(build_: (pres: PptxTs) => unknown) {
 	const { result: xml, codes } = await captureDiagnostics(async () => {
 		const { zip } = await build(build_)
 		return readEntry(zip, SLIDE_XML)

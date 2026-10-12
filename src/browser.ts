@@ -17,10 +17,10 @@ import type { TableToSlidesProps } from './types/index.js'
  * bare `pptx-ts` specifier for the web lands here without naming this subpath.
  *
  * Same authoring API as every other entry (see `entry-surface.ts`), plus one method that only
- * makes sense with a live DOM: {@link TsPptx.tableToSlides}. `writeFile` triggers a download
+ * makes sense with a live DOM: {@link PptxTs.tableToSlides}. `writeFile` triggers a download
  * rather than touching a filesystem.
  */
-export class TsPptx extends PresentationCore {
+export class PptxTs extends PresentationCore {
 	constructor() {
 		// The table family's live-DOM half is composed here and nowhere else: it is the one part of
 		// the authoring surface that needs a `document`.
@@ -50,7 +50,7 @@ export class TsPptx extends PresentationCore {
 /**
  * Compose a presentation from the construct families it needs, on the browser adapter.
  *
- * The counterpart to {@link TsPptx}, which is composed with every family there is. This one costs
+ * The counterpart to {@link PptxTs}, which is composed with every family there is. This one costs
  * what it carries: the core tier (text, shapes, images, groups, speaker notes) plus whatever
  * `use` names, and nothing else reaches the bundle. `tableToSlides` is one of those families
  * (`domTables`), so a deck that wants it composes it.
@@ -66,5 +66,11 @@ export function createPresentation<const Fs extends readonly ConstructFamily[] =
 	return composePresentation(createBrowserRuntime(), opts)
 }
 
-export { TsPptx as default }
+export { PptxTs as default }
+
+/** @deprecated Renamed to {@link PptxTs}. This alias is removed in v5. */
+export const TsPptx = PptxTs
+/** @deprecated Renamed to {@link PptxTs}. This alias is removed in v5. */
+export type TsPptx = PptxTs
+
 export * from './entry-surface.js'

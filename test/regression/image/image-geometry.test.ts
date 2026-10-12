@@ -8,7 +8,7 @@
 import { describe, test } from 'vitest'
 import { fitSrcRectPercents, getImageSizeFromBytes } from '../../../src/media/image-size.ts'
 import { Presentation } from '../../../dist/read.js'
-import type TsPptx from '../../../dist/node.js'
+import type PptxTs from '../../../dist/node.js'
 import { EMU_PER_INCH } from '../../../dist/node.js'
 import { assert, assertEqual, build, captureDiagnostics, caughtSync, slideXml, defined, at } from '../../helpers.ts'
 
@@ -116,7 +116,7 @@ describe('image geometry', () => {
 	test('a table and an image with a null axis both take it from the placeholder', async () => {
 		// The image treated `null` as unstated and the table did not: a table with `x: null` landed at
 		// the half-inch default rather than the placeholder's 3in.
-		const withPlaceholder = (p: TsPptx) =>
+		const withPlaceholder = (p: PptxTs) =>
 			p.defineSlideMaster({
 				title: 'M',
 				objects: [{ placeholder: { options: { name: 'body', type: 'body', x: 3, y: 1, w: 4, h: 2 }, text: '' } }],

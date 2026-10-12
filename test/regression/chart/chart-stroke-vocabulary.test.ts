@@ -1,4 +1,4 @@
-import TsPptx, {
+import PptxTs, {
 	ChartType,
 	SchemeColor,
 	type CHART_NAME,
@@ -207,7 +207,7 @@ defineRegressionSuite('Chart stroke vocabulary', [
 			// `ChartOpts` used to extend `OptsChartGridLine`, so `color`, `size`, `style` and `cap`
 			// typechecked on the chart bag itself and were read by nothing. A JS caller can still
 			// pass them; what this pins is that they reach no attribute.
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			// The directive is the assertion: this line no longer compiles, which is the half of the
 			// change TypeScript enforces. A JavaScript caller can still pass them.
 			// @ts-expect-error the gridline keys are not chart options

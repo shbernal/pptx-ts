@@ -3,10 +3,10 @@
 // `typecheck:test`; the runtime assertions check that `WriteOutputMap` states what the zip layer
 // actually returns, since the method's return is a cast over it.
 import { describe, expect, expectTypeOf, test } from 'vitest'
-import TsPptx, { type WRITE_OUTPUT_TYPE } from '../../../dist/node.js'
+import PptxTs, { type WRITE_OUTPUT_TYPE } from '../../../dist/node.js'
 
 function deck() {
-	const pres = new TsPptx()
+	const pres = new PptxTs()
 	pres.addSlide().addText('x', { x: 1, y: 1, w: 2, h: 1 })
 	return pres
 }

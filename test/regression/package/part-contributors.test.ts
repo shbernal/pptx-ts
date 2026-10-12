@@ -12,7 +12,7 @@
 // These import from `src/` rather than `dist/` because the seam is internal: `PackageSource` and
 // the contributor list are not on the public surface.
 import { afterAll, beforeAll, describe, test, vi } from 'vitest'
-import TsPptx from '../../../src/node.ts'
+import PptxTs from '../../../src/node.ts'
 import { buildPackageParts, type PackageSource } from '../../../src/package/assemble.ts'
 import { composeFamilies } from '../../../src/families/shared.ts'
 import { ALL_CONSTRUCT_FAMILIES } from '../../../src/entry-families.ts'
@@ -26,7 +26,7 @@ const SERIES = [{ name: 'Rev', labels: ['Q1', 'Q2'], values: [1, 2] }]
 
 /** A deck that reaches all three families: a chart, a comment, and the notes every slide carries. */
 function richDeck() {
-	const pres = new TsPptx()
+	const pres = new PptxTs()
 	const slide = pres.addSlide()
 	slide.addText('contributed parts', { x: 1, y: 1, w: 4, h: 1 })
 	slide.addChart(SERIES, { type: 'bar', x: 1, y: 2, w: 4, h: 3 })
@@ -37,7 +37,7 @@ function richDeck() {
 
 /** A deck that reaches none of the optional families -- text boxes and the notes slides only. */
 function textDeck() {
-	const pres = new TsPptx()
+	const pres = new PptxTs()
 	pres.addSlide().addText('text only', { x: 1, y: 1, w: 4, h: 1 })
 	return pres
 }
@@ -46,7 +46,7 @@ function textDeck() {
  * The slice of deck state the packager reads. `Presentation` assembles this privately with the
  * full contributor list; here the list is the variable under test.
  */
-function sourceWith(pres: TsPptx, partContributors: PackageSource['partContributors']): PackageSource {
+function sourceWith(pres: PptxTs, partContributors: PackageSource['partContributors']): PackageSource {
 	// Element access reaches the private members, still type-checked.
 	return {
 		runtime: pres['_runtime'],
@@ -80,7 +80,7 @@ function decode(bytes: Uint8Array) {
 }
 
 /** Build a deck through the seam and return its parts as `path -> text`, in emission order. */
-async function partsOf(makePres: () => TsPptx, partContributors: PackageSource['partContributors']) {
+async function partsOf(makePres: () => PptxTs, partContributors: PackageSource['partContributors']) {
 	const parts = await buildPackageParts(sourceWith(makePres(), partContributors), {})
 	return new Map(parts.map((part) => [part.path, decode(part.data)]))
 }

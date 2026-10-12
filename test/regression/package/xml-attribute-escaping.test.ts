@@ -16,7 +16,7 @@ import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import JSZip from 'jszip'
 import { describe, test, expect, beforeAll } from 'vitest'
-import TsPptx from '../../../dist/node.js'
+import PptxTs from '../../../dist/node.js'
 import { FIXTURES } from '../../read/corpus.ts'
 import { readEntry } from '../../helpers.ts'
 
@@ -38,7 +38,7 @@ beforeAll(async () => {
 
 /** `ppt/presentation.xml` of a deck with one embedded face under `typeface`. */
 async function presentationXml(typeface: string) {
-	const pres = new TsPptx()
+	const pres = new PptxTs()
 	await pres.embedFont({ data: regular, typeface })
 	pres.addSlide().addText('hi', { x: 1, y: 1, w: 4, h: 1, fontFace: typeface })
 	const zip = await JSZip.loadAsync(await pres.toBytes())

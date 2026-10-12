@@ -31,16 +31,16 @@ import {
 	PRSTGEOM_LAYOUT_IN,
 } from './contract.mjs'
 
-async function loadTsPptx() {
-	const { default: TsPptx, ShapeType } = await import(pathToFileURL(path.join(ROOT, 'dist', 'node.js')).href)
-	return { TsPptx, ShapeType }
+async function loadPptxTs() {
+	const { default: PptxTs, ShapeType } = await import(pathToFileURL(path.join(ROOT, 'dist', 'node.js')).href)
+	return { PptxTs, ShapeType }
 }
 
 // --- 1a. navigation deck ----------------------------------------------------
 /** Build a focused nav deck from the built dist and return its path. */
 export async function generateNavDeck() {
-	const { TsPptx } = await loadTsPptx()
-	const pptx = new TsPptx()
+	const { PptxTs } = await loadPptxTs()
+	const pptx = new PptxTs()
 	pptx.defineLayout({ name: 'SMOKE', width: 10, height: 5.63 })
 	pptx.layout = 'SMOKE'
 
@@ -81,8 +81,8 @@ export async function generateNavDeck() {
 // --- 1b. custGeom connection-site deck --------------------------------------
 /** Build a custGeom deck whose connector binds to the custom shape's connection site. */
 export async function generateGeomDeck() {
-	const { TsPptx, ShapeType } = await loadTsPptx()
-	const pptx = new TsPptx()
+	const { PptxTs, ShapeType } = await loadPptxTs()
+	const pptx = new PptxTs()
 	pptx.defineLayout({ name: 'SMOKE', width: 10, height: 5.63 })
 	pptx.layout = 'SMOKE'
 
@@ -138,8 +138,8 @@ export async function generateGeomDeck() {
 // --- 1c. OLE / embedded-object deck -----------------------------------------
 /** Build a deck with one embedded-package and one generic-blob OLE object. */
 export async function generateOleDeck() {
-	const { TsPptx } = await loadTsPptx()
-	const pptx = new TsPptx()
+	const { PptxTs } = await loadPptxTs()
+	const pptx = new PptxTs()
 	pptx.defineLayout({ name: 'SMOKE', width: 10, height: 5.63 })
 	pptx.layout = 'SMOKE'
 
@@ -158,8 +158,8 @@ export async function generateOleDeck() {
 // --- 1d. 3D-model deck ------------------------------------------------------
 /** Build a deck with one embedded 3D model over a magenta preview. */
 export async function generateModel3dDeck() {
-	const { TsPptx } = await loadTsPptx()
-	const pptx = new TsPptx()
+	const { PptxTs } = await loadPptxTs()
+	const pptx = new PptxTs()
 	pptx.defineLayout({ name: 'SMOKE3D', width: MODEL3D_LAYOUT_IN.w, height: MODEL3D_LAYOUT_IN.h })
 	pptx.layout = 'SMOKE3D'
 
@@ -186,8 +186,8 @@ export async function generateModel3dDeck() {
  * spelled twice.
  */
 export async function generatePresetGeomDeck() {
-	const { TsPptx } = await loadTsPptx()
-	const pptx = new TsPptx()
+	const { PptxTs } = await loadPptxTs()
+	const pptx = new PptxTs()
 	pptx.defineLayout({ name: 'PRSTGEOM', width: PRSTGEOM_LAYOUT_IN.w, height: PRSTGEOM_LAYOUT_IN.h })
 	pptx.layout = 'PRSTGEOM'
 

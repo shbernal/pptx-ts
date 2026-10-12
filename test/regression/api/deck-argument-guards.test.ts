@@ -1,6 +1,6 @@
 import {
 	defineRegressionSuite,
-	TsPptx,
+	PptxTs,
 	captureDiagnostics,
 	assert,
 	assertEqual,
@@ -25,7 +25,7 @@ import { InvalidOptionError } from '../../../dist/node.js'
 
 /** A deck with one section already in place, for the section-routing cases. */
 function withSection(title = 'Intro') {
-	const pres = new TsPptx()
+	const pres = new PptxTs()
 	pres.addSection({ title })
 	return pres
 }
@@ -35,7 +35,7 @@ defineRegressionSuite('Deck argument guards', [
 		name: 'addSection without an argument warns and leaves the deck usable',
 		fn: async () => {
 			const { result, codes } = await captureDiagnostics(async () => {
-				const pres = new TsPptx()
+				const pres = new PptxTs()
 				// @ts-expect-error addSection requires its props
 				pres.addSection(undefined)
 				pres.addSlide()
@@ -105,7 +105,7 @@ defineRegressionSuite('Deck argument guards', [
 			// A mistyped `masterTitle` fell back to the default layout with nothing said, while a
 			// mistyped `sectionTitle` beside it warned.
 			const { result, codes } = await captureDiagnostics(async () => {
-				const pres = new TsPptx()
+				const pres = new PptxTs()
 				pres.defineSlideMaster({ title: 'MASTER' })
 				pres.addSlide({ masterTitle: 'MASTR' })
 				return pres.toBytes()
@@ -121,9 +121,9 @@ defineRegressionSuite('Deck argument guards', [
 			// carries an unregistered default layout, whose name matches no master.
 			const rows = Array.from({ length: 60 }, (_, i) => [{ text: `row ${i}` }])
 			const { result, codes } = await captureDiagnostics(async () => {
-				const plain = new TsPptx()
+				const plain = new PptxTs()
 				plain.addSlide().addTable(rows, { x: 0.5, y: 0.5, w: 4, autoPage: true })
-				const mastered = new TsPptx()
+				const mastered = new PptxTs()
 				mastered.defineSlideMaster({ title: 'MASTER' })
 				mastered.addSlide({ masterTitle: 'MASTER' }).addTable(rows, { x: 0.5, y: 0.5, w: 4, autoPage: true })
 				return { plain, mastered }
@@ -179,7 +179,7 @@ defineRegressionSuite('Deck argument guards', [
 
 			for (const layout of usable) {
 				const { result, codes } = await captureDiagnostics(async () => {
-					const pres = new TsPptx()
+					const pres = new PptxTs()
 					// @ts-expect-error a dimension given as a numeric string
 					pres.defineLayout(layout)
 					return pres
@@ -198,7 +198,7 @@ defineRegressionSuite('Deck argument guards', [
 			// told about one of them. The two sides are independently wrong and both get said.
 			const { codes } = await captureDiagnostics(async () => {
 				// @ts-expect-error both dimensions given as strings
-				new TsPptx().defineLayout({ name: 'BothStrings', width: '10', height: '7.5' })
+				new PptxTs().defineLayout({ name: 'BothStrings', width: '10', height: '7.5' })
 			})
 			assertEqual(codes.length, 2, `both sides must be reported; got ${JSON.stringify(codes)}`)
 		},
@@ -213,7 +213,7 @@ defineRegressionSuite('Deck argument guards', [
 				{ width: 10, height: 7 },
 				{ name: '', width: 10, height: 7 },
 			]) {
-				const pres = new TsPptx()
+				const pres = new PptxTs()
 				let err: unknown = null
 				try {
 					// @ts-expect-error a layout with no usable name
@@ -241,7 +241,7 @@ defineRegressionSuite('Deck argument guards', [
 			// width they had in fact passed, on top of the clamp diagnostic that says what really
 			// happened. One statement, one diagnostic.
 			const { codes } = await captureDiagnostics(async () => {
-				new TsPptx().defineLayout({ name: 'ZeroWidth', width: 0, height: 7 })
+				new PptxTs().defineLayout({ name: 'ZeroWidth', width: 0, height: 7 })
 			})
 			assertEqual(codes.join(','), 'layout/size-out-of-range', `got ${JSON.stringify(codes)}`)
 		},
@@ -261,7 +261,7 @@ defineRegressionSuite('Deck argument guards', [
 				const { codes } = await captureDiagnostics(async () => {
 					try {
 						// @ts-expect-error a layout missing a dimension
-						new TsPptx().defineLayout(layout)
+						new PptxTs().defineLayout(layout)
 					} catch (ex) {
 						err = ex
 					}
@@ -279,7 +279,7 @@ defineRegressionSuite('Deck argument guards', [
 			// The sensitivity check for the case above: these assertions can only mean
 			// something if a good definition passes silently.
 			const { result, codes } = await captureDiagnostics(async () => {
-				const pres = new TsPptx()
+				const pres = new PptxTs()
 				pres.defineLayout({ name: 'A3', width: 16.5, height: 11.7 })
 				pres.layout = 'A3'
 				return pres
@@ -297,7 +297,7 @@ defineRegressionSuite('Deck argument guards', [
 			let err: unknown = null
 			try {
 				// @ts-expect-error a master with no title
-				new TsPptx().defineSlideMaster({ background: { color: 'FF0000' } })
+				new PptxTs().defineSlideMaster({ background: { color: 'FF0000' } })
 			} catch (ex) {
 				err = ex
 			}
@@ -314,7 +314,7 @@ defineRegressionSuite('Deck argument guards', [
 			// than being embedded as a font PowerPoint will not open.
 			let err: unknown = null
 			try {
-				await new TsPptx().embedFont({ data: 'not base64 at all!!', typeface: 'Silkscreen' })
+				await new PptxTs().embedFont({ data: 'not base64 at all!!', typeface: 'Silkscreen' })
 			} catch (ex) {
 				err = ex
 			}

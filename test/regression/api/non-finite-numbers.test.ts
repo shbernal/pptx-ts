@@ -8,7 +8,7 @@ import { describe, test } from 'vitest'
 import { FontMetricsRegistry } from '../../../dist/measure.js'
 import type { MeasureTextOptions } from '../../../dist/node.js'
 import {
-	TsPptx,
+	PptxTs,
 	assert,
 	assertEqual,
 	build,
@@ -29,7 +29,7 @@ interface Outcome {
 }
 
 /** Build a deck and read slide 1 back with the diagnostics it raised, or the error the build threw. */
-async function outcome(author: (pres: TsPptx) => void): Promise<Outcome> {
+async function outcome(author: (pres: PptxTs) => void): Promise<Outcome> {
 	try {
 		const { result, codes } = await captureDiagnostics(async () => {
 			const { zip } = await build(author)
@@ -73,7 +73,7 @@ describe('non-finite and out-of-range numbers on the write side', () => {
 	})
 
 	test('an OLE image size that is not an EMU size in range is refused, and a fraction is rounded', async () => {
-		const ole = (imgW: number, imgH: number) => (p: TsPptx) =>
+		const ole = (imgW: number, imgH: number) => (p: PptxTs) =>
 			p.addSlide().addOleObject({ data: 'UEsDBA==', progId: 'Excel.Sheet.12', imgW, imgH, ...BOX })
 		assertEqual((await outcome(ole(NaN, 100))).error?.code, 'ole/invalid-image-size', 'a NaN width')
 		assertEqual((await outcome(ole(100, -5))).error?.code, 'ole/invalid-image-size', 'a negative height')
@@ -82,7 +82,7 @@ describe('non-finite and out-of-range numbers on the write side', () => {
 	})
 
 	test('a zoom transitionDur is refused when NaN, clamped when out of range, and rounded', async () => {
-		const zoom = (transitionDur: number) => (p: TsPptx) => {
+		const zoom = (transitionDur: number) => (p: PptxTs) => {
 			const host = p.addSlide()
 			p.addSlide()
 			host.addSlideZoom({ target: 2, ...BOX, transitionDur })
@@ -117,7 +117,7 @@ describe('non-finite and out-of-range numbers on the write side', () => {
 	})
 
 	test('a media loopCount that plays nothing warns and plays once, and a real count is kept', async () => {
-		const media = (loopCount: number) => (p: TsPptx) =>
+		const media = (loopCount: number) => (p: PptxTs) =>
 			p.addSlide().addMedia({ type: 'audio', data: 'data:audio/mpeg;base64,SUQz', ...BOX, loopCount })
 		for (const loopCount of [NaN, 0, -1, Infinity]) {
 			const result = await outcome(media(loopCount))
@@ -130,7 +130,7 @@ describe('non-finite and out-of-range numbers on the write side', () => {
 	})
 
 	test('measureText refuses a box it cannot lay out, and the height checks refuse one too', () => {
-		const pres = new TsPptx()
+		const pres = new PptxTs()
 		const words = 'one two three four five six seven eight nine ten eleven twelve'
 		const measure = (opts: Omit<MeasureTextOptions, 'fontFace' | 'fontSize'> & Partial<MeasureTextOptions>) =>
 			pres.measureText(words, { fontFace: 'Arial', fontSize: 12, ...opts })

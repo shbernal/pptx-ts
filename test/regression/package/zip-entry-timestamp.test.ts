@@ -25,8 +25,8 @@ const NODE_ENTRY = pathToFileURL(
  */
 function headerTimeAndDate(tz: string): string {
 	const script = [
-		`const { default: TsPptx } = await import(${JSON.stringify(NODE_ENTRY)})`,
-		'const pres = new TsPptx()',
+		`const { default: PptxTs } = await import(${JSON.stringify(NODE_ENTRY)})`,
+		'const pres = new PptxTs()',
 		"pres.addSlide().addText('hi', { x: 1, y: 1, w: 2, h: 1 })",
 		'const bytes = await pres.toBytes()',
 		"process.stdout.write(Buffer.from(bytes.subarray(10, 14)).toString('hex'))",

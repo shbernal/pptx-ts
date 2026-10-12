@@ -1,5 +1,5 @@
 import { defineRegressionSuite, assert, assertEqual, defined, caught } from '../../helpers.ts'
-import TsPptx, {
+import PptxTs, {
 	TsPptxError,
 	InvalidOptionError,
 	UnsupportedFeatureError,
@@ -25,7 +25,7 @@ defineRegressionSuite('Error taxonomy', [
 		name: 'an invalid option throws an InvalidOptionError with a stable code',
 		fn: async () => {
 			const err = await caught(() => {
-				const pres = new TsPptx()
+				const pres = new PptxTs()
 				pres.layout = 'NOT-A-LAYOUT'
 			})
 
@@ -40,7 +40,7 @@ defineRegressionSuite('Error taxonomy', [
 			// `typeface` is required at the type level, so only an untyped caller reaches the runtime
 			// guard — which is exactly the caller the taxonomy exists for.
 			// @ts-expect-error `typeface` is required
-			const err = await caught(() => new TsPptx().embedFont({ data: 'AAAA' }))
+			const err = await caught(() => new PptxTs().embedFont({ data: 'AAAA' }))
 
 			// A consumer catching broadly must still be able to catch this, and a consumer catching
 			// only pptx-ts failures must be able to say so in one `instanceof`.

@@ -1,4 +1,4 @@
-import TsPptx, { ChartType } from '../../../dist/node.js'
+import PptxTs, { ChartType } from '../../../dist/node.js'
 import type JSZip from 'jszip'
 import { defineRegressionSuite, build, readEntry, listEntries, assert, assertRejects } from '../../helpers.ts'
 
@@ -49,7 +49,7 @@ defineRegressionSuite('addChart signature', [
 	{
 		name: 'omitting the chart type on the options object throws',
 		fn: async () => {
-			const p = new TsPptx()
+			const p = new PptxTs()
 			await assertRejects(
 				// @ts-expect-error `type` is intentionally omitted
 				() => p.addSlide().addChart(DATA, { x: 1, y: 1, w: 6, h: 3 }),

@@ -11,7 +11,7 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, test, expect } from 'vitest'
-import TsPptx, {
+import PptxTs, {
 	setDiagnosticHandler,
 	type Diagnostic,
 	type TableCell,
@@ -49,7 +49,7 @@ function firstXfrm(xml: string) {
 const szValues = (xml: string) => [...xml.matchAll(/sz="(\d+)"/g)].map((m) => Number(m[1]))
 
 async function pptxWithSilkscreen() {
-	const pres = new TsPptx()
+	const pres = new PptxTs()
 	await pres.registerFontMetrics('Silkscreen', REG_PATH)
 	await pres.registerFontMetrics('Silkscreen', BOLD_PATH, { bold: true })
 	return pres
@@ -153,7 +153,7 @@ describe("applyMeasuredFit: fit:'shrink' through dist export", () => {
 	})
 
 	test('bytes source (Uint8Array) works the same as a path', async () => {
-		const pres = new TsPptx()
+		const pres = new PptxTs()
 		await pres.registerFontMetrics('Silkscreen', new Uint8Array(readFileSync(REG_PATH)))
 		const slide = pres.addSlide()
 		slide.addText(OVERFLOW, { x: 1, y: 1, w: 3, h: 1, fontFace: 'Silkscreen', fontSize: 18, fit: 'shrink' })

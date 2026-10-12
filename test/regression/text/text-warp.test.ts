@@ -1,8 +1,8 @@
 import JSZip from 'jszip'
-import TsPptx from '../../../dist/node.js'
+import PptxTs from '../../../dist/node.js'
 import { defineRegressionSuite, assert } from '../../helpers.ts'
 
-async function buildSlideXml(pres: TsPptx) {
+async function buildSlideXml(pres: PptxTs) {
 	const buf = await pres.toBytes()
 	const zip = await JSZip.loadAsync(buf)
 	const entry = zip.file('ppt/slides/slide1.xml')
@@ -17,7 +17,7 @@ defineRegressionSuite('Preset text warp (prstTxWarp) [usages-transverses-textArc
 	{
 		name: 'textWarp emits <a:prstTxWarp> with the requested preset',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			pres.addSlide().addText('R&D', { x: 1, y: 1, w: 4, h: 1, textWarp: 'textArchUp' })
 
 			const xml = await buildSlideXml(pres)
@@ -30,7 +30,7 @@ defineRegressionSuite('Preset text warp (prstTxWarp) [usages-transverses-textArc
 	{
 		name: 'prstTxWarp precedes the autofit element when both are set',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			pres.addSlide().addText('R&D', { x: 1, y: 1, w: 4, h: 1, textWarp: 'textArchUp', fit: 'resize' })
 
 			const xml = await buildSlideXml(pres)
@@ -43,7 +43,7 @@ defineRegressionSuite('Preset text warp (prstTxWarp) [usages-transverses-textArc
 	{
 		name: 'no textWarp → no prstTxWarp emitted',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			pres.addSlide().addText('plain', { x: 1, y: 1, w: 4, h: 1 })
 
 			const xml = await buildSlideXml(pres)

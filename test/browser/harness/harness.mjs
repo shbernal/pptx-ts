@@ -11,7 +11,7 @@
 // The relative specifier below resolves because scripts/browser-harness-server.mjs
 // serves the repo with its real layout, so the URL depth and the on-disk depth agree —
 // which is also what lets `pnpm run typecheck:test` resolve it to `dist/browser.d.ts`.
-import TsPptx, { setDiagnosticHandler } from '../../../dist/browser.js'
+import PptxTs, { setDiagnosticHandler } from '../../../dist/browser.js'
 import { buildDeckBase64, DECKS } from './decks.mjs'
 
 /**
@@ -52,7 +52,7 @@ async function build(name, options = {}) {
 	const diagnostics = []
 	setDiagnosticHandler((diagnostic) => diagnostics.push({ code: diagnostic.code, message: diagnostic.message }))
 	try {
-		return { ok: true, base64: await buildDeckBase64(new TsPptx(), name, ASSETS, options), diagnostics }
+		return { ok: true, base64: await buildDeckBase64(new PptxTs(), name, ASSETS, options), diagnostics }
 	} catch (err) {
 		// The media pipeline wraps a loader failure in `media/load-failed` and chains the
 		// original as `cause`, so the adapter's own code is one level down. Both are
@@ -87,14 +87,14 @@ async function build(name, options = {}) {
 async function download(name) {
 	const deck = DECKS[name]
 	if (!deck) throw new Error(`unknown harness deck: ${name}`)
-	const pres = new TsPptx()
+	const pres = new PptxTs()
 	await deck(pres, ASSETS)
 	return await pres.writeFile({ fileName: 'harness.pptx' })
 }
 
 /** Prove the byte-oriented convenience works without Node's global `Buffer`. */
 async function bytes() {
-	const pres = new TsPptx()
+	const pres = new PptxTs()
 	pres.addSlide().addText('portable bytes', { x: 1, y: 1, w: 2, h: 1 })
 	const out = await pres.toBytes()
 	return {

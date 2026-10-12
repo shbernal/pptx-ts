@@ -2,7 +2,7 @@ import type { DiagnosticCode, PresetEffect, TransitionProps } from '../../../dis
 import JSZip from 'jszip'
 import { fixturePath, readOracle } from '../../read/corpus.ts'
 import {
-	TsPptx,
+	PptxTs,
 	PNG_1X1_DATA_URI,
 	assert,
 	assertEqual,
@@ -36,7 +36,7 @@ function sndAcOf(xml: string) {
 	return m ? m[0] : null
 }
 
-// TsPptx numbers slide rels by its own deterministic scheme (media first), so an
+// PptxTs numbers slide rels by its own deterministic scheme (media first), so an
 // embedded sound's rId differs from PowerPoint's authored value; normalize for the
 // structural comparison (internal consistency is asserted separately).
 function normRid(s: string | null | undefined) {
@@ -320,7 +320,7 @@ defineRegressionSuite('Preset build animations (write)', [
 // Transition sounds (p:sndAc). The writer reproduces
 // PowerPoint's sndAc forms (embedded start / looped / stop-previous) plus the audio
 // rel + media part + content-type graph, deduping identical sound bytes. rIds use
-// TsPptx's own numbering, so the sndAc is compared rId-normalized to the oracle.
+// PptxTs's own numbering, so the sndAc is compared rId-normalized to the oracle.
 const SOUND_WAV = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA='
 
 defineRegressionSuite('Transition sounds (write)', [
@@ -484,7 +484,7 @@ defineRegressionSuite('Transition sounds (write)', [
 		fn: async () => {
 			const transition = { type: 'fade', sound: { data: SOUND_WAV, name: 'ding.wav' } } as const
 			const before = JSON.stringify(transition)
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			pres.addSlide().transition = transition
 			const second = pres.addSlide()
 			second.addImage({ data: PNG_1X1_DATA_URI, x: 1, y: 1, w: 1, h: 1 })

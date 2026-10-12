@@ -1,5 +1,5 @@
 import type JSZip from 'jszip'
-import type TsPptx from '../../../dist/node.js'
+import type PptxTs from '../../../dist/node.js'
 import type { Diagnostic, TextBulletProps } from '../../../dist/node.js'
 import {
 	setDiagnosticHandler,
@@ -72,7 +72,7 @@ const JPG_PATH = 'test/assets/cc_logo.jpg'
 const SVG_PATH = 'test/assets/lock-green.svg'
 
 /** Build, capturing library diagnostics as `{ code, message }` pairs. */
-async function buildCapturingLogs(buildFn: (pres: TsPptx) => unknown) {
+async function buildCapturingLogs(buildFn: (pres: PptxTs) => unknown) {
 	const warnings: Diagnostic[] = []
 	setDiagnosticHandler((d) => warnings.push(d))
 	try {
@@ -100,7 +100,7 @@ defineRegressionSuite('Text definition', [
 		// caller reaches for, and it failed inside the definer with a `TypeError`.
 		name: 'a single run object where an array belongs is refused on addText and on a text descriptor',
 		fn: async () => {
-			const refused = (buildFn: (pres: TsPptx) => unknown) => caught(() => build(buildFn))
+			const refused = (buildFn: (pres: PptxTs) => unknown) => caught(() => build(buildFn))
 			const run = { text: 'x' }
 			const box = { x: 1, y: 1, w: 2, h: 1 }
 			// @ts-expect-error a lone run object is not one of the text overloads

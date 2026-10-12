@@ -200,7 +200,7 @@ def build(theme_name):
     # A: your code
     card(A[0], y1, A[1], h1)
     add(g.text("Your TypeScript", A[0] + 20, y1 + 32, 17, "sans-sb", t["text"]))
-    for i, line in enumerate(["const pptx = new TsPptx()", "pptx.addSlide()", "  .addText(…)", "  .addChart(…)"]):
+    for i, line in enumerate(["const pptx = new PptxTs()", "pptx.addSlide()", "  .addText(…)", "  .addChart(…)"]):
         add(g.text(line, A[0] + 20, y1 + 62 + i * 19, 12.5, "mono", t["muted"]))
 
     # B: pptx-ts

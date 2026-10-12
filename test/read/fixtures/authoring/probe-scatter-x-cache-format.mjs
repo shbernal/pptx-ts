@@ -13,12 +13,12 @@
 import fs from 'node:fs'
 import JSZip from 'jszip'
 import { zipPart } from './oracle-utils.mjs'
-import TsPptx, { ChartType } from '../../../../dist/node.js'
+import PptxTs, { ChartType } from '../../../../dist/node.js'
 
 const outDir = new URL('../../../../.tmp/scatter-x-cache-format/', import.meta.url)
 fs.mkdirSync(outDir, { recursive: true })
 
-const pres = new TsPptx()
+const pres = new PptxTs()
 pres.addSlide().addChart(
 	[
 		{ name: 'X', values: [0.25, 0.5, 0.75, 1] },

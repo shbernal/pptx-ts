@@ -9,7 +9,7 @@
 
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
-import TsPptx from '../../dist/node.js'
+import PptxTs from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
 import { bytesEqual, assert, assertEqual, partBodies, at } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
@@ -26,7 +26,7 @@ function isChromePart(name: string) {
 }
 
 function wideGenerator() {
-	const pptx = new TsPptx()
+	const pptx = new PptxTs()
 	pptx.layout = 'LAYOUT_WIDE'
 	return pptx
 }

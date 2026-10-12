@@ -1,5 +1,5 @@
 import { ChartType } from '../../../dist/node.js'
-import type TsPptx from '../../../dist/node.js'
+import type PptxTs from '../../../dist/node.js'
 import type JSZip from 'jszip'
 import { defineRegressionSuite, build, listEntries, assert, assertEqual } from '../../helpers.ts'
 
@@ -19,7 +19,7 @@ const embeddingParts = (zip: JSZip): string[] =>
 		.filter((f) => /^ppt\/embeddings\/Microsoft_Excel_Worksheet\d+\.xlsx$/.test(f))
 		.sort()
 
-const buildTwoChartDeck = (p: TsPptx): void => {
+const buildTwoChartDeck = (p: PptxTs): void => {
 	const data1 = [{ name: 'S1', labels: ['A', 'B'], values: [1, 2] }]
 	const data2 = [{ name: 'S2', labels: ['A', 'B'], values: [3, 4] }]
 	p.addSlide().addChart(data1, { type: ChartType.bar, x: 1, y: 1, w: 4, h: 3 })
@@ -85,7 +85,7 @@ defineRegressionSuite('Chart part-name determinism', [
 	},
 ])
 
-async function reExport(pres: TsPptx): Promise<JSZip> {
+async function reExport(pres: PptxTs): Promise<JSZip> {
 	const { default: Zip } = await import('jszip')
 	const buf = await pres.toBytes()
 	return Zip.loadAsync(buf)

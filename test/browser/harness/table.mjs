@@ -13,7 +13,7 @@
 // numbers are the right numbers, or that another engine would agree — see
 // ./table-fixture.mjs and docs/contributing/scope-and-policy.md "Out Of Active Scope".
 
-import TsPptx from '../../../dist/browser.js'
+import PptxTs from '../../../dist/browser.js'
 import { TABLE_HTML, TABLE_ID } from './table-fixture.mjs'
 
 /**
@@ -77,7 +77,7 @@ function bases(scenario) {
 async function build(scenario) {
 	try {
 		render(scenario)
-		const pres = new TsPptx()
+		const pres = new PptxTs()
 		// The instance method, not the `pptx-ts/html` free function: this is the call a
 		// browser consumer makes, and it is the one that resolves the table id off the
 		// ambient `document`.

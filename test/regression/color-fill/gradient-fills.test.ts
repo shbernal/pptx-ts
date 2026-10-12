@@ -1,4 +1,4 @@
-import type TsPptx from '../../../dist/node.js'
+import type PptxTs from '../../../dist/node.js'
 import { ShapeType } from '../../../dist/node.js'
 import {
 	defineRegressionSuite,
@@ -13,7 +13,7 @@ import {
 	type ThrownError,
 } from '../../helpers.ts'
 
-async function expectBuildError(buildFn: (pres: TsPptx) => unknown, expectedMessage: string) {
+async function expectBuildError(buildFn: (pres: PptxTs) => unknown, expectedMessage: string) {
 	let err: ThrownError | undefined
 	try {
 		await build(buildFn)

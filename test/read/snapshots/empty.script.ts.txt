@@ -19,7 +19,7 @@
 
 import { readFile, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
-import TsPptx from 'pptx-ts'
+import PptxTs from 'pptx-ts'
 import { Presentation } from 'pptx-ts/read'
 
 /** Resolve a path against this script rather than against the working directory. */
@@ -33,8 +33,8 @@ const deck = await Presentation.fromTemplate(here('./template.pptx'))
  * A generator sized to the template. appendSlides compares slide sizes exactly and
  * throws when they differ, so the inches here must round-trip to the source EMU.
  */
-function generator(): TsPptx {
-	const pptx = new TsPptx()
+function generator(): PptxTs {
+	const pptx = new PptxTs()
 	pptx.defineLayout({ name: 'source', width: 13.333333, height: 7.5 })
 	pptx.layout = 'source'
 	return pptx

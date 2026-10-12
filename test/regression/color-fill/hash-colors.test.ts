@@ -1,8 +1,8 @@
-import TsPptx, { ChartType, ShapeType } from '../../../dist/node.js'
+import PptxTs, { ChartType, ShapeType } from '../../../dist/node.js'
 import JSZip from 'jszip'
 import { defineRegressionSuite, assert, readEntry } from '../../helpers.ts'
 
-async function buildSlide1(pres: TsPptx) {
+async function buildSlide1(pres: PptxTs) {
 	const buf = await pres.toBytes()
 	const zip = await JSZip.loadAsync(buf)
 	const entry = zip.file('ppt/slides/slide1.xml')
@@ -14,7 +14,7 @@ defineRegressionSuite('Hash-prefixed colors [legacy bug-07]', [
 	{
 		name: 'shape fill with "#FF0000" emits val="FF0000" (no leading hash)',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			const slide = pres.addSlide()
 			slide.addShape(ShapeType.rect, {
 				x: 1,
@@ -38,7 +38,7 @@ defineRegressionSuite('Hash-prefixed colors [legacy bug-07]', [
 	{
 		name: 'text color "#00FF00" emits val="00FF00"',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			const slide = pres.addSlide()
 			slide.addText('hello', { x: 1, y: 1, w: 4, h: 0.5, color: '#00FF00' })
 
@@ -53,7 +53,7 @@ defineRegressionSuite('Hash-prefixed colors [legacy bug-07]', [
 	{
 		name: 'shape line color "#0000FF" emits val="0000FF"',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			const slide = pres.addSlide()
 			slide.addShape(ShapeType.rect, {
 				x: 1,
@@ -74,7 +74,7 @@ defineRegressionSuite('Hash-prefixed colors [legacy bug-07]', [
 	{
 		name: 'shadow color "#888888" emits val="888888"',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			const slide = pres.addSlide()
 			slide.addShape(ShapeType.rect, {
 				x: 1,
@@ -104,7 +104,7 @@ defineRegressionSuite('Hash-prefixed colors [legacy bug-07]', [
 			// `length === 6`, so `'#4472C4'` was neither a hex colour nor a scheme colour and the
 			// border silently became the `F9F9F9` fallback. Every other colour option in the
 			// library strips the hash before testing. One shared `isHexColor` does too.
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			pres.addSlide().addChart([{ name: 'S', labels: ['a'], values: [1] }], {
 				type: ChartType.bar,
 				x: 1,

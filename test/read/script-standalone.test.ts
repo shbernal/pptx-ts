@@ -23,7 +23,7 @@ import path from 'node:path'
 import { promisify } from 'node:util'
 import JSZip from 'jszip'
 import { describe, expect, test } from 'vitest'
-import TsPptx, { ChartType, SchemeColor, type BackgroundOption } from '../../dist/node.js'
+import PptxTs, { ChartType, SchemeColor, type BackgroundOption } from '../../dist/node.js'
 import { Presentation, isGroupShape, type AnyShape, type ThemeColorSlot } from '../../dist/read.js'
 import {
 	canonicalDeckIr,
@@ -80,8 +80,8 @@ async function runStandalone(bytes: Uint8Array, options: PrintStandaloneScriptOp
 }
 
 /** Author a deck through the write API and return its bytes, for cases the corpus lacks. */
-async function authored(build: (pptx: TsPptx) => void) {
-	const pptx = new TsPptx()
+async function authored(build: (pptx: PptxTs) => void) {
+	const pptx = new PptxTs()
 	build(pptx)
 	return await pptx.write({ outputType: 'nodebuffer' })
 }
@@ -126,7 +126,7 @@ describe('standalone printer — corpus invariants', () => {
 		// tier. Pinned to the manifest rather than to a literal anyone can re-guess.
 		const manifest = JSON.parse(await readFile(path.join(REPO, 'package.json'), 'utf8'))
 		const { code } = printStandaloneScript(await irFor('empty.pptx'))
-		assert(code.includes(`import TsPptx from '${manifest.name}'`), `import is not ${manifest.name}`)
+		assert(code.includes(`import PptxTs from '${manifest.name}'`), `import is not ${manifest.name}`)
 		assert(!code.includes(`${manifest.name}/read`), 'a standalone script must not import the read half')
 	})
 

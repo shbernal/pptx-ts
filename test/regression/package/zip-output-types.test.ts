@@ -5,13 +5,13 @@
 // 'nodebuffer', so the other shapes are otherwise unmeasured.
 import { Buffer } from 'node:buffer'
 import { describe, test } from 'vitest'
-import TsPptx from '../../../dist/node.js'
+import PptxTs from '../../../dist/node.js'
 import { assert, assertRejects } from '../../helpers.ts'
 
 const PK_MAGIC = [0x50, 0x4b] // "PK" — local file header of any zip
 
 function makePres() {
-	const pres = new TsPptx()
+	const pres = new PptxTs()
 	pres.addSlide().addText('hi', { x: 1, y: 1, w: 2, h: 1 })
 	return pres
 }

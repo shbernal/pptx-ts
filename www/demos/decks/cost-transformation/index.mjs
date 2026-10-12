@@ -16,7 +16,7 @@
  * (`www/demos/`) import it and build the same deck in a browser: the deck is the deck, only the
  * runner differs.
  */
-import TsPptx, { ChartType, ShapeType } from 'pptx-ts'
+import PptxTs, { ChartType, ShapeType } from 'pptx-ts'
 import { columns, signedPct } from '../lib/layout.mjs'
 import {
 	BRANCHES,
@@ -1553,7 +1553,7 @@ const PLAN = [
  * is what would force the deck to be described twice.
  */
 export async function compose() {
-	const pptx = new TsPptx()
+	const pptx = new PptxTs()
 
 	pptx.title = 'Project Lodestar: Cost Transformation'
 	pptx.subject = 'Operating cost transformation: steering committee recommendation'

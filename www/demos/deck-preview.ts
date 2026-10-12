@@ -10,7 +10,7 @@
  * copies.
  */
 import { importDeck, renderDeck } from 'pptx-html'
-import type TsPptx from 'pptx-ts'
+import type PptxTs from 'pptx-ts'
 
 /**
  * One entry from `pptx-html`'s fidelity ledger, flattened for display.
@@ -60,7 +60,7 @@ export interface DeckSource {
 	description: string
 	fileName: string
 	/** Assemble the deck and return the presentation, having written nothing. */
-	compose(): Promise<TsPptx>
+	compose(): Promise<PptxTs>
 }
 
 /** Assemble a deck and return the package bytes. Nothing is written. */

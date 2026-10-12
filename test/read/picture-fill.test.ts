@@ -28,7 +28,7 @@ import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import { Presentation, type Table, type TableCell } from '../../dist/read.js'
 import { TableStyle } from '../../dist/node.js'
-import { PNG_1X1, assert, assertEqual, defined, readEntry, type TsPptx, at } from '../helpers.ts'
+import { PNG_1X1, assert, assertEqual, defined, readEntry, type PptxTs, at } from '../helpers.ts'
 import { openFixture, readFixture } from './corpus.ts'
 import {
 	authorRead,
@@ -238,7 +238,7 @@ describe('TableCell.resolvedFill — a non-solid own fill suppresses the style g
 	 * because PowerPoint reads `<a:tableStyleId>` off its own gallery and never out of the
 	 * package. `MEDIUM_STYLE_2_ACCENT_1` is defined in the fixture, with `firstRow` shading.
 	 */
-	function styledTable(pres: TsPptx) {
+	function styledTable(pres: PptxTs) {
 		pres
 			.addSlide()
 			.addTable([[{ text: 'A', options: { fill: { type: 'image', image: { data: PNG_1X1 } } } }, { text: 'B' }]], {

@@ -1,4 +1,4 @@
-import TsPptx, { ChartType } from '../../../dist/node.js'
+import PptxTs, { ChartType } from '../../../dist/node.js'
 import {
 	defineRegressionSuite,
 	build,
@@ -183,7 +183,7 @@ defineRegressionSuite('Combo chart axes [legacy bug-06]', [
 				],
 				[bubble, { ...bubble, type: ChartType.bubble3d }],
 			]) {
-				const pres = new TsPptx()
+				const pres = new PptxTs()
 				const slide = pres.addSlide()
 				const error = await assertRejects(
 					() => slide.addChart(types, { x: 1, y: 1, w: 6, h: 3 }),

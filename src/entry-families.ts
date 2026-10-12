@@ -2,7 +2,7 @@
  * pptx-ts: the construct families the three main entries are composed with
  *
  * The full authoring surface, as a list: `index.ts`, `node.ts` and `browser.ts` each compose every
- * family, so `TsPptx` authors everything it ever has; the browser entry adds the table family's
+ * family, so `PptxTs` authors everything it ever has; the browser entry adds the table family's
  * live-DOM half on top, because that one needs a `document` to read. The families a *composed*
  * presentation gets without asking are the shorter list in `families/core.ts`.
  *

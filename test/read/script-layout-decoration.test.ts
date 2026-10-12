@@ -34,7 +34,7 @@ import { promisify } from 'node:util'
 import { fileURLToPath } from 'node:url'
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
-import TsPptx, { ChartType } from '../../dist/node.js'
+import PptxTs, { ChartType } from '../../dist/node.js'
 import {
 	Presentation,
 	isGraphicFrame,
@@ -113,8 +113,8 @@ function objectsOfLayout(ir: DeckIr, index: number): IrValue[] {
 }
 
 /** Author a deck through the write API and return its bytes. */
-async function authored(build: (pptx: TsPptx) => void): Promise<Uint8Array> {
-	const pptx = new TsPptx()
+async function authored(build: (pptx: PptxTs) => void): Promise<Uint8Array> {
+	const pptx = new PptxTs()
 	build(pptx)
 	return await pptx.write({ outputType: 'uint8array' })
 }

@@ -1,8 +1,8 @@
-import TsPptx, { ShapeType, type ShadowProps } from '../../../dist/node.js'
+import PptxTs, { ShapeType, type ShadowProps } from '../../../dist/node.js'
 import JSZip from 'jszip'
 import { defineRegressionSuite, assert, at } from '../../helpers.ts'
 
-async function buildSlideXml(pres: TsPptx) {
+async function buildSlideXml(pres: PptxTs) {
 	const buf = await pres.toBytes()
 	const zip = await JSZip.loadAsync(buf)
 	const entry = zip.file('ppt/slides/slide1.xml')
@@ -28,7 +28,7 @@ defineRegressionSuite('Shared shadow options [legacy bug-05]', [
 	{
 		name: 'two addShape calls sharing one shadow object emit identical effectLst',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			const slide = pres.addSlide()
 			/** The caller authors public `ShadowProps`; the writer stamps the derived internal `_alpha` onto it. */
 			const shadow: ShadowProps & { _alpha?: number } = {
@@ -67,7 +67,7 @@ defineRegressionSuite('Shared shadow options [legacy bug-05]', [
 	{
 		name: 'shared shadow object literal not mutated after build',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			const slide = pres.addSlide()
 			/** The caller's own `ShadowProps`; the definer normalizes a COPY per shape. */
 			const shadow: ShadowProps & { _alpha?: number } = {
@@ -91,7 +91,7 @@ defineRegressionSuite('Shared shadow options [legacy bug-05]', [
 	{
 		name: 'shared shadow across image+shape emits same EMU values (no double-conversion)',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			const slide = pres.addSlide()
 			const png =
 				'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkAAIAAAoAAv/lxKUAAAAASUVORK5CYII='

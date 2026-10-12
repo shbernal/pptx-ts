@@ -7,21 +7,21 @@
  * what the snippet contract in `snippet.ts` promises it: a fresh presentation and its first
  * slide, from the browser build of the library.
  */
-import type TsPptx from 'pptx-ts'
+import type PptxTs from 'pptx-ts'
 import { type DeckPreview, previewDeck } from '../demos/deck-preview.ts'
 
 /** A compiled fence body, as `wrapSnippet` writes it. */
 export interface SnippetModule {
 	/** True when the body makes its own first slide, so none is made for it. */
 	ownsSlide: boolean
-	default(pptx: TsPptx, slide?: ReturnType<TsPptx['addSlide']>): Promise<void>
+	default(pptx: PptxTs, slide?: ReturnType<PptxTs['addSlide']>): Promise<void>
 }
 
 /** What the page hands the component: the fence's module, imported on first call. */
 export type SnippetLoader = () => Promise<SnippetModule>
 
 /** Run a fence body against a fresh presentation and return the presentation. */
-export async function runSnippet(load: SnippetLoader): Promise<TsPptx> {
+export async function runSnippet(load: SnippetLoader): Promise<PptxTs> {
 	const [{ default: Presentation }, snippet] = await Promise.all([import('pptx-ts'), load()])
 	const pptx = new Presentation()
 	await snippet.default(pptx, snippet.ownsSlide ? undefined : pptx.addSlide())

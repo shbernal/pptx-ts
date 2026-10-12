@@ -20,7 +20,7 @@ import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import JSZip from 'jszip'
-import TsPptx from '../../dist/node.js'
+import PptxTs from '../../dist/node.js'
 import { Presentation, isGraphicFrame, type AnyShape, type Chart, type ChartEx, type Table } from '../../dist/read.js'
 import { defined } from '../helpers.ts'
 import type { ValidationDiagnostic } from 'ooxml-validate'
@@ -34,16 +34,16 @@ export { validatorInstalled }
 export interface Authored {
 	presentation: Presentation
 	buf: Uint8Array
-	pres: TsPptx
+	pres: PptxTs
 }
 
 /**
  * Author a deck in memory with the write API and load it into the deep read
- * model. `build` receives a fresh TsPptx instance — add slides / shapes /
+ * model. `build` receives a fresh PptxTs instance — add slides / shapes /
  * charts / tables with the normal write API — and may be async.
  */
-export async function authorRead(build: (pres: TsPptx) => unknown): Promise<Authored> {
-	const pres = new TsPptx()
+export async function authorRead(build: (pres: PptxTs) => unknown): Promise<Authored> {
+	const pres = new PptxTs()
 	await build(pres)
 	const buf = await pres.toBytes()
 	const presentation = await Presentation.load(buf)
@@ -65,8 +65,8 @@ export async function authorRead(build: (pres: TsPptx) => unknown): Promise<Auth
  * Author the table with `tableStyle: TableStyle.MEDIUM_STYLE_2_ACCENT_1` — the fixture defines
  * that GUID, with `firstRow` shading and `band1H`/`band1V` banding.
  */
-export async function authorReadWithFixtureStyles(build: (pres: TsPptx) => unknown): Promise<Authored> {
-	const pres = new TsPptx()
+export async function authorReadWithFixtureStyles(build: (pres: PptxTs) => unknown): Promise<Authored> {
+	const pres = new PptxTs()
 	await build(pres)
 	const authored = await pres.toBytes()
 

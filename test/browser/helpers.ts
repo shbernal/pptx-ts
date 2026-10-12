@@ -179,8 +179,8 @@ export async function buildDeckInHarness(
 
 /** Build the same deck in Node, against `dist/node.js`, for the comparison. */
 export async function buildDeckInNode(deck: string, options: HarnessWriteOptions = {}): Promise<string> {
-	const { default: TsPptx } = await import('../../dist/node.js')
-	return await buildDeckBase64(new TsPptx(), deck, NODE_ASSETS, options)
+	const { default: PptxTs } = await import('../../dist/node.js')
+	return await buildDeckBase64(new PptxTs(), deck, NODE_ASSETS, options)
 }
 
 /** Decode a package the harness returned as base64. */
@@ -226,12 +226,12 @@ export async function buildTableInHarness(page: Page, scenario: string): Promise
 export async function buildTableInNode(scenario: string): Promise<string> {
 	const { Window } = await import('happy-dom')
 	const { tableToSlides } = await import('../../dist/html.js')
-	const { default: TsPptx } = await import('../../dist/node.js')
+	const { default: PptxTs } = await import('../../dist/node.js')
 	const { TABLE_HTML, TABLE_ID } = await import('./harness/table-fixture.mjs')
 
 	const win = new Window()
 	win.document.body.innerHTML = defined(TABLE_HTML[scenario], `unknown table fixture: ${scenario}`)
-	const pres = new TsPptx()
+	const pres = new PptxTs()
 	const table = win.document.getElementById(TABLE_ID)
 	if (!table) throw new Error(`fixture "${scenario}" rendered no #${TABLE_ID}`)
 	tableToSlides(pres, table)

@@ -22,6 +22,9 @@
 		}
 	},
 	"ignore": ["tools/powerpoint-vm/shared/**"],
+	"ignoreIssues": {
+		"src/{index,node,browser}.ts": ["duplicates"]
+	},
 	"ignoreExportsUsedInFile": true,
 	"ignoreBinaries": ["reg", "fc-match"]
 }

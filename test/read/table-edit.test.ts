@@ -14,15 +14,15 @@
 // are the ones an edit causes somewhere it was not looking.
 
 import { describe, test } from 'vitest'
-import TsPptx from '../../dist/node.js'
+import PptxTs from '../../dist/node.js'
 import { Presentation, type Table, type TableCell } from '../../dist/read.js'
 import JSZip from 'jszip'
 import { firstTable } from './authored.ts'
 import { assert, assertEqual, defined, readEntry, caughtSync, at } from '../helpers.ts'
 
 /** Author a deck, load it for editing, and return the presentation plus its first table. */
-async function editable(build: (pres: TsPptx) => void) {
-	const pres = new TsPptx()
+async function editable(build: (pres: PptxTs) => void) {
+	const pres = new PptxTs()
 	build(pres)
 	const buf = await pres.toBytes()
 	const presentation = await Presentation.load(buf)
@@ -57,7 +57,7 @@ async function savedSlide(presentation: Presentation) {
 }
 
 /** A plain 3x3 table with no styling to get in the way. */
-function plainTable(p: TsPptx) {
+function plainTable(p: PptxTs) {
 	p.addSlide().addTable(
 		[
 			[{ text: 'A1' }, { text: 'B1' }, { text: 'C1' }],
@@ -190,7 +190,7 @@ function assertGridConsistent(table: Table) {
 }
 
 /** A 3x3 table whose top-left 2x2 is merged by the writer, which repeats the spans on covered cells. */
-function writerMergedTable(p: TsPptx) {
+function writerMergedTable(p: PptxTs) {
 	p.addSlide().addTable(
 		[
 			[{ text: 'X', options: { rowspan: 2, colspan: 2 } }, { text: 'C1' }],
@@ -217,7 +217,7 @@ function stripCoveredSpans(table: Table) {
 }
 
 /** The forms a 2x2 merge at the top-left of a 3x3 table reaches an edit in. */
-const MERGE_FORMS: { form: string; build: (p: TsPptx) => void; merge: (table: Table) => void }[] = [
+const MERGE_FORMS: { form: string; build: (p: PptxTs) => void; merge: (table: Table) => void }[] = [
 	{ form: 'the writer', build: writerMergedTable, merge: () => {} },
 	{ form: 'mergeCells', build: plainTable, merge: (table) => table.mergeCells(0, 0, 1, 1) },
 	{ form: 'a producer that repeats no spans', build: writerMergedTable, merge: stripCoveredSpans },

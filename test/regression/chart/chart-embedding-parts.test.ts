@@ -1,4 +1,4 @@
-import TsPptx, { ChartType, type CHART_NAME, type OptsChartData } from '../../../dist/node.js'
+import PptxTs, { ChartType, type CHART_NAME, type OptsChartData } from '../../../dist/node.js'
 import JSZip from 'jszip'
 import {
 	defineRegressionSuite,
@@ -54,7 +54,7 @@ defineRegressionSuite('Chart embedding parts [legacy bug-17]', [
 	{
 		name: 'chart-present deck still creates chart and embedding parts (regression)',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			const slide = pres.addSlide()
 			const data = [
 				{

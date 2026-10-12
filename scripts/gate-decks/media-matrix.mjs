@@ -22,7 +22,7 @@
  * Unlike the other gate decks this one reads assets off disk: a `.glb`, an `.mp4` and a `.jpg`,
  * all committed test fixtures under `test/`, so every run reads the same bytes.
  */
-import TsPptx, { ShapeType } from '../../dist/node.js'
+import PptxTs, { ShapeType } from '../../dist/node.js'
 import { fileURLToPath } from 'node:url'
 
 /**
@@ -155,7 +155,7 @@ function master(pptx) {
 }
 
 async function compose() {
-	const pptx = new TsPptx()
+	const pptx = new PptxTs()
 	pptx.layout = 'LAYOUT_WIDE'
 	pptx.author = 'pptx-ts byte-identity gate'
 	pptx.title = 'Media and picture construct matrix'

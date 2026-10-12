@@ -4,7 +4,7 @@
 // a round-trip bug in fflate can't mask itself by being used on both sides.
 // Keep jszip as a devDep for this reason — do not "consolidate" onto src/zip.ts.
 import JSZip from 'jszip'
-import TsPptx, { setDiagnosticHandler, type Diagnostic } from '../dist/node.js'
+import PptxTs, { setDiagnosticHandler, type Diagnostic } from '../dist/node.js'
 import { describe, expect, test } from 'vitest'
 
 /**
@@ -22,8 +22,8 @@ const PNG_1X1 =
 /** The same bytes with the `data:` scheme, for the paths that assert both spellings are taken. */
 const PNG_1X1_DATA_URI = `data:${PNG_1X1}`
 
-async function build(buildFn: (pres: TsPptx) => unknown) {
-	const pres = new TsPptx()
+async function build(buildFn: (pres: PptxTs) => unknown) {
+	const pres = new PptxTs()
 	await buildFn(pres)
 	const buf = await pres.toBytes()
 	const zip = await JSZip.loadAsync(buf)
@@ -50,7 +50,7 @@ async function readEntry(zip: JSZip, path: string): Promise<string> {
  *
  * @param n 1-based slide number
  */
-async function slideXml(buildFn: (pres: TsPptx) => unknown, n = 1): Promise<string> {
+async function slideXml(buildFn: (pres: PptxTs) => unknown, n = 1): Promise<string> {
 	const { zip } = await build(buildFn)
 	return readEntry(zip, `ppt/slides/slide${n}.xml`)
 }
@@ -498,7 +498,7 @@ async function captureDiagnostics<R>(fn: () => R | Promise<R>) {
 export type { RegressionCase, ThrownError }
 
 export {
-	TsPptx,
+	PptxTs,
 	setDiagnosticHandler,
 	captureDiagnostics,
 	PNG_1X1,

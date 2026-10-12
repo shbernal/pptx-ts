@@ -5,7 +5,7 @@
  * source PowerPoint opens when a user edits the chart. `createExcelWorksheet` writes
  * the workbook plus the chart part + its `.rels` into the presentation package;
  * `buildEmbeddedWorksheet` and `chartPartBodies` are also used by slide extraction
- * (`TsPptx.extractSlides`), whose chart relationships `appendSlides` rebuilds itself against the
+ * (`PptxTs.extractSlides`), whose chart relationships `appendSlides` rebuilds itself against the
  * parts it reserves. Everything here is a pure string/bytes
  * builder — no I/O beyond the passed-in ZipWriter, no mutation of the presentation model.
  *
@@ -81,7 +81,7 @@ const XLSX_THEME_XML =
  * return its bytes — the data source PowerPoint opens when a user edits the
  * chart's data. Pure (no zip side effects), so both the package write path
  * ({@link createExcelWorksheet}) and the read-side injection path
- * (`TsPptx.extractSlides`) can reuse it.
+ * (`PptxTs.extractSlides`) can reuse it.
  * @param {SlideRelChart} chartObject - chart object
  * @return {Uint8Array} the embedded `.xlsx` package bytes
  */

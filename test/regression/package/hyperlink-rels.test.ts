@@ -11,9 +11,9 @@ import {
 	at,
 } from '../../helpers.ts'
 import type JSZip from 'jszip'
-import type { TableCellProps, TsPptx } from '../../../dist/node.js'
+import type { TableCellProps, PptxTs } from '../../../dist/node.js'
 
-type BuildFn = (pres: TsPptx) => unknown
+type BuildFn = (pres: PptxTs) => unknown
 
 // `createHyperlinkRels` walks the text/table-cell tree and mints one slide relationship per
 // hyperlink, stamping the resolved `_rId` back onto the hyperlink so the emitter can write
@@ -391,11 +391,11 @@ defineRegressionSuite('Hyperlink relationship registration', [
 		// deck is serialized, by a write and by `extractSlides` alike.
 		name: 'a slide link past the last slide is refused when the deck is written or extracted, and the last slide is not',
 		fn: async () => {
-			const author = (p: TsPptx, slide: number) => {
+			const author = (p: PptxTs, slide: number) => {
 				p.addSlide().addText('next', { x: 1, y: 1, w: 2, h: 1, hyperlink: { slide } })
 				p.addSlide()
 			}
-			let deck: TsPptx | undefined
+			let deck: PptxTs | undefined
 			const error = await failedBuild((p) => {
 				author(p, 3)
 				deck = p
@@ -422,7 +422,7 @@ defineRegressionSuite('Hyperlink relationship registration', [
 		// number reached the package unchecked as well.
 		name: 'a slide link on a layout object resolves to the slide part, and is bounds-checked',
 		fn: async () => {
-			const author = (p: TsPptx, slide: number) => {
+			const author = (p: PptxTs, slide: number) => {
 				p.defineSlideMaster({
 					title: 'linking',
 					objects: [{ text: { text: 'go', options: { x: 1, y: 1, w: 2, h: 1, hyperlink: { slide } } } }],

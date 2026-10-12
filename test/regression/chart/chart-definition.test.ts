@@ -6,7 +6,7 @@ import {
 	type ChartOpts,
 	type OptsChartData,
 } from '../../../dist/node.js'
-import type TsPptx from '../../../dist/node.js'
+import type PptxTs from '../../../dist/node.js'
 import {
 	setDiagnosticHandler,
 	defineRegressionSuite,
@@ -62,7 +62,7 @@ async function chartFrom(data: OptsChartData[] | ChartMulti[], options?: ChartOp
 }
 
 /** Build, capturing library warnings (`log.ts` routes every one through `console.warn`). */
-async function buildCapturingWarnings(buildFn: (pres: TsPptx) => unknown) {
+async function buildCapturingWarnings(buildFn: (pres: PptxTs) => unknown) {
 	const warnings: string[] = []
 	setDiagnosticHandler((d) => warnings.push(d.message))
 	try {

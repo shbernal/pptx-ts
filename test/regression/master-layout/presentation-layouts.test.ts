@@ -9,12 +9,12 @@ import {
 	pixelsToEmu,
 	pointsToEmu,
 } from '../../../dist/index.js'
-import type { StandardLayout, TsPptx } from '../../../dist/node.js'
+import type { StandardLayout, PptxTs } from '../../../dist/node.js'
 import { defineRegressionSuite, build, readEntry, assert, assertEqual, assertRejects } from '../../helpers.ts'
 
 const WIDE = STANDARD_LAYOUTS.LAYOUT_WIDE
 
-async function assertPresentationSize(buildFn: (pres: TsPptx) => unknown, expected: StandardLayout, label: string) {
+async function assertPresentationSize(buildFn: (pres: PptxTs) => unknown, expected: StandardLayout, label: string) {
 	const { zip } = await build(buildFn)
 	const xml = await readEntry(zip, 'ppt/presentation.xml')
 	const expectedTag = `<p:sldSz cx="${expected.widthEmu}" cy="${expected.heightEmu}"/>`

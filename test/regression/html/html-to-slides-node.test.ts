@@ -1,7 +1,7 @@
 import JSZip from 'jszip'
 import { Window } from 'happy-dom'
 import { tableToSlides } from '../../../dist/html.js'
-import BrowserTsPptx from '../../../dist/browser.js'
+import BrowserPptxTs from '../../../dist/browser.js'
 import {
 	build,
 	readEntry,
@@ -32,8 +32,8 @@ const ONE_IN_EMU = 914400
  * live-DOM half, so it is the only one whose `tableToSlides` resolves; `toBytes` needs nothing from
  * the browser runtime adapter, so the deck it writes here is the deck a browser would write.
  */
-async function buildBrowser(buildFn: (pres: BrowserTsPptx) => unknown) {
-	const pres = new BrowserTsPptx()
+async function buildBrowser(buildFn: (pres: BrowserPptxTs) => unknown) {
+	const pres = new BrowserPptxTs()
 	buildFn(pres)
 	return { zip: await JSZip.loadAsync(await pres.toBytes()) }
 }
@@ -661,7 +661,7 @@ defineRegressionSuite('HTML table to slides on Node (happy-dom)', [
 			const viaFunction = await build((pptx) => {
 				tableToSlides(pptx, tableOf(windowWith(html)))
 			})
-			assertEqual(typeof BrowserTsPptx.prototype.tableToSlides, 'function', 'the browser build must keep the method')
+			assertEqual(typeof BrowserPptxTs.prototype.tableToSlides, 'function', 'the browser build must keep the method')
 			assertEqual(
 				await readEntry(viaMethod.zip, 'ppt/slides/slide1.xml'),
 				await readEntry(viaFunction.zip, 'ppt/slides/slide1.xml'),

@@ -1,4 +1,4 @@
-import type TsPptx from '../../../dist/node.js'
+import type PptxTs from '../../../dist/node.js'
 import type { LineCap } from '../../../dist/node.js'
 import { assert, build, caught, defineRegressionSuite, firstXmlBlock, slideXml } from '../../helpers.ts'
 
@@ -22,7 +22,7 @@ function lineBlock(xml: string) {
 	return ln
 }
 
-async function expectBuildError(buildFn: (pres: TsPptx) => unknown, expectedMessage: string) {
+async function expectBuildError(buildFn: (pres: PptxTs) => unknown, expectedMessage: string) {
 	const err = await caught(() => build(buildFn))
 	assert(err, 'expected build to fail')
 	const message = err.message

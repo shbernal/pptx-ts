@@ -25,7 +25,7 @@ describe('what counts', () => {
 
 	test('dist/, scripts/ and a src/ path that is not a relative specifier do not', () => {
 		const source = [
-			`import TsPptx from '../../dist/node.js'`,
+			`import PptxTs from '../../dist/node.js'`,
 			`import { x } from '../../scripts/src-utils.mjs'`,
 			`const file = 'src/gen/chart/plot-bar.ts'`,
 		].join('\n')

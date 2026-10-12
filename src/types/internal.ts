@@ -505,6 +505,6 @@ export interface PresentationPropsInternal extends PresentationProps {
 	sections: SectionInternalProps[]
 	slideLayouts: SlideLayoutInternal[]
 	slides: PresSlideInternal[]
-	/** Author-side embedded fonts (see {@link TsPptx.embedFont}); empty when none. */
+	/** Author-side embedded fonts (see {@link PptxTs.embedFont}); empty when none. */
 	embeddedFonts: EmbeddedFont[]
 }

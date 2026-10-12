@@ -1,7 +1,7 @@
 // Acceptance for the composable surface: `createPresentation({ use })` against the published
 // entry, not the internal seam. What it has to hold up:
 //
-//   1. A composed deck is a real deck. The core tier writes the same package a default `TsPptx`
+//   1. A composed deck is a real deck. The core tier writes the same package a default `PptxTs`
 //      writes for the same slides -- part for part, byte for byte.
 //   2. A family that was not composed is absent, loudly. `addChart` on a core-tier deck raises
 //      `family/not-composed` naming the family, rather than failing as a missing property.
@@ -10,7 +10,7 @@
 // Imports from `dist/` because this is the public surface: the entry's `createPresentation` and
 // the `pptx-ts/families` subpath are what a consumer reaches for.
 import { describe, expect, test } from 'vitest'
-import TsPptx, { createPresentation, type Composed } from '../../../dist/node.js'
+import PptxTs, { createPresentation, type Composed } from '../../../dist/node.js'
 import { charts, comments, tables } from '../../../dist/families.js'
 import { assert, assertEqual, caughtSync } from '../../helpers.ts'
 
@@ -18,7 +18,7 @@ const SERIES = [{ name: 'Rev', labels: ['Q1', 'Q2'], values: [1, 2] }]
 
 const decoder = new TextDecoder()
 /** Parts as `path -> text`, with the two timestamps a pair of builds can straddle blanked. */
-async function partsOf(pres: Pick<TsPptx, 'toParts'>) {
+async function partsOf(pres: Pick<PptxTs, 'toParts'>) {
 	const parts = await pres.toParts()
 	return new Map(
 		parts.map((part) => [
@@ -43,7 +43,7 @@ function coreDeck<P extends Composed<[]>>(pres: P): P {
 describe('createPresentation', () => {
 	test('the core tier writes the same package the full class does', async () => {
 		const composed = await partsOf(coreDeck(createPresentation()))
-		const full = await partsOf(coreDeck(new TsPptx()))
+		const full = await partsOf(coreDeck(new PptxTs()))
 		// Not "a deck it can open" -- the same deck. A tier that emitted a near-miss would be a
 		// second implementation of the write path, which is the thing the family seam exists to avoid.
 		assertEqual(JSON.stringify([...composed.keys()]), JSON.stringify([...full.keys()]), 'part paths and order')
@@ -94,7 +94,7 @@ describe('createPresentation', () => {
 	})
 
 	test('the default class still carries every family', () => {
-		const slide = new TsPptx().addSlide()
+		const slide = new PptxTs().addSlide()
 		for (const method of [
 			'addChart',
 			'addTable',

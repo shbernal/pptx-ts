@@ -7,7 +7,7 @@
  */
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import TsPptx from 'pptx-ts'
+import PptxTs from 'pptx-ts'
 import { tableToSlides } from 'pptx-ts/html'
 import { Window } from 'happy-dom'
 
@@ -24,7 +24,7 @@ const FIT_FONT = 'Liberation Sans'
 const FIT_FONT_FILE = '/usr/share/fonts/liberation/LiberationSans-Regular.ttf'
 
 const out = process.argv[2] ?? path.join(HERE, 'work/features.pptx')
-const pptx = new TsPptx()
+const pptx = new PptxTs()
 applyDesign(pptx)
 await pptx.registerFontMetrics(FIT_FONT, FIT_FONT_FILE)
 

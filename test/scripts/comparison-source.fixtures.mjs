@@ -5,31 +5,31 @@
 // lines) before it runs. The real corpus is untransformed `.mjs`, so these are too. The types
 // sit in JSDoc above each binding, outside the text `toString()` returns.
 
-/** @typedef {import('../../dist/node.js').default} TsPptx */
+/** @typedef {import('../../dist/node.js').default} PptxTs */
 
-/** @param {TsPptx} pres */
+/** @param {PptxTs} pres */
 export const addSlideBuild = (pres) => {
 	pres.addSlide()
 }
 
-/** @param {TsPptx} pres */
+/** @param {PptxTs} pres */
 export const multiLineBuild = (pres) => {
 	pres.addSlide().addText('probe', {
 		x: 1,
 	})
 }
 
-/** @param {TsPptx} pres */
+/** @param {PptxTs} pres */
 export const asyncBuild = async (pres) => {
 	await pres.embedFont({ typeface: 'Silkscreen' })
 }
 
-/** @param {TsPptx} pres */
+/** @param {PptxTs} pres */
 export const conciseBuild = (pres) => pres.addSlide()
 
 export const PNG = 'data:image/png;base64,AAA'
 
-/** @param {TsPptx} pres */
+/** @param {PptxTs} pres */
 export const imageBuild = (pres) => {
 	pres.addSlide().addImage({ data: PNG })
 }
@@ -37,7 +37,7 @@ export const imageBuild = (pres) => {
 export const FIRST = 'a'
 export const SECOND = 'b'
 
-/** @param {TsPptx} pres */
+/** @param {PptxTs} pres */
 export const twoConstantBuild = (pres) => {
 	pres.addSlide().addImage({ data: SECOND, altText: FIRST })
 }

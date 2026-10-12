@@ -10,7 +10,7 @@
 
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
-import TsPptx, { ChartType } from '../../dist/node.js'
+import PptxTs, { ChartType } from '../../dist/node.js'
 import { Presentation, isGraphicFrame, type GraphicFrame } from '../../dist/read.js'
 import { authorRead } from './authored.ts'
 import { bytesEqual, assert, assertEqual, defined, partBodies, at } from '../helpers.ts'
@@ -264,7 +264,7 @@ describe('element_ with markDirty()', () => {
 // chartEx has no checked-in fixture — the writer emits every `cx:` piece, so these
 // author a waterfall in memory and round-trip the writer's own bytes (the same
 // harness test/read/chartex-read.test.ts uses for the getters).
-function authorWaterfall(pres: TsPptx) {
+function authorWaterfall(pres: PptxTs) {
 	pres.addSlide().addChart([{ name: 'Cash Flow', labels: ['Start', 'Q1', 'End'], values: [100, 40, 190] }], {
 		type: ChartType.waterfall,
 		x: 1,
@@ -337,7 +337,7 @@ describe('chartEx element_ / markDirty()', () => {
 
 describe('shared-chrome and notes element_ / markDirty()', () => {
 	/** A deck with a defined master (so master/layout placeholders exist) and notes. */
-	function authorChrome(pres: TsPptx) {
+	function authorChrome(pres: PptxTs) {
 		pres.theme = { headFontFace: 'Georgia' }
 		pres.defineSlideMaster({ title: 'BRANDED', slideNumber: { x: 0.5, y: 7.0 } })
 		pres.addSlide({ masterTitle: 'BRANDED' }).addNotes('a note')

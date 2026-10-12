@@ -13,7 +13,7 @@ import {
 	at,
 } from '../../helpers.ts'
 import type JSZip from 'jszip'
-import type TsPptx from '../../../dist/node.js'
+import type PptxTs from '../../../dist/node.js'
 
 // The *definition* side of `slide.addComment()` (`gen/define/comment.ts`), as distinct from
 // `comments-xml.test.ts`, which byte-pins the emitters given already-normalized `SlideComment`
@@ -42,7 +42,7 @@ import type TsPptx from '../../../dist/node.js'
 // contributes nothing to the reported numbers — see the header there.
 
 /** Build, capturing library warnings (`log.ts` routes every one through `console.warn`). */
-async function buildCapturingWarnings(buildFn: (pres: TsPptx) => unknown) {
+async function buildCapturingWarnings(buildFn: (pres: PptxTs) => unknown) {
 	const warnings: string[] = []
 	setDiagnosticHandler((d) => warnings.push(d.message))
 	try {

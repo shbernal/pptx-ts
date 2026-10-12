@@ -18,7 +18,7 @@ import { createNodeRuntime } from './runtime/node.js'
  * differs. This one can reach the filesystem, so `writeFile` writes a real file and media may be
  * loaded from a path — both of which throw on the runtime-agnostic entry.
  */
-export class TsPptx extends PresentationCore {
+export class PptxTs extends PresentationCore {
 	constructor() {
 		super(createNodeRuntime(), ALL_CONSTRUCT_FAMILIES)
 	}
@@ -27,7 +27,7 @@ export class TsPptx extends PresentationCore {
 /**
  * Compose a presentation from the construct families it needs, on the Node adapter.
  *
- * The counterpart to {@link TsPptx}, which is composed with every family there is. This one costs
+ * The counterpart to {@link PptxTs}, which is composed with every family there is. This one costs
  * what it carries: the core tier (text, shapes, images, groups, speaker notes) plus whatever
  * `use` names, and nothing else reaches the bundle.
  * @param {ComposeOptions} opts - the families to compose in, from `pptx-ts/families`
@@ -42,5 +42,11 @@ export function createPresentation<const Fs extends readonly ConstructFamily[] =
 	return composePresentation(createNodeRuntime(), opts)
 }
 
-export { TsPptx as default }
+export { PptxTs as default }
+
+/** @deprecated Renamed to {@link PptxTs}. This alias is removed in v5. */
+export const TsPptx = PptxTs
+/** @deprecated Renamed to {@link PptxTs}. This alias is removed in v5. */
+export type TsPptx = PptxTs
+
 export * from './entry-surface.js'

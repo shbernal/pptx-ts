@@ -1,4 +1,4 @@
-import TsPptx, {
+import PptxTs, {
 	ChartType,
 	InvalidOptionError,
 	type CHART_NAME,
@@ -127,7 +127,7 @@ defineRegressionSuite('Chart option validation', [
 				// The type error is the point: `CHART_NAME` keeps TypeScript callers out, and this guard
 				// exists for the JavaScript ones it cannot reach.
 				// @ts-expect-error `nonsense` is not a chart type
-				new TsPptx().addSlide().addChart(SERIES, { ...BASE, type: 'nonsense' })
+				new PptxTs().addSlide().addChart(SERIES, { ...BASE, type: 'nonsense' })
 			} catch (err) {
 				thrown = err
 			}
@@ -152,7 +152,7 @@ defineRegressionSuite('Chart option validation', [
 			let thrown: unknown = null
 			try {
 				// @ts-expect-error `nonsense` is not a chart type
-				new TsPptx().addSlide().addChart(combo, BASE)
+				new PptxTs().addSlide().addChart(combo, BASE)
 			} catch (err) {
 				thrown = err
 			}
@@ -526,7 +526,7 @@ defineRegressionSuite('Chart option validation', [
 			}
 			let thrown: unknown = null
 			try {
-				const pres = new TsPptx()
+				const pres = new PptxTs()
 				pres.addSlide().addChart(SERIES, { ...BASE, type: ChartType.line, lineSize: NaN })
 				await pres.toBytes()
 			} catch (err) {
@@ -701,7 +701,7 @@ defineRegressionSuite('Chart option validation', [
 			] as const) {
 				let thrown: unknown = null
 				try {
-					const pres = new TsPptx()
+					const pres = new PptxTs()
 					pres.addSlide().addChart(SERIES, { ...BASE, type: ChartType.doughnut, [option]: value })
 				} catch (err) {
 					thrown = err
@@ -911,7 +911,7 @@ defineRegressionSuite('Chart option validation', [
 				'a base past the old documented 99 is kept'
 			)
 			const thrown = thrownBy(() =>
-				new TsPptx().addSlide().addChart(SERIES, { ...BASE, type: ChartType.bar, valAxisLogScaleBase: NaN })
+				new PptxTs().addSlide().addChart(SERIES, { ...BASE, type: ChartType.bar, valAxisLogScaleBase: NaN })
 			)
 			assert(thrown instanceof InvalidOptionError, `a NaN base throws; got ${thrown}`)
 			assertEqual(thrown.code, 'chart/option-non-finite', 'with the shared code')
@@ -1010,7 +1010,7 @@ defineRegressionSuite('Chart option validation', [
 			]
 			for (const [label, options] of cases) {
 				const thrown = thrownBy(() =>
-					new TsPptx().addSlide().addChart(SERIES, { ...BASE, type: ChartType.bar, ...options })
+					new PptxTs().addSlide().addChart(SERIES, { ...BASE, type: ChartType.bar, ...options })
 				)
 				assert(thrown instanceof InvalidOptionError, `${label} throws; got ${thrown}`)
 				assertEqual(thrown.code, 'chart/option-non-finite', `${label} carries the shared code`)
@@ -1054,7 +1054,7 @@ defineRegressionSuite('Chart option validation', [
 			]
 			for (const [label, bar, code] of cases) {
 				const thrown = thrownBy(() =>
-					new TsPptx().addSlide().addChart([{ ...SERIES[0], errorBars: bar }], { ...BASE, type: ChartType.bar })
+					new PptxTs().addSlide().addChart([{ ...SERIES[0], errorBars: bar }], { ...BASE, type: ChartType.bar })
 				)
 				assert(thrown instanceof InvalidOptionError, `a NaN ${label} throws; got ${thrown}`)
 				assertEqual(thrown.code, code, `${label} carries its converter's code`)
@@ -1113,7 +1113,7 @@ defineRegressionSuite('Chart option validation', [
 			assertIncludes(over.xml, '<a:alpha val="100000"/>', 'an opacity above 100 clamps')
 			assert(over.codes.includes('chart/option-out-of-range'), `and warns; got ${JSON.stringify(over.codes)}`)
 			const thrown = thrownBy(() =>
-				new TsPptx().addSlide().addChart(SERIES, { ...BASE, type: ChartType.bar, chartColorsOpacity: NaN })
+				new PptxTs().addSlide().addChart(SERIES, { ...BASE, type: ChartType.bar, chartColorsOpacity: NaN })
 			)
 			assert(thrown instanceof InvalidOptionError, `a NaN opacity throws; got ${thrown}`)
 			assertEqual(thrown.code, 'chart/option-non-finite', 'with the shared code')

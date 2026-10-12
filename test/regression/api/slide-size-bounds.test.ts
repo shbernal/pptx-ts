@@ -1,6 +1,6 @@
 import {
 	defineRegressionSuite,
-	TsPptx,
+	PptxTs,
 	captureDiagnostics,
 	build,
 	readEntry,
@@ -24,7 +24,7 @@ import { InvalidOptionError } from '../../../dist/node.js'
 // a clamp rather than a rejection.
 
 /** The `<p:sldSz .../>` element of a deck built under `layoutName`. */
-async function slideSize(defineFn: (pres: TsPptx) => void, layoutName: string) {
+async function slideSize(defineFn: (pres: PptxTs) => void, layoutName: string) {
 	const { zip } = await build((pres) => {
 		defineFn(pres)
 		pres.layout = layoutName
@@ -48,7 +48,7 @@ defineRegressionSuite('Slide size bounds', [
 				let err: unknown = null
 				try {
 					// @ts-expect-error none of these is a layout
-					new TsPptx().defineLayout(bad)
+					new PptxTs().defineLayout(bad)
 				} catch (ex) {
 					err = ex
 				}

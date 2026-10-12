@@ -37,7 +37,7 @@
 //
 // The counting is `ooxml-validate`'s own `probeFormats`, so this script is the
 // project-specific half — the fixtures that make each row shape observable — over a
-// claim the package re-checks for every consumer. What is measured here is TsPptx's
+// claim the package re-checks for every consumer. What is measured here is PptxTs's
 // output; what is asserted is the package's pin.
 //
 // It is deliberately NOT part of `verify`: seven validation passes per fixture, and it
@@ -49,7 +49,7 @@ import os from 'node:os'
 import path from 'node:path'
 import JSZip from 'jszip'
 import { probeFormats, validatorPath } from 'ooxml-validate'
-import TsPptx from '../dist/node.js'
+import PptxTs from '../dist/node.js'
 import { isMain, parseCli, runCli } from './script-utils.mjs'
 
 // Fixtures chosen to span the coverage axis, not to cover features — `test:schema`
@@ -58,7 +58,7 @@ import { isMain, parseCli, runCli } from './script-utils.mjs'
 /**
  * @typedef {object} Fixture
  * @property {string} name
- * @property {(pres: import('../dist/node.js').TsPptx) => void} build
+ * @property {(pres: import('../dist/node.js').PptxTs) => void} build
  * @property {(zip: import('jszip')) => Promise<void>} [corrupt] damage the built package on purpose
  * @property {boolean} [control] the row that must be non-zero at every version
  */
@@ -123,7 +123,7 @@ const FIXTURES = [
  * @returns {Promise<string>} path to the built deck
  */
 async function buildFixture(fixture, dir) {
-	const pres = new TsPptx()
+	const pres = new PptxTs()
 	fixture.build(pres)
 	let buf = await pres.toBytes()
 	if (fixture.corrupt) {
@@ -230,8 +230,8 @@ Options:
 	}
 
 	// Returns rather than exits from inside the `try`: `process.exit` there skipped the
-	// `finally`, and every run left a `TsPptx-versions-*` directory behind.
-	const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'TsPptx-versions-'))
+	// `finally`, and every run left a `pptx-ts-versions-*` directory behind.
+	const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-ts-versions-'))
 	try {
 		/** @type {Target[]} */
 		const targets = explicitFile

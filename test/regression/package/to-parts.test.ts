@@ -1,4 +1,4 @@
-// Contract for `TsPptx.toParts()` (src/presentation.ts → buildPackageParts): the unzipped
+// Contract for `PptxTs.toParts()` (src/presentation.ts → buildPackageParts): the unzipped
 // parts it returns must be the SAME parts `write()` compresses into the `.pptx` — same path
 // set, same emission order, and byte-identical per part. `toParts` is the public seam over
 // the assembly pipeline, so a drift between it and `write()` (a part only one path emits, a
@@ -6,12 +6,12 @@
 // output back as an independent oracle (the write path zips with fflate), mirroring helpers.ts.
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
-import TsPptx from '../../../dist/node.js'
+import PptxTs from '../../../dist/node.js'
 import { assert, at, take, defined } from '../../helpers.ts'
 
 /** Author an identical text-only deck each call so two builds differ only in core.xml timestamps. */
 function makePres() {
-	const pres = new TsPptx()
+	const pres = new PptxTs()
 	pres.addSlide().addText('to-parts contract', { x: 1, y: 1, w: 4, h: 1 })
 	pres.addSlide().addText('second slide', { x: 1, y: 1, w: 4, h: 1 })
 	return pres
@@ -87,7 +87,7 @@ describe('toParts()', () => {
 		// Assembly seeds each slide with the layout placeholders it leaves empty, mutating the slide,
 		// and a seeded placeholder with an image fill registers media of its own. A second call has to
 		// find that work done and change nothing, whatever order the preparation steps run in.
-		const pres = new TsPptx()
+		const pres = new PptxTs()
 		pres.defineSlideMaster({
 			title: 'SEEDED',
 			objects: [

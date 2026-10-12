@@ -489,8 +489,8 @@ async function buildDeck(testCase, fixture, outDir) {
  * @returns {Promise<string>}
  */
 async function buildPairDeck(pair, side, outDir) {
-	const { TsPptx } = await import(pathToFileURL(path.join(ROOT, 'dist', 'node.js')).href)
-	const pptx = new TsPptx()
+	const { PptxTs } = await import(pathToFileURL(path.join(ROOT, 'dist', 'node.js')).href)
+	const pptx = new PptxTs()
 	const slide = pptx.addSlide()
 	slide.addText(CANARY, { x: 0.6, y: 0.4, w: 8.5, h: 0.6, fontSize: 18, fontFace: 'Arial' })
 	pair[side](slide)

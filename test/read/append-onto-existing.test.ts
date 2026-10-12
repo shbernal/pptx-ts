@@ -1,7 +1,7 @@
 // Append-onto-existing tests for `pptx-ts/read` (dn-append-onto-existing-deck).
 //
 // Contract under test: Presentation.appendSlides(source, { layout }) authors
-// slides on a generator (TsPptx), serializes them via source.extractSlides(),
+// slides on a generator (PptxTs), serializes them via source.extractSlides(),
 // and splices them into a loaded deck bound to an existing layout — keeping the
 // deck's masters/layouts/theme (and every other untouched part) byte-identical,
 // changing only presentation.xml, its .rels, [Content_Types].xml, and the new
@@ -11,7 +11,7 @@
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { describe, test } from 'vitest'
-import TsPptx, { ChartType } from '../../dist/node.js'
+import PptxTs, { ChartType } from '../../dist/node.js'
 import { Presentation, type OpcPackage } from '../../dist/read.js'
 import {
 	bytesEqual,
@@ -75,7 +75,7 @@ async function mediaFixture(name: string) {
 
 /** A generator deck sized to LAYOUT_WIDE (12192000×6858000), matching theme-colors / image. */
 function wideGenerator() {
-	const pptx = new TsPptx()
+	const pptx = new PptxTs()
 	pptx.layout = 'LAYOUT_WIDE'
 	return pptx
 }
@@ -448,7 +448,7 @@ describe('Presentation.appendSlides', () => {
 
 	test('rejects a slide-size mismatch', async () => {
 		const pres = await Presentation.load(await readFile(fixturePath('theme-colors'))) // LAYOUT_WIDE
-		const pptx = new TsPptx() // default LAYOUT_16x9 — narrower
+		const pptx = new PptxTs() // default LAYOUT_16x9 — narrower
 		pptx.addSlide().addText('x', { x: 1, y: 1, w: 4, h: 1 })
 		assert(await rejects(() => pres.appendSlides(pptx, { layout: 'Blank' })), 'a mismatched slide size throws')
 	})
@@ -653,7 +653,7 @@ describe('Presentation.appendSlides', () => {
 		const pres = await Presentation.load(await readFile(fixturePath('theme-colors')))
 		const pptx = wideGenerator()
 		pptx.addSlide()
-		const appendSlides = pres.appendSlides.bind(pres) as (source: TsPptx, options?: object) => Promise<unknown>
+		const appendSlides = pres.appendSlides.bind(pres) as (source: PptxTs, options?: object) => Promise<unknown>
 		for (const options of [undefined, {}]) {
 			const err = await caught(() => appendSlides(pptx, options))
 			assertEqual(err?.code ?? null, 'layout/missing', `options ${JSON.stringify(options)}`)

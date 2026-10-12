@@ -13,7 +13,7 @@
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
 import { readModelToIr } from '../../dist/script.js'
-import TsPptx, { type HyperlinkProps } from '../../dist/node.js'
+import PptxTs, { type HyperlinkProps } from '../../dist/node.js'
 import { assert, assertEqual, defined, at } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
@@ -22,7 +22,7 @@ const allShapes = (presentation: Presentation) => presentation.slides.flatMap((s
 
 /** A deck with one linked shape of each form, read back. */
 async function authorLinked() {
-	const pres = new TsPptx()
+	const pres = new PptxTs()
 	const slide = pres.addSlide()
 	slide.addShape('rect', {
 		x: 1,
@@ -80,7 +80,7 @@ describe('Shape.hyperlink', () => {
 	test('a run link and a shape link stay independent', async () => {
 		// The two are different elements on different parents. Reading one through the other's
 		// accessor is the mistake a single shared reader could invite.
-		const pres = new TsPptx()
+		const pres = new PptxTs()
 		pres.addSlide().addText([{ text: 'inner', options: { hyperlink: { url: 'https://example.invalid/run' } } }], {
 			x: 1,
 			y: 1,
@@ -124,7 +124,7 @@ describe('pptxToScript keeps a shape hyperlink', () => {
 		// picture's `p:cNvPr`. It is structural, not something anyone linked: the media emitter
 		// writes it itself and `addMedia` writes it again. Reading it as a hyperlink made every
 		// media deck report a dropped link it never had.
-		const pres = new TsPptx()
+		const pres = new PptxTs()
 		pres.addSlide().addMedia({ type: 'video', data: 'video/mp4;base64,AAAA', x: 1, y: 1, w: 3, h: 2 })
 		const presentation = await Presentation.load(await pres.toBytes())
 		const shape = allShapes(presentation).find((candidate) => candidate.hyperlink !== null)

@@ -198,4 +198,4 @@ for (const font of deck.embeddedFonts) {
 - [Text that fits](text-fit.md)
 - [Read and edit a deck](reading/read-and-edit.md)
 - [Errors and warnings](errors-and-warnings.md)
-- API reference: [`TsPptx.embedFont`](reference/api/index/classes/TsPptx.md#embedfont), [`TsPptx.registerFontMetrics`](reference/api/index/classes/TsPptx.md#registerfontmetrics)
+- API reference: [`PptxTs.embedFont`](reference/api/index/classes/PptxTs.md#embedfont), [`PptxTs.registerFontMetrics`](reference/api/index/classes/PptxTs.md#registerfontmetrics)

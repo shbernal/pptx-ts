@@ -1,8 +1,8 @@
 import JSZip from 'jszip'
-import TsPptx from '../../../dist/node.js'
+import PptxTs from '../../../dist/node.js'
 import { defineRegressionSuite, assert } from '../../helpers.ts'
 
-async function buildSlide1(pres: TsPptx) {
+async function buildSlide1(pres: PptxTs) {
 	const buf = await pres.toBytes()
 	const zip = await JSZip.loadAsync(buf)
 	const entry = zip.file('ppt/slides/slide1.xml')
@@ -17,7 +17,7 @@ defineRegressionSuite('PPT-aligned border/shadow props [border-shadow-ppt-props]
 	{
 		name: 'table cell border `width` emits the correct line w=',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			pres.addSlide().addTable([[{ text: 'x' }]], {
 				x: 1,
 				y: 1,
@@ -31,7 +31,7 @@ defineRegressionSuite('PPT-aligned border/shadow props [border-shadow-ppt-props]
 	{
 		name: 'table cell border `transparency` emits <a:alpha> inside the line fill',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			pres.addSlide().addTable([[{ text: 'x' }]], {
 				x: 1,
 				y: 1,
@@ -47,7 +47,7 @@ defineRegressionSuite('PPT-aligned border/shadow props [border-shadow-ppt-props]
 	{
 		name: 'shadow `transparency` (0-100) sets the emitted alpha',
 		fn: async () => {
-			const presT = new TsPptx()
+			const presT = new PptxTs()
 			presT.addSlide().addShape('rect', {
 				x: 1,
 				y: 1,
@@ -63,7 +63,7 @@ defineRegressionSuite('PPT-aligned border/shadow props [border-shadow-ppt-props]
 	{
 		name: 'removed `opacity` input is ignored — falls back to the shape/text-shadow default alpha',
 		fn: async () => {
-			const presO = new TsPptx()
+			const presO = new PptxTs()
 			presO.addSlide().addShape('rect', {
 				x: 1,
 				y: 1,
@@ -92,7 +92,7 @@ defineRegressionSuite('PPT-aligned border/shadow props [border-shadow-ppt-props]
 	{
 		name: 'table-level border `cap` survives normalization (single BorderProps, applied to all four sides)',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			pres.addSlide().addTable([[{ text: 'x' }]], {
 				x: 1,
 				y: 1,
@@ -110,7 +110,7 @@ defineRegressionSuite('PPT-aligned border/shadow props [border-shadow-ppt-props]
 	{
 		name: 'per-side border `cap` survives the tuple normalization, per side',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			pres.addSlide().addTable([[{ text: 'x' }]], {
 				x: 1,
 				y: 1,
@@ -136,7 +136,7 @@ defineRegressionSuite('PPT-aligned border/shadow props [border-shadow-ppt-props]
 	{
 		name: 'a `type: none` border carries its `cap` too',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			pres.addSlide().addTable([[{ text: 'x' }]], {
 				x: 1,
 				y: 1,

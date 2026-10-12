@@ -12,7 +12,7 @@
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { describe, test } from 'vitest'
-import TsPptx from '../../dist/node.js'
+import PptxTs from '../../dist/node.js'
 import { Presentation, OpcPackage } from '../../dist/read.js'
 import { bytesEqual, assert, assertEqual, defined, partBodies, at } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
@@ -158,7 +158,7 @@ describe('3D model: PowerPoint-authored fixture', () => {
 
 describe('3D model: pptx-ts-authored', () => {
 	async function authored(options = {}) {
-		const pptx = new TsPptx()
+		const pptx = new PptxTs()
 		pptx.layout = 'LAYOUT_WIDE'
 		pptx.addSlide().addModel3d({
 			path: path.join(FIXTURES, 'authoring', 'assets', 'cube.glb'),
@@ -238,7 +238,7 @@ describe('3D model: pptx-ts-authored', () => {
 	// body. What covers that is the byte-for-byte comparison against PowerPoint's own output
 	// above, plus the desktop check in `pnpm run test:com`.
 	test.skipIf(!validatorInstalled)('the package and its mc:Fallback branch are schema-valid', async () => {
-		const pptx = new TsPptx()
+		const pptx = new PptxTs()
 		pptx.layout = 'LAYOUT_WIDE'
 		pptx.addSlide().addModel3d({
 			path: path.join(FIXTURES, 'authoring', 'assets', 'cube.glb'),

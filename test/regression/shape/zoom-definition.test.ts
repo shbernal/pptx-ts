@@ -19,7 +19,7 @@ import {
 	defined,
 } from '../../helpers.ts'
 import type JSZip from 'jszip'
-import type TsPptx from '../../../dist/node.js'
+import type PptxTs from '../../../dist/node.js'
 
 // The *definition* side of Insert ▸ Zoom (`gen/define/zoom.ts` + `gen/define/preview-image.ts`),
 // as distinct from `zoom-links.test.ts`, which byte-pins the emitter given an already-built
@@ -47,7 +47,7 @@ import type TsPptx from '../../../dist/node.js'
 const COVER_JPG = 'test/assets/cc_logo.jpg'
 
 /** Build, capturing library warnings (`log.ts` routes every one through `console.warn`). */
-async function buildCapturingWarnings(buildFn: (pres: TsPptx) => unknown) {
+async function buildCapturingWarnings(buildFn: (pres: PptxTs) => unknown) {
 	const warnings: string[] = []
 	setDiagnosticHandler((d) => warnings.push(d.message))
 	try {

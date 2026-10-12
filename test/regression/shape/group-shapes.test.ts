@@ -2,7 +2,7 @@ import { Presentation, isGroupShape, type AnyShape } from '../../../dist/read.js
 import type { Slide } from '../../../dist/node.js'
 import {
 	PNG_1X1,
-	TsPptx,
+	PptxTs,
 	setDiagnosticHandler,
 	defineRegressionSuite,
 	build,
@@ -868,7 +868,7 @@ defineRegressionSuite('Group shapes', [
 	{
 		name: 'slide.objects reports every authored object bottom-to-top, with its name and kind',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			const s = pres.addSlide()
 			s.addShape('rect', { x: 1, y: 1, w: 1, h: 1, objectName: 'Bottom' })
 			s.addText('Hi', { x: 2, y: 1, w: 1, h: 1, objectName: 'Middle' })
@@ -890,7 +890,7 @@ defineRegressionSuite('Group shapes', [
 	{
 		name: 'slide.objects names an unnamed object by the identity PowerPoint shows in the Selection Pane',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			const s = pres.addSlide()
 			s.addShape('rect', { x: 1, y: 1, w: 1, h: 1 })
 			s.addText('Hi', { x: 2, y: 1, w: 1, h: 1 })
@@ -916,7 +916,7 @@ defineRegressionSuite('Group shapes', [
 		name: 'slide.objects reports a name with XML metacharacters in the spelling that resolves',
 		fn: async () => {
 			const metacharacters = 'Risk <high> "1" \'2\'\ttabbed\nwrapped'
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			const s = pres.addSlide()
 			s.addShape('rect', { x: 1, y: 1, w: 1, h: 1, objectName: 'Q&A' })
 			s.addText('Hi', { x: 2, y: 1, w: 1, h: 1, objectName: metacharacters })
@@ -939,7 +939,7 @@ defineRegressionSuite('Group shapes', [
 	{
 		name: 'slide.objects nests a group as children and keeps reporting the members by name',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			const s = pres.addSlide()
 			s.addShape('rect', { x: 1, y: 1, w: 1, h: 1, objectName: 'Box' })
 			s.addText('Hi', { x: 2, y: 1, w: 1, h: 1, objectName: 'Caption' })
@@ -965,7 +965,7 @@ defineRegressionSuite('Group shapes', [
 		// refuses, because grouping it would sever the layout inheritance that makes it one.
 		name: 'slide.objects marks the kinds groupObjects refuses, and groupObjects agrees',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			pres.defineSlideMaster({
 				title: 'PLACEHOLDER',
 				objects: [{ placeholder: { options: { name: 'body', type: 'body', x: 1, y: 3, w: 4, h: 1 } } }],
@@ -1001,7 +1001,7 @@ defineRegressionSuite('Group shapes', [
 	{
 		name: 'slide.objects is a snapshot, not a live handle',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			const s = pres.addSlide()
 			s.addShape('rect', { x: 1, y: 1, w: 1, h: 1, objectName: 'Box' })
 
@@ -1022,7 +1022,7 @@ defineRegressionSuite('Group shapes', [
 		// empty name that `groupObjects()` refuses, against the promise that every listed name resolves.
 		name: 'slide.objects leaves speaker notes out',
 		fn: async () => {
-			const s = new TsPptx().addSlide()
+			const s = new PptxTs().addSlide()
 			s.addNotes('remember the chart')
 			s.addShape('rect', { x: 1, y: 1, w: 1, h: 1, objectName: 'Box' })
 			assertEqual(s.objects.map((o) => o.objectName).join(','), 'Box', 'expected only the shape')

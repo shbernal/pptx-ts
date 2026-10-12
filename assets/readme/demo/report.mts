@@ -1,4 +1,4 @@
-import TsPptx from 'pptx-ts'
+import PptxTs from 'pptx-ts'
 
 const sales = [
 	{ quarter: 'Q1', revenue: 1.2 },
@@ -7,7 +7,7 @@ const sales = [
 	{ quarter: 'Q4', revenue: 2.3 },
 ]
 
-const pptx = new TsPptx()
+const pptx = new PptxTs()
 const slide = pptx.addSlide()
 
 slide.addText('Revenue by quarter', {

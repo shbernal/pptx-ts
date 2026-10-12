@@ -16,7 +16,7 @@
 // Checking any one of them alone is what let this drift.
 import { describe, test, expect } from 'vitest'
 import JSZip from 'jszip'
-import TsPptx, { setDiagnosticHandler, type TableProps, type TableRow } from '../../../dist/node.js'
+import PptxTs, { setDiagnosticHandler, type TableProps, type TableRow } from '../../../dist/node.js'
 import { defined, readEntry, at } from '../../helpers.ts'
 import { computeTableLayout } from '../../../src/measure/table-fit.ts'
 import { applyMeasuredFit } from '../../../src/measure/fit.ts'
@@ -43,7 +43,7 @@ const ROWS = (): TableRow[] => [
 
 /** Per-row `<a:tr h>` in inches, straight out of the built package. 0 is an auto-height row. */
 async function writerRowHeightsIn(opts: TableProps) {
-	const pres = new TsPptx()
+	const pres = new PptxTs()
 	pres.addSlide().addTable(ROWS(), opts)
 	const zip = await JSZip.loadAsync(await pres.write({ outputType: 'nodebuffer' }))
 	const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
@@ -65,7 +65,7 @@ function layoutRows(opts: TableProps) {
  * a reduced font size means the pass resolved a real height for that row.
  */
 function fitShrankRow0(opts: TableProps) {
-	const pres = new TsPptx()
+	const pres = new PptxTs()
 	pres.addSlide().addTable(ROWS(), opts)
 	const registry = new FontMetricsRegistry()
 	registry.set('Mono', mono())
@@ -153,7 +153,7 @@ describe('a colW entry that is not a width is reported', () => {
 		const codes: string[] = []
 		setDiagnosticHandler((d) => codes.push(d.code))
 		try {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			pres.addSlide().addTable(TWO_COL(), { x: 0.5, y: 0.5, w: 4, h: 4, colW })
 			await pres.write({ outputType: 'nodebuffer' })
 		} finally {
@@ -181,7 +181,7 @@ describe('rowH entries that are not heights are reported', () => {
 		const codes: string[] = []
 		setDiagnosticHandler((d) => codes.push(d.code))
 		try {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			pres.addSlide().addTable(ROWS(), { x: 0.5, y: 0.5, w: 2, h: 4, rowH })
 			await pres.write({ outputType: 'nodebuffer' })
 		} finally {

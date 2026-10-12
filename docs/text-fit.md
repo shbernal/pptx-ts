@@ -323,4 +323,4 @@ A resized box's baked height is the shape's `height`, in EMU. See [Read object m
 - [Smaller bundles](bundle-size.md)
 - [Read and edit a deck](reading/read-and-edit.md)
 - [Errors and warnings](errors-and-warnings.md)
-- API reference: [`TsPptx`](reference/api/index/classes/TsPptx.md), [`TextFitShrinkProps`](reference/api/index/interfaces/TextFitShrinkProps.md), [`MeasureTextOptions`](reference/api/index/interfaces/MeasureTextOptions.md), [`OverflowBoxOptions`](reference/api/index/interfaces/OverflowBoxOptions.md), [`TextMeasurement`](reference/api/index/interfaces/TextMeasurement.md)
+- API reference: [`PptxTs`](reference/api/index/classes/PptxTs.md), [`TextFitShrinkProps`](reference/api/index/interfaces/TextFitShrinkProps.md), [`MeasureTextOptions`](reference/api/index/interfaces/MeasureTextOptions.md), [`OverflowBoxOptions`](reference/api/index/interfaces/OverflowBoxOptions.md), [`TextMeasurement`](reference/api/index/interfaces/TextMeasurement.md)

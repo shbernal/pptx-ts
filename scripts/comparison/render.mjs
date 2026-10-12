@@ -1658,8 +1658,8 @@ function sectionAroundTheCalls() {
 		'## What changes around the calls',
 		'',
 		...bullet(
-			'**The import.** `import TsPptx from "pptx-ts"` in place of `import pptxgen from "pptxgenjs"`. From ' +
-				'CommonJS, `const { default: TsPptx } = require("pptx-ts")`: the package is an ES module, so ' +
+			'**The import.** `import PptxTs from "pptx-ts"` in place of `import pptxgen from "pptxgenjs"`. From ' +
+				'CommonJS, `const { default: PptxTs } = require("pptx-ts")`: the package is an ES module, so ' +
 				'`require()` returns its namespace and the class is on `.default`.'
 		),
 		...bullet('**Node.js 24 or later.** pptx-ts declares `>=24`; pptxgenjs runs on older releases.'),
@@ -1672,7 +1672,7 @@ function sectionAroundTheCalls() {
 			'**No upstream file paths.** Code that loads `dist/pptxgen.cjs.js`, `dist/pptxgen.js`, ' +
 				'`dist/pptxgen.es.js`, `dist/pptxgen.bundle.js` or `dist/pptxgen.min.js` by path imports the ' +
 				'package instead, and the global the classic-script bundle defined has no equivalent. A page ' +
-				'with no build step uses `import TsPptx from "https://esm.sh/pptx-ts/browser"` in a module script.'
+				'with no build step uses `import PptxTs from "https://esm.sh/pptx-ts/browser"` in a module script.'
 		),
 		'',
 	]
@@ -1867,9 +1867,9 @@ export function renderSyntaxPage(snapshot) {
 		),
 		...fence(
 			[
-				"import TsPptx from 'pptx-ts/node'",
+				"import PptxTs from 'pptx-ts/node'",
 				'',
-				'const pres = new TsPptx()',
+				'const pres = new PptxTs()',
 				'// the snippet goes here',
 				"await pres.writeFile({ fileName: 'probe.pptx' })",
 			].join('\n')

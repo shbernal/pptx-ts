@@ -1,6 +1,6 @@
 import JSZip from 'jszip'
 import {
-	TsPptx,
+	PptxTs,
 	setDiagnosticHandler,
 	captureDiagnostics,
 	defineRegressionSuite,
@@ -14,7 +14,7 @@ import {
 } from '../../helpers.ts'
 
 /** A package's entry by name, from a written deck. */
-async function entryOf(pres: TsPptx, name: string) {
+async function entryOf(pres: PptxTs, name: string) {
 	return readEntry(await JSZip.loadAsync(await pres.toBytes()), name)
 }
 
@@ -137,7 +137,7 @@ defineRegressionSuite('Speaker notes hyperlinks & rich runs', [
 		name: 'one hyperlink object on a slide run and a notes run resolves in both parts, on every write',
 		fn: async () => {
 			const link = { url: 'https://shared.example/' }
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			const slide = pres.addSlide()
 			slide.addText([{ text: 'slide run', options: { hyperlink: link } }], { x: 1, y: 1, w: 4, h: 1 })
 			slide.addNotes([{ text: 'notes run', options: { hyperlink: link } }])
@@ -161,7 +161,7 @@ defineRegressionSuite('Speaker notes hyperlinks & rich runs', [
 		// never given an id and wrote `r:id="rIdundefined"`.
 		name: 'notes added after a write are linked on the next write',
 		fn: async () => {
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			const slide = pres.addSlide()
 			slide.addNotes([{ text: 'early', options: { hyperlink: { url: 'https://early.example/' } } }])
 			await pres.toBytes()
@@ -179,7 +179,7 @@ defineRegressionSuite('Speaker notes hyperlinks & rich runs', [
 			const toSlide = { hyperlink: { slide: 1 } }
 			const toUrl = { hyperlink: { url: 'https://u.example/' } }
 			const before = JSON.stringify([toSlide, toUrl])
-			const pres = new TsPptx()
+			const pres = new PptxTs()
 			pres.addSlide().addNotes([
 				{ text: 'to a slide', options: toSlide },
 				{ text: 'to a url', options: toUrl },
@@ -198,7 +198,7 @@ defineRegressionSuite('Speaker notes hyperlinks & rich runs', [
 				[{}, 'hyperlink/missing-target'],
 				['https://a.example/', 'hyperlink/not-an-object'],
 			]) {
-				const slide = new TsPptx().addSlide()
+				const slide = new PptxTs().addSlide()
 				const options = { hyperlink }
 				assertEqual(
 					// @ts-expect-error each hyperlink is one addText refuses

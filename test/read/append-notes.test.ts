@@ -12,7 +12,7 @@
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
 import JSZip from 'jszip'
-import TsPptx from '../../dist/node.js'
+import PptxTs from '../../dist/node.js'
 import { Presentation, type OpcPackage } from '../../dist/read.js'
 import { assert, assertEqual, defined, readEntry, at, take } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
@@ -23,11 +23,11 @@ const NOTES_MASTER_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/
 const SLIDE_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide'
 
 /** Author `build` onto a template shell, append, save, and hand back the bytes + re-read deck. */
-async function appendOnto(fixture: string, build: (pptx: TsPptx) => void) {
+async function appendOnto(fixture: string, build: (pptx: PptxTs) => void) {
 	const bytes = await readFile(fixturePath(fixture))
 	const deck = await Presentation.fromTemplate(bytes)
 	const size = defined(deck.slideSize, `${fixture} declares a slide size`)
-	const pptx = new TsPptx()
+	const pptx = new PptxTs()
 	pptx.defineLayout({ name: 'MATCH', width: size.widthEmu / 914400, height: size.heightEmu / 914400 })
 	pptx.layout = 'MATCH'
 	build(pptx)
