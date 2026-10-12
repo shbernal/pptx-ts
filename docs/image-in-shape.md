@@ -17,9 +17,9 @@ doc_type: "guide"
 fills the picture's box.
 
 ```ts
-import TsPptx from 'pptx-ts'
+import PptxTs from 'pptx-ts'
 
-const pptx = new TsPptx()
+const pptx = new PptxTs()
 const slide = pptx.addSlide()
 slide.addImage({ path: 'avatar.png', x: 1, y: 1, w: 2, h: 2, shape: 'ellipse', sizing: { type: 'cover' } })
 await pptx.writeFile({ fileName: 'avatar.pptx' })
@@ -165,9 +165,9 @@ It has one silhouette, `half-disc`: a rectangle whose one side is replaced by an
 toward the opposite edge. A cover-slide picture placeholder cuts the same outline.
 
 ```ts
-import TsPptx, { clipPath } from 'pptx-ts'
+import PptxTs, { clipPath } from 'pptx-ts'
 
-const pptx = new TsPptx()
+const pptx = new PptxTs()
 const slide = pptx.addSlide()
 const w = 5.22
 const h = 7.5

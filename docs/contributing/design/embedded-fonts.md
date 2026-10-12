@@ -70,7 +70,7 @@ XML 1.0 forbids, so a `typeface` holding a control character cannot corrupt `pre
 
 ## Writing a generated deck
 
-`TsPptx.embedFont` (`src/presentation.ts`) validates its arguments, resolves the bytes through
+`PptxTs.embedFont` (`src/presentation.ts`) validates its arguments, resolves the bytes through
 `resolveFontBytes` (`src/font-source.ts`, where a string is a path unless `base64: true`), and adds the
 face to `_embeddedFonts`, one `EmbeddedFont` per typeface. That list reaches the writers as
 `PresentationPropsInternal.embeddedFonts` (`src/types/internal.ts`).

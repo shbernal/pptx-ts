@@ -17,9 +17,9 @@ Every object pptx-ts places on a slide has a name and alt text. They are written
 Set them with the `objectName` and `altText` options. Zooms take `objectName` only.
 
 ```ts
-import TsPptx from "pptx-ts"
+import PptxTs from "pptx-ts"
 
-const pptx = new TsPptx()
+const pptx = new PptxTs()
 const slide = pptx.addSlide()
 slide.addText("Revenue", { x: 1, y: 1, w: 3, h: 0.5 })
 slide.addShape("rect", { x: 1, y: 2, w: 3, h: 1, objectName: "card" })

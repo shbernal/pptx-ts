@@ -35,13 +35,13 @@ const quarters = [
 ## Create the presentation
 
 ```ts
-import TsPptx, { type TableRow } from "pptx-ts"
+import PptxTs, { type TableRow } from "pptx-ts"
 
-const pptx = new TsPptx()
+const pptx = new PptxTs()
 pptx.layout = "LAYOUT_WIDE"
 ```
 
-`TsPptx` is the presentation. `layout` sets the slide size for the whole deck: `LAYOUT_WIDE` is
+`PptxTs` is the presentation. `layout` sets the slide size for the whole deck: `LAYOUT_WIDE` is
 13.333 by 7.5 inches, the widescreen size PowerPoint uses for a new deck. Without it you get
 `LAYOUT_16x9`, 10 by 5.625 inches. `TableRow` is a type the table further down uses.
 
@@ -169,7 +169,7 @@ const bytes = await pptx.toBytes()
 
 <!-- first-deck:program -->
 ```ts
-import TsPptx, { type TableRow } from "pptx-ts"
+import PptxTs, { type TableRow } from "pptx-ts"
 
 const quarters = [
   { quarter: "Q1", revenue: 1.2, customers: 310 },
@@ -178,7 +178,7 @@ const quarters = [
   { quarter: "Q4", revenue: 2.3, customers: 480 },
 ]
 
-const pptx = new TsPptx()
+const pptx = new PptxTs()
 pptx.layout = "LAYOUT_WIDE"
 
 // Title slide

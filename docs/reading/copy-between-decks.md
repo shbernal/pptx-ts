@@ -37,7 +37,7 @@ The copy of the library's third slide becomes the first slide of `deck`. Parts o
 | [`importSlides`](../reference/api/read/classes/Presentation.md#importslides) | one or more loaded decks | several slides, each at its final position | `copy` only | per request, with `importNotes` | per request, with `rescale` | yes, for the whole batch |
 | [`importShape`](../reference/api/read/classes/Presentation.md#importshape), [`importShapes`](../reference/api/read/classes/Presentation.md#importshapes) | a slide of any loaded deck | one or more top-level shapes, onto a slide of this deck | `preserve` by default, or `restyle`, `copy` | not applicable | throws unless `rescale` is set | yes |
 | [`importSlideMasters`](../reference/api/read/classes/Presentation.md#importslidemasters) | another loaded deck | slide masters with their layouts, and no slides | not applicable, each master brings its theme | not applicable | throws unless `requireEqualSize: false`, and never rescales | yes |
-| [`appendSlides`](../reference/api/read/classes/Presentation.md#appendslides) | a `TsPptx` generator | the generator's slides, bound to one layout of this deck | none, the slides bind to this deck's layout | carried | throws | checks the layout, size and links first |
+| [`appendSlides`](../reference/api/read/classes/Presentation.md#appendslides) | a `PptxTs` generator | the generator's slides, bound to one layout of this deck | none, the slides bind to this deck's layout | carried | throws | checks the layout, size and links first |
 | [`Presentation.fromTemplate`](../reference/api/read/classes/Presentation.md#fromtemplate) | a `.pptx` or `.potx` file | a new deck with the file's chrome and no slides | not applicable | removed with the slides | not applicable | not applicable |
 
 `importSlide` and `importShape` default to different theme modes. A slide import brings the source layout, master and theme with the slide. A lifted shape lands on a slide that keeps this deck's chrome, so by default it bakes in the colours its source theme gave it. [Build on a template](build-on-a-template.md) covers `fromTemplate` and `appendSlides`.
@@ -68,12 +68,12 @@ const copy = deck.cloneSlide(0, { at: 1 })
 
 `at` works as in `cloneSlide`. `0` puts the slide first, and an omitted or out-of-range `at` appends. Each insert shifts the slides after it, so to set every position in one step, use [`importSlides`](#import-several-slides-in-one-batch).
 
-To put brand slides around slides you generate, build the interior with `TsPptx`, load its bytes, and import the cover and the closer:
+To put brand slides around slides you generate, build the interior with `PptxTs`, load its bytes, and import the cover and the closer:
 
 ```ts
-import { TsPptx } from 'pptx-ts'
+import { PptxTs } from 'pptx-ts'
 
-const pptx = new TsPptx()
+const pptx = new PptxTs()
 pptx.layout = 'LAYOUT_WIDE'
 pptx.addSlide().addText('Interior', { x: 1, y: 1, w: 6, h: 1 })
 

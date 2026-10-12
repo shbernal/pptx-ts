@@ -46,7 +46,7 @@ flowchart TD
   core -.->|"fit bake at export"| measure
 ```
 
-- **Entry points.** `src/index.ts`, `src/node.ts` and `src/browser.ts` each export a `TsPptx`
+- **Entry points.** `src/index.ts`, `src/node.ts` and `src/browser.ts` each export a `PptxTs`
   subclass of `PresentationCore` and a `createPresentation`, and differ only in the
   `RuntimeAdapter` they inject. `.` resolves to one of them by condition: `node`, `browser`, or
   neither. `index.ts` is the neither case (Deno, Bun, edge workers): it authors and exports bytes,
@@ -203,7 +203,7 @@ They are passed rather than registered in module-level maps. A never-reset modul
 chart-part-id counter in `package/assemble.ts`, once made the same input produce different bytes.
 And two presentations composed differently in one process must each keep their own families.
 
-- **The family list.** `TsPptx` composes `ALL_CONSTRUCT_FAMILIES` (`entry-families.ts`), and the
+- **The family list.** `PptxTs` composes `ALL_CONSTRUCT_FAMILIES` (`entry-families.ts`), and the
   browser entry adds `families/table-dom.ts`, the one piece that needs a `document`.
   `createPresentation({ use })` composes the core tier in `families/core.ts` (text, shape, image,
   group, notes) plus what it is given, and writes the same deck part for part. `pptx-ts/families`
@@ -243,7 +243,7 @@ every program's graph again, including the ones composed without it.
 
 Nothing else catches it. The types check, the tests pass, the emitted bytes are identical, and
 `bundle-size:check` does not move, because `dist/` ships the same files. Only `bundle-tier:check`
-sees it: its composed rows climb toward the `TsPptx` rows until the budget fails. That is why the
+sees it: its composed rows climb toward the `PptxTs` rows until the budget fails. That is why the
 tier budget measures composed programs, with the `full` row beside them as a control. The numbers
 are on [Smaller bundles](../bundle-size.md).
 
@@ -311,7 +311,7 @@ stating its job, and larger files carry `// ===== region =====` banners to grep 
   `EXPORT_MATRIX` in `scripts/package-smoke.mjs`.
 - **Platform differences go through `RuntimeAdapter`.** Each entry injects its adapter into the
   shared core class. The live-DOM half of the table family (`families/table-dom.ts`) needs a
-  `document`, so only the browser entry's `TsPptx` composes it. A composed program opts in through
+  `document`, so only the browser entry's `PptxTs` composes it. A composed program opts in through
   `domTables` on `pptx-ts/families`.
 - **The neutral adapter is a fallback.** A runtime that resolves neither the `node` nor the
   `browser` condition gets `runtime/neutral.ts`. It implements what is host-neutral (`fetch`,

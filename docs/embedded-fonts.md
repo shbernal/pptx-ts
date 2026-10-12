@@ -16,9 +16,9 @@ doc_type: "guide"
 `pptx.embedFont(options)` writes a font file into the deck, so PowerPoint can render text in that font on a machine that does not have it installed.
 
 ```ts
-import { TsPptx } from 'pptx-ts'
+import { PptxTs } from 'pptx-ts'
 
-const pptx = new TsPptx()
+const pptx = new PptxTs()
 await pptx.embedFont({ path: 'fonts/Silkscreen-Regular.ttf', typeface: 'Silkscreen' })
 pptx.addSlide().addText('Hello', { x: 1, y: 1, w: 6, h: 1, fontFace: 'Silkscreen' })
 await pptx.writeFile({ fileName: 'embedded.pptx' })
@@ -121,7 +121,7 @@ await writeFile('deck-merged.pptx', await deck.save())
 - The merge goes by `typeface` and face. A face the deck already embeds is kept, and the incoming copy of that face is not added. Importing the same slide twice adds each face once.
 - When the deck already has an entry for the `typeface`, that entry keeps its own attributes, and only the missing faces are added to it.
 - The import checks that every font file the source lists is in the source package before it changes anything. A missing one throws, and the deck is left byte-identical.
-- `appendSlides` carries the fonts of the `TsPptx` you pass it, with the same merge rules.
+- `appendSlides` carries the fonts of the `PptxTs` you pass it, with the same merge rules.
 - A carry that adds a face sets `embedTrueTypeFonts="1"` on the deck. PowerPoint removes every embedded font from a deck without it the next time it saves.
 
 ## Register font metrics separately for text fit

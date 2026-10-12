@@ -70,17 +70,17 @@ npm install temml mathml2omml
 From an ES module, in Node or through a bundler:
 
 ```ts
-import TsPptx from "pptx-ts"
+import PptxTs from "pptx-ts"
 
-const pptx = new TsPptx()
+const pptx = new PptxTs()
 ```
 
 ### CommonJS
 
 ```js
-const { default: TsPptx } = require("pptx-ts")
+const { default: PptxTs } = require("pptx-ts")
 
-const pptx = new TsPptx()
+const pptx = new PptxTs()
 ```
 
 `require()` returns the module's namespace, so the class is on `.default`.

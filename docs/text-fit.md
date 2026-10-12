@@ -16,9 +16,9 @@ doc_type: "guide"
 `fit: 'shrink'` and `fit: 'resize'` ask for text that fits its box. Register the box's font with `registerFontMetrics`, and the library measures the wrapped text as it writes the deck and stores the result in the file: `'shrink'` writes the font scale that fits, and `'resize'` writes the height the text needs.
 
 ```ts
-import { TsPptx } from 'pptx-ts'
+import { PptxTs } from 'pptx-ts'
 
-const pptx = new TsPptx()
+const pptx = new PptxTs()
 await pptx.registerFontMetrics('Aptos', '/fonts/Aptos.ttf')
 pptx.addSlide().addText('Quarterly results for the northern region, by product line', {
   x: 1,
@@ -194,9 +194,9 @@ slide.addTable(rows, { x: 1, y: 1, w: 8, rowH: 0.4, fontFace: 'Aptos', fit: 'shr
 `pptx.measureText(text, options)` lays text out with the same model the pass uses, so you can size shapes before you add them:
 
 ```ts
-import { TsPptx } from 'pptx-ts'
+import { PptxTs } from 'pptx-ts'
 
-const pptx = new TsPptx()
+const pptx = new PptxTs()
 await pptx.registerFontMetrics('Aptos', '/fonts/Aptos.ttf')
 
 const title = 'Quarterly results for the northern region'
@@ -227,7 +227,7 @@ slide.addText(title, { x: 1, y: 1.2, w: 4, h: textH, fontFace: 'Aptos', fontSize
 - With at least one face registered, `measureText` and the pass share one run converter, one font lookup and one layout. `shrinkScaleFor(h)` equals the scale the pass bakes for that inner box, and `heightIn` equals the height `'resize'` bakes, less the insets.
 - They differ when no face is registered. `measureText` still measures every named face with average character widths and lists it in `approximatedFaces`, while the pass writes bare flags. Check `approximatedFaces` when you need an exact number.
 
-`measureText`, `overflowsBox` and `tableLayout` come from the `measure` family. `new TsPptx()` has them. A deck from `createPresentation` has them only when it asks, and without them the call throws `family/not-composed`. The fit pass runs either way.
+`measureText`, `overflowsBox` and `tableLayout` come from the `measure` family. `new PptxTs()` has them. A deck from `createPresentation` has them only when it asks, and without them the call throws `family/not-composed`. The fit pass runs either way.
 
 ```ts
 import { createPresentation } from 'pptx-ts'
@@ -238,7 +238,7 @@ const deck = createPresentation({ use: [measure] })
 
 ## Measure without a presentation
 
-`pptx-ts/measure` exports the model as plain functions, for layout code that has no `TsPptx`:
+`pptx-ts/measure` exports the model as plain functions, for layout code that has no `PptxTs`:
 
 ```ts
 import { readFile } from 'node:fs/promises'

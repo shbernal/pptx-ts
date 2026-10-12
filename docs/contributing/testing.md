@@ -1381,7 +1381,7 @@ font metrics load `opentype.js` through a dynamic import that runs only when a f
 registered. Charging a program for a chunk it may never fetch is as wrong as hiding one it might,
 so there is no single figure.
 
-The programs come in two shapes. The three `new TsPptx()` programs are cumulative: `text` writes
+The programs come in two shapes. The three `new PptxTs()` programs are cumulative: `text` writes
 one slide with one text box, `text-shape-image` adds a shape and a base64 image, and `full` adds a
 chart, a table and an embedded video. The two `composed` programs are one `createPresentation`
 program with and without the chart family, so their difference is what that family costs. They

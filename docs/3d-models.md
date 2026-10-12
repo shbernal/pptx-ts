@@ -16,9 +16,9 @@ doc_type: "guide"
 `slide.addModel3d()` embeds a glTF binary (`.glb`) in the `.pptx` and places it on the slide as a 3D model, the kind PowerPoint's Insert > 3D Models makes. PowerPoint 2019 and later draw the model, and a viewer can drag to rotate it.
 
 ```ts
-import TsPptx from 'pptx-ts'
+import PptxTs from 'pptx-ts'
 
-const pptx = new TsPptx()
+const pptx = new PptxTs()
 pptx.addSlide().addModel3d({
   path: 'assets/engine.glb',
   preview: { path: 'assets/engine-render.png' },

@@ -16,9 +16,9 @@ doc_type: "guide"
 A group turns several slide objects into one PowerPoint object, with one Selection Pane entry, one drag target and one rotation handle.
 
 ```ts
-import TsPptx from "pptx-ts"
+import PptxTs from "pptx-ts"
 
-const pptx = new TsPptx()
+const pptx = new PptxTs()
 const slide = pptx.addSlide()
 slide.addGroup(
   [

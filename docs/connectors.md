@@ -15,9 +15,9 @@ doc_type: "guide"
 `slide.addConnector()` draws a line between two points as a PowerPoint connector, which can attach to a shape at either end.
 
 ```ts
-import TsPptx from "pptx-ts"
+import PptxTs from "pptx-ts"
 
-const pptx = new TsPptx()
+const pptx = new PptxTs()
 const slide = pptx.addSlide()
 slide.addConnector({ x1: 1, y1: 1, x2: 5, y2: 3, endArrowType: "triangle" })
 await pptx.writeFile({ fileName: "connector.pptx" })

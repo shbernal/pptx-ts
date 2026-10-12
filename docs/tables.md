@@ -17,9 +17,9 @@ doc_type: "guide"
 `slide.addTable(rows, options)` draws a PowerPoint table from an array of rows, each an array of cells.
 
 ```ts
-import { TsPptx } from 'pptx-ts'
+import { PptxTs } from 'pptx-ts'
 
-const pptx = new TsPptx()
+const pptx = new PptxTs()
 pptx.addSlide().addTable(
   [
     [{ text: 'Region' }, { text: 'Q1' }, { text: 'Q2' }],

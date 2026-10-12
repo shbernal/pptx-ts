@@ -18,7 +18,7 @@ its topic in full.
 
 ```mermaid
 flowchart TD
-  pres["TsPptx: the presentation"]
+  pres["PptxTs: the presentation"]
   pres --> masters["Slide masters: defineSlideMaster()"]
   pres --> sections["Sections: addSection()"]
   pres --> slides["Slides: addSlide()"]
@@ -28,7 +28,7 @@ flowchart TD
   slides --> notes["Speaker notes: addNotes()"]
 ```
 
-`new TsPptx()` creates the presentation. `addSlide()` appends a slide and returns it. Each `add*`
+`new PptxTs()` creates the presentation. `addSlide()` appends a slide and returns it. Each `add*`
 method on the slide places one object and returns the slide again, so calls can chain. Slides appear
 in the order they were added, and objects on a slide stack in the order they were added, the last one
 on top.
@@ -114,14 +114,14 @@ build each runtime loads.
 
 ## Errors and warnings
 
-When the library cannot produce the deck you asked for, it throws a `TsPptxError` subclass carrying a
+When the library cannot produce the deck you asked for, it throws a `PptxTsError` subclass carrying a
 stable `code` you can branch on. When it can, by ignoring, clamping or falling back on part of the
 input, it reports a diagnostic and carries on. Diagnostics go to the console unless you route them
 with `setDiagnosticHandler`. See [Errors and warnings](../errors-and-warnings.md).
 
 ## Two ways to start
 
-`new TsPptx()` can author everything the library supports. `createPresentation({ use })` starts from
+`new PptxTs()` can author everything the library supports. `createPresentation({ use })` starts from
 a smaller core and adds only the construct families you name, so a browser bundle carries only those.
 For the same calls, both write the same deck. [Smaller bundles](../bundle-size.md) lists the families and
 what each costs.

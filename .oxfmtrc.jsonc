@@ -89,6 +89,10 @@
 		// line on purpose: a changed element is then one changed line in `git diff`.
 		// A formatter expands it to ~25k lines and turns any change into an unreadable wall.
 		"test/read/fixtures/inspect-surface.snapshot.json",
+		// The README hero demo prints this program, verbatim, in a fixed 28-line window
+		// (`assets/readme/demo/build.py`). It is laid out to fit that window; formatted, it is
+		// 43 lines and the demo cuts it off.
+		"assets/readme/demo/report.mts",
 		"package-lock.json",
 		"pnpm-lock.yaml",
 		"**/*.min.js",

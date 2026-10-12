@@ -69,9 +69,9 @@ Keynote, LibreOffice Impress and Google Slides import it on a best-effort basis.
 2. Save this as `hello.mts`:
 
    ```ts
-   import TsPptx from "pptx-ts"
+   import PptxTs from "pptx-ts"
 
-   const pptx = new TsPptx()
+   const pptx = new PptxTs()
    const slide = pptx.addSlide()
 
    slide.addText("Hello from pptx-ts", {
@@ -138,7 +138,7 @@ pptx-ts builds those parts from your calls and zips them, with no Office process
 | --- | --- | --- |
 | Node.js 24 or later | `import`, or `require()` with the class on `.default` | writes to disk |
 | Browser, with a bundler | `import` | downloads the file |
-| Browser, no build step | `import TsPptx from "https://esm.sh/pptx-ts/browser"` | downloads the file |
+| Browser, no build step | `import PptxTs from "https://esm.sh/pptx-ts/browser"` | downloads the file |
 | Deno, Bun, edge workers | `import` | throws; use `toBytes()` |
 
 [Where it runs](docs/getting-started/runtime.md) lists every entry point.

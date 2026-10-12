@@ -50,7 +50,7 @@ Both printers take the same `DeckIr`. They differ in where the deck's masters, l
 | Printer | [`printScript`](api/script/functions/printScript.md) | [`printStandaloneScript`](api/script/functions/printStandaloneScript.md) |
 | Masters, layouts and theme | The source deck's, unchanged. `Presentation.fromTemplate` removes only its slides | Re-authored as `pptx.theme` and one `defineSlideMaster` call per source layout |
 | Ships beside the script | The unmodified source deck as `template.pptx`, and the media files the slides use | The media files the slides and layouts use, or nothing with `assets: 'inline'` |
-| Entry calls | `Presentation.fromTemplate()`, then `deck.appendSlides()` for each run of slides that share a layout | `new TsPptx()`, then `pptx.addSlide({ masterTitle })` for each slide |
+| Entry calls | `Presentation.fromTemplate()`, then `deck.appendSlides()` for each run of slides that share a layout | `new PptxTs()`, then `pptx.addSlide({ masterTitle })` for each slide |
 | Editable in the script | Slide content | Slide content, theme colours and fonts, and layouts |
 | Charts | Rebuilt with `addChart` from the chart's cached values | Same |
 | chartEx charts, SmartArt and undecoded graphic frames | The slide is copied from the source with `deck.importSlide()` | The slide is transcribed and the frame is dropped |
@@ -112,7 +112,7 @@ The template-anchored output reuses the source deck's masters, layouts and theme
 | Layout background taken from the theme (`p:bgRef`) | The resolved fill | A colour or an image | Kept | The resolved fill, baked in | `master.background` |
 | Layout names | `Presentation.layouts()` | `defineSlideMaster({ title })` | Kept | A repeated name gets a suffix. A tab or line break becomes a space | `master.nameCollision`, `master.name` |
 | Document properties | `Presentation.coreProperties`, `Presentation.appProperties` | Title, author, subject, revision and company | Kept | Those five. A property the source left blank gets the library's value | `deck.docProps`, `deck.docPropsDefault` |
-| Blank `DEFAULT` layout | Not applicable | Added by every `new TsPptx()` | Not added | Added ahead of the source layouts | `master.default` |
+| Blank `DEFAULT` layout | Not applicable | Added by every `new PptxTs()` | Not added | Added ahead of the source layouts | `master.default` |
 
 The standalone output leaves layout placeholders out on purpose. The write path gives every slide an empty shape for each layout placeholder the slide does not fill. The converter writes every source shape as positioned content, never into a placeholder, so declaring the placeholders would add empty shapes to every slide.
 

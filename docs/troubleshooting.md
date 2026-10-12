@@ -53,7 +53,7 @@ Each table lists what you see, what causes it, and what to change. The last colu
 
 | Symptom | Cause | Fix | Guide |
 | --- | --- | --- | --- |
-| `require("pptx-ts")` returns an object, and `new` on it throws | `require()` returns the ES module's namespace, and the class is its default export. | Write `const { default: TsPptx } = require("pptx-ts")`. | [Installation](getting-started/installation.md#commonjs) |
+| `require("pptx-ts")` returns an object, and `new` on it throws | `require()` returns the ES module's namespace, and the class is its default export. | Write `const { default: PptxTs } = require("pptx-ts")`. | [Installation](getting-started/installation.md#commonjs) |
 | npm or pnpm reports an unsupported engine | The package declares `"engines": { "node": ">=24" }`. | Run Node.js 24 or later. | [Installation](getting-started/installation.md#requirements) |
 | Importing a file under `pptx-ts/dist/` fails with `ERR_PACKAGE_PATH_NOT_EXPORTED` | The package's `exports` map publishes only its entry points, and Node refuses every other path. | Import an entry point, such as `pptx-ts/node` or `pptx-ts/read`. | [Where it runs](getting-started/runtime.md#entry-points) |
 | `writeFile()` throws `runtime/file-output-unavailable` on Deno, Bun or an edge worker | These runtimes load the runtime-agnostic build, which has no filesystem and no page to download onto. | Call `write()` and store the bytes yourself. | [Where it runs](getting-started/runtime.md#deno-bun-and-edge-workers) |

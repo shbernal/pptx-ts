@@ -17,10 +17,10 @@ PowerPoint's equation editor stores. Pass the result to the `math` option of a t
 slide gets an equation you can edit in PowerPoint.
 
 ```ts
-import TsPptx from 'pptx-ts'
+import PptxTs from 'pptx-ts'
 import { latexToOmml } from 'pptx-ts/math'
 
-const pptx = new TsPptx()
+const pptx = new PptxTs()
 const slide = pptx.addSlide()
 
 slide.addText([{ math: latexToOmml('x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}') }], { x: 1, y: 2, w: 8, h: 1 })
