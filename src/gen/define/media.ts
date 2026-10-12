@@ -77,6 +77,13 @@ export function addMediaDefinition(target: PresSlideInternal, opt: MediaProps): 
 	if (strType === 'online' && !strLink) {
 		throw new InvalidOptionError('media/online-missing-link', 'addMedia(): online videos require `link` value')
 	}
+	// Only an online video reads `link`. An embedded clip's `r:link` names its own media part, so
+	// there is nowhere to put an outside link, and it was dropped with nothing reported (#203).
+	if (strType !== 'online' && strLink)
+		warn(
+			'media/option-not-supported',
+			`addMedia(): \`link\` is read only for \`type: 'online'\`; embedded ${strType} has nowhere to write it, so it was ignored.`
+		)
 	const options = framedObjectOptions(target, SlideObjectType.media, opt, {
 		label: 'Media',
 		kind: 'media',

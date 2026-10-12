@@ -349,7 +349,9 @@ export type MediaProps = MediaBaseProps &
 				 */
 				type: Exclude<MediaType, 'online'>
 				/**
-				 * Optional video embed link metadata.
+				 * Not written for embedded media: only `type: 'online'` reads `link`. An embedded
+				 * clip links its own media part, so an outside link has nowhere to go, and setting
+				 * it warns `media/option-not-supported`.
 				 */
 				link?: string
 		  })
