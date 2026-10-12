@@ -59,6 +59,10 @@ import type {
 	AbsoluteFrame,
 	AbsoluteFrameFailure,
 	CustomGeometry,
+	CustomGeometryAdjustHandle,
+	CustomGeometryConnectionSite,
+	CustomGeometryGuide,
+	GeometryCoordinate,
 	Glow,
 	InnerShadow,
 	LineEnd,
@@ -626,7 +630,12 @@ export abstract class Shape {
 		if (!custGeom) return null
 		const pathLst = firstChild(custGeom, 'a:pathLst')
 		const paths = pathLst ? getElements(pathLst, 'a:path').map((p) => readGeometryPath(p)) : []
-		return { paths }
+		return {
+			paths,
+			guides: readGeometryGuides(firstChild(custGeom, 'a:gdLst')),
+			adjustHandles: readAdjustHandles(firstChild(custGeom, 'a:ahLst')),
+			connectionSites: readConnectionSites(firstChild(custGeom, 'a:cxnLst')),
+		}
 	}
 
 	/**
@@ -967,4 +976,73 @@ export abstract class Shape {
 	get element_(): Element {
 		return this.element
 	}
+}
+
+/** An `ST_AdjCoordinate` attribute: a number in EMU, a guide name, or `null` when absent. */
+function adjCoordinate(element: Element, name: string): GeometryCoordinate | null {
+	const value = attr(element, name)
+	if (value === null || value === '') return null
+	const number = numberValue(value)
+	return number === null ? value : number
+}
+
+/** An `ST_AdjAngle` attribute in degrees, or `null` when absent or a guide name. */
+function adjAngleDeg(element: Element, name: string): number | null {
+	const number = numberValue(attr(element, name))
+	return number === null ? null : number / 60000
+}
+
+/** A custom geometry's `a:gdLst` as {@link CustomGeometryGuide}s. */
+function readGeometryGuides(gdLst: Element | null): CustomGeometryGuide[] {
+	if (!gdLst) return []
+	return getElements(gdLst, 'a:gd').map((gd) => ({ name: attr(gd, 'name') ?? '', formula: attr(gd, 'fmla') ?? '' }))
+}
+
+/** A custom geometry's `a:ahLst` as {@link CustomGeometryAdjustHandle}s, XY and polar in document order. */
+function readAdjustHandles(ahLst: Element | null): CustomGeometryAdjustHandle[] {
+	if (!ahLst) return []
+	const handles: CustomGeometryAdjustHandle[] = []
+	for (const handle of childElements(ahLst)) {
+		const pos = firstChild(handle, 'a:pos')
+		const x = pos ? adjCoordinate(pos, 'x') : null
+		const y = pos ? adjCoordinate(pos, 'y') : null
+		if (handle.localName === 'ahXY')
+			handles.push({
+				kind: 'xy',
+				x,
+				y,
+				gdRefX: attr(handle, 'gdRefX'),
+				minX: adjCoordinate(handle, 'minX'),
+				maxX: adjCoordinate(handle, 'maxX'),
+				gdRefY: attr(handle, 'gdRefY'),
+				minY: adjCoordinate(handle, 'minY'),
+				maxY: adjCoordinate(handle, 'maxY'),
+			})
+		else if (handle.localName === 'ahPolar')
+			handles.push({
+				kind: 'polar',
+				x,
+				y,
+				gdRefR: attr(handle, 'gdRefR'),
+				minR: adjCoordinate(handle, 'minR'),
+				maxR: adjCoordinate(handle, 'maxR'),
+				gdRefAng: attr(handle, 'gdRefAng'),
+				minAngDeg: adjAngleDeg(handle, 'minAng'),
+				maxAngDeg: adjAngleDeg(handle, 'maxAng'),
+			})
+	}
+	return handles
+}
+
+/** A custom geometry's `a:cxnLst` as {@link CustomGeometryConnectionSite}s. */
+function readConnectionSites(cxnLst: Element | null): CustomGeometryConnectionSite[] {
+	if (!cxnLst) return []
+	return getElements(cxnLst, 'a:cxn').map((cxn) => {
+		const pos = firstChild(cxn, 'a:pos')
+		return {
+			angleDeg: adjAngleDeg(cxn, 'ang'),
+			x: pos ? adjCoordinate(pos, 'x') : null,
+			y: pos ? adjCoordinate(pos, 'y') : null,
+		}
+	})
 }

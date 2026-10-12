@@ -45,6 +45,21 @@ describe('Shape.customGeometry on a picture: real PowerPoint XML (picture-custge
 						],
 					},
 				],
+				// PowerPoint names a site at each vertex, as a guide scaling the vertex to the width.
+				guides: [
+					{ name: 'csX0', formula: '*/ 0 w 2794000' },
+					{ name: 'csY0', formula: '*/ 0 h 2222500' },
+					{ name: 'csX1', formula: '*/ 2794000 w 2794000' },
+					{ name: 'csY1', formula: '*/ 0 h 2222500' },
+					{ name: 'csX2', formula: '*/ 1397000 w 2794000' },
+					{ name: 'csY2', formula: '*/ 2222500 h 2222500' },
+				],
+				adjustHandles: [],
+				connectionSites: [
+					{ angleDeg: 0, x: 'csX0', y: 'csY0' },
+					{ angleDeg: 0, x: 'csX1', y: 'csY1' },
+					{ angleDeg: 0, x: 'csX2', y: 'csY2' },
+				],
 			}),
 			'clip path'
 		)

@@ -186,7 +186,7 @@ The Output column says where the note fires. A construct that fires in both outp
 | `image.svg` | Both | unsupported | An SVG picture keeps its vector part. The write path generates a new raster fallback in place of the source's | 1/58 |
 | `line.arrowSize` | Both | unwritable | Arrowheads render at the default width and length | 1/58 |
 | `line.schemeToken` | Both | unwritable | An outline colour outside the ten mapped scheme tokens is baked to hex | 1/58 |
-| `shape.custGeom.guides` | Both | unread | A freeform, or a picture clipped to one, keeps its path and loses its guides, adjust handles and connection sites | 2/58 |
+| `shape.custGeom.guides` | Both | unwritable | A picture clipped to a freeform, or a freeform holding text, keeps its path and loses its guides, adjust handles and connection sites, which only `addShape` takes | 2/58 |
 | `slide.background` | Both | unwritable | A slide background taken from the theme (`p:bgRef`) is baked to the fill it resolves to | 1/58 |
 | `table.cell.fill.picture.geometry` | Both | unwritable | A cell's picture fill keeps its image. Its tiling, destination inset, DPI and rotate-with-shape setting do not carry | 1/58 |
 | `table.rowAuto` | Both | unsupported | Auto-height rows get an even share of the table height instead of fitting their content | 1/58 |

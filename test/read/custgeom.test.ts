@@ -13,9 +13,11 @@
 // - preset-rect: <a:prstGeom prst="rect"> — the negative case (customGeometry === null).
 
 import { describe, test } from 'vitest'
-import type { CustomGeometryPath, Slide } from '../../dist/read.js'
+import TsPptx from '../../dist/node.js'
+import { Presentation, type CustomGeometryPath, type Slide } from '../../dist/read.js'
+import { readModelToIr } from '../../dist/script.js'
 
-import { assert, assertEqual, at } from '../helpers.ts'
+import { assert, assertEqual, at, defined } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 async function openCustgeom() {
@@ -115,5 +117,78 @@ describe('Shape.customGeometry — real PowerPoint XML (custgeom.pptx)', () => {
 		const rect = shapeNamed(slide, 'preset-rect')
 		assertEqual(rect.customGeometry, null, 'preset geometry → no custom geometry')
 		assertEqual(rect.presetGeometry, 'rect', 'preset-rect still reports its preset name')
+	})
+})
+
+describe('Shape.customGeometry guides, adjust handles and connection sites', () => {
+	// None of the three lists had an accessor, so readModelToIr returned the path outline alone and a
+	// replay wrote a custGeom with no guides, no handles and no connection sites (#78).
+
+	test("freeform-hole: PowerPoint's guides and connection sites, positions naming the guides", async () => {
+		const geometry = defined(shapeNamed(at((await openFixture('custgeom')).slides, 0), 'freeform-hole').customGeometry)
+		assertEqual(geometry.guides.length, 18, 'eighteen guides')
+		assertEqual(
+			JSON.stringify(at(geometry.guides, 0)),
+			JSON.stringify({ name: 'csX0', formula: '*/ 1270000 w 2540000' })
+		)
+		assertEqual(geometry.connectionSites.length, 9, 'nine connection sites')
+		assertEqual(JSON.stringify(at(geometry.connectionSites, 0)), JSON.stringify({ angleDeg: 0, x: 'csX0', y: 'csY0' }))
+		assertEqual(geometry.adjustHandles.length, 0, 'a freeform has no adjust handles')
+	})
+
+	test('an authored custGeom carries all three lists through readModelToIr', async () => {
+		const pptx = new TsPptx()
+		pptx.addSlide().addShape('custGeom', {
+			x: 1,
+			y: 1,
+			w: 5,
+			h: 1.5,
+			points: [{ x: 0, y: 1.5 }, { x: 2.5, y: 0 }, { x: 5, y: 1.5 }, { close: true }],
+			guides: [{ name: 'g0', formula: 'val 10800' }],
+			connectionSites: [
+				{ ang: 90, x: 2.5, y: 1.5 },
+				{ ang: 0, x: 'g0', y: 0 },
+			],
+			adjustHandles: [
+				{ x: 1, y: 0.5, gdRefX: 'g0', minX: 0, maxX: 5 },
+				{ x: 2.5, y: 0.75, gdRefR: 'g0', minR: 0, maxR: 1, gdRefAng: 'g0', minAng: 0, maxAng: 180 },
+			],
+		})
+		const deck = await Presentation.load(await pptx.toBytes())
+		const geometry = defined(at(at(deck.slides, 0).shapes, 0).customGeometry)
+		assertEqual(at(geometry.adjustHandles, 1).kind, 'polar', 'the second handle is polar')
+		const ir = readModelToIr(deck)
+		const options = at(at(ir.slides, 0).calls, 0).args[1] as Record<string, unknown>
+		assertEqual(JSON.stringify(options['guides']), JSON.stringify([{ name: 'g0', formula: 'val 10800' }]))
+		assertEqual(
+			JSON.stringify(options['connectionSites']),
+			JSON.stringify([
+				{ ang: 90, x: '2286000emu', y: '1371600emu' },
+				{ ang: 0, x: 'g0', y: '0emu' },
+			])
+		)
+		assertEqual(
+			JSON.stringify(options['adjustHandles']),
+			JSON.stringify([
+				{ gdRefX: 'g0', maxX: '4572000emu', minX: '0emu', x: '914400emu', y: '457200emu' },
+				{
+					gdRefAng: 'g0',
+					gdRefR: 'g0',
+					maxAng: 180,
+					maxR: '914400emu',
+					minAng: 0,
+					minR: '0emu',
+					x: '2286000emu',
+					y: '685800emu',
+				},
+			])
+		)
+		assert(!ir.fidelity.some((note) => note.construct === 'shape.custGeom.guides'), 'nothing is declared lost')
+	})
+
+	test('a picture clipped to a freeform still notes its lists, which addImage does not take', async () => {
+		const ir = readModelToIr(await openFixture('picture-custgeom'))
+		const note = ir.fidelity.find((one) => one.construct === 'shape.custGeom.guides')
+		assertEqual(note?.cause, 'unwritable', 'noted as unwritable, no longer unread')
 	})
 })
