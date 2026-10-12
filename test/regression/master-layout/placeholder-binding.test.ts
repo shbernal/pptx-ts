@@ -83,6 +83,37 @@ defineRegressionSuite('Placeholder binding (placeholder: { name, type, idx })', 
 		},
 	},
 	{
+		name: 'a chart naming a layout placeholder takes its frame and p:ph, and a binding writes one regardless',
+		fn: async () => {
+			const data = [{ name: 'S', labels: ['a'], values: [1] }]
+			const { zip } = await build((p) => {
+				p.defineSlideMaster({
+					title: 'CHART_MASTER',
+					objects: [{ placeholder: { options: { name: 'chart', type: 'chart', x: 2, y: 1.5, w: 6, h: 4 }, text: '' } }],
+				})
+				p.addSlide({ masterTitle: 'CHART_MASTER' }).addChart(data, { type: 'bar', placeholder: 'chart', w: 3 })
+				p.addSlide().addChart(data, { type: 'bar', placeholder: { type: 'chart', idx: 13 } })
+			})
+			assertEqual(JSON.stringify(await placeholders(zip)), JSON.stringify(['<p:ph idx="100" type="chart" />']), 'named')
+			const xfrm = (await readEntry(zip, 'ppt/slides/slide1.xml')).match(/<a:off [^>]*\/>\s*<a:ext [^>]*\/>/)?.[0]
+			assertEqual(
+				xfrm?.replace(/\s+/g, ' '),
+				'<a:off x="1828800" y="1371600"/> <a:ext cx="2743200" cy="3657600"/>',
+				"the placeholder's x, y and h, and the stated w"
+			)
+			assertEqual(
+				JSON.stringify(await placeholders(zip, 2)),
+				JSON.stringify(['<p:ph idx="13" type="chart" />']),
+				'bound'
+			)
+			await assertRejects(
+				() => build((p) => p.addSlide().addChart(data, { type: 'bar', placeholder: { idx: -1 } })),
+				/placeholder\.idx/,
+				'a bad idx throws'
+			)
+		},
+	},
+	{
 		name: 'an idx or type with no p:ph spelling throws',
 		fn: async () => {
 			for (const placeholder of [{ idx: -1 }, { idx: 1.5 }, { idx: 2 ** 32 }])

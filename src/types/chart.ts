@@ -26,7 +26,7 @@ import type {
 	TimeUnit,
 } from '../ooxml/st-enums.js'
 import type { Color, HexColor, PatternFillProps, PositionProps } from './core.js'
-import type { ObjectNameProps } from './object.js'
+import type { ObjectNameProps, PlaceholderOption } from './object.js'
 import type { BorderProps, FillOption, ShadowProps, StrokeProps } from './style.js'
 import type { TextBaseProps } from './text.js'
 
@@ -1118,6 +1118,16 @@ export interface ChartOpts
 	 * - PowerPoint: [right-click on a chart] > "Edit Alt Text..."
 	 */
 	altText?: string
+	/**
+	 * Name of a placeholder defined on the slide layout/master to fill, or a
+	 * {@link PlaceholderBinding} that states the `p:ph` to write
+	 * - when it matches a layout/master placeholder, the chart takes that placeholder's position
+	 *   and size for any of `x`/`y`/`w`/`h` not supplied explicitly; explicit values always win
+	 * - a name that matches none writes no `p:ph`; a binding's `idx` or `type` writes one regardless
+	 * @example 'chartph'
+	 * @example { type: 'chart', idx: 13 }
+	 */
+	placeholder?: PlaceholderOption
 	/**
 	 * Custom chart-level metadata, emitted as a schema-valid extension on the chart space
 	 * (`c:chartSpace/c:extLst`) under a stable pptx-ts vendor GUID.

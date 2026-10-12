@@ -114,17 +114,16 @@ function autoShapeText(shape: AutoShape, notes: NoteScope): TextFrame | null {
 /**
  * A picture, table or chart placeholder's call, carrying its layout binding where the call takes one.
  *
- * `addImage` and `addTable` take the source's `p:ph` as a `placeholder` binding (#111). `addChart`
- * takes no `placeholder`, so a chart keeps its frame and no longer follows its layout, under a note.
- * It used to be dropped with no note at all, because the read model reported a placeholder on a
- * `p:sp` only.
+ * `addImage`, `addTable` and `addChart` take the source's `p:ph` as a `placeholder` binding (#111).
+ * A graphic frame written back as some other call keeps its frame and no longer follows its layout,
+ * under a note.
  */
 function withPlaceholder(shape: Picture | GraphicFrame, call: CallIr | null, notes: NoteScope): CallIr | null {
 	const ph = shape.placeholder
 	if (!call || !ph) return call
 	const binding = placeholderBinding(ph, false)
-	// The options bag: `addImage(options)`, `addTable(rows, options)`.
-	const at = call.method === 'addImage' ? 0 : call.method === 'addTable' ? 1 : -1
+	// The options bag: `addImage(options)`, `addTable(rows, options)`, `addChart(data, options)`.
+	const at = call.method === 'addImage' ? 0 : call.method === 'addTable' || call.method === 'addChart' ? 1 : -1
 	const options = at >= 0 ? call.args[at] : undefined
 	if (
 		binding !== undefined &&

@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   placeholder's. A binding to a layout placeholder's `idx` fills it, so no empty copy is stamped.
   A bad `idx` or `type` throws `placeholder/invalid-idx` or `placeholder/invalid-type`
   ([#112](https://github.com/shbernal/pptx-ts/issues/112)).
+- **`addChart` takes `placeholder`.** A name or a `{ name?, type?, idx? }` binding, as on
+  `addImage` and `addTable`: a chart naming a layout placeholder takes its frame for any of
+  `x`/`y`/`w`/`h` it leaves unstated, and writes its `p:ph`. `readModelToIr` carries a chart in a
+  placeholder as that binding instead of noting it as `shape.placeholder`.
 - **`crop` takes a negative inset.** A negative edge pads the source with empty space on that side,
   the way PowerPoint's Fit crop and `sizing: 'contain'` write `a:srcRect`. It threw
   `image/crop-inset-out-of-range` before, on a picture, a picture fill and a picture background.
@@ -72,8 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`readModelToIr` keeps a placeholder's layout binding.** A text placeholder bound by `idx`
   (every body placeholder) and a picture or table in a placeholder came back as plain objects
   under a `shape.placeholder` note. They now carry the source's `p:ph` as a `placeholder: { type,
-  idx }` binding, in both printed scripts. A chart in a placeholder is still noted: `addChart`
-  takes no `placeholder` ([#111](https://github.com/shbernal/pptx-ts/issues/111),
+  idx }` binding, in both printed scripts ([#111](https://github.com/shbernal/pptx-ts/issues/111),
   [#112](https://github.com/shbernal/pptx-ts/issues/112)).
 - **`textStyles` `bullet: true` writes a bullet.** On a slide-master level it wrote nothing, so the
   title, whose default is no bullet, could not be given one without a `characterCode`. It now
