@@ -17,7 +17,7 @@
  * double-clicking it in PowerPoint opens data that matches the plot but has lost the source
  * sheet's formulas, extra columns, and formatting.
  */
-import type { Chart, ChartAxis, ChartLine, ChartSeries } from '../../read/api/chart.js'
+import type { Chart, ChartAxis, ChartLine, ChartSeries, ChartTextStyle } from '../../read/api/chart.js'
 import type { GraphicFrame } from '../../read/api/shapes.js'
 import type { NoteScope } from '../fidelity.js'
 import type { CallIr, IrValue } from '../ir.js'
@@ -154,6 +154,7 @@ export function chartCall(frame: GraphicFrame, chart: Chart, notes: NoteScope): 
 		...axisOptions(chart, type, notes),
 		...seriesLineOptions(chart, type, notes),
 		...plotGroupOptions(chart, type, notes),
+		...chartTextOptions(chart, type, notes),
 		chartColors: seriesColors(chart),
 		...dataTableOptions(chart),
 		metadata: metadataOption(chart),
@@ -629,7 +630,17 @@ function seriesOverrides(chart: Chart, type: string, notes: NoteScope): IrValue 
 	const formats = XY_TYPES.has(type) || CATEGORY_NAME_TYPES.has(type) ? [] : series.map(seriesLabelFormat)
 	const chartFormat = chart.dataLabels?.numberFormat?.formatCode ?? null
 	const ownFormats = formats.some((format) => format !== null && format !== chartFormat)
-	if (!ownWidths && !ownFormats) return undefined
+	// A series' label font, where it differs from the chart's: the category-axis family writes a
+	// label block per series, whose font a `seriesOptions` entry sets.
+	const chartFont = labelFontOptions(chart.dataLabels?.textStyle ?? null, notes)
+	const fonts =
+		XY_TYPES.has(type) || CATEGORY_NAME_TYPES.has(type)
+			? []
+			: series.map((one) => labelFontOptions(one.dataLabels?.textStyle ?? null, notes))
+	const ownFont = (font: Record<string, IrValue | undefined>) =>
+		compact(Object.fromEntries(Object.entries(font).filter(([key, value]) => value !== chartFont[key])))
+	const ownFonts = fonts.some((font) => ownFont(font) !== undefined)
+	if (!ownWidths && !ownFormats && !ownFonts) return undefined
 	if (ownFormats && XY_TYPES.has(type)) {
 		notes.note(
 			'chart.labels',
@@ -643,8 +654,118 @@ function seriesOverrides(chart: Chart, type: string, notes: NoteScope): IrValue 
 			compact({
 				lineSize: ownWidths ? widths[index] : undefined,
 				dataLabelFormatCode: ownFormats ? (formats[index] ?? undefined) : undefined,
+				...(ownFonts && fonts[index] ? (ownFont(fonts[index]) ?? {}) : {}),
 			}) ?? {}
 	)
+}
+
+/** What the writer writes for a chart text block's options left out. */
+const TEXT_DEFAULTS = { titleSize: 18, labelSize: 12, color: '000000', fontFace: 'Arial', lang: 'en-US' }
+
+/** `ChartTextStyle.align` -> `titleAlign`, which spells only left and right; centre is the default. */
+const TITLE_ALIGN: Readonly<Record<string, string>> = { l: 'left', r: 'right' }
+
+/**
+ * A chart text colour as a `*Color` option: a writable token or a literal, or `undefined` for the
+ * writer's black. A colour carrying a theme transform is left to the writer and noted, as a stroke's
+ * is in {@link strokeOption}.
+ */
+function textColor(style: ChartTextStyle, notes: NoteScope): string | undefined {
+	const color = style.color
+	if (!color) return undefined
+	if (style.colorTransformed) {
+		notes.note(
+			'chart.schemeToken',
+			'approximated',
+			'unwritable',
+			'a chart text colour carries a transform (a:lumMod and the like) that is applied against the theme, which a chart part is read without, so the text takes the default colour'
+		)
+		return undefined
+	}
+	const value = colorOption(
+		{ scheme: color.scheme, ownHex: color.srgb, resolvedHex: null },
+		notes,
+		'chart.schemeToken',
+		'chart text'
+	)
+	return value === TEXT_DEFAULTS.color ? undefined : value
+}
+
+/** A data-label text block as the `dataLabel*` options, each against the writer's default. */
+function labelFontOptions(style: ChartTextStyle | null, notes: NoteScope): Record<string, IrValue | undefined> {
+	if (!style) return {}
+	return {
+		dataLabelFontSize: differsNumber(style.sizePt, TEXT_DEFAULTS.labelSize),
+		dataLabelColor: textColor(style, notes),
+		dataLabelFontFace: differs(style.fontName, TEXT_DEFAULTS.fontFace),
+		dataLabelFontBold: style.bold === true ? true : undefined,
+		dataLabelFontItalic: style.italic === true ? true : undefined,
+	}
+}
+
+/**
+ * The formatting of a chart's text: its title, legend, data labels, axis labels and axis titles,
+ * and the language it is tagged with. Each is stated only where it differs from what the writer
+ * writes when the option is left out (an 18pt black Arial title, 12pt black Arial labels; a legend
+ * and an axis title state nothing).
+ */
+function chartTextOptions(chart: Chart, type: string, notes: NoteScope): Record<string, IrValue | undefined> {
+	const title = chart.title === null ? null : chart.titleStyle
+	const legend = chart.legend?.textStyle ?? null
+	const labelBlock = (CATEGORY_NAME_TYPES.has(type) ? chart.series[0]?.dataLabels : null) ?? chart.dataLabels
+	const { cat, val } = axisPair(chart, XY_TYPES.has(type))
+	const ser = chart.axes.find((axis) => axis.kind === 'ser') ?? null
+	const align = title?.align ?? null
+	return {
+		lang: differs(chart.language, TEXT_DEFAULTS.lang),
+		...(title && {
+			titleFontSize: differsNumber(title.sizePt, TEXT_DEFAULTS.titleSize),
+			titleBold: title.bold === true ? true : undefined,
+			titleItalic: title.italic === true ? true : undefined,
+			titleUnderline: title.underline !== null && title.underline !== 'none' ? true : undefined,
+			titleColor: textColor(title, notes),
+			titleFontFace: differs(title.fontName, TEXT_DEFAULTS.fontFace),
+			titleAlign: align === null ? undefined : TITLE_ALIGN[align],
+			titleRotate: title.rotationDeg ?? undefined,
+		}),
+		...(legend && {
+			legendFontSize: legend.sizePt ?? undefined,
+			legendColor: textColor(legend, notes),
+			legendFontFace: legend.fontName ?? undefined,
+		}),
+		...labelFontOptions(labelBlock?.textStyle ?? null, notes),
+		...axisTextOptions('cat', cat, notes),
+		...axisTextOptions('val', val, notes),
+		...axisTextOptions('ser', ser, notes),
+	}
+}
+
+/** One axis' label and title formatting as its `*AxisLabel*` and `*AxisTitle*` options. */
+function axisTextOptions(
+	prefix: 'cat' | 'val' | 'ser',
+	axis: ChartAxis | null,
+	notes: NoteScope
+): Record<string, IrValue | undefined> {
+	if (!axis) return {}
+	const labels = axis.labelStyle
+	const title = axis.title === null ? null : axis.titleStyle
+	return {
+		...(labels && {
+			[`${prefix}AxisLabelFontSize`]: differsNumber(labels.sizePt, TEXT_DEFAULTS.labelSize),
+			[`${prefix}AxisLabelColor`]: textColor(labels, notes),
+			[`${prefix}AxisLabelFontFace`]: differs(labels.fontName, TEXT_DEFAULTS.fontFace),
+			[`${prefix}AxisLabelFontBold`]: labels.bold === true ? true : undefined,
+			[`${prefix}AxisLabelFontItalic`]: labels.italic === true ? true : undefined,
+			// The series axis has no label rotation option.
+			...(prefix === 'ser' ? {} : { [`${prefix}AxisLabelRotate`]: labels.rotationDeg ?? undefined }),
+		}),
+		...(title && {
+			[`${prefix}AxisTitleFontSize`]: title.sizePt ?? undefined,
+			[`${prefix}AxisTitleColor`]: textColor(title, notes),
+			[`${prefix}AxisTitleFontFace`]: differs(title.fontName, TEXT_DEFAULTS.fontFace),
+			[`${prefix}AxisTitleRotate`]: title.rotationDeg ?? undefined,
+		}),
+	}
 }
 
 /** The number format a series' own label block states, or `null`. */
