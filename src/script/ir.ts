@@ -216,8 +216,17 @@ export interface SlideIr {
 	/** `p:cSld/@name`, when the source slide had one. */
 	name?: string
 	background?: BackgroundIr
-	/** Speaker notes as plain text. Notes-slide geometry and placeholders do not survive. */
+	/**
+	 * Speaker notes as plain text, when no run states formatting `addNotes` can write. Notes-slide
+	 * geometry and placeholders do not survive.
+	 */
 	notesText?: string
+	/**
+	 * Speaker notes as the `NotesProps[]` `addNotes` takes, in place of {@link notesText} when a run
+	 * is bold, italic, underlined, coloured, sized, set in a face of its own or links to a URL. A
+	 * paragraph break rides on a run's text as `\n`.
+	 */
+	notesRuns?: IrValue[]
 	/**
 	 * The show transition, when the source has one the write API can name. Slide-scoped
 	 * rather than a {@link CallIr} because the write API models it as a property assignment

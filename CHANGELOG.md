@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`SlideIr.notesRuns` carries speaker notes as `NotesProps[]`.** When a notes run is bold,
+  italic, underlined, coloured, sized, set in its own face or links to a URL, `readModelToIr`
+  carries the runs with those options and `printScript` prints `addNotes([...])`. Plain notes
+  still carry as `notesText`
+  ([#129](https://github.com/shbernal/pptx-ts/issues/129)).
 - **`CellBorder.cap` reads a table cell edge's or diagonal's line cap** (`@cap`) as its raw token,
   `flat`, `rnd` or `sq`, or `null` when unset.
 - **`placeholder` takes a binding: `{ name?, type?, idx? }`.** On `addText`, `addImage` and
@@ -75,6 +80,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`notes.formatting` names what `addNotes` cannot write, with cause `unwritable`.** It fired as
+  `unsupported` for every formatted note, though the write side authors most of it. It now fires
+  only for an indent level, a bullet, strikethrough, a highlight, character spacing or a link that
+  is not a URL ([#129](https://github.com/shbernal/pptx-ts/issues/129)).
 - **`readModelToIr` keeps a table cell border's `cap` and `transparency`.** Both came back as the
   writer's defaults with no note, on an edge and on a diagonal
   ([#81](https://github.com/shbernal/pptx-ts/issues/81)).

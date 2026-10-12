@@ -55,6 +55,8 @@ export interface CanonicalSlide {
 	layoutName: string | null
 	background: IrValue | null
 	notesText: string | null
+	/** {@link SlideIr.notesRuns}, or `null`. */
+	notesRuns: IrValue | null
 	/**
 	 * The show transition, or `null`.
 	 *
@@ -157,6 +159,7 @@ function canonicalSlide(slide: SlideIr, digests: Map<string, string>): Canonical
 		layoutName: slide.layout?.name ?? null,
 		background: slide.background === undefined ? null : canonicalValue(slide.background as IrValue, digests),
 		notesText: slide.notesText ?? null,
+		notesRuns: slide.notesRuns === undefined ? null : canonicalValue(slide.notesRuns, digests),
 		transition: slide.transition === undefined ? null : canonicalValue(asIrValue(slide.transition), digests),
 		slideNumber: slide.slideNumber === undefined ? null : canonicalValue(slide.slideNumber, digests),
 		calls: slide.calls.map((call) => {
