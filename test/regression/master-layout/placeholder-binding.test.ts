@@ -95,10 +95,12 @@ defineRegressionSuite('Placeholder binding (placeholder: { name, type, idx })', 
 				p.addSlide().addChart(data, { type: 'bar', placeholder: { type: 'chart', idx: 13 } })
 			})
 			assertEqual(JSON.stringify(await placeholders(zip)), JSON.stringify(['<p:ph idx="100" type="chart" />']), 'named')
-			const xfrm = (await readEntry(zip, 'ppt/slides/slide1.xml')).match(/<a:off [^>]*\/>\s*<a:ext [^>]*\/>/)?.[0]
+			const xfrm = (await readEntry(zip, 'ppt/slides/slide1.xml')).match(
+				/<p:xfrm>\s*(<a:off [^>]*\/>\s*<a:ext [^>]*\/>)/
+			)?.[1]
 			assertEqual(
 				xfrm?.replace(/\s+/g, ' '),
-				'<a:off x="1828800" y="1371600"/> <a:ext cx="2743200" cy="3657600"/>',
+				'<a:off x="1828800" y="1371600"/><a:ext cx="2743200" cy="3657600"/>',
 				"the placeholder's x, y and h, and the stated w"
 			)
 			assertEqual(
@@ -111,6 +113,30 @@ defineRegressionSuite('Placeholder binding (placeholder: { name, type, idx })', 
 				/placeholder\.idx/,
 				'a bad idx throws'
 			)
+		},
+	},
+	{
+		name: "a slide object filling a layout placeholder does not take the definition's hasCustomPrompt",
+		fn: async () => {
+			const { zip } = await build((p) => {
+				p.defineSlideMaster({
+					title: 'PROMPT_MASTER',
+					objects: [
+						{ placeholder: { options: { name: 'body', type: 'body', x: 1, y: 1, w: 4, h: 2 }, text: 'Prompt' } },
+						{ placeholder: { options: { name: 'pic', type: 'pic', x: 5, y: 1, w: 4, h: 2 }, text: '' } },
+					],
+				})
+				const s = p.addSlide({ masterTitle: 'PROMPT_MASTER' })
+				s.addText('x', { placeholder: 'body' })
+				s.addImage({ data: PNG_1X1, placeholder: 'pic' })
+			})
+			assertEqual(
+				JSON.stringify(await placeholders(zip)),
+				JSON.stringify(['<p:ph idx="100" type="body" />', '<p:ph idx="101" type="pic" />']),
+				'the slide p:ph carries no hasCustomPrompt'
+			)
+			const layout = await readEntry(zip, 'ppt/slideLayouts/slideLayout2.xml')
+			assert(/idx="100"[^>]*hasCustomPrompt="1"/.test(layout.replace(/\s+/g, ' ')), 'the definition keeps it')
 		},
 	},
 	{

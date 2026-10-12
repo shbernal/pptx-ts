@@ -288,9 +288,15 @@ export function genXmlTextBody(slideObj: SlideObject | TableCellInternal, slideC
  * @param {SlideObject} placeholderObj
  * @param binding - the `type` and `idx` the slide object states itself, each winning over
  *   `placeholderObj`'s; with one, a `p:ph` is written even when `placeholderObj` is `null`
+ * @param definition - `placeholderObj` is the layout or master placeholder being written, not the
+ *   one a slide object fills
  * @returns XML
  */
-export function genXmlPlaceholder(placeholderObj: SlideObject | null, binding?: PlaceholderBinding): string {
+export function genXmlPlaceholder(
+	placeholderObj: SlideObject | null,
+	binding?: PlaceholderBinding,
+	definition = false
+): string {
 	if (!placeholderObj && !binding) return ''
 
 	const placeholderIdx = binding?.idx ?? (placeholderObj?.options?._placeholderIdx || '')
@@ -309,8 +315,10 @@ export function genXmlPlaceholder(placeholderObj: SlideObject | null, binding?: 
 
 	// `hasCustomPrompt` flags a placeholder *definition* (layout/master) that carries custom
 	// prompt text; it must not be set on a populated slide-level text shape promoted to a
-	// placeholder, or PowerPoint would treat the visible text as prompt text.
-	const isPlaceholderDef = placeholderObj?._type === SlideObjectType.placeholder
+	// placeholder, or PowerPoint would treat the visible text as prompt text. A slide object
+	// bound to a layout placeholder is handed that layout's definition, so the object's type
+	// cannot tell the two apart: the caller says which one it is writing.
+	const isPlaceholderDef = definition && placeholderObj?._type === SlideObjectType.placeholder
 
 	// NOTE: `placeholderType` is already the mapped OOXML value (e.g. 'pic', 'tbl') validated on
 	// the line above; do NOT re-look it up in PLACEHOLDER_TYPE_MAP (its keys are the input names,
