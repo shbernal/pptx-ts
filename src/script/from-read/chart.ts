@@ -131,7 +131,7 @@ export function chartCall(frame: GraphicFrame, chart: Chart, ctx: MapContext): C
 
 	const xy = XY_TYPES.has(type)
 	const ownLabels = customLabelOptions(chart, type, notes)
-	const data = xy ? xyData(chart, type, notes, ownLabels.labels) : seriesData(chart, notes)
+	const data = xy ? xyData(chart, type, notes, ownLabels.labels) : seriesData(chart, type, notes)
 	// Series that all read no points plot nothing either. `addChart` would draw an empty frame the
 	// source never showed as a chart, and checking only for zero series let those through.
 	if (data.length === 0 || chart.series.every((series) => (xy ? series.yValues : series.values).length === 0)) {
@@ -189,7 +189,7 @@ export function chartCall(frame: GraphicFrame, chart: Chart, ctx: MapContext): C
  * `c:cat` only when it states `labels`, so labels on the first series alone left every later
  * one plotted against 1, 2, 3 (#141).
  */
-function seriesData(chart: Chart, notes: NoteScope): IrValue[] {
+function seriesData(chart: Chart, type: string, notes: NoteScope): IrValue[] {
 	const dense = blanksToZero(notes)
 
 	return chart.series.map((series) => {
@@ -202,9 +202,39 @@ function seriesData(chart: Chart, notes: NoteScope): IrValue[] {
 				name: orUndefined(series.name),
 				values,
 				labels: levels[0]?.length ? (levels.length > 1 ? levels : levels[0]) : undefined,
+				pointStyles: type === 'bar' || type === 'bar3D' ? pointStyles(series, notes) : undefined,
 			}) ?? { values }
 		)
 	})
+}
+
+/**
+ * A bar series' own data points as its `pointStyles`, each point's literal fill as `fill` (#184).
+ * That is how the per-point colours `invertedColors` writes come back: `pointStyles` writes the same
+ * `c:dPt`. A point formatted beyond a literal fill keeps what it can and is noted.
+ */
+function pointStyles(series: ChartSeries, notes: NoteScope): IrValue[] | undefined {
+	const points = series.dataPoints
+	if (points.length === 0) return undefined
+	const styles: IrValue[] = []
+	let partial = false
+	for (const point of points) {
+		const hex = point.fill?.noFill ? null : (point.fill?.colorRef.srgb ?? null)
+		if (point.patternFill || (point.line && !point.line.noFill) || point.invertIfNegative === true) partial = true
+		if (point.fill && !point.fill.noFill && hex === null) partial = true
+		if (hex === null) continue
+		while (styles.length < point.index) styles.push({})
+		styles[point.index] = { fill: literalColor(hex) }
+	}
+	if (partial) {
+		notes.note(
+			'chart.dataPoints',
+			'approximated',
+			'unwritable',
+			"a data point of this bar series is formatted beyond a literal fill (a theme colour, a pattern, an outline or an inverted negative bar), which its pointStyles entry does not carry, so it comes back in the series' colour or its own literal fill"
+		)
+	}
+	return styles.length > 0 ? styles : undefined
 }
 
 /**

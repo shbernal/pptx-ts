@@ -155,6 +155,7 @@ export {
 	ChartPlotGroup,
 	type AxisNumberFormat,
 	type ChartMarker,
+	type ChartDataPoint,
 	type ChartDisplayUnits,
 	type ChartTextStyle,
 	type ChartAreaFormat,

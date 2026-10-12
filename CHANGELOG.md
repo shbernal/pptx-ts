@@ -143,6 +143,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A bar series' per-point colours carry through `readModelToIr`.** `ChartSeries.dataPoints` reads a
+  series' own data points (`c:dPt`: index, inverted-negative flag, fill, pattern and outline), which
+  had no accessor, so the per-point fills `invertedColors` writes were dropped with no note. On a bar
+  chart each point's literal fill comes back as the series' `pointStyles`, which write the same
+  points; a point formatted beyond that is noted under `chart.dataPoints`
+  ([#184](https://github.com/shbernal/pptx-ts/issues/184)).
 - **A chart's marker outline and a series shadow's `rotateWithShape` carry through `readModelToIr`.**
   The marker outline (`c:marker/c:spPr/a:ln`) comes back as `lineDataSymbolLineSize` and, where it is
   not the series' own colour, `lineDataSymbolLineColor`

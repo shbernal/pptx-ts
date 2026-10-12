@@ -150,6 +150,20 @@ export interface ChartMarker {
 	line: ChartLine | null
 }
 
+/** One data point a series formats on its own (`c:ser/c:dPt`). */
+export interface ChartDataPoint {
+	/** The point's index in the series (`c:idx`). */
+	index: number
+	/** Whether a negative bar at this point paints inverted (`c:invertIfNegative`), or `null` when unstated. */
+	invertIfNegative: boolean | null
+	/** The point's solid fill, as {@link ChartSeries.fill} reads a series'. */
+	fill: ChartFill | null
+	/** The point's pattern fill (`a:pattFill`), or `null`. */
+	patternFill: PatternFill | null
+	/** The point's outline, as {@link ChartSeries.line} reads a series'. */
+	line: ChartLine | null
+}
+
 /** A chart's data table (`c:plotArea/c:dTable`), the grid of values drawn under the plot. */
 export interface ChartDataTable {
 	/** Horizontal cell borders (`c:showHorzBorder`), or `null` when unstated. */
@@ -1069,6 +1083,30 @@ export class ChartSeries {
 			fill: spPr ? readSolidFill(spPr) : null,
 			line: ln ? readChartLine(ln) : null,
 		}
+	}
+
+	/**
+	 * The points this series formats on its own (`c:dPt`), in document order: a bar's per-point
+	 * colours, a pie's slice colours. A `c:dPt` with no `c:idx` is left out.
+	 */
+	get dataPoints(): ChartDataPoint[] {
+		const points: ChartDataPoint[] = []
+		for (const dPt of childElements(this.ser)) {
+			if (dPt.localName !== 'dPt') continue
+			const idx = firstChild(dPt, 'c:idx')
+			const index = idx ? numberValue(attr(idx, 'val')) : null
+			if (index === null) continue
+			const invert = firstChild(dPt, 'c:invertIfNegative')
+			const spPr = firstChild(dPt, 'c:spPr')
+			points.push({
+				index,
+				invertIfNegative: invert ? boolValue(attr(invert, 'val')) : null,
+				fill: spPr ? readSolidFill(spPr) : null,
+				patternFill: spPr ? readPatternFill(spPr, NO_THEME) : null,
+				line: spPrLine(dPt),
+			})
+		}
+		return points
 	}
 
 	/** Whether a bar series paints a negative bar inverted (`c:invertIfNegative`), or `null` when unstated. */
