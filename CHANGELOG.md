@@ -83,6 +83,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A chart or plot area paints a picture fill.** `chartArea.fill` and `plotArea.fill` with
+  `type: 'image'` wrote no fill and warned that the caller's `image.data` was missing. The chart part
+  now declares the picture and writes an `a:blipFill`, through `write()`, `extractSlides()` and
+  `appendSlides()` alike ([#139](https://github.com/shbernal/pptx-ts/issues/139)).
 - **`notes.formatting` names what `addNotes` cannot write, with cause `unwritable`.** It fired as
   `unsupported` for every formatted note, though the write side authors most of it. It now fires
   only for an indent level, a bullet, strikethrough, a highlight, character spacing or a link that

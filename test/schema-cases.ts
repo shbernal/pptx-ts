@@ -281,6 +281,25 @@ export default [
 		},
 	},
 	{
+		name: 'chart and plot area picture fills',
+		fn: async () => {
+			const png =
+				'image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+			const { buf } = await build((p) => {
+				p.addSlide().addChart([{ name: 'S', labels: ['A', 'B'], values: [1, 2] }], {
+					type: 'bar',
+					x: 1,
+					y: 1,
+					w: 6,
+					h: 4,
+					chartArea: { fill: { type: 'image', image: { data: png } } },
+					plotArea: { fill: { type: 'image', image: { data: png } } },
+				})
+			})
+			await expectNoSchemaErrors(buf, 'chart-area-picture-fill')
+		},
+	},
+	{
 		name: 'object locks on a chart frame and a group',
 		fn: async () => {
 			const { buf } = await build((p) => {

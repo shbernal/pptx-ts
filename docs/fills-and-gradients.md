@@ -38,7 +38,7 @@ slide.addShape("rect", {
 | Shape, text box | `fill` | yes | yes | yes | yes, raster |
 | Slide or master background | `background` | yes | yes | yes | yes, through `image` or a top-level `path` or `data` |
 | Table, table cell | `tableFill`, `fill`, a cell's `options.fill` | yes | yes | yes | yes, raster |
-| Chart area, plot area | `chartArea.fill`, `plotArea.fill` | yes | yes | yes | no, see [invalid input](#invalid-input) |
+| Chart area, plot area | `chartArea.fill`, `plotArea.fill` | yes | yes | yes | yes, raster; not on a chartEx chart |
 | Line | `line` | yes | yes | yes | no, see [invalid input](#invalid-input) |
 
 A colour string on its own is a solid fill, so `fill: "FF0000"` and `fill: { color: "FF0000" }` are the
@@ -197,7 +197,6 @@ both are set, the top-level one is used. `transparency` fades a picture backgrou
 | a picture fill with no `path` or `data` | warns; no fill | `image-fill/missing-source` |
 | picture `data` without its base64 header | warns; no fill | `image-fill/missing-base64-header` |
 | an SVG picture fill | warns; no fill | `image-fill/svg-unsupported` |
-| a picture fill on a chart area or plot area | warns; no fill | `image-fill/unresolved-media` |
 | a picture on a `line` | throws `UnsupportedFeatureError` | `line/image-fill-unsupported` |
 
 ## Limits

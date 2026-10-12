@@ -233,6 +233,11 @@ function wireCharts(deck: Presentation, rels: Relationships, partName: string, s
 		deck.opc.addPart(embeddingPartName, XLSX_CONTENT_TYPE, c.embeddingBytes)
 		const chartRels = deck.opc.relationshipsFor(chartPartName)
 		chartRels.addWithId('rId1', PACKAGE_REL, relativePartName(chartPartName, embeddingPartName))
+		for (const picture of c.pictures ?? []) {
+			const mediaPartName = deck.opc.reserveMediaPartName(picture.extn)
+			deck.opc.addPart(mediaPartName, picture.contentType, picture.bytes)
+			chartRels.addWithId(`rId${picture.rId}`, IMAGE_REL, relativePartName(chartPartName, mediaPartName))
+		}
 		if (c.chartEx) {
 			// rId2 = colors, rId3 = style: the order the write path authors
 			// (`buildChartExRelsXml` in gen/chart/embed-xlsx.ts).

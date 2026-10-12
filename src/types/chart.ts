@@ -246,13 +246,14 @@ export interface ChartPropsFillLine {
 	 * states neither a `color` nor a `type` — `transparency` alone is not a fill, since
 	 * there is no colour for the alpha to apply to.
 	 *
-	 * `type: 'image'` is not supported here and falls back to no fill with a warning: a
-	 * blip fill needs a media relationship on the chart part, which nothing registers.
+	 * `type: 'image'` paints a picture, which the chart part references through a relationship of
+	 * its own. A chartEx chart (waterfall, funnel, …) writes no area fill at all.
 	 * @example fill: '696969' // hex RGB color value, shorthand for {color: '696969'}
 	 * @example fill: {color: '696969'} // hex RGB color value
 	 * @example fill: {color: SchemeColor.background2} // Theme color value
 	 * @example fill: {color: '696969', transparency: 50} // 50% transparent grey
 	 * @example fill: {type: 'gradient', gradient: {kind: 'linear', angle: 90, stops: [{position: 0, color: '0088CC'}, {position: 100, color: 'FFFFFF'}]}}
+	 * @example fill: {type: 'image', image: {path: 'paper.png'}} // a picture, stretched over the area
 	 * @example fill: {type: 'inherit'} // no fill child at all -- take the chart style's fill
 	 */
 	fill?: FillOption
