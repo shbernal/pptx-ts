@@ -2142,3 +2142,76 @@ describe('deck IR — slide number', () => {
 		assert(constructs(ir).has('text.field'), 'and the field it drops is noted')
 	})
 })
+
+describe('deck IR — what the write options cannot state', () => {
+	/** The IR of `buf` with its first slide's XML put through `rewrite`. */
+	async function rewritten(buf: Uint8Array, rewrite: (xml: string) => string): Promise<DeckIr> {
+		const zip = await JSZip.loadAsync(buf)
+		const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
+		const next = rewrite(xml)
+		assert(next !== xml, 'the rewrite applied')
+		zip.file('ppt/slides/slide1.xml', next)
+		return readModelToIr(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
+	}
+
+	test.for([
+		[
+			'a second effect of one kind',
+			{ grayscale: true },
+			(xml: string) => xml.replace('<a:grayscl/>', '<a:grayscl/><a:grayscl/>'),
+		],
+		[
+			'a black-and-white split with no threshold',
+			{ biLevel: { threshold: 0.3 } },
+			(xml: string) => xml.replace(/ thresh="\d+"/, ''),
+		],
+		[
+			'a duotone with one colour',
+			{ duotone: { shadow: '250F6B', highlight: 'F0C808' } },
+			(xml: string) => xml.replace('<a:srgbClr val="F0C808"/>', ''),
+		],
+		[
+			'a colour change with no source colour',
+			{ clrChange: { from: '000000', to: '9B1B30' } },
+			(xml: string) => xml.replace(/<a:clrFrom>.*?<\/a:clrFrom>/, '<a:clrFrom/>'),
+		],
+	] as const)('%s is noted as a recolour loss', async ([, options, rewrite]) => {
+		const { buf } = await authorRead((pres) => {
+			pres.addSlide().addImage({ data: PNG_1X1, x: 1, y: 1, w: 5, h: 1.5, ...options })
+		})
+		const ir = await rewritten(buf, rewrite)
+		assert(constructs(ir).has('image.recolor'), 'the loss is declared')
+	})
+
+	test('a connector bend given as a formula takes the preset default, and is noted', async () => {
+		const { buf } = await authorRead((pres) => {
+			pres.addSlide().addConnector({ x1: 1, y1: 1, x2: 5, y2: 3, type: 'elbow', adj: 30 })
+		})
+		const ir = await rewritten(buf, (xml) => xml.replace('fmla="val 30000"', 'fmla="*/ h 1 2"'))
+		const connector = objectOf(defined(allCalls(ir).find((c) => c.method === 'addConnector')).args[0])
+		assertEqual(connector['adj'], undefined, 'no bend position is stated')
+		assert(constructs(ir).has('connector.route'), 'and the formula is noted')
+	})
+
+	test('a group with no child space leaves its children to their slide-absolute frames', async () => {
+		const { buf } = await authorRead((pres) => {
+			pres.addSlide().addGroup([{ rect: { x: 1, y: 1, w: 1, h: 1 } }, { rect: { x: 4, y: 1, w: 1, h: 1 } }], {
+				objectName: 'grp',
+			})
+		})
+		const ir = await rewritten(buf, (xml) =>
+			xml.replace(/(<p:grpSp>.*?<a:ext [^>]*\/>)<a:chOff [^>]*\/><a:chExt [^>]*\/>/s, '$1')
+		)
+		assert(constructs(ir).has('shape.frameInherited'), 'each child is placed by its own frame, and says so')
+	})
+
+	test('a child with no transform of its own inside a group falls back to its resolved frame', async () => {
+		const { buf } = await authorRead((pres) => {
+			pres.addSlide().addGroup([{ rect: { x: 1, y: 1, w: 1, h: 1 } }, { rect: { x: 4, y: 1, w: 1, h: 1 } }], {
+				objectName: 'grp',
+			})
+		})
+		const ir = await rewritten(buf, (xml) => xml.replace(/(<p:sp>.*?<p:spPr>)<a:xfrm>.*?<\/a:xfrm>/s, '$1'))
+		assert(constructs(ir).has('shape.frameUnresolved'), 'the child with nothing to place it is dropped, and says so')
+	})
+})
