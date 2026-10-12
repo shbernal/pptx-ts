@@ -69,6 +69,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A slide object filling a layout placeholder no longer writes `hasCustomPrompt`.** `addText`
+  and `addImage` with `placeholder` copied the flag from the layout's definition onto the slide's
+  `p:ph`, so a filled shape claimed its own text was prompt text. Only the layout or master
+  placeholder carries it now.
 - **`readModelToIr` keeps a placeholder's layout binding.** A text placeholder bound by `idx`
   (every body placeholder) and a picture or table in a placeholder came back as plain objects
   under a `shape.placeholder` note. They now carry the source's `p:ph` as a `placeholder: { type,
