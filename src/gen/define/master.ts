@@ -10,6 +10,13 @@ import type { ObjectOptionsInternal, PresSlideInternal, SlideLayoutInternal } fr
 import { addChildDefinition, warnUnauthoredChild } from './group.js'
 import type { ChildAuthors } from '../../families/shared.js'
 import { addTextDefinition } from './text.js'
+import { checkPlaceholderBinding } from './layout-placeholder.js'
+import { PlaceholderType } from '../../enums.js'
+
+/** Whether a definition's `type` is one of the six friendly ones the `p:ph` writer maps itself. */
+function isFriendlyPlaceholderType(type: string): boolean {
+	return Object.hasOwn(PlaceholderType, type) || (Object.values(PlaceholderType) as string[]).includes(type)
+}
 
 /**
  * Transforms a slide definition to a slide object that is then passed to the XML transformation process.
@@ -26,11 +33,20 @@ export function createSlideMaster(props: SlideMasterProps, target: SlideLayoutIn
 				// handled by the shared chart/image/shape/text dispatch
 			} else if ('placeholder' in object) {
 				const placeholder = object.placeholder
-				const { name, type, ...rawPlaceholderOptions } = placeholder.options
+				const { name, type, idx: statedIdx, ...rawPlaceholderOptions } = placeholder.options
+				// A friendly type (`image`, `table`) is mapped where `p:ph` is written; anything else is
+				// an `ST_PlaceholderType` value and is vetted here, with the `idx`, as a binding's are.
+				checkPlaceholderBinding(
+					{
+						...(statedIdx === undefined ? {} : { idx: statedIdx }),
+						...(isFriendlyPlaceholderType(type) ? {} : { type }),
+					},
+					'defineSlideMaster'
+				)
 				const placeholderOptions = rawPlaceholderOptions as TextPropsOptions & ObjectOptionsInternal
 				placeholderOptions.placeholder = name
 				placeholderOptions._placeholderType = type
-				placeholderOptions._placeholderIdx = 100 + idx
+				placeholderOptions._placeholderIdx = statedIdx ?? 100 + idx
 				// An empty placeholder is spelled as a run with no `text` key at all — `TextProps.text`
 				// is optional and the emitters read it with `||`, so a key holding `undefined` would
 				// be a second spelling of the same thing.

@@ -107,7 +107,7 @@ The template-anchored output reuses the source deck's masters, layouts and theme
 | Shapes on a slide master | `SlideMaster.shapes` | None. `defineSlideMaster` creates a layout | Kept | Dropped | `master.decoration` |
 | Colour map (`p:clrMap`) | `SlideMaster.colorMap` | None. The write path emits the identity map | Kept | Identity map | `master.colorMap` |
 | More than one slide master | `Presentation.masters()` | One shared master | Kept | One master, with the first master's theme and colour map | `master.multiple` |
-| Layout placeholders | `SlideLayout.placeholders` | `defineSlideMaster({ objects })`, left unused | Kept | Dropped | `master.placeholders` |
+| Layout placeholders | `SlideLayout.placeholders` | `defineSlideMaster({ objects: [{ placeholder }] })`, with its `type` and `idx` | Kept | Re-declared when every slide on the layout fills it; one a slide leaves out is dropped | `master.placeholders` |
 | Shapes on a layout | `SlideLayout.shapes` | `defineSlideMaster({ objects })` | Kept | Re-authored. A group becomes loose shapes and a table is dropped | `layout.*` |
 | Layout background taken from the theme (`p:bgRef`) | The resolved fill | A colour or an image | Kept | The resolved fill, baked in | `master.background` |
 | Layout names | `Presentation.layouts()` | `defineSlideMaster({ title })` | Kept | A repeated name gets a suffix. A tab or line break becomes a space | `master.nameCollision`, `master.name` |
@@ -199,7 +199,7 @@ The Output column says where the note fires. A construct that fires in both outp
 | `deck.docProps` | Standalone | unwritable | Keywords, description, category, content status and last-modified-by are dropped | 58/58 |
 | `deck.docPropsDefault` | Standalone | unwritable | A title, author, subject, revision or company the source left blank gets the library's value | 58/58 |
 | `master.default` | Standalone | unsupported | The layout gallery gains a blank `DEFAULT` layout ahead of the source layouts | 58/58 |
-| `master.placeholders` | Standalone | unsupported | Layout placeholder definitions are not reproduced | 58/58 |
+| `master.placeholders` | Standalone | unsupported | A layout placeholder a slide on that layout leaves out is not re-declared, because the write path would seed an empty copy onto that slide | 58/58 |
 | `master.txStyles` | Standalone | unread | Placeholder text falls back to built-in size, face, colour, indent and bullet per list level | 58/58 |
 | `theme.fmtScheme` | Standalone | unread | The theme's fill, line and effect style lists become Office's | 58/58 |
 | `master.background` | Standalone | unwritable | A layout background taken from the theme is baked to the fill it resolves to | 57/58 |

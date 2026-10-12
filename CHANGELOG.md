@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **A layout placeholder definition takes `idx` and any `ST_PlaceholderType`.** In
+  `defineSlideMaster({ objects: [{ placeholder: { options } }] })`, `idx` is written as `p:ph/@idx`
+  (it was always 100 plus the object's position; `0` writes none, as PowerPoint writes a title), and
+  `type` takes `ctrTitle`, `subTitle`, `obj`, `dt`, `ftr`, `sldNum` and the rest beside the six
+  friendly types. A slide object bound by type alone fills an `idx`-0 definition of that type, so no
+  empty copy is seeded beside it ([#165](https://github.com/shbernal/pptx-ts/issues/165)).
 - **A chart's areas, manual layouts and series effects read back.** `Chart.chartArea` and
   `Chart.plotArea` (`ChartAreaFormat`: solid, gradient, pattern and picture fills read as a shape's
   are, the border, the plot's manual layout), `Chart.roundedCorners`, `Chart.titleLayout`,
@@ -118,6 +124,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`readModelToIr` re-declares a layout's placeholders.** Every definition was dropped under
+  `master.placeholders`. Each one every slide on its layout fills now carries as a `{ placeholder }`
+  object with its source name, type, `idx`, frame and custom prompt; one a slide leaves out is still
+  dropped and noted, since the write path would seed an empty copy onto that slide
+  ([#165](https://github.com/shbernal/pptx-ts/issues/165)).
 - **A one-entry multi-type `addChart` array writes a bubble chart.** Every bubble entry threw
   `chart/bubble-in-combo`, a one-entry array that combines nothing included, so `type[].data[].sizes`
   could never be written. A single bubble entry is now written as the standalone chart, its options
