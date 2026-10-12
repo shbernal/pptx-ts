@@ -83,6 +83,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`catAxes[n]` and `valAxes[n]` write `catAxisCrossesAt`, `valAxisCrossesAt` and
+  `valLabelFormatCode`.** Each entry's crossing now lands on the axis it crosses, as the flat key's
+  does, and a value-axis entry's format sets the series caches of the plots on that axis. All three
+  wrote nothing from an entry ([#142](https://github.com/shbernal/pptx-ts/issues/142)).
 - **`readModelToIr` carries the chart settings the read model reads.** A series outline
   (`dataBorder` on a bar, area or pie; `lineSize`, `lineDash`, `lineDashValues` and a per-series
   `seriesOptions[n].lineSize` on a stroked series), each axis' orientation, tick marks, label
