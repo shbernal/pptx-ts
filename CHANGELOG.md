@@ -124,6 +124,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`addNotes` writes a run's `hyperlink.slide` and `hyperlink.action`.** `NotesTextOptions` typed
+  both, but only `url` was written: a slide jump was dropped with a warning and a show jump without
+  one. A slide jump is now a slide relationship of the notes part, which `appendSlides` repoints at
+  the appended slide (`ExtractedNotes.slideLinks`), and a link past the last slide is refused on
+  write. `readModelToIr` carries both onto the notes runs instead of noting them as unwritable
+  ([#168](https://github.com/shbernal/pptx-ts/issues/168)).
+
 - **A chart's embedded workbook no longer stamps the clock.** Its own `docProps/core.xml` carried
   `dcterms:created` and `dcterms:modified`, so two writes of a deck with a chart differed inside the
   workbook, a part a consumer comparing packages cannot exclude by name. The workbook now states no
