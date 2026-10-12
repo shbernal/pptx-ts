@@ -31,6 +31,7 @@ import {
 	type AutoShape,
 	type Connector,
 	type CustomGeometry,
+	type GeometryCoordinate,
 	type GraphicFrame,
 	type GroupShape,
 	type Picture,
@@ -52,6 +53,7 @@ import {
 	identityOptions,
 	lockOption,
 	nameOf,
+	orUndefined,
 	positionOptions,
 	type ShapeBox,
 } from './values.js'
@@ -204,11 +206,12 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 	const frame = autoShapeText(shape, notes)
 
 	const placeholder = placeholderOption(shape, notes)
+	const style = styleOptions(shape, ctx)
 
 	const common = {
 		...positionOptions(box),
 		...transformOptions(shape, ctx.groups),
-		...styleOptions(shape, ctx),
+		...style,
 		...identityOptions(shape),
 		objectLock: lockOption(shape, SHAPE_LOCK_ATTRS),
 		placeholder,
@@ -219,11 +222,11 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 	}
 
 	if (custom) {
-		noteCustGeomGuides(notes)
 		const points = customGeometryPoints(box, custom)
 		// A freeform holding text is an `addText` with the same points: this arm used to return
 		// `addShape` before the text arm below, so a freeform's text was discarded.
 		if (frame !== null) {
+			noteUnwritableCustGeomLists(custom, 'addText', notes)
 			const options = compact({
 				...common,
 				...textFrameOptions(frame, notes),
@@ -233,11 +236,14 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 			})
 			return {
 				method: 'addText',
-				args: [textRuns(frame, ctx, placeholder !== undefined, textLang(options)), options ?? {}],
+				args: [
+					textRuns(frame, ctx, placeholder !== undefined || common.hyperlink !== undefined, textLang(options)),
+					options ?? {},
+				],
 				...nameOf(shape),
 			}
 		}
-		const options = compact({ ...common, points })
+		const options = compact({ ...common, ...addShapeLine(style['line']), points, ...custGeomListOptions(custom) })
 		return { method: 'addShape', args: ['custGeom', options ?? {}], ...nameOf(shape) }
 	}
 
@@ -253,7 +259,10 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 		})
 		return {
 			method: 'addText',
-			args: [textRuns(frame, ctx, placeholder !== undefined, textLang(options)), options ?? {}],
+			args: [
+				textRuns(frame, ctx, placeholder !== undefined || common.hyperlink !== undefined, textLang(options)),
+				options ?? {},
+			],
 			...nameOf(shape),
 		}
 	}
@@ -272,18 +281,75 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 		)
 		return null
 	}
-	const options = compact({ ...common, ...adjustOptions(shape) })
+	const options = compact({ ...common, ...addShapeLine(style['line']), ...adjustOptions(shape) })
 	return { method: 'addShape', args: [preset, options ?? {}], ...nameOf(shape) }
 }
 
+/**
+ * An `addShape` call's `line`, spelled out when the source states none.
+ *
+ * `addShape` writes an absent `line` as `{ type: 'none' }`, so that is what a shape stating no
+ * outline already came back with. Left implicit, the copy's own IR stated a line the source's did
+ * not, which the round trip reported on every placeholder the writer seeds empty (#177).
+ */
+function addShapeLine(line: IrValue | undefined): { line: IrValue } {
+	return { line: line ?? { type: 'none' } }
+}
+
 /** The note for what a `custGeom` holds beside its path, shared by a freeform shape and a picture clipped to one. */
-function noteCustGeomGuides(notes: NoteScope): void {
+function noteUnwritableCustGeomLists(custom: CustomGeometry, method: string, notes: NoteScope): void {
+	if (custom.guides.length === 0 && custom.adjustHandles.length === 0 && custom.connectionSites.length === 0) return
 	notes.note(
 		'shape.custGeom.guides',
 		'dropped',
-		'unread',
-		'custGeom guides, adjust handles and connection sites (a:gdLst / a:ahLst / a:cxnLst) have no accessor, so only the path outline carries'
+		'unwritable',
+		`custGeom guides, adjust handles and connection sites (a:gdLst / a:ahLst / a:cxnLst) are addShape options, and ${method} takes the freeform's points alone, so only the path outline carries`
 	)
+}
+
+/**
+ * A custom geometry's guides, adjust handles and connection sites as `addShape` takes them. A
+ * position is in the shape's own EMU space on both sides, or names a guide, which passes through.
+ */
+function custGeomListOptions(custom: CustomGeometry): Record<string, IrValue | undefined> {
+	const coord = (value: GeometryCoordinate | null): IrValue | undefined =>
+		value === null ? undefined : typeof value === 'number' ? emu(value) : value
+	return {
+		guides: custom.guides.length
+			? custom.guides.map((guide) => ({ name: guide.name, formula: guide.formula }))
+			: undefined,
+		connectionSites: custom.connectionSites.length
+			? custom.connectionSites.map(
+					(site) => compact({ ang: site.angleDeg ?? 0, x: coord(site.x), y: coord(site.y) }) ?? { ang: 0 }
+				)
+			: undefined,
+		adjustHandles: custom.adjustHandles.length
+			? custom.adjustHandles.map(
+					(handle) =>
+						(handle.kind === 'xy'
+							? compact({
+									x: coord(handle.x),
+									y: coord(handle.y),
+									gdRefX: orUndefined(handle.gdRefX),
+									minX: coord(handle.minX),
+									maxX: coord(handle.maxX),
+									gdRefY: orUndefined(handle.gdRefY),
+									minY: coord(handle.minY),
+									maxY: coord(handle.maxY),
+								})
+							: compact({
+									x: coord(handle.x),
+									y: coord(handle.y),
+									gdRefR: orUndefined(handle.gdRefR),
+									minR: coord(handle.minR),
+									maxR: coord(handle.maxR),
+									gdRefAng: orUndefined(handle.gdRefAng),
+									minAng: orUndefined(handle.minAngDeg),
+									maxAng: orUndefined(handle.maxAngDeg),
+								})) ?? {}
+				)
+			: undefined,
+	}
 }
 
 /**
@@ -296,7 +362,7 @@ function noteCustGeomGuides(notes: NoteScope): void {
 function pictureClipOptions(shape: Picture, box: ShapeBox, notes: NoteScope): Record<string, IrValue | undefined> {
 	const custom = shape.customGeometry
 	if (custom) {
-		noteCustGeomGuides(notes)
+		noteUnwritableCustGeomLists(custom, 'addImage', notes)
 		return { points: customGeometryPoints(box, custom) }
 	}
 	const preset = shape.presetGeometry
@@ -763,7 +829,7 @@ function graphicFrameCall(shape: GraphicFrame, ctx: MapContext): CallIr | null {
 	if (table) return tableCall(shape, table, ctx)
 
 	const chart = shape.chart
-	if (chart) return chartCall(shape, chart, notes)
+	if (chart) return chartCall(shape, chart, ctx)
 
 	// Everything below emits no call. Reached even when the deck-level walk already marked the
 	// slide `carried`, because the standalone tier has no source package to copy from and needs

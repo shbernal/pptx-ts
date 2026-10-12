@@ -9,6 +9,8 @@
 import type { ExtractedSlide } from '../read/api/presentation-types.js'
 import type { PresSlideInternal } from '../types/internal.js'
 import { buildEmbeddedWorksheet, chartPartBodies } from './chart/embed-xlsx.js'
+import { decodeBase64ToBytes } from '../media/base64.js'
+import { imageContentType } from '../media/content-type.js'
 
 /**
  * Charts: the chart part XML plus its embedded workbook bytes. The chart part's own `.rels`
@@ -25,5 +27,10 @@ export function chartsOf(slide: PresSlideInternal): ExtractedSlide['charts'] {
 		rId: rel.rId,
 		embeddingBytes: buildEmbeddedWorksheet(rel),
 		...chartPartBodies(rel),
+		pictures: (rel.media ?? []).flatMap((picture) => {
+			const bytes = decodeBase64ToBytes(typeof picture.rel.data === 'string' ? picture.rel.data : '')
+			const extn = (picture.rel.extn || 'png').toLowerCase()
+			return bytes ? [{ rId: picture.rId, bytes, extn, contentType: imageContentType(extn) }] : []
+		}),
 	}))
 }

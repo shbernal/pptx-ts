@@ -12,7 +12,7 @@ import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { describe, test } from 'vitest'
 import TsPptx, { ChartType } from '../../dist/node.js'
-import { Presentation, type OpcPackage } from '../../dist/read.js'
+import { Presentation, isGraphicFrame, type OpcPackage } from '../../dist/read.js'
 import {
 	bytesEqual,
 	PNG_1X1,
@@ -451,6 +451,28 @@ describe('Presentation.appendSlides', () => {
 		const pptx = new TsPptx() // default LAYOUT_16x9 — narrower
 		pptx.addSlide().addText('x', { x: 1, y: 1, w: 4, h: 1 })
 		assert(await rejects(() => pres.appendSlides(pptx, { layout: 'Blank' })), 'a mismatched slide size throws')
+	})
+
+	test("appends a chart area's picture fill as a picture the chart part references", async () => {
+		// The picture is registered on the generating slide, which does not reference it: the
+		// extraction hands it over with the chart instead, and the chart part declares it (#139).
+		const pres = await Presentation.load(await readFile(fixturePath('theme-colors')))
+		const pptx = wideGenerator()
+		pptx.addSlide().addChart([{ name: 'S1', labels: ['A', 'B'], values: [1, 2] }], {
+			type: ChartType.bar,
+			x: 1,
+			y: 1,
+			w: 6,
+			h: 3,
+			chartArea: { fill: { type: 'image', image: { data: PNG_1X1 } } },
+		})
+		const [added] = take(await pres.appendSlides(pptx, { layout: 'Blank' }), 1)
+		const frame = defined(added.shapes.find(isGraphicFrame))
+		const chartPart = defined(frame.chart?.partName)
+		assertEqual(typeOfRid(pres.opc, chartPart, 'rId2'), IMAGE_REL, 'the chart part declares the picture')
+		assert(resolveRid(pres.opc, chartPart, 'rId2')?.startsWith('/ppt/media/'), 'over a media part')
+		const slideRels = [...pres.opc.relationshipsFor(added.partName)].map((rel) => rel.type)
+		assert(!slideRels.includes(IMAGE_REL), 'and the slide declares no picture of its own')
 	})
 
 	test('appends a chartEx chart as a chartEx part, with its mandatory style/colors sidecars', async () => {

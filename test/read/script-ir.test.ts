@@ -17,7 +17,14 @@ import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import type { BackgroundProps, SlideNumberProps } from '../../dist/index.js'
 import { Presentation, isAutoShape, type TransitionInput } from '../../dist/read.js'
-import { canonicalDeckIr, readModelToIr, type CallIr, type DeckIr, type IrValue } from '../../dist/script.js'
+import {
+	canonicalDeckIr,
+	printScript,
+	readModelToIr,
+	type CallIr,
+	type DeckIr,
+	type IrValue,
+} from '../../dist/script.js'
 import { PNG_1X1, assert, assertEqual, defined, expectDefined, readEntry, at as atIndex, take } from '../helpers.ts'
 import { authorRead } from './authored.ts'
 import { fixtureNames, freshIr, irFor, readFixture, readOracle } from './corpus.ts'
@@ -892,6 +899,55 @@ describe('deck IR — a hyperlinked run with no colour of its own', () => {
 		assert(cells.includes('"color":"000000"'), `the plain cell keeps its black: ${cells}`)
 		assert(!constructs(ir).has('text.color.inherited'), 'and declares no loss, because it was stated')
 	})
+
+	test('a show jump on the shape or on a cell leaves the runs uncoloured', async () => {
+		// The shape's jump is written on its `p:cNvPr` alone, so its run states no link and was
+		// coloured black; the cell's was written nowhere until #82 (#128).
+		const box = { x: 1, y: 1, w: 4, h: 1 }
+		const { presentation } = await authorRead((pres) => {
+			const slide = pres.addSlide()
+			slide.addText('next', { ...box, hyperlink: { action: 'nextslide' } })
+			slide.addTable([[{ text: 'a', options: { hyperlink: { action: 'nextslide' } } }]], { ...box, y: 3 })
+			pres.addSlide()
+		})
+		const ir = readModelToIr(presentation)
+		for (const method of ['addText', 'addTable']) {
+			const args = JSON.stringify(defined(allCalls(ir).find((c) => c.method === method)).args)
+			assert(!args.includes('"color"'), `${method} states no colour: ${args}`)
+		}
+		assert(!constructs(ir).has('text.color.inherited'), 'and declares no loss')
+	})
+})
+
+describe('deck IR — a table cell border keeps its cap and transparency', () => {
+	// `cap` had no accessor and the stroke alpha was read but not mapped, so both came back as the
+	// writer's defaults, with no note (#81).
+	test('on an edge and on a diagonal', async () => {
+		const line = { type: 'solid' as const, color: '9B1B30', width: 2 }
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addTable(
+				[
+					[
+						{
+							text: 'a',
+							options: {
+								border: [{ ...line, cap: 'round' }, { ...line, transparency: 40 }, line, line],
+								diagonal: { tlToBr: { ...line, cap: 'square', transparency: 40 } },
+							},
+						},
+					],
+				],
+				{ x: 1, y: 1, w: 5 }
+			)
+		})
+		const ir = readModelToIr(presentation)
+		const options = at(defined(allCalls(ir).find((c) => c.method === 'addTable')).args[0], 0, 0, 'options')
+		assertEqual(at(options, 'border', 0, 'cap'), 'round', 'the top edge keeps its round cap')
+		assertEqual(at(options, 'border', 1, 'transparency'), 40, 'the right edge keeps its transparency')
+		assertEqual(opt(options, 'border', 2, 'cap'), undefined, "a flat cap, the writer's own, is left implied")
+		assertEqual(at(options, 'diagonal', 'tlToBr', 'cap'), 'square', 'the diagonal keeps its cap')
+		assertEqual(at(options, 'diagonal', 'tlToBr', 'transparency'), 40, 'and its transparency')
+	})
 })
 
 describe('deck IR — a run that jumps in the slide show', () => {
@@ -1135,6 +1191,26 @@ describe('deck IR — shape locks', () => {
 		assertEqual(lockOf('addTable'), '{"noDrilldown":true,"noResize":true}', 'the writer-implied noGrp is left out')
 		assertEqual(lockOf('addGroup'), '{"noRot":true,"noSelect":true}', 'the group locks')
 		assertEqual((await replayLocks(ir)).join(''), source.join(''), 'the replay')
+	})
+
+	test("a chart's frame locks and a group's noUngrp carry", async () => {
+		const { presentation } = await authorRead((pres) => {
+			const slide = pres.addSlide()
+			slide.addChart([{ name: 'S', labels: ['A', 'B'], values: [1, 2] }], {
+				type: 'bar',
+				x: 1,
+				y: 1,
+				w: 4,
+				h: 3,
+				objectLock: { noDrilldown: true, noMove: true },
+			})
+			slide.addGroup([{ rect: { x: 6, y: 1, w: 2, h: 1 } }], { objectLock: { noUngrp: true } })
+		})
+		const ir = readModelToIr(presentation)
+		const lockOf = (method: string) =>
+			JSON.stringify(at(defined(allCalls(ir).find((c) => c.method === method)).args[1], 'objectLock'))
+		assertEqual(lockOf('addChart'), '{"noDrilldown":true,"noMove":true}', 'the chart locks')
+		assertEqual(lockOf('addGroup'), '{"noUngrp":true}', 'the group noUngrp')
 	})
 
 	test('a picture without noChangeAspect and a table without noGrp do not gain them', async () => {
@@ -1936,20 +2012,83 @@ describe('deck IR — text links, freeform text and fields', () => {
 		assert(kinds.has('text.field'), "and the text box's still is")
 	})
 
-	test('speaker notes formatting beyond bold and italic is noted, and plain notes raise nothing', async () => {
+	test('speaker notes formatting beyond bold and italic carries, what addNotes cannot write is noted, and plain notes raise nothing', async () => {
 		const { buf } = await authorRead((pres) => {
 			pres.addSlide().addNotes('underlined note')
 		})
-		// The run properties immediately before the note's text, and no others.
-		const ir = await irWithPart(buf, 'ppt/notesSlides/notesSlide1.xml', (xml) =>
-			xml.replace(/<a:rPr([^>]*?)(\/?)>(?=(?:(?!<a:rPr)[^])*<a:t>underlined note)/, '<a:rPr$1 u="sng"$2>')
+		/** The notes part with `attrs` added to the run properties right before the note's text. */
+		const withRunAttrs = (attrs: string) =>
+			irWithPart(buf, 'ppt/notesSlides/notesSlide1.xml', (xml) =>
+				xml.replace(/<a:rPr([^>]*?)(\/?)>(?=(?:(?!<a:rPr)[^])*<a:t>underlined note)/, `<a:rPr$1 ${attrs}$2>`)
+			)
+		const underlined = await withRunAttrs('u="sng"')
+		assertEqual(
+			JSON.stringify(atIndex(underlined.slides, 0).notesRuns),
+			JSON.stringify([{ text: 'underlined note', options: { underline: { style: 'sng' } } }]),
+			'an underlined note carries its underline'
 		)
-		assert(constructs(ir).has('notes.formatting'), 'an underlined note is noted')
+		assert(!constructs(underlined).has('notes.formatting'), 'and is not noted')
+		const struck = await withRunAttrs('strike="sngStrike"')
+		const note = defined(struck.fidelity.find((one) => one.construct === 'notes.formatting'))
+		assertEqual(note.cause, 'unwritable', 'a struck note is noted as unwritable')
 		const { presentation: plainDeck } = await authorRead((pres) => {
 			pres.addSlide().addNotes('plain note')
 		})
 		const plain = readModelToIr(plainDeck)
 		assert(!constructs(plain).has('notes.formatting'), 'plain notes are not')
+		assertEqual(atIndex(plain.slides, 0).notesText, 'plain note', 'and carry as plain text')
+	})
+
+	test('speaker notes runs carry the formatting addNotes(NotesProps[]) writes, and print in that form', async () => {
+		// The IR held notes as plain text and declared their formatting unsupported, though
+		// addNotes writes every option below and the read model reads each back (#129).
+		const runs = [
+			{ text: 'Bold ', options: { bold: true, italic: true, color: '9B1B30' } },
+			{
+				text: 'sized\n',
+				options: { fontSize: 20, fontFace: 'Georgia', underline: { style: 'dbl' as const, color: '9B1B30' } },
+			},
+			{ text: 'link', options: { hyperlink: { url: 'https://example.com/', tooltip: 'Example' } } },
+		]
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addNotes(runs)
+		})
+		const ir = readModelToIr(presentation)
+		const carried = defined(atIndex(ir.slides, 0).notesRuns)
+		assertEqual(carried.map((run) => at(run, 'text')).join(''), 'Bold sized\nlink', 'the text and its paragraph break')
+		assertEqual(
+			JSON.stringify(at(carried, 0, 'options')),
+			JSON.stringify({ bold: true, color: '9B1B30', italic: true })
+		)
+		assertEqual(
+			JSON.stringify(at(carried, 1, 'options')),
+			JSON.stringify({ fontFace: 'Georgia', fontSize: 20, underline: { color: '9B1B30', style: 'dbl' } })
+		)
+		assertEqual(
+			JSON.stringify(at(carried, 2, 'options', 'hyperlink')),
+			JSON.stringify({ tooltip: 'Example', url: 'https://example.com/' })
+		)
+		assert(!constructs(ir).has('notes.formatting'), 'nothing is declared lost')
+		assert(/slide1\.addNotes\(\s*\[\s*\{/.test(printScript(ir).code), 'the script prints the array form')
+	})
+
+	test("a notes run's jump to a slide or a show jump carries, as a slide run's does", async () => {
+		// Notes carried a `url` link only, and declared any other link unwritable because addNotes
+		// wrote no other (#168).
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide()
+			pres.addSlide().addNotes([
+				{ text: 'back ', options: { hyperlink: { slide: 1, tooltip: 'Back' } } },
+				{ text: 'next', options: { hyperlink: { action: 'nextslide' } } },
+			])
+		})
+		const ir = readModelToIr(presentation)
+		const carried = defined(atIndex(ir.slides, 1).notesRuns)
+		assertEqual(
+			JSON.stringify(carried.map((run) => at(run, 'options', 'hyperlink'))),
+			JSON.stringify([{ slide: 1, tooltip: 'Back' }, { action: 'nextslide' }])
+		)
+		assert(!constructs(ir).has('notes.formatting'), 'nothing is declared lost')
 	})
 })
 

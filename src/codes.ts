@@ -100,6 +100,7 @@ export type DiagnosticCode =
 	| 'table/invalid-row-height'
 	| 'table/invalid-margin'
 	| 'table/invalid-header-row-count'
+	| 'table/option-not-supported'
 	// Text and bullets
 	| 'text/invalid-valign'
 	| 'text/invalid-vertical'
@@ -301,6 +302,7 @@ export type InvalidOptionErrorCode =
 	| 'hyperlink/missing-target'
 	| 'hyperlink/conflicting-targets'
 	| 'hyperlink/invalid-slide'
+	| 'hyperlink/invalid-action'
 	| 'slide/link-past-last-slide'
 	// Text
 	| 'text/invalid-text'

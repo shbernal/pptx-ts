@@ -309,9 +309,9 @@ export function genXmlParagraphProperties(textObj: SlideObject | TextProps, isDe
 			// *overrides* it, which is a different fact even where the inherited style has no
 			// bullet, because a later edit to the master then stops arriving.
 			//
-			// Omission cannot mean this: it has meant `a:buNone` since the writer existed and
-			// every deck authored against it depends on that. Same resolution as `fill: { type:
-			// 'inherit' }` (#10) — name the state that had no name, leave the one that has.
+			// Omission means this on a placeholder definition and on text filling one (#174), where
+			// `addTextDefinition` defaults it; anywhere else omission still means `a:buNone`. Same
+			// resolution as `fill: { type: 'inherit' }` (#10) — name the state that had no name.
 		} else if (opts.bullet) {
 			defaultMarL = bulletHangMarL(bulletMarL, indentLevel)
 			defaultIndent = -bulletMarL
@@ -841,11 +841,16 @@ export function renderTextParagraphsXml(
 			})
 			// A link taken from the shape is the shape's object, so the emitter can tell it from the
 			// run's own: a shape's show jump is written on the shape alone. Recomputed on every write,
-			// since the inheritance above leaves the shape's link on the run's bag.
+			// since the inheritance above leaves the shape's link on the run's bag. A table cell has no
+			// `<p:cNvPr>` of its own, so its link is written on the runs it reaches (#82).
 			setOrClear(
 				textOptions,
 				'_shapeHyperlink',
-				textOptions.hyperlink !== undefined && textOptions.hyperlink === shapeOptions.hyperlink ? true : undefined
+				slideObj._type !== SlideObjectType.tablecell &&
+					textOptions.hyperlink !== undefined &&
+					textOptions.hyperlink === shapeOptions.hyperlink
+					? true
+					: undefined
 			)
 
 			// D: Add formatted textrun

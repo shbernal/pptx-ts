@@ -186,6 +186,60 @@ export type GeometryCommand =
 	| { cmd: 'arcTo'; wR: number; hR: number; stAng: number; swAng: number }
 	| { cmd: 'close' }
 
+/**
+ * A custom-geometry coordinate (`ST_AdjCoordinate`): a number in the shape's own EMU space, or the
+ * name of a guide whose value it takes.
+ */
+export type GeometryCoordinate = number | string
+
+/** One guide formula of a custom geometry (`a:gd`). */
+export interface CustomGeometryGuide {
+	/** The guide's name (`@name`), which positions and other formulas refer to. */
+	name: string
+	/** The formula (`@fmla`) as written: an operation and its arguments, such as PowerPoint's multiply-divide of a site against the shape width. */
+	formula: string
+}
+
+/**
+ * One adjust handle of a custom geometry: an XY handle (`a:ahXY`) bound to guides along each axis,
+ * or a polar one (`a:ahPolar`) bound along its radius and angle. Every bound is `null` when unset.
+ */
+export type CustomGeometryAdjustHandle =
+	| {
+			kind: 'xy'
+			/** The handle's position (`a:pos`). */
+			x: GeometryCoordinate | null
+			y: GeometryCoordinate | null
+			gdRefX: string | null
+			minX: GeometryCoordinate | null
+			maxX: GeometryCoordinate | null
+			gdRefY: string | null
+			minY: GeometryCoordinate | null
+			maxY: GeometryCoordinate | null
+	  }
+	| {
+			kind: 'polar'
+			/** The handle's position (`a:pos`). */
+			x: GeometryCoordinate | null
+			y: GeometryCoordinate | null
+			gdRefR: string | null
+			minR: GeometryCoordinate | null
+			maxR: GeometryCoordinate | null
+			gdRefAng: string | null
+			/** The angle bounds in degrees (the 60000ths source ÷ 60000), or `null`. */
+			minAngDeg: number | null
+			maxAngDeg: number | null
+	  }
+
+/** One connection site of a custom geometry (`a:cxn`): where a connector can attach. */
+export interface CustomGeometryConnectionSite {
+	/** The angle a connector arrives at, in degrees (`@ang` ÷ 60000), or `null` when it names a guide. */
+	angleDeg: number | null
+	/** The site's position (`a:pos`). */
+	x: GeometryCoordinate | null
+	y: GeometryCoordinate | null
+}
+
 /** One `<a:path>` of a custom geometry, with its path-unit viewport and render attrs. */
 export interface CustomGeometryPath {
 	/** Path-unit width (`a:path/@w`); the `x` denominator for this path's coords. Default `0`. */
@@ -210,6 +264,12 @@ export interface CustomGeometryPath {
  */
 export interface CustomGeometry {
 	paths: CustomGeometryPath[]
+	/** The guide formulas (`a:gdLst/a:gd`), in document order; empty when there are none. */
+	guides: CustomGeometryGuide[]
+	/** The adjust handles (`a:ahLst`), in document order; empty when there are none. */
+	adjustHandles: CustomGeometryAdjustHandle[]
+	/** The connection sites (`a:cxnLst/a:cxn`), in document order; empty when there are none. */
+	connectionSites: CustomGeometryConnectionSite[]
 }
 
 /** A shape's resolved position and size in slide-absolute EMU. */

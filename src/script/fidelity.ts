@@ -94,6 +94,9 @@ const TEMPLATE_ONLY = ['template'] as const
  * to list it. An entry without `tiers` no longer satisfies the catalogue's type.
  */
 export const NOTE_CONSTRUCTS = {
+	// An axis setting no ChartOpts key spells: a crossing at the other axis' max or min, a custom
+	// display unit. Absent from both IRs.
+	'chart.axis': { fields: [], tiers: BOTH_TIERS },
 	'chart.blanks': { fields: ['values'], tiers: BOTH_TIERS },
 	'chart.combo': { fields: ['type'], tiers: BOTH_TIERS },
 	// A chart with no cached plottable series is not emitted at all, so the whole frame is
@@ -103,6 +106,18 @@ export const NOTE_CONSTRUCTS = {
 	// Label flags the writer has no spelling for: the legend key on any plot, the category name on any
 	// but a pie or a doughnut. Absent from the IR on both sides, so there is nothing to exclude.
 	'chart.labels': { fields: [], tiers: BOTH_TIERS },
+	// A title's manual layout, which titlePos cannot state. Absent from both IRs.
+	'chart.layout': { fields: [], tiers: BOTH_TIERS },
+	// A series' gradient or pattern fill, which no addChart option spells. Absent from both IRs.
+	'chart.series.fill': { fields: [], tiers: BOTH_TIERS },
+	// A bar series' c:invertIfNegative, which no addChart option writes. Absent from both IRs.
+	'chart.invertIfNegative': { fields: [], tiers: BOTH_TIERS },
+	// A series outline the chart writer cannot dash as the source did, rebuilt solid. Both IRs carry
+	// the solid stroke, so the source dash is in neither.
+	'chart.series.line': { fields: [], tiers: BOTH_TIERS },
+	// A chart stroke's scheme colour outside the writable tokens, which a chart part read without a
+	// theme cannot bake either. Absent from both IRs.
+	'chart.schemeToken': { fields: [], tiers: BOTH_TIERS },
 	'chart.type': { fields: ['type'], tiers: BOTH_TIERS },
 	// A 3-D line, area or pie rebuilt flat: `type` names the flat chart on both sides, and the 3-D
 	// view is in neither IR.
@@ -234,7 +249,7 @@ export const NOTE_CONSTRUCTS = {
 	'line.schemeToken': { fields: ['line.color'], tiers: BOTH_TIERS },
 	'line.width': { fields: ['line.width'], tiers: BOTH_TIERS },
 	'media.audioVideo': { fields: ['*'], tiers: BOTH_TIERS },
-	'notes.formatting': { fields: ['notesText'], tiers: BOTH_TIERS },
+	'notes.formatting': { fields: ['notesText', 'notesRuns'], tiers: BOTH_TIERS },
 	'shadow.schemeToken': { fields: ['shadow.color'], tiers: BOTH_TIERS },
 	'shape.custGeom.guides': { fields: ['points'], tiers: BOTH_TIERS },
 	'shape.effects': { fields: ['shadow', 'glow'], tiers: BOTH_TIERS },

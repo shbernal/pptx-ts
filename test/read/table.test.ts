@@ -261,6 +261,7 @@ describe('Table cell styling', () => {
 		)
 		assertEqual(bottom.colorRef.resolved.effectiveHex, 'D9D9D9', 'lumMod 85% darkens white to D9D9D9')
 		assertEqual(bottom.colorRef.srgb, null, 'a scheme-coloured border states no literal hex')
+		assertEqual(bottom.cap, 'flat', 'and the cap PowerPoint writes on every edge is read as its token')
 	})
 
 	test('element_ escape hatches expose the underlying a:tbl / a:tr / a:tc nodes', async () => {

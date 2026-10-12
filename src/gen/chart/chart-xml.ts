@@ -33,6 +33,7 @@ import type {
 	SlideRelChart,
 } from '../../types/internal.js'
 import type { BorderProps, FillOption } from '../../types/index.js'
+import type { ChartPropsAxisCat, ChartPropsAxisVal } from '../../types/chart.js'
 import { warn } from '../../diagnostics.js'
 import { clampFontSizeSz } from '../drawingml/clamp.js'
 import { namedColorOr } from '../drawingml/color.js'
@@ -52,6 +53,7 @@ import { makeSurfacePlot, makeSurfaceScene } from './plot-surface.js'
 import { InternalError, InvalidOptionError } from '../../errors.js'
 import { isScatterChart, isXyChart } from './chart-kind.js'
 import { OOXML_NS } from '../../ooxml/namespaces.js'
+import { CHART_METADATA_EXT_URI, CHART_METADATA_NS } from '../../ooxml/chart-metadata.js'
 import { xsdBool } from '../../ooxml/xsd-boolean.js'
 
 /** The three namespaces every `<c:chartSpace>` declares, in the order PowerPoint writes them. */
@@ -321,12 +323,26 @@ function makeChartAxesXml(rel: SlideRelChart, plan: ComboAxisPlan): string {
 			)
 		}
 
+		// A crossing is written on the axis that crosses: `catAxisCrossesAt` on the value axis and
+		// `valAxisCrossesAt` on the category axis, so each entry's goes to the other axis' builder.
+		// Spread over its own axis alone, it reached a builder that never reads it (#142).
+		const crossing = (key: 'catAxisCrossesAt' | 'valAxisCrossesAt', entry: ChartAxisCrossing | undefined) =>
+			entry?.[key] === undefined ? {} : { [key]: entry[key] }
+
 		strXml += makeCatAxis(
-			{ ...rel.opts, ...catOverride(0), ...comboCatAxisType(false) },
+			{
+				...rel.opts,
+				...catOverride(0),
+				...crossing('valAxisCrossesAt', valOverride(0)),
+				...comboCatAxisType(false),
+			},
 			AXIS_ID_CATEGORY_PRIMARY,
 			AXIS_ID_VALUE_PRIMARY
 		)
-		strXml += makeValAxis({ ...rel.opts, ...valOverride(0) }, AXIS_ID_VALUE_PRIMARY)
+		strXml += makeValAxis(
+			{ ...rel.opts, ...valOverride(0), ...crossing('catAxisCrossesAt', catOverride(0)) },
+			AXIS_ID_VALUE_PRIMARY
+		)
 
 		// 3D bar and surface plot over a category × series grid.
 		if (rel.opts._type === ChartType.bar3d || rel.opts._type === ChartType.surface) {
@@ -338,7 +354,12 @@ function makeChartAxesXml(rel: SlideRelChart, plan: ComboAxisPlan): string {
 		// secondary axis. An override can still show it.
 		if (plan.secondary) {
 			strXml += makeValAxis(
-				{ ...rel.opts, ...(plan.secondaryVal ? {} : { valAxisHidden: true }), ...valOverride(1) },
+				{
+					...rel.opts,
+					...(plan.secondaryVal ? {} : { valAxisHidden: true }),
+					...valOverride(1),
+					...crossing('catAxisCrossesAt', catOverride(1)),
+				},
 				AXIS_ID_VALUE_SECONDARY
 			)
 			strXml += makeCatAxis(
@@ -346,6 +367,7 @@ function makeChartAxesXml(rel: SlideRelChart, plan: ComboAxisPlan): string {
 					...rel.opts,
 					...(plan.secondaryCat ? {} : { catAxisHidden: true }),
 					...catOverride(1),
+					...crossing('valAxisCrossesAt', valOverride(1)),
 					...comboCatAxisType(true),
 				},
 				AXIS_ID_CATEGORY_SECONDARY,
@@ -585,10 +607,22 @@ export function makeXmlCharts(rel: SlideRelChart): string {
 			const secondary = plotsOnSecondaryAxes(options)
 			const valAxisId = secondary ? AXIS_ID_VALUE_SECONDARY : AXIS_ID_VALUE_PRIMARY
 			const catAxisId = secondary ? AXIS_ID_CATEGORY_SECONDARY : AXIS_ID_CATEGORY_PRIMARY
-			plots += makeChartType(asChartType(type.type), type.data, options, valAxisId, catAxisId, sheet)
+			const plotOptions = withAxisValueFormat(
+				options,
+				rel.opts.valAxes?.[secondary ? 1 : 0],
+				type.options?.valLabelFormatCode
+			)
+			plots += makeChartType(asChartType(type.type), type.data, plotOptions, valAxisId, catAxisId, sheet)
 		}
 	} else if (rel.opts._type) {
-		plots = makeChartType(rel.opts._type, rel.data, rel.opts, AXIS_ID_VALUE_PRIMARY, AXIS_ID_CATEGORY_PRIMARY, sheet)
+		plots = makeChartType(
+			rel.opts._type,
+			rel.data,
+			withAxisValueFormat(rel.opts, rel.opts.valAxes?.[0], undefined),
+			AXIS_ID_VALUE_PRIMARY,
+			AXIS_ID_CATEGORY_PRIMARY,
+			sheet
+		)
 	}
 
 	// STEP 3: the axes the plots just referenced.
@@ -627,16 +661,6 @@ export function makeXmlCharts(rel: SlideRelChart): string {
 		])
 	)
 }
-
-/**
- * Stable pptx-ts vendor GUID identifying the chart-metadata extension on `c:chartSpace/c:extLst`.
- * Custom data rides under this URI in a foreign namespace so PowerPoint preserves it (the extLst
- * mechanism) instead of stripping/repairing it as it would an unrecognised sibling element.
- */
-const CHART_METADATA_EXT_URI = '{094A432E-1F6C-499B-95B8-B57DC9536949}'
-
-/** Foreign namespace for the chart-metadata extension payload. */
-const CHART_METADATA_NS = 'http://ts-pptx.com/schema/chart/metadata'
 
 /**
  * Create the chart-space extension-list XML carrying custom `metadata` key/value annotations.
@@ -681,6 +705,27 @@ function genXmlChartMetadata(metadata?: Record<string, string>): string {
 			)
 		)
 	)
+}
+
+/** The crossing keys an axis entry can state, read for the axis it crosses. */
+type ChartAxisCrossing = Pick<ChartPropsAxisCat, 'catAxisCrossesAt'> & Pick<ChartPropsAxisVal, 'valAxisCrossesAt'>
+
+/**
+ * A plot's options with the value format its series caches take: a subchart's own
+ * `valLabelFormatCode`, else the one stated on the `valAxes` entry for the axis it plots on, else
+ * the chart's. The entry's format was spread over that axis' builder only, which never reads it, so
+ * the caches kept the chart's (#142).
+ * @param opts - the plot's resolved options
+ * @param axis - the `valAxes` entry for the value axis the plot is on
+ * @param own - the format the subchart states itself
+ */
+function withAxisValueFormat(
+	opts: ChartOptsInternal,
+	axis: { valLabelFormatCode?: string | undefined } | undefined,
+	own: string | undefined
+): ChartOptsInternal {
+	const format = own ?? axis?.valLabelFormatCode
+	return format === undefined ? opts : { ...opts, valLabelFormatCode: format }
 }
 
 /**

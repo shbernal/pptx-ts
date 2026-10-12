@@ -37,6 +37,7 @@ import { resolveObjectName } from './object-name.js'
 import { checkPlaceholderBinding, placeholderFrame } from './layout-placeholder.js'
 import { EMU_PER_INCH } from '../../units.js'
 import { createHyperlinkRels } from './hyperlinks.js'
+import { createBulletImageRels } from './text.js'
 import { resolveFillKind } from '../drawingml/fill.js'
 import { registerImageFillMedia } from './image.js'
 import { InvalidOptionError } from '../../errors.js'
@@ -137,6 +138,30 @@ function applyTableHeaderColumnSugar(tableRows: TableRow[], opt: TablePropsInter
 		})
 	}
 	return srcRows
+}
+
+/**
+ * Report and drop `textWarp` from the table and its cells, once per call.
+ *
+ * `TableCellProps` takes it from `TextBaseProps`, and a cell's `a:bodyPr` was written empty whatever
+ * it said (#84). PowerPoint has nowhere to put it: setting `TextFrame2.WarpFormat` on a cell throws
+ * "The specified value is out of range" over COM, and a saved cell carries an empty `a:bodyPr`.
+ * (`fit` is different: `'shrink'` is baked into the runs by the measured-fit pass.)
+ * @param rows - the normalized rows, whose option bags are this module's own copies
+ * @param opt - the table's options, also this module's own
+ */
+function dropCellTextWarp(rows: TableCellInternal[][], opt: TablePropsInternal): void {
+	let stated = false
+	for (const bag of [opt, ...rows.flatMap((row) => row.map((cell) => cell.options ?? {}))]) {
+		if (bag.textWarp === undefined) continue
+		stated = true
+		delete bag.textWarp
+	}
+	if (stated)
+		warn(
+			'table/option-not-supported',
+			'addTable: `textWarp` has no effect in a table cell, which PowerPoint does not warp; it was ignored.'
+		)
 }
 
 /**
@@ -475,6 +500,7 @@ export function addTableDefinition(
 		delete opt.border
 	}
 	const arrRows = normalizeTableRows(srcRows, opt)
+	dropCellTextWarp(arrRows, opt)
 
 	// STEP 3: Set options
 	// Keep x/y/w/h as raw user `Coord` (inches/percent/unit-string). They are resolved to EMU
@@ -652,6 +678,15 @@ export function addTableDefinition(
 		// Same timing rule as the hyperlink rels above: resolve cell image fills to media rels
 		// on the slide this table actually landed on.
 		registerTableImageFills(target, arrRows, opt)
+
+		// And the picture bullets, on a cell or on one of its runs, the way `addText` registers them.
+		// Left out, a cell's `bullet.image` fell back to a glyph (#82).
+		createBulletImageRels(
+			target,
+			arrRows.flatMap((row) =>
+				row.flatMap((cell) => [cell.options, ...(Array.isArray(cell.text) ? cell.text.map((run) => run.options) : [])])
+			)
+		)
 
 		// Add slideObjects (NOTE: Use `extend` to avoid mutation)
 		// `columns` (per-column TableCellProps[]) is consumed in STEP 1.5 and baked into cells;

@@ -15,7 +15,7 @@
  */
 import type { Presentation } from '../../read/api/presentation.js'
 import type { Slide } from '../../read/api/slide.js'
-import type { Paragraph } from '../../read/api/text.js'
+import type { Paragraph, Run } from '../../read/api/text.js'
 import { isGraphicFrame, isGroupShape, type AnyShape } from '../../read/api/shapes.js'
 import type { CoreProperties } from '../../read/api/document-properties.js'
 import { backgroundIr, SLIDE_BACKGROUND } from './background.js'
@@ -30,15 +30,17 @@ import {
 	type DeckIr,
 	type DeckPropKey,
 	type DeckPropsIr,
+	type IrValue,
 	type SlideIr,
 	type SlideLayoutIr,
 } from '../ir.js'
 import { shapeCall, unwritableFramePayload } from './shape.js'
 import type { AssetResolver, MapContext } from './context.js'
-import { chromeToIr } from './chrome.js'
+import { chromeToIr, pruneUnfilledPlaceholders } from './chrome.js'
 import { transitionToIr } from './transition.js'
 import { slideNumberIr } from './slide-number.js'
-import { compact, inches } from './values.js'
+import { compact, inches, literalColor, orUndefined, schemeColorOption } from './values.js'
+import { hyperlinkOption, underlineOption } from './text.js'
 import { ABSENT_SLIDE_SIZE_EMU } from '../../ooxml/slide-size.js'
 import { assetFilenameExtension } from '../../media/content-type.js'
 
@@ -135,6 +137,7 @@ export function readModelToIr(pres: Presentation): DeckIr {
 	const slides = pres.slides.map((slide, index) =>
 		slideToIr(slide, index + 1, collector, { assets, slideNumberOf }, layouts)
 	)
+	pruneUnfilledPlaceholders(chrome, slides, deckScope)
 
 	return {
 		slideSize: size ? { widthEmu: size.widthEmu, heightEmu: size.heightEmu } : { ...ABSENT_SLIDE_SIZE_EMU },
@@ -240,7 +243,7 @@ function slideToIr(
 		hidden: slide.hidden,
 		...(slide.name ? { name: slide.name } : {}),
 		...backgroundOf(slide, notes, assets),
-		...notesOf(slide, notes),
+		...notesOf(slide, ctx),
 	}
 
 	const transition = transitionToIr(slide, ctx)
@@ -314,48 +317,91 @@ function backgroundOf(slide: Slide, notes: NoteScope, assets: AssetResolver): { 
 	return ir ? { background: ir } : {}
 }
 
-function notesOf(slide: Slide, notes: NoteScope): { notesText?: string } {
+function notesOf(slide: Slide, ctx: MapContext): { notesText?: string; notesRuns?: IrValue[] } {
+	const { notes } = ctx
 	const text = slide.notesText
 	if (!text) return {}
 	const frame = slide.notesTextFrame
-	if (frame && frame.paragraphs.some(hasNotesFormatting)) {
+	if (!frame) return { notesText: text }
+	const unwritable = frame.paragraphs.flatMap(unwritableNotesFormatting)
+	if (unwritable.length > 0) {
 		notes.note(
 			'notes.formatting',
 			'flattened',
-			'unsupported',
-			"speaker notes carry as plain text; per-run formatting, hyperlinks, bullets and indent levels, and the notes slide's own placeholder geometry, do not"
+			'unwritable',
+			`speaker notes state ${andList([...new Set(unwritable)])}, which addNotes cannot write, and the notes slide's own placeholder geometry does not carry`
 		)
 	}
-	return { notesText: text }
+	const runs = notesRuns(frame.paragraphs, ctx)
+	return runs ? { notesRuns: runs } : { notesText: text }
 }
 
 /**
- * `true` when a speaker-notes paragraph states anything plain text cannot carry.
- *
- * `addNotes` takes plain text. The note used to fire for bold and italic only, so underline,
- * strike, colour, size, face, highlight, character spacing, a hyperlink, a bullet or an indent
- * level went with nothing said. An explicit off (`u="none"`, `strike="noStrike"`, a suppressed
- * bullet) is how plain text reads anyway, so it does not count. Reads accessors only: `runOptions` would record colour
- * notes for text that emits no call.
+ * Speaker notes as the `NotesProps[]` `addNotes` takes, or `undefined` when no run states
+ * anything that form carries over the plain string. A paragraph break rides on the last run of
+ * every paragraph but the final one as a `\n`, which is how `addNotes` splits paragraphs.
  */
-function hasNotesFormatting(paragraph: Paragraph): boolean {
-	if (paragraph.level > 0) return true
+function notesRuns(paragraphs: Paragraph[], ctx: MapContext): IrValue[] | undefined {
+	const runs: IrValue[] = []
+	let formatted = false
+	paragraphs.forEach((paragraph, index) => {
+		const breaks = index < paragraphs.length - 1 ? '\n' : ''
+		const items = paragraph.runs.map((run) => {
+			const options = notesRunOptions(run, ctx)
+			if (options) formatted = true
+			return { text: run.text, ...(options ? { options } : {}) }
+		})
+		const last = items.at(-1)
+		if (last) last.text += breaks
+		else if (breaks) items.push({ text: breaks })
+		runs.push(...items)
+	})
+	return formatted ? runs : undefined
+}
+
+/** A notes run's options, as far as `NotesTextOptions` spells them. */
+function notesRunOptions(run: Run, ctx: MapContext): Record<string, IrValue> | undefined {
+	const { notes } = ctx
+	return compact({
+		bold: run.bold === true ? true : undefined,
+		italic: run.italic === true ? true : undefined,
+		underline:
+			run.underline === null || run.underline === 'none' ? undefined : underlineOption(run, run.underline, notes),
+		color:
+			run.color !== null
+				? literalColor(run.color)
+				: schemeColorOption(
+						run.schemeColor,
+						run.resolvedColor?.effectiveHex ?? null,
+						notes,
+						'text.color.schemeToken',
+						'notes run'
+					),
+		fontSize: orUndefined(run.fontSizePt),
+		fontFace: orUndefined(run.fontName),
+		hyperlink: hyperlinkOption(run, ctx),
+	})
+}
+
+/**
+ * What a speaker-notes paragraph states that `addNotes` cannot write: an indent level, a bullet,
+ * and on a run strike, highlight or character spacing. A link `addNotes` cannot write is noted by
+ * {@link hyperlinkOption}, as on a slide.
+ *
+ * An explicit off (`strike="noStrike"`, a suppressed bullet) is how plain text reads anyway, so it
+ * does not count. Reads accessors only.
+ */
+function unwritableNotesFormatting(paragraph: Paragraph): string[] {
+	const found: string[] = []
+	if (paragraph.level > 0) found.push('an indent level')
 	const bullet = paragraph.bulletDetail
-	if (bullet !== null && bullet.kind !== 'none') return true
-	return paragraph.runs.some(
-		(run) =>
-			run.bold === true ||
-			run.italic === true ||
-			(run.underline !== null && run.underline !== 'none') ||
-			(run.strike !== null && run.strike !== 'noStrike') ||
-			run.color !== null ||
-			run.schemeColor !== null ||
-			run.fontSizePt !== null ||
-			run.fontName !== null ||
-			run.highlight !== null ||
-			Boolean(run.charSpacingPt) ||
-			run.hyperlink !== null
-	)
+	if (bullet !== null && bullet.kind !== 'none') found.push('a bullet')
+	for (const run of paragraph.runs) {
+		if (run.strike !== null && run.strike !== 'noStrike') found.push('strikethrough')
+		if (run.highlight !== null) found.push('a highlight')
+		if (run.charSpacingPt) found.push('character spacing')
+	}
+	return found
 }
 
 /**

@@ -415,7 +415,7 @@ export interface ExtractedSlide {
 	onlineMedia: OnlineMediaItem[]
 	/**
 	 * The slide's speaker notes, or `undefined` when it has none. Carried as a ready
-	 * `<p:notes>` part body plus its external hyperlink rels;
+	 * `<p:notes>` part body plus its hyperlink and slide-link rels;
 	 * {@link Presentation.appendSlides} creates the notes part, wires it to the appended
 	 * slide, and binds it to a notes master (see {@link ExtractedSlides.notesMaster}).
 	 */
@@ -435,9 +435,14 @@ export interface ExtractedNotes {
 	/**
 	 * External hyperlink rels the notes body references, keyed by the `rId` used in
 	 * {@link xml}. Notes rels reserve `rId1` for the notes master and `rId2` for the
-	 * slide, so these start at `rId3`. Notes support external `url` links only.
+	 * slide, so these start at `rId3`.
 	 */
 	hyperlinks: Array<{ rId: number; target: string }>
+	/**
+	 * Jumps from a notes run to another slide, as {@link ExtractedSlide.slideLinks} holds them for the
+	 * body. Their ids share the numbering of {@link hyperlinks}. Absent means none.
+	 */
+	slideLinks?: Array<{ rId: number; sourceSlideNumber: number }>
 }
 
 /**
@@ -457,6 +462,8 @@ export interface ExtractedChart {
 	chartXml: string
 	/** The chart's embedded `.xlsx` workbook, the data source PowerPoint opens on edit. */
 	embeddingBytes: Uint8Array
+	/** The pictures a chart or plot area's picture fill paints, keyed by the `rId` used in {@link chartXml}. */
+	pictures?: Array<{ rId: number; bytes: Uint8Array; extn: string; contentType: string }>
 	/**
 	 * Present only for a chartEx chart, and then always with both sidecars. A chartEx part
 	 * *requires* a chart-style and a color-style part or PowerPoint reports the deck as

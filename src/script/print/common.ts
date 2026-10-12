@@ -235,7 +235,9 @@ export function printSlide(
 	if (slide.slideNumber) {
 		lines.push(`${identifier}.slideNumber = ${printValue(slide.slideNumber, 0, printAsset)}`)
 	}
-	if (slide.notesText !== undefined) {
+	if (slide.notesRuns !== undefined) {
+		lines.push(printArguments(`${identifier}.addNotes`, [slide.notesRuns], 0, printAsset))
+	} else if (slide.notesText !== undefined) {
 		lines.push(printArguments(`${identifier}.addNotes`, [slide.notesText], 0, printAsset))
 	}
 

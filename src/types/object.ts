@@ -14,11 +14,24 @@ import type { TextBaseProps, TextProps, TextPropsOptions } from './text.js'
  * A layout placeholder's options. They reach the slide objects that fill the placeholder as text
  * options, so beside the text formatting a placeholder takes the shape `fill` (an image fill
  * included) and the `hyperlink` a text box does, and `bullet` through {@link TextBaseProps}.
+ *
+ * A definition states no bullet, left margin or first-line indent unless given one, so the
+ * master's `textStyles` reach its slides; `bullet: false` turns the bullet off on this layout.
  */
 export interface PlaceholderProps
 	extends PositionProps, TextBaseProps, ObjectNameProps, Pick<TextPropsOptions, 'fill' | 'hyperlink'> {
 	name: string
-	type: PLACEHOLDER_TYPE
+	/**
+	 * `p:ph/@type`: one of the six friendly types, or any `ST_PlaceholderType` value (`ctrTitle`,
+	 * `subTitle`, `obj`, `dt`, `ftr`, `sldNum`, …).
+	 */
+	type: PLACEHOLDER_TYPE | PlaceholderXmlType
+	/**
+	 * `p:ph/@idx`, a non-negative integer a slide object binds to by stating the same `idx`.
+	 * Omitted, it is 100 plus the object's position in `objects`. `0` writes none, as PowerPoint
+	 * writes for a title.
+	 */
+	idx?: number
 	/**
 	 * margin (inches) — text-frame internal margin; a value `>= 1` warns as a likely legacy points value
 	 */
@@ -106,6 +119,8 @@ export interface ObjectNameProps {
 export interface ObjectLockProps {
 	/** Disallow grouping/ungrouping with other objects. (shapes, images, tables) */
 	noGrp?: boolean
+	/** Disallow ungrouping the group (`a:grpSpLocks/@noUngrp`). (groups only) */
+	noUngrp?: boolean
 	/** Disallow selecting the object. (shapes, images, tables) */
 	noSelect?: boolean
 	/** Disallow moving the object. (shapes, images, tables) */

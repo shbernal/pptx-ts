@@ -21,7 +21,7 @@ import type { ChartErrorBarOptions, ChartMulti, ChartOpts, OptsChartData } from 
 import type { BackgroundOption, Margin, TextVertType } from './core.js'
 import type { MasterTextStyleProps, SlideNumberProps } from './master.js'
 import type { MediaProps, MediaType } from './media.js'
-import type { TextShapeType } from '../ooxml/st-enums.js'
+import type { PlaceholderXmlType, TextShapeType } from '../ooxml/st-enums.js'
 import type { PresLayout, PresentationProps, SectionProps } from './pres.js'
 import type { ObjectOptions, Slide, SlideLayout } from './slide.js'
 import type { HyperlinkProps, ShadowProps, ShapeFillProps } from './style.js'
@@ -153,7 +153,7 @@ export interface TextPropsOptionsInternal extends TextPropsOptions {
  */
 export interface ObjectOptionsInternal extends ObjectOptions, TextPropsOptionsInternal {
 	_placeholderIdx?: number
-	_placeholderType?: PLACEHOLDER_TYPE
+	_placeholderType?: PLACEHOLDER_TYPE | PlaceholderXmlType
 	/** Connector adjust-guide values (OOXML 1000ths-of-a-percent), one per bend; emitted as `<a:gd name="adjN">` */
 	_connectorAdj?: number[]
 	/** Connector start-point binding: target shape `objectName` (raw, as the caller spelled it) + connection-site index; resolved to `<a:stCxn>` at serialize time */
@@ -294,6 +294,12 @@ export interface SlideRelChart extends OptsChartData {
 	 * via `<mc:AlternateContent>`. Set at define time from {@link isChartExType}.
 	 */
 	isChartEx?: boolean
+	/**
+	 * The pictures the chart part references (a chart or plot area's picture fill), each under the
+	 * relationship id the chart part gives it. The media rel is the slide's, marked
+	 * {@link SlideRelMedia.chartOwned}, so its `Target` is read at write time, after media dedupe.
+	 */
+	media?: Array<{ rId: number; rel: SlideRelMedia }>
 }
 // PRIVATE vvv
 export interface SlideRel {
@@ -350,6 +356,12 @@ export interface SlideRelMedia {
 	 * separate, perfectly ordinary image rel. Same escape hatch as {@link oleRelType}.
 	 */
 	model3dRelType?: string
+	/**
+	 * The picture of a chart's area fill, registered on the slide so the media pass loads, dedupes and
+	 * writes its part like any other picture. The chart part references it (see
+	 * {@link SlideRelChart.media}); the slide does not, so the slide's `.rels` leaves it out.
+	 */
+	chartOwned?: true
 	rId: number
 	/** Unescaped — see {@link SlideRel.Target}. Doubles as the zip entry name for embedded media. */
 	Target: string

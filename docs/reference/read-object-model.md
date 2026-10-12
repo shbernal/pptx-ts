@@ -165,6 +165,7 @@ Every getter below takes the first tier that defines a value.
 | Run colour | [`Run.resolvedColor`](api/read/classes/Run.md#resolvedcolor) | The run's own fill, the shape's `p:style/a:fontRef`, then the list-style tiers | No |
 | Run typeface | [`Run.resolvedFontFace`](api/read/classes/Run.md#resolvedfontface) | The run's own `a:latin`, the shape's `p:style/a:fontRef`, then the list-style tiers. A `+mj-*` or `+mn-*` token resolves through the theme font scheme. | No |
 | Run size, bold and italic | [`resolvedSizePt`](api/read/classes/Run.md#resolvedsizept), [`resolvedBold`](api/read/classes/Run.md#resolvedbold), [`resolvedItalic`](api/read/classes/Run.md#resolveditalic) | The run's own `a:rPr` attribute, then the list-style tiers | No |
+| Paragraph alignment, margin, indent, spacing and bullet | [`resolvedAlign`](api/read/classes/Paragraph.md#resolvedalign), [`resolvedMarginLeftPt`](api/read/classes/Paragraph.md#resolvedmarginleftpt), [`resolvedIndentPt`](api/read/classes/Paragraph.md#resolvedindentpt), [`resolvedLineSpacing`](api/read/classes/Paragraph.md#resolvedlinespacing), [`resolvedSpaceBeforePt`](api/read/classes/Paragraph.md#resolvedspacebeforept), [`resolvedSpaceAfterPt`](api/read/classes/Paragraph.md#resolvedspaceafterpt), [`resolvedBulletDetail`](api/read/classes/Paragraph.md#resolvedbulletdetail) | The paragraph's own `a:pPr`, then the list-style tiers' level element (`a:lvlNpPr`) | No |
 
 - The list-style tiers are: the paragraph's `a:pPr/a:defRPr`, the text body's `a:lstStyle` for the paragraph level, the matching layout placeholder's `a:lstStyle`, the matching master placeholder's `a:lstStyle`, the master's `p:txStyles`, and the presentation's `p:defaultTextStyle`. A run outside a placeholder skips the three placeholder tiers.
 - A run whose own fill is not a solid colour, such as `a:noFill` or a gradient, reads `null` from `resolvedColor`.
@@ -381,6 +382,7 @@ Every read value that carries a colour carries a [`ColorRef`](api/read/interface
 - [`level`](api/read/classes/Paragraph.md#level) is `0` when unset. [`align`](api/read/classes/Paragraph.md#align), [`lineSpacing`](api/read/classes/Paragraph.md#linespacing), [`spaceBeforePt`](api/read/classes/Paragraph.md#spacebeforept), [`spaceAfterPt`](api/read/classes/Paragraph.md#spaceafterpt), [`marginLeftPt`](api/read/classes/Paragraph.md#marginleftpt) [`indentPt`](api/read/classes/Paragraph.md#indentpt), [`rtl`](api/read/classes/Paragraph.md#rtl), [`tabStops`](api/read/classes/Paragraph.md#tabstops) and [`endLanguage`](api/read/classes/Paragraph.md#endlanguage), the language of the paragraph's end mark (`a:endParaRPr/@lang`), are `null` when unset.
 - `spaceBeforePt` and `spaceAfterPt` are also `null` for spacing given as a percentage. `lineSpacing` reports either form: `{ type: 'points', valuePt }` or `{ type: 'percent', percent }`, where `150` is 1.5 lines.
 - [`bulletDetail`](api/read/classes/Paragraph.md#bulletdetail) reports the bullet as `none`, `char`, `autoNum` or `picture`, with the bullet's own font, size and colour. It is `null` when the paragraph inherits its bullet.
+- Each of those has a `resolved` counterpart that walks [the inheritance chain](#the-inheritance-chain) at the paragraph's level. An inherited picture bullet reports `imagePartName: null`, since its image is a relationship of the layout or master.
 
 A run's own getters and its resolved getters answer different questions:
 
@@ -441,6 +443,7 @@ A run's own getters and its resolved getters answer different questions:
 - [`chartType`](api/read/classes/Chart.md#charttype) is the first plot group's type. [`chartTypes`](api/read/classes/Chart.md#charttypes) lists every group, several for a combo chart.
 - [`Chart.categories`](api/read/classes/Chart.md#categories) and [`categoryLevels`](api/read/classes/Chart.md#categorylevels) come from the first series.
 - [`Chart.dataLabels`](api/read/classes/Chart.md#datalabels) is the first plot group's labels block. [`ChartSeries.dataLabels`](api/read/classes/ChartSeries.md#datalabels) is the series' own. A pie keeps the flags the user set on the series, and an all-off block on the group.
+- [`ChartSeries.customLabels`](api/read/classes/ChartSeries.md#customlabels) lists the labels that state their own text (`c:dLbl` with `c:tx/c:rich`), such as a scatter's custom labels, each with its point index and its runs. A field (`a:fld`) reads as a run with its `field` type, `XVALUE` or `YVALUE` for the values `dataLabelFormatScatter: 'customXY'` appends.
 - A bar or area series has no `a:ln` by default, so its [`line`](api/read/classes/ChartSeries.md#line) reads `null`.
 
 | Series | Where the data is |

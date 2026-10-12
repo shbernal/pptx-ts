@@ -140,6 +140,31 @@ defineRegressionSuite('Placeholder binding (placeholder: { name, type, idx })', 
 		},
 	},
 	{
+		// PowerPoint drops the flag when a layout's prompt is cleared, and keeps it on a space.
+		name: 'a layout placeholder with no prompt text writes no hasCustomPrompt',
+		fn: async () => {
+			const { zip } = await build((p) => {
+				p.defineSlideMaster({
+					title: 'EMPTY_PROMPT_MASTER',
+					objects: [
+						{ placeholder: { options: { name: 'empty', type: 'body', x: 1, y: 1, w: 4, h: 1 }, text: '' } },
+						{ placeholder: { options: { name: 'unset', type: 'body', x: 1, y: 2, w: 4, h: 1 } } },
+						{ placeholder: { options: { name: 'space', type: 'body', x: 1, y: 3, w: 4, h: 1 }, text: ' ' } },
+					],
+				})
+			})
+			const layout = (await readEntry(zip, 'ppt/slideLayouts/slideLayout2.xml')).replace(/\s+/g, ' ')
+			assertEqual(
+				JSON.stringify(layout.match(/<p:ph[^>]*>/g)),
+				JSON.stringify([
+					'<p:ph idx="100" type="body" />',
+					'<p:ph idx="101" type="body" />',
+					'<p:ph idx="102" type="body" hasCustomPrompt="1" />',
+				])
+			)
+		},
+	},
+	{
 		name: 'an idx or type with no p:ph spelling throws',
 		fn: async () => {
 			for (const placeholder of [{ idx: -1 }, { idx: 1.5 }, { idx: 2 ** 32 }])
@@ -163,6 +188,50 @@ defineRegressionSuite('Placeholder binding (placeholder: { name, type, idx })', 
 					),
 				/placeholder\.type/,
 				'a friendly key is not an ST_PlaceholderType value'
+			)
+		},
+	},
+	{
+		// A layout placeholder took one of six friendly types and an `idx` of 100 plus its position, so a
+		// definition could not be written as the `ctrTitle`, `dt` or `idx`-1 placeholder a slide binds
+		// to, and readModelToIr dropped every layout's definitions (#165).
+		name: 'a definition states its idx and any ST_PlaceholderType, and a slide binding by them fills it',
+		fn: async () => {
+			const { zip } = await build((p) => {
+				p.defineSlideMaster({
+					title: 'TYPED',
+					objects: [
+						{ placeholder: { options: { name: 'title', type: 'ctrTitle', idx: 0, x: 1, y: 1, w: 8, h: 1 } } },
+						{ placeholder: { options: { name: 'Subtitle 2', type: 'subTitle', idx: 1, x: 1, y: 2, w: 8, h: 1 } } },
+						{ placeholder: { options: { name: 'Date 3', type: 'dt', idx: 10, x: 1, y: 5, w: 2, h: 0.4 } } },
+					],
+				})
+				const slide = p.addSlide({ masterTitle: 'TYPED' })
+				slide.addText('Title', { x: 1, y: 1, w: 8, h: 1, placeholder: { type: 'ctrTitle' } })
+				slide.addText('Subtitle', { x: 1, y: 2, w: 8, h: 1, placeholder: { type: 'subTitle', idx: 1 } })
+				slide.addText('Today', { x: 1, y: 5, w: 2, h: 0.4, placeholder: { type: 'dt', idx: 10 } })
+			})
+			const layout = (await readEntry(zip, 'ppt/slideLayouts/slideLayout2.xml')).replace(/\s+/g, ' ')
+			assert(/<p:ph type="ctrTitle"[ />]/.test(layout), 'an idx-0 title is written with no idx: ' + layout)
+			assert(/<p:ph idx="1" type="subTitle"[ />]/.test(layout), 'the subtitle with its idx')
+			assert(/<p:ph idx="10" type="dt"[ />]/.test(layout), 'the date with its idx')
+			const slide = await placeholders(zip)
+			assertEqual(slide.length, 3, 'each definition is filled, so none is seeded empty: ' + slide.join(' '))
+		},
+	},
+	{
+		name: 'a definition idx that is not a whole number throws',
+		fn: async () => {
+			await assertRejects(
+				() =>
+					build((p) => {
+						p.defineSlideMaster({
+							title: 'BAD',
+							objects: [{ placeholder: { options: { name: 'b', type: 'body', idx: 1.5, x: 1, y: 1, w: 1, h: 1 } } }],
+						})
+					}),
+				/placeholder\.idx/,
+				'defineSlideMaster'
 			)
 		},
 	},

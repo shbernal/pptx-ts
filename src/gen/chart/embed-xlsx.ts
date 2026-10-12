@@ -25,6 +25,7 @@ import {
 	CORE_PROPS_REL,
 	EXTENDED_PROPS_CONTENT_TYPE,
 	EXTENDED_PROPS_REL,
+	IMAGE_REL,
 	OFFICE_DOCUMENT_REL,
 	OFFICE_REL,
 	PACKAGE_REL,
@@ -35,7 +36,7 @@ import {
 } from '../../ooxml/rel-types.js'
 import { OOXML_NS } from '../../ooxml/namespaces.js'
 import { relationshipEl, relationshipsEl } from '../opc/rels.js'
-import { CORE_PROPS_NS, coreTimestamp } from '../opc/core.js'
+import { CORE_PROPS_NS } from '../opc/core.js'
 import { dataLabels, getExcelColName, labelSeries, type WorksheetLayout, worksheetLayout } from './data-refs.js'
 import { makeXmlCharts } from './chart-xml.js'
 import { makeXmlChartEx } from './chartex-xml.js'
@@ -163,18 +164,16 @@ export function buildEmbeddedWorksheet(chartObject: SlideRelChart): Uint8Array {
 					) +
 					'\n'
 			)
-			// One reading of the clock for both stamps: two calls make `created` and `modified`
-			// disagree whenever the build crosses a millisecond, which no reader notices and
-			// every byte-diff does.
-			const now = coreTimestamp()
+			// No `dcterms:created` / `dcterms:modified`: both are optional, nobody reads an embedded
+			// workbook's creation time, and stamping the clock here made every write of a deck with a
+			// chart differ from the last inside a part a consumer cannot exclude by name (#145). The
+			// deck's own `docProps/core.xml` keeps its dates.
 			zipExcel.add(
 				'docProps/core.xml',
 				XML_DECL +
 					el('cp:coreProperties', CORE_PROPS_NS, [
 						raw(el('dc:creator', null, 'TsPptx')),
 						raw(el('cp:lastModifiedBy', null, 'TsPptx')),
-						raw(el('dcterms:created', { 'xsi:type': 'dcterms:W3CDTF' }, now)),
-						raw(el('dcterms:modified', { 'xsi:type': 'dcterms:W3CDTF' }, now)),
 					])
 			)
 			zipExcel.add(
@@ -432,14 +431,23 @@ function buildXlsxSheet(data: OptsChartDataInternal[], layout: WorksheetLayout):
 }
 
 /**
- * Build the standalone `.rels` for a classic chart part: a single `rId1` relationship to the
- * chart's embedded workbook (`Target`). Package write path only: `appendSlides` builds a chart's
- * relationships through the package model instead.
+ * Build the standalone `.rels` for a classic chart part: an `rId1` relationship to the chart's
+ * embedded workbook (`Target`), then one per picture an area fill paints. A media `Target` is
+ * `../media/…` from `ppt/slides/` and from `ppt/charts/` alike, so the slide's reads the same here.
+ * Package write path only: `appendSlides` builds a chart's relationships through the package model
+ * instead.
  * @param {string} embeddingTarget - the workbook target, relative to the chart part
+ * @param media - the chart's pictures, {@link SlideRelChart.media}
  * @return {string} the chart part's `.rels` XML
  */
-function buildChartRelsXml(embeddingTarget: string): string {
-	return XML_DECL + relationshipsEl([relationshipEl('rId1', PACKAGE_REL, embeddingTarget)])
+function buildChartRelsXml(embeddingTarget: string, media: SlideRelChart['media']): string {
+	return (
+		XML_DECL +
+		relationshipsEl([
+			relationshipEl('rId1', PACKAGE_REL, embeddingTarget),
+			...(media ?? []).map((picture) => relationshipEl(`rId${picture.rId}`, IMAGE_REL, picture.rel.Target)),
+		])
+	)
 }
 
 /**
@@ -512,7 +520,7 @@ export async function createExcelWorksheet(chartObject: SlideRelChart, zip: ZipW
 			buildChartExRelsXml(embeddingTarget, names.colorsName, names.styleName)
 		)
 	} else {
-		zip.add('ppt/charts/_rels/' + chartObject.fileName + '.rels', buildChartRelsXml(embeddingTarget))
+		zip.add('ppt/charts/_rels/' + chartObject.fileName + '.rels', buildChartRelsXml(embeddingTarget, chartObject.media))
 	}
 	zip.add(`ppt/charts/${chartObject.fileName}`, bodies.chartXml)
 

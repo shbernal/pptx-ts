@@ -251,6 +251,23 @@ describe('chart data keeps the shape addChart takes', () => {
 			['North', '', 'South', ''],
 		])
 	})
+
+	test('every series keeps its categories, which the writer gives only a series stating labels', async () => {
+		// The mapper put the labels on the first series alone, and a series with no `labels` is
+		// written with no `c:cat`, so every later series lost its categories on the way back (#141).
+		const data = [
+			{ name: 'North', labels: ['Q1', 'Q2', 'Q3'], values: [4, 7, 5] },
+			{ name: 'South', labels: ['Q1', 'Q2', 'Q3'], values: [3, 5, 8] },
+		]
+		for (const type of [ChartType.bar, ChartType.line, ChartType.area, ChartType.radar]) {
+			const { presentation } = await authorRead((pres) => {
+				pres.addSlide().addChart(data, { type, x: 1, y: 1, w: 6, h: 4 })
+			})
+			const series = seriesOf(chartCall(readModelToIr(presentation)))
+			for (const [index, one] of series.entries())
+				expect(one.labels, `${type} series ${index}`).toEqual(['Q1', 'Q2', 'Q3'])
+		}
+	})
 })
 
 /** The options argument of slide 1's chart call. */
@@ -312,11 +329,210 @@ describe('chart options are spelled the way ChartOpts spells them', () => {
 		)
 	})
 
+	test("a scatter's X axis is the catAxis options and its Y axis the valAxis ones", async () => {
+		// Both axes of a scatter are `c:valAx`, and the first is X: it was read as the value axis,
+		// and the Y axis was never read (#154).
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addChart(XY, {
+				type: ChartType.scatter,
+				x: 1,
+				y: 1,
+				w: 6,
+				h: 4,
+				catAxisMinVal: 0,
+				catAxisMaxVal: 5,
+				valAxisMinVal: 2,
+				valAxisMaxVal: 9,
+				valAxisTitle: 'Y',
+				showValAxisTitle: true,
+			})
+		})
+		const options = chartOptions(readModelToIr(presentation))
+		expect([options.catAxisMinVal, options.catAxisMaxVal], 'the X bounds').toEqual([0, 5])
+		expect([options.valAxisMinVal, options.valAxisMaxVal], 'the Y bounds').toEqual([2, 9])
+		assertEqual(options.valAxisTitle, 'Y', 'and the Y axis title')
+	})
+
 	test('a 2-D surface stays flat', async () => {
 		// The write side's `surface` draws the 3-D one unless `surface3D` is false.
 		const flat = await chartDeck(ChartType.surface, { surface3D: false })
 		assertEqual(chartOptions(readModelToIr(flat.presentation)).surface3D, false, 'a contour says so')
 		const tilted = await chartDeck(ChartType.surface)
 		assert(!('surface3D' in chartOptions(readModelToIr(tilted.presentation))), 'and a 3-D surface keeps the default')
+	})
+})
+
+describe('chart settings the read model reads come back as their options', () => {
+	// `chartCall` left out settings the read model already reported, with no note, so each came back
+	// as the writer's default (#130).
+	const TWO = [
+		{ name: 'North', labels: ['Q1', 'Q2', 'Q3'], values: [4, 7, 5] },
+		{ name: 'South', labels: ['Q1', 'Q2', 'Q3'], values: [3, 5, 8] },
+	]
+
+	/** The rebuilt options of a two-series chart written with `options`. */
+	async function rebuilt(type: CHART_NAME, options: ChartOpts, data: OptsChartData[] = TWO) {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addChart(data, { type, x: 1, y: 1, w: 6, h: 4, ...options })
+		})
+		return chartOptions(readModelToIr(presentation))
+	}
+
+	/** Assert each key of `expected` came back with its value. */
+	function expectKept(options: ChartOpts, expected: ChartOpts) {
+		for (const [key, value] of Object.entries(expected))
+			expect((options as Record<string, unknown>)[key], key).toEqual(value)
+	}
+
+	test('a bar outline is dataBorder', async () => {
+		const options = await rebuilt(ChartType.bar, { dataBorder: { color: '9B1B30', width: 3 } })
+		expect(options.dataBorder).toEqual({ color: '9B1B30', width: 3 })
+	})
+
+	test("a line's width and dash", async () => {
+		expectKept(await rebuilt(ChartType.line, { lineSize: 5, lineDash: 'dash' }), { lineSize: 5, lineDash: 'dash' })
+		expectKept(await rebuilt(ChartType.line, { lineDashValues: ['dash', 'sysDot'] }), {
+			lineDashValues: ['dash', 'sysDot'],
+		})
+		const own = await rebuilt(ChartType.line, { seriesOptions: [{ lineSize: 1 }, { lineSize: 4 }] })
+		expect(own.seriesOptions, 'a width per series').toEqual([{ lineSize: 1 }, { lineSize: 4 }])
+	})
+
+	test('axis orientation, tick marks, label position, log base, minor unit and gridlines', async () => {
+		const expected: ChartOpts = {
+			catAxisOrientation: 'maxMin',
+			catAxisMajorTickMark: 'cross',
+			catAxisMinorTickMark: 'in',
+			catAxisLabelPos: 'high',
+			valAxisLogScaleBase: 10,
+			valAxisMinorUnit: 0.5,
+			valAxisMajorTickMark: 'none',
+			valAxisLabelPos: 'low',
+			catGridLine: { color: '9B1B30' },
+			valGridLine: { type: 'none' },
+		}
+		expectKept(await rebuilt(ChartType.bar, expected), expected)
+	})
+
+	test('a default axis states nothing', async () => {
+		const options = await rebuilt(ChartType.bar, {})
+		for (const key of Object.keys(options))
+			assert(!/Orientation|TickMark|LabelPos|GridLine|LogScale|MinorUnit/.test(key), `no ${key}`)
+	})
+
+	test('an axis title comes back with the flag that draws it', async () => {
+		expectKept(
+			await rebuilt(ChartType.bar, {
+				showCatAxisTitle: true,
+				catAxisTitle: 'Category',
+				showValAxisTitle: true,
+				valAxisTitle: 'Value',
+			}),
+			{ showCatAxisTitle: true, catAxisTitle: 'Category', showValAxisTitle: true, valAxisTitle: 'Value' }
+		)
+	})
+
+	test("a 3-D bar's series axis", async () => {
+		expectKept(
+			await rebuilt(ChartType.bar3d, {
+				serAxisHidden: true,
+				serAxisTitle: 'Series',
+				showSerAxisTitle: true,
+				serLabelFormatCode: '0.0',
+				serAxisOrientation: 'maxMin',
+			}),
+			{
+				serAxisHidden: true,
+				serAxisTitle: 'Series',
+				showSerAxisTitle: true,
+				serLabelFormatCode: '0.0',
+				serAxisOrientation: 'maxMin',
+			}
+		)
+	})
+
+	test("a bubble's size labels, and a series' own label format", async () => {
+		const bubble = [
+			{ name: 'X', values: [1, 2, 3] },
+			{ name: 'Y', values: [4, 5, 6], sizes: [7, 8, 9] },
+		]
+		expectKept(await rebuilt(ChartType.bubble, { showValue: true, showBubbleSize: true }, bubble), {
+			showBubbleSize: true,
+		})
+		const own = await rebuilt(ChartType.bar, {
+			showValue: true,
+			dataLabelFormatCode: '0.0',
+			seriesOptions: [{}, { dataLabelFormatCode: '0%' }],
+		})
+		expect(own.seriesOptions).toEqual([{ dataLabelFormatCode: '0.0' }, { dataLabelFormatCode: '0%' }])
+	})
+})
+
+describe("chart mapping: a scatter's own data labels", () => {
+	/** A scatter of one labelled Y series and one plain one, authored with `options`, read back. */
+	async function scatterIr(options: ChartOpts, labels = ['a', '', 'c']) {
+		const data = [
+			{ name: 'X', values: [1, 2, 3] },
+			{ name: 'Y1', values: [4, 5, 6], labels },
+			{ name: 'Y2', values: [7, 8, 9] },
+		]
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addChart(data, { type: ChartType.scatter, x: 1, y: 1, w: 5, h: 4, showLabel: true, ...options })
+		})
+		return readModelToIr(presentation)
+	}
+
+	// A scatter came back with no labels and no `dataLabelFormatScatter`, and no note said so (#166).
+	for (const format of ['custom', 'customXY'] as const) {
+		test(`'${format}' carries its format and each series' label text`, async () => {
+			const ir = await scatterIr({ dataLabelFormatScatter: format })
+			const call = chartCall(ir)
+			expect(optionsOf(call)).toMatchObject({ showLabel: true, dataLabelFormatScatter: format })
+			expect(seriesOf(call).map((row) => row.labels)).toEqual([undefined, ['a', '', 'c'], undefined])
+			expect(ir.fidelity.filter((note) => note.construct === 'chart.labels')).toEqual([])
+		})
+	}
+
+	test("'XY' carries as the series' value and category-name labels", async () => {
+		const ir = await scatterIr({ dataLabelFormatScatter: 'XY' }, [])
+		expect(optionsOf(chartCall(ir))).toMatchObject({ showLabel: true, dataLabelFormatScatter: 'XY' })
+	})
+
+	test('the read model reports each label, its text and its fields', async () => {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addChart(
+				[
+					{ name: 'X', values: [1, 2] },
+					{ name: 'Y', values: [3, 4], labels: ['a', 'b'] },
+				],
+				{ type: ChartType.scatter, x: 1, y: 1, w: 5, h: 4, showLabel: true, dataLabelFormatScatter: 'customXY' }
+			)
+		})
+		const frame = defined(at(presentation.slides, 0).shapes.find((shape) => 'chart' in shape && shape.chart))
+		const series = at(defined((frame as { chart: { series: { customLabels: unknown }[] } }).chart).series, 0)
+		expect(series.customLabels).toEqual(
+			[0, 1].map((index) => ({
+				index,
+				runs: [
+					{ text: index === 0 ? 'a' : 'b', field: null },
+					{ text: ' (', field: null },
+					{ text: '[Y', field: 'XVALUE' },
+					{ text: ', ', field: null },
+					{ text: '[Y]', field: 'YVALUE' },
+					{ text: ')', field: null },
+				],
+			}))
+		)
+	})
+
+	test('label text on a bar chart is noted, since only a scatter writes it', async () => {
+		const { buf } = await authorRead((pres) => {
+			pres.addSlide().addChart(SERIES, { type: ChartType.bar, x: 1, y: 1, w: 5, h: 4, showValue: true })
+		})
+		const label =
+			'<c:dLbl><c:idx val="0"/><c:tx><c:rich><a:bodyPr/><a:p><a:r><a:t>own</a:t></a:r></a:p></c:rich></c:tx><c:showLegendKey val="0"/><c:showVal val="1"/><c:showCatName val="0"/><c:showSerName val="0"/><c:showPercent val="0"/><c:showBubbleSize val="0"/></c:dLbl>'
+		const ir = await irWithChartXml(buf, (xml) => xml.replace(/(<c:ser>(?:(?!<\/c:ser>)[^])*?<c:dLbls>)/, `$1${label}`))
+		const note = ir.fidelity.find((one) => one.construct === 'chart.labels')
+		expect(note?.disposition).toBe('dropped')
 	})
 })

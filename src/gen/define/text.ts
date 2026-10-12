@@ -10,7 +10,12 @@ import { rejectEmptyColor } from '../drawingml/color.js'
 import { AlignH, type PLACEHOLDER_TYPE, ShapeType, SlideObjectType, TextAnchor } from '../../enums.js'
 import { warn } from '../../diagnostics.js'
 import type { TextProps, TextPropsOptions } from '../../types/index.js'
-import type { ObjectOptionsInternal, PresSlideInternal, SlideObject } from '../../types/internal.js'
+import type {
+	ObjectOptionsInternal,
+	PresSlideInternal,
+	SlideObject,
+	TextBulletPropsInternal,
+} from '../../types/internal.js'
 import { getNewRelId } from '../utils.js'
 import { pushMediaRel, registerSvgImageRels, resolveImageSource } from './image-rel.js'
 import { setOrClear } from '../../options-internal.js'
@@ -66,9 +71,9 @@ export function addTextDefinition(
 	// quietly change that shape's `<a:ln>`. The caller is protected either way — the aliasing is
 	// between two objects this function now owns.
 	//
-	// Nested option objects the caller supplies (`bullet`, `shadow`, `fill`) are deliberately still
-	// shared: `bullet._rId` and the image fill's rel id are registered through those references and
-	// read back at emit time, and auto-paging relies on a cloned text object reaching the same bullet.
+	// Nested option objects the caller supplies (`shadow`, `fill`) are deliberately still shared:
+	// the image fill's rel id is registered through that reference and read back at emit time. A
+	// picture bullet is the exception: `createBulletImageRels` swaps in a copy before it stamps one.
 	// A layout placeholder's are not the caller's, and are copied: see `placeholderOptionsForSlide`.
 	const owned = new Map<TextPropsOptions, ObjectOptionsInternal>()
 	/**
@@ -150,8 +155,14 @@ export function addTextDefinition(
 				setOrClear(itemOpts, '_slideColor', color === undefined && !linked ? true : undefined)
 			}
 
-			// A.2: Placeholder should inherit their bullets or override them, so don't default them
-			if (itemOpts.placeholder || isPlaceholder) {
+			// A.2: A placeholder definition states no bullet unless asked, so the master's `textStyles`
+			// reach the layout (#174). `false` wrote `a:buNone` plus `marL="0" indent="0"` into its
+			// `a:lstStyle`, the tier above the master's `p:bodyStyle`, which overrode them on every slide.
+			// Text filling a placeholder takes this `'inherit'` through A.3 like any unstated option; its
+			// own `false` is only the fallback for a placeholder the layout does not define.
+			if (isPlaceholder) {
+				itemOpts.bullet = itemOpts.bullet ?? 'inherit'
+			} else if (itemOpts.placeholder) {
 				itemOpts.bullet = itemOpts.bullet || false
 			}
 
@@ -360,7 +371,7 @@ export function addTextDefinition(
 	createHyperlinkRels(target, newObject)
 
 	// STEP 4: Create picture-bullet image rels
-	createBulletImageRels(target, newObject.options, textObjects)
+	createBulletImageRels(target, [newObject.options, ...textObjects.map((item) => item.options)])
 
 	// STEP 5: Register an image fill (if any) as a media relationship for serialize-time blipFill
 	if (typeof newObject.options.fill === 'object' && resolveFillKind(newObject.options.fill) === 'image') {
@@ -399,30 +410,37 @@ export function placeholderOptionsForSlide<T extends object>(options: T): T {
 }
 
 /**
- * Register slide media relationships for any picture bullets (`bullet.image`) used by a text object.
- * Picture bullets render as `<a:buBlip><a:blip r:embed="rId.."/></a:buBlip>`, so the bullet image
- * needs the same media-rel + package-part plumbing as `addImage()`. The assigned `rId` is stored on
- * the bullet options object (`_rId`) so XML generation can reference it.
+ * Register slide media relationships for any picture bullets (`bullet.image`) the given option bags
+ * use. Picture bullets render as `<a:buBlip><a:blip r:embed="rId.."/></a:buBlip>`, so the bullet
+ * image needs the same media-rel + package-part plumbing as `addImage()`. The assigned `rId` is
+ * stored on the bullet (`_rId`) so XML generation can reference it.
+ *
+ * The bullet each bag holds is replaced by a copy before anything is stamped on it. The bags are
+ * the definer's own, but the bullet inside one is the caller's object, and an id stamped there
+ * travelled with it: reused in another deck, it was written as an `r:embed` that deck never
+ * declared (#83). One copy per bullet object, so a bullet shared between the shape and its runs
+ * stays one object and registers once.
  * @param {PresSlideInternal} target - slide receiving the rels
- * @param objectOptions - shape-level text options (bullet may live here)
- * @param {TextProps[]} textObjects - per-paragraph text options (bullet may live here too)
+ * @param bags - the shape-level, per-paragraph or per-cell options a bullet may live on
  */
-function createBulletImageRels(
+export function createBulletImageRels(
 	target: PresSlideInternal,
-	objectOptions: ObjectOptionsInternal,
-	textObjects: TextProps[]
+	bags: ReadonlyArray<TextPropsOptions | undefined>
 ): void {
-	// Collect every bullet options object that requests a picture bullet (shape-level + per-paragraph).
-	// Shape-level bullets are later shared by reference onto the first run, so the same object may appear
-	// twice; the `_rId` guard below makes the registration idempotent.
-	const bulletObjs: Array<{ image?: { path?: string; data?: string }; _rId?: number; _rIdSvg?: number }> = []
-	const collect = (opts?: TextPropsOptions): void => {
-		if (opts && typeof opts.bullet === 'object' && opts.bullet) bulletObjs.push(opts.bullet)
+	const copies = new Map<TextBulletPropsInternal, TextBulletPropsInternal>()
+	for (const opts of bags) {
+		if (!opts || typeof opts.bullet !== 'object' || !opts.bullet) continue
+		const source: TextBulletPropsInternal = opts.bullet
+		if (!source.image) continue
+		let copy = copies.get(source)
+		if (!copy) {
+			copy = { ...source }
+			copies.set(source, copy)
+		}
+		opts.bullet = copy
 	}
-	collect(objectOptions)
-	textObjects.forEach((item) => collect(item.options))
 
-	bulletObjs.forEach((bullet) => {
+	copies.forEach((bullet) => {
 		const img = bullet.image
 		if (!img || (!img.path && !img.data)) return
 
