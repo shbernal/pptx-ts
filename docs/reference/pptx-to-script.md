@@ -173,7 +173,6 @@ The Output column says where the note fires. A construct that fires in both outp
 | `diagram.all` | Both | unwritable | No write API builds SmartArt. The template-anchored output copies the slide, and the standalone output drops the diagram | 3/58 |
 | `text.endParagraph.lang` | Both | unwritable | Paragraphs that end in different languages (`a:endParaRPr/@lang`) all end in `en-US`. Their runs keep their languages | 3/58 |
 | `group.childSpace` | Both | unsupported | The children of a group that scales them are printed pre-scaled, so resizing the group no longer rescales them | 2/58 |
-| `group.transform` | Both | unsupported | A group's rotation and flips are baked into its children. They render the same and no longer rotate with the group | 2/58 |
 | `media.audioVideo` | Both | unread | Embedded audio or video becomes a still image of its poster frame | 2/58 |
 | `shape.empty` | Both | unsupported | A shape with no text and no geometry of its own, such as an unfilled placeholder, is omitted | 2/58 |
 | `text.equation` | Both | unread | An OMML equation is dropped from its shape | 2/58 |
@@ -237,6 +236,7 @@ These constructs carry in both outputs and raise no note.
 | A baked autofit scale (`a:normAutofit/@fontScale`, `@lnSpcReduction`) | `fit: { type: 'shrink', fontScale, lnSpcReduction }`. A bare `<a:normAutofit/>` is `fit: 'shrink'` |
 | A table cell with a fill of its own | `fill` on the cell. A styled cell with no fill of its own is left to `tableStyle` |
 | A picture fill on a shape or cell | `fill: { type: 'image', image: { data, crop }, transparency }` |
+| A group's rotation and flips | `rotate`, `flipH` and `flipV` on `addGroup`, with the children in the group's own space |
 | A picture's crop | `crop` on `addImage` |
 | A picture's recolour and transparency (`a:grayscl`, `a:biLevel`, `a:duotone`, `a:clrChange`, `a:alphaModFix`) | `grayscale`, `biLevel`, `duotone`, `clrChange` and `transparency` on `addImage`. A colour change to a transparent colour (Set Transparent Color) keeps the colour and loses the transparency, under `image.recolor` |
 | A background picture's crop and transparency (`a:alphaModFix`) | `background: { image: { data, crop }, transparency }` |

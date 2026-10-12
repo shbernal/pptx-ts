@@ -420,6 +420,40 @@ describe('deck IR — connectors', () => {
 })
 
 describe('deck IR — groups', () => {
+	// A group's own rotation and flips were baked into its children, under a `group.transform` note
+	// blaming addGroup, though `GroupProps` takes all three (issue #116). The replay must write the
+	// same group and child transforms.
+	test('a rotated, flipped group keeps its transform, and its children theirs', async () => {
+		const { presentation, buf } = await authorRead((pres) => {
+			pres.addSlide().addGroup(
+				[
+					{ rect: { x: 1, y: 1, w: 1, h: 1, rotate: 15 } },
+					{ rect: { x: 4, y: 1, w: 1, h: 1 } },
+					{
+						group: {
+							children: [{ shape: { type: 'ellipse', options: { x: 2, y: 3, w: 1, h: 0.5 } } }],
+							options: { rotate: 45, flipH: true },
+						},
+					},
+				],
+				{ objectName: 'grp', rotate: 30, flipH: true, flipV: true }
+			)
+		})
+		const ir = readModelToIr(presentation)
+		assert(!constructs(ir).has('group.transform'), 'nothing is declared lost')
+		const call = defined(allCalls(ir).find((c) => c.method === 'addGroup'))
+		assertEqual(at(call.args[1], 'rotate'), 30, 'the group keeps its rotation')
+		assertEqual(at(call.args[1], 'flipH'), true, 'and its flips')
+
+		const xfrms = (xml: string) => [...xml.matchAll(/<a:xfrm[^>]*>.*?<\/a:xfrm>/gs)].map((m) => m[0]).join('\n')
+		const { buf: replayed } = await authorRead((pres) => {
+			;(pres.addSlide().addGroup as (...args: unknown[]) => unknown)(...call.args)
+		})
+		const source = xfrms(await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml'))
+		const replay = xfrms(await readEntry(await JSZip.loadAsync(replayed), 'ppt/slides/slide1.xml'))
+		assertEqual(replay, source, 'the replay writes the same transforms')
+	})
+
 	test('a nested group nests rather than flattening', async () => {
 		const ir = await irFor('group-transform.pptx')
 		const nested = allCalls(ir).find((call) => call.sourceName === 'nested-rot-in-scale')

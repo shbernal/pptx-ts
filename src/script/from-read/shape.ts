@@ -37,6 +37,7 @@ import {
 	type Recolor,
 } from '../../read/api/shapes.js'
 import type { ColorRef } from '../../read/api/theme-context.js'
+import type { GroupTransform } from '../../read/api/shapes/group-transform.js'
 import { UNWRITABLE_FRAME_CONSTRUCTS, type NoteScope, type UnwritableFramePayload } from '../fidelity.js'
 import { isAssetRef, type CallIr, type IrValue } from '../ir.js'
 import type { ConnectorProps, ShapeLineProps } from '../../types/style.js'
@@ -47,6 +48,7 @@ import {
 	compactRequired,
 	emu,
 	frameOf,
+	groupTransformOf,
 	identityOptions,
 	lockOption,
 	nameOf,
@@ -163,7 +165,7 @@ function placeholderOption(shape: AutoShape, notes: NoteScope): IrValue | undefi
 
 function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 	const { notes } = ctx
-	const box = frameOf(shape, notes)
+	const box = frameOf(shape, notes, ctx.groups)
 	if (!box) return null
 	const preset = shape.presetGeometry
 	const custom = shape.customGeometry
@@ -173,7 +175,7 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 
 	const common = {
 		...positionOptions(box),
-		...transformOptions(shape),
+		...transformOptions(shape, ctx.groups),
 		...styleOptions(shape, ctx),
 		...identityOptions(shape),
 		objectLock: lockOption(shape, SHAPE_LOCK_ATTRS),
@@ -358,7 +360,7 @@ function customGeometryPoints(box: ShapeBox, custom: CustomGeometry): IrValue {
  */
 function pictureCall(shape: Picture, ctx: MapContext): CallIr | null {
 	const { notes, assets } = ctx
-	const box = frameOf(shape, notes)
+	const box = frameOf(shape, notes, ctx.groups)
 	if (!box) return null
 	if (isAudioVideo(shape.element_)) {
 		notes.note(
@@ -412,7 +414,7 @@ function pictureCall(shape: Picture, ctx: MapContext): CallIr | null {
 	}
 	const options = compact({
 		...positionOptions(box),
-		...transformOptions(shape),
+		...transformOptions(shape, ctx.groups),
 		...identityOptions(shape),
 		// `addImage` writes `noChangeAspect` unless `objectLock` turns it off.
 		objectLock: lockOption(shape, PICTURE_LOCK_ATTRS, ['noChangeAspect']),
@@ -781,21 +783,28 @@ function graphicFrameCall(shape: GraphicFrame, ctx: MapContext): CallIr | null {
  */
 function groupCall(shape: GroupShape, ctx: MapContext): CallIr | null {
 	const { notes } = ctx
-	const box = frameOf(shape, notes)
+	const box = frameOf(shape, notes, ctx.groups)
 	if (!box) return null
+	// The children are placed in this group's child space, since the group carries its own
+	// rotation and flips below. A group with no child space to map through leaves them to their
+	// slide-absolute frames, which then fail too and fall back as such a frame does.
+	const own = groupTransformOf(shape)
+	const { groups: _outer, ...rest } = ctx
+	const inner: MapContext = own ? { ...ctx, groups: [own, ...(ctx.groups ?? [])] } : rest
 	const children: IrValue[] = []
 	for (const child of shape.shapes) {
 		// `addConnector` has no group child variant, and a connector child used to be dropped.
 		if (isConnector(child)) {
 			const drawn = connectorLine(
 				child,
-				forShape(ctx, child).notes,
-				'this connector is bound to shapes; it is re-authored as a line shape inside its group, which paints the same stroke but no longer follows them'
+				forShape(inner, child).notes,
+				'this connector is bound to shapes; it is re-authored as a line shape inside its group, which paints the same stroke but no longer follows them',
+				inner.groups
 			)
 			if (drawn) children.push(lineShape(drawn.options))
 			continue
 		}
-		const call = shapeCall(child, ctx)
+		const call = shapeCall(child, inner)
 		if (!call) continue
 		const tagged = asGroupChild(call)
 		if (!tagged) {
@@ -828,27 +837,16 @@ function groupCall(shape: GroupShape, ctx: MapContext): CallIr | null {
 		)
 	}
 
-	// The group's own rotation and flips are deliberately NOT emitted here. `absoluteFrame`
-	// composes them into every child, and the children above were built from it, so the
-	// transform is already baked in at slide-absolute coordinates. Emitting it on the group
-	// as well would apply it a second time — measured: a group rotated 30° came back at 60°
-	// with its children walked off their positions, and a flipped group came back unflipped
-	// because the double flip cancelled. The group's frame is a bounding box and nothing else.
-	if (shape.rotation !== 0 || shape.flipH || shape.flipV) {
-		notes.note(
-			'group.transform',
-			'flattened',
-			'unsupported',
-			"the group's own rotation and flips are baked into its children's coordinates rather than kept on the group, because addGroup would otherwise apply them twice; the shapes render identically but rotating or resetting the group no longer moves them together"
-		)
-	}
-
 	return {
 		method: 'addGroup',
 		args: [
 			children,
 			compact({
 				...positionOptions(box),
+				// The group's own rotation and flips, which used to be baked into its children under a
+				// `group.transform` note (#116). `addGroup` writes them on the group and keeps an identity
+				// child space, which is why the children above are placed without them.
+				...transformOptions(shape, ctx.groups),
 				...identityOptions(shape),
 				objectLock: lockOption(shape, GROUP_SHAPE_LOCK_ATTRS),
 			}) ?? {},
@@ -1004,13 +1002,19 @@ interface ConnectorLine {
  * @param shape - the connector
  * @param notes - the scope bound to this connector
  * @param bindingDetail - the endpoint-binding note's detail, for where this connector lands
+ * @param groups - the groups enclosing a connector re-authored as a group's line child
  */
-function connectorLine(shape: Connector, notes: NoteScope, bindingDetail: string | null): ConnectorLine | null {
+function connectorLine(
+	shape: Connector,
+	notes: NoteScope,
+	bindingDetail: string | null,
+	groups?: readonly GroupTransform[]
+): ConnectorLine | null {
 	if (shape.hidden) {
 		noteHidden(notes)
 		return null
 	}
-	const box = frameOf(shape, notes)
+	const box = frameOf(shape, notes, groups)
 	if (!box) return null
 
 	if (bindingDetail !== null && (shape.startConnection || shape.endConnection)) {
@@ -1023,7 +1027,7 @@ function connectorLine(shape: Connector, notes: NoteScope, bindingDetail: string
 	// a colour that paints nothing on the source and a filled box on the output.
 	const options = compactRequired({
 		...positionOptions(box),
-		...transformOptions(shape),
+		...transformOptions(shape, groups),
 		line,
 		shadow: shadowOption(shape, notes),
 		glow: glowOption(shape, notes),
