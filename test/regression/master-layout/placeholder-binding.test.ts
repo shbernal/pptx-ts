@@ -83,6 +83,30 @@ defineRegressionSuite('Placeholder binding (placeholder: { name, type, idx })', 
 		},
 	},
 	{
+		name: "a slide object filling a layout placeholder does not take the definition's hasCustomPrompt",
+		fn: async () => {
+			const { zip } = await build((p) => {
+				p.defineSlideMaster({
+					title: 'PROMPT_MASTER',
+					objects: [
+						{ placeholder: { options: { name: 'body', type: 'body', x: 1, y: 1, w: 4, h: 2 }, text: 'Prompt' } },
+						{ placeholder: { options: { name: 'pic', type: 'pic', x: 5, y: 1, w: 4, h: 2 }, text: '' } },
+					],
+				})
+				const s = p.addSlide({ masterTitle: 'PROMPT_MASTER' })
+				s.addText('x', { placeholder: 'body' })
+				s.addImage({ data: PNG_1X1, placeholder: 'pic' })
+			})
+			assertEqual(
+				JSON.stringify(await placeholders(zip)),
+				JSON.stringify(['<p:ph idx="100" type="body" />', '<p:ph idx="101" type="pic" />']),
+				'the slide p:ph carries no hasCustomPrompt'
+			)
+			const layout = await readEntry(zip, 'ppt/slideLayouts/slideLayout2.xml')
+			assert(/idx="100"[^>]*hasCustomPrompt="1"/.test(layout.replace(/\s+/g, ' ')), 'the definition keeps it')
+		},
+	},
+	{
 		name: 'an idx or type with no p:ph spelling throws',
 		fn: async () => {
 			for (const placeholder of [{ idx: -1 }, { idx: 1.5 }, { idx: 2 ** 32 }])

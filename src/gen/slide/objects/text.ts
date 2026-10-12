@@ -58,15 +58,15 @@ export function renderTextObject(ctx: RenderContext): string {
 	}
 	// Prefer the resolved slide-layout placeholder; otherwise fall back to the shape's own
 	// placeholder type so a standalone title/body text box still emits a real <p:ph>.
+	const isPlaceholderDef = slideItemObj._type === SlideObjectType.placeholder
 	strSlideXml += el(
 		'p:nvPr',
 		null,
 		raw(
 			genXmlPlaceholder(
-				slideItemObj._type === SlideObjectType.placeholder || (placeholderObj == null && itemOpts?._placeholderType)
-					? slideItemObj
-					: placeholderObj,
-				statedPlaceholderBinding(itemOpts.placeholder)
+				isPlaceholderDef || (placeholderObj == null && itemOpts?._placeholderType) ? slideItemObj : placeholderObj,
+				statedPlaceholderBinding(itemOpts.placeholder),
+				isPlaceholderDef
 			)
 		)
 	)
