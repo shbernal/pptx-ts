@@ -171,7 +171,7 @@ Every getter below takes the first tier that defines a value.
 - A table cell's text inherits differently: see [Tables](#tables).
 - A `schemeClr` token resolves through the colour map of the tier that holds the shape, then the theme's colour scheme.
 
-A slide placeholder inherits from the layout or master placeholder that matches its `p:ph`:
+A slide placeholder inherits from the layout or master placeholder that matches its `p:ph`. [`Shape.placeholder`](api/read/classes/Shape.md#placeholder) reads that `p:ph` on any shape: a text placeholder is a `p:sp`, and a filled picture, table or chart placeholder is a `p:pic` or `p:graphicFrame`.
 
 - `dt`, `ftr`, `sldNum` and `hdr` match only a placeholder of the same type.
 - Any other type matches, in order: the same `idx` in the same category, then the same `idx`, then the same category. It never matches one of the four types above.

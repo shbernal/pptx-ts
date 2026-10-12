@@ -56,6 +56,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`Shape.placeholder` reads a picture's or graphic frame's `p:ph`.** It was `null` for every
+  shape but a `p:sp`, so a filled picture placeholder read as a free picture, and `readModelToIr`
+  dropped its layout binding with no note. It now reads the binding, and `readModelToIr` declares
+  it lost under `shape.placeholder` ([#111](https://github.com/shbernal/pptx-ts/issues/111)).
 - **`readModelToIr` keeps the language a text's paragraphs end in.** `addText('bonjour', { lang:
   'fr-FR' })` writes `fr-FR` on the run and on `a:endParaRPr`. The IR carried it on the run only,
   so the replay ended the paragraph in `en-US`. When every paragraph end agrees, the language is

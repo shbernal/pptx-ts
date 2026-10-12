@@ -71,7 +71,7 @@ import type {
 } from './types.js'
 import { InternalError, PackageReadError, UnsupportedFeatureError } from '../../../errors.js'
 import { checkFiniteEmu, checkPositiveEmu } from '../coords.js'
-import { drawingIdsIn, unbindConnectors } from '../../oxml/slide-dom.js'
+import { drawingIdsIn, nvPrOf, unbindConnectors } from '../../oxml/slide-dom.js'
 import { pruneSpids } from '../animation.js'
 
 // Microsoft's "decorative" accessibility extension: p:cNvPr/a:extLst/a:ext
@@ -928,11 +928,17 @@ export abstract class Shape {
 
 	/**
 	 * This shape's placeholder identity (`p:ph` `type`/`idx`), or `null` when it is
-	 * not a placeholder. Only `p:sp` shapes can be placeholders, so the base
-	 * implementation always returns `null`; {@link AutoShape} overrides it.
+	 * not a placeholder. `idx` defaults to `'0'` when the attribute is absent, as
+	 * PowerPoint does. A text placeholder is a `p:sp`; a filled picture, table or chart
+	 * placeholder is a `p:pic` or `p:graphicFrame` carrying the same `p:ph`, which is what
+	 * inserting a picture into a picture placeholder produces. This used to be `null` for
+	 * every shape but a `p:sp` (#111). Use {@link Slide.placeholder} to find a text
+	 * placeholder by type.
 	 */
 	get placeholder(): PlaceholderRef | null {
-		return null
+		const nvPr = nvPrOf(this.element)
+		const ph = nvPr && firstChild(nvPr, 'p:ph')
+		return ph ? { type: attr(ph, 'type'), idx: attr(ph, 'idx') ?? '0' } : null
 	}
 
 	/**
