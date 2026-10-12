@@ -1058,6 +1058,42 @@ describe('deck IR — shape paint details', () => {
 	})
 })
 
+describe('deck IR — an outline left to inherit', () => {
+	// An `a:ln` that paints nothing leaves the whole outline to `p:style` or the placeholder. The
+	// mapper dropped it, and the replay's `addShape` either wrote an explicit no-line (nothing
+	// stated) or a default 1pt black stroke (a width stated), so neither came back as written (#214).
+	const ln = (xml: string) => defined(xml.match(/<a:ln(?=[\s/>])(?:[^>]*\/>|.*?<\/a:ln>)/s)?.[0])
+
+	test.for<[string, Record<string, unknown>, string]>([
+		['nothing stated', { type: 'inherit' }, '<a:ln></a:ln>'],
+		['a width stated', { type: 'inherit', width: 3 }, '<a:ln w="38100"></a:ln>'],
+	])('%s: addShape replays the same <a:ln>', async ([, line, expected]) => {
+		const { presentation, buf } = await authorRead((pres) => {
+			pres.addSlide().addShape('rect', { x: 1, y: 1, w: 2, h: 1, line })
+		})
+		const source = await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml')
+		assertEqual(ln(source), expected, 'the source outline')
+		const shape = defined(presentation.slides[0]?.shapes[0])
+		assert(shape.hasOwnLine, 'the shape states an outline of its own')
+
+		const call = defined(allCalls(readModelToIr(presentation)).find((c) => c.method === 'addShape'))
+		assertEqual(JSON.stringify(at(call.args[1], 'line')), JSON.stringify(line), 'the mapped line')
+		const { buf: replayed } = await authorRead((pres) => {
+			pres.addSlide().addShape(...(call.args as Parameters<ReturnType<typeof pres.addSlide>['addShape']>))
+		})
+		assertEqual(ln(await readEntry(await JSZip.loadAsync(replayed), 'ppt/slides/slide1.xml')), expected, 'the replay')
+	})
+
+	test('a text box states no inherit, since addText writes one for an absent line', async () => {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addText('T', { x: 1, y: 1, w: 5, h: 1.5 })
+		})
+		assert(defined(presentation.slides[0]?.shapes[0]).hasOwnLine, 'addText writes an empty <a:ln/>')
+		const call = defined(allCalls(readModelToIr(presentation)).find((c) => c.method === 'addText'))
+		assertEqual(at(call.args[1], 'line'), undefined, 'no line is stated')
+	})
+})
+
 describe('deck IR — text options the read model could not see', () => {
 	// Eleven options `addText` writes came back from `readModelToIr` without the value and without a
 	// note, so a replay lost them and `diffDeckIr` called it clean (issue #54). Each case writes one,

@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`Shape.hasOwnLine`** says whether the shape has an `spPr/a:ln` of its own. The line getters report
+  `null` for both a missing `a:ln` and an empty one, and the empty one inherits the whole outline
+  ([#214](https://github.com/shbernal/pptx-ts/issues/214)).
 - **A layout placeholder definition takes `idx` and any `ST_PlaceholderType`.** In
   `defineSlideMaster({ objects: [{ placeholder: { options } }] })`, `idx` is written as `p:ph/@idx`
   (it was always 100 plus the object's position; `0` writes none, as PowerPoint writes a title), and
@@ -162,6 +165,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`line: { type: 'inherit' }` leaves the whole outline to the placeholder or `p:style`.** On
+  `addShape` and a line-shaped `addText`, it still wrote a 1pt solid stroke, so a shape
+  inherited its outline colour and nothing else. It now writes an empty `<a:ln>`, plus whatever width,
+  dash, cap or arrowheads the caller stated. To keep the old output, write
+  `{ type: 'inherit', width: 1, dashType: 'solid' }`. `readModelToIr` maps an `a:ln` that paints
+  nothing back to `type: 'inherit'`, where it replayed as an explicit no-line, or as a 1pt black stroke
+  when it stated a width ([#214](https://github.com/shbernal/pptx-ts/issues/214)).
 - **A slide's unfilled layout placeholder writes a bare text body.** The empty copy a slide gets for
   a placeholder it leaves unfilled wrote a list style and an empty run stamped `lang="en-US"`, where
   `addShape` bound to the same placeholder, and PowerPoint for an empty one, write

@@ -230,6 +230,7 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 			noteUnwritableCustGeomLists(custom, 'addText', notes)
 			const options = compact({
 				...common,
+				...addTextLine(style['line'], 'custGeom'),
 				...textFrameOptions(frame, notes),
 				...(isTextBox(shape.element_) ? { isTextBox: true } : {}),
 				shape: 'custGeom',
@@ -254,6 +255,7 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 		// the absence of geometry misclassified every one of them as an auto shape.
 		const options = compact({
 			...common,
+			...addTextLine(style['line'], preset),
 			...textFrameOptions(frame, notes),
 			...(isTextBox(shape.element_) ? { isTextBox: true } : {}),
 			...(preset === null ? {} : { shape: preset, ...adjustOptions(shape) }),
@@ -295,6 +297,26 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
  */
 function addShapeLine(line: IrValue | undefined): { line: IrValue } {
 	return { line: line ?? { type: 'none' } }
+}
+
+/**
+ * An `addText` call's `line`, left out when it only says "inherit".
+ *
+ * `addText` writes an absent `line` as the empty `<a:ln/>` that `type: 'inherit'` writes, and that
+ * renders as no `a:ln` at all, so spelling it out says nothing. Left in, a source text box with no
+ * `a:ln` came back stating one (#214). A `line` shape is the exception: it takes the outline
+ * defaults, and only `type: 'inherit'` keeps them off.
+ */
+function addTextLine(line: IrValue | undefined, preset: string | null): { line: IrValue | undefined } {
+	const bareInherit =
+		preset !== 'line' &&
+		typeof line === 'object' &&
+		line !== null &&
+		!Array.isArray(line) &&
+		!isAssetRef(line) &&
+		Object.keys(line).length === 1 &&
+		line['type'] === 'inherit'
+	return { line: bareInherit ? undefined : line }
 }
 
 /** The note for what a `custGeom` holds beside its path, shared by a freeform shape and a picture clipped to one. */
@@ -685,7 +707,7 @@ const CONNECTOR_LINE_KEYS = [
  * Typed as the complement of {@link CONNECTOR_LINE_KEYS}, so a stroke option the write API gains
  * does not compile here until it is placed, carried or noted. Unplaced, it would reach `lineOption`'s
  * output and the copy loop would drop it without a note. `type` is the fill kind, and gets this far
- * only as `'gradient'`: a `'none'` outline has already become a `line` shape.
+ * only as `'gradient'`: a `'none'` or `'inherit'` outline has already become a `line` shape.
  */
 const CONNECTOR_FLATTENED_LINE_KEYS: Record<
 	Exclude<keyof ShapeLineProps, (typeof CONNECTOR_LINE_KEYS)[number]>,
@@ -717,7 +739,9 @@ function connectorCall(shape: Connector, ctx: MapContext): CallIr | null {
 	// A connector with no outline has no `addConnector` spelling: its stroke options take no `type`,
 	// and one given none is drawn with the write path's default line. The `line` shape it paints as
 	// states `line: { type: 'none' }` and stays invisible, the way a layout's connectors already do.
-	if (drawn.line?.['type'] === 'none') {
+	// An outline left to inherit has no flat spelling either, and the `line` shape writes it as the
+	// empty `<a:ln/>` the source has.
+	if (drawn.line?.['type'] === 'none' || drawn.line?.['type'] === 'inherit') {
 		return { method: 'addShape', args: ['line', drawn.options], ...nameOf(shape) }
 	}
 	const frame = drawn.box

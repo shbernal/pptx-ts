@@ -9,9 +9,11 @@ import {
 	assert,
 	assertEqual,
 	captureDiagnostics,
+	defined,
 	defineRegressionSuite,
 	slideXml,
 	asError,
+	type PptxTs,
 	type ThrownError,
 } from '../../helpers.ts'
 
@@ -167,6 +169,37 @@ defineRegressionSuite('Fill kind inference', [
 		fn: async () => {
 			const xml = await slideXml((p) => p.addSlide().addShape('rect', { ...BOX, line: { width: 2, type: 'inherit' } }))
 			assertEqual(lineFill(xml).join(','), '', 'an inherited stroke names no paint')
+		},
+	},
+	{
+		name: "a line `type: 'inherit'` takes no width or dash defaults, and still writes the ones stated",
+		fn: async () => {
+			// It stamped the 1pt solid defaults every other kind takes, which override the width and
+			// dash a placeholder or `p:style` would have supplied: only the paint was inherited (#214).
+			const ln = (xml: string) => defined(xml.match(/<a:ln(?=[\s/>])(?:[^>]*\/>|.*?<\/a:ln>)/s)?.[0])
+			const cases: [string, (p: PptxTs) => void, string][] = [
+				[
+					'nothing stated',
+					(p) => p.addSlide().addShape('rect', { ...BOX, line: { type: 'inherit' } }),
+					'<a:ln></a:ln>',
+				],
+				[
+					'the old output, spelled out',
+					(p) => p.addSlide().addShape('rect', { ...BOX, line: { type: 'inherit', width: 1, dashType: 'solid' } }),
+					'<a:ln w="12700"><a:prstDash val="solid"/></a:ln>',
+				],
+				[
+					'a dash alone',
+					(p) => p.addSlide().addShape('rect', { ...BOX, line: { type: 'inherit', dashType: 'dash' } }),
+					'<a:ln><a:prstDash val="dash"/></a:ln>',
+				],
+				[
+					'an addText line shape',
+					(p) => p.addSlide().addText('', { ...BOX, shape: 'line', line: { type: 'inherit' } }),
+					'<a:ln></a:ln>',
+				],
+			]
+			for (const [label, build, expected] of cases) assertEqual(ln(await slideXml(build)), expected, label)
 		},
 	},
 	{

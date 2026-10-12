@@ -572,6 +572,19 @@ export abstract class Shape {
 	}
 
 	/**
+	 * Whether the shape states an outline of its **own** (`spPr/a:ln`), however little it holds.
+	 *
+	 * The line accessors all report `null` both for a shape with no `a:ln` and for one whose `a:ln`
+	 * is empty, and the two are different statements to a writer: an empty `<a:ln/>` says "take the
+	 * whole outline from `p:style` or the placeholder", which is what PowerPoint writes on its own
+	 * placeholders, and `addShape` writes it for `line: { type: 'inherit' }`. A copy that has to
+	 * reproduce the outline rather than describe it needs to know which one it has.
+	 */
+	get hasOwnLine(): boolean {
+		return this.#line() !== null
+	}
+
+	/**
 	 * The line end cap (`spPr/a:ln/@cap`) as the raw OOXML token — `'flat'`,
 	 * `'rnd'` (round) or `'sq'` (square) — or `null` when unset (PowerPoint's
 	 * default is `flat`). The write API authors this attribute through
