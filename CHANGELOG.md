@@ -165,6 +165,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A slide's copy of a layout placeholder it leaves unfilled inherits an outline that paints
+  nothing.** Where the definition's line names no paint, or there is none, the copy wrote an
+  explicit `<a:ln><a:noFill/></a:ln>`. It now writes the empty `<a:ln/>` that leaves the outline to
+  the layout placeholder, which its `readModelToIr` replay, `line: { type: 'inherit' }`, writes the
+  same. A stated `type: 'none'` or painted line is unchanged
+  ([#218](https://github.com/shbernal/pptx-ts/issues/218)).
 - **`line: { type: 'inherit' }` leaves the whole outline to the placeholder or `p:style`.** On
   `addShape` and a line-shaped `addText`, it still wrote a 1pt solid stroke, so a shape
   inherited its outline colour and nothing else. It now writes an empty `<a:ln>`, plus whatever width,

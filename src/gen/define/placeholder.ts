@@ -43,15 +43,17 @@ export function addPlaceholdersToSlideLayouts(slide: PresSlideInternal): void {
 					seeded._seeded = true
 					seeded.text = []
 					// And the outline `addShape` writes for the definition's line (#194, #205): a stated
-					// stroke with its defaults, and none for a line that paints nothing. Left as given, a
-					// line naming no paint wrote an empty `<a:ln>`, which inherits, where its replay
-					// wrote an explicit no-line. Nothing up a defined layout's chain draws one either.
+					// stroke with its defaults, and a stated none as none. A line that paints nothing is
+					// left to the layout placeholder as an empty `<a:ln/>`, which its replay reads back
+					// as `type: 'inherit'` and writes the same (#214, #218).
 					const options = seeded.options ?? (seeded.options = {})
 					const line = options.line
 					options.line =
-						line && line.type !== 'none' && fillNamesPaint(line)
-							? withLineDefaults(line, 'line.color')
-							: { type: 'none' }
+						line?.type === 'none'
+							? { type: 'none' }
+							: line && fillNamesPaint(line)
+								? withLineDefaults(line, 'line.color')
+								: { type: 'inherit' }
 				}
 			}
 		}
