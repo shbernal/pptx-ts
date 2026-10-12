@@ -161,8 +161,9 @@ defineRegressionSuite('Slide master placeholders [legacy bug-18]', [
 	{
 		// The copy wrote the definition's line as given: an empty `<a:ln>` for none, and a stated
 		// line with no `a:prstDash`. Its addShape replay writes `<a:ln><a:noFill/></a:ln>` and the
-		// solid dash, so the two differed in bytes (#194, #205).
-		name: 'an unfilled placeholder writes the same outline as addShape bound to it (#194, #205)',
+		// solid dash, so the two differed in bytes (#194, #205). A line that paints nothing now
+		// writes the empty `<a:ln>` it inherits by, which the replay reads as `type: 'inherit'` (#218).
+		name: 'an unfilled placeholder writes the same outline as addShape bound to it (#194, #205, #218)',
 		fn: async () => {
 			const spPr = async (zip: JSZip) =>
 				defined(
@@ -171,7 +172,7 @@ defineRegressionSuite('Slide master placeholders [legacy bug-18]', [
 					)?.[1],
 					'body placeholder spPr'
 				)
-			for (const line of [undefined, { color: 'FF0000', width: 2 }]) {
+			for (const line of [undefined, { width: 2 }, { type: 'none' as const }, { color: 'FF0000', width: 2 }]) {
 				const MASTER = {
 					title: 'M194',
 					objects: [
@@ -202,6 +203,10 @@ defineRegressionSuite('Slide master placeholders [legacy bug-18]', [
 				const a = await spPr(seeded.zip)
 				const b = await spPr(bound.zip)
 				assert(a === b, 'expected the seeded and bound outlines to match;\nseeded: ' + a + '\nbound:  ' + b)
+				// A line that paints nothing is left to the layout placeholder, not stated as none (#218).
+				if (!line || !('color' in line || 'type' in line)) {
+					assert(/<a:ln\s*\/>|<a:ln><\/a:ln>/.test(a), 'expected an empty <a:ln>, got ' + a)
+				}
 			}
 		},
 	},
