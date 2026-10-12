@@ -17,7 +17,17 @@
  * double-clicking it in PowerPoint opens data that matches the plot but has lost the source
  * sheet's formulas, extra columns, and formatting.
  */
-import type { Chart, ChartAxis, ChartLine, ChartSeries, ChartTextStyle } from '../../read/api/chart.js'
+import type {
+	Chart,
+	ChartAreaFormat,
+	ChartAxis,
+	ChartLine,
+	ChartManualLayout,
+	ChartSeries,
+	ChartTextStyle,
+} from '../../read/api/chart.js'
+import type { MapContext } from './context.js'
+import { surfaceFill } from './surface-fill.js'
 import type { GraphicFrame } from '../../read/api/shapes.js'
 import type { NoteScope } from '../fidelity.js'
 import type { CallIr, IrValue } from '../ir.js'
@@ -84,7 +94,8 @@ const XY_TYPES: ReadonlySet<string> = new Set(['bubble', 'bubble3D', 'scatter'])
 /** `c:legendPos/@val` → the write API's `legendPos`. */
 const LEGEND_POS: Record<string, string> = { r: 'r', l: 'l', t: 't', b: 'b', tr: 'tr' }
 
-export function chartCall(frame: GraphicFrame, chart: Chart, notes: NoteScope): CallIr | null {
+export function chartCall(frame: GraphicFrame, chart: Chart, ctx: MapContext): CallIr | null {
+	const { notes } = ctx
 	const box = frameOf(frame, notes)
 	if (!box) return null
 	const sourceType = chart.chartType
@@ -155,6 +166,7 @@ export function chartCall(frame: GraphicFrame, chart: Chart, notes: NoteScope): 
 		...seriesLineOptions(chart, type, notes),
 		...plotGroupOptions(chart, type, notes),
 		...chartTextOptions(chart, type, notes),
+		...areaOptions(chart, type, ctx),
 		chartColors: seriesColors(chart),
 		...dataTableOptions(chart),
 		metadata: metadataOption(chart),
@@ -587,7 +599,13 @@ function seriesLineOptions(chart: Chart, type: string, notes: NoteScope): Record
 		const color = line.colorRef.srgb
 		return {
 			dataBorder:
-				compact({ width: orUndefined(line.widthPt), color: color === null ? undefined : literalColor(color) }) ?? {},
+				compact({
+					width: orUndefined(line.widthPt),
+					color: color === null ? undefined : literalColor(color),
+					transparency: alphaToTransparency(line.alpha ?? undefined),
+				}) ?? {},
+			// The writer caps a data border with the chart's `lineCap`.
+			lineCap: line.cap === null || line.cap === 'flat' ? undefined : LINE_CAP_BY_TOKEN[line.cap],
 		}
 	}
 
@@ -768,6 +786,127 @@ function axisTextOptions(
 	}
 }
 
+/**
+ * The chart and plot areas, the manual layouts, and what a chart sets on every series' shape
+ * properties: their opacity, their shadow, the stroke cap of a stroked series, a data label
+ * background and the leader lines.
+ *
+ * The chart area comes back with square corners, as PowerPoint writes it; the writer's default is
+ * rounded. A title's manual layout has no inverse in `titlePos`, whose offsets the writer folds
+ * through a non-linear conversion, and a series' gradient or pattern fill has no option at all;
+ * both are noted.
+ */
+function areaOptions(chart: Chart, type: string, ctx: MapContext): Record<string, IrValue | undefined> {
+	const { notes } = ctx
+	const series = chart.series
+	const plotArea = chart.plotArea
+	const labels = (CATEGORY_NAME_TYPES.has(type) ? series[0]?.dataLabels : null) ?? chart.dataLabels
+	const seriesLabels = series.map((one) => one.dataLabels)
+
+	if (chart.titleLayout) {
+		notes.note(
+			'chart.layout',
+			'approximated',
+			'unwritable',
+			"the chart title is placed by a manual layout; titlePos takes offsets the writer converts in a way that has no inverse, so the title goes back to PowerPoint's automatic place"
+		)
+	}
+	if (series.some((one) => one.gradientFill !== null || one.patternFill !== null)) {
+		notes.note(
+			'chart.series.fill',
+			'approximated',
+			'unwritable',
+			'a series is filled with a gradient or a pattern, which no addChart option spells, so it comes back in a solid colour'
+		)
+	}
+
+	const alphas = series.map((one) => one.fill?.alpha ?? null)
+	const opacity = alphas.length > 0 && alphas.every((alpha) => alpha !== null && alpha === alphas[0]) ? alphas[0] : null
+	const leader = labels?.leaderLines ?? null
+	return {
+		chartArea: chartAreaOption(chart, ctx),
+		plotArea: plotArea ? areaFormatOption(plotArea, ctx) : undefined,
+		layout: layoutOption(plotArea?.layout ?? null),
+		legendLayout: layoutOption(chart.legend?.layout ?? null),
+		chartColorsOpacity: opacity === null || opacity === undefined ? undefined : Math.round(opacity * 100),
+		shadow: seriesShadowOption(series[0] ?? null, notes),
+		lineCap: STROKED_TYPES.has(type) ? lineCapOption(series[0]?.line ?? null) : undefined,
+		dataLabelBkgrdColors: seriesLabels.some((one) => one?.fill && !one.fill.noFill) ? true : undefined,
+		leaderLineColor: leader ? (leader.colorTransformed ? undefined : (leader.colorRef.srgb ?? undefined)) : undefined,
+		leaderLineSize: leader?.widthPt ?? undefined,
+	}
+}
+
+/** The chart area as `chartArea`: its fill, its border and its square corners. */
+function chartAreaOption(chart: Chart, ctx: MapContext): IrValue | undefined {
+	const area = chart.chartArea
+	return compact({
+		...(area ? areaFormatFields(area, ctx) : {}),
+		roundedCorners: chart.roundedCorners === false ? false : undefined,
+	})
+}
+
+/** An area's fill and border as `{ fill, border }`, each only when the area states one that draws. */
+function areaFormatOption(area: ChartAreaFormat, ctx: MapContext): IrValue | undefined {
+	return compact(areaFormatFields(area, ctx))
+}
+
+/** {@link areaFormatOption}'s fields, for a caller that adds its own. */
+function areaFormatFields(area: ChartAreaFormat, ctx: MapContext): Record<string, IrValue | undefined> {
+	// No fill and no border are what the writer draws when either is left out.
+	const border = area.border
+	return {
+		fill: area.fillNoFill ? undefined : surfaceFill(area, ctx, 'fill'),
+		border: border && !border.noFill ? borderOption(border) : undefined,
+	}
+}
+
+/** A chart area border as the `BorderProps` the writer reads: colour, width and transparency. */
+function borderOption(line: ChartLine): IrValue {
+	const color = line.colorTransformed ? null : line.colorRef.srgb
+	return (
+		compact({
+			color: color === null ? undefined : literalColor(color),
+			width: orUndefined(line.widthPt),
+			transparency: alphaToTransparency(line.alpha ?? undefined),
+		}) ?? {}
+	)
+}
+
+/** A manual layout as the writer's `{ x, y, w, h }`, which it writes as an inner, edge-mode box. */
+function layoutOption(layout: ChartManualLayout | null): IrValue | undefined {
+	if (!layout) return undefined
+	const { x, y, w, h } = layout
+	if (x === null || y === null || w === null || h === null) return undefined
+	return { x, y, w, h }
+}
+
+/** A series' shadow as `shadow`, which every series of the chart takes. */
+function seriesShadowOption(series: ChartSeries | null, notes: NoteScope): IrValue | undefined {
+	const outer = series?.shadow ?? null
+	const source = outer ?? series?.innerShadow ?? null
+	if (!source) return undefined
+	return compact({
+		type: outer ? 'outer' : 'inner',
+		color: colorOption(
+			{ scheme: source.colorRef.scheme, ownHex: source.colorRef.srgb, resolvedHex: null },
+			notes,
+			'chart.schemeToken',
+			'chart shadow'
+		),
+		blur: source.blurPt,
+		offset: source.offsetPt,
+		angle: source.angleDeg,
+		transparency: alphaToTransparency(source.colorRef.resolved?.alpha),
+	})
+}
+
+/** A series line's cap as `lineCap`, or `undefined` for the writer's flat cap. */
+function lineCapOption(line: ChartLine | null): IrValue | undefined {
+	const cap = line?.cap ?? null
+	return cap === null || cap === 'flat' ? undefined : LINE_CAP_BY_TOKEN[cap]
+}
+
 /** The number format a series' own label block states, or `null`. */
 function seriesLabelFormat(series: ChartSeries): string | null {
 	return series.dataLabels?.numberFormat?.formatCode ?? null
@@ -829,7 +968,10 @@ function plotGroupOptions(chart: Chart, type: string, notes: NoteScope): Record<
 	}
 	if (type === 'bar') {
 		options['barOverlapPct'] = differsNumber(group.overlapPct, stacked ? 100 : 0)
-		options['barSeriesLine'] = group.seriesLines ? true : undefined
+		const seriesLine = group.seriesLinesLine
+		options['barSeriesLine'] = group.seriesLines
+			? ((seriesLine && strokeOption(seriesLine, STROKE_DEFAULT_COLOR, notes)) ?? true)
+			: undefined
 	}
 	if (type === 'bar3D') {
 		options['barGapDepthPct'] = differsNumber(group.gapDepthPct, PLOT_DEFAULTS.gapDepth)

@@ -25,7 +25,14 @@ import {
 import { CHART_METADATA_EXT_URI, CHART_METADATA_NS } from '../../ooxml/chart-metadata.js'
 import { readIndexedPoints } from '../oxml/point-cache.js'
 import { readLineBasics } from './line.js'
-import { readColorRef, type ColorRef } from './theme-context.js'
+import { readColorRef, resolveColorElement, type ColorRef, type ResolvedColor } from './theme-context.js'
+import type { Relationships } from '../opc/relationships.js'
+import type { ColorContext } from '../oxml/theme.js'
+import { readGradientFill, type GradientFill } from './gradient.js'
+import { readPatternFill, type PatternFill } from './pattern-fill.js'
+import { readPictureFill, type PictureFill } from './picture-fill.js'
+import { readInnerShadow, readOuterShadow } from './shapes/effects.js'
+import type { InnerShadow, OuterShadow } from './shapes/types.js'
 
 /** A chart axis number format (`c:numFmt`). */
 export interface AxisNumberFormat {
@@ -43,6 +50,8 @@ export interface ChartLegend {
 	overlay: boolean | null
 	/** The legend text's formatting (`c:txPr`), or `null` when it states none. */
 	textStyle: ChartTextStyle | null
+	/** The legend's manual layout, or `null` when it is placed automatically. */
+	layout: ChartManualLayout | null
 }
 
 /**
@@ -94,6 +103,10 @@ export interface ChartDataLabels {
 	numberFormat: AxisNumberFormat | null
 	/** The labels' text formatting (`c:txPr`), or `null` when the block states none. */
 	textStyle: ChartTextStyle | null
+	/** The labels' background fill (`c:spPr`), or `null` when it states none. */
+	fill: ChartFill | null
+	/** The leader lines' stroke (`c:leaderLines/c:spPr/a:ln`), or `null` when they state none. */
+	leaderLines: ChartLine | null
 }
 
 /** The 3-D view of a chart (`c:chart/c:view3D`). Every field is `null` when the element leaves it unstated. */
@@ -143,6 +156,51 @@ export interface ChartFill {
 	colorRef: ColorRef
 	/** Whether the fill is explicitly suppressed (`a:noFill`). */
 	noFill: boolean
+	/** The opacity of the solid colour, 0 to 1 (its `a:alpha`), or `null` when it states none. */
+	alpha: number | null
+}
+
+/**
+ * A manual layout (`c:layout/c:manualLayout`): where an element sits, as fractions of the chart.
+ * Every field is `null` where the layout leaves it automatic.
+ */
+export interface ChartManualLayout {
+	/** What the box bounds (`c:layoutTarget`): `inner` (the plot alone) or `outer` (with its labels). */
+	target: string | null
+	/** How `x` reads (`c:xMode`): `edge` (from the chart's left edge) or `factor` (an offset). */
+	xMode: string | null
+	/** How `y` reads (`c:yMode`). */
+	yMode: string | null
+	x: number | null
+	y: number | null
+	w: number | null
+	h: number | null
+}
+
+/**
+ * The fill, border and manual layout of a chart surface: the chart area (`c:chartSpace/c:spPr`) or
+ * the plot area (`c:plotArea`). The fill accessors are the ones a slide shape has, read the same way.
+ */
+export interface ChartAreaFormat {
+	/** Whether the area is explicitly unfilled (`a:noFill`). */
+	fillNoFill: boolean
+	/** A literal solid fill colour (`a:srgbClr`), or `null`. */
+	fillColor: string | null
+	/** A theme solid fill colour (`a:schemeClr`), or `null`. */
+	fillSchemeColor: string | null
+	/**
+	 * The solid fill resolved without a theme: a literal colour with its transforms applied, its
+	 * `alpha` included; `null` for a scheme colour or a non-solid fill.
+	 */
+	resolvedFill: ResolvedColor | null
+	gradientFill: GradientFill | null
+	patternFill: PatternFill | null
+	/** A picture fill (`a:blipFill`), its image resolved through the chart part's relationships. */
+	pictureFill: PictureFill | null
+	/** The area's border (`a:ln`), or `null` when it states none. */
+	border: ChartLine | null
+	/** The area's manual layout; always `null` for the chart area, which fills the frame. */
+	layout: ChartManualLayout | null
 }
 
 /** A series' line/stroke (`c:ser/c:spPr/a:ln`). */
@@ -181,8 +239,39 @@ export interface ChartDisplayUnits {
 export class Chart {
 	constructor(
 		/** The chart's OPC part (`/ppt/charts/chartN.xml`). */
-		readonly part: Part
+		readonly part: Part,
+		/** The chart part's relationships, which resolve a picture fill's image; `null` leaves it unresolved. */
+		private readonly rels: Relationships | null = null
 	) {}
+
+	/** The chart area's fill and border (`c:chartSpace/c:spPr`), or `null` when it states none. */
+	get chartArea(): ChartAreaFormat | null {
+		const root = this.part.dom.documentElement
+		const spPr = root ? firstChild(root, 'c:spPr') : null
+		return spPr ? readAreaFormat(spPr, null, this.rels) : null
+	}
+
+	/** Whether the chart area's corners are rounded (`c:roundedCorners`), or `null` when unstated. */
+	get roundedCorners(): boolean | null {
+		const root = this.part.dom.documentElement
+		const element = root ? firstChild(root, 'c:roundedCorners') : null
+		return element ? boolValue(attr(element, 'val')) : null
+	}
+
+	/** The plot area's fill, border and manual layout, or `null` when the chart has no plot area. */
+	get plotArea(): ChartAreaFormat | null {
+		const plotArea = this.#plotArea()
+		if (!plotArea) return null
+		const spPr = firstChild(plotArea, 'c:spPr')
+		return readAreaFormat(spPr, firstChild(plotArea, 'c:layout'), this.rels)
+	}
+
+	/** The title's manual layout (`c:title/c:layout`), or `null` when it is placed automatically. */
+	get titleLayout(): ChartManualLayout | null {
+		const chart = this.#chart()
+		const title = chart && firstChild(chart, 'c:title')
+		return readManualLayout(title && firstChild(title, 'c:layout'))
+	}
 
 	/** Partname of the chart part. */
 	get partName(): string {
@@ -247,6 +336,7 @@ export class Chart {
 			position: pos ? attr(pos, 'val') : null,
 			overlay: overlay ? boolValue(attr(overlay, 'val')) : null,
 			textStyle: readTextStyle(firstChild(legend, 'c:txPr')),
+			layout: readManualLayout(firstChild(legend, 'c:layout')),
 		}
 	}
 
@@ -463,6 +553,11 @@ export class ChartPlotGroup {
 	/** Whether stacked bars are joined by series lines (`c:serLines`). */
 	get seriesLines(): boolean {
 		return firstChild(this.group, 'c:serLines') !== null
+	}
+
+	/** The series lines' stroke (`c:serLines/c:spPr/a:ln`), or `null` when they state none. */
+	get seriesLinesLine(): ChartLine | null {
+		return spPrLine(firstChild(this.group, 'c:serLines'))
 	}
 
 	/** The depth gap of a 3-D bar group, as a percentage (`c:gapDepth`). */
@@ -868,6 +963,30 @@ export class ChartSeries {
 		return readDataLabels(firstChild(this.ser, 'c:dLbls'))
 	}
 
+	/** The series' gradient fill (`c:spPr/a:gradFill`), or `null`. */
+	get gradientFill(): GradientFill | null {
+		const spPr = firstChild(this.ser, 'c:spPr')
+		return spPr ? readGradientFill(spPr, NO_THEME) : null
+	}
+
+	/** The series' pattern fill (`c:spPr/a:pattFill`), or `null`. */
+	get patternFill(): PatternFill | null {
+		const spPr = firstChild(this.ser, 'c:spPr')
+		return spPr ? readPatternFill(spPr, NO_THEME) : null
+	}
+
+	/** The series' outer shadow (`c:spPr/a:effectLst/a:outerShdw`), or `null`. */
+	get shadow(): OuterShadow | null {
+		const spPr = firstChild(this.ser, 'c:spPr')
+		return readOuterShadow(spPr && firstChild(spPr, 'a:effectLst'), NO_THEME)
+	}
+
+	/** The series' inner shadow (`c:spPr/a:effectLst/a:innerShdw`), or `null`. */
+	get innerShadow(): InnerShadow | null {
+		const spPr = firstChild(this.ser, 'c:spPr')
+		return readInnerShadow(spPr && firstChild(spPr, 'a:effectLst'), NO_THEME)
+	}
+
 	/** Whether a line or scatter series is smoothed (`c:smooth`), or `null` when unstated. */
 	get smooth(): boolean | null {
 		const element = firstChild(this.ser, 'c:smooth')
@@ -968,6 +1087,8 @@ function readDataLabels(dLbls: Element | null): ChartDataLabels | null {
 		position: pos ? attr(pos, 'val') : null,
 		numberFormat: readNumberFormat(dLbls),
 		textStyle: readTextStyle(firstChild(dLbls, 'c:txPr')),
+		fill: spPrFill(dLbls),
+		leaderLines: spPrLine(firstChild(dLbls, 'c:leaderLines')),
 	}
 }
 
@@ -1078,7 +1199,77 @@ function readSolidFill(container: Element): ChartFill | null {
 	const solidFill = firstChild(container, 'a:solidFill')
 	const noFill = !!firstChild(container, 'a:noFill')
 	if (!solidFill && !noFill) return null
-	return { colorRef: readColorRef(solidFill ? firstChildElement(solidFill) : null, null), noFill }
+	const color = solidFill ? firstChildElement(solidFill) : null
+	return { colorRef: readColorRef(color, null), noFill, alpha: colorAlpha(color) }
+}
+
+/** The `a:alpha` of a colour element, 0 to 1, or `null`. */
+function colorAlpha(color: Element | null): number | null {
+	const alpha = color && firstChild(color, 'a:alpha')
+	const value = alpha ? numberValue(attr(alpha, 'val')) : null
+	return value === null ? null : value / 100000
+}
+
+/**
+ * The colour context a chart part's fills resolve against: none. A literal resolves with its
+ * transforms; a scheme colour does not, since the part is read without its slide's theme.
+ */
+const NO_THEME: ColorContext = { clrMap: new Map(), clrScheme: new Map() }
+
+/** The solid fill of an element's `c:spPr`, or `null`. */
+function spPrFill(parent: Element | null): ChartFill | null {
+	const spPr = parent && firstChild(parent, 'c:spPr')
+	return spPr ? readSolidFill(spPr) : null
+}
+
+/** The stroke of an element's `c:spPr/a:ln`, or `null`. */
+function spPrLine(parent: Element | null): ChartLine | null {
+	const spPr = parent && firstChild(parent, 'c:spPr')
+	const ln = spPr && firstChild(spPr, 'a:ln')
+	return ln ? readChartLine(ln) : null
+}
+
+/** A `c:layout`'s manual layout, or `null` when it has none. */
+function readManualLayout(layout: Element | null): ChartManualLayout | null {
+	const manual = layout && firstChild(layout, 'c:manualLayout')
+	if (!manual) return null
+	const value = (qname: string): string | null => {
+		const element = firstChild(manual, qname)
+		return element ? attr(element, 'val') : null
+	}
+	const number = (qname: string): number | null => numberValue(value(qname))
+	return {
+		target: value('c:layoutTarget'),
+		xMode: value('c:xMode'),
+		yMode: value('c:yMode'),
+		x: number('c:x'),
+		y: number('c:y'),
+		w: number('c:w'),
+		h: number('c:h'),
+	}
+}
+
+/** A chart surface's `c:spPr` and `c:layout` as a {@link ChartAreaFormat}. */
+function readAreaFormat(spPr: Element | null, layout: Element | null, rels: Relationships | null): ChartAreaFormat {
+	const solidFill = spPr && firstChild(spPr, 'a:solidFill')
+	const color = solidFill && firstChildElement(solidFill)
+	const ln = spPr && firstChild(spPr, 'a:ln')
+	return {
+		fillNoFill: spPr ? firstChild(spPr, 'a:noFill') !== null : false,
+		fillColor: colorValueOf(color, 'srgbClr'),
+		fillSchemeColor: colorValueOf(color, 'schemeClr'),
+		resolvedFill: color && color.localName === 'srgbClr' ? resolveColorElement(color, NO_THEME) : null,
+		gradientFill: spPr ? readGradientFill(spPr, NO_THEME) : null,
+		patternFill: spPr ? readPatternFill(spPr, NO_THEME) : null,
+		pictureFill: spPr ? readPictureFill(spPr, rels) : null,
+		border: ln ? readChartLine(ln) : null,
+		layout: readManualLayout(layout),
+	}
+}
+
+/** The `@val` of a colour element of the given local name, or `null`. */
+function colorValueOf(color: Element | null, localName: string): string | null {
+	return color && color.localName === localName ? attr(color, 'val') : null
 }
 
 /** Resolve a `c:cat`/`c:val`/`c:tx` container to its cache element (`c:numCache`/`c:strCache`/literal). */
