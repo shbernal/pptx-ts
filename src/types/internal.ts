@@ -21,7 +21,7 @@ import type { ChartErrorBarOptions, ChartMulti, ChartOpts, OptsChartData } from 
 import type { BackgroundOption, Margin, TextVertType } from './core.js'
 import type { MasterTextStyleProps, SlideNumberProps } from './master.js'
 import type { MediaProps, MediaType } from './media.js'
-import type { TextShapeType } from '../ooxml/st-enums.js'
+import type { PlaceholderXmlType, TextShapeType } from '../ooxml/st-enums.js'
 import type { PresLayout, PresentationProps, SectionProps } from './pres.js'
 import type { ObjectOptions, Slide, SlideLayout } from './slide.js'
 import type { HyperlinkProps, ShadowProps, ShapeFillProps } from './style.js'
@@ -153,7 +153,7 @@ export interface TextPropsOptionsInternal extends TextPropsOptions {
  */
 export interface ObjectOptionsInternal extends ObjectOptions, TextPropsOptionsInternal {
 	_placeholderIdx?: number
-	_placeholderType?: PLACEHOLDER_TYPE
+	_placeholderType?: PLACEHOLDER_TYPE | PlaceholderXmlType
 	/** Connector adjust-guide values (OOXML 1000ths-of-a-percent), one per bend; emitted as `<a:gd name="adjN">` */
 	_connectorAdj?: number[]
 	/** Connector start-point binding: target shape `objectName` (raw, as the caller spelled it) + connection-site index; resolved to `<a:stCxn>` at serialize time */

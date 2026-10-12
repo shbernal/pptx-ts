@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **A layout placeholder definition takes `idx` and any `ST_PlaceholderType`.** In
+  `defineSlideMaster({ objects: [{ placeholder: { options } }] })`, `idx` is written as `p:ph/@idx`
+  (it was always 100 plus the object's position; `0` writes none, as PowerPoint writes a title), and
+  `type` takes `ctrTitle`, `subTitle`, `obj`, `dt`, `ftr`, `sldNum` and the rest beside the six
+  friendly types. A slide object bound by type alone fills an `idx`-0 definition of that type, so no
+  empty copy is seeded beside it ([#165](https://github.com/shbernal/pptx-ts/issues/165)).
 - **`Paragraph` resolves what it inherits.** `resolvedAlign`, `resolvedMarginLeftPt`,
   `resolvedIndentPt`, `resolvedLineSpacing`, `resolvedSpaceBeforePt`, `resolvedSpaceAfterPt` and
   `resolvedBulletDetail` walk the paragraph's own `a:pPr`, then the text body's, layout's and
@@ -129,6 +135,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`readModelToIr` re-declares a layout's placeholders.** Every definition was dropped under
+  `master.placeholders`. Each one every slide on its layout fills now carries as a `{ placeholder }`
+  object with its source name, type, `idx`, frame and custom prompt; one a slide leaves out is still
+  dropped and noted, since the write path would seed an empty copy onto that slide
+  ([#165](https://github.com/shbernal/pptx-ts/issues/165)).
 - **An unknown `hyperlink.action` throws `hyperlink/invalid-action`.** It was written into
   `ppaction://hlinkshowjump?jump=…` as given, and PowerPoint refused the deck as corrupt
   (`0x80070570`). `'prevslide'` in plain JavaScript is the usual slip; the jump is `'previousslide'`
