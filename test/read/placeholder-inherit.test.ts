@@ -88,14 +88,40 @@ describe('read: placeholder paragraph-property inheritance', () => {
 		assertEqual(paragraph.resolvedAlign, 'l', 'and the alignment')
 	})
 
-	test('the closest tier wins, as PowerPoint draws it', async () => {
-		// The master's body style asks for a centred numbered list; the layout placeholder the
-		// master's body object becomes states marL 0, indent 0 and no bullet, which PowerPoint
-		// reads over the master: over COM the paragraph is centred, unindented and unbulleted.
+	test("a placeholder definition with no paragraph options lets the master's textStyles through", async () => {
+		// The master's body style asks for a centred numbered list at 0.5in. The layout placeholder the
+		// master's body object becomes states nothing at level 1, and neither does the slide text that
+		// fills it, so every one of those reaches the paragraph (#174).
 		const pptx = new TsPptx()
 		pptx.defineSlideMaster({
 			title: 'M',
 			objects: [{ placeholder: { options: { name: 'body', type: 'body', x: 1, y: 1, w: 6, h: 2 }, text: '' } }],
+			textStyles: { body: [{ align: 'center', marginLeft: 0.5, indent: -0.25, bullet: { type: 'number' } }] },
+		})
+		pptx.addSlide({ masterTitle: 'M' }).addText('Inherits', { placeholder: 'body' })
+		const deck = await Presentation.load(await pptx.toBytes())
+		const paragraph = at(defined(at(deck.slides, 0).shapes.find((s) => s.textFrame)?.textFrame).paragraphs, 0)
+		assertEqual(paragraph.align, null, 'the paragraph states no alignment')
+		assertEqual(paragraph.resolvedAlign, 'ctr', "it takes the master's")
+		assertEqual(paragraph.resolvedMarginLeftPt, 36, 'and its margin')
+		assertEqual(paragraph.resolvedIndentPt, -18, 'and indent')
+		assertEqual(paragraph.resolvedBulletDetail?.kind, 'autoNum', 'and numbered bullet')
+	})
+
+	test('the closest tier wins, as PowerPoint draws it', async () => {
+		// The layout placeholder states marL 0, indent 0 and no bullet, which PowerPoint reads over
+		// the master: over COM the paragraph is centred, unindented and unbulleted.
+		const pptx = new TsPptx()
+		pptx.defineSlideMaster({
+			title: 'M',
+			objects: [
+				{
+					placeholder: {
+						options: { name: 'body', type: 'body', x: 1, y: 1, w: 6, h: 2, bullet: false },
+						text: '',
+					},
+				},
+			],
 			textStyles: { body: [{ align: 'center', marginLeft: 0.5, indent: -0.25, bullet: { type: 'number' } }] },
 		})
 		pptx.addSlide({ masterTitle: 'M' }).addText('Inherits', {
@@ -106,8 +132,7 @@ describe('read: placeholder paragraph-property inheritance', () => {
 		})
 		const deck = await Presentation.load(await pptx.toBytes())
 		const paragraph = at(defined(at(deck.slides, 0).shapes.find((s) => s.textFrame)?.textFrame).paragraphs, 0)
-		assertEqual(paragraph.align, null, 'the paragraph states no alignment')
-		assertEqual(paragraph.resolvedAlign, 'ctr', "it takes the master's")
+		assertEqual(paragraph.resolvedAlign, 'ctr', "it takes the master's alignment")
 		assertEqual(paragraph.resolvedMarginLeftPt, 0, "and the layout's margin")
 		assertEqual(paragraph.resolvedIndentPt, 0, 'and indent')
 		assertEqual(paragraph.resolvedBulletDetail?.kind, 'none', 'and no bullet')

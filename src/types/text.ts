@@ -129,12 +129,13 @@ export interface TextBaseProps {
 	 * Add standard or custom bullet
 	 * - use `true` for standard bullet
 	 * - pass object options for custom bullet
-	 * - `false` (and omitting the option) is the *explicit off*: it writes `<a:buNone/>`
-	 *   plus `marL="0" indent="0"`, which overrides whatever bullet the layout's or
-	 *   master's list style sets for this level
+	 * - `false` is the *explicit off*: it writes `<a:buNone/>` plus `marL="0" indent="0"`,
+	 *   which overrides whatever bullet the layout's or master's list style sets for this level
 	 * - `'inherit'` states nothing at all — no bullet child and no margin attributes — so
-	 *   the list style keeps reaching the paragraph. This is the one state omission
-	 *   cannot spell, because omitting the option means `false` here for compatibility
+	 *   the list style keeps reaching the paragraph
+	 * - omitting the option means `'inherit'` on a placeholder definition
+	 *   (`defineSlideMaster({ objects })`), and on text filling a placeholder the layout
+	 *   defines, which takes the definition's bullet. Anywhere else it means `false`
 	 *
 	 * The margins are only a *default* of the bullet state: {@link paraMarginLeft} and
 	 * {@link paraIndent} state `@marL`/`@indent` independently in any of the three, including
@@ -144,7 +145,7 @@ export interface TextBaseProps {
 	 * that draws a bullet starts a new paragraph by itself, so repeating it — the placement
 	 * that {@link align} requires — turns one three-run paragraph into three one-run
 	 * paragraphs. A paragraph takes its properties from its first run.
-	 * @default false
+	 * @default false, or `'inherit'` on a placeholder
 	 */
 	bullet?: boolean | 'inherit' | TextBulletProps
 	/**

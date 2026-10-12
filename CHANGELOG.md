@@ -119,6 +119,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Breaking: a placeholder definition inherits the master's bullet and margins.** A
+  `defineSlideMaster({ objects })` placeholder that sets no `bullet`, `paraMarginLeft` or
+  `paraIndent` wrote `<a:buNone/>` plus `marL="0" indent="0"` into its layout's level-1 list style,
+  which overrode the master's `textStyles` on every slide that used it. It now states nothing there,
+  and text filling the placeholder with no `bullet` of its own takes the same silence, so both pick
+  up the master's level-1 bullet and hanging indent. Without `textStyles` that is the built-in
+  `•` at 0.375in. Set `bullet: false` on the definition to keep the old output for its slides, or
+  on the slide text for one paragraph ([#174](https://github.com/shbernal/pptx-ts/issues/174)).
 - **`baseline` is a percent.** It counted twentieths of a percent (written as
   `Math.round(baseline * 50)` thousandths), unlike `bullet.size`, `fit.fontScale`,
   `Run.baselinePct` and every other percentage in the API

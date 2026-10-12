@@ -14,6 +14,9 @@ import type { TextBaseProps, TextProps, TextPropsOptions } from './text.js'
  * A layout placeholder's options. They reach the slide objects that fill the placeholder as text
  * options, so beside the text formatting a placeholder takes the shape `fill` (an image fill
  * included) and the `hyperlink` a text box does, and `bullet` through {@link TextBaseProps}.
+ *
+ * A definition states no bullet, left margin or first-line indent unless given one, so the
+ * master's `textStyles` reach its slides; `bullet: false` turns the bullet off on this layout.
  */
 export interface PlaceholderProps
 	extends PositionProps, TextBaseProps, ObjectNameProps, Pick<TextPropsOptions, 'fill' | 'hyperlink'> {

@@ -155,8 +155,14 @@ export function addTextDefinition(
 				setOrClear(itemOpts, '_slideColor', color === undefined && !linked ? true : undefined)
 			}
 
-			// A.2: Placeholder should inherit their bullets or override them, so don't default them
-			if (itemOpts.placeholder || isPlaceholder) {
+			// A.2: A placeholder definition states no bullet unless asked, so the master's `textStyles`
+			// reach the layout (#174). `false` wrote `a:buNone` plus `marL="0" indent="0"` into its
+			// `a:lstStyle`, the tier above the master's `p:bodyStyle`, which overrode them on every slide.
+			// Text filling a placeholder takes this `'inherit'` through A.3 like any unstated option; its
+			// own `false` is only the fallback for a placeholder the layout does not define.
+			if (isPlaceholder) {
+				itemOpts.bullet = itemOpts.bullet ?? 'inherit'
+			} else if (itemOpts.placeholder) {
 				itemOpts.bullet = itemOpts.bullet || false
 			}
 
