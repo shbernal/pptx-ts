@@ -73,6 +73,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`readModelToIr` reads a scatter's or bubble's Y axis as its value axis.** Both axes of those
+  charts are `c:valAx`, and the X axis was taken for the value axis: its bounds came back as
+  `valAxisMinVal` / `valAxisMaxVal`, and the Y axis' bounds and title were lost. The X axis now
+  maps to the `catAxis*` options, its bounds included
+  ([#154](https://github.com/shbernal/pptx-ts/issues/154)).
 - **`readModelToIr` gives every chart series its own category labels.** Only the first series
   carried `labels`, and `addChart` writes no `c:cat` for a series without them, so a rebuilt chart
   plotted every later series against 1, 2, 3 ([#141](https://github.com/shbernal/pptx-ts/issues/141)).
