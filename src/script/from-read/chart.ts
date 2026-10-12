@@ -147,8 +147,10 @@ export function chartCall(frame: GraphicFrame, chart: Chart, notes: NoteScope): 
 		...titleOptions(chart),
 		...legendOptions(chart),
 		...labelOptions(chart, type, notes),
-		...axisOptions(chart, xy),
+		...axisOptions(chart, type),
+		...seriesLineOptions(chart, type, notes),
 		chartColors: seriesColors(chart),
+		seriesOptions: seriesOverrides(chart, type, notes),
 	})
 
 	return {
@@ -328,6 +330,7 @@ function labelOptions(chart: Chart, type: string, notes: NoteScope): Record<stri
 		showLabel: carriesCategoryName ? (labels.showCategoryName ?? undefined) : undefined,
 		showPercent: labels.showPercent ?? undefined,
 		showLeaderLines: labels.showLeaderLines ?? undefined,
+		showBubbleSize: labels.showBubbleSize ? true : undefined,
 		// A pie's labels with no `c:dLblPos` sit at best fit (PowerPoint reports
 		// `xlLabelPositionBestFit` for them), and the writer spells an unset pie position `ctr`.
 		dataLabelPosition: orUndefined(labels.position) ?? (type === 'pie' ? 'bestFit' : undefined),
@@ -354,23 +357,196 @@ function axisPair(chart: Chart, xy: boolean): { cat: ChartAxis | null; val: Char
 }
 
 /**
- * Axis bounds, titles and gridlines. The write API spells these as a flat `catAxis*` /
- * `valAxis*` prefix set rather than an axis object, so each side is unpacked by hand.
+ * Axis bounds, titles, scaling, tick marks, label positions and gridlines. The write API spells
+ * these as a flat `catAxis*` / `valAxis*` / `serAxis*` prefix set rather than an axis object, so
+ * each side is unpacked by hand.
+ *
+ * A setting is stated only where it differs from what the writer writes when the option is left
+ * out (`minMax`, `out` / `none` tick marks, the label position its `barDir` implies), so a
+ * rebuilt chart states what its source changed and nothing else.
+ * @param type - the write-API chart type the chart is rebuilt as
  */
-function axisOptions(chart: Chart, xy: boolean): Record<string, IrValue | undefined> {
+function axisOptions(chart: Chart, type: string): Record<string, IrValue | undefined> {
+	const xy = XY_TYPES.has(type)
+	const scatter = type === 'scatter'
 	const { cat, val } = axisPair(chart, xy)
+	const ser = chart.axes.find((axis) => axis.kind === 'ser') ?? null
+	// The writer gives a scatter's every axis gridlines, and any other chart its value axis' alone.
+	const gridDefault = { cat: scatter, val: true, ser: scatter }
 	return {
-		catAxisHidden: cat?.hidden ? true : undefined,
-		catAxisTitle: cat?.title ?? undefined,
+		...sharedAxisOptions('cat', cat, gridDefault.cat),
 		catAxisMinVal: cat?.min ?? undefined,
 		catAxisMaxVal: cat?.max ?? undefined,
-		valAxisHidden: val?.hidden ? true : undefined,
-		valAxisTitle: val?.title ?? undefined,
+		// Only a scatter's or bubble's X axis (a `c:valAx`) and a date axis have unit slots.
+		catAxisMajorUnit: xy || cat?.kind === 'date' ? (cat?.majorUnit ?? undefined) : undefined,
+		catAxisMinorUnit: xy || cat?.kind === 'date' ? (cat?.minorUnit ?? undefined) : undefined,
+		// The writer forces a scatter's tick marks to none, and its value labels next to the axis.
+		...(scatter ? {} : tickOptions('cat', cat)),
+		catAxisLabelPos: differs(cat?.tickLabelPosition, scatter ? 'nextTo' : 'low'),
+
+		...sharedAxisOptions('val', val, gridDefault.val),
 		valAxisMinVal: val?.min ?? undefined,
 		valAxisMaxVal: val?.max ?? undefined,
+		valAxisLogScaleBase: val?.logBase ?? undefined,
 		valAxisMajorUnit: val?.majorUnit ?? undefined,
+		valAxisMinorUnit: val?.minorUnit ?? undefined,
 		valAxisLabelFormatCode: val?.numberFormat?.formatCode ?? undefined,
+		...(scatter ? {} : tickOptions('val', val)),
+		valAxisLabelPos: scatter ? undefined : differs(val?.tickLabelPosition, 'nextTo'),
+
+		...sharedAxisOptions('ser', ser, gridDefault.ser),
+		serLabelFormatCode: differs(ser?.numberFormat?.formatCode, 'General'),
+		serAxisLabelPos: differs(ser?.tickLabelPosition, 'low'),
 	}
+}
+
+/** `value`, or `undefined` when it is `null` or the writer's default `fallback`. */
+function differs(value: string | null | undefined, fallback: string): string | undefined {
+	return value === null || value === undefined || value === fallback ? undefined : value
+}
+
+/**
+ * What the category, value and series axes spell alike: hidden, title, orientation and gridlines.
+ *
+ * A title needs its `show*AxisTitle` flag: the writer draws an axis title only when that is set,
+ * so a title carried alone was lost although it was mapped.
+ *
+ * Gridlines carry as presence only. The read model does not read their stroke, so a source line
+ * comes back in the writer's default style.
+ * @param gridDefault - whether the writer draws this axis' gridlines when its option is left out
+ */
+function sharedAxisOptions(
+	prefix: 'cat' | 'val' | 'ser',
+	axis: ChartAxis | null,
+	gridDefault: boolean
+): Record<string, IrValue | undefined> {
+	if (!axis) return {}
+	const title = axis.title
+	const capital = prefix.charAt(0).toUpperCase() + prefix.slice(1)
+	const grid = axis.majorGridlines
+	return {
+		[`${prefix}AxisHidden`]: axis.hidden ? true : undefined,
+		[`${prefix}AxisTitle`]: title ?? undefined,
+		[`show${capital}AxisTitle`]: title === null ? undefined : true,
+		[`${prefix}AxisOrientation`]: differs(axis.orientation, 'minMax'),
+		[`${prefix}GridLine`]: grid === gridDefault ? undefined : grid ? {} : { type: 'none' },
+	}
+}
+
+/** Major and minor tick marks, against the writer's `out` and `none`. */
+function tickOptions(prefix: 'cat' | 'val', axis: ChartAxis | null): Record<string, IrValue | undefined> {
+	return {
+		[`${prefix}AxisMajorTickMark`]: differs(axis?.majorTickMark, 'out'),
+		[`${prefix}AxisMinorTickMark`]: differs(axis?.minorTickMark, 'none'),
+	}
+}
+
+/** The plot types whose series stroke themselves, from `lineSize` and `lineDash`. */
+const STROKED_TYPES: ReadonlySet<string> = new Set(['line', 'radar', 'scatter', 'bubble', 'bubble3D'])
+
+/** The dash presets `ChartLineDash` spells, which is every one a series stroke takes. */
+const CHART_DASHES: ReadonlySet<string> = new Set([
+	'dash',
+	'dashDot',
+	'lgDash',
+	'lgDashDot',
+	'lgDashDotDot',
+	'solid',
+	'sysDash',
+	'sysDot',
+])
+
+/** The widths, in points, the writer strokes a series with when `lineSize` is left out. */
+const DEFAULT_LINE_SIZE = 2
+
+/**
+ * The series outline as chart-level options.
+ *
+ * A stroked series (a line, a radar, a scatter, a bubble) takes `lineSize` and `lineDash`, or
+ * `lineDashValues` when its series differ. A bar's, an area's or a pie's outline is `dataBorder`,
+ * which the writer paints the same on every series, solid: it is taken from the first series that
+ * draws one. Widths that differ between stroked series are {@link seriesOverrides}' job.
+ */
+function seriesLineOptions(chart: Chart, type: string, notes: NoteScope): Record<string, IrValue | undefined> {
+	const lines = chart.series.map((series) => series.line)
+	if (!STROKED_TYPES.has(type)) {
+		const line = lines.find((one) => one !== null && !one.noFill)
+		if (!line) return {}
+		if (line.dash !== null && line.dash !== 'solid') {
+			notes.note(
+				'chart.series.line',
+				'approximated',
+				'unwritable',
+				`the series outline is dashed (${line.dash}); dataBorder has no dash, so it comes back solid`
+			)
+		}
+		const color = line.colorRef.srgb
+		return {
+			dataBorder:
+				compact({ width: orUndefined(line.widthPt), color: color === null ? undefined : literalColor(color) }) ?? {},
+		}
+	}
+
+	const widths = lines.map(strokeWidth)
+	const shared = widths.every((width) => width === widths[0]) ? widths[0] : undefined
+	const dashes = lines.map((line) => {
+		const dash = line?.dash ?? 'solid'
+		if (CHART_DASHES.has(dash)) return dash
+		notes.note(
+			'chart.series.line',
+			'approximated',
+			'unwritable',
+			`a series line's dash (${dash}) is not one ChartLineDash spells, so it comes back solid`
+		)
+		return 'solid'
+	})
+	const oneDash = dashes.every((dash) => dash === dashes[0])
+	return {
+		lineSize: shared === undefined || shared === DEFAULT_LINE_SIZE ? undefined : shared,
+		lineDash: oneDash && dashes[0] !== 'solid' ? dashes[0] : undefined,
+		lineDashValues: oneDash ? undefined : dashes,
+	}
+}
+
+/** A stroked series' width as `lineSize` reads it: `0` for no line, the writer's 2pt when unstated. */
+function strokeWidth(line: ChartSeries['line']): number {
+	if (line?.noFill) return 0
+	return line?.widthPt ?? DEFAULT_LINE_SIZE
+}
+
+/**
+ * `seriesOptions`: what one series sets apart from the others, where the chart-level option cannot
+ * say it. A stroked series' own width, and a series' own data-label number format on the plots
+ * whose series carry a label block of their own (the category-axis family).
+ */
+function seriesOverrides(chart: Chart, type: string, notes: NoteScope): IrValue | undefined {
+	const series = chart.series
+	const widths = STROKED_TYPES.has(type) ? series.map((one) => strokeWidth(one.line)) : []
+	const ownWidths = widths.some((width) => width !== widths[0])
+	const formats = XY_TYPES.has(type) || CATEGORY_NAME_TYPES.has(type) ? [] : series.map(seriesLabelFormat)
+	const chartFormat = chart.dataLabels?.numberFormat?.formatCode ?? null
+	const ownFormats = formats.some((format) => format !== null && format !== chartFormat)
+	if (!ownWidths && !ownFormats) return undefined
+	if (ownFormats && XY_TYPES.has(type)) {
+		notes.note(
+			'chart.labels',
+			'dropped',
+			'unwritable',
+			'a series sets its own data-label number format, which this plot type has no per-series label block for'
+		)
+	}
+	return series.map(
+		(_one, index) =>
+			compact({
+				lineSize: ownWidths ? widths[index] : undefined,
+				dataLabelFormatCode: ownFormats ? (formats[index] ?? undefined) : undefined,
+			}) ?? {}
+	)
+}
+
+/** The number format a series' own label block states, or `null`. */
+function seriesLabelFormat(series: ChartSeries): string | null {
+	return series.dataLabels?.numberFormat?.formatCode ?? null
 }
 
 /**

@@ -83,6 +83,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`readModelToIr` carries the chart settings the read model reads.** A series outline
+  (`dataBorder` on a bar, area or pie; `lineSize`, `lineDash`, `lineDashValues` and a per-series
+  `seriesOptions[n].lineSize` on a stroked series), each axis' orientation, tick marks, label
+  position and gridlines, the value axis' log base and minor unit, the series axis' hidden flag,
+  title and format, `showBubbleSize`, and a series' own data-label format came back as the
+  writer's defaults with no note. An axis title now carries the `show*AxisTitle` flag that draws
+  it ([#130](https://github.com/shbernal/pptx-ts/issues/130)).
 - **`notes.formatting` names what `addNotes` cannot write, with cause `unwritable`.** It fired as
   `unsupported` for every formatted note, though the write side authors most of it. It now fires
   only for an indent level, a bullet, strikethrough, a highlight, character spacing or a link that

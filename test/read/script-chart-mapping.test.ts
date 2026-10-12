@@ -361,3 +361,109 @@ describe('chart options are spelled the way ChartOpts spells them', () => {
 		assert(!('surface3D' in chartOptions(readModelToIr(tilted.presentation))), 'and a 3-D surface keeps the default')
 	})
 })
+
+describe('chart settings the read model reads come back as their options', () => {
+	// `chartCall` left out settings the read model already reported, with no note, so each came back
+	// as the writer's default (#130).
+	const TWO = [
+		{ name: 'North', labels: ['Q1', 'Q2', 'Q3'], values: [4, 7, 5] },
+		{ name: 'South', labels: ['Q1', 'Q2', 'Q3'], values: [3, 5, 8] },
+	]
+
+	/** The rebuilt options of a two-series chart written with `options`. */
+	async function rebuilt(type: CHART_NAME, options: ChartOpts, data: OptsChartData[] = TWO) {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addChart(data, { type, x: 1, y: 1, w: 6, h: 4, ...options })
+		})
+		return chartOptions(readModelToIr(presentation))
+	}
+
+	/** Assert each key of `expected` came back with its value. */
+	function expectKept(options: ChartOpts, expected: ChartOpts) {
+		for (const [key, value] of Object.entries(expected))
+			expect((options as Record<string, unknown>)[key], key).toEqual(value)
+	}
+
+	test('a bar outline is dataBorder', async () => {
+		const options = await rebuilt(ChartType.bar, { dataBorder: { color: '9B1B30', width: 3 } })
+		expect(options.dataBorder).toEqual({ color: '9B1B30', width: 3 })
+	})
+
+	test("a line's width and dash", async () => {
+		expectKept(await rebuilt(ChartType.line, { lineSize: 5, lineDash: 'dash' }), { lineSize: 5, lineDash: 'dash' })
+		expectKept(await rebuilt(ChartType.line, { lineDashValues: ['dash', 'sysDot'] }), {
+			lineDashValues: ['dash', 'sysDot'],
+		})
+		const own = await rebuilt(ChartType.line, { seriesOptions: [{ lineSize: 1 }, { lineSize: 4 }] })
+		expect(own.seriesOptions, 'a width per series').toEqual([{ lineSize: 1 }, { lineSize: 4 }])
+	})
+
+	test('axis orientation, tick marks, label position, log base, minor unit and gridlines', async () => {
+		const expected: ChartOpts = {
+			catAxisOrientation: 'maxMin',
+			catAxisMajorTickMark: 'cross',
+			catAxisMinorTickMark: 'in',
+			catAxisLabelPos: 'high',
+			valAxisLogScaleBase: 10,
+			valAxisMinorUnit: 0.5,
+			valAxisMajorTickMark: 'none',
+			valAxisLabelPos: 'low',
+			catGridLine: {},
+			valGridLine: { type: 'none' },
+		}
+		expectKept(await rebuilt(ChartType.bar, { ...expected, catGridLine: { color: '9B1B30' } }), expected)
+	})
+
+	test('a default axis states nothing', async () => {
+		const options = await rebuilt(ChartType.bar, {})
+		for (const key of Object.keys(options))
+			assert(!/Orientation|TickMark|LabelPos|GridLine|LogScale|MinorUnit/.test(key), `no ${key}`)
+	})
+
+	test('an axis title comes back with the flag that draws it', async () => {
+		expectKept(
+			await rebuilt(ChartType.bar, {
+				showCatAxisTitle: true,
+				catAxisTitle: 'Category',
+				showValAxisTitle: true,
+				valAxisTitle: 'Value',
+			}),
+			{ showCatAxisTitle: true, catAxisTitle: 'Category', showValAxisTitle: true, valAxisTitle: 'Value' }
+		)
+	})
+
+	test("a 3-D bar's series axis", async () => {
+		expectKept(
+			await rebuilt(ChartType.bar3d, {
+				serAxisHidden: true,
+				serAxisTitle: 'Series',
+				showSerAxisTitle: true,
+				serLabelFormatCode: '0.0',
+				serAxisOrientation: 'maxMin',
+			}),
+			{
+				serAxisHidden: true,
+				serAxisTitle: 'Series',
+				showSerAxisTitle: true,
+				serLabelFormatCode: '0.0',
+				serAxisOrientation: 'maxMin',
+			}
+		)
+	})
+
+	test("a bubble's size labels, and a series' own label format", async () => {
+		const bubble = [
+			{ name: 'X', values: [1, 2, 3] },
+			{ name: 'Y', values: [4, 5, 6], sizes: [7, 8, 9] },
+		]
+		expectKept(await rebuilt(ChartType.bubble, { showValue: true, showBubbleSize: true }, bubble), {
+			showBubbleSize: true,
+		})
+		const own = await rebuilt(ChartType.bar, {
+			showValue: true,
+			dataLabelFormatCode: '0.0',
+			seriesOptions: [{}, { dataLabelFormatCode: '0%' }],
+		})
+		expect(own.seriesOptions).toEqual([{ dataLabelFormatCode: '0.0' }, { dataLabelFormatCode: '0%' }])
+	})
+})
