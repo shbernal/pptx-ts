@@ -178,7 +178,7 @@ export function chartCall(frame: GraphicFrame, chart: Chart, ctx: MapContext): C
 		...(combo ? secondaryAxesOptions(chart, combo, notes) : plotGroupOptions(chart, chart.plotGroups[0], type, notes)),
 		...chartTextOptions(chart, type, notes),
 		...areaOptions(chart, type, ctx),
-		chartColors: seriesColors(chart),
+		chartColors: (CATEGORY_NAME_TYPES.has(type) ? sliceColors(data) : undefined) ?? seriesColors(chart),
 		...dataTableOptions(chart),
 		metadata: metadataOption(chart),
 		seriesOptions: seriesOverrides(chart, type, notes),
@@ -350,25 +350,41 @@ function seriesData(all: readonly ChartSeries[], type: string, notes: NoteScope)
 				name: orUndefined(series.name),
 				values,
 				labels: levels[0]?.length ? (levels.length > 1 ? levels : levels[0]) : undefined,
-				pointStyles: type === 'bar' || type === 'bar3D' ? pointStyles(series, notes) : undefined,
+				pointStyles: pointStyles(series, type, notes),
 			}) ?? { values }
 		)
 	})
 }
 
+/** The plot types whose series write `pointStyles` as `c:dPt`. A radar's and a bubble's write none. */
+const POINT_STYLE_TYPES: ReadonlySet<string> = new Set(['area', 'bar', 'bar3D', 'doughnut', 'line', 'pie', 'scatter'])
+
 /**
- * A bar series' own data points as its `pointStyles`, each point's literal fill as `fill` (#184).
- * That is how the per-point colours `invertedColors` writes come back: `pointStyles` writes the same
- * `c:dPt`. A point formatted beyond a literal fill keeps what it can and is noted.
+ * A series' own data points as its `pointStyles`, each point's literal fill as `fill`: the per-point
+ * colours `invertedColors` writes on a bar (#184), a line's, an area's or a scatter's own points, and
+ * a pie's slices (#197). `pointStyles` writes the same `c:dPt`. A point formatted beyond a literal
+ * fill keeps what it can and is noted. An outline the series draws too is not the point's own: it
+ * comes back as `dataBorder`, which the writer strokes a pie's slices with.
+ * @param type - the write-API chart type the chart is rebuilt as
  */
-function pointStyles(series: ChartSeries, notes: NoteScope): IrValue[] | undefined {
+function pointStyles(series: ChartSeries, type: string, notes: NoteScope): IrValue[] | undefined {
 	const points = series.dataPoints
 	if (points.length === 0) return undefined
+	if (!POINT_STYLE_TYPES.has(type)) {
+		notes.note(
+			'chart.dataPoints',
+			'dropped',
+			'unwritable',
+			`a series of this ${type} chart formats data points of its own (c:dPt), and addChart writes none on a ${type} series, so they come back in the series' formatting`
+		)
+		return undefined
+	}
 	const styles: IrValue[] = []
 	let partial = false
 	for (const point of points) {
 		const hex = point.fill?.noFill ? null : (point.fill?.colorRef.srgb ?? null)
-		if (point.patternFill || (point.line && !point.line.noFill) || point.invertIfNegative === true) partial = true
+		const ownLine = point.line !== null && !point.line.noFill && !sameLine(point.line, series.line)
+		if (point.patternFill || ownLine || point.invertIfNegative === true) partial = true
 		if (point.fill && !point.fill.noFill && hex === null) partial = true
 		if (hex === null) continue
 		while (styles.length < point.index) styles.push({})
@@ -379,10 +395,36 @@ function pointStyles(series: ChartSeries, notes: NoteScope): IrValue[] | undefin
 			'chart.dataPoints',
 			'approximated',
 			'unwritable',
-			"a data point of this bar series is formatted beyond a literal fill (a theme colour, a pattern, an outline or an inverted negative bar), which its pointStyles entry does not carry, so it comes back in the series' colour or its own literal fill"
+			`a data point of this ${type} series is formatted beyond a literal fill (a theme colour, a pattern, an outline of its own or an inverted negative bar), which its pointStyles entry does not carry, so it comes back in the series' colour or its own literal fill`
 		)
 	}
 	return styles.length > 0 ? styles : undefined
+}
+
+/** Whether two outlines stroke alike: the same colour, width and dash. */
+function sameLine(a: ChartLine, b: ChartLine | null): boolean {
+	return (
+		b !== null &&
+		a.noFill === b.noFill &&
+		a.colorRef.srgb === b.colorRef.srgb &&
+		a.widthPt === b.widthPt &&
+		(a.dash ?? 'solid') === (b.dash ?? 'solid')
+	)
+}
+
+/**
+ * A pie's or doughnut's slice fills as `chartColors`, taken off its series' `pointStyles` when they
+ * colour every slice: that is the option the writer paints each slice from (#197). A pie with a
+ * slice left in the series' colour keeps its `pointStyles`.
+ */
+function sliceColors(data: readonly IrValue[]): string[] | undefined {
+	const series = data[0] as { values?: unknown[]; pointStyles?: Array<{ fill?: string }> } | undefined
+	const styles = series?.pointStyles
+	if (!series || !styles || styles.length !== series.values?.length) return undefined
+	const colors = styles.map((style) => style.fill)
+	if (!colors.every((color): color is string => color !== undefined)) return undefined
+	delete series.pointStyles
+	return colors
 }
 
 /**
@@ -418,6 +460,7 @@ function xyData(
 				values,
 				sizes: withSizes ? dense(one.bubbleSizes) : undefined,
 				labels: labels[index],
+				pointStyles: pointStyles(one, type, notes),
 			}) ?? { values }
 		)
 	}

@@ -215,6 +215,67 @@ describe('Chart.plotGroups, Chart.view3D, Chart.displayBlanksAs and series marke
 		expect(await dPt(copy.buf)).toEqual(await dPt(buf))
 	})
 
+	// A pie's slice fills and a line's, area's or scatter's own points were dropped with no note, so a
+	// pie's slices came back in the default palette (#197).
+	test.each<[CHART_NAME, unknown, ChartOpts]>([
+		[
+			'pie',
+			[{ name: 'S', labels: ['a', 'b', 'c'], values: [1, 2, 3] }],
+			{ chartColors: ['9B1B30', '250F6B', '0B6E4F'] },
+		],
+		[
+			'doughnut',
+			[{ name: 'S', labels: ['a', 'b', 'c'], values: [1, 2, 3], pointStyles: [{}, { fill: '0B6E4F' }] }],
+			{},
+		],
+		['line', [{ name: 'S', labels: ['a', 'b', 'c'], values: [1, 2, 3], pointStyles: [{}, { fill: '9B1B30' }] }], {}],
+		['area', [{ name: 'S', labels: ['a', 'b', 'c'], values: [1, 2, 3], pointStyles: [{}, { fill: '9B1B30' }] }], {}],
+		[
+			'scatter',
+			[
+				{ name: 'X', values: [1, 2, 3] },
+				{ name: 'S', values: [1, 2, 3], pointStyles: [{}, { fill: '9B1B30' }] },
+			],
+			{},
+		],
+	])("a %s series' own points carry through readModelToIr", async (type, data, options) => {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addChart(data as never, { type, x: 1, y: 1, w: 6, h: 4, objectName: 'probe', ...options })
+		})
+		const ir = readModelToIr(presentation)
+		expect(ir.fidelity.filter((note) => note.construct === 'chart.dataPoints')).toEqual([])
+		const call = defined(ir.slides[0]?.calls.find((one) => one.method === 'addChart'))
+		const copy = await authorRead((pres) => {
+			pres.addSlide().addChart(call.args[0] as never, { ...(call.args[1] as ChartOpts), objectName: 'probe' })
+		})
+		const fills = (deck: Presentation) =>
+			chartNamed(deck, 'probe').series.map((series) =>
+				series.dataPoints.map((point) => [point.index, point.fill?.colorRef.srgb])
+			)
+		const source = fills(presentation)
+		expect(source.flat()).not.toEqual([])
+		expect(fills(copy.presentation)).toEqual(source)
+	})
+
+	test('a pie whose every slice is coloured comes back with them as chartColors', async () => {
+		const chartColors = ['9B1B30', '250F6B', '0B6E4F']
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addChart([{ name: 'S', labels: ['a', 'b', 'c'], values: [1, 2, 3] }], {
+				type: 'pie',
+				x: 1,
+				y: 1,
+				w: 6,
+				h: 4,
+				objectName: 'probe',
+				chartColors,
+			})
+		})
+		const ir = readModelToIr(presentation)
+		expect(rebuiltOptions(ir, 'probe').chartColors).toEqual(chartColors)
+		const call = defined(ir.slides[0]?.calls.find((one) => one.method === 'addChart'))
+		expect((call.args[0] as Array<{ pointStyles?: unknown }>)[0]?.pointStyles).toBeUndefined()
+	})
+
 	test('a default chart states none of them', async () => {
 		for (const type of ['bar', 'line', 'pie', 'doughnut', 'radar', 'bar3D'] as const) {
 			const { presentation } = await authorRead((pres) => {
