@@ -168,8 +168,13 @@ export function lineOption(shape: AnyShape, notes: NoteScope): Record<string, Ir
 
 	noteLineLosses(shape, { widthPt, dash, scheme, resolved }, notes)
 
+	const paint = linePaint(shape, notes)
+	// An `a:ln` of the shape's own that paints nothing, and no style colour behind it: the outline
+	// is left to the placeholder, as an empty `<a:ln/>` says. Without the `type`, the write path
+	// takes a line naming no paint for a solid one and draws the default 1pt black stroke (#214).
+	const inherits = shape.hasOwnLine && Object.values(paint).every((value) => value === undefined)
 	return compact({
-		...linePaint(shape, notes),
+		...(inherits ? { type: 'inherit' } : paint),
 		width: orUndefined(widthPt),
 		dashType: dash !== null && WRITABLE_DASHES.has(dash) ? dash : undefined,
 		// The read side reports the raw `a:ln/@cap` token (`AutoShape.lineCap`) and the write side

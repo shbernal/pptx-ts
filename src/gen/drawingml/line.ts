@@ -170,7 +170,7 @@ export function resolveBorderWidth(border: BorderProps, defaultPt: number): numb
 
 /**
  * A shape outline with its defaults applied: the kind `resolveLineKind` answers, no transparency, a
- * 1pt width, a solid dash, and on a solid stroke the default colour.
+ * 1pt width, a solid dash, and on a solid stroke the default colour. An inherited line takes none of them.
  *
  * Shapes, line-shaped text boxes and connectors each merged these themselves, and the connector
  * disagreed about zero: `line.width: 0` took the 1pt default on a shape and a text box, and wrote no
@@ -188,6 +188,10 @@ export function resolveBorderWidth(border: BorderProps, defaultPt: number): numb
  */
 export function withLineDefaults(line: ShapeLineProps, colorLabel: string): ShapeLineProps {
 	const kind = resolveLineKind(line)
+	// An inherited outline takes its width and dash from `p:style` or the placeholder as well as
+	// its paint, so it gets no defaults: stamping 1pt solid on it overrode both (#214). What the
+	// caller did state is still written, which is how `width: 1, dashType: 'solid'` keeps the old output.
+	if (kind === 'inherit') return { ...line, type: kind }
 	const resolved: ShapeLineProps = {
 		...line,
 		type: kind,

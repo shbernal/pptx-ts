@@ -265,18 +265,23 @@ export interface ShapeLineProps extends Omit<ShapeFillProps, 'type' | 'image'> {
 	/**
 	 * Stroke paint kind. The same vocabulary as {@link ShapeFillProps.type} minus
 	 * `'image'`, which `<a:ln>` cannot express (see the note on this interface).
+	 *
+	 * `'inherit'` leaves the whole outline to `p:style/a:lnRef` or the placeholder: no paint,
+	 * and no 1pt or solid defaults for `width` and `dashType`. A width, dash, cap or arrowhead
+	 * you state is still written over what is inherited.
+	 * @example { type: 'inherit' } // an empty <a:ln>: paint, width and dash all inherited
 	 * @default 'solid'
 	 */
 	type?: 'none' | 'inherit' | 'solid' | 'gradient' | 'pattern'
 	/**
 	 * Line width (pt)
-	 * @default 1
+	 * @default 1, or inherited when `type` is `'inherit'`
 	 */
 	width?: number
 	/**
 	 * Dash type — the full `ST_PresetLineDashVal` set, so any dash a source deck can
 	 * carry can also be authored and replicated.
-	 * @default 'solid'
+	 * @default 'solid', or inherited when `type` is `'inherit'`
 	 */
 	dashType?: PresetLineDashVal
 	/**
@@ -374,7 +379,7 @@ export interface ConnectorProps {
 	color?: HexColor
 	/**
 	 * Line width (pt)
-	 * @default 1
+	 * @default 1, or inherited when `type` is `'inherit'`
 	 */
 	width?: number
 	/** Dash style */
