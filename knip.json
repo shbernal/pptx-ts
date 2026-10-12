@@ -21,7 +21,6 @@
 			"ignoreDependencies": ["typedoc", "typedoc-plugin-markdown"]
 		}
 	},
-	"ignore": ["tools/powerpoint-vm/shared/**"],
 	"ignoreIssues": {
 		"src/{index,node,browser,entry-errors}.ts": ["duplicates"]
 	},
