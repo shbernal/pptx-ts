@@ -14,14 +14,14 @@ $TMP = $SCRATCH
 $engine = Join-Path $PSScriptRoot 'author-deck.ps1'
 $measure = Join-Path $PSScriptRoot 'measure-lo.py'
 # LibreOffice's bundled Python runs the cross-measure. It sits beside soffice, which is found the
-# way `pnpm run test:lo` finds it: TSPPTX_SOFFICE, then PATH, then the two Windows install roots.
+# way `pnpm run test:lo` finds it: PPTXTS_SOFFICE, then PATH, then the two Windows install roots.
 $sofficeCandidates = @(
-  $env:TSPPTX_SOFFICE,
+  $env:PPTXTS_SOFFICE,
   (Get-Command soffice.com, soffice -ErrorAction SilentlyContinue | Select-Object -First 1).Source,
   (Join-Path $env:LOCALAPPDATA 'Programs\LibreOffice\program\soffice.com'),
   'C:\Program Files\LibreOffice\program\soffice.com'
 ) | Where-Object { $_ -and (Test-Path $_) }
-if (-not $sofficeCandidates) { throw 'LibreOffice not found. Set TSPPTX_SOFFICE to its soffice binary.' }
+if (-not $sofficeCandidates) { throw 'LibreOffice not found. Set PPTXTS_SOFFICE to its soffice binary.' }
 $py = Join-Path (Split-Path @($sofficeCandidates)[0]) 'python.exe'
 
 # deck -> whether to run the LibreOffice cross-measure

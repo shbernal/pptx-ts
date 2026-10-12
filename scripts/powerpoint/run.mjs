@@ -49,7 +49,7 @@ Options:
   -h, --help           show this message
 
 Environment:
-  TSPPTX_POWERPOINT_URL, TSPPTX_POWERPOINT_TOKEN   the worker; both fall back to
+  PPTXTS_POWERPOINT_URL, PPTXTS_POWERPOINT_TOKEN   the worker; both fall back to
                                                    tools/powerpoint-vm/.env`
 
 /**

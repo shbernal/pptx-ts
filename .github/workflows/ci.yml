@@ -186,7 +186,7 @@ jobs:
   # `libreoffice-impress`, not the `libreoffice` metapackage: Impress plus the PDF export
   # filter is the entire surface used, and the metapackage adds Writer, Calc, Base and Java.
   #
-  # `TSPPTX_RENDER_ORACLE: required` is the load-bearing line, for the same reason
+  # `PPTXTS_RENDER_ORACLE: required` is the load-bearing line, for the same reason
   # `FONT_ORACLES: required` is in the test job. Missing tools are a deliberate SKIP on a
   # workstation, so without this a runner image that stopped shipping one of them would give
   # a green leg that checked nothing at all.
@@ -200,7 +200,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     env:
-      TSPPTX_RENDER_ORACLE: required
+      PPTXTS_RENDER_ORACLE: required
 
     steps:
       - name: Checkout

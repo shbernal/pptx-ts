@@ -260,7 +260,7 @@ export async function runCli(main) {
 	}
 }
 
-const packageManagerCache = process.env.TSPPTX_SCRIPT_CACHE_DIR || path.join(ROOT, '.tmp', 'package-manager-cache')
+const packageManagerCache = process.env.PPTXTS_SCRIPT_CACHE_DIR || path.join(ROOT, '.tmp', 'package-manager-cache')
 
 /**
  * The commands {@link run} launches through the package that declares them rather than by name,

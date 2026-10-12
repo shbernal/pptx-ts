@@ -11,7 +11,7 @@
 //   GET  /health   {ok, powerpoint, busy, workerVersion}
 //
 // Every request needs `Authorization: Bearer <token>`, where the token is the value of
-// `TSPPTX_POWERPOINT_TOKEN` when the worker started. Status codes: 400 for an invalid job, 401
+// `PPTXTS_POWERPOINT_TOKEN` when the worker started. Status codes: 400 for an invalid job, 401
 // for a missing or wrong token, 413 for a body over the limit, 503 when the queue is full.
 //
 //   node scripts/powerpoint/worker.mjs --port 8765 --host 0.0.0.0
@@ -184,7 +184,7 @@ Options:
   -h, --help     show this message
 
 Environment:
-  TSPPTX_POWERPOINT_TOKEN   the bearer token every request must carry (required)
+  PPTXTS_POWERPOINT_TOKEN   the bearer token every request must carry (required)
 
 This server executes the scripts it is sent. Never expose it beyond the host.`
 
@@ -198,9 +198,9 @@ async function main() {
 			fake: { type: 'boolean', default: false },
 		},
 	})
-	const token = process.env.TSPPTX_POWERPOINT_TOKEN
+	const token = process.env.PPTXTS_POWERPOINT_TOKEN
 	if (!token) {
-		console.error('TSPPTX_POWERPOINT_TOKEN is not set; refusing to start a worker without a token.')
+		console.error('PPTXTS_POWERPOINT_TOKEN is not set; refusing to start a worker without a token.')
 		return 2
 	}
 	const port = Number(values.port)

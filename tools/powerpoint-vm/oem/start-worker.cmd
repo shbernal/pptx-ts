@@ -23,7 +23,7 @@ if not exist "%DEST%\token" (
 	timeout /t 15 /nobreak >nul
 	goto start
 )
-set /p TSPPTX_POWERPOINT_TOKEN=<"%DEST%\token"
+set /p PPTXTS_POWERPOINT_TOKEN=<"%DEST%\token"
 "%NODE%" "%DEST%\scripts\powerpoint\worker.mjs" --host 0.0.0.0 --port 8765
 echo The worker exited with code %errorlevel%. Restarting in 5 seconds.
 timeout /t 5 /nobreak >nul

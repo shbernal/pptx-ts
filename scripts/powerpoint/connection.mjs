@@ -34,7 +34,7 @@ export function readVmEnv() {
  */
 export function resolveConnection(env = process.env) {
 	const file = readVmEnv()
-	const url = env.TSPPTX_POWERPOINT_URL || file.TSPPTX_POWERPOINT_URL || DEFAULT_URL
-	const token = env.TSPPTX_POWERPOINT_TOKEN || file.TSPPTX_POWERPOINT_TOKEN || null
+	const url = env.PPTXTS_POWERPOINT_URL || file.PPTXTS_POWERPOINT_URL || DEFAULT_URL
+	const token = env.PPTXTS_POWERPOINT_TOKEN || file.PPTXTS_POWERPOINT_TOKEN || null
 	return { url: url.replace(/\/+$/, ''), token }
 }

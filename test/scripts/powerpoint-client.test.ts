@@ -36,7 +36,7 @@ describe('resolveTransport', () => {
 	const linux = { platform: 'linux' as const, comRegistered: () => false }
 
 	test('a URL with a token selects the remote transport', () => {
-		const env = { TSPPTX_POWERPOINT_URL: 'http://127.0.0.1:8765/', TSPPTX_POWERPOINT_TOKEN: 't' }
+		const env = { PPTXTS_POWERPOINT_URL: 'http://127.0.0.1:8765/', PPTXTS_POWERPOINT_TOKEN: 't' }
 		expect(resolveTransport({ env, fileEnv: {}, ...linux })).toEqual({
 			kind: 'remote',
 			url: 'http://127.0.0.1:8765',
@@ -45,17 +45,17 @@ describe('resolveTransport', () => {
 	})
 
 	test('the VM .env supplies what the environment does not', () => {
-		const fileEnv = { TSPPTX_POWERPOINT_URL: 'http://127.0.0.1:8765', TSPPTX_POWERPOINT_TOKEN: 'from-file' }
+		const fileEnv = { PPTXTS_POWERPOINT_URL: 'http://127.0.0.1:8765', PPTXTS_POWERPOINT_TOKEN: 'from-file' }
 		expect(resolveTransport({ env: {}, fileEnv, ...linux })).toMatchObject({ kind: 'remote', token: 'from-file' })
 	})
 
 	test('a URL without a token is an error, not a skip', () => {
-		const env = { TSPPTX_POWERPOINT_URL: 'http://127.0.0.1:8765' }
+		const env = { PPTXTS_POWERPOINT_URL: 'http://127.0.0.1:8765' }
 		expect(() => resolveTransport({ env, fileEnv: {}, ...linux })).toThrow(TransportError)
 	})
 
 	test('a token alone does not select the remote transport', () => {
-		const env = { TSPPTX_POWERPOINT_TOKEN: 't' }
+		const env = { PPTXTS_POWERPOINT_TOKEN: 't' }
 		expect(resolveTransport({ env, fileEnv: {}, ...linux })).toMatchObject({ kind: 'none' })
 		expect(resolveTransport({ env, fileEnv: {}, platform: 'win32', comRegistered: () => true })).toEqual({
 			kind: 'local',
@@ -69,7 +69,7 @@ describe('resolveTransport', () => {
 		})
 		expect(resolveTransport({ env: {}, fileEnv: {}, ...linux })).toEqual({
 			kind: 'none',
-			reason: expect.stringContaining('TSPPTX_POWERPOINT_URL'),
+			reason: expect.stringContaining('PPTXTS_POWERPOINT_URL'),
 		})
 	})
 })

@@ -25,11 +25,11 @@ Do not use it to chase third-party office-suite interop quirks, which are out of
 A PowerPoint transport, which `pnpm run test:com` picks for itself:
 
 - **Linux:** the worker VM in `tools/powerpoint-vm/`. Its `.env` sets
-  `TSPPTX_POWERPOINT_URL`, and `pnpm ppt:health` confirms it answers with a PowerPoint build.
-- **Windows:** desktop PowerPoint registered for COM. With `TSPPTX_POWERPOINT_URL` unset,
+  `PPTXTS_POWERPOINT_URL`, and `pnpm ppt:health` confirms it answers with a PowerPoint build.
+- **Windows:** desktop PowerPoint registered for COM. With `PPTXTS_POWERPOINT_URL` unset,
   the decks open on this machine.
 
-With neither, `test:com` reports SKIP. Under `TSPPTX_COM_SMOKE=required` that is a failure.
+With neither, `test:com` reports SKIP. Under `PPTXTS_COM_SMOKE=required` that is a failure.
 
 ## Workflow
 
