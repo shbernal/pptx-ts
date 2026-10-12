@@ -43,8 +43,10 @@ import {
 	nameOf,
 	orUndefined,
 	positionOptions,
+	type ShapeBox,
 	WRITABLE_DASHES,
 } from './values.js'
+import { EMU_PER_INCH } from '../../units.js'
 import { GRAPHIC_FRAME_LOCK_ATTRS } from '../../ooxml/lock-attrs.js'
 import { LINE_CAP_BY_TOKEN } from '../../ooxml/line-cap.js'
 
@@ -162,6 +164,7 @@ export function chartCall(frame: GraphicFrame, chart: Chart, ctx: MapContext): C
 		...identityOptions(frame),
 		objectLock: lockOption(frame, GRAPHIC_FRAME_LOCK_ATTRS),
 		...titleOptions(chart),
+		titlePos: chart.title === null ? undefined : titlePosOption(chart.titleLayout, box, notes),
 		...legendOptions(chart),
 		...labelOptions(chart, type, notes),
 		valLabelFormatCode: sourceFormatOption(chart, type, notes),
@@ -333,6 +336,67 @@ function blanksToZero(notes: NoteScope): (points: (number | null)[]) => number[]
 function titleOptions(chart: Chart): Record<string, IrValue | undefined> {
 	const title = chart.title
 	return title === null ? {} : { showTitle: true, title }
+}
+
+/**
+ * The decimal places a `titlePos` offset keeps: enough that the fraction it writes back lands within
+ * about 1e-10 of the source's, and few enough that reading the copy gives the same offset again.
+ */
+const TITLE_POS_DECIMALS = 9
+
+/**
+ * What the writer writes as a title's `c:x` or `c:y` for an offset of `inches` from the slide's edge
+ * (the `titlePos` value plus the chart frame's own): `inches² / 50`, divided by ten once or twice
+ * to bring it under 1. A mirror of `edgeFraction` in `src/gen/chart/chart-parts.ts`.
+ */
+function titleFraction(inches: number): number {
+	let value = inches === 0 ? 0 : (inches * (inches / 5)) / 10
+	if (value >= 1) value = value / 10
+	if (value >= 0.1) value = value / 10
+	return value
+}
+
+/**
+ * The offset {@link titleFraction} folds into `fraction`. It is not one-to-one, but every fraction from
+ * 0 up has an offset: under 0.1 the undivided branch, from 0.1 the twice-divided one.
+ */
+function titleOffset(fraction: number): number | undefined {
+	if (!Number.isFinite(fraction) || fraction < 0) return undefined
+	return Math.sqrt((fraction < 0.1 ? 50 : 5000) * fraction)
+}
+
+/**
+ * A title's manual layout as `titlePos`: each edge-mode coordinate unfolded into the offset that
+ * writes it, less the chart frame's own (#187). What `titlePos` cannot state is noted: a
+ * coordinate in factor mode, a size, or an offset that does not write the same fraction back.
+ */
+function titlePosOption(layout: ChartManualLayout | null, box: ShapeBox, notes: NoteScope): IrValue | undefined {
+	if (!layout) return undefined
+	const position: Record<string, number> = {}
+	const lost: string[] = []
+	for (const axis of ['x', 'y'] as const) {
+		const fraction = layout[axis]
+		if (fraction === null) continue
+		const mode = layout[axis === 'x' ? 'xMode' : 'yMode'] ?? 'factor'
+		const offset = mode === 'edge' ? titleOffset(fraction) : undefined
+		const frame = (axis === 'x' ? box.left : box.top) / EMU_PER_INCH
+		const value = offset === undefined ? undefined : Number((offset - frame).toFixed(TITLE_POS_DECIMALS))
+		if (value === undefined || Math.abs(titleFraction(value + frame) - fraction) > 1e-9) {
+			lost.push(`its ${axis} (${mode} mode, ${fraction})`)
+			continue
+		}
+		position[axis] = value
+	}
+	if (layout.w !== null || layout.h !== null) lost.push('its size')
+	if (lost.length > 0) {
+		notes.note(
+			'chart.layout',
+			'approximated',
+			'unwritable',
+			`the chart title's manual layout states ${lost.join(' and ')}, which titlePos cannot write: it takes an edge-mode position only, so that part is left to PowerPoint's automatic layout`
+		)
+	}
+	return compact(position)
 }
 
 function legendOptions(chart: Chart): Record<string, IrValue | undefined> {
@@ -946,9 +1010,8 @@ function axisTextOptions(
  * background and the leader lines.
  *
  * The chart area comes back with square corners, as PowerPoint writes it; the writer's default is
- * rounded. A title's manual layout has no inverse in `titlePos`, whose offsets the writer folds
- * through a non-linear conversion, and a series' gradient or pattern fill has no option at all;
- * both are noted.
+ * rounded. A series' gradient or pattern fill has no option at all, and is noted. A title's manual
+ * layout is {@link titlePosOption}'s.
  */
 function areaOptions(chart: Chart, type: string, ctx: MapContext): Record<string, IrValue | undefined> {
 	const { notes } = ctx
@@ -957,14 +1020,6 @@ function areaOptions(chart: Chart, type: string, ctx: MapContext): Record<string
 	const labels = (CATEGORY_NAME_TYPES.has(type) ? series[0]?.dataLabels : null) ?? chart.dataLabels
 	const seriesLabels = series.map((one) => one.dataLabels)
 
-	if (chart.titleLayout) {
-		notes.note(
-			'chart.layout',
-			'approximated',
-			'unwritable',
-			"the chart title is placed by a manual layout; titlePos takes offsets the writer converts in a way that has no inverse, so the title goes back to PowerPoint's automatic place"
-		)
-	}
 	if (series.some((one) => one.gradientFill !== null || one.patternFill !== null)) {
 		notes.note(
 			'chart.series.fill',

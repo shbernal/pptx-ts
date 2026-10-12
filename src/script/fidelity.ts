@@ -106,7 +106,8 @@ export const NOTE_CONSTRUCTS = {
 	// Label flags the writer has no spelling for: the legend key on any plot, the category name on any
 	// but a pie or a doughnut. Absent from the IR on both sides, so there is nothing to exclude.
 	'chart.labels': { fields: [], tiers: BOTH_TIERS },
-	// A title's manual layout, which titlePos cannot state. Absent from both IRs.
+	// The part of a title's manual layout titlePos cannot state (a factor-mode coordinate, a size).
+	// Absent from both IRs; the part it can state is carried as titlePos.
 	'chart.layout': { fields: [], tiers: BOTH_TIERS },
 	// A series' gradient or pattern fill, which no addChart option spells. Absent from both IRs.
 	'chart.series.fill': { fields: [], tiers: BOTH_TIERS },

@@ -143,6 +143,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A chart title's manual layout comes back as `titlePos`.** `readModelToIr` declared every title
+  layout `chart.layout` unwritable, though `titlePos` writes it: each edge-mode coordinate now unfolds
+  into the offset the writer folds into it. `chart.layout` is left for what `titlePos` cannot state, a
+  factor-mode coordinate or a size ([#187](https://github.com/shbernal/pptx-ts/issues/187)).
 - **A bar series' per-point colours carry through `readModelToIr`.** `ChartSeries.dataPoints` reads a
   series' own data points (`c:dPt`: index, inverted-negative flag, fill, pattern and outline), which
   had no accessor, so the per-point fills `invertedColors` writes were dropped with no note. On a bar
