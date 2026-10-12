@@ -17,11 +17,13 @@
  * double-clicking it in PowerPoint opens data that matches the plot but has lost the source
  * sheet's formulas, extra columns, and formatting.
  */
-import type { Chart, ChartAxis, ChartSeries } from '../../read/api/chart.js'
+import type { Chart, ChartAxis, ChartLine, ChartSeries } from '../../read/api/chart.js'
 import type { GraphicFrame } from '../../read/api/shapes.js'
 import type { NoteScope } from '../fidelity.js'
 import type { CallIr, IrValue } from '../ir.js'
 import {
+	alphaToTransparency,
+	colorOption,
 	compact,
 	frameOf,
 	identityOptions,
@@ -30,8 +32,10 @@ import {
 	nameOf,
 	orUndefined,
 	positionOptions,
+	WRITABLE_DASHES,
 } from './values.js'
 import { GRAPHIC_FRAME_LOCK_ATTRS } from '../../ooxml/lock-attrs.js'
+import { LINE_CAP_BY_TOKEN } from '../../ooxml/line-cap.js'
 
 /**
  * Read chart-group token → `CHART_NAME`. The read model strips the `Chart` suffix from the
@@ -147,7 +151,7 @@ export function chartCall(frame: GraphicFrame, chart: Chart, notes: NoteScope): 
 		...titleOptions(chart),
 		...legendOptions(chart),
 		...labelOptions(chart, type, notes),
-		...axisOptions(chart, type),
+		...axisOptions(chart, type, notes),
 		...seriesLineOptions(chart, type, notes),
 		...plotGroupOptions(chart, type, notes),
 		chartColors: seriesColors(chart),
@@ -369,15 +373,26 @@ function axisPair(chart: Chart, xy: boolean): { cat: ChartAxis | null; val: Char
  * rebuilt chart states what its source changed and nothing else.
  * @param type - the write-API chart type the chart is rebuilt as
  */
-function axisOptions(chart: Chart, type: string): Record<string, IrValue | undefined> {
+function axisOptions(chart: Chart, type: string, notes: NoteScope): Record<string, IrValue | undefined> {
 	const xy = XY_TYPES.has(type)
 	const scatter = type === 'scatter'
 	const { cat, val } = axisPair(chart, xy)
 	const ser = chart.axes.find((axis) => axis.kind === 'ser') ?? null
-	// The writer gives a scatter's every axis gridlines, and any other chart its value axis' alone.
-	const gridDefault = { cat: scatter, val: true, ser: scatter }
+	// The writer gives a scatter's every axis gridlines, in a lighter grey, and any other chart its
+	// value axis' alone.
+	const grid = { drawn: { cat: scatter, val: true, ser: scatter }, color: scatter ? 'D9D9D9' : STROKE_DEFAULT_COLOR }
+	const date = cat?.kind === 'date'
+	const units = val?.displayUnits ?? null
+	if (units && units.builtIn === null) {
+		notes.note(
+			'chart.axis',
+			'dropped',
+			'unwritable',
+			`the value axis divides by a custom unit (c:custUnit ${units.custom ?? ''}); valAxisDisplayUnit takes a built-in unit only, so the axis shows plain values`
+		)
+	}
 	return {
-		...sharedAxisOptions('cat', cat, gridDefault.cat),
+		...sharedAxisOptions('cat', cat, grid.drawn.cat, grid.color, notes),
 		catAxisMinVal: cat?.min ?? undefined,
 		catAxisMaxVal: cat?.max ?? undefined,
 		// Only a scatter's or bubble's X axis (a `c:valAx`) and a date axis have unit slots.
@@ -386,8 +401,21 @@ function axisOptions(chart: Chart, type: string): Record<string, IrValue | undef
 		// The writer forces a scatter's tick marks to none, and its value labels next to the axis.
 		...(scatter ? {} : tickOptions('cat', cat)),
 		catAxisLabelPos: differs(cat?.tickLabelPosition, scatter ? 'nextTo' : 'low'),
+		// A crossing is stated on the axis that crosses: the value axis' is where it meets the
+		// category axis, which the writer spells `catAxisCrossesAt`, and the other way round.
+		catAxisCrossesAt: crossing(val, notes),
+		valAxisCrossesAt: crossing(cat, notes),
+		catAxisLabelFrequency: cat?.labelSkip ?? undefined,
+		// The writer writes `noMultiLvlLbl="1"` unless asked for multi-level labels.
+		catAxisMultiLevelLabels: cat?.noMultiLevelLabels === false ? true : undefined,
+		// A date axis is the writer's `c:dateAx` only with a category format, so its format carries
+		// with its time units, or the dates came back as text.
+		catLabelFormatCode: date ? (cat?.numberFormat?.formatCode ?? 'General') : undefined,
+		catAxisBaseTimeUnit: date ? (cat?.baseTimeUnit ?? undefined) : undefined,
+		catAxisMajorTimeUnit: date ? (cat?.majorTimeUnit ?? undefined) : undefined,
+		catAxisMinorTimeUnit: date ? (cat?.minorTimeUnit ?? undefined) : undefined,
 
-		...sharedAxisOptions('val', val, gridDefault.val),
+		...sharedAxisOptions('val', val, grid.drawn.val, grid.color, notes),
 		valAxisMinVal: val?.min ?? undefined,
 		valAxisMaxVal: val?.max ?? undefined,
 		valAxisLogScaleBase: val?.logBase ?? undefined,
@@ -396,11 +424,73 @@ function axisOptions(chart: Chart, type: string): Record<string, IrValue | undef
 		valAxisLabelFormatCode: val?.numberFormat?.formatCode ?? undefined,
 		...(scatter ? {} : tickOptions('val', val)),
 		valAxisLabelPos: scatter ? undefined : differs(val?.tickLabelPosition, 'nextTo'),
+		valAxisCrossBetween: differs(val?.crossBetween, scatter ? 'midCat' : 'between'),
+		valAxisDisplayUnit: units?.builtIn ?? undefined,
+		valAxisDisplayUnitLabel: units?.builtIn && units.showLabel ? true : undefined,
 
-		...sharedAxisOptions('ser', ser, gridDefault.ser),
+		...sharedAxisOptions('ser', ser, grid.drawn.ser, grid.color, notes),
 		serLabelFormatCode: differs(ser?.numberFormat?.formatCode, 'General'),
 		serAxisLabelPos: differs(ser?.tickLabelPosition, 'low'),
+		serAxisLabelFrequency: ser?.labelSkip ?? undefined,
 	}
+}
+
+/**
+ * Where `axis` crosses the other one, as `*AxisCrossesAt` takes it: a value, or `undefined` for
+ * the writer's `autoZero`. A `max` or `min` rule has no spelling there and is noted.
+ */
+function crossing(axis: ChartAxis | null, notes: NoteScope): number | undefined {
+	if (!axis) return undefined
+	const at = axis.crossesAt
+	if (at !== null) return at
+	const rule = axis.crosses
+	if (rule === 'max' || rule === 'min') {
+		notes.note(
+			'chart.axis',
+			'approximated',
+			'unwritable',
+			`an axis crosses at the other axis' ${rule}imum (c:crosses ${rule}); *AxisCrossesAt takes a value or autoZero only, so it crosses at zero`
+		)
+	}
+	return undefined
+}
+
+/** The colour the writer strokes an axis line or a gridline with when none is stated. */
+const STROKE_DEFAULT_COLOR = '888888'
+
+/**
+ * A chart stroke as the `StrokeProps` an axis line or a gridline option takes, stating only what
+ * differs from the writer's 1pt solid flat line in `defaultColor`. `undefined` when nothing does.
+ */
+function strokeOption(line: ChartLine, defaultColor: string, notes: NoteScope): IrValue | undefined {
+	if (line.noFill) return { type: 'none' }
+	// A transformed colour cannot be applied without the theme, and its bare token is usually far from
+	// it: PowerPoint's default axis line is `tx1` lightened to a grey, which bare is black. The
+	// writer's grey is the nearer of the two, so the colour is left to it.
+	if (line.colorTransformed) {
+		notes.note(
+			'chart.schemeToken',
+			'approximated',
+			'unwritable',
+			'a chart line colour carries a transform (a:lumMod and the like) that is applied against the theme, which a chart part is read without, so the line takes the default grey'
+		)
+	}
+	const color = line.colorTransformed
+		? undefined
+		: colorOption(
+				{ scheme: line.colorRef.scheme, ownHex: line.colorRef.srgb, resolvedHex: null },
+				notes,
+				'chart.schemeToken',
+				'chart line'
+			)
+	const dash = line.dash
+	return compact({
+		color: color === undefined || color === defaultColor ? undefined : color,
+		width: line.widthPt === null || line.widthPt === 1 ? undefined : line.widthPt,
+		dashType: dash === null || dash === 'solid' || !WRITABLE_DASHES.has(dash) ? undefined : dash,
+		cap: line.cap === null || line.cap === 'flat' ? undefined : LINE_CAP_BY_TOKEN[line.cap],
+		transparency: alphaToTransparency(line.alpha ?? undefined),
+	})
 }
 
 /** `value`, or `undefined` when it is `null` or the writer's default `fallback`. */
@@ -414,25 +504,35 @@ function differs(value: string | null | undefined, fallback: string): string | u
  * A title needs its `show*AxisTitle` flag: the writer draws an axis title only when that is set,
  * so a title carried alone was lost although it was mapped.
  *
- * Gridlines carry as presence only. The read model does not read their stroke, so a source line
- * comes back in the writer's default style.
+ * The axis line and the gridlines carry their strokes where they differ from the writer's.
  * @param gridDefault - whether the writer draws this axis' gridlines when its option is left out
+ * @param gridColor - the colour the writer draws them in
  */
 function sharedAxisOptions(
 	prefix: 'cat' | 'val' | 'ser',
 	axis: ChartAxis | null,
-	gridDefault: boolean
+	gridDefault: boolean,
+	gridColor: string,
+	notes: NoteScope
 ): Record<string, IrValue | undefined> {
 	if (!axis) return {}
 	const title = axis.title
 	const capital = prefix.charAt(0).toUpperCase() + prefix.slice(1)
 	const grid = axis.majorGridlines
+	const gridStroke = grid ? axis.majorGridlinesLine : null
+	const gridOption = gridStroke ? strokeOption(gridStroke, gridColor, notes) : undefined
+	const line = axis.line
 	return {
 		[`${prefix}AxisHidden`]: axis.hidden ? true : undefined,
 		[`${prefix}AxisTitle`]: title ?? undefined,
 		[`show${capital}AxisTitle`]: title === null ? undefined : true,
 		[`${prefix}AxisOrientation`]: differs(axis.orientation, 'minMax'),
-		[`${prefix}GridLine`]: grid === gridDefault ? undefined : grid ? {} : { type: 'none' },
+		[`${prefix}GridLine`]: !grid
+			? gridDefault
+				? { type: 'none' }
+				: undefined
+			: (gridOption ?? (gridDefault ? undefined : {})),
+		[`${prefix}AxisLine`]: line ? strokeOption(line, STROKE_DEFAULT_COLOR, notes) : undefined,
 	}
 }
 

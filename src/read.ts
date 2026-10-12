@@ -151,6 +151,7 @@ export {
 	ChartPlotGroup,
 	type AxisNumberFormat,
 	type ChartMarker,
+	type ChartDisplayUnits,
 	type ChartView3D,
 	type ChartLegend,
 	type ChartDataLabels,
