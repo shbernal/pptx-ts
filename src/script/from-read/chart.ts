@@ -17,7 +17,7 @@
  * double-clicking it in PowerPoint opens data that matches the plot but has lost the source
  * sheet's formulas, extra columns, and formatting.
  */
-import type { Chart, ChartSeries } from '../../read/api/chart.js'
+import type { Chart, ChartAxis, ChartSeries } from '../../read/api/chart.js'
 import type { GraphicFrame } from '../../read/api/shapes.js'
 import type { NoteScope } from '../fidelity.js'
 import type { CallIr, IrValue } from '../ir.js'
@@ -136,7 +136,7 @@ export function chartCall(frame: GraphicFrame, chart: Chart, notes: NoteScope): 
 		...titleOptions(chart),
 		...legendOptions(chart),
 		...labelOptions(chart, type, notes),
-		...axisOptions(chart),
+		...axisOptions(chart, xy),
 		chartColors: seriesColors(chart),
 	})
 
@@ -325,15 +325,34 @@ function labelOptions(chart: Chart, type: string, notes: NoteScope): Record<stri
 }
 
 /**
+ * The axis `catAxis*` options describe and the one `valAxis*` options describe.
+ *
+ * A scatter or bubble has no category axis: both of its axes are `c:valAx`, and the writer writes
+ * the `catAxis*` options onto the horizontal one. `Chart.valueAxis` is the first `c:valAx`, which
+ * on those charts is that X axis, so the Y axis was never read and the X axis was taken for it
+ * (#154). Told apart by `c:axPos`, the axis' edge of the plot.
+ */
+function axisPair(chart: Chart, xy: boolean): { cat: ChartAxis | null; val: ChartAxis | null } {
+	if (!xy) return { cat: chart.categoryAxis, val: chart.valueAxis }
+	const values = chart.axes.filter((axis) => axis.kind === 'val')
+	const horizontal = (axis: ChartAxis) => axis.position === 'b' || axis.position === 't'
+	return {
+		cat: values.find(horizontal) ?? values[0] ?? null,
+		val: values.find((axis) => !horizontal(axis)) ?? values[1] ?? null,
+	}
+}
+
+/**
  * Axis bounds, titles and gridlines. The write API spells these as a flat `catAxis*` /
  * `valAxis*` prefix set rather than an axis object, so each side is unpacked by hand.
  */
-function axisOptions(chart: Chart): Record<string, IrValue | undefined> {
-	const cat = chart.categoryAxis
-	const val = chart.valueAxis
+function axisOptions(chart: Chart, xy: boolean): Record<string, IrValue | undefined> {
+	const { cat, val } = axisPair(chart, xy)
 	return {
 		catAxisHidden: cat?.hidden ? true : undefined,
 		catAxisTitle: cat?.title ?? undefined,
+		catAxisMinVal: cat?.min ?? undefined,
+		catAxisMaxVal: cat?.max ?? undefined,
 		valAxisHidden: val?.hidden ? true : undefined,
 		valAxisTitle: val?.title ?? undefined,
 		valAxisMinVal: val?.min ?? undefined,

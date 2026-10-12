@@ -84,6 +84,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `unsupported` for every formatted note, though the write side authors most of it. It now fires
   only for an indent level, a bullet, strikethrough, a highlight, character spacing or a link that
   is not a URL ([#129](https://github.com/shbernal/pptx-ts/issues/129)).
+- **`readModelToIr` reads a scatter's or bubble's Y axis as its value axis.** Both axes of those
+  charts are `c:valAx`, and the X axis was taken for the value axis: its bounds came back as
+  `valAxisMinVal` / `valAxisMaxVal`, and the Y axis' bounds and title were lost. The X axis now
+  maps to the `catAxis*` options, its bounds included
+  ([#154](https://github.com/shbernal/pptx-ts/issues/154)).
 - **`readModelToIr` keeps a table cell border's `cap` and `transparency`.** Both came back as the
   writer's defaults with no note, on an edge and on a diagonal
   ([#81](https://github.com/shbernal/pptx-ts/issues/81)).
