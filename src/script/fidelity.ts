@@ -163,7 +163,9 @@ export const NOTE_CONSTRUCTS = {
 	'group.child': { fields: ['*'], tiers: BOTH_TIERS },
 	'group.childSpace': { fields: ['x', 'y', 'w', 'h', 'rotate', 'flipH', 'flipV'], tiers: BOTH_TIERS },
 	'group.empty': { fields: ['*'], tiers: BOTH_TIERS },
-	'group.transform': { fields: ['rotate', 'flipH', 'flipV'], tiers: BOTH_TIERS },
+	// `group.transform` used to live here, for a group's own rotation and flips baked into its
+	// children. The group carries them as `addGroup` options and its children are placed in its
+	// child space (`groupSpaceFrame`), so the note is gone rather than unmapped (#116).
 	// A picture crop with no `crop` spelling is left off, so the difference lands on the option.
 	'image.crop': { fields: ['crop'], tiers: BOTH_TIERS },
 	'image.data': { fields: ['data', '$asset'], tiers: BOTH_TIERS },

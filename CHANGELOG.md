@@ -56,6 +56,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`readModelToIr` keeps a group's rotation and flips on the group.** They were baked into each
+  child, which moved and rotated it in their place, under a `group.transform` note. The group now
+  carries `rotate`, `flipH` and `flipV`, and its children keep their own transforms
+  ([#116](https://github.com/shbernal/pptx-ts/issues/116)).
 - **`Shape.placeholder` reads a picture's or graphic frame's `p:ph`.** It was `null` for every
   shape but a `p:sp`, so a filled picture placeholder read as a free picture, and `readModelToIr`
   dropped its layout binding with no note. It now reads the binding, and `readModelToIr` declares
