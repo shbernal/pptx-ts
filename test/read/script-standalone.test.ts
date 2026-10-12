@@ -473,9 +473,8 @@ describe('standalone printer — the fidelity contract', () => {
 })
 
 describe('standalone printer — picture crop', () => {
-	test('a picture whose crop `crop` cannot hold prints a script that runs', async () => {
-		// A negative inset used to reach the script as `crop: { l: -5 }`, and the script threw
-		// `image/crop-inset-out-of-range` at `addImage`. It is left off and noted now.
+	// Authors a 1x1 picture, rewrites its srcRect, and runs the standalone script printed from it.
+	async function printedWithSrcRect(srcRect: string) {
 		const zip = await JSZip.loadAsync(
 			await authored((pptx) => {
 				pptx.addSlide().addImage({
@@ -489,10 +488,24 @@ describe('standalone printer — picture crop', () => {
 			})
 		)
 		const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
-		const bled = slideXml.replace(/<a:srcRect[^>]*\/>/, '<a:srcRect l="-5000"/>')
-		assert(bled !== slideXml, 'the authored srcRect was found and made negative')
-		zip.file('ppt/slides/slide1.xml', bled)
-		const { printed, report } = await runStandalone(await zip.generateAsync({ type: 'nodebuffer' }))
+		const edited = slideXml.replace(/<a:srcRect[^>]*\/>/, srcRect)
+		assert(edited !== slideXml, 'the authored srcRect was found and rewritten')
+		zip.file('ppt/slides/slide1.xml', edited)
+		return runStandalone(await zip.generateAsync({ type: 'nodebuffer' }))
+	}
+
+	test('a negative inset carries as a padded crop', async () => {
+		// PowerPoint's Fit crop, and `sizing: 'contain'`, pad the source with negative insets.
+		const { printed, report } = await printedWithSrcRect('<a:srcRect l="-5000" r="-5000"/>')
+		assert(printed.code.includes('crop: { l: -5, r: -5 }'), 'the padded crop reaches the script')
+		assert(!printed.notes.some((note) => note.construct === 'image.crop'), 'the crop is not noted as lost')
+		assertEqual(report.undeclared.length, 0, `no undeclared difference, got ${JSON.stringify(report.undeclared)}`)
+	})
+
+	test('a picture whose crop `crop` cannot hold prints a script that runs', async () => {
+		// Opposite insets that leave no source area have no `crop` spelling; carried, the script
+		// would throw `image/crop-insets-exceed-extent` at `addImage`. It is left off and noted.
+		const { printed, report } = await printedWithSrcRect('<a:srcRect l="60000" r="60000"/>')
 		assert(
 			printed.notes.some((note) => note.construct === 'image.crop'),
 			'the uncarried crop is noted in the script'

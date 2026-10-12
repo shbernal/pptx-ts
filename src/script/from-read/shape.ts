@@ -400,16 +400,16 @@ function pictureCall(shape: Picture, ctx: MapContext): CallIr | null {
 		)
 	}
 
-	// The same guard a picture fill's crop takes. A negative inset (PowerPoint writes one for a fit
-	// crop) or opposite insets summing to 100% or more have no `crop` spelling, and passing them
-	// through put a crop in the IR that made the printed script throw at `addImage`.
+	// The same guard a picture fill's crop takes. An inset over 100% or opposite insets summing to
+	// 100% or more have no `crop` spelling, and passing them through would put a crop in the IR
+	// that made the printed script throw at `addImage`.
 	const crop = cropOption(shape.crop)
 	if (crop === undefined && isRectSet(shape.crop)) {
 		notes.note(
 			'image.crop',
 			'approximated',
 			'unwritable',
-			"this picture's source crop (a:srcRect) has an inset outside the 0–100% `crop` accepts, or opposite insets that leave no image, so the picture is emitted uncropped"
+			"this picture's source crop (a:srcRect) has an inset over the 100% `crop` accepts, or opposite insets that leave no image, so the picture is emitted uncropped"
 		)
 	}
 	const options = compact({

@@ -14,13 +14,17 @@ import { FIXED_PCT_PER_PERCENT } from '../../units.js'
 import { el, raw, voidEl } from '../oxml/el.js'
 import { InvalidOptionError } from '../../errors.js'
 
-/** Percentage edge insets trimmed from the source image; an omitted edge is `0`. */
+/**
+ * Percentage edge insets on the source image; an omitted edge is `0`. A positive inset trims
+ * that edge, a negative one pads it with empty space, as `sizing: 'contain'` does.
+ */
 export type ImageCrop = { l?: number; t?: number; r?: number; b?: number }
 
 /**
- * The four insets, defaulted and checked. Rejects anything that is not a percentage and
- * any pair that would leave no source area at all — a degenerate `<a:srcRect>` renders as
- * an empty shape rather than as an error, so it has to fail here.
+ * The four insets, defaulted and checked. Rejects a non-finite inset, one over 100, and any
+ * pair that would leave no source area at all — a degenerate `<a:srcRect>` renders as an
+ * empty shape rather than as an error, so it has to fail here. A negative inset is accepted:
+ * DrawingML's `ST_Percentage` is signed, and it is how a source is padded inside its box.
  * @param crop - edge insets in percent; omitted edges default to 0
  * @param label - the option's owner, as an error message names it (`addImage`, `image fill`)
  * @param where - trailing context for an error message, or `''`
@@ -32,10 +36,10 @@ function normalizeImageCrop(
 ): { l: number; t: number; r: number; b: number } {
 	const edges = { l: crop.l ?? 0, t: crop.t ?? 0, r: crop.r ?? 0, b: crop.b ?? 0 }
 	for (const [name, val] of Object.entries(edges)) {
-		if (typeof val !== 'number' || !Number.isFinite(val) || val < 0 || val > 100) {
+		if (typeof val !== 'number' || !Number.isFinite(val) || val > 100) {
 			throw new InvalidOptionError(
 				'image/crop-inset-out-of-range',
-				`${label} crop.${name} must be a percentage between 0 and 100 (got ${String(val)})${where}.`
+				`${label} crop.${name} must be a finite percentage no greater than 100 (got ${String(val)})${where}.`
 			)
 		}
 	}
@@ -53,10 +57,10 @@ function normalizeImageCrop(
 }
 
 /**
- * Build an explicit `<a:srcRect>` crop from percentage edge insets (0–100), emitted verbatim.
- * Each inset is the percent of the *source* image trimmed from that edge; values serialize in
- * 1000ths of a percent (DrawingML `ST_Percentage`, where 100% = 100000). Unlike `sizing: 'crop'`
- * — which derives the rect from displayed inches and the natural pixel size — this maps a
+ * Build an explicit `<a:srcRect>` crop from percentage edge insets, emitted verbatim.
+ * Each inset is the percent of the *source* image trimmed from that edge, or padded onto it
+ * when negative; values serialize in 1000ths of a percent (DrawingML `ST_Percentage`, where
+ * 100% = 100000). Unlike `sizing: 'crop'` — which derives the rect from displayed inches and the natural pixel size — this maps a
  * sub-region of the source directly, so it works for SVG and other unmeasurable formats.
  * @param crop - edge insets in percent; omitted edges default to 0
  * @param label - the option's owner, as an error message names it

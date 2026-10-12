@@ -1614,10 +1614,8 @@ describe('deck IR — picture fills', () => {
 		)
 	})
 
-	test('a source crop the write path would refuse stays uncarried, with a note that says why', async () => {
-		// A negative inset is how a `contain`-style fill bleeds its source past the surface.
-		// `image.crop` takes 0–100 only, so carrying it would emit a script that throws when
-		// it is run — the note is the honest answer instead.
+	test('a negative source crop carries as `image.crop`', async () => {
+		// A negative inset is how a `contain`-style fill pads its source inside the surface.
 		const { buf } = await authorRead((pres) => {
 			pres.addSlide().addText('img', {
 				x: 1,
@@ -1631,6 +1629,35 @@ describe('deck IR — picture fills', () => {
 		const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
 		const bled = slideXml.replace('<a:srcRect l="0" t="25000" r="0" b="25000"/>', '<a:srcRect t="-25000" b="25000"/>')
 		assert(bled !== slideXml, 'the authored srcRect was found and made negative')
+		zip.file('ppt/slides/slide1.xml', bled)
+		const ir = readModelToIr(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
+
+		const fill = at(defined(allCalls(ir).find((call) => call.method === 'addText')).args[1], 'fill')
+		assertEqual(JSON.stringify(at(at(fill, 'image'), 'crop')), '{"b":25,"t":-25}', 'the padded crop carries')
+		assertEqual(
+			ir.fidelity.filter((note) => note.construct === 'fill.picture.geometry').length,
+			0,
+			'and nothing is noted as lost'
+		)
+	})
+
+	test('a source crop the write path would refuse stays uncarried, with a note that says why', async () => {
+		// Opposite insets summing to 100% or more leave no source area. `image.crop` refuses them,
+		// so carrying them would emit a script that throws when it is run — the note is the honest
+		// answer instead.
+		const { buf } = await authorRead((pres) => {
+			pres.addSlide().addText('img', {
+				x: 1,
+				y: 1,
+				w: 3,
+				h: 1,
+				fill: { type: 'image', image: { data: PNG_1X1, crop: { t: 25, b: 25 } } },
+			})
+		})
+		const zip = await JSZip.loadAsync(buf)
+		const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
+		const bled = slideXml.replace('<a:srcRect l="0" t="25000" r="0" b="25000"/>', '<a:srcRect t="60000" b="60000"/>')
+		assert(bled !== slideXml, 'the authored srcRect was found and made degenerate')
 		zip.file('ppt/slides/slide1.xml', bled)
 		const ir = readModelToIr(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
 
@@ -1697,14 +1724,23 @@ describe('deck IR — picture fills', () => {
 		)
 		assertEqual(JSON.stringify(kept.crop), '{"l":12.5,"t":33.333}', 'a crop in range carries, zero edges left out')
 
-		// PowerPoint writes a negative inset for a fit crop. Passed through, it put `{ l: -5 }` in
-		// the IR with no note, and the printed script threw at `addImage`.
+		// PowerPoint writes a negative inset for a fit crop, and `crop` takes it.
 		const zip = await JSZip.loadAsync(buf)
 		const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
-		const bled = slideXml.replace(/<a:srcRect[^>]*\/>/, '<a:srcRect l="-5000"/>')
-		assert(bled !== slideXml, 'the authored srcRect was found and made negative')
-		zip.file('ppt/slides/slide1.xml', bled)
-		const ir = readModelToIr(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
+		const withSrcRect = async (srcRect: string) => {
+			const edited = slideXml.replace(/<a:srcRect[^>]*\/>/, srcRect)
+			assert(edited !== slideXml, 'the authored srcRect was found and rewritten')
+			zip.file('ppt/slides/slide1.xml', edited)
+			return readModelToIr(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
+		}
+		const padded = await withSrcRect('<a:srcRect l="-5000"/>')
+		const fit = objectOf(defined(allCalls(padded).find((call) => call.method === 'addImage')).args[0])
+		assertEqual(JSON.stringify(fit.crop), '{"l":-5}', 'a negative inset carries')
+		assertEqual(padded.fidelity.filter((note) => note.construct === 'image.crop').length, 0, 'with no note')
+
+		// Opposite insets that leave no source area have no `crop` spelling. Passed through, they
+		// would put a crop in the IR that made the printed script throw at `addImage`.
+		const ir = await withSrcRect('<a:srcRect l="60000" r="60000"/>')
 		const image = objectOf(defined(allCalls(ir).find((call) => call.method === 'addImage')).args[0])
 		assertEqual(
 			'crop' in image,

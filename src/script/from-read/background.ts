@@ -130,7 +130,7 @@ function fillIr(
 					tier.construct,
 					'approximated',
 					'unwritable',
-					`${tier.subject} is a picture cropped (a:srcRect) with insets outside the 0–100% \`image.crop\` accepts, so it comes back uncropped`
+					`${tier.subject} is a picture cropped (a:srcRect) with insets outside what \`image.crop\` accepts, so it comes back uncropped`
 				)
 			}
 			return { data: asset, ...faded }

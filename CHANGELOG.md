@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`crop` takes a negative inset.** A negative edge pads the source with empty space on that side,
+  the way PowerPoint's Fit crop and `sizing: 'contain'` write `a:srcRect`. It threw
+  `image/crop-inset-out-of-range` before, on a picture, a picture fill and a picture background.
+  `readModelToIr` now carries such a crop as `crop` instead of dropping it with a note
+  ([#110](https://github.com/shbernal/pptx-ts/issues/110)).
 - **`Paragraph.endLanguage` reads the language of a paragraph's end mark** (`a:endParaRPr/@lang`),
   or `null` when it states none.
 - **`Picture.recolors` reads every blip effect on a picture**, in document order. `recolor` reads
