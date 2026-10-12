@@ -13,6 +13,7 @@ import {
 	boolValue,
 	childElements,
 	concatDrawingMLText,
+	descendantsByTag,
 	type Element,
 	ELEMENT_NODE,
 	firstChild,
@@ -40,6 +41,35 @@ export interface ChartLegend {
 	position: string | null
 	/** Whether the legend overlays the plot area (`c:overlay/@val`). */
 	overlay: boolean | null
+	/** The legend text's formatting (`c:txPr`), or `null` when it states none. */
+	textStyle: ChartTextStyle | null
+}
+
+/**
+ * The formatting of a block of chart text: a `c:txPr` (a legend's, an axis' labels', data labels')
+ * or a title's `c:rich`. Read off the block's `a:bodyPr` and its first paragraph: the paragraph's
+ * `a:pPr` and `a:defRPr`, and in a title, the first run's `a:rPr` over them. Every field is `null`
+ * where the block states nothing.
+ */
+export interface ChartTextStyle {
+	/** Size in points (`@sz`). */
+	sizePt: number | null
+	/** Bold (`@b`). */
+	bold: boolean | null
+	/** Italic (`@i`). */
+	italic: boolean | null
+	/** Underline style (`@u`, e.g. `sng`, `none`). */
+	underline: string | null
+	/** The solid colour, unresolved: a chart part is read without a theme. */
+	color: ColorRef | null
+	/** Whether {@link color} carries a transform (`a:lumMod`, …) that only a theme can apply. */
+	colorTransformed: boolean
+	/** The Latin typeface (`a:latin/@typeface`), a theme token such as `+mn-lt` included. */
+	fontName: string | null
+	/** Rotation in degrees (`a:bodyPr/@rot` / 60000), or `null` when unstated or outside -90 to 90. */
+	rotationDeg: number | null
+	/** Paragraph alignment (`a:pPr/@algn`: `l`, `ctr`, `r`, …). */
+	align: string | null
 }
 
 /** Data-label settings (`c:dLbls`), read from a plot group or from one series. */
@@ -62,6 +92,8 @@ export interface ChartDataLabels {
 	position: string | null
 	/** Label number format (`c:numFmt`), or `null` when absent. */
 	numberFormat: AxisNumberFormat | null
+	/** The labels' text formatting (`c:txPr`), or `null` when the block states none. */
+	textStyle: ChartTextStyle | null
 }
 
 /** The 3-D view of a chart (`c:chart/c:view3D`). Every field is `null` when the element leaves it unstated. */
@@ -214,7 +246,27 @@ export class Chart {
 		return {
 			position: pos ? attr(pos, 'val') : null,
 			overlay: overlay ? boolValue(attr(overlay, 'val')) : null,
+			textStyle: readTextStyle(firstChild(legend, 'c:txPr')),
 		}
+	}
+
+	/** The chart title's formatting (`c:title/c:tx/c:rich`), or `null` when the chart has no rich title. */
+	get titleStyle(): ChartTextStyle | null {
+		const chart = this.#chart()
+		return readTitleStyle(chart && firstChild(chart, 'c:title'))
+	}
+
+	/**
+	 * The language the chart's text is tagged with: `c:lang`, which PowerPoint writes, else the first
+	 * paragraph end's `@lang` in the part, where `addChart` writes its `lang`. `null` when neither says.
+	 */
+	get language(): string | null {
+		const root = this.part.dom.documentElement
+		if (!root) return null
+		const lang = firstChild(root, 'c:lang')
+		if (lang) return attr(lang, 'val')
+		const end = descendantsByTag(root, OOXML_NS.a, 'endParaRPr').find((element) => attr(element, 'lang'))
+		return end ? attr(end, 'lang') : null
 	}
 
 	/**
@@ -592,6 +644,16 @@ export class ChartAxis {
 		return el ? numberValue(attr(el, 'val')) : null
 	}
 
+	/** The tick labels' text formatting and rotation (`c:txPr`), or `null` when the axis states none. */
+	get labelStyle(): ChartTextStyle | null {
+		return readTextStyle(firstChild(this.ax, 'c:txPr'))
+	}
+
+	/** The axis title's formatting (`c:title/c:tx/c:rich`), or `null` when it has no rich title. */
+	get titleStyle(): ChartTextStyle | null {
+		return readTitleStyle(firstChild(this.ax, 'c:title'))
+	}
+
 	/** Where this axis crosses the other one, as a value on it (`c:crossesAt`), or `null`. */
 	get crossesAt(): number | null {
 		const element = firstChild(this.ax, 'c:crossesAt')
@@ -905,7 +967,62 @@ function readDataLabels(dLbls: Element | null): ChartDataLabels | null {
 		showLeaderLines: flag('c:showLeaderLines'),
 		position: pos ? attr(pos, 'val') : null,
 		numberFormat: readNumberFormat(dLbls),
+		textStyle: readTextStyle(firstChild(dLbls, 'c:txPr')),
 	}
+}
+
+/** The size, in 1/60000 of a degree, of the `@rot` PowerPoint writes for an upright default. */
+const MAX_TEXT_ROTATION = 5400000
+
+/** Read a chart text block, a `c:txPr` or a title's `c:rich`; see {@link ChartTextStyle}. */
+function readTextStyle(block: Element | null): ChartTextStyle | null {
+	if (!block) return null
+	const bodyPr = firstChild(block, 'a:bodyPr')
+	const paragraph = firstChild(block, 'a:p')
+	const pPr = paragraph && firstChild(paragraph, 'a:pPr')
+	const defRPr = pPr && firstChild(pPr, 'a:defRPr')
+	const run = paragraph && firstChild(paragraph, 'a:r')
+	const rPr = run && firstChild(run, 'a:rPr')
+	// The run's own properties win over the paragraph's defaults, as they do when PowerPoint draws it.
+	const props = [rPr, defRPr].filter((element): element is Element => element !== null)
+	const first = (name: string): string | null => {
+		for (const element of props) {
+			const value = attr(element, name)
+			if (value !== null) return value
+		}
+		return null
+	}
+	const child = (qname: string): Element | null => {
+		for (const element of props) {
+			const found = firstChild(element, qname)
+			if (found) return found
+		}
+		return null
+	}
+	const solidFill = child('a:solidFill')
+	const colorElement = solidFill && firstChildElement(solidFill)
+	const latin = child('a:latin')
+	const size = numberValue(first('sz'))
+	const rot = bodyPr ? numberValue(attr(bodyPr, 'rot')) : null
+	return {
+		sizePt: size === null ? null : size / 100,
+		bold: boolValue(first('b')),
+		italic: boolValue(first('i')),
+		underline: first('u'),
+		color: colorElement ? readColorRef(colorElement, null) : null,
+		colorTransformed: colorElement
+			? childElements(colorElement).some((transform) => transform.localName !== 'alpha')
+			: false,
+		fontName: latin ? attr(latin, 'typeface') : null,
+		rotationDeg: rot === null || Math.abs(rot) > MAX_TEXT_ROTATION ? null : rot / 60000,
+		align: pPr ? attr(pPr, 'algn') : null,
+	}
+}
+
+/** A `c:title`'s formatting, off its `c:tx/c:rich`. */
+function readTitleStyle(title: Element | null): ChartTextStyle | null {
+	const tx = title && firstChild(title, 'c:tx')
+	return readTextStyle(tx && firstChild(tx, 'c:rich'))
 }
 
 /**

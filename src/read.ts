@@ -152,6 +152,7 @@ export {
 	type AxisNumberFormat,
 	type ChartMarker,
 	type ChartDisplayUnits,
+	type ChartTextStyle,
 	type ChartView3D,
 	type ChartLegend,
 	type ChartDataLabels,
