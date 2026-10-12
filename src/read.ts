@@ -153,6 +153,8 @@ export {
 	type ChartMarker,
 	type ChartDisplayUnits,
 	type ChartTextStyle,
+	type ChartAreaFormat,
+	type ChartManualLayout,
 	type ChartView3D,
 	type ChartLegend,
 	type ChartDataLabels,

@@ -106,6 +106,10 @@ export const NOTE_CONSTRUCTS = {
 	// Label flags the writer has no spelling for: the legend key on any plot, the category name on any
 	// but a pie or a doughnut. Absent from the IR on both sides, so there is nothing to exclude.
 	'chart.labels': { fields: [], tiers: BOTH_TIERS },
+	// A title's manual layout, which titlePos cannot state. Absent from both IRs.
+	'chart.layout': { fields: [], tiers: BOTH_TIERS },
+	// A series' gradient or pattern fill, which no addChart option spells. Absent from both IRs.
+	'chart.series.fill': { fields: [], tiers: BOTH_TIERS },
 	// A bar series' c:invertIfNegative, which no addChart option writes. Absent from both IRs.
 	'chart.invertIfNegative': { fields: [], tiers: BOTH_TIERS },
 	// A series outline the chart writer cannot dash as the source did, rebuilt solid. Both IRs carry
