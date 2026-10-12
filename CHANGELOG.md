@@ -118,6 +118,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A chart's embedded workbook no longer stamps the clock.** Its own `docProps/core.xml` carried
+  `dcterms:created` and `dcterms:modified`, so two writes of a deck with a chart differed inside the
+  workbook, a part a consumer comparing packages cannot exclude by name. The workbook now states no
+  timestamp; the deck's `docProps/core.xml` keeps its dates
+  ([#145](https://github.com/shbernal/pptx-ts/issues/145)).
 - **A one-entry multi-type `addChart` array writes a bubble chart.** Every bubble entry threw
   `chart/bubble-in-combo`, a one-entry array that combines nothing included, so `type[].data[].sizes`
   could never be written. A single bubble entry is now written as the standalone chart, its options
