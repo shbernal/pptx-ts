@@ -408,10 +408,10 @@ describe('chart settings the read model reads come back as their options', () =>
 			valAxisMinorUnit: 0.5,
 			valAxisMajorTickMark: 'none',
 			valAxisLabelPos: 'low',
-			catGridLine: {},
+			catGridLine: { color: '9B1B30' },
 			valGridLine: { type: 'none' },
 		}
-		expectKept(await rebuilt(ChartType.bar, { ...expected, catGridLine: { color: '9B1B30' } }), expected)
+		expectKept(await rebuilt(ChartType.bar, expected), expected)
 	})
 
 	test('a default axis states nothing', async () => {

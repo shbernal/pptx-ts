@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`ChartAxis` reads where it crosses, its display units, label skip, time units and strokes.**
+  `crossesAt`, `crosses`, `crossBetween`, `displayUnits`, `labelSkip`, `noMultiLevelLabels`,
+  `baseTimeUnit` / `majorTimeUnit` / `minorTimeUnit`, `line` and `majorGridlinesLine`. A `ChartLine`
+  now reads its `cap`, its colour's `alpha`, and whether the colour carries a theme transform the
+  chart part cannot apply. `readModelToIr` maps each onto its `addChart` option, carries a date axis
+  as one instead of as text, and gives axis and gridline strokes their colour, width, dash, cap and
+  transparency ([#132](https://github.com/shbernal/pptx-ts/issues/132)).
 - **`Chart.plotGroups`, `Chart.view3D` and `Chart.displayBlanksAs`.** A `ChartPlotGroup` reads its
   type, its series and what it sets on all of them: bar direction, grouping, gap width, overlap,
   series lines, 3-D gap depth and shape, a pie's first-slice angle, a doughnut's hole, a radar's
