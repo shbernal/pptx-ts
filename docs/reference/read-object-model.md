@@ -361,6 +361,7 @@ Every read value that carries a colour carries a [`ColorRef`](api/read/interface
 - [`svgRelId`](api/read/classes/Picture.md#svgrelid) and [`svgPartName`](api/read/classes/Picture.md#svgpartname) name the SVG, from the `asvg:svgBlip` extension.
 - PowerPoint usually pairs an SVG with a raster fallback. Some exporters write an SVG with no raster, where `imagePartName` is `null` and only `svgPartName` resolves.
 - [`mediaKind`](api/read/classes/Picture.md#mediakind) reports `'raster'`, `'svg'`, `'both'` or `'none'`. [`mediaPartName`](api/read/classes/Picture.md#mediapartname) is the raster part, else the SVG part.
+- [`media`](api/read/classes/Picture.md#media) reads the audio or video a picture plays: its `kind`, its media `partName` and `contentType`, the `link` of linked or online media, and the `repeatCount` the slide's timing gives it. It is `null` for a still picture, whose blip is then the poster frame.
 - A partname getter is `null` when the id is absent, when the part's relationships lack it, or when it points outside the package, as for a linked image.
 - [`crop`](api/read/classes/Picture.md#crop) reads `a:srcRect` as fractions, [`recolor`](api/read/classes/Picture.md#recolor) reads the first recolour effect on the blip, and [`recolors`](api/read/classes/Picture.md#recolors) reads all of them.
 - [`setImage()`](api/read/classes/Picture.md#setimage) replaces the image: see [Read and edit a deck](../reading/read-and-edit.md#replace-the-image-of-a-picture).

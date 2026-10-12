@@ -102,7 +102,11 @@ describe('script printer — corpus invariants', () => {
 		for (const assetName of assets.keys()) {
 			const identifier = assetName.replace(/\.[^.]*$/, '')
 			assert(code.includes(`const ${identifier} = `), `${name}: no binding for ${assetName}`)
-			assert(code.includes(`data: ${identifier}`), `${name}: ${assetName} is declared but never used`)
+			// A clip's poster frame is its `cover`, and every other asset is a `data`.
+			assert(
+				code.includes(`data: ${identifier}`) || code.includes(`cover: ${identifier}`),
+				`${name}: ${assetName} is declared but never used`
+			)
 		}
 	})
 

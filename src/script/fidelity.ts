@@ -254,6 +254,8 @@ export const NOTE_CONSTRUCTS = {
 	'line.schemeToken': { fields: ['line.color'], tiers: BOTH_TIERS },
 	'line.width': { fields: ['line.width'], tiers: BOTH_TIERS },
 	'media.audioVideo': { fields: ['*'], tiers: BOTH_TIERS },
+	// What a picture states that `addMedia` takes no option for, dropped from the clip it rebuilds.
+	'media.formatting': { fields: ['rotate', 'flipH', 'flipV'], tiers: BOTH_TIERS },
 	'notes.formatting': { fields: ['notesText', 'notesRuns'], tiers: BOTH_TIERS },
 	'shadow.schemeToken': { fields: ['shadow.color'], tiers: BOTH_TIERS },
 	'shape.custGeom.guides': { fields: ['points'], tiers: BOTH_TIERS },

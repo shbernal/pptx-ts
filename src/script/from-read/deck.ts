@@ -91,7 +91,7 @@ class Assets implements AssetResolver {
 
 		const contentType = assetContentType(part.contentType)
 		const extension = assetFilenameExtension(contentType) ?? partName.split('.').pop() ?? 'bin'
-		const kind = contentType.startsWith('audio/') ? 'audio' : 'image'
+		const kind = contentType.startsWith('audio/') ? 'audio' : contentType.startsWith('video/') ? 'video' : 'image'
 		const index = (this.#counts.get(kind) ?? 0) + 1
 		this.#counts.set(kind, index)
 		const name = `${kind}${index}.${extension}`

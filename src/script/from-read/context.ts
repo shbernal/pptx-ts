@@ -56,6 +56,12 @@ export interface MapContext {
 	 * the top of a slide, where a shape's frame is its slide-absolute one.
 	 */
 	readonly groups?: readonly GroupTransform[]
+	/**
+	 * Whether embedded audio or video is kept as its poster frame rather than rebuilt with `addMedia`:
+	 * set where a call becomes an entry of a union that has no media variant, a group's child
+	 * (`GroupChildProps`) and a layout's object (`SlideMasterObject`).
+	 */
+	readonly mediaAsImage?: boolean
 }
 
 /**

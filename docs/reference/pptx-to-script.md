@@ -160,7 +160,7 @@ The counts come from `pnpm run script:census`, run in a clone of the repository 
 
 A count is the number of fixtures that raise the note at least once. Each fixture targets a few constructs, so a count shows what the corpus exercises, not how often a construct occurs in real decks. The table lists only constructs some fixture raises. [`knownNoteConstructs()`](api/script/functions/knownNoteConstructs.md) returns the full catalogue.
 
-The Output column says where the note fires. A construct that fires in both outputs has the same count in each. A construct under the `layout.` prefix is the slide construct of the same name, raised while re-authoring a layout's shapes. Across the corpus the standalone output raises 905 notes and the template-anchored output 463, which is 3 to 12 more per deck.
+The Output column says where the note fires. A construct that fires in both outputs has the same count in each. A construct under the `layout.` prefix is the slide construct of the same name, raised while re-authoring a layout's shapes. Across the corpus the standalone output raises 903 notes and the template-anchored output 461, which is 3 to 12 more per deck.
 
 | Construct | Output | Cause | What happens | Fixtures |
 | --- | --- | --- | --- | --- |
@@ -176,7 +176,6 @@ The Output column says where the note fires. A construct that fires in both outp
 | `chart.dataPoints` | Both | unwritable | A data point or pie slice in a theme colour, a pattern or an outline of its own comes back in the series' colour or its own literal fill. A radar's or bubble's own points are dropped | 2/60 |
 | `chart.xLabels` | Both | unwritable | A scatter or bubble chart plotted against text X labels plots at the same positions, and the labels are gone | 2/60 |
 | `group.childSpace` | Both | unsupported | The children of a group that scales them are printed pre-scaled, so resizing the group no longer rescales them | 2/60 |
-| `media.audioVideo` | Both | unread | Embedded audio or video becomes a still image of its poster frame | 2/60 |
 | `shape.empty` | Both | unsupported | A shape with no text and no geometry of its own, such as an unfilled placeholder, is omitted | 2/60 |
 | `text.equation` | Both | unread | An OMML equation is dropped from its shape | 2/60 |
 | `chart.axis` | Both | unwritable | An axis crossing at the other axis' maximum or minimum crosses at zero, and a custom display unit is dropped. A combo's secondary axis takes a setting its primary axis states and it does not | 1/60 |
@@ -191,6 +190,7 @@ The Output column says where the note fires. A construct that fires in both outp
 | `image.svg` | Both | unsupported | An SVG picture keeps its vector part. The write path generates a new raster fallback in place of the source's | 1/60 |
 | `line.arrowSize` | Both | unwritable | Arrowheads render at the default width and length | 1/60 |
 | `line.schemeToken` | Both | unwritable | An outline colour outside the ten mapped scheme tokens is baked to hex | 1/60 |
+| `media.audioVideo` | Both | unwritable | Audio or video linked from outside the package, or inside a group or on a layout, becomes a still image of its poster frame | 1/60 |
 | `shape.custGeom.guides` | Both | unwritable | A picture clipped to a freeform, or a freeform holding text, keeps its path and loses its guides, adjust handles and connection sites, which only `addShape` takes | 1/60 |
 | `shape.placeholder` | Both | unwritable | A placeholder whose `p:ph` type or `idx` has no `placeholder` spelling becomes a plain shape with its inherited geometry and styling baked in. A title, and any text placeholder with one of the six types the string form names and no `idx`, carries as that string. Any other text placeholder, and a filled picture, table or chart placeholder, carries as a `placeholder: { type, idx }` binding | 1/60 |
 | `slide.background` | Both | unwritable | A slide background taken from the theme (`p:bgRef`) is baked to the fill it resolves to | 1/60 |
@@ -244,6 +244,7 @@ These constructs carry in both outputs and raise no note.
 | A picture fill on a shape or cell | `fill: { type: 'image', image: { data, crop }, transparency }` |
 | A group's rotation and flips | `rotate`, `flipH` and `flipV` on `addGroup`, with the children in the group's own space |
 | A picture's crop | `crop` on `addImage` |
+| Embedded audio and video (`a:audioFile`, `a:videoFile`) and its loop timing | `addMedia` with `type`, `data`, `extn`, `cover` from the poster frame, and `loop` or `loopCount`. An online video is `type: 'online'` with its `link`. A rotation or flip is dropped under `media.formatting` |
 | A picture's recolour and transparency (`a:grayscl`, `a:biLevel`, `a:duotone`, `a:clrChange`, `a:alphaModFix`) | `grayscale`, `biLevel`, `duotone`, `clrChange` and `transparency` on `addImage`. A colour change to a transparent colour (Set Transparent Color) keeps the colour and loses the transparency, under `image.recolor` |
 | A background picture's crop and transparency (`a:alphaModFix`) | `background: { image: { data, crop }, transparency }` |
 | A connector's route, bends and bend positions (`bentConnector3`-`5`, `curvedConnector3`-`5`) | `type`, `bends` and `adj` on `addConnector`. Any other route prints straight under `connector.route` |
@@ -263,7 +264,6 @@ A crop with a negative inset, or with opposite insets that add up to 100% or mor
 - The theme's format scheme (`a:fmtScheme`), and with it the width and dash of an outline taken from the theme
 - Master text styles (`p:txStyles`)
 - Build animations
-- The media part of embedded audio and video
 - OMML equations and text fields
 - Freeform guides, adjust handles and connection sites
 - Graphic frames other than tables, charts and SmartArt

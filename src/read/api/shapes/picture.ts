@@ -9,6 +9,7 @@
 import {
 	ELEMENT_NODE,
 	attr,
+	descendantsByTag,
 	firstChild,
 	firstChildElement,
 	getElements,
@@ -28,7 +29,7 @@ import { readRect, type FillRect } from '../picture-fill.js'
 import { readColorRef, type ColorRef } from '../theme-context.js'
 import { Shape } from './base.js'
 import { childElements, type PaintSurface } from './oxml.js'
-import type { Recolor } from './types.js'
+import type { PictureMedia, Recolor } from './types.js'
 import { IMAGE_REL } from '../../../ooxml/rel-types.js'
 import { InvalidOptionError } from '../../../errors.js'
 import { BLIPFILL_BLIP_AFTER, BLIPFILL_SRCRECT_AFTER, PIC_BLIPFILL_AFTER } from '../../../ooxml/sequence.js'
@@ -181,6 +182,54 @@ export class Picture extends Shape {
 	 */
 	get mediaPartName(): string | null {
 		return this.imagePartName ?? this.svgPartName
+	}
+
+	/**
+	 * The audio or video this picture plays (`p:nvPr/a:audioFile` or `a:videoFile`), or `null` for a
+	 * still picture. Its blip ({@link imagePartName}) is then the poster frame. See {@link PictureMedia}.
+	 */
+	get media(): PictureMedia | null {
+		const nvPr = firstChild(this.element, 'p:nvPicPr')
+		const props = nvPr && firstChild(nvPr, 'p:nvPr')
+		if (!props) return null
+		const file = firstChild(props, 'a:videoFile') ?? firstChild(props, 'a:audioFile')
+		if (!file) return null
+		const rels = this.host.relationships
+		const embedded = descendantsByTag(props, OOXML_NS.p14, 'media')
+			.map((media) => resolvePartName(attr(media, 'r:embed'), rels))
+			.find((name) => name !== null)
+		const linkId = attr(file, 'r:link')
+		const partName = embedded ?? resolvePartName(linkId, rels)
+		const linkRel = linkId ? rels.get(linkId) : undefined
+		return {
+			kind: file.localName === 'audioFile' ? 'audio' : 'video',
+			partName,
+			contentType: partName === null ? null : (this.host.opc.part(partName)?.contentType ?? null),
+			link: partName === null && linkRel?.targetMode === 'External' ? linkRel.target : null,
+			repeatCount: this.#repeatCount(),
+		}
+	}
+
+	/**
+	 * The `repeatCount` of the media node the host's `p:timing` aims at this picture, as
+	 * {@link PictureMedia.repeatCount} reports it.
+	 */
+	#repeatCount(): number | 'indefinite' | null {
+		const id = this.id
+		const root = this.element.ownerDocument?.documentElement
+		if (id === null || !root) return null
+		for (const node of descendantsByTag(root, OOXML_NS.p, 'cMediaNode')) {
+			const target = firstChild(node, 'p:tgtEl')
+			const spTgt = target && firstChild(target, 'p:spTgt')
+			if (!spTgt || attr(spTgt, 'spid') !== String(id)) continue
+			const cTn = firstChild(node, 'p:cTn')
+			const value = cTn && attr(cTn, 'repeatCount')
+			if (value === null) return null
+			if (value === 'indefinite') return 'indefinite'
+			const count = Number(value)
+			return Number.isFinite(count) && count > 0 ? count / 1000 : null
+		}
+		return null
 	}
 
 	/**

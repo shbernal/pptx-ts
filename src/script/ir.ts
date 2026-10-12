@@ -87,7 +87,16 @@ export interface AssetIr {
  * and so does the write path, so preserving call order preserves overlap.
  */
 export interface CallIr {
-	method: 'addText' | 'addShape' | 'addImage' | 'addTable' | 'addChart' | 'addConnector' | 'addGroup' | 'addNotes'
+	method:
+		| 'addText'
+		| 'addShape'
+		| 'addImage'
+		| 'addMedia'
+		| 'addTable'
+		| 'addChart'
+		| 'addConnector'
+		| 'addGroup'
+		| 'addNotes'
 	args: IrValue[]
 	/**
 	 * The source shape's name (`p:cNvPr/@name`), when it had one. Not an argument —
