@@ -477,6 +477,43 @@ describe('chart and plot areas, manual layouts and series effects', () => {
 		expect(rebuiltOptions(readModelToIr(presentation), 'probe')[key]).toEqual({ fill: { type: 'inherit' } })
 	})
 
+	// A title's manual layout was declared `chart.layout` unwritable, though `titlePos` writes it: the
+	// writer's offset-to-fraction fold has an inverse on each of its branches (#187).
+	test.each([{ x: 0.5, y: 0.3 }, { x: 25 }, { y: -0.4 }])(
+		'a title placed by titlePos %j comes back',
+		async (titlePos) => {
+			const build = (options: ChartOpts) =>
+				authorRead((pres) => {
+					pres.addSlide().addChart(SERIES, {
+						type: 'bar',
+						x: 1,
+						y: 1.5,
+						w: 6,
+						h: 4,
+						objectName: 'probe',
+						showTitle: true,
+						title: 'T',
+						...options,
+					})
+				})
+			const source = await build({ titlePos })
+			const ir = readModelToIr(source.presentation)
+			expect(ir.fidelity.filter((note) => note.construct === 'chart.layout')).toEqual([])
+			const rebuilt = defined(rebuiltOptions(ir, 'probe').titlePos)
+			const copy = await build({ titlePos: rebuilt })
+			const layout = (chart: Chart) => defined(chart.titleLayout)
+			const [from, to] = [
+				layout(chartNamed(source.presentation, 'probe')),
+				layout(chartNamed(copy.presentation, 'probe')),
+			]
+			expect([to.xMode, to.yMode]).toEqual([from.xMode, from.yMode])
+			for (const axis of ['x', 'y'] as const) {
+				if (from[axis] === null) expect(to[axis], axis).toBeNull()
+				else expect(to[axis], axis).toBeCloseTo(defined(from[axis]), 9)
+			}
+		}
+	)
+
 	test("a chart area's picture fill comes back as a picture", async () => {
 		const png =
 			'image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
