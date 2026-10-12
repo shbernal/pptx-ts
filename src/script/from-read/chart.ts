@@ -21,7 +21,17 @@ import type { Chart, ChartAxis, ChartSeries } from '../../read/api/chart.js'
 import type { GraphicFrame } from '../../read/api/shapes.js'
 import type { NoteScope } from '../fidelity.js'
 import type { CallIr, IrValue } from '../ir.js'
-import { compact, frameOf, identityOptions, literalColor, nameOf, orUndefined, positionOptions } from './values.js'
+import {
+	compact,
+	frameOf,
+	identityOptions,
+	literalColor,
+	lockOption,
+	nameOf,
+	orUndefined,
+	positionOptions,
+} from './values.js'
+import { GRAPHIC_FRAME_LOCK_ATTRS } from '../../ooxml/lock-attrs.js'
 
 /**
  * Read chart-group token → `CHART_NAME`. The read model strips the `Chart` suffix from the
@@ -133,6 +143,7 @@ export function chartCall(frame: GraphicFrame, chart: Chart, notes: NoteScope): 
 		surface3D: sourceType === 'surface' ? false : undefined,
 		...positionOptions(box),
 		...identityOptions(frame),
+		objectLock: lockOption(frame, GRAPHIC_FRAME_LOCK_ATTRS),
 		...titleOptions(chart),
 		...legendOptions(chart),
 		...labelOptions(chart, type, notes),
