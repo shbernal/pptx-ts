@@ -51,7 +51,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   object; the output does not change.
 - **The shipped agent skill is now `pptx-ts-upstream`.** It was `ts-pptx-upstream`. An installed
   copy keeps the old name, and `npx skills update ts-pptx-upstream` no longer finds it: remove it
-  and run `npx skills add shbernal/pptx-ts --skill pptx-ts-upstream`.
+  and run `npx skills add shbernal/pptx-ts --skill pptx-ts-upstream`. The skill now marks a
+  workaround with `pptx-ts#<N>` and sweeps for it with `rg 'pptx-ts#'`, so a marker written as
+  `ts-pptx#<N>` no longer turns up: rename the existing ones when you switch skills.
 - **An embedded chart workbook names `pptx-ts` as its creator.** Its `docProps/core.xml` wrote
   `TsPptx` as `dc:creator` and `cp:lastModifiedBy`; it now writes the package name, as the deck's
   own `core.xml` does. Every chart's embedded workbook changes in those two elements and nothing

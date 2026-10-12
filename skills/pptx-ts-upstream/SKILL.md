@@ -272,7 +272,7 @@ which means re-reading the issue and re-deriving the reproduction someone alread
 Write the comment so that verifying the fix is running one line:
 
 ```ts
-// Workaround for ts-pptx#<N>: https://github.com/shbernal/pptx-ts/issues/<N>
+// Workaround for pptx-ts#<N>: https://github.com/shbernal/pptx-ts/issues/<N>
 //
 // <what the library does instead, as an observable: the XML it emits, the value the
 //  accessor returns, the option it ignores.>
@@ -281,8 +281,8 @@ Write the comment so that verifying the fix is running one line:
 // part containing the right element> holds, and write <the code this becomes> instead.
 ```
 
-Keep `ts-pptx#` in that literal spelling wherever you mark one. It is the token that
-makes `rg 'ts-pptx#'` list every stopgap in the project at once, and step 7 is exactly
+Keep `pptx-ts#` in that literal spelling wherever you mark one. It is the token that
+makes `rg 'pptx-ts#'` list every stopgap in the project at once, and step 7 is exactly
 the moment someone needs that list.
 
 ## 7. When the fix ships, delete the workaround
@@ -295,7 +295,7 @@ fix.
 ```bash
 npm view pptx-ts version                          # what is out
 gh issue list --repo shbernal/pptx-ts --state closed --limit 30
-rg 'ts-pptx#'                                     # every stopgap here
+rg 'pptx-ts#'                                     # every stopgap here
 ```
 
 **A closed issue is not a released fix.** A fix can sit merged and unreleased for weeks,
