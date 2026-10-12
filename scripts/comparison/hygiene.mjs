@@ -52,7 +52,7 @@ import zlib from 'node:zlib'
 import esbuild from 'esbuild'
 import { packPackage } from '../pack-utils.mjs'
 import { run } from '../script-utils.mjs'
-import { PROGRAMS, programArm, programFrame, programModule, programSource, resetProgramData } from './programs.mjs'
+import { PROGRAMS, programArm, programModule, programSource, resetProgramData } from './programs.mjs'
 import { unavailable } from './unavailable.mjs'
 
 /** Our package's name on npm, and the directory it installs into. */
@@ -324,7 +324,6 @@ export async function measureHygiene({ workDir, upstreamRoot, subjects, reuse = 
 
 	/** @type {Record<string, unknown>} */
 	const hygiene = {
-		frame: Object.fromEntries(Object.keys(subjects).map((subject) => [subject, programFrame(subject)])),
 		programs: PROGRAMS.map((program) => ({
 			id: program.id,
 			label: program.label,

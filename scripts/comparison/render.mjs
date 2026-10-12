@@ -47,6 +47,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { isMain, parseCli, ROOT, runCli } from '../script-utils.mjs'
+import { programFrame } from './programs.mjs'
 import { isUnavailable } from './unavailable.mjs'
 
 const SNAPSHOT = path.join(ROOT, 'scripts', 'comparison', 'snapshot.json')
@@ -1738,8 +1739,6 @@ function bundleCorpusSection(snapshot) {
 	/** @type {any[]} */
 	const programs = snapshot.hygiene?.programs ?? []
 	if (programs.length === 0) return []
-	/** @type {Record<string, string>} */
-	const frames = snapshot.hygiene?.frame ?? {}
 
 	const lines = [
 		'## The bundle corpus',
@@ -1751,16 +1750,15 @@ function bundleCorpusSection(snapshot) {
 				'shows both of them emitting, and each is run before it is bundled.'
 		),
 	]
-	if (frames[OURS] && frames[UPSTREAM])
-		lines.push(
-			...para(
-				'The frame is a consumer program rather than the probe harness, so it imports the ' +
-					'package root and keeps the exported bytes:'
-			),
-			...fence(frames[OURS]),
-			...para('and, for the other column:'),
-			...fence(frames[UPSTREAM])
-		)
+	lines.push(
+		...para(
+			'The frame is a consumer program rather than the probe harness, so it imports the ' +
+				'package root and keeps the exported bytes:'
+		),
+		...fence(programFrame(OURS)),
+		...para('and, for the other column:'),
+		...fence(programFrame(UPSTREAM))
+	)
 
 	for (const program of programs) {
 		const ours = program.source?.[OURS]

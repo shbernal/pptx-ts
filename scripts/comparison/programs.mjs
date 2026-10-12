@@ -436,8 +436,8 @@ export function programModule(program, subject) {
 /**
  * The frame with the program cut out of it, for the page to state once.
  *
- * Assembled from the same two strings {@link programModule} compiles, and carried into the
- * snapshot, so the frame a reader is shown cannot drift from the frame that was measured.
+ * Assembled from the same two strings {@link programModule} compiles. The page renders it from
+ * here rather than from the snapshot, so editing the frame does not need a re-measure.
  * @param {string} subject
  * @returns {string}
  */
