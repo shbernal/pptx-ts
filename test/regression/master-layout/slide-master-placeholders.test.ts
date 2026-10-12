@@ -159,6 +159,53 @@ defineRegressionSuite('Slide master placeholders [legacy bug-18]', [
 		},
 	},
 	{
+		// The copy wrote the definition's line as given: an empty `<a:ln>` for none, and a stated
+		// line with no `a:prstDash`. Its addShape replay writes `<a:ln><a:noFill/></a:ln>` and the
+		// solid dash, so the two differed in bytes (#194, #205).
+		name: 'an unfilled placeholder writes the same outline as addShape bound to it (#194, #205)',
+		fn: async () => {
+			const spPr = async (zip: JSZip) =>
+				defined(
+					(await readEntry(zip, 'ppt/slides/slide1.xml')).match(
+						/<p:ph[^>]*type="body"[\s\S]*?(<p:spPr>[\s\S]*?<\/p:spPr>)/
+					)?.[1],
+					'body placeholder spPr'
+				)
+			for (const line of [undefined, { color: 'FF0000', width: 2 }]) {
+				const MASTER = {
+					title: 'M194',
+					objects: [
+						{
+							placeholder: {
+								options: { name: 'body', type: 'body' as const, x: 1, y: 3, w: 5, h: 1, ...(line ? { line } : {}) },
+							},
+						},
+					],
+				}
+				const seeded = await build((p) => {
+					p.defineSlideMaster(MASTER)
+					p.addSlide({ masterTitle: 'M194' })
+				})
+				const ir = readModelToIr(await Presentation.load(await seeded.zip.generateAsync({ type: 'uint8array' })))
+				const call = defined(
+					ir.slides[0]?.calls.find((c) => c.method === 'addShape'),
+					'the replayed addShape call'
+				)
+				const bound = await build((p) => {
+					p.defineSlideMaster(MASTER)
+					const slide = p.addSlide({ masterTitle: 'M194' }) as unknown as Record<
+						string,
+						(...args: unknown[]) => unknown
+					>
+					defined(slide[call.method], call.method).apply(slide, call.args)
+				})
+				const a = await spPr(seeded.zip)
+				const b = await spPr(bound.zip)
+				assert(a === b, 'expected the seeded and bound outlines to match;\nseeded: ' + a + '\nbound:  ' + b)
+			}
+		},
+	},
+	{
 		name: 'master with single placeholder fully populated → exactly one <p:sp>, no empty stub',
 		fn: async () => {
 			const { zip } = await build((p) => {
