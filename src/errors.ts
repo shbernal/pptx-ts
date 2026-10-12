@@ -26,7 +26,7 @@
  * a `PackageReadError` on a file that opens cleanly in PowerPoint, a `MediaError` on an asset every
  * other tool loads, an `UnsupportedFeatureError` for something PowerPoint can plainly express.
  * `InvalidOptionError` is worth reporting only if the deck it refused is one PowerPoint can
- * express. See `skills/ts-pptx-upstream` for how to file one.
+ * express. See `skills/pptx-ts-upstream` for how to file one.
  *
  * @see `docs/errors-and-warnings.md` for the consumer-facing contract.
  * @see `codes.ts` for the code vocabulary, which is shared with the diagnostic (warning) surface.

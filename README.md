@@ -183,7 +183,7 @@ PptxGenJS](docs/comparison-syntax.md).
 Found a bug? [Open an issue](https://github.com/shbernal/pptx-ts/issues).
 Errors that are the library's fault print that link themselves.
 
-If an agent writes most of your code, install the `ts-pptx-upstream` skill that ships in the package.
+If an agent writes most of your code, install the `pptx-ts-upstream` skill that ships in the package.
 It files a library defect the agent hits as an issue with a small reproduction, instead of a silent workaround.
 [CONTRIBUTING.md](CONTRIBUTING.md#the-skill-that-files-the-issue-for-you) has the install command.
 

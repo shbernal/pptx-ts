@@ -1,5 +1,5 @@
 ---
-name: ts-pptx-upstream
+name: pptx-ts-upstream
 description: Report a pptx-ts bug, gap, or wrong output to its GitHub tracker from a project that depends on it. Use when pptx-ts throws an InternalError or an error whose message points at the issue tracker, when it cannot read a .pptx that opens cleanly in PowerPoint, when it writes a deck PowerPoint repairs or renders wrong, when a construct does not survive a round trip, when its types block correct code, or whenever you are about to write a workaround for pptx-ts behaving incorrectly. Filing the bug is the fix; the workaround is the stopgap.
 ---
 
@@ -17,7 +17,7 @@ builds its own deck.** Everything below is in service of that.
 
 ## 1. Decide whether it is actually ours
 
-Every failure pptx-ts raises is a `TsPptxError` in one of five classes, and the class
+Every failure pptx-ts raises is a `PptxTsError` in one of five classes, and the class
 already answers *whose problem is this*. Catch it and read `err.name` and `err.code`.
 `code` is a stable `area/condition` string and is API; the message is not, so never
 branch on its wording.
@@ -115,10 +115,10 @@ anonymously, never its name, its deck or client names, or a path from its tree.
 Instead, write a self-contained script that *constructs* its input and fails:
 
 ```ts
-import TsPptx from 'pptx-ts'
+import PptxTs from 'pptx-ts'
 
 // build the smallest deck that shows the problem
-const pptx = new TsPptx()
+const pptx = new PptxTs()
 const slide = pptx.addSlide()
 slide.addText('x', { x: 1, y: 1, w: 8, h: 1 /* the option that triggers it */ })
 
@@ -332,7 +332,7 @@ installed version. The copy in an agent directory is a *copy*, and a version bum
 not move it. Refresh it in the same commit as the bump, which is step 7's commit:
 
 ```bash
-npx skills update ts-pptx-upstream
+npx skills update pptx-ts-upstream
 ```
 
 If that reports nothing to do but the skill is not loading, the runtime link is missing

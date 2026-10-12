@@ -176,7 +176,7 @@ gh issue comment <N> --repo shbernal/pptx-ts --body "Released in X.Y.Z."
 
 Issues here close when the fix merges, and merged-but-unreleased can last weeks. A consumer who
 deletes a workaround because the issue is closed breaks against the version actually installed.
-The `ts-pptx-upstream` skill tells consumers to trust the published version over the issue state,
+The `pptx-ts-upstream` skill tells consumers to trust the published version over the issue state,
 and this comment is what makes the two agree. `CHANGELOG.md` cites the issue numbers, so the list is
 the entry you just wrote.
 

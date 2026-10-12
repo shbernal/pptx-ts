@@ -110,7 +110,7 @@ The project's bar is output that opens cleanly in Microsoft PowerPoint. It appli
 
 Open an issue from the [new-issue chooser](https://github.com/shbernal/pptx-ts/issues/new/choose). Issues are public, so describe your project's need without its data.
 
-The package ships the `ts-pptx-upstream` skill in its `skills` directory, and `npx skills add shbernal/pptx-ts` installs it. The skill walks through triage, reducing the failure to a script that builds its own deck, and filing the issue.
+The package ships the `pptx-ts-upstream` skill in its `skills` directory, and `npx skills add shbernal/pptx-ts` installs it. The skill walks through triage, reducing the failure to a script that builds its own deck, and filing the issue.
 
 ### The originating failure is kept on `cause`
 
