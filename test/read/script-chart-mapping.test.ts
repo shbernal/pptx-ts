@@ -608,3 +608,95 @@ describe('combo replay', () => {
 		expect(copy).toEqual(source)
 	})
 })
+
+describe('declared losses in what the chart mapper carries', () => {
+	// The arms of #184, #187, #189 and #191 that only a chart part PowerPoint or another tool wrote
+	// reaches: the write path states none of these.
+
+	/** The `cause` of every note the IR recorded under `construct`. */
+	const causes = (ir: DeckIr, construct: string) =>
+		ir.fidelity.filter((note) => note.construct === construct).map((note) => note.cause)
+
+	test('a title layout in factor mode, or with a size, is noted, and its edge-mode part still carries', async () => {
+		const { buf } = await authorRead((pres) => {
+			pres.addSlide().addChart(SERIES, {
+				type: ChartType.bar,
+				x: 1,
+				y: 1,
+				w: 6,
+				h: 4,
+				showTitle: true,
+				title: 'T',
+				titlePos: { x: 0.5, y: 0.3 },
+			})
+		})
+		const ir = await irWithChartXml(buf, (xml) =>
+			xml
+				.replace('<c:yMode val="edge"/>', '<c:yMode val="factor"/>')
+				.replace(/(<c:y val="[^"]*"\/>)/, '$1<c:w val="0.3"/>')
+		)
+		expect(causes(ir, 'chart.layout')).toEqual(['unwritable'])
+		const titlePos = optionsOf(chartCall(ir)).titlePos
+		expect(titlePos?.x).toBeCloseTo(0.5, 6)
+		expect(titlePos?.y).toBeUndefined()
+	})
+
+	test('a bar point formatted beyond a literal fill is noted', async () => {
+		const { buf } = await authorRead((pres) => {
+			pres
+				.addSlide()
+				.addChart([{ ...SERIES[0], pointStyles: [{ fill: '9B1B30' }, { fill: '250F6B' }] } as OptsChartData], {
+					type: ChartType.bar,
+					x: 1,
+					y: 1,
+					w: 6,
+					h: 4,
+				})
+		})
+		const ir = await irWithChartXml(buf, (xml) =>
+			xml.replace('<a:srgbClr val="250F6B"/>', '<a:schemeClr val="accent2"/>')
+		)
+		expect(causes(ir, 'chart.dataPoints')).toEqual(['unwritable'])
+		expect(seriesOf(chartCall(ir))[0]?.pointStyles).toEqual([{ fill: '9B1B30' }])
+	})
+
+	test('series cached in different number formats take the first one, noted', async () => {
+		const { buf } = await authorRead((pres) => {
+			pres.addSlide().addChart(
+				[
+					{ name: 'A', labels: ['x', 'y'], values: [1, 2] },
+					{ name: 'B', labels: ['x', 'y'], values: [3, 4] },
+				],
+				{ type: ChartType.bar, x: 1, y: 1, w: 6, h: 4, valLabelFormatCode: '0.0%' }
+			)
+		})
+		let seen = 0
+		const ir = await irWithChartXml(buf, (xml) =>
+			xml.replace(/<c:formatCode>0\.0%<\/c:formatCode>/g, (match) =>
+				seen++ === 0 ? match : '<c:formatCode>0.00</c:formatCode>'
+			)
+		)
+		expect(causes(ir, 'chart.labels')).toContain('unwritable')
+		expect(optionsOf(chartCall(ir)).valLabelFormatCode).toBe('0.0%')
+	})
+
+	test('a combo plot on secondary axes that are both hidden comes back on the secondary value axis, noted', async () => {
+		const { buf } = await authorRead((pres) => {
+			pres.addSlide().addChart(
+				[
+					{ type: ChartType.bar, data: SERIES, options: {} },
+					{
+						type: ChartType.line,
+						data: [{ name: 'S2', labels: ['A', 'B', 'C'], values: [4, 5, 6] }],
+						options: { secondaryValAxis: true },
+					},
+				],
+				{ x: 1, y: 1, w: 6, h: 4 }
+			)
+		})
+		const ir = await irWithChartXml(buf, (xml) => xml.replaceAll('<c:delete val="0"/>', '<c:delete val="1"/>'))
+		expect(causes(ir, 'chart.axis')).toContain('unwritable')
+		const subcharts = chartCall(ir).args[0] as unknown as ChartMulti[]
+		expect(subcharts[1]?.options).toMatchObject({ secondaryValAxis: true })
+	})
+})
