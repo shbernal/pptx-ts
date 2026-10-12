@@ -13,6 +13,9 @@
  * reason `<DeckPreview />` is: it carries `pptx-html` and the library, and only pages with a
  * live fence mount it.
  *
+ * `<HomeBanner />` fills the home page hero's `home-hero-info-before` slot with the README's
+ * banner. It is two small images, so it is registered synchronously like the layout it sits in.
+ *
  * `<MermaidDiagram />` is what a `mermaid` fence renders as. The component itself is small
  * and registered synchronously; mermaid is imported inside it on first render
  * (`www/diagrams/render.ts`), so it stays out of pages that draw no diagram. That holds only
@@ -22,14 +25,16 @@
  */
 import type { Theme } from 'vitepress'
 import DefaultTheme from 'vitepress/theme'
-import { defineAsyncComponent } from 'vue'
+import { defineAsyncComponent, h } from 'vue'
 import { MERMAID_COMPONENT } from '../diagrams/fence'
 import MermaidDiagram from '../diagrams/MermaidDiagram.vue'
+import HomeBanner from './HomeBanner.vue'
 import { LIVE_COMPONENT } from '../live/snippet'
 import './style.css'
 
 export default {
 	extends: DefaultTheme,
+	Layout: () => h(DefaultTheme.Layout, null, { 'home-hero-info-before': () => h(HomeBanner) }),
 	enhanceApp({ app }) {
 		app.component(
 			'DeckPreview',

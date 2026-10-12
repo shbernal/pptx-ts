@@ -348,9 +348,10 @@ Every read value that carries a colour carries a [`ColorRef`](api/read/interface
 
 [`customGeometry`](api/read/classes/Shape.md#customgeometry) reads `a:custGeom/a:pathLst`, and is `null` for a shape with preset geometry or none. Every shape class has it, as with `presetGeometry`: a picture clipped to a freeform reads its clip path, and a group reads `null`.
 
-- It returns one entry per `a:path`, each with `w`, `h`, `fill`, `stroke` and its [`GeometryCommand`](api/read/type-aliases/GeometryCommand.md) list in document order. An absent attribute reads its schema default: `w` and `h` of `0`, `fill` of `'norm'`, `stroke` of `true`.
-- Coordinates are path units from `0` to `w` and `0` to `h`, not EMU. Scale them against the path's `w` and `h` and the shape's box.
-- A coordinate that is not a number, such as a guide name, reads `0`.
+- Its `paths` holds one entry per `a:path`, each with `w`, `h`, `fill`, `stroke` and its [`GeometryCommand`](api/read/type-aliases/GeometryCommand.md) list in document order. An absent attribute reads its schema default: `w` and `h` of `0`, `fill` of `'norm'`, `stroke` of `true`.
+- Path coordinates are path units from `0` to `w` and `0` to `h`, not EMU. Scale them against the path's `w` and `h` and the shape's box.
+- A path coordinate that is not a number, such as a guide name, reads `0`.
+- `guides` lists the `a:gdLst` formulas as `{ name, formula }`, `adjustHandles` the `a:ahXY` and `a:ahPolar` handles, and `connectionSites` the `a:cxn` sites, each in document order and `[]` when absent. A handle or site position reads as an EMU number or the guide name it references. See [`CustomGeometry`](api/read/interfaces/CustomGeometry.md).
 - `arcTo` angles are degrees.
 - The command names match the write-side `GeometryPoint` list, one to one.
 - PowerPoint writes one `a:path` per shape, and a shape with a hole as two contours in that one path. A list with several `a:path` elements comes from other producers, such as SVG import.

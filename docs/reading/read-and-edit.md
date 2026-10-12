@@ -62,8 +62,8 @@ console.log(caption?.placeholder, insideGroup?.shapeType, body?.text)
 ```
 
 - The finders return `undefined` when nothing matches.
-- `placeholder()` returns an `AutoShape`, since only `p:sp` shapes can be placeholders.
-- `shape.placeholder` is `{ type, idx }`, or `null` when the shape is not a placeholder. A `p:ph` with no `idx` reads as `idx: '0'`.
+- `placeholder()` searches `p:sp` shapes only and returns an `AutoShape`. A filled picture, table or chart placeholder is a `p:pic` or `p:graphicFrame`, which it skips.
+- `shape.placeholder` is `{ type, idx }` on any shape class, or `null` when the shape is not a placeholder. A `p:ph` with no `idx` reads as `idx: '0'`.
 - To find a shape by name inside a group, walk `group.shapes`.
 - `isAutoShape`, `isPicture`, `isGraphicFrame`, `isGroupShape` and `isConnector` narrow a shape to its class. `shape.shapeType` names the class as a string.
 - Tables have their own editing members. See [Reading it back](../tables.md#reading-it-back).

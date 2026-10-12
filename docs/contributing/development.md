@@ -19,6 +19,10 @@ covers setting up the repository, the gate to run locally, and the git hooks.
 - `test/`: regression tests, schema fixtures and validator helpers.
 - `dist/`: the built package. Tests import from it, not from `src/`. Do not hand-edit it unless
   the task asks to refresh release artifacts.
+- `assets/readme/`: the README's banner, demo, gallery and loop diagram. Each image is generated
+  output, so regenerate it rather than editing it: `banner/generate.py`, `demo/build.py` (which
+  runs the program the demo shows), `gallery/build.sh` and `how-it-works/build_loop_svg.py`. Each
+  script's header says how to run it.
 - `docs/`: documentation content. See [Site changes](#site-changes).
 - `www/`: the site's theme and Vue components, the demos page, its showcase decks
   (`www/demos/decks`) and live examples (`www/live`).
@@ -434,7 +438,7 @@ covers what counts as render evidence.
 ### `docs:check` fails
 
 `docs:check` runs `docs:api` first, which regenerates `docs/reference/api/` with TypeDoc, then
-`scripts/docs-check.mjs`.
+`docs:index`, which regenerates `docs/doc-index.md`, then `scripts/docs-check.mjs`.
 
 The first step fails on a TypeDoc **warning**, not just an error: `treatWarningsAsErrors` is set
 in `typedoc.docs.json`. A warning there means the published reference is wrong in a way nobody

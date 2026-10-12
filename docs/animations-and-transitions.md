@@ -131,7 +131,7 @@ slide.addAnimation({ preset: "fadeOut", objectName: "title" })                  
 - Eight presets. There are no motion paths, custom effects or per-effect settings beyond `durationMs`.
 - Transitions newer than the list above, such as Morph, can be read and are preserved, but cannot be authored.
 - `variant` values are written as given; only the keys are checked.
-- In a deck opened for reading, animations are kept as they are: you can check for them, remove them, or carry a shape's along on import, but not list or edit individual effects.
+- In a deck opened for reading, animations are kept as they are: you can check for them, list their effects, remove them, or carry a shape's along on import, but not edit individual effects.
 - The reading side's transition setter can keep or remove a sound, not add a new one. Add sounds when authoring the deck.
 
 ## Reading it back
@@ -144,7 +144,7 @@ A slide opened through `pptx-ts/read` exposes:
 - `slide.hasAnimations`: whether the slide has build animations.
 - `slide.animations`: each build effect in the slide's timing, in document order: the sequence it plays
   in (`main`, `interactive` or `other`), its `presetClass`, `presetId` and `presetSubtype`, its `trigger`,
-  `durationMs`, the `delayMs` of its step, and the `shapeId` it targets. `readModelToIr` replays an effect
+  `durationMs`, the `delayMs` of its step, the `shapeId` it targets, and `textRange`, whether it targets a range of the shape's text. `readModelToIr` replays an effect
   in the main sequence that matches one of the eight presets as `addAnimation`.
 - `slide.flattenAnimations()`: removes them.
 

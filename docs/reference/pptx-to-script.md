@@ -170,7 +170,7 @@ The Output column says where the note fires. A construct that fires in both outp
 | `chart.workbook` | Both | unsupported | The chart is rebuilt from its cached values. The plotted numbers match, and the workbook's formulas, extra columns and formatting are gone | 5/60 |
 | `chart.schemeToken` | Both | unwritable | A chart line or text colour outside the ten mapped scheme tokens, or one with a theme transform such as `a:lumMod`, takes the default colour | 4/60 |
 | `diagram.all` | Both | unwritable | No write API builds SmartArt. The template-anchored output copies the slide, and the standalone output drops the diagram | 3/60 |
-| `slide.animation` | Both | unwritable | A build effect `addAnimation` cannot write is dropped: one in an interactive sequence, such as PowerPoint's click-to-play media trigger, a preset other than the eight `addAnimation` writes, or one whose target has no name unique on its slide. An after-previous step that starts at a delay of its own plays when the step before it ends | 3/60 |
+| `slide.animation` | Both | unwritable | A build effect `addAnimation` cannot write is dropped: one in an interactive sequence, such as PowerPoint's click-to-play media trigger, a preset other than the eight `addAnimation` writes, or one whose target has no name unique on its slide. An effect that builds part of a shape's text builds the whole shape. An after-previous step that starts at a delay of its own plays when the step before it ends | 3/60 |
 | `text.endParagraph.lang` | Both | unwritable | Paragraphs that end in different languages (`a:endParaRPr/@lang`) all end in `en-US`. Their runs keep their languages | 3/60 |
 | `text.hyperlink.underline` | Both | unwritable | A link that states no underline comes back stating `u="sng"`. It looks the same | 3/60 |
 | `chart.dataPoints` | Both | unwritable | A data point or pie slice in a theme colour, a pattern or an outline of its own comes back in the series' colour or its own literal fill. A radar's or bubble's own points are dropped | 2/60 |
@@ -267,7 +267,6 @@ A crop with a negative inset, or with opposite insets that add up to 100% or mor
 - The theme's format scheme (`a:fmtScheme`), and with it the width and dash of an outline taken from the theme
 - Master text styles (`p:txStyles`)
 - OMML equations and text fields
-- Freeform guides, adjust handles and connection sites
 - Graphic frames other than tables, charts and SmartArt
 
 ## Verifying a conversion

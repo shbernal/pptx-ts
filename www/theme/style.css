@@ -35,6 +35,29 @@
 	--vp-home-hero-name-background: linear-gradient(120deg, #e9855c, #f3b48f);
 }
 
+/* --- home banner ---------------------------------------------------------------- */
+
+/* The banner carries the name and the one-line pitch, so it stands in for the hero's `name`.
+   VitePress toggles `.dark` on <html>, which is what picks the image. */
+.home-banner {
+	margin-bottom: 24px;
+}
+
+.home-banner img {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+
+.home-banner .home-banner__dark,
+.dark .home-banner .home-banner__light {
+	display: none;
+}
+
+.dark .home-banner .home-banner__dark {
+	display: block;
+}
+
 /* --- mermaid diagrams ------------------------------------------------------------ */
 
 .mermaid-diagram {

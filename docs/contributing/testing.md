@@ -33,6 +33,7 @@ Each cell comes from `package.json`, `lefthook.yml` or a workflow under `.github
 | `test-imports:check` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
 | `path-refs:check` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
 | `docs:api` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
+| `docs:index` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
 | `docs:check` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
 | `comparison:check` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
 | `census:check` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
@@ -82,9 +83,10 @@ pnpm run check:package  # what CI's package job runs
 can be reproduced by its own command.
 
 - `check:core` is the one list of cheap checks: the four typechecks, `raw-xml:check`,
-  `ooxml-literals:check`, `test-imports:check`, `path-refs:check`, `docs:api`, `docs:check`,
-  `comparison:check` and `census:check`.
-  `docs:api` regenerates the API reference, so `docs:check` validates current pages.
+  `ooxml-literals:check`, `test-imports:check`, `path-refs:check`, `docs:api`, `docs:index`,
+  `docs:check`, `comparison:check` and `census:check`.
+  `docs:api` regenerates the API reference and `docs:index` the doc index, so `docs:check`
+  validates current pages.
 - `verify` is `ensure-dist`, `check:core` and `test`. `check:static` is `lint`, `lint:chars`,
   `format:check` and `check:core`.
 - Add a cheap check to `check:core`, not to an aggregate. `test/scripts/gate-parsers.test.ts`

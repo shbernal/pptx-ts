@@ -379,7 +379,7 @@ export interface ConnectorProps {
 	color?: HexColor
 	/**
 	 * Line width (pt)
-	 * @default 1, or inherited when `type` is `'inherit'`
+	 * @default 1
 	 */
 	width?: number
 	/** Dash style */

@@ -20,7 +20,7 @@ know first, what the library does, where it runs and where it came from, is on t
 - Shipping more than one build. The published ESM artifact is what Node, bundlers, browsers and
   `require()` callers all load; see
   [Where it runs](../getting-started/runtime.md).
-- Reproducing the upstream release matrix: its historical artifact names, its `window.TsPptx`
+- Reproducing the upstream release matrix: its historical artifact names, its `window.PptxGenJS`
   global, or compatibility with its build system. A browser reaches this package as a module,
   from a bundler or an ESM CDN.
 - Treating generated `dist/` outputs as hand-edited source.

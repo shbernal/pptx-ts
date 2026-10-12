@@ -149,6 +149,9 @@ The stop at position 0 is the colour at the centre, and later stops spread outwa
 Leaving `fill` off a shape makes it transparent, so a shape that should take its colour from its style or
 placeholder needs `type: 'inherit'` spelled out.
 
+A `line` takes the same `type: 'inherit'`, and it leaves the whole outline to the style or placeholder:
+paint, width and dash. A width, dash, cap or arrowhead you state alongside it is still written.
+
 A chart area or plot area with no fill is transparent too, and there a fill counts only when it has a
 colour or a `type`. `{ gradient: { ... } }` on its own leaves the chart area transparent; write
 `{ type: 'gradient', gradient: { ... } }`.
@@ -173,7 +176,8 @@ fill: { type: "image", image: { path: "texture.png", crop: { l: 10, r: 10 } } }
 ```
 
 The picture is stretched to the filled area. `crop` trims a percentage from each edge of the source
-first; `l` plus `r`, and `t` plus `b`, each stay under 100. `transparency` fades the picture. The
+first, and a negative inset pads that edge with empty space instead; `l` plus `r`, and `t` plus `b`,
+each stay under 100. `transparency` fades the picture. The
 source has to be a raster image: an SVG leaves the area unfilled. To put a picture on a slide as its
 own object, clipped to a shape, see [Images in shapes](image-in-shape.md).
 

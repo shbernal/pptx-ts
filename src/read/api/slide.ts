@@ -582,8 +582,9 @@ export class Slide implements ShapeHost {
 	/**
 	 * The first placeholder of the given type (`p:ph/@type`, e.g. `title`,
 	 * `ctrTitle`, `subTitle`, `body`), optionally narrowed by `idx`. Returns
-	 * `undefined` when none match. Only `p:sp` shapes can be placeholders, so the
-	 * result is an {@link AutoShape}.
+	 * `undefined` when none match. Only {@link AutoShape}s are searched: a filled
+	 * picture, table or chart placeholder is not found here, though its own
+	 * `placeholder` getter still reads it.
 	 */
 	placeholder(type: string, idx?: string): AutoShape | undefined {
 		return this.shapes.find((shape): shape is AutoShape => {

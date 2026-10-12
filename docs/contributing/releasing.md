@@ -31,7 +31,7 @@ flowchart TD
   s2 --> s3["3. Write and stage the CHANGELOG entry"]
   s3 --> s4["4. Local gate<br/>check:static, verify, npm view for a 404 on both names"]
   s4 --> s5["5. pnpm version<br/>bumps, syncs the constant, commits, tags"]
-  s5 --> s6["6. Push master, then the vX.Y.Z tag"]
+  s5 --> s6["6. Push main, then the vX.Y.Z tag"]
   s6 --> s7["7. Publish a GitHub Release from the tag"]
   s7 --> s8["8. Workflow guards<br/>ci.yml gate, tag matches version, a name still lacks it"]
   s8 --> s9["9. Publish pptx-ts"]
@@ -136,7 +136,7 @@ gh workflow run publish.yml --repo shbernal/pptx-ts --ref vX.Y.Z
 
 The guard passes because one name still lacks the version, the `pptx-ts` step skips, and the alias
 step publishes. The alias goes last on purpose, so a failure in it costs at most a re-dispatch and
-never the release that already went out. The selected ref must be the tag, not `master`.
+never the release that already went out. The selected ref must be the tag, not `main`.
 
 ## The `next` channel
 
