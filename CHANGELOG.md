@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Chart text formatting reads as `ChartTextStyle`.** `Chart.titleStyle`, `ChartLegend.textStyle`,
+  `ChartDataLabels.textStyle`, `ChartAxis.labelStyle` and `ChartAxis.titleStyle` read size, bold,
+  italic, underline, colour, typeface, rotation and alignment, and `Chart.language` the language the
+  text is tagged with. `readModelToIr` maps each onto its `title*`, `legend*`, `dataLabel*`,
+  `*AxisLabel*`, `*AxisTitle*` and `lang` options, a series' own label font onto `seriesOptions`
+  ([#133](https://github.com/shbernal/pptx-ts/issues/133)).
 - **`ChartAxis` reads where it crosses, its display units, label skip, time units and strokes.**
   `crossesAt`, `crosses`, `crossBetween`, `displayUnits`, `labelSkip`, `noMultiLevelLabels`,
   `baseTimeUnit` / `majorTimeUnit` / `minorTimeUnit`, `line` and `majorGridlinesLine`. A `ChartLine`
