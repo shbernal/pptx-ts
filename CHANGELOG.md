@@ -585,7 +585,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   suppressed for placeholder-targeting text, but it tested the bag it was handed, and `cleanOpts`
   runs once for the shape and again for each of its runs, where a run carries only what the caller
   wrote on that run. So the shape was spared and the run inside it was not. The question asked is
-  now whether the _text_ targets a placeholder, which is the object's answer as much as the run's. A
+  now whether the *text* targets a placeholder, which is the object's answer as much as the run's. A
   colour the caller does state still arrives, through `RUN_INHERITABLE_OPTIONS`, and nothing else
   about the default changes.
 
@@ -593,7 +593,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   entry got wrong. `addText([{ text }], { placeholder })`, the array and multi-paragraph form, has
   been baking black for as long as the guard has read one bag. `addText('x', { placeholder })`, the
   string form, was spared by accident until 4.0.0: it handed ONE options object to both the shape
-  and its lone run, so the run's bag _was_ the shape's and carried the key. Removing that aliasing,
+  and its lone run, so the run's bag *was* the shape's and carried the key. Removing that aliasing,
   so a run no longer inherits the shape's `shadow`, took the key this default was reading and the
   string form started baking black too. So 4.0.0 widened an older defect rather than introducing
   one, and this release fixes both forms.
@@ -743,7 +743,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Nothing changes for `import TsPptx from 'pptx-ts'`: it is still composed with every family
   and still authors everything. What changed underneath is that the slide's `add*` methods, the
   renderer that emits each shape, the parts each family adds to the package, and the child
-  descriptors a slide master accepts all now travel _to_ the write path from that family list
+  descriptors a slide master accepts all now travel *to* the write path from that family list
   instead of being named by import along it.
 
   The types follow the composition. `addSlide()` answers a slide carrying exactly the methods
@@ -752,7 +752,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`family/child-not-composed`, for a slide-master or group child no composed family can
   author.** The composition made a new condition reachable: a child descriptor is rejected by
-  the _types_ only when no family anywhere claims its key, so `{ chart: … }` inside a slide
+  the *types* only when no family anywhere claims its key, so `{ chart: … }` inside a slide
   master's `objects` type-checks on a presentation composed without the chart family -- and
   `createSlideMaster` used to skip it without a word, so it simply vanished from the deck.
   Both walks now warn, and the message names the family to compose, the way
@@ -792,7 +792,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   -- `application`, `appVersion`, `company` and `titlesOfParts` -- and `readExtendedProperties`
   plus the `ExtendedProperties` type are published alongside the core/custom pair.
 
-  The part's _statistics_ (`Slides`, `Words`, `Paragraphs`, `HiddenSlides`, …) are
+  The part's *statistics* (`Slides`, `Words`, `Paragraphs`, `HiddenSlides`, …) are
   deliberately not reported: they are numbers the producing application computed for the file
   it wrote, and this read model can hand back an edited deck, so reporting them would state a
   fact about a document that no longer exists. `titlesOfParts` is the flat `vt:lpstr` vector
@@ -860,7 +860,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`'no-own-transform'`, an ordinary placeholder inheriting its box from the layout), an
   enclosing `p:grpSp` states no complete `a:off`/`a:ext` **and** `a:chOff`/`a:chExt` pair
   (`'group-transform-missing'`), or an enclosing group's `a:chExt` is zero on an axis
-  (`'group-transform-degenerate'`) — and only a caller that wants to _report_ the
+  (`'group-transform-degenerate'`) — and only a caller that wants to *report* the
   unresolvable shape needs them apart: the first is normal, the other two say the deck is
   malformed. The new getter is `null` when the frame resolved; both project from a single
   ancestry walk, so they cannot disagree. A missing group transform outranks a degenerate
@@ -878,7 +878,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   source deck's embedded fonts or put a differently-sized source on this canvas. Both are
   now per request, spelled as they are on `importSlide`.
 
-  Both are really whole-_deck_ decisions wearing a per-page spelling, so the batch
+  Both are really whole-*deck* decisions wearing a per-page spelling, so the batch
   reconciles them before it moves anything:
 
   - `embedFonts` carries the source deck's **whole** face list, once, when any of that
@@ -908,16 +908,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   ```js
   slide.addShape(ShapeType.triangle, {
-  	x: 1,
-  	y: 1,
-  	w: 4,
-  	h: 3,
-  	fill: { type: 'image', image: { path: 'portrait.png', crop: { t: 25, b: 25 } } },
+    x: 1, y: 1, w: 4, h: 3,
+    fill: { type: 'image', image: { path: 'portrait.png', crop: { t: 25, b: 25 } } },
   })
   ```
 
   The shape geometry stays the mask; `crop` only decides which pixels arrive inside it.
-  Note that the remaining region is still _stretched_ to the fill's box, so a cover-style
+  Note that the remaining region is still *stretched* to the fill's box, so a cover-style
   placement means computing insets that match the box's aspect ratio yourself. Where the
   output does not have to be a filled shape, `addImage({ shape, sizing: { type: 'cover' } })`
   is the better answer to that: it reads the source's own dimensions and derives the
@@ -1024,17 +1021,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Migration:** read the fields below. `colorRef.resolved?.effectiveHex` is `undefined` rather
     than `null` when nothing resolves, so add `?? null` where a comparison expects `null`.
 
-    | Type                                                           | Before                                   | After                                                                              |
-    | -------------------------------------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------- |
-    | `GradientStop`                                                 | `color`, `schemeColor`, `presetColor`    | `colorRef.srgb`, `colorRef.scheme`, `colorRef.preset`                              |
-    | `GradientStop`                                                 | `resolvedColor`, `effectiveHex`, `alpha` | `colorRef.resolved`, `colorRef.resolved?.effectiveHex`, `colorRef.resolved?.alpha` |
-    | `OuterShadow`, `InnerShadow`, `Glow`                           | `color`, `colorToken`, `alpha`           | `colorRef.resolved?.effectiveHex`, `colorRef.scheme`, `colorRef.resolved?.alpha`   |
-    | `BulletStyle`                                                  | `color`, `schemeColor`, `resolvedColor`  | `colorRef.srgb`, `colorRef.scheme`, `colorRef.resolved`                            |
-    | `CellBorder`                                                   | `color`, `schemeColor`, `resolvedColor`  | `colorRef.resolved?.effectiveHex`, `colorRef.scheme`, `colorRef.resolved`          |
-    | `PatternFill`                                                  | `foreground`, `background`               | `foreground.resolved`, `background.resolved`; each colour's token is its `scheme`  |
-    | `Recolor` stops, `from`, `to`                                  | `color`, `schemeColor`, `presetColor`    | `srgb`, `scheme`, `preset`, and the new `resolved`                                 |
-    | `SlideBackground` and `BackgroundFill`, `solid` and `themeRef` | `color`                                  | `colorRef.resolved`                                                                |
-    | `ChartFill`, `ChartLine`                                       | `color`, `schemeColor`                   | `colorRef.srgb`, `colorRef.scheme`; `resolved` is always `null`                    |
+    | Type | Before | After |
+    | --- | --- | --- |
+    | `GradientStop` | `color`, `schemeColor`, `presetColor` | `colorRef.srgb`, `colorRef.scheme`, `colorRef.preset` |
+    | `GradientStop` | `resolvedColor`, `effectiveHex`, `alpha` | `colorRef.resolved`, `colorRef.resolved?.effectiveHex`, `colorRef.resolved?.alpha` |
+    | `OuterShadow`, `InnerShadow`, `Glow` | `color`, `colorToken`, `alpha` | `colorRef.resolved?.effectiveHex`, `colorRef.scheme`, `colorRef.resolved?.alpha` |
+    | `BulletStyle` | `color`, `schemeColor`, `resolvedColor` | `colorRef.srgb`, `colorRef.scheme`, `colorRef.resolved` |
+    | `CellBorder` | `color`, `schemeColor`, `resolvedColor` | `colorRef.resolved?.effectiveHex`, `colorRef.scheme`, `colorRef.resolved` |
+    | `PatternFill` | `foreground`, `background` | `foreground.resolved`, `background.resolved`; each colour's token is its `scheme` |
+    | `Recolor` stops, `from`, `to` | `color`, `schemeColor`, `presetColor` | `srgb`, `scheme`, `preset`, and the new `resolved` |
+    | `SlideBackground` and `BackgroundFill`, `solid` and `themeRef` | `color` | `colorRef.resolved` |
+    | `ChartFill`, `ChartLine` | `color`, `schemeColor` | `colorRef.srgb`, `colorRef.scheme`; `resolved` is always `null` |
 
 - **Breaking: the read model's text, table and diagram proxies take the context they are read
   against, and always resolve against a theme.**
@@ -1250,13 +1247,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   still gets `DEF_FONT_COLOR`. No colour that names something changed: the byte-identity gate
   is clean across all 1312 parts.
 
-  The one place `''` still paints is a slot that _requires_ a colour and has no absent state
+  The one place `''` still paints is a slot that *requires* a colour and has no absent state
   to fall back to -- a gradient stop, a duotone half, a `buClr`. Those keep the `000000`
   fallback, but report it under `color/empty-string` rather than under `color/invalid-value`,
   whose message complained that `""` is not a scheme colour and named neither the option nor
   the real problem.
 
-  **Migration:** a deck passing `''` to mean _leave this unpainted_ has to omit the option or
+  **Migration:** a deck passing `''` to mean *leave this unpainted* has to omit the option or
   spell the state it wants (`fill: { type: 'inherit' }`, `fill: { type: 'none' }`). Two inputs
   change what they emit: `fill: { color: '' }` no longer paints black, and a chart's
   `dataLabelColor: ''` / `catAxisLabelColor: ''` / `titleColor: ''` now paint the same default
@@ -1273,7 +1270,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   A master `margin` is now the deck-wide **default** a per-call `slideMargin` overrides, and a
   deck that states neither is unchanged. **Migration:** a deck relying on a master margin to
   hold the line against a per-table override has to stop passing the override. A master margin
-  as a _floor_ rather than a ceiling is a third reading, and if that is what is wanted it
+  as a *floor* rather than a ceiling is a third reading, and if that is what is wanted it
   belongs in a stated option rather than in a precedence accident.
 
 - **Seven chart options are checked against the schema's own value lists.** `barDir`,
@@ -1337,7 +1334,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   byte-identity showcase decks are unchanged, so no deck in the corpus was relying on the old
   behaviour.
 
-- **`ShapeLineProps` is deliberately not a `StrokeProps`.** A shape stroke is a _paint_, so
+- **`ShapeLineProps` is deliberately not a `StrokeProps`.** A shape stroke is a *paint*, so
   its `type` names a fill kind (`gradient`, `pattern`, `inherit`, …) rather than the
   three-way dash switch a border's does. The four keys the two share -- `width`, `dashType`,
   `cap`, `transparency` -- already agreed and are unchanged. This is written down because
@@ -1353,7 +1350,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   Setting it on one of those now raises `chart/option-not-supported` and the type says which
   families read it. Nothing about the emitted chart changes. A pie has no referent for a
-  _series_ override even in principle — it colours points — while the others are a gap whose
+  *series* override even in principle — it colours points — while the others are a gap whose
   fix needs a question settled first: a scatter's `data[0]` is the shared X row, so it is not
   obvious which series `seriesOptions[0]` names.
 
@@ -1375,21 +1372,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **An object's own coordinates now beat the frame of the placeholder it names.** BREAKING
   for a deck that states both. `addText('own coords', { placeholder: 'body', x: 5, y: 3, w: 2,
   h: 1 })` used to emit the layout placeholder's box and discard all four stated values, with
-  no diagnostic — while the same object with a _partial_ frame and no placeholder warns
+  no diagnostic — while the same object with a *partial* frame and no placeholder warns
   loudly. Three states (inherit the box, override it, override part of it) had one spelling
   between them, and the decision is the one the rest of the library makes everywhere: an
   explicit option beats an inherited one, and a placeholder's frame is an inherited one.
 
   Each axis resolves independently, so `{ placeholder: 'body', x: 5, w: 2 }` takes `x` and `w`
   from the object and `y` and `h` from the placeholder. A stated `0` counts as stated. The
-  resolution also moved _before_ the negative-extent normalization: the placeholder's extents
+  resolution also moved *before* the negative-extent normalization: the placeholder's extents
   used to skip it while the flip flags were derived from the object's own signs, so a negative
   extent on either side composed wrong.
 
   Every other option a placeholder states is still imposed on the object, unchanged.
 
 - **`SectionProps.order` counts from 1, as it has always documented.** BREAKING for a deck
-  passing `order`. It was spliced in raw, so `order: 1` inserted the section _second_ and
+  passing `order`. It was spliced in raw, so `order: 1` inserted the section *second* and
   `order: 0` — falsy — appended it with nothing said. `order: 1` is now the first position.
   An order past the end appends. Anything that is not a whole number of at least 1 warns with
   the new `section/invalid-order` code and appends, rather than splicing from somewhere
@@ -1400,7 +1397,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **A hole in a table-level `border` tuple is left alone, exactly as it is on a cell.**
   `[rule, null, rule, null]` meant two different things depending on where it was written: on a
-  cell a `null` side is _omitted_, so the edge keeps inheriting from the built-in table style,
+  cell a `null` side is *omitted*, so the edge keeps inheriting from the built-in table style,
   while at table level the definer filled the hole with an explicit `{ type: 'none' }` — which
   is direct formatting and erases the style's rule. And because the same array object reached
   every cell by reference, the filling propagated into cells that had already captured it. Both
@@ -1412,11 +1409,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`Picture.imagePartName`, `.svgPartName` and `.mediaPartName` return `null` where they used
   to throw.** `Relationships.resolveTarget` throws on a dangling id and on an external target,
   which is right for an accessor asking a question a malformed package cannot answer — and
-  wrong for one that already reports "absent" as `null`. The _same_ `a:blip/@r:embed` reached
+  wrong for one that already reports "absent" as `null`. The *same* `a:blip/@r:embed` reached
   through `AutoShape.pictureFill`, `TableCell.pictureFill` or `Slide.background` degraded to
   `null` and through `Picture.imagePartName` threw, so one broken embed on an imported deck
   took out a whole `slide.shapes` walk; `mediaPartName`, the "just give me the bytes"
-  accessor, inherited the throw from both halves. A `p:pic` carrying a _linked_ image — which
+  accessor, inherited the throw from both halves. A `p:pic` carrying a *linked* image — which
   `mediaKind`'s own documentation names as its `'none'` case — threw rather than reporting it.
 
   **Migration:** a caller that was catching `relationship/not-found` or
@@ -1425,7 +1422,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Enumerated attributes are checked against their `ST_` union on every write path, not on
   four of them.** `check-enum.ts` is the declared policy for this and had four call sites
-  against roughly thirty hand-rolled ones, which is how the _same type_ reaching the _same_
+  against roughly thirty hand-rolled ones, which is how the *same type* reaching the *same*
   attribute got two answers: `addTable(..., { border: { dashType: 'bogusDash' } })` warned
   and fell back to solid, while `addShape('rect', { line: { dashType: 'bogusDash' } })`
   wrote `<a:prstDash val="bogusDash"/>` into the part. Nine dash sites now share one
@@ -1514,7 +1511,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `undefined` for it.
 
 - **An out-of-range percentage has one answer, and three options stop having their own.**
-  `bullet.size`, `fit.fontScale` and `fit.lnSpcReduction` used to _reject_ a value outside
+  `bullet.size`, `fit.fontScale` and `fit.lnSpcReduction` used to *reject* a value outside
   their range: warn, and emit no attribute at all. That is the combination
   `docs/contributing/development.md` ("Warn or throw?") exists to rule out, because the request is
   discarded and reported as a warning, and the caller reads the warning while getting a
@@ -1532,14 +1529,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   **Migration:** if you were relying on an out-of-range `bullet.size` or `fit.*` being
   dropped, omit the option instead — that is still how you leave the value inherited. A
   `NaN` reaching any of the three is now an `InvalidOptionError` rather than a warning; so
-  is a numeric _string_ (`bullet.size: '80'`), which the coercing `Number()` in front of
+  is a numeric *string* (`bullet.size: '80'`), which the coercing `Number()` in front of
   that option used to accept. The rule is written down in `docs/contributing/development.md` under
   "The rule applied: an out-of-range number".
 
 - **`import/slide-size-unknown` now means what its name says, at every import entry point.**
   Five methods enforce equal slide sizes — `importSlide`, `importSlides`,
   `importSlideMasters`, `appendSlides` and `importShape`/`importShapes` — and they carried
-  five copies of the same precondition that disagreed about one thing: what an _unknown_
+  five copies of the same precondition that disagreed about one thing: what an *unknown*
   size is. `importSlide` reported a deck with no `p:sldSz` as `import/slide-size-unknown`,
   but only when a rescale had been requested; the other four folded it into
   `import/slide-size-mismatch` and printed the word `unknown` inside the message. So a
@@ -1550,7 +1547,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The two conditions are separate everywhere now. `import/slide-size-unknown` is raised
   whenever a deck does not declare a size, and `import/slide-size-mismatch` only when both
   are known and differ. The split is worth having because only the second one is
-  _answerable_: a mismatch is what `{ rescale }` and `{ requireEqualSize: false }` exist
+  *answerable*: a mismatch is what `{ rescale }` and `{ requireEqualSize: false }` exist
   for, while a size that is not there cannot be compared or rescaled onto no matter what
   the caller passes.
 
@@ -1575,14 +1572,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   throws when it is run. Tiling, the destination `a:fillRect` inset, a non-zero `@dpi` and
   `rotWithShape="0"` are unchanged: still uncarried, still noted.
 
-  No published census figure moves — no corpus deck crops a _fill_, as opposed to a picture
+  No published census figure moves — no corpus deck crops a *fill*, as opposed to a picture
   — so this shows up as a note that no longer fires where a deck of your own uses one.
 
 - **Default `objectName` indices are 1-based for every kind, and `addChart` now takes its
   index from the shared counter.** Six definers numbered their default Selection Pane name
   from 0 (`Shape 0`, `Text 0`, `Image 0`, `Connector 0`, `Media 0`, `Table 0`) and four from
   1 (`Group 1`, `Object 1`, `3D Model 1`, and the zoom tiles), while `addChart` did neither:
-  it derived `Chart 0` by counting the chart objects _currently_ on the slide, which is the
+  it derived `Chart 0` by counting the chart objects *currently* on the slide, which is the
   numbering the per-slide counter exists to replace — group children are spliced out of that
   list, so a count taken from it can hand a later object a name already in use.
 
@@ -1612,7 +1609,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   They now live on `…Internal` counterparts in `src/types/internal.ts`, which
   `src/types/index.ts` deliberately does not barrel — the pattern `ShadowPropsInternal`
   already set. Because every added member is optional, a public value is still assignable to
-  its internal counterpart, so the _carriers_ stay public: `hyperlink?: HyperlinkProps` on a
+  its internal counterpart, so the *carriers* stay public: `hyperlink?: HyperlinkProps` on a
   shape, a run and a table cell is unchanged, and only the emitters that read or stamp the id
   name the internal type.
 
@@ -1664,19 +1661,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and emit exactly what they did; they carry `@deprecated` so an editor points at the
   replacement.
 
-  | Deprecated                                                                     | Use                                                    |
-  | ------------------------------------------------------------------------------ | ------------------------------------------------------ |
-  | `OptsChartGridLine.size`, `ChartErrorBarOptions.size`                          | `width`                                                |
-  | `OptsChartGridLine.style: 'solid' \| 'dash' \| 'dot'`                          | `dashType` (same values, plus the other eight presets) |
-  | `OptsChartGridLine.style: 'none'`                                              | `type: 'none'`                                         |
-  | `catAxisLineColor` / `valAxisLineColor` / `serAxisLineColor`                   | `catAxisLine.color`, …                                 |
-  | `catAxisLineSize` / `valAxisLineSize` / `serAxisLineSize`                      | `catAxisLine.width`, …                                 |
-  | `catAxisLineStyle` / `valAxisLineStyle` / `serAxisLineStyle`                   | `catAxisLine.dashType`, …                              |
-  | `catAxisLineShow: false` / `valAxisLineShow: false` / `serAxisLineShow: false` | `catAxisLine.type: 'none'`, …                          |
+  | Deprecated | Use |
+  |---|---|
+  | `OptsChartGridLine.size`, `ChartErrorBarOptions.size` | `width` |
+  | `OptsChartGridLine.style: 'solid' \| 'dash' \| 'dot'` | `dashType` (same values, plus the other eight presets) |
+  | `OptsChartGridLine.style: 'none'` | `type: 'none'` |
+  | `catAxisLineColor` / `valAxisLineColor` / `serAxisLineColor` | `catAxisLine.color`, … |
+  | `catAxisLineSize` / `valAxisLineSize` / `serAxisLineSize` | `catAxisLine.width`, … |
+  | `catAxisLineStyle` / `valAxisLineStyle` / `serAxisLineStyle` | `catAxisLine.dashType`, … |
+  | `catAxisLineShow: false` / `valAxisLineShow: false` / `serAxisLineShow: false` | `catAxisLine.type: 'none'`, … |
 
   **Precedence, where a caller sets both:** the new key wins, and an explicit `type` wins
   over one inferred from `style: 'none'` or `*AxisLineShow: false`. The one place the two
-  halves fold _independently_ is a hidden axis line: `*AxisLineShow: false` with a
+  halves fold *independently* is a hidden axis line: `*AxisLineShow: false` with a
   `*AxisLineStyle` still writes that dash, because the axis' `<c:spPr>` has always carried
   an `<a:prstDash>` alongside its `<a:noFill/>` and swallowing it would move bytes.
 
@@ -1706,7 +1703,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   existed, so a run reported `preserve:` for all of them. What it still carried was two
   liabilities: inline copies of four docs pages that had long since diverged from the real
   ones with nothing checking, and a `PACKAGE_SCRIPTS` constant that, unlike the pages, was
-  _not_ preserve-on-conflict -- `addPackageScripts` rewrote any `docs:*` script whose
+  *not* preserve-on-conflict -- `addPackageScripts` rewrote any `docs:*` script whose
   command differed, so a stale entry there silently downgraded a real repo's docs pipeline,
   which had already happened once. Nothing in this repo ran it. **Migration:** none; the
   kit stays in git history if it is ever wanted as the seed of a template repo.
@@ -1726,7 +1723,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`correctShadowOptions` is now `normalizeShadowOptions` and no longer mutates its
   argument.** It is not exported from any entrypoint, so this reaches no consumer; the rename
-  is recorded because the old name promised a correction _of_ the caller's object and that is
+  is recorded because the old name promised a correction *of* the caller's object and that is
   what four internal call sites had come to depend on unevenly.
 
 - **The five series-axis unit options are gone.** `serAxisMajorUnit`, `serAxisMinorUnit`,
@@ -1739,14 +1736,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`PresLayout._sizeW` / `._sizeH` are gone.** Every writer set them equal to `width` /
   `height`, and the only two readers were spelled `presLayout._sizeW || presLayout.width` —
   two names for one fact, with the fallback proving the second was always enough. Because
-  they were public and optional, a caller _could_ set them differently, and only the table
+  they were public and optional, a caller *could* set them differently, and only the table
   auto-width path would have honoured it. **Migration:** use `width` and `height`.
 
 - **`TableCell._tableCells` is gone.** Zero reads and zero writes anywhere in the library.
 
 - **`SlideMasterChartProps.opts` is gone; use `options`.** Both were declared, neither was
   documented, and the definer read `chart.opts || chart.options`, so the undocumented alias
-  _won_ when a caller had both — setting the documented one and leaving a stray `opts`
+  *won* when a caller had both — setting the documented one and leaving a stray `opts`
   behind got the stray. `options` is the spelling every sibling descriptor uses.
 
 - **`CONNECTOR_PRESETS` is no longer exported.** Its only consumer was
@@ -1824,7 +1821,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`p:grpSpPr` lands in schema order in every legal group.** The successor list it is inserted
   before was written out by hand and named five of `CT_GroupShape`'s seven children, missing
   `p:contentPart` (ink) and `p:extLst`. A group whose only children were one of those got its
-  `p:grpSpPr` appended _after_ them, which is schema-invalid. The list is now sliced from a declared
+  `p:grpSpPr` appended *after* them, which is schema-invalid. The list is now sliced from a declared
   `CT_GroupShape` sequence, as every other successor list in that module already is, and the type
   joins the table the emitter's child order is checked against. Only a malformed source reaches
   that branch, since the schema makes `p:grpSpPr` required.
@@ -1963,7 +1960,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **A combo subchart with `showLegend: false` hides its own legend entries.**
   - Its deleted entries were numbered by data row, but `c:legendEntry/c:idx` counts positions in the
-    legend: PowerPoint, deleting the first entry of a legend listing series 1, 2 and 0, writes idx 0. Row numbers matched positions only by accident. A scatter's X row is not a series, so hiding
+    legend: PowerPoint, deleting the first entry of a legend listing series 1, 2 and 0, writes idx
+    0. Row numbers matched positions only by accident. A scatter's X row is not a series, so hiding
     a scatter placed ahead of a bar chart deleted the bars' entries and left the scatter's. Entries
     are now numbered by position, counting only a scatter's or bubble's Y series.
   - Positions follow the legend order read off PowerPoint renders. One axis group lists its
@@ -3015,7 +3013,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   - **A word wider than its column cost an extra line.** The wrap pushes the buffered line and
     starts a new one whenever the next word will not fit; on the first word of a cell the buffer
-    is empty, so a word too wide on its own pushed an _empty_ line before it. The text still
+    is empty, so a word too wide on its own pushed an *empty* line before it. The text still
     reached the slide -- the pager concatenates its lines back -- but `_lines.length` is what
     prices the row, so every such cell was budgeted one line too tall and its table paged early.
     Twelve identical one-word rows in a 0.4in column took two slides when the word was long and
@@ -3026,7 +3024,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     places -- the pager's main path, its fallback for an unusably small `h`, and `tableToSlides`,
     which places what the pager measured -- and only the first was right. The other two read
     `autoPageSlideStartY: 0` as unset, so a caller asking for the top of the slide got the top
-    margin; and both dropped the clause that keeps a `y` already _above_ the top margin from
+    margin; and both dropped the clause that keeps a `y` already *above* the top margin from
     being pushed down to it, so page one held more rows than every page after it. One rule now,
     read from one place.
 
@@ -3095,7 +3093,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`addText('hi', { shadow })` emitted two shadows.** One `<a:effectLst>` landed in the
   shape's `p:spPr` and another in the run's `a:rPr`, because the bare-string overload handed a
-  single options object to the shape _and_ to its lone run, and `shadow` was on the list of
+  single options object to the shape *and* to its lone run, and `shadow` was on the list of
   options a run inherits from its shape.
 
   `shadow` now means the shape's shadow on a shape's bag and the text shadow on a run's, and a
@@ -3114,14 +3112,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     { hyperlink })` was already broken this way.
   - **A line-shaped text box drew its 1pt default only through the string overload.** The
     defaults were computed on a pass that had no `line` bag to assign them to and were only
-    seen by a _second_ pass over the same object. The bag is installed first now, so one pass is
+    seen by a *second* pass over the same object. The bag is installed first now, so one pass is
     enough and `shape: 'line'` draws the same line through either overload.
 
   `rtlMode` and `tabStops` gained the inherit list they never had -- the paragraph builder reads
   them off a run's bag, and they used to arrive only through the shared object.
 
 - **An HTML row covered end to end by a rowspan was dropped, taking the table's shape with
-  it.** A source row states only the cells it _starts_, so a row every column of which is held
+  it.** A source row states only the cells it *starts*, so a row every column of which is held
   by a `rowspan` from above states none at all -- what `<tr></tr>` between two spanned rows
   means. The auto-pager dropped it as an empty buffer while the table emitter went on
   synthesizing that grid row's `vMerge` continuations, so they landed in the next row's
@@ -3149,7 +3147,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   stated there, the inset is absent because it was never overridden, and the stated anchor is
   the one that applies. `placeholder-override.pptx` is that deck.
 
-  "Stated" means what the _caller_ wrote, captured before this library defaults anything onto
+  "Stated" means what the *caller* wrote, captured before this library defaults anything onto
   the same bag. A placeholder-targeting object has its `bullet` defaulted to `false` on the
   way past, so reading statedness off the bag would have let that default beat the layout's
   bullet, which is a different claim from letting a caller beat it.
@@ -3166,14 +3164,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `seriesOptions[0]` styles `data[1]`, the first Y series, because `data[0]` is the shared X
   row and is not a series at all.
 
-  The `chart/option-not-supported` warning is now per _field_ rather than per chart type,
+  The `chart/option-not-supported` warning is now per *field* rather than per chart type,
   because the gaps are per field: `lineSize` reached a stroke only on a series that draws
   one, so it was accepted and dropped on `bar`, `bar3d` and `area` while every other field on
   the same bag worked. `pie`, `doughnut` and `surface` still warn on everything -- a pie
   colours points and a surface colours bands, so a per-series override has no referent.
 
 - **A combo chart restarted the colour palette in every subchart.** Each subchart's series
-  builder looked its colour up by the series' position _within that subchart_, so a
+  builder looked its colour up by the series' position *within that subchart*, so a
   bar(2) + line(1) combo painted the line with palette entry 0 -- the same colour as the
   first bar -- while `<c:idx>`, `<c:order>` and `seriesOptions` were all keyed on the
   position across the whole chart. Only the colour restarted.
@@ -3227,13 +3225,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   **What blocked this was the fixture, and it is now in the corpus.** No deck under
   `test/read/fixtures/` had a slide-scoped background that was not `solid` or `none`, so the
   slide arm's claim had nothing to contradict it — and the round trip could not catch it
-  either, since it excludes exactly the _declared_ losses and this loss was declared. The new
+  either, since it excludes exactly the *declared* losses and this loss was declared. The new
   `slide-background.pptx` is three PowerPoint-authored slides: a picture background, a
   slide-scoped `p:bgRef`, and a solid with an `a:alpha`.
 
 - **A combo chart's line markers took a different palette entry from the line they sit on.**
-  Two lookups for one series: the line body read the series' position _within its own
-  subchart_ and the marker read its position _across all of them_. Those are the same number
+  Two lookups for one series: the line body read the series' position *within its own
+  subchart* and the marker read its position *across all of them*. Those are the same number
   for a single-type chart and not for a combo — a bar(2) + line(1) combo drew a `C0504D` line
   with `9BBB59` dots — and a `seriesOptions.color` override moved the body while leaving the
   dots on the palette. The marker now takes the series colour that was already resolved for
@@ -3242,7 +3240,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`dataLabelPosition: 'outEnd'` on a clustered bar chart is no longer silently dropped.**
   The two rules deciding which `ST_DLblPos` values a bar accepts ran as sequential `if`s, each
-  keyed to the grouping it did _not_ apply to, so the outcome was exactly inverted: the list
+  keyed to the grouping it did *not* apply to, so the outcome was exactly inverted: the list
   containing `outEnd` was applied when the grouping was not clustered and the list without it
   when the grouping was not stacked. `{ barGrouping: 'clustered', dataLabelPosition: 'outEnd' }`
   — the most ordinary combination there is — emitted no `<c:dLblPos>` at all, while the stacked
@@ -3276,7 +3274,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   generated script states `transparency` wherever the source deck did.
 
 - **Eight blind spots in the round-trip verifier, which is the thing that decides whether a
-  generated script rebuilt the deck it came from.** Each is a way it could answer _yes_
+  generated script rebuilt the deck it came from.** Each is a way it could answer *yes*
   without having compared, or report a defect where the loss was already declared.
 
   - **Seven note constructs were emitted with no entry in the coverage table** — `chart.data`,
@@ -3327,10 +3325,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `1image_2` — not a legal JavaScript identifier. Unreachable today, and one line.
 
 - **Building a table no longer writes into the caller's cell objects.** `addTableDefinition`
-  takes ownership of the _table_ options and left the per-cell ones aliased, so the border
+  takes ownership of the *table* options and left the per-cell ones aliased, so the border
   completion, the hyperlink rel id and the table-level inheritance all wrote through to the
   objects the caller passed in. One `rows` array reused across two tables — the obvious thing
-  to do with a shared style fixture — came out styled by the _first_ table both times, and the
+  to do with a shared style fixture — came out styled by the *first* table both times, and the
   caller's cell came back holding `{ border, bold, color, fontSize, margin, _lineIdx }`. The
   emitter resolves the inheritance into a local bag now instead of stamping the stored model,
   which also makes two `write()` calls on one deck independent.
@@ -3339,7 +3337,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   mutates: `arrTabRows` holds the caller's own cell objects" throughout.
 
 - **A shadow literal shared between two shapes comes back as written.**
-  `correctShadowOptions` normalized its argument _in place_ and returned it, and its four
+  `correctShadowOptions` normalized its argument *in place* and returned it, and its four
   callers split on which of the two contracts they used — two assigned the result, two
   discarded it and relied on the mutation. It is `normalizeShadowOptions` now, pure, with all
   four callers assigning: the derived `_alpha` reaches the emitter as a value rather than as a
@@ -3348,7 +3346,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `transparency` and RGBA alpha on every text run unless all four move together.
 
 - **A percentage stated in the string form is read as the value it states.** `ST_Percentage`
-  and its relatives are _unions_: the fixed-point integer PowerPoint writes (`100%` →
+  and its relatives are *unions*: the fixed-point integer PowerPoint writes (`100%` →
   `100000`) and a decimal string carrying a literal `%` (`"62.5%"`) — and the string form is
   the **only** one the Strict profile has. `read/oxml/dom.ts` has carried the union parser and
   a note saying exactly this; four getters read the attribute as a bare number instead, so
@@ -3363,7 +3361,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`p:spTree/p:extLst` is the shape tree's own child, not a shape.** Three helpers over a
   shape tree asked "is this a shape" and only one of them excluded `p:extLst`, so
   `carriedDecorations` reported it as a decoration to carry — and `importSlide`'s
-  `carryMasterGraphics` inserts each of those _before_ the destination's own shapes, which
+  `carryMasterGraphics` inserts each of those *before* the destination's own shapes, which
   puts an `extLst` where `CT_GroupShape` sequences `nvGrpSpPr, grpSpPr, (shape)*, extLst?` and
   makes the part invalid. The read corpus holds no direct `p:spTree/p:extLst` across 776 shape
   trees, so nothing existing could have caught it.
@@ -3409,7 +3407,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Every series' worksheet reference addresses its own column.** The embedded workbook lays
   every series out behind the FIRST series' label columns, one row per that series'
-  categories; the chart XML derived both numbers from _each_ series' own labels. Label only
+  categories; the chart XML derived both numbers from *each* series' own labels. Label only
   the first series — the shape the plot builders' own worked example shows — and from series
   1 on the part carried `Sheet1!$A$2:$$1` for the categories, a `<c:val>` range running
   backwards over series A's column, and a `<c:tx>` naming series A's header. The workbook was
@@ -3436,7 +3434,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Every page of a paged table gets the same usable height.** There were three rules for two
   cases: the "after the initial slide" block was gated on `tableRowSlides.length > 1`, so
-  despite its own comment it began on the _third_ page, its first arm recomputed what had just
+  despite its own comment it began on the *third* page, its first arm recomputed what had just
   been computed, and the explicit-`h` floor reached page one and pages three and up. Page two
   was the one page that got neither, so a 60-row table with `h: 4` and `y: 0.2` paged
   9/**7**/9/9/9/9/8. `calcSlideTabH` is now one rule: this page's start-Y, less the bottom
@@ -3445,7 +3443,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **A `colspan` or a cell `margin` is read the same way everywhere.** Six sites read a span in
   six spellings and five read a cell margin in five, agreeing only on values that were already
   valid — and the auto-pager gated each margin side on truthiness, so a cell asking for
-  `margin: [0, …]` fell through to the _table's_ margin instead of taking its own zero, and a
+  `margin: [0, …]` fell through to the *table's* margin instead of taking its own zero, and a
   scalar `margin: 0.2` was not seen at all where the emitter broadcasts it to four sides. Spans
   now read through `resolveSpan` (already the declared rule) and margins through the new
   `resolveCellMarginsInches`, which reports an unusable one under `table/invalid-margin`
@@ -3498,7 +3496,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **A preset-geometry adjustment is not computed against a zero extent.** `rectRadius` is
   emitted as a fraction of the shape's shorter side, and a text object with no stated height
-  reaches the emitter with `cy === 0` — the renderer rescues a height only for a _line-less_
+  reaches the emitter with `cy === 0` — the renderer rescues a height only for a *line-less*
   text shape, so any line at all put the division back on zero and wrote
   `<a:gd name="adj" fmla="val Infinity"/>`. A guide formula is a plain string in the schema,
   so nothing downstream refused it. A zero or negative divisor now warns under
@@ -3558,7 +3556,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `color/invalid-value` diagnostic and a `000000` outline, one line after `363636` was named
   as the default for exactly this. `dataBorder` is the reachable one — the chart-area,
   plot-area and table-cell borders all resolve their colour in the definition step before
-  the emitter sees it — and the chart-area _builder_ already read an empty colour as
+  the emitter sees it — and the chart-area *builder* already read an empty colour as
   unstated. All four builders share one implementation now, so they can no longer disagree
   about it.
 
@@ -3614,7 +3612,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`isHexColor`), which strips the hash first, as the rest of the library always has.
 
 - **Four converter policies were honoured by the shape mapper and skipped elsewhere.** Each
-  produced a silently different deck with _no fidelity note_, which is why the round trip
+  produced a silently different deck with *no fidelity note*, which is why the round trip
   could not see them: it excludes exactly the declared losses, and an undeclared one is
   invisible when both IRs come from the same reader.
 
@@ -3653,23 +3651,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `heightExact: false`. That is the drift the one reading of `rowH` closed, arriving through a
   second option, so the fix is the shared `resolveTableGridEmu` that both measure paths now
   read rather than a third correction. The emitter deliberately keeps its own height: it
-  resolves against the _placed_ frame, which a layout placeholder can override, and the other
+  resolves against the *placed* frame, which a layout placeholder can override, and the other
   two only ever see the options.
 
 - **A `colW` entry that is not a width now says so.** `resolveTableColWidthsEmu` fell back to
   the even-distribution width for an unusable slot with no diagnostic, while the analogous
   `rowH` entry has warned for a while under the reasoning that an entry present but unusable
   is something the caller wrote on purpose. `{ colW: [2, NaN] }` now warns
-  `table/invalid-col-width`; a _missing_ slot stays silent, which is the same line `rowH`
+  `table/invalid-col-width`; a *missing* slot stays silent, which is the same line `rowH`
   draws.
 
 - **`tableToSlides` wrote its working state into the caller's options object.** Every definer
   copies its options bag before touching it, each with a comment saying why; this path did
   not, and resolved its slide margin, column widths, head rows and per-page `y` into the
   object it was handed. So a reused bag changed the next call's output — most visibly `y`,
-  left holding the continuation start, which put the second call's _first_ table where the
-  first call's _second_ page began. The auto-pager likewise wrote its resolved `colW` back
-  onto the bag and its `autoPageCharWeight` onto the caller's _cell_ options; the grid rides
+  left holding the continuation start, which put the second call's *first* table where the
+  first call's *second* page began. The auto-pager likewise wrote its resolved `colW` back
+  onto the bag and its `autoPageCharWeight` onto the caller's *cell* options; the grid rides
   out on each `TableRowSlide` now (a new optional `colW`), and the weight is projected onto
   the cell the pager measures rather than written onto the one the caller owns.
 
@@ -3731,11 +3729,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `{ type: 'bar3d', catAxisMajorUnit: 3, valAxisMajorUnit: 4 }` emitted exactly one element.
 
     Ungating them was the wrong reading and is superseded within this same unreleased cycle
-    (see **Axis units are emitted per axis TYPE** above): the three rules were three _content
-    models_, not three spellings of one decision, and emitting the units on every axis made
+    (see **Axis units are emitted per axis TYPE** above): the three rules were three *content
+    models*, not three spellings of one decision, and emitting the units on every axis made
     the category and series axes schema-invalid. What survives of this entry is that the
-    numeric units no longer sit behind a _format code_ — they sit behind the axis type.
-
+    numeric units no longer sit behind a *format code* — they sit behind the axis type.
   - **A pie's plot-level label flags were constants.** The per-point `<c:dLbl>` honoured
     `showLabel`/`showPercent`/`showValue`/`showSerName` while the plot-level `<c:dLbls>` wrote
     `showCatName="1" showPercent="1"` whatever the caller said. The constants were masked
@@ -3748,7 +3745,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     backwards (`Sheet1!$A$2:$A$1`). The slice count now comes from the values, `<c:cat>` is
     omitted rather than pointed at an empty range, and a series with neither labels nor values
     warns and plots nothing.
-
   - **The bubble workbook's table range used the column count as a row count.** One embedded
     workbook stated two different extents for the same sheet — `ref="A1:C3"` in
     `xl/tables/table1.xml` against `<dimension ref="A1:C5"/>` in `xl/worksheets/sheet1.xml`.
@@ -3824,7 +3820,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     outside its own type.
 
 - **One run's font size no longer leaks onto the runs after it.** The `endParaRPr` bookkeeping
-  wrote the first sized run's size back onto the _shape's_ options bag, and the inheritance
+  wrote the first sized run's size back onto the *shape's* options bag, and the inheritance
   above then handed it to every later run and every later paragraph:
   `addText([{ text: 'big', options: { fontSize: 40 } }, { text: 'normal' }], {})` emitted
   `sz="4000"` on both runs. The size is now a paragraph-local. Two showcase decks change:
@@ -3832,7 +3828,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   own.
 
   A related question is deliberately left open. For string text (`addText('hi', opts)`) a
-  run's `options` _is_ the shape's object rather than a copy, which is why a shape-level
+  run's `options` *is* the shape's object rather than a copy, which is why a shape-level
   `shadow` also becomes a glyph shadow. Naming the run-inheritable keys makes the array-text
   path agree with that path rather than diverge from it; whether `shadow` on an `addText` bag
   should mean the shape, the glyphs, or both is an API decision and is not made here.
@@ -3848,7 +3844,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **A table's black text default was decided by a substring search.** A hyperlink anywhere
   in the grid stands the default down, because the default is direct formatting and would
-  paint the words _after_ a link black. The test was
+  paint the words *after* a link black. The test was
   `JSON.stringify({ arrRows }).includes('hyperlink')`, so a cell reading "see the hyperlink
   docs" suppressed the default for the whole table and its text fell through to the theme's
   `tx1` — and every `addTable` serialized its entire grid to ask. It is now a walk over the
@@ -3875,7 +3871,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   old code.
 
   - **Usable width was the sum of the slide margins, not the slide minus them.** The
-    fallback the pager reaches when a table states neither `w` nor `colW` _added_ the left
+    fallback the pager reaches when a table states neither `w` nor `colW` *added* the left
     and right margins, so a 10in slide gave about one inch of usable width and the pager
     then divided that across the columns. It writes the result back onto `colW`, so the
     number reached the emitted `<a:gridCol>`: a three-column table added with
@@ -3908,7 +3904,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`shadow.transparency` and `shadow.angle` follow the project's own out-of-range rule.**
   Both were the third option `docs/contributing/development.md` names as the tempting wrong one: they
-  reported a warning _and_ discarded the request, so the caller read a diagnostic and got a
+  reported a warning *and* discarded the request, so the caller read a diagnostic and got a
   shadow they had not asked for. Four behaviours change, and none of them for an input that
   was already in range — every showcase deck emits byte-identically:
 
@@ -3938,7 +3934,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`shadow.blur` and `shadow.offset` are bounded by the schema, and their JSDoc now says
   what is actually enforced.** Both are `ST_PositiveCoordinate` on `blurRad`/`dist`, which
-  is _unsigned_ — so `blur: -6` reached the package as `blurRad="-76200"` and PowerPoint
+  is *unsigned* — so `blur: -6` reached the package as `blurRad="-76200"` and PowerPoint
   reported the file as needing repair. A negative value now clamps to `0` and warns under
   the new `shadow/blur-out-of-range` / `shadow/offset-out-of-range`.
 
@@ -3972,7 +3968,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `SHAPE_AFTER_SPPR` was the one successor list in `src/ooxml/sequence.ts` written out by
   hand instead of sliced from a declared sequence, and it was missing `p:extLst` — the last
   child of `CT_Shape`. A `getOrAddChild(sp, 'p:spPr', …)` on such a shape therefore matched
-  no successor and _appended_, producing a schema-invalid `p:sp`. Deriving the list from a
+  no successor and *appended*, producing a schema-invalid `p:sp`. Deriving the list from a
   declared `SP_SEQUENCE` closed the gap and removed the module's one exception to "every
   successor list is sliced out of a sequence" in the same edit. Reachable only on input that
   is already malformed — the schema makes `p:spPr` required — so this is the repair path
@@ -4005,7 +4001,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   shared builder, so a non-finite value warns (`chart/non-finite-value`) and is dropped, as it
   always has been on a bar or a line.
 
-  A _gap_ — a `null` or `undefined` slice value — also changes spelling, from a `<c:pt>` with
+  A *gap* — a `null` or `undefined` slice value — also changes spelling, from a `<c:pt>` with
   an empty `<c:v>` to no `<c:pt>` at all. That half is not a defect being fixed: measured
   against desktop PowerPoint the two are equivalent, opening without a prompt, resolving to the
   same object model and exporting to a byte-identical image. It changes because one spelling of
@@ -4013,7 +4009,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   so the OpenXmlValidator passes all four spellings alike, which is why PowerPoint is the
   oracle this was settled against.
 
-  **Migration:** an untyped caller passing a _numeric string_ (`values: ['42', '7']`) to a pie
+  **Migration:** an untyped caller passing a *numeric string* (`values: ['42', '7']`) to a pie
   or doughnut now gets `chart/non-finite-value` and an empty chart, where the value used to
   reach the cache and render. That is what every other chart type has always done with one —
   the option is `number[]` — so convert before the call rather than relying on the pie path.
@@ -4066,7 +4062,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   column side has always shared. **An entry pins its row only when it is a number greater
   than zero.** `0`, a negative, and anything that does not read as a finite number are not
   heights: the row is sized from the table's `h` instead, or grows to fit if there is none,
-  and the new `table/invalid-row-height` diagnostic says which entry did that. A _missing_
+  and the new `table/invalid-row-height` diagnostic says which entry did that. A *missing*
   array slot stays silent, because that is how the auto-pager spells an auto-height row.
   Separately, `heightExact` is now false whenever the default-line fallback supplied a
   row's height, which is a number `tableLayout()` invented rather than one the file pins.
@@ -4107,7 +4103,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Percent-valued options are clamped into their schema range instead of reaching the
   attribute raw.** `chartColorsOpacity: 150` wrote `<a:alpha val="150000"/>` against an
   `ST_PositiveFixedPercentage` maximum of 100000 (and `Infinity` wrote `val="Infinity"`);
-  image `transparency` inverts, so 150 wrote a _negative_ `<a:alphaModFix>` and -30 wrote
+  image `transparency` inverts, so 150 wrote a *negative* `<a:alphaModFix>` and -30 wrote
   one over the maximum; `biLevel.threshold` is a 0-1 fraction, so 5 wrote
   `thresh="500000"`; and `lineSpacingMultiple: 200` wrote `<a:spcPct val="20000000"/>`
   against a maximum of 13200000. Every one of those makes PowerPoint offer to repair the
@@ -4182,7 +4178,7 @@ stays canonical, and installing both at once is the one thing not to do.
   **`objectName` comes back in the caller's spelling, not the stored one.** Every
   `add*Definition` stores the name attribute-escaped and `groupObjects()` escapes the
   caller's spelling before comparing, so reporting the stored form would hand back a name
-  that escapes a _second_ time on the way in and resolves to nothing — the same mismatch
+  that escapes a *second* time on the way in and resolves to nothing — the same mismatch
   1.0.0 fixed on the input side, arriving from the other direction. A shape named `Q&A`
   reads back as `Q&A`. The promise is the round trip rather than invertibility, and it
   holds even where decoding is not a true inverse: a name authored as the literal string
@@ -4272,7 +4268,7 @@ part.
   solid fill could say what the transform had been.
 
   Why it matters to a consumer: a reader could not tell "this stop stated no transforms"
-  from "this reader could not see them". Anything re-authoring a deck against a _different_
+  from "this reader could not see them". Anything re-authoring a deck against a *different*
   theme needs the first fact, because `effectiveHex` alone is the theme baked in, and a
   `lumMod`-darkened accent carried forward as a literal hex stops tracking the theme it
   came from with nothing saying so.
@@ -4295,7 +4291,7 @@ part.
   `@b` and `@i` are siblings on `CT_TextCharacterProperties` and PowerPoint writes them as
   a pair (every level `a:defRPr` in a stock master carries both); the write API already
   treats them as one, since `MasterTextStyleLevel` has `bold` and `italic` — so a deck
-  could be _authored_ with an inherited italic that could not then be read back. Anything
+  could be *authored* with an inherited italic that could not then be read back. Anything
   painting from the read model as `props.X ?? resolved.X` had to render such a subtitle
   upright. It resolves the same chain `resolvedBold` documents (paragraph `a:defRPr` →
   slide `a:lstStyle` → layout → master placeholder `a:lstStyle` → master `p:txStyles` →
@@ -4333,14 +4329,14 @@ part.
   is honest; reporting a guessed one is not. Settling it needs a render oracle, and until
   there is one that stays a decision rather than an oversight.
 
-  One related repair on the way past: `a:ST_Percentage` is a _union_ in the Transitional
+  One related repair on the way past: `a:ST_Percentage` is a *union* in the Transitional
   profile — the fixed-point integer Office writes and a `%`-suffixed decimal string — and
   the transform decoder read only the first, dropping a schema-legal `alpha="50%"` without
   a word. Both spellings are read now.
 
   It shows up downstream: three run colours in the `table` fixture move from
   `text.color.default` — the one fidelity note where the converter's output colour is not
-  merely frozen but possibly _wrong_, because nothing resolved what the run inherits and
+  merely frozen but possibly *wrong*, because nothing resolved what the run inherits and
   the write path paints it black — to `text.color.inherited`, resolved and baked. The
   corpus note totals move with them (733 / 433).
 
@@ -4368,7 +4364,7 @@ part.
   which has no SmartArt layout engine and therefore paints the cache and nothing else,
   via `soffice --convert-to pdf` plus `pdftotext`. Three cases, each with its own
   sensitivity check: `mirrored` proves `DiagramPoint.text` reaches the renderer, `stale`
-  edits the data model alone and proves the renderer keeps painting the _old_ string,
+  edits the data model alone and proves the renderer keeps painting the *old* string,
   and every case asserts the ten sibling nodes it did not touch are still painted, so a
   mirror that writes the right string into the wrong point fails on its own sentinel.
   Text is read through PDF rather than PNG because LibreOffice's PNG export writes the
@@ -4405,7 +4401,7 @@ part.
   after it. `objectName` leaked by the same route, spreading the first box's assigned
   name onto its siblings and colliding in the Selection Pane. Options are now copied on
   the way in, so the object a caller passes comes back exactly as it was written.
-  Emitted bytes are unchanged (183/183 baseline parts): sharing _within_ one `addText`
+  Emitted bytes are unchanged (183/183 baseline parts): sharing *within* one `addText`
   call is preserved, because the string shorthand's shape and run genuinely are one
   object and the second normalization pass over it emits `<a:ln>` defaults the first
   cannot. Nested option objects (`bullet`, `shadow`, `fill`) are still shared by
@@ -4556,7 +4552,7 @@ them, and a SmartArt slide is copied rather than transcribed into a script with 
 
 - **`DiagramPoint.drawnShape` and `DiagramPoint.presentationId` link a node to what is drawn
   for it.** `drawnShape` resolves the `dsp:sp` of the fallback drawing part that carries the
-  point's text, plus the paragraph index inside it, as a `TextFrame` bound to the _drawing_
+  point's text, plus the paragraph index inside it, as a `TextFrame` bound to the *drawing*
   part. The mapping is not the obvious one and is many-to-one in both directions: a
   `dsp:sp/@modelId` is always a generated `pres` point's id rather than the authored point's,
   one shape draws several points at paragraph indices that can contradict document order, and
@@ -4595,7 +4591,7 @@ them, and a SmartArt slide is copied rather than transcribed into a script with 
   again.** `pptx-ts/script`'s template-anchored tier copies a slide the write API cannot
   author (`slide.carried`) with `importSlide`, out of the very file it templated the deck
   from. That import used to duplicate the slide's layout and master, and because the duplicate
-  repeated a layout _name_, it demoted every `appendSlides` binding in the emitted script from
+  repeated a layout *name*, it demoted every `appendSlides` binding in the emitted script from
   the name to a gallery position. With `importSlide` reusing chrome the destination already
   holds, layout names stay unambiguous and bindings print as `{ layout: 'Titelfolie' }`. A
   multi-master deck that genuinely repeats a layout name still falls back to a position, which
@@ -4612,7 +4608,7 @@ them, and a SmartArt slide is copied rather than transcribed into a script with 
   in the shape-tree walk, and a new `graphicKind` field (`'table' | 'chart' | 'chartEx' |
   'diagram' | 'other'`). Its `text` is what a reader sees on the slide, so it counts toward
   the slide's `text` and `wordCount`; a chart contributes none, matching `Slide.text`, which
-  treats data labels as chart data rather than slide body text. The _structure_ is still not
+  treats data labels as chart data rather than slide body text. The *structure* is still not
   flattened: `textRuns` and `paragraphs` stay empty, and cells, series, and nodes are reached
   through `pptx-ts/read`.
 
@@ -4714,7 +4710,7 @@ build.
   adjust-handle angle all threw `Infinity` straight through their converter and into the
   attribute — `sz="Infinity"`, `rot="Infinity"` — which is not a legal value and made
   PowerPoint offer to repair the package. Each now throws an `InvalidOptionError` with code
-  `coord/non-finite` at the point of conversion. A _finite_ out-of-range value is unaffected:
+  `coord/non-finite` at the point of conversion. A *finite* out-of-range value is unaffected:
   it still clamps into the schema range and warns, as before.
 
   Migration: if you were computing one of these from data that can produce `Infinity` or
@@ -4728,14 +4724,14 @@ build.
   already within a turn — including a negative one — is byte-for-byte unchanged, since both
   `-45` and `315` are valid `ST_Angle` and the read side reports back what was authored.
 
-  The same function was also being used for angles that are _not_ modular: a `custGeom`
+  The same function was also being used for angles that are *not* modular: a `custGeom`
   connection site, a polar adjust handle's `minAng`/`maxAng`, an `angleRange` guide, and the
   chart label rotations. Those now go through a non-wrapping converter, so an adjust handle
   declared with `maxAng: 540` keeps its full travel instead of silently collapsing to 180.
 
 - **An empty `chartColors` now means the same as omitting it.** `chartColors: []` used to give
-  every chart the _bar_ palette, including a pie or doughnut, whose default when the option is
-  omitted is `PIECHART_COLORS`. Nothing chose that: normalization defaulted a _missing_
+  every chart the *bar* palette, including a pie or doughnut, whose default when the option is
+  omitted is `PIECHART_COLORS`. Nothing chose that: normalization defaulted a *missing*
   `chartColors` per chart type, `Array.isArray([])` is true, so an explicit empty array walked
   through that pass untouched and met a later fallback that did not know the chart type. An
   empty array names no colours, which is what omitting the option means, so both now resolve to
@@ -4762,7 +4758,7 @@ build.
   that inheritance. So a hole in the tuple meant the opposite of the omission it reads as, and
   there was no spelling left for "draw the edges I name, leave the rest to the style".
   A `null` side now leaves its element absent, which is the distinction `normalizeOuterBorder`
-  already documents for the perimeter ("a sparse side is _not_ `{ type: 'none' }`"), and the
+  already documents for the perimeter ("a sparse side is *not* `{ type: 'none' }`"), and the
   tuple type accepts `null` so the sparse form is authorable from TypeScript. An explicit
   `{ type: 'none' }` still emits `<a:noFill/>`, so both states stay reachable.
 
@@ -4799,7 +4795,7 @@ build.
   no showcase deck reaches one.
 
 - **A slide-number field on a master or layout no longer caches a fake page number.**
-  `<a:t>` inside an `a:fld` is the field's _cached_ rendering, and a master has no slide number
+  `<a:t>` inside an `a:fld` is the field's *cached* rendering, and a master has no slide number
   while a layout carries the library's internal 1000-and-up counter. So every master shipped
   `<a:t>null</a:t>` and every layout something like `<a:t>1004</a:t>`. PowerPoint recomputes
   the field on open, so nothing ever looked wrong there — but anything that reads the cache
@@ -4853,10 +4849,10 @@ project-site changes.
 ### Added
 
 - **`isChartType` narrows a string to the chart catalog.** The companion to `isChartExType`,
-  which reported only which _half_ of the catalog a type belongs to and answered `false` for
+  which reported only which *half* of the catalog a type belongs to and answered `false` for
   a string that is in neither. Useful for validating a chart type that arrives as data — from
   a config file, a spreadsheet column, a CLI flag — before it reaches `addChart`, which now
-  throws on one it does not recognise (see _Changed_).
+  throws on one it does not recognise (see *Changed*).
 
 - **`importSlides` carries speaker notes, per request.** `ImportSlidesRequest` gains
   `importNotes?: boolean`, the batch spelling of the option `importSlide` has had all
@@ -4865,7 +4861,7 @@ project-site changes.
 
   Per request rather than per batch because a stitch mixes sources: the notes of a
   library's cover page are worth carrying where a scratch deck's are not. What the flag
-  does _not_ decide is the styling — a presentation holds at most one `notesMaster`, so the
+  does *not* decide is the styling — a presentation holds at most one `notesMaster`, so the
   destination's own is reused when it has one and the first carried master is installed
   when it has none, exactly as `importSlide({ importNotes: true })`, `appendSlides` and
   `Slide.addNotes` do. The four paths cannot between them produce a second notes master.
@@ -4895,7 +4891,7 @@ project-site changes.
   through any API. Reported as #17.
 
   A `
-  ` starts a new paragraph, matching the write-side `addNotes`; runs carry no
+` starts a new paragraph, matching the write-side `addNotes`; runs carry no
   formatting of their own, so per-run colour/size/hyperlinks are set afterwards through
   `notesTextFrame`. Called on a slide that already has notes it replaces the body text and
   leaves the rest of the part — geometry, the `sldImg`/`sldNum` placeholders — alone.
@@ -4960,7 +4956,7 @@ project-site changes.
   constrains TypeScript callers, but nothing enforced it for JavaScript ones, and the two chart
   emitters partition `ChartType` between them and each treats the other's members as not its
   own — so an off-catalog string matched no arm anywhere and fell through to an empty-string
-  default. `addChart(data, { type: 'nonsence' })` was _accepted_, and the typo arrived in the
+  default. `addChart(data, { type: 'nonsence' })` was *accepted*, and the typo arrived in the
   deck as a chart frame with axes and nothing inside it. Both the single-type form and every
   `ChartMulti` entry of a combo are now checked against the catalog, throwing
   `InvalidOptionError` (`chart/unknown-type`) naming the valid types. The two emitters no longer
@@ -5021,7 +5017,7 @@ project-site changes.
   - `tools/ooxml-validator/` is gone — installer, update checker, version pin and the
     `check-validator` script with it. `ooxml-validate` fetches its oracle from GitHub
     Releases on first use (never from a postinstall hook), verifies the download's
-    checksum _and_ its build provenance, and caches it under `~/.cache/ooxml-validate`.
+    checksum *and* its build provenance, and caches it under `~/.cache/ooxml-validate`.
     CI caches that directory instead of running an install step.
   - `test/validator.js` shrank to an adapter. Batching, the one-child-at-a-time queue and
     the CI gate belong to the package now; the suite's `validateBuf` /
@@ -5043,12 +5039,12 @@ project-site changes.
     failure to one fixture.
 
 - **The browser demo is a page of the site, not a workspace.** `demos/vite-demo` — a React
-  - Vite + Bootstrap app whose only output was a download — is deleted. Its replacement is
-    `/demos` on the project site, which builds the same deck in the tab and then **shows you
-    the slides**, by reading the package back with
-    [`pptx-html`](https://www.npmjs.com/package/pptx-html) and painting them as SVG. A
-    download button is still there, and still goes through the browser runtime's own
-    `writeFile`.
+  + Vite + Bootstrap app whose only output was a download — is deleted. Its replacement is
+  `/demos` on the project site, which builds the same deck in the tab and then **shows you
+  the slides**, by reading the package back with
+  [`pptx-html`](https://www.npmjs.com/package/pptx-html) and painting them as SVG. A
+  download button is still there, and still goes through the browser runtime's own
+  `writeFile`.
 
   This removes React, Bootstrap, sass-embedded and a second ESLint configuration from the
   repository, and leaves one toolchain (VitePress + Vue) building one site. The site's
@@ -5090,7 +5086,7 @@ project-site changes.
   and the deliberate leak/detector pair in
   `test/regression/api/global-state-reset.test.js` fails when that setup file is removed.
   `sequence.shuffle.files` randomizes file order, so an order dependence fails instead of
-  hiding behind a stable one; four full shuffled runs pass 3337 tests each. Tests _within_
+  hiding behind a stable one; four full shuffled runs pass 3337 tests each. Tests *within*
   a file stay in source order deliberately, because `captureDiagnostics()` and the
   warn-capturing schema fixtures rest on it. The other module-level state under `src/` is
   idempotent caching, which is better shared than rebuilt.
@@ -5138,7 +5134,7 @@ project-site changes.
   found something on its first run: `bar-chart-data-labels.pptx` fails "saved output passes
   the validator" **as committed**, before this library touches it, with three Microsoft365
   errors inside PowerPoint's own chart `c:extLst` that the SDK does not model. So the
-  assertion is now "a round trip introduces no _new_ validator errors", which stays
+  assertion is now "a round trip introduces no *new* validator errors", which stays
   strictly stronger everywhere else (an empty verdict before still demands an empty verdict
   after) and avoids the choice between excluding that fixture and implying the library
   caused what PowerPoint authored.
@@ -5297,11 +5293,11 @@ project-site changes.
   numbers are deliberately conservative — raw advances with no kerning, the taller of two
   line heights, a width safety factor that wraps a hair early — so a wrong answer is a
   too-tall box. Font fallback is different: PowerPoint substitutes another face per code
-  point and lays the run out in _that_ face's advances, while this model has no fallback
+  point and lays the run out in *that* face's advances, while this model has no fallback
   and charges the registered font's `.notdef`, a single flat number unrelated to the glyph
   that paints. Malgun Gothic's `.notdef` is 0.663 em — wider than the 0.5 em halfwidth
   Katakana it lacks, so those gain a harmless phantom line, and narrower than the 1.0 em
-  Plane 2 ideographs it lacks, so a run of _those_ measures short: 24 of them in a 150 pt
+  Plane 2 ideographs it lacks, so a run of *those* measures short: 24 of them in a 150 pt
   box lay out on 2 lines here and 3 in PowerPoint. A short measurement is a `fit:'resize'`
   box baked smaller than its text, which is the overflow the resize path has no safety net
   for.
@@ -5315,7 +5311,7 @@ project-site changes.
 
 - **`Presentation.importSlides(requests)`, batch slide import across one or more loaded
   sources** (#19). Stitching a deck from several sources needs each imported page at a
-  specific position in the _final_ slide list, and needs the whole stitch to succeed or
+  specific position in the *final* slide list, and needs the whole stitch to succeed or
   fail as one. `importSlide` in a loop can leave a half-stitched deck when request three
   of five fails on a size mismatch; `importSlides` validates everything up front — pages
   exist, output positions are unique and within the final list, sizes match, and a
@@ -5365,7 +5361,7 @@ project-site changes.
   `--fix`, because a fix is a guess about prose and rewriting a sentence on its way into a
   commit is not a guess a hook should make unsupervised. Reading that diff was not a
   formality either: `--fix` broke a bracketed label in three places, nested parentheses two
-  deep in four more, converted only one half of five dash _pairs_, and turned a table cell
+  deep in four more, converted only one half of five dash *pairs*, and turned a table cell
   whose entire content was a dash into `|: |`, twice over seven such cells. None of that is
   caught by a check.
 
@@ -5385,7 +5381,7 @@ project-site changes.
   the tree against `docs.json` by hand. Page to nav is checked now, with two exemption
   mechanisms, because the two exempt things are not the same shape. `NAV_EXEMPT` is by
   exact key, currently `doc-index`, which `scripts/docs-index.mjs` generates for the
-  llms.txt build rather than for anyone to navigate to; listing an exempt page _in_ the
+  llms.txt build rather than for anyone to navigate to; listing an exempt page *in* the
   nav is itself an error, so an exemption that stops being true reports rather than
   silently granting slack, the same reasoning as the allowlist in `scripts/path-refs.mjs`.
   `GENERATED_TREES` is by prefix, currently `reference/api/`, where TypeDoc emits a few
@@ -5416,7 +5412,7 @@ project-site changes.
   against desktop PowerPoint, which refuses a shared workbook exactly as it refuses a
   shared chart — while media blobs, fonts and deck furniture stay shared, which is what
   PowerPoint itself does. The classification lives in `src/read/api/ops/page-owned.ts` as a
-  list of what may be _shared_, so a relationship type nobody has classified is copied: a
+  list of what may be *shared*, so a relationship type nobody has classified is copied: a
   wrongly shared part is a deck nobody can open, a wrongly copied one is some duplicated
   bytes.
 
@@ -5427,7 +5423,7 @@ project-site changes.
   by one chart subtree per copy.
 
 - **`cloneSlide` lost every relationship of a page imported in the same session.** The
-  clone copied the source's `.rels` _part bytes_, and a page brought in by `importSlide`
+  clone copied the source's `.rels` *part bytes*, and a page brought in by `importSlide`
   holds its relationships in memory until the deck is saved: there was no such part yet, so
   the clone came out with none at all — a slide whose `r:id`s resolved to nothing, its
   chart with no chart part behind it and its layout unbound. The clone now copies the live
@@ -5477,7 +5473,7 @@ project-site changes.
   syllables; PowerPoint does not do it, because Korean is written with spaces between
   words. A Hangul run still breaks when it is longer than a line, but through the
   over-long-token character-wrap fallback rather than a break class. Including it
-  would have _under_-reported the line count for Korean, which is the direction that
+  would have *under*-reported the line count for Korean, which is the direction that
   overflows, and which the resize path has no safety net for.
 
   Both halves are pinned to a new PowerPoint-authored fixture,
@@ -5530,7 +5526,7 @@ project-site changes.
 - **`src/types/` had never been formatted.** `.oxfmtrc.jsonc` carried `types/` among a
   group of build-output directories, next to `dist/` and `build/`, mirroring the `/types/`
   in `.gitignore`. It lost the anchor on the way across, and oxfmt's patterns are
-  gitignore-flavoured, so an unanchored directory name matches at _any_ depth. There is no
+  gitignore-flavoured, so an unanchored directory name matches at *any* depth. There is no
   `types/` at the root and never has been, so the pattern had only ever matched one thing:
   the library's entire public type surface. Seventeen files the formatter had never read,
   while `format:run`'s `"src/**/*.ts"` glob says plainly that it covers them. The ignore
@@ -5548,7 +5544,7 @@ project-site changes.
   well-formatted one.
 
 - **Two claims in the demos READMEs had gone stale in a way `path-refs:check` cannot
-  see**, since the file each one cites exists and what the text says _about_ it is what
+  see**, since the file each one cites exists and what the text says *about* it is what
   rotted. The showcases README told the next author to register a third deck in
   `build.mjs`; `SHOWCASES` moved to `lib/showcases.mjs` when the byte-identity harness
   started enumerating decks from it, so following that instruction would have built the
@@ -5580,7 +5576,7 @@ project-site changes.
   Eight more were symbols a documented type references but that are not documented
   themselves, plus one stale `intentionallyNotExported` entry for `ImageBaseProps`, which
   is exported now. For the `st-enums.ts` tuples this is deliberate: `types/table.ts`
-  re-exports the four `a:cell3D` _type aliases_ and keeps the backing tuples internal, so
+  re-exports the four `a:cell3D` *type aliases* and keeps the backing tuples internal, so
   the fix is to declare that intent rather than widen the public surface. The last warning
   was an `@example` on a member of the `SlideMasterObject` union, where TypeDoc allows no
   block tags; it is prose now, and says why.
@@ -5610,7 +5606,7 @@ project-site changes.
 - **`tslib` and `@arethetypeswrong/core` from `devDependencies`.** No tsconfig sets
   `importHelpers` and nothing in `dist/` imports tslib; it arrived in a bulk dependency
   bump and was never used. `@arethetypeswrong/core` is a direct dependency of
-  `@arethetypeswrong/cli` at an _exact_ pin, so declaring it again here was a second,
+  `@arethetypeswrong/cli` at an *exact* pin, so declaring it again here was a second,
   looser constraint on the same package whose only possible effect was to drift out of
   step with the pin the cli actually wants.
 
@@ -5637,7 +5633,7 @@ project-site changes.
   so deriving it through the reader would make the oracle a function of the code it exists
   to judge. It would also make `dist/` a prerequisite for regenerating a fixture, and this
   is the one recipe in `authoring/` that needs nothing but Node. The three replacement
-  helpers walk _direct children_ rather than searching descendants, which is what every
+  helpers walk *direct children* rather than searching descendants, which is what every
   field lookup here means (`p:spPr` then `a:xfrm` then `a:off`); the one place recursion
   is correct is the `p:sp` sweep, where a group nests shapes. The regenerated table is
   byte-identical to the committed one across all 149 cases and every field, so
@@ -5681,7 +5677,7 @@ project-site changes.
 - **`bullet: 'inherit'`, the state omission cannot spell** (#15). `TextBaseProps.bullet` had
   two states and three meanings: a bullet, or `false`/omitted — and both of the latter emitted
   an explicit `<a:buNone/>` plus `indent="0" marL="0"`. There was no way to author a paragraph
-  that states _nothing_ about its bullet. That matters because bullet properties resolve down
+  that states *nothing* about its bullet. That matters because bullet properties resolve down
   the `a:lstStyle` → placeholder → layout → master chain, and `a:buNone` **overrides** that
   chain rather than deferring to it: a paragraph inheriting a bullet from its layout's
   `a:lvl1pPr` lost it, and one inheriting no bullet still stopped tracking the master, so a
@@ -5693,7 +5689,7 @@ project-site changes.
   Omission keeps meaning `a:buNone`, and that is deliberate: it has meant that since the writer
   existed and every deck authored against it depends on the default. Same resolution as
   `fill: { type: 'inherit' }` (#10) — name the state that had no name, leave alone the one that
-  has. This is that fix one element down, and #14's mirror image: there the _explicit off_
+  has. This is that fix one element down, and #14's mirror image: there the *explicit off*
   needed a spelling distinct from silence, here the explicit off is the only thing that could
   be said.
 
@@ -5710,7 +5706,7 @@ project-site changes.
   attributes themselves still belonged to the bullet: `a:pPr/@marL` and `@indent` had no option
   of their own, so `bullet: false` could not suppress a bullet without also flattening an
   inherited hanging indent to zero, a drawn bullet always re-hung the first line by the
-  writer's 27pt default, and a first-line indent (a _positive_ `@indent`, the prose form) was
+  writer's 27pt default, and a first-line indent (a *positive* `@indent`, the prose form) was
   unauthorable in every state. `indentLevel` is a different fact — it writes `a:p/@lvl`, the
   discrete outline level — and `bullet.indent` reached `@marL` only by drawing a bullet with
   it.
@@ -5741,7 +5737,7 @@ project-site changes.
   emitter retried `genXmlParagraphProperties` on each run of a paragraph until one produced
   non-empty XML. That was unreachable while every `bullet` state wrote something, and became
   wrong the moment an empty `a:pPr` was possible: a paragraph whose first run said `'inherit'`
-  took its properties from a _continuation_ run instead, which by convention states no bullet —
+  took its properties from a *continuation* run instead, which by convention states no bullet —
   so it got back the very `a:buNone` the first run asked to leave out, appended **after** that
   run's `<a:r>`, where a `pPr` is not allowed. No deck the byte-identity corpus authors moves.
 
@@ -5774,7 +5770,7 @@ project-site changes.
   of the supposed write-side ceiling was already reachable. Three kinds genuinely are
   not, and each is handled rather than assumed away. A **group** has no variant, so it is
   flattened into its children — visually lossless, because `absoluteFrame` composes the
-  group's offset, rotation, flips _and_ child-space scaling into each child, and noted as
+  group's offset, rotation, flips *and* child-space scaling into each child, and noted as
   `layout.group` because one selectable object becomes several. A **connector** has no
   variant either and is re-authored as a `line` preset: it paints the identical stroke,
   keeps its rotation (which the slide-side `addConnector` mapping loses), and matters
@@ -5786,7 +5782,7 @@ project-site changes.
   the write path seeds every slide with each layout placeholder it did not populate, so
   re-declaring one would put an empty ghost shape on every slide bound to the layout.
   `master.decoration` survives for a **master's** own shapes and moves from a reading
-  problem to a structural one — `defineSlideMaster` creates a _layout_ under the single
+  problem to a structural one — `defineSlideMaster` creates a *layout* under the single
   shared master, so a master's shape tree has no write-side counterpart to receive them.
 
   Fidelity notes recorded against a layout shape are namespaced under a new
@@ -5794,7 +5790,7 @@ project-site changes.
   mapper speaks the slide vocabulary: `layout.line.width` is `line.width` seen from the
   chrome. The prefix is load-bearing twice over — the template-anchored tier suppresses
   every note under it (it rebuilds no layout, so none of them describes its output), and
-  the round-trip check refuses to let one excuse a difference on a _slide_, which a
+  the round-trip check refuses to let one excuse a difference on a *slide*, which a
   shape name repeated between a layout and the slides bound to it would otherwise do.
   `isKnownNoteConstruct` is exported alongside it and resolves a prefixed construct to
   its slide entry in the coverage table.
@@ -5810,14 +5806,14 @@ project-site changes.
   `AnyShape` union `Slide.shapes` does, from the same `buildShapes` dispatch, so
   shape-walking code applies unchanged — and the members carry the full paint surface
   (`resolvedFill`, `resolvedLine`, `presetGeometry`, `rotation`, `absoluteFrame`), which
-  the smaller `Placeholder` class never had. Tokens resolve against the _owning_ part's
+  the smaller `Placeholder` class never had. Tokens resolve against the *owning* part's
   context: a master shape's `schemeClr accent2` goes through the master's own `p:clrMap`
   and theme, not a slide's. Groups recurse and compose to slide-absolute frames as at
   slide level, and both classes get `shapeByIdDeep`.
 
   `placeholders` is unchanged, and is now documented as the filtered view of the same
   tree — both hand out the same live `p:sp` elements. Read a placeholder there to
-  _place_ it, through `shapes` to _draw_ it.
+  *place* it, through `shapes` to *draw* it.
 
   Shipping the accessor alone would have traded one wrong answer for another, so
   `Slide.showMasterSp` and `SlideLayout.showMasterSp` ship with it: `@showMasterSp`
@@ -5831,7 +5827,7 @@ project-site changes.
 
 - **`fill: { type: 'inherit' }` authors a shape whose interior comes from the style
   reference or the placeholder** (#10). 3.1.0 gave `type: 'none'` its `<a:noFill/>` back
-  (#9) and, in doing so, left the _inherit_ state with no spelling on the shape and text-box
+  (#9) and, in doing so, left the *inherit* state with no spelling on the shape and text-box
   path: that emitter defaults a **missing** `fill` to `<a:noFill/>`, so omitting the option
   is an explicit transparent interior, not silence. The two arms were therefore both
   no-fill, and 3.1.0's own migration advice — "omit `fill` instead" — pointed at the wrong
@@ -5840,7 +5836,7 @@ project-site changes.
   existing `addShape`/`addText` call without a `fill` keeps emitting `<a:noFill/>`, which is
   why this is additive rather than a fix to the ternary. `ShapeLineProps` inherits the new
   member, where it means the same thing the stroke side already got for free — omit the
-  paint child, keep the `<a:ln>`. On a table cell and a slide background, where _omitting_
+  paint child, keep the `<a:ln>`. On a table cell and a slide background, where *omitting*
   the option already meant inherit, `'inherit'` is simply the explicit spelling of that.
 
 - **Any commit is installable straight from GitHub: `npm i github:shbernal/pptx-ts#<sha>`.**
@@ -5848,7 +5844,7 @@ project-site changes.
   only installed git hooks, so a git-URL install packed a tarball in which every `exports`
   entry named a file that had never been built — the install succeeded and the first import
   failed. `prepare` now also runs `scripts/ensure-dist.mjs --if-missing`, a new mode that
-  builds an _absent_ `dist/` and leaves a stale one alone. That distinction is the whole
+  builds an *absent* `dist/` and leaves a stale one alone. That distinction is the whole
   design: the existing freshness check would be wrong in `prepare`, where it would make
   `pnpm run build` and `pnpm run watch` build twice over, and every script that needs a
   current build already front-loads its own unconditional `ensure-dist`. Absent means
@@ -5879,7 +5875,7 @@ project-site changes.
 
   The doc comments now also say which state silence is an alias for, on all three
   decorations. `false` and an omitted `strike` both write no attribute and therefore state
-  _nothing_, leaving the run with whatever it inherits — the same as `bold`/`italic`, whose
+  *nothing*, leaving the run with whatever it inherits — the same as `bold`/`italic`, whose
   falsy arm is likewise an omission. `'noStrike'`, `underline: { style: 'none' }` and
   `caps: 'none'` are the spellings that state "off" and override an inherited decoration.
 
@@ -5906,7 +5902,7 @@ project-site changes.
   the exact check that proves the fix, and the code the stopgap becomes. `ts-pptx#` is
   named as the literal token to grep for, which is what makes step 7 a command rather
   than a memory. Two other gaps a downstream consumer found by working through it: step
-  4 now checks `npm view @shbernal/ts-pptx version` _before_ the tracker, since a report
+  4 now checks `npm view @shbernal/ts-pptx version` *before* the tracker, since a report
   against a stale pin costs a maintainer a full triage and ends in a close; and step 1
   carries the `FidelityNote.cause` triage — `unread` and `unwritable` are gaps worth
   filing, `unsupported` is the format's own limit and is not — which is our own
@@ -5928,7 +5924,7 @@ project-site changes.
   merged-and-unreleased lasts weeks, and a workaround deleted on the strength of a closed
   issue breaks against the version actually installed. Post-publish now comments the
   carrying version on each issue the release closed. `AGENTS.md` gains the rule #10 was:
-  when a fix gives an option value a meaning it did not have, work out what its _absence_
+  when a fix gives an option value a meaning it did not have, work out what its *absence*
   now means, because an emitter that defaults through a ternary has already assigned one
   state to silence.
 
@@ -5939,7 +5935,7 @@ project-site changes.
   `Run.underline` / `Run.strike` / `Run.caps` and then mapped to `undefined`, so the
   resulting `CallIr` carried no option and re-emitting wrote no attribute. All three now
   carry — `underline: { style: 'none' }`, `strike: 'noStrike'`, `caps: 'none'` — and only an
-  _absent_ attribute maps to an absent option.
+  *absent* attribute maps to an absent option.
 
   `none` / `noStrike` are not the same fact as stating nothing. Each is a member of its own
   enumeration (ECMA-376 §20.1.10.81, §20.1.10.78, `ST_TextCapsType`) and would be redundant
@@ -5951,7 +5947,7 @@ project-site changes.
 
   It was undeclared either way — the same shape as #13. `DeckIr.fidelity` named neither
   construct, and `canonicalDeckIr` did not carry the field, so `diffDeckIr` compared two
-  models that were _both_ missing it and reported the deck clean; a consumer's round-trip
+  models that were *both* missing it and reported the deck clean; a consumer's round-trip
   harness structurally could not see this. Carrying the tokens closes both at once, and
   neither state notes. Two PowerPoint-authored fixtures state these tokens: `mixed.pptx` and
   `table.pptx` hold 132 runs stating `u="none"` and `strike="noStrike"`, 100 of which also
@@ -5967,7 +5963,7 @@ project-site changes.
   and one with neither keeps `fit: 'shrink'`.
 
   The two spellings are two states, not one value at two precisions. ECMA-376 §21.1.2.1.3
-  defaults each attribute to 100%/0% only when it is _omitted_; PowerPoint recomputes an
+  defaults each attribute to 100%/0% only when it is *omitted*; PowerPoint recomputes an
   unbaked scale on edit and draws a baked one exactly as written until then. A deck baked at
   `fontScale="40000"` therefore came back painting its text two and a half times too large,
   in a file valid either way, which is why nothing caught it.
@@ -5996,7 +5992,7 @@ project-site changes.
   `'inherit'` emits no fill child at all and leaves the area to the chart style.
 
   Two spellings deliberately still mean no-fill, because the gate is on a fill being
-  _stated_ rather than merely present. `normalizeChartOptions` defaults `plotArea.fill` to
+  *stated* rather than merely present. `normalizeChartOptions` defaults `plotArea.fill` to
   `{}`, so every chart ever authored arrives at the emitter carrying a fill object — a
   presence check would have painted all of them a default grey. And `{ transparency: 50 }`
   with no colour is not a fill: there is nothing for the alpha to apply to. That was a
@@ -6024,8 +6020,8 @@ project-site changes.
   it is the only one that already declares whose bug it is, and a "report this" banner on every
   malformed package would train callers to skip the line that always means something. The
   `ErrorCode` TSDoc — and therefore the `.d.ts` an agent in `node_modules` actually reads — now
-  states the test for the other four: the supported bar is _"the output opens cleanly in Microsoft
-  PowerPoint"_, and it reads in both directions, so a `PackageReadError` on a file PowerPoint opens
+  states the test for the other four: the supported bar is *"the output opens cleanly in Microsoft
+  PowerPoint"*, and it reads in both directions, so a `PackageReadError` on a file PowerPoint opens
   cleanly is our gap, not bad input. And `skills/ts-pptx-upstream/` is published in the tarball, so
   `npx skills add ./node_modules/@shbernal/ts-pptx` works offline and always matches the installed
   version. The skill's load-bearing instruction is the one about the deck: presentations carry
@@ -6086,7 +6082,7 @@ project-site changes.
   a table cell (`TableCellProps.fill`) can author a transparent cell the same way.
   Round-trip consequence: `addShape({ fill: { type: 'none' } })` → save → load now reports
   `Shape.fillNoFill === true`, where it reported `false` before. The one behaviour that
-  changes for existing decks is that `type: 'none'` no longer produces the _inherit_ state
+  changes for existing decks is that `type: 'none'` no longer produces the *inherit* state
   by accident — if you were relying on it to mean "leave the fill to the style", use
   `type: 'inherit'`, added in the next release. (This sentence originally said to omit the
   `fill` option, which is wrong on the shape and text-box path: a missing `fill` emits
@@ -6096,7 +6092,7 @@ project-site changes.
   legs of the cap mapping already existed — `ShapeLineProps.cap` authors the attribute and
   3.0.0's `Shape.lineCap` reads it back — but the script tier's `lineOption` never consumed
   it, so a deck this library wrote could not survive its own converter. The loss was
-  _undeclared_, which is the part that mattered: the round-trip gate excludes exactly what
+  *undeclared*, which is the part that mattered: the round-trip gate excludes exactly what
   a fidelity note names, so it passed green while the deck changed. `@cap` extends every
   dash by the stroke width and decides whether each draws as a rectangle or a lozenge, so
   on a thick dashed rule the before and after are visibly different. `@algn` is readable and
@@ -6106,11 +6102,11 @@ project-site changes.
 - **`latexToOmml` emits accents as `<m:acc>` rather than `<m:limUpp>`** (#6). `\hat`,
   `\bar`, `\vec`, `\dot`, `\ddot`, `\tilde`, `\acute`, `\grave`, `\check`, `\breve`,
   `\mathring`, `\H`, `\dddot` and their short-form aliases (`\^`, `` \` ``, `\'`, `\"`,
-  `\.`, `\=`, `\u`, `\v`, `\r`) all landed as over-_limits_, with limit spacing and
+  `\.`, `\=`, `\u`, `\v`, `\r`) all landed as over-*limits*, with limit spacing and
   semantics, because temml emits a bare `<mover>` (correct for a browser — MathML renderers
   derive accent positioning from the operator dictionary) and mathml2omml has no dictionary
   and keys strictly off `accent="true"`. The pipeline now carries the small dictionary
-  subset that closes the gap, and while it is there it swaps temml's _spacing_ modifier for
+  subset that closes the gap, and while it is there it swaps temml's *spacing* modifier for
   the combining mark ECMA-376 §22.1.2.20 says an `accPr` character should be — so `\vec{v}`
   gets an arrow accent instead of a full-size arrow hung over the base.
 
@@ -6119,7 +6115,7 @@ project-site changes.
   are untouched (`\widehat`/`\overbrace` stay `m:groupChr`, `\overline`/`\underline` stay
   `m:borderBox`, `\stackrel` stays `m:limUpp`), and two stay limits by necessity: `\utilde`
   and other under-accents, since OMML has no under-accent object and the symmetric
-  `accentunder="true"` makes mathml2omml emit an _over_-accent; and `\ddddot`, whose
+  `accentunder="true"` makes mathml2omml emit an *over*-accent; and `\ddddot`, whose
   two-character operator has no single `m:chr`.
 
 - **A table cell's explicit `a:noFill` survives read → script → write.** Previously a
@@ -6138,7 +6134,7 @@ project-site changes.
   `patternFill`, `pictureFill`) reports `null` for both, so a consumer honouring the read
   model painted an `a:noFill` rectangle in the theme's accent colour. The same class had
   `ChartFill.noFill`, `ChartLine.noFill` and `CellBorder.noFill` already; the shape fill was
-  the omission. `Shape.noFill()` has always been able to _write_ this state.
+  the omission. `Shape.noFill()` has always been able to *write* this state.
 
 - **`Shape.lineCap` and `Shape.lineAlign` read `a:ln/@cap` and `a:ln/@algn`.** `@cap` was a
   write/read asymmetry inside this library: `ShapeLineProps.cap` authors it and nothing read
@@ -6153,7 +6149,7 @@ project-site changes.
   (`p:grpSpPr/a:xfrm/a:chOff` and `a:chExt`), as a `ChildFrame` of `offsetX` / `offsetY` /
   `extentX` / `extentY` in EMU, or `null` when the group has no transform. `absoluteFrame`
   reads these internally to compose slide-absolute geometry and remains the right answer for
-  anything that _paints_ — this is for a consumer that _rebuilds_ a group as OOXML, which
+  anything that *paints* — this is for a consumer that *rebuilds* a group as OOXML, which
   needs the source child space to reproduce its scaling and could otherwise only rebuild
   groups whose child space is the identity. Named after the OOXML attributes rather than the
   read model's `left`/`top`/`width`/`height`, because it is the source rectangle of a
@@ -6168,16 +6164,11 @@ project-site changes.
   ```js
   import { clipPath } from '@shbernal/ts-pptx'
 
-  const w = 5.22,
-  	h = 7.5
+  const w = 5.22, h = 7.5
   slide.addImage({
-  	path: 'cover.jpg',
-  	x: 0,
-  	y: 0,
-  	w,
-  	h,
-  	points: clipPath({ kind: 'half-disc', flat: 'right' }, w, h),
-  	sizing: { type: 'cover', w, h },
+    path: 'cover.jpg', x: 0, y: 0, w, h,
+    points: clipPath({ kind: 'half-disc', flat: 'right' }, w, h),
+    sizing: { type: 'cover', w, h },
   })
   ```
 
@@ -6187,25 +6178,22 @@ project-site changes.
   inherited blipFill — with no placeholder, and no layout, involved.
 
   **The box size is an argument for a reason.** A `custGeom` point written as `%` resolves
-  against the _slide_, not the picture, so a box-relative silhouette has to be emitted in
+  against the *slide*, not the picture, so a box-relative silhouette has to be emitted in
   inches already scaled to its box. `clipPath` multiplies its fractions out at build time,
   which is what lets one silhouette scale to any region — and is why handing a path to a
   picture of a different size puts the clip somewhere else entirely. That trap is the whole
   reason this is worth shipping rather than leaving to each caller.
 
-- **`slide.addModel3d()` embeds a 3D model** — PowerPoint's _Insert ▸ 3D Models_. A glTF
+- **`slide.addModel3d()` embeds a 3D model** — PowerPoint's *Insert ▸ 3D Models*. A glTF
   binary (`.glb`) travels inside the package, and PowerPoint 2019+ renders it live and lets
   the viewer orbit it. See [`docs/3d-models.md`](docs/3d-models.md).
 
   ```js
   slide.addModel3d({
-  	path: 'assets/engine.glb',
-  	preview: { path: 'assets/engine-render.png' },
-  	meterPerModelUnit: 1 / 240, // the model's largest bounding-box dimension
-  	x: 1,
-  	y: 1,
-  	w: 6,
-  	h: 4,
+    path: 'assets/engine.glb',
+    preview: { path: 'assets/engine-render.png' },
+    meterPerModelUnit: 1 / 240, // the model's largest bounding-box dimension
+    x: 1, y: 1, w: 6, h: 4,
   })
   ```
 
@@ -6264,7 +6252,7 @@ project-site changes.
   cannot, because its showcase draws every asset rather than loading one:
 
   - `loadMedia` — a fetched raster image lands in the package as the same bytes Node reads
-    off disk, _and_ as the same bytes as the source file. The two implementations return
+    off disk, *and* as the same bytes as the source file. The two implementations return
     different strings for the same image (Node raw base64, the browser a `FileReader` data
     URI) and everything downstream reconciles them, including the image sizer.
   - `createSvgPngPreview` — the `<canvas>` rasterizer, whose branches nothing exercised
@@ -6277,16 +6265,16 @@ project-site changes.
   in the fixture cannot read as a divergence in the runtime.
 
   Two things fell out of loading the shipped file unbundled. `opentype.js` turns out to be
-  a _dynamic_ bare import inside the measure/fit chunk — invisible to every bundled
+  a *dynamic* bare import inside the measure/fit chunk — invisible to every bundled
   consumer, and now documented for anyone loading the entry over a plain
-  `<script type="module">`. And Node and the browser are _expected_ to disagree on exactly
+  `<script type="module">`. And Node and the browser are *expected* to disagree on exactly
   one part: the SVG PNG fallback, where Node has no rasterizer. The lane asserts the shape
   of that disagreement so it cannot quietly become a different one.
 
 - **`tableToSlides` is tested against a table a browser actually laid out** — a third
   Playwright project, `html-table`, on the same unbundled harness server.
 
-  `pickColWidthBasis` chooses between three column-width bases, and its _first_ arm — the
+  `pickColWidthBasis` chooses between three column-width bases, and its *first* arm — the
   rendered `offsetWidth` — had never executed anywhere. The Node suite drives happy-dom,
   where `offsetWidth` is `0` for every cell, so it always took a fallback arm; the unit
   suite reached the function by handing it numbers directly, which proves the `if` and not
@@ -6302,7 +6290,7 @@ project-site changes.
   assertions go red, reporting the CSS ratio.
 
   **This does not move the scope line, and the wording matters.** What is asserted is that a
-  measurement is _taken and honoured_ — proportionally, with `data-pptx-width` still winning
+  measurement is *taken and honoured* — proportionally, with `data-pptx-width` still winning
   outright. Nothing asserts that Chromium's numbers are the right numbers or that another
   engine would agree; that is live-DOM layout fidelity, it has no oracle, and it stays out
   of active scope. A layout difference between two browsers is still not a defect in this
@@ -6318,19 +6306,19 @@ project-site changes.
 
 - **Coverage from both lanes is merged into one number** (`pnpm run coverage:gate`, CI job
   `coverage`). `scripts/coverage-merge.mjs` folds the browser lane's V8 coverage into the
-  Node report on one rule — _the Node report defines the shape, the browser lane
-  contributes hits_ — so the merged denominator is identical to the Node report's and the
+  Node report on one rule — *the Node report defines the shape, the browser lane
+  contributes hits* — so the merged denominator is identical to the Node report's and the
   two percentages are directly comparable. Merged: statements 93.91, branches 83.71,
   functions 98.29, lines 96.11.
 
   It also makes this repo's **point-of-slack rule fail a build** rather than live in prose:
-  `scripts/coverage-gate.mjs` is red both when a number falls below its notch _and_ when it
+  `scripts/coverage-gate.mjs` is red both when a number falls below its notch *and* when it
   clears it by less than a full point. Prose does not fail a build, which is how the
   exclusion drop left `functions` at 0.35 of slack while an acceptance criterion of
   "thresholds still pass" was satisfied.
 
   The four numbers in `vitest.config.ts` remain the Node suite's own floor, and the browser
-  lane keeps its per-function gate — a percentage cannot say _which_ adapter function
+  lane keeps its per-function gate — a percentage cannot say *which* adapter function
   stopped running.
 
 - **The package is now bundled for Node and run, inside `pnpm run test:package`.** The
@@ -6356,7 +6344,7 @@ project-site changes.
 ### Changed
 
 - **BREAKING: `Paragraph.bullet` is replaced by `Paragraph.bulletDetail`.** The old accessor
-  reported a _tagged string_ — `'none'` / `'char:•'` / `'autoNum:arabicPeriod'` — which is
+  reported a *tagged string* — `'none'` / `'char:•'` / `'autoNum:arabicPeriod'` — which is
   ambiguous when the glyph is itself a colon and reads as a bare glyph if you do not know
   better. That is not hypothetical: this library's own script converter first consumed it as
   one, and `'none'.codePointAt(0)` put a literal `n` bullet on every converted deck, silently.
@@ -6388,7 +6376,7 @@ project-site changes.
 
 - **BREAKING (output): `<a:buSzPct/>` is emitted only when `bullet.size` is given.** It used
   to be written unconditionally, pinned to `val="100000"`, on every object-form bullet and on
-  `bullet: true`. An explicit 100% is not the same as leaving it out — it _overrides_
+  `bullet: true`. An explicit 100% is not the same as leaving it out — it *overrides*
   whatever bullet size the layout's or master's list style sets, so every bullet this path
   wrote silently forced its glyph back to full size. The same class of bug as the explicit
   `a:buNone` an omitted `bullet` emits, and invisible until `bulletDetail` gave the
@@ -6403,7 +6391,7 @@ project-site changes.
   still means what it always did — a fit box deliberately different from the picture.
 
   `stretch` emits the plain `<a:stretch><a:fillRect/></a:stretch>` a raster already gets. It
-  exists so the fill-the-box behaviour can be _asked for_, which is what makes the vector
+  exists so the fill-the-box behaviour can be *asked for*, which is what makes the vector
   default below opt-out-able rather than a trap.
 
 - **BREAKING: an SVG is placed at its own aspect ratio by default instead of being stretched
@@ -6413,13 +6401,13 @@ project-site changes.
   routes each call through `sizing: 'contain'`; that wrapper is now the library's default.
 
   ```js
-  slide.addImage({ svg: icon, x: 1, y: 1, w: 3, h: 1 }) // letterboxed, centered
+  slide.addImage({ svg: icon, x: 1, y: 1, w: 3, h: 1 })                            // letterboxed, centered
   slide.addImage({ svg: band, x: 0, y: 0, w: 13.33, h: 0.4, sizing: { type: 'stretch' } }) // opt out
   ```
 
   **Scope, deliberately narrow.** Rasters are untouched: a photo's box is chosen for it, filling
   it is what PowerPoint does, and letterboxing every existing deck's pictures would be a change
-  of a different order. A vector is different in kind — it _states_ its ratio in a `viewBox`,
+  of a different order. A vector is different in kind — it *states* its ratio in a `viewBox`,
   and disagreeing with that statement is a defect rather than a layout choice. Nothing is
   emitted when the ratios already agree, so a square glyph in a square box produces the same
   bytes it always did, and an SVG carrying neither `viewBox` nor `width`/`height` stretches
@@ -6441,7 +6429,7 @@ project-site changes.
 
 - **`vitest.config.ts` no longer excludes anything of this repo's own from coverage.**
   The `dist/browser.js` / `dist/browser-*.js` entries are gone; the second never matched
-  anything, because tsdown bundles the adapter _into_ the entry. Dropping them took the
+  anything, because tsdown bundles the adapter *into* the entry. Dropping them took the
   measured functions figure 98.33 → 97.35 while actual tested-ness went up, which is the
   shape of an honest denominator: the Node suite cannot execute an adapter that needs
   `fetch`, `FileReader` and a canvas.
@@ -6455,11 +6443,11 @@ project-site changes.
   [`docs/runtime-and-package-support.md`](docs/runtime-and-package-support.md) so it is not
   re-litigated per release.
 
-- **The docs called `tableToSlides`'s no-browser width path a _degradation_. It is a
-  _fallback_, and the difference is not cosmetic.** Every user-facing statement of it — the
+- **The docs called `tableToSlides`'s no-browser width path a *degradation*. It is a
+  *fallback*, and the difference is not cosmetic.** Every user-facing statement of it — the
   README, `docs/project-target.md`, `docs/runtime-and-package-support.md`, `AGENTS.md`, the
   `/html` entry's own doc comment — said column widths "degrade to computed CSS", which
-  reads as _the same answer, less precisely_. They do not measure the same box:
+  reads as *the same answer, less precisely*. They do not measure the same box:
   `offsetWidth` is the border box and a computed `width` is the content box, so padding
   alone can put the two bases in different **proportions**. The `html-table` fixture is
   built to demonstrate exactly that — 1:1 measured against 2:1 from CSS on one table — so
@@ -6482,12 +6470,12 @@ project-site changes.
 
 ### Fixed
 
-- **`readModelToIr` now emits its `table.rowAuto` note when _every_ row is auto-height**, not
+- **`readModelToIr` now emits its `table.rowAuto` note when *every* row is auto-height**, not
   only when some are. The guard excluded the all-auto case explicitly, and that case is both
   the more common one — a table authored with no explicit row heights has `a:tr/@h="0"` on
   every row — and a real loss: no `rowH` is emitted at all, so `addTable` divides the frame
   height evenly and three auto rows come back pinned to a third of the frame each. The table
-  still looks the same; what is lost is the _implicitness_, which matters the moment someone
+  still looks the same; what is lost is the *implicitness*, which matters the moment someone
   edits a cell and expects the row to grow. A round-trip oracle gated on "nothing undeclared"
   is only as good as its note set, and this was a difference passing through undeclared.
 
@@ -6503,7 +6491,7 @@ project-site changes.
   at 8px of cell padding a 60-row table paged `[10, 11, 11, 11, 11, 7]` where every full page
   had room for 10.
 
-  The symptom is easy to miss because the error is _constant_: every generated page overflows
+  The symptom is easy to miss because the error is *constant*: every generated page overflows
   by the same amount, so the pages agree with each other and disagree only with the first
   one. That is also why the existing continuation-slide regression stayed green — it compared
   continuation pages to each other.
@@ -6529,7 +6517,7 @@ project-site changes.
 
   - a deck pointed at a **built-in** GUID that the package does not define renders
     correctly — so the gallery, not the part, is what is consulted;
-  - a PowerPoint-authored deck with one style's GUID rewritten to a novel value in _both_
+  - a PowerPoint-authored deck with one style's GUID rewritten to a novel value in *both*
     `ppt/tableStyles.xml` and the slide, bytes otherwise identical, loses that table's
     styling entirely (black hairline grid on white) while its untouched neighbours keep
     theirs;
@@ -6547,17 +6535,17 @@ project-site changes.
   ```js
   // before
   const brand = pptx.defineTableStyle({
-  	name: 'Brand',
-  	wholeTbl: { border: { type: 'solid', color: 'D9D9D9', width: 0.5 } },
-  	firstRow: { fill: '1A2B3C', color: 'FFFFFF', bold: true },
+    name: 'Brand',
+    wholeTbl: { border: { type: 'solid', color: 'D9D9D9', width: 0.5 } },
+    firstRow: { fill: '1A2B3C', color: 'FFFFFF', bold: true },
   })
   slide.addTable(rows, { tableStyle: brand, hasHeader: true, styleDrivenCells: true })
 
   // after
   slide.addTable(rows, {
-  	hasHeader: true,
-  	border: { type: 'solid', color: 'D9D9D9', width: 0.5 },
-  	headerRow: { fill: { color: '1A2B3C' }, color: 'FFFFFF', bold: true },
+    hasHeader: true,
+    border: { type: 'solid', color: 'D9D9D9', width: 0.5 },
+    headerRow: { fill: { color: '1A2B3C' }, color: 'FFFFFF', bold: true },
   })
   ```
 
@@ -6607,7 +6595,7 @@ project-site changes.
 
 - **A styled table cell's own fill is no longer dropped by `pptx-to-script`.** A cell
   with an explicit `a:solidFill` inside a table that also has a `tableStyle` replicated
-  as _unfilled_, because the mapper could not tell that colour apart from one the cell
+  as *unfilled*, because the mapper could not tell that colour apart from one the cell
   merely inherited from the style's header/banding rules — and baking an inherited
   colour in would freeze the banding, so it dropped both.
 
@@ -6639,7 +6627,7 @@ project-site changes.
   setters, saves it, and validates the result — the only shape of test that catches it.
 
   Structural edits keep the grid rectangular and every merge's continuations in step.
-  Inserting a row or column _through_ a merge extends it rather than splitting it;
+  Inserting a row or column *through* a merge extends it rather than splitting it;
   removing a merge origin promotes its first continuation, so the region survives one
   row shorter; removing a column inside a merge drops a covered cell rather than the
   origin, so the region keeps its content. `mergeCells` **rejects** a rectangle that
@@ -6655,8 +6643,8 @@ project-site changes.
   would leave them looking at an unchanged deck with nothing to explain it.
 
 - **`TableProps.tableFill`** — the table's own background, written as a real `a:tblPr`
-  fill that the cells sit on top of. The existing `TableProps.fill` is _stamped onto
-  every cell_ instead, so nothing ever reached `a:tblPr`. The two usually render alike,
+  fill that the cells sit on top of. The existing `TableProps.fill` is *stamped onto
+  every cell* instead, so nothing ever reached `a:tblPr`. The two usually render alike,
   which is why the difference is worth stating: with `fill` there is no such thing as
   an unfilled cell, so a cell can never fall back to a table background — and a deck
   read back from PowerPoint carries the `a:tblPr` shape, not the flattened one.
@@ -6691,7 +6679,7 @@ project-site changes.
   because a diagonal is one corner-to-corner stroke and repeating it per covered cell
   would draw a sawtooth.
 
-- **`TableCellProps.anchorCtr`** — centres a cell's whole text _block_ horizontally
+- **`TableCellProps.anchorCtr`** — centres a cell's whole text *block* horizontally
   (`a:tcPr/@anchorCtr`), independent of each paragraph's `align`. The two compose:
   `align` places each line inside the text block, `anchorCtr` places that block inside
   the cell. Read back via `TableCell.anchorCtr`. `false` is the schema default and
@@ -6718,7 +6706,7 @@ project-site changes.
   both without complaint and then strips them on the first save, so an emitter would
   ship a feature that dies as soon as anyone edits the deck. The measurement is
   `test/read/fixtures/authoring/probe-table-cell-a11y-and-3d.ps1`, and it is a
-  controlled one: `a:cell3D` and `a:headers` were injected into the _same_ `a:tcPr`,
+  controlled one: `a:cell3D` and `a:headers` were injected into the *same* `a:tcPr`,
   and PowerPoint kept the first and discarded the second. `TableProps.hasHeader`
   (`a:tblPr/@firstRow`) remains the header marker PowerPoint keeps — and the one its
   own accessibility checker reads. The accessors exist because a deck from another
@@ -6728,7 +6716,7 @@ project-site changes.
 - **`BorderProps.dashType`** — the exact `a:prstDash` preset for a border, using the
   same vocabulary as `ShapeLineProps.dashType`. `BorderProps.type` is only a coarse
   three-way switch, so every dashed border it can express — dotted, long-dash,
-  dash-dot — collapsed onto the single `sysDash` preset on write _and_ on read-back.
+  dash-dot — collapsed onto the single `sysDash` preset on write *and* on read-back.
   A deck whose table borders are `dot` or `lgDashDot` could not be authored or
   replicated. `dashType` names the preset directly and wins over `type` when both are
   set; `type: 'none'` still suppresses the border before any dash is chosen. Honored
@@ -6754,7 +6742,7 @@ project-site changes.
   "outline the table, no interior grid" is `outerBorder` with no `border` at all.
 
   The perimeter is decided by **grid position**, not by authored cell, so merges
-  work: PowerPoint defines a merged region's outer edges on the _covered_ cells, and
+  work: PowerPoint defines a merged region's outer edges on the *covered* cells, and
   a colspan reaching the last column gets that column's rule on its `hMerge` dummy.
   Leaving the option unset emits nothing — existing decks are byte-identical.
 
@@ -6820,14 +6808,14 @@ project-site changes.
 - **`TableProps.border` is documented as what it is: a per-cell default, not the
   table's perimeter.** The old wording ("single value applied to all 4 sides / array
   in TRBL for individual sides") read like the outside of the table. It never was:
-  `normalizeTableRows` broadcasts it to _every_ cell, so
+  `normalizeTableRows` broadcasts it to *every* cell, so
   `border: [solid, none, solid, none]` gives each cell a top and bottom rule — a full
   set of horizontal grid lines — rather than a rule above and below the table.
   Nothing about the behaviour changed; the doc now says so plainly and points at the
   new `TableProps.outerBorder` for the perimeter case.
 
 - **A table-level `border` side with `width: 0` is now emitted as the hairline it
-  asks for**, instead of being replaced by the 1pt default. Per-_cell_ borders
+  asks for**, instead of being replaced by the 1pt default. Per-*cell* borders
   already treated `0` as a real width; only the table-level path used a truthiness
   test, so the two disagreed for exactly one value. Both now share one helper. A
   border that sets no `width` at all is unaffected.
@@ -6866,8 +6854,8 @@ makes no backwards-compatibility guarantee with the original project.
 
 - **An error taxonomy: `TsPptxError` and five subclasses.** The library threw
   ~160 bare `Error`s and shipped no error classes at all, so a consumer wanting to
-  tell _"you passed a bad coordinate"_ from _"this font file is corrupt"_ from
-  _"these bytes are not a package"_ had to match on message substrings — text the
+  tell *"you passed a bad coordinate"* from *"this font file is corrupt"* from
+  *"these bytes are not a package"* had to match on message substrings — text the
   project is explicitly free to reword in any release.
 
   Every failure is now a `TsPptxError` carrying a stable `code`:
@@ -6887,7 +6875,7 @@ makes no backwards-compatibility guarantee with the original project.
 
   The classes are a deliberately flat set of five — `InvalidOptionError`,
   `UnsupportedFeatureError`, `PackageReadError`, `MediaError`, `InternalError` —
-  answering _whose problem is this?_; the `code` carries the specificity.
+  answering *whose problem is this?*; the `code` carries the specificity.
 
   **The class and the `code` are API; the `message` is not.** Codes draw on the
   same vocabulary as diagnostics, so a condition reads the same whichever way it
@@ -6906,7 +6894,7 @@ makes no backwards-compatibility guarantee with the original project.
 - **A diagnostics seam: `setDiagnosticHandler`.** Library warnings were hardwired
   to `console.warn` across ~100 call sites, so a consumer generating decks in a
   batch job could neither silence nor route them, and nothing downstream could
-  react to a _specific_ condition without matching on message substrings.
+  react to a *specific* condition without matching on message substrings.
 
   Every warning is now a structured `Diagnostic { code, message, detail? }`
   delivered to a handler you can install:
@@ -6919,7 +6907,7 @@ makes no backwards-compatibility guarantee with the original project.
   setDiagnosticHandler(null) // restore the console default
   ```
 
-  **The `code` is API; the `message` is not.** A code identifies a _condition_ in
+  **The `code` is API; the `message` is not.** A code identifies a *condition* in
   `area/condition` form (`'chart/non-finite-value'`, `'coord/bare-number-is-inches'`)
   and is stable: adding one is back-compatible, removing or renaming one is
   breaking. The wording behind it is free to improve in any release — do not parse
@@ -6978,7 +6966,7 @@ makes no backwards-compatibility guarantee with the original project.
   `types`, so what the compiler shows matches what the runtime has.
 
 - **`pptx-ts/inspect` is now a projection over `pptx-ts/read`, and
-  `fast-xml-parser` is no longer a dependency.** The library shipped _two_
+  `fast-xml-parser` is no longer a dependency.** The library shipped *two*
   independent readers of a `.pptx` over two different XML parsers: the deep,
   navigable `read` model on `@xmldom/xmldom`, and the flat `inspect` snapshot on
   `fast-xml-parser` with its own hand-rolled, JSZip-shaped package facade. The
@@ -6987,9 +6975,9 @@ makes no backwards-compatibility guarantee with the original project.
   listing — so every read-side fix had to be made twice, and a divergence between
   the two was invisible to every test in the repo.
 
-  The _shape_ of `inspect` is unchanged: a cheap, flat, allocation-light snapshot
+  The *shape* of `inspect` is unchanged: a cheap, flat, allocation-light snapshot
   is a genuinely different use case from a navigable model, and every exported
-  type and function keeps its name and meaning. The _implementation_ is gone.
+  type and function keeps its name and meaning. The *implementation* is gone.
   `inspect` now reaches the package through `OpcPackage` and every field through
   the read model's own getters, so the two surfaces cannot disagree about what a
   deck says.
@@ -7145,7 +7133,7 @@ makes no backwards-compatibility guarantee with the original project.
   `a:alphaModFix` opacity carries as `transparency`.
 
   The write path emits every picture fill as a plain stretched blip, so a tiled,
-  cropped or inset fill is re-embedded and then _flattened_: that is the new
+  cropped or inset fill is re-embedded and then *flattened*: that is the new
   `fill.picture.geometry` / `table.cell.fill.picture.geometry` note, recorded
   only when the source uses one of them. The older `fill.picture` /
   `table.cell.fill.picture` notes narrow to the surfaces whose bytes cannot be
@@ -7153,7 +7141,7 @@ makes no backwards-compatibility guarantee with the original project.
   an SVG, which `addImage` accepts but a fill does not.
 
 - **The read model can now see a picture fill.** `TableCell.pictureFill` and
-  `AutoShape.pictureFill` decode an `a:blipFill` on a _surface_ — the cell's
+  `AutoShape.pictureFill` decode an `a:blipFill` on a *surface* — the cell's
   `a:tcPr`, the shape's `p:spPr` — into `{ relId, partName, mode, srcRect,
   fillRect, tile, alpha, dpi, rotWithShape }`. Rect edges are per-edge fractions
   (`÷ 100000`, so `0.1` is 10 %, and a negative `fillRect` edge stays negative);
@@ -7166,7 +7154,7 @@ makes no backwards-compatibility guarantee with the original project.
   author an image-filled cell and then read it back as unfilled, because
   `resolvedFill` decodes solid colours only. It also settles what a `Picture` is
   and is not — a `p:pic` whose image is its sibling `p:blipFill` — as against a
-  shape or cell whose _surface_ happens to be an image.
+  shape or cell whose *surface* happens to be an image.
 
   Gated on `test/read/fixtures/table-cell-image-fill.pptx` for the cell half
   (stretched, tiled, bordered and merged picture cells, plus a solid control) and
@@ -7194,7 +7182,7 @@ makes no backwards-compatibility guarantee with the original project.
 - **`tableToSlides` produced an empty table for an id that is not a valid CSS
   identifier.** The table id was interpolated raw into a CSS selector
   (`#${id} tr:first-child th`), so an id starting with a digit, or containing `.`
-  or `:`, matched nothing — _after_ passing the `getElementById` reality-check,
+  or `:`, matched nothing — *after* passing the `getElementById` reality-check,
   which made it look like the table had simply been read as empty. Every query is
   now scoped to the element, so the id is never parsed as a selector. Selector
   semantics are otherwise unchanged.
@@ -7211,14 +7199,14 @@ makes no backwards-compatibility guarantee with the original project.
   background still becomes white.
 
   A dead condition next to it was removed:
-  `getComputedStyle(cell).getPropertyValue('transparent')` tested a CSS _keyword_
+  `getComputedStyle(cell).getPropertyValue('transparent')` tested a CSS *keyword*
   as if it were a property, so it returned `''` for every cell and never fired.
 
 - **`tableToSlides` dropped every row that was not inside a `<thead>`/`<tbody>`/
   `<tfoot>`, then threw `addTable: Array expected!`.** Rows were collected with
   three descendant queries (`thead tr`, `tbody tr`, `tfoot tr`), which see only
   sectioned rows. `<table><tr>…` is valid authored markup, and a table assembled
-  with `createElement`/`appendChild` has no `<tbody>` at all — the HTML _parser_
+  with `createElement`/`appendChild` has no `<tbody>` at all — the HTML *parser*
   inserts one, the DOM API does not. Such a table lost all of its rows and
   reached `addTable` empty, which is the reported failure in upstream
   gitbrent/PptxGenJS#1005. Rows now come from the table's own row list, and a row
@@ -7228,17 +7216,17 @@ makes no backwards-compatibility guarantee with the original project.
   row's ownership is checked rather than assumed).
 
 - **`tableToSlides` applied `data-pptx-width` to the wrong column when a header
-  cell spanned.** The width overrides were looked up by _column_ index
-  (`thead tr:first-child th:nth-child(n)`) against a row indexed by _cell_ — the
+  cell spanned.** The width overrides were looked up by *column* index
+  (`thead tr:first-child th:nth-child(n)`) against a row indexed by *cell* — the
   two part ways the moment a `colspan` is involved. A 2-span header with
   `data-pptx-width="4"` followed by a header with `data-pptx-width="2"` sized the
-  span's second column with the _next_ header's 2in and left the last column with
+  span's second column with the *next* header's 2in and left the last column with
   no override at all. This is upstream gitbrent/PptxGenJS#1244. A spanning cell's
   `data-pptx-width` / `data-pptx-min-width` now divides across the columns it
   covers, matching what its `offsetWidth` and its computed CSS width already did.
 
   Two related mismatches went with it. The overrides were read from `<thead>`
-  `<th>` cells while the widths themselves came from the first row _anywhere_, so
+  `<th>` cells while the widths themselves came from the first row *anywhere*, so
   a table with no `<thead>` measured one row and took overrides from a row that
   did not exist — both now come from the same cells. And the width-source query
   was a descendant selector, so a table with `<th>` in both `<thead>` and
@@ -7265,8 +7253,8 @@ makes no backwards-compatibility guarantee with the original project.
   `cap` was silently ignored everywhere: `line: { cap: 'round' }` on a shape and
   `border: { cap: 'round' }` on a table both emitted `cap="flat"`. `pattern` was
   worse than ignored — `line: { type: 'pattern', pattern: {…} }` reached
-  `genXmlPatternFill` with no pattern object and threw _"Pattern fill requires a
-  pattern object."_ A gradient stroke was dropped on the `addText({ shape:
+  `genXmlPatternFill` with no pattern object and threw *"Pattern fill requires a
+  pattern object."* A gradient stroke was dropped on the `addText({ shape:
   'line' })` path specifically, which carried its own near-duplicate rebuild.
 
   All four rebuilds (two for shape/text lines, two for table borders) now spread
@@ -7310,7 +7298,7 @@ makes no backwards-compatibility guarantee with the original project.
 
   That also closes the wider half of the same hole: a combo chart's internal
   `_type` is a `ChartMulti[]`, so the chart-level corrections that key off the
-  chart _type_ — `barGrouping`, `dataLabelPosition` — previously matched no branch
+  chart *type* — `barGrouping`, `dataLabelPosition` — previously matched no branch
   and never ran either. They now resolve per subchart, which is why one bad
   chart-level `barGrouping` correctly lands as `clustered` for a bar group and
   `standard` for a line group.
@@ -7342,7 +7330,7 @@ makes no backwards-compatibility guarantee with the original project.
   overflow slide's media on that slide rather than piling every relationship onto
   the first one.
 
-  This is a cell _fill_, not a picture nested in a cell — `CT_TableCell` accepts
+  This is a cell *fill*, not a picture nested in a cell — `CT_TableCell` accepts
   only `a:txBody`, `a:tcPr` and `a:extLst`, so no `<p:pic>` can live inside an
   `<a:tc>` at any effort. To float a real picture over a cell instead, use
   `pptx.tableLayout()` to get that cell's computed rect and `addImage()` at those
@@ -7352,21 +7340,21 @@ makes no backwards-compatibility guarantee with the original project.
   image fill always type-checked. What was missing was the registration step —
   nothing walked a table's cells to allocate the media relationship, which is why
   it degraded at write time (see Fixed, below). Registration is keyed on fill
-  _object identity_, so the `headerRow`/`columns` sugar — which shares one fill
+  *object identity*, so the `headerRow`/`columns` sugar — which shares one fill
   object across every cell it styles — mints a single relationship rather than one
   per cell.
 
   Gated on `test/read/fixtures/table-cell-image-fill.pptx`, authored by desktop
   PowerPoint: stretched, tiled, bordered and merged picture-fill cells in one
   table. Two findings from it are worth keeping. PowerPoint writes a bare
-  `<a:tcPr/>` on a merged region's _covered_ cells and repeats no fill there,
+  `<a:tcPr/>` on a merged region's *covered* cells and repeats no fill there,
   while this library copies the origin's fill onto them — kept deliberately, since
   a covered cell is never rendered and the copy keeps image fills uniform with the
-  solid case. And PowerPoint's _stretched_ cell fill omits `dpi="0"
+  solid case. And PowerPoint's *stretched* cell fill omits `dpi="0"
   rotWithShape="1"` and `<a:srcRect/>`, which our shared `genXmlImageFill` always
   writes; that shared emitter was left alone, because both attributes are optional
   with no schema default and PowerPoint authors exactly that attribute set for its
-  own _tiled_ cell in the same table.
+  own *tiled* cell in the same table.
 
 - **A deck IR (`@shbernal/ts-pptx/script`), the read half of turning an existing
   `.pptx` back into source.** `readModelToIr(presentation)` walks a deck read
@@ -7397,7 +7385,7 @@ makes no backwards-compatibility guarantee with the original project.
 
 - **`printScript(ir, options)` turns that IR into a runnable TypeScript module.**
   Returns `{ code, assets, notes }`: the module source, the image bytes it
-  expects beside it, and the losses that apply to _this_ output. The emitted
+  expects beside it, and the losses that apply to *this* output. The emitted
   script anchors on a template, and the template is the **source deck itself,
   unmodified** — `Presentation.fromTemplate` already strips a package's slides
   while leaving its masters, layouts, theme, and document properties
@@ -7406,10 +7394,10 @@ makes no backwards-compatibility guarantee with the original project.
   slides sharing a layout share one generator, since `appendSlides` binds one
   layout per call.
 
-  `notes` is not simply `ir.fidelity`. A template-anchored output _rescues_ some
+  `notes` is not simply `ir.fidelity`. A template-anchored output *rescues* some
   declared losses — all twelve document properties ride in the template, so the
   IR's `deck.docProps` note does not apply and is omitted rather than left to
-  teach readers to skim. It also _adds_ losses that belong to the tier rather
+  teach readers to skim. It also *adds* losses that belong to the tier rather
   than to the conversion: a slide's `p:cSld@name` reads fine and would survive a
   byte copy, but has no public write-API setter. The applicable set is
   reproduced as a header comment in `code`, so the artifact carries its own
@@ -7431,7 +7419,7 @@ makes no backwards-compatibility guarantee with the original project.
   gets the deck's entire design back byte for byte, at the cost of shipping the
   source deck alongside the script and of leaving that design uneditable.
   Standalone output is one file, and the parts of the original design the read
-  model cannot see are gone. Three of them are unreachable from _both_
+  model cannot see are gone. Three of them are unreachable from *both*
   directions, so no amount of converter work recovers them: `a:fmtScheme` (the
   fill, line and effect style lists a shape's `p:style` indexes into — no reader,
   and the write path emits a hardcoded Office one), `p:txStyles` (the master's
@@ -7450,7 +7438,7 @@ makes no backwards-compatibility guarantee with the original project.
 
   The second consumer moved the IR twice, both still within this unreleased
   window. `DeckIr` gained `chrome` (`{ theme, masters[] }`), which the
-  template-anchored printer ignores entirely since the source deck _is_ its
+  template-anchored printer ignores entirely since the source deck *is* its
   chrome. And `SlideIr.calls` is now populated for a `carried` slide too: marking
   a slide carried was an erasure and is now a recommendation, because a printer
   with no source package to copy from had the whole slide erased rather than only
@@ -7504,7 +7492,7 @@ makes no backwards-compatibility guarantee with the original project.
   emitted literal when the source left it at its OOXML default.
 
   The type is filtered against the write API's closed vocabulary. The read model
-  reports `TransitionInfo.type` as an _open string_, because it also decodes
+  reports `TransitionInfo.type` as an *open string*, because it also decodes
   PowerPoint's modern effects (Morph, Vortex, Ripple, …) and tells them apart by
   namespace, while `TransitionType` names the 21 base ECMA-376 transitions and
   nothing else. A name that does not survive the filter files a
@@ -7522,7 +7510,7 @@ makes no backwards-compatibility guarantee with the original project.
 
   The round-trip oracle was widened to match: `CanonicalSlide` now carries
   `transition`, compared structurally rather than as one opaque value, so a note
-  can declare a lost _sound_ without also excusing a wrong transition _type_.
+  can declare a lost *sound* without also excusing a wrong transition *type*.
   Without that, a printer that stopped emitting transitions entirely would have
   produced identical calls and reported a clean round trip.
 
@@ -7544,7 +7532,7 @@ makes no backwards-compatibility guarantee with the original project.
 
   The options object had the same problem and is fixed with it: defaults
   (`chartColors`, `barGapWidthPct`, `plotArea`, …) were written onto the caller's
-  object, and invalid entries were _deleted_ from it — an out-of-range
+  object, and invalid entries were *deleted* from it — an out-of-range
   `layout.x`, a bad `catGridLine.size`, a `dataLabelPosition` illegal for the
   chart type. Sharing one options object across two charts therefore meant the
   second chart saw the first chart's normalization. Options are now copied before
@@ -7554,7 +7542,7 @@ makes no backwards-compatibility guarantee with the original project.
   Two consequences worth noting. `_dataIndex` is gone from the public
   `OptsChartData` type — it was only ever there because the normalization wrote
   it onto the caller's object, and it remains on the internal series shape the
-  emitters read. And code that _relied_ on reading the normalized values back off
+  emitters read. And code that *relied* on reading the normalized values back off
   its own options object after the call (the filled-in defaults, the clamped
   percentages) no longer sees them; pass the values explicitly instead. Emitted
   OOXML is byte-identical.
@@ -7581,8 +7569,8 @@ makes no backwards-compatibility guarantee with the original project.
 
 - **A negative `w`/`h` produced a deck PowerPoint refused to open at all.** The
   signed value went straight into `<a:ext cx=… cy=…>`, and both attributes are
-  `ST_PositiveCoordinate` — so one negative extent anywhere cost the _whole_
-  presentation: _"The file or directory is corrupted and unreadable"_ (0x80070570),
+  `ST_PositiveCoordinate` — so one negative extent anywhere cost the *whole*
+  presentation: *"The file or directory is corrupted and unreadable"* (0x80070570),
   naming no shape, no part, and no slide. LibreOffice rendered the same package
   happily, so a pipeline that previews with LibreOffice saw nothing wrong until
   the deck reached PowerPoint.
@@ -7613,10 +7601,10 @@ makes no backwards-compatibility guarantee with the original project.
   added as `objectName: 'Q&A'` is stored attribute-escaped (`Q&amp;A`) so it can
   be written into `<p:cNvPr name>` as-is, and the two lookups compared the
   caller's raw string against that escaped text. Neither ever matched:
-  `addAnimation({ preset: 'fadeIn', objectName: 'Q&A' })` warned _"no object
-  named "Q&A" on the slide"_ and dropped the effect — leaving the deck with no
-  `<p:timing>` at all — and `groupObjects(['Q&A'])` threw _"no top-level object
-  on this slide has that objectName"_, both naming a shape that was plainly
+  `addAnimation({ preset: 'fadeIn', objectName: 'Q&A' })` warned *"no object
+  named "Q&A" on the slide"* and dropped the effect — leaving the deck with no
+  `<p:timing>` at all — and `groupObjects(['Q&A'])` threw *"no top-level object
+  on this slide has that objectName"*, both naming a shape that was plainly
   there. Renaming to `QandA` was the only way through. Any `objectName` now
   works as a lookup key, including for a shape inside a group and for the
   "already inside a group" hint that tells a grouped name apart from a typo.
@@ -7631,7 +7619,7 @@ makes no backwards-compatibility guarantee with the original project.
   the emitter — but nothing on the table path ever called
   `registerImageFillMedia`, so no media relationship was allocated. The fill
   reached `genXmlColorSelection`'s `case 'image'` with no resolved `_imgRid`,
-  warned _"image fill is missing its resolved media reference"_, and emitted
+  warned *"image fill is missing its resolved media reference"*, and emitted
   `<a:noFill/>`. The package contained no `ppt/media/` entry and the cell rendered
   blank. Shapes (`gen/define/shape.ts`) and text boxes (`gen/define/text.ts`) had
   been wired since image fills were introduced; tables were the one major object
@@ -7639,7 +7627,7 @@ makes no backwards-compatibility guarantee with the original project.
 
 - **A transition sound supplied as `data:audio/x-wav;…` was written to a media
   part named `.x-wav`.** The media filename was taken from the data URI's mime
-  _subtype_ verbatim, so the package ended up with `ppt/media/audio-1-1.x-wav`
+  *subtype* verbatim, so the package ended up with `ppt/media/audio-1-1.x-wav`
   and a `<Default Extension="x-wav"/>` declaring a file type that exists nowhere
   else. The content type was right and PowerPoint opened it, but nothing else
   would recognise the file. The subtype now maps to a real extension
@@ -7652,7 +7640,7 @@ makes no backwards-compatibility guarantee with the original project.
 - **A tab, carriage return or line feed inside an XML attribute value was emitted
   literally, so it read back as a space** (`dn-xml-attr-whitespace`). XML 1.0
   §3.3.3 requires a parser to normalise those three characters to a single space
-  inside an attribute value _before any consumer sees them_; carrying one across
+  inside an attribute value *before any consumer sees them*; carrying one across
   needs a character reference. Every caller-supplied string that lands in an
   attribute was affected — `objectName` (`p:cNvPr/@name`), alt text
   (`p:cNvPr/@descr`), layout and slide titles (`p:cSld/@name`), section titles
@@ -7662,7 +7650,7 @@ makes no backwards-compatibility guarantee with the original project.
 
   The fix is a new `encodeXmlAttrValue` used by the attribute-emitting paths only
   (the element builder in `src/gen/oxml/el.ts`, plus the few emitters that write
-  attributes with template strings). It is deliberately _not_ a widening of
+  attributes with template strings). It is deliberately *not* a widening of
   `encodeXmlEntities`, which also escapes element text — there a literal newline
   is meaningful content, and escaping it would change bytes across every
   text-bearing part in the package.
@@ -7676,7 +7664,7 @@ makes no backwards-compatibility guarantee with the original project.
 - **Nine converter defects that no static check and no execution check could
   catch**, all found by the round-trip comparison above and all producing a
   script that typechecked, ran, and wrote a plausible deck.
-  - **Every paragraph bullet was wrong.** `Paragraph.bullet` reports a _tagged_
+  - **Every paragraph bullet was wrong.** `Paragraph.bullet` reports a *tagged*
     string (`'none'`, `'char:<glyph>'`, `'autoNum:<type>'`) and the mapper read
     it as a bare glyph — so an explicit `a:buNone` became a literal `n` bullet
     (`'none'.codePointAt(0)`), a real character bullet became `c`, and a numbered
@@ -7690,7 +7678,7 @@ makes no backwards-compatibility guarantee with the original project.
     produces a zero-height box in the corner. Now resolved through the
     layout/master chain via `resolvedFrame`.
   - **A group's rotation and flips were applied twice**, because the children were
-    already emitted in composed slide-absolute coordinates _and_ the transform was
+    already emitted in composed slide-absolute coordinates *and* the transform was
     repeated on the group. A 30° group came back at 60°; a flipped group came back
     unflipped, the double flip having cancelled.
   - **Image crops were sent to `sizing`**, which crops in displayed inches against
@@ -7722,7 +7710,7 @@ makes no backwards-compatibility guarantee with the original project.
   `ShapeFillProps.type` and accepted by the type checker, but `genXmlLineFill` had
   no branch for it and emitted no paint child — which is how a stroke says
   "inherit", not "none". A shape authored with an explicitly suppressed outline
-  therefore _grew_ the theme's border instead of losing it. It now emits
+  therefore *grew* the theme's border instead of losing it. It now emits
   `<a:noFill/>`.
 
 - **`readModelToIr` mapped three constructs onto write-API shapes that do not
@@ -7855,7 +7843,7 @@ makes no backwards-compatibility guarantee with the original project.
   editing the first deck shifts every GUID in the second, and the gate reports a
   diff in a deck nobody touched.
 
-  The corpus is 177 parts against the old deck's 1637. Every part _kind_ survives
+  The corpus is 177 parts against the old deck's 1637. Every part *kind* survives
   — charts with their embedded workbooks, media, notes slides, masters, layouts,
   themes — but it is a narrower slice of the emitters, so AGENTS.md now says to
   confirm the part you touched is in the baseline before reading a PASS as proof
@@ -7886,7 +7874,7 @@ makes no backwards-compatibility guarantee with the original project.
 - **A theme-indexed picture background reported the wrong part.** When a
   `p:bgRef`'s `fmtScheme` entry is an `a:blipFill` — the third `bgFillStyleLst`
   slot in several stock Office themes (Ion, Facet, …) — the fill element comes out
-  of the _theme_ part, so its `r:embed` is scoped to the theme's relationships.
+  of the *theme* part, so its `r:embed` is scoped to the theme's relationships.
   `SlideBackground.resolvedFill` resolved it against the owning
   slide/layout/master's relationships instead, which does not fail loudly: the
   same id usually exists there and points at something else entirely. On an
