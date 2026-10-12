@@ -233,7 +233,10 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 			})
 			return {
 				method: 'addText',
-				args: [textRuns(frame, ctx, placeholder !== undefined, textLang(options)), options ?? {}],
+				args: [
+					textRuns(frame, ctx, placeholder !== undefined || common.hyperlink !== undefined, textLang(options)),
+					options ?? {},
+				],
 				...nameOf(shape),
 			}
 		}
@@ -253,7 +256,10 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 		})
 		return {
 			method: 'addText',
-			args: [textRuns(frame, ctx, placeholder !== undefined, textLang(options)), options ?? {}],
+			args: [
+				textRuns(frame, ctx, placeholder !== undefined || common.hyperlink !== undefined, textLang(options)),
+				options ?? {},
+			],
 			...nameOf(shape),
 		}
 	}

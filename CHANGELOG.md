@@ -73,6 +73,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`readModelToIr` leaves the runs of a linked shape uncoloured.** A text box with a shape-level
+  `hyperlink: { action }` came back with `color: '000000'` on its run, which `addText` leaves
+  uncoloured, so the replay added a black fill the source never had
+  ([#128](https://github.com/shbernal/pptx-ts/issues/128)).
 - **A table cell writes `hyperlink.action` and `bullet.image`.** A show-jump link on a cell wrote
   no `a:hlinkClick`, leaving underlined text that went nowhere, and a picture bullet fell back to
   a `•` glyph with `bullet/image-embed-failed`. Both are now written as `addText` writes them

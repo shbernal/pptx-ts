@@ -892,6 +892,24 @@ describe('deck IR — a hyperlinked run with no colour of its own', () => {
 		assert(cells.includes('"color":"000000"'), `the plain cell keeps its black: ${cells}`)
 		assert(!constructs(ir).has('text.color.inherited'), 'and declares no loss, because it was stated')
 	})
+
+	test('a show jump on the shape or on a cell leaves the runs uncoloured', async () => {
+		// The shape's jump is written on its `p:cNvPr` alone, so its run states no link and was
+		// coloured black; the cell's was written nowhere until #82 (#128).
+		const box = { x: 1, y: 1, w: 4, h: 1 }
+		const { presentation } = await authorRead((pres) => {
+			const slide = pres.addSlide()
+			slide.addText('next', { ...box, hyperlink: { action: 'nextslide' } })
+			slide.addTable([[{ text: 'a', options: { hyperlink: { action: 'nextslide' } } }]], { ...box, y: 3 })
+			pres.addSlide()
+		})
+		const ir = readModelToIr(presentation)
+		for (const method of ['addText', 'addTable']) {
+			const args = JSON.stringify(defined(allCalls(ir).find((c) => c.method === method)).args)
+			assert(!args.includes('"color"'), `${method} states no colour: ${args}`)
+		}
+		assert(!constructs(ir).has('text.color.inherited'), 'and declares no loss')
+	})
 })
 
 describe('deck IR — a run that jumps in the slide show', () => {
