@@ -83,6 +83,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A one-entry multi-type `addChart` array writes a bubble chart.** Every bubble entry threw
+  `chart/bubble-in-combo`, a one-entry array that combines nothing included, so `type[].data[].sizes`
+  could never be written. A single bubble entry is now written as the standalone chart, its options
+  over the chart-level ones; a real combo still refuses one
+  ([#140](https://github.com/shbernal/pptx-ts/issues/140)).
 - **`catAxes[n]` and `valAxes[n]` write `catAxisCrossesAt`, `valAxisCrossesAt` and
   `valLabelFormatCode`.** Each entry's crossing now lands on the axis it crosses, as the flat key's
   does, and a value-axis entry's format sets the series caches of the plots on that axis. All three
