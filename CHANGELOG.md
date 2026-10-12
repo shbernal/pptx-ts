@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`Chart.dataTable` and `Chart.metadata`.** The first reads the data table under the plot
+  (`c:dTable`: its border, outline and key flags and its text size), the second the key/value map
+  `addChart`'s `metadata` option writes. `readModelToIr` carries both back onto `addChart`, so
+  `metadata` survives the round trip its documentation promises
+  ([#135](https://github.com/shbernal/pptx-ts/issues/135)).
 - **`SlideIr.notesRuns` carries speaker notes as `NotesProps[]`.** When a notes run is bold,
   italic, underlined, coloured, sized, set in its own face or links to a URL, `readModelToIr`
   carries the runs with those options and `printScript` prints `addNotes([...])`. Plain notes

@@ -1134,6 +1134,100 @@
 		],
 		"diagnostics": []
 	},
+	"chart-formatting.pptx": {
+		"slideSize": {"widthIn":13.333,"heightIn":7.5},
+		"slides": [
+			{
+				"index": 0,
+				"name": "Slide 1",
+				"path": "ppt/slides/slide1.xml",
+				"size": {"widthIn":13.333,"heightIn":7.5},
+				"text": "",
+				"wordCount": 0,
+				"elements": [
+					{"id":2,"name":"stacked-bar-chart","kind":"graphicFrame","graphicKind":"chart","zIndex":0,"box":{"x":0.8333333333333334,"y":0.5555555555555556,"w":11.666666666666666,"h":6.388888888888889},"rotation":0,"flipH":false,"flipV":false,"parentZIndex":null,"childZIndices":[],"text":"","textWrap":null,"autofit":null,"autofitFontScale":null,"bodyInsets":null,"textRuns":[],"paragraphs":[],"fontSizes":[],"colors":[],"fill":null,"line":null,"shapeType":null}
+				]
+			},
+			{
+				"index": 1,
+				"name": "Slide 2",
+				"path": "ppt/slides/slide2.xml",
+				"size": {"widthIn":13.333,"heightIn":7.5},
+				"text": "",
+				"wordCount": 0,
+				"elements": [
+					{"id":2,"name":"line-marker-chart","kind":"graphicFrame","graphicKind":"chart","zIndex":0,"box":{"x":0.8333333333333334,"y":0.5555555555555556,"w":11.666666666666666,"h":6.388888888888889},"rotation":0,"flipH":false,"flipV":false,"parentZIndex":null,"childZIndices":[],"text":"","textWrap":null,"autofit":null,"autofitFontScale":null,"bodyInsets":null,"textRuns":[],"paragraphs":[],"fontSizes":[],"colors":[],"fill":null,"line":null,"shapeType":null}
+				]
+			},
+			{
+				"index": 2,
+				"name": "Slide 3",
+				"path": "ppt/slides/slide3.xml",
+				"size": {"widthIn":13.333,"heightIn":7.5},
+				"text": "",
+				"wordCount": 0,
+				"elements": [
+					{"id":2,"name":"doughnut-chart","kind":"graphicFrame","graphicKind":"chart","zIndex":0,"box":{"x":0.8333333333333334,"y":0.5555555555555556,"w":11.666666666666666,"h":6.388888888888889},"rotation":0,"flipH":false,"flipV":false,"parentZIndex":null,"childZIndices":[],"text":"","textWrap":null,"autofit":null,"autofitFontScale":null,"bodyInsets":null,"textRuns":[],"paragraphs":[],"fontSizes":[],"colors":[],"fill":null,"line":null,"shapeType":null}
+				]
+			},
+			{
+				"index": 3,
+				"name": "Slide 4",
+				"path": "ppt/slides/slide4.xml",
+				"size": {"widthIn":13.333,"heightIn":7.5},
+				"text": "",
+				"wordCount": 0,
+				"elements": [
+					{"id":2,"name":"column-3d-chart","kind":"graphicFrame","graphicKind":"chart","zIndex":0,"box":{"x":0.8333333333333334,"y":0.5555555555555556,"w":11.666666666666666,"h":6.388888888888889},"rotation":0,"flipH":false,"flipV":false,"parentZIndex":null,"childZIndices":[],"text":"","textWrap":null,"autofit":null,"autofitFontScale":null,"bodyInsets":null,"textRuns":[],"paragraphs":[],"fontSizes":[],"colors":[],"fill":null,"line":null,"shapeType":null}
+				]
+			},
+			{
+				"index": 4,
+				"name": "Slide 5",
+				"path": "ppt/slides/slide5.xml",
+				"size": {"widthIn":13.333,"heightIn":7.5},
+				"text": "",
+				"wordCount": 0,
+				"elements": [
+					{"id":2,"name":"radar-filled-chart","kind":"graphicFrame","graphicKind":"chart","zIndex":0,"box":{"x":0.8333333333333334,"y":0.5555555555555556,"w":11.666666666666666,"h":6.388888888888889},"rotation":0,"flipH":false,"flipV":false,"parentZIndex":null,"childZIndices":[],"text":"","textWrap":null,"autofit":null,"autofitFontScale":null,"bodyInsets":null,"textRuns":[],"paragraphs":[],"fontSizes":[],"colors":[],"fill":null,"line":null,"shapeType":null}
+				]
+			},
+			{
+				"index": 5,
+				"name": "Slide 6",
+				"path": "ppt/slides/slide6.xml",
+				"size": {"widthIn":13.333,"heightIn":7.5},
+				"text": "",
+				"wordCount": 0,
+				"elements": [
+					{"id":2,"name":"surface-wire-chart","kind":"graphicFrame","graphicKind":"chart","zIndex":0,"box":{"x":0.8333333333333334,"y":0.5555555555555556,"w":11.666666666666666,"h":6.388888888888889},"rotation":0,"flipH":false,"flipV":false,"parentZIndex":null,"childZIndices":[],"text":"","textWrap":null,"autofit":null,"autofitFontScale":null,"bodyInsets":null,"textRuns":[],"paragraphs":[],"fontSizes":[],"colors":[],"fill":null,"line":null,"shapeType":null}
+				]
+			},
+			{
+				"index": 6,
+				"name": "Slide 7",
+				"path": "ppt/slides/slide7.xml",
+				"size": {"widthIn":13.333,"heightIn":7.5},
+				"text": "",
+				"wordCount": 0,
+				"elements": [
+					{"id":2,"name":"invert-column-chart","kind":"graphicFrame","graphicKind":"chart","zIndex":0,"box":{"x":0.8333333333333334,"y":0.5555555555555556,"w":11.666666666666666,"h":6.388888888888889},"rotation":0,"flipH":false,"flipV":false,"parentZIndex":null,"childZIndices":[],"text":"","textWrap":null,"autofit":null,"autofitFontScale":null,"bodyInsets":null,"textRuns":[],"paragraphs":[],"fontSizes":[],"colors":[],"fill":null,"line":null,"shapeType":null}
+				]
+			},
+			{
+				"index": 7,
+				"name": "Slide 8",
+				"path": "ppt/slides/slide8.xml",
+				"size": {"widthIn":13.333,"heightIn":7.5},
+				"text": "",
+				"wordCount": 0,
+				"elements": [
+					{"id":2,"name":"pie-leader-chart","kind":"graphicFrame","graphicKind":"chart","zIndex":0,"box":{"x":0.8333333333333334,"y":0.5555555555555556,"w":11.666666666666666,"h":6.388888888888889},"rotation":0,"flipH":false,"flipV":false,"parentZIndex":null,"childZIndices":[],"text":"","textWrap":null,"autofit":null,"autofitFontScale":null,"bodyInsets":null,"textRuns":[],"paragraphs":[],"fontSizes":[],"colors":[],"fill":null,"line":null,"shapeType":null}
+				]
+			}
+		],
+		"diagnostics": []
+	},
 	"chart-legend-entry.pptx": {
 		"slideSize": {"widthIn":13.333,"heightIn":7.5},
 		"slides": [
