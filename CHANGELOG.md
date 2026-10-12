@@ -88,6 +88,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A one-entry multi-type `addChart` array writes a bubble chart.** Every bubble entry threw
+  `chart/bubble-in-combo`, a one-entry array that combines nothing included, so `type[].data[].sizes`
+  could never be written. A single bubble entry is now written as the standalone chart, its options
+  over the chart-level ones; a real combo still refuses one
+  ([#140](https://github.com/shbernal/pptx-ts/issues/140)).
 - **`addChart` warns for the text keys it does not read.** `ChartOpts` takes every
   `TextBaseProps` key (`bold`, `fontFace`, `align`, `bullet`, …) through `ChartPropsTitle`, and the
   chart writer reads none but `lang`, so a chart given them was byte-identical to one without. They
