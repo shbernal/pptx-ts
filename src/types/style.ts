@@ -104,8 +104,10 @@ export interface HyperlinkProps {
 	 */
 	tooltip?: string
 	/**
-	 * Slide-show navigation action for action-button shapes. Emits a relationship-less
-	 * `<a:hlinkClick action="ppaction://hlinkshowjump?jump=…"/>` on the shape.
+	 * Slide-show navigation action. Emits a relationship-less
+	 * `<a:hlinkClick action="ppaction://hlinkshowjump?jump=…"/>` on the shape when the shape states
+	 * it (an action button), or on the run when a text run states it, as PowerPoint writes a jump
+	 * set on selected text. A shape's action is not repeated on its runs.
 	 * @example hyperlink: { action: 'nextslide' }
 	 */
 	action?: HyperlinkActionJump

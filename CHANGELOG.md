@@ -56,6 +56,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A text run's `hyperlink: { action }` writes its jump.** The run was underlined and linked
+  nowhere, with no warning. It now writes `a:hlinkClick` with the show jump on the run, as
+  PowerPoint does, and `readModelToIr` carries a run's jump as `hyperlink.action` instead of
+  noting it unwritable ([#114](https://github.com/shbernal/pptx-ts/issues/114)).
 - **`readModelToIr` keeps a group's rotation and flips on the group.** They were baked into each
   child, which moved and rotated it in their place, under a `group.transform` note. The group now
   carries `rotate`, `flipH` and `flipV`, and its children keep their own transforms

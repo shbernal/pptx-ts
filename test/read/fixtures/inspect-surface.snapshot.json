@@ -2668,6 +2668,34 @@
 		],
 		"diagnostics": []
 	},
+	"text-run-show-jump.pptx": {
+		"slideSize": {"widthIn":13.333,"heightIn":7.5},
+		"slides": [
+			{
+				"index": 0,
+				"name": "Slide 1",
+				"path": "ppt/slides/slide1.xml",
+				"size": {"widthIn":13.333,"heightIn":7.5},
+				"text": "Next plain Last",
+				"wordCount": 3,
+				"elements": [
+					{"id":2,"name":"NextText","kind":"text","graphicKind":null,"zIndex":0,"box":{"x":0.8333333333333334,"y":0.8333333333333334,"w":8.333333333333334,"h":0.4039063867016623},"rotation":0,"flipH":false,"flipV":false,"parentZIndex":null,"childZIndices":[],"text":"Next plain","textWrap":null,"autofit":"spAutoFit","autofitFontScale":null,"bodyInsets":{"left":0.1,"top":0.05,"right":0.1,"bottom":0.05},"textRuns":[{"text":"Next ","fontSizePt":null,"color":null,"fontFace":null,"bold":false,"italic":false,"strike":null,"highlight":null,"charSpacingPt":null},{"text":"plain","fontSizePt":null,"color":null,"fontFace":null,"bold":false,"italic":false,"strike":null,"highlight":null,"charSpacingPt":null}],"paragraphs":[{"runs":[{"text":"Next ","fontSizePt":null,"color":null,"fontFace":null,"bold":false,"italic":false,"strike":null,"highlight":null,"charSpacingPt":null},{"text":"plain","fontSizePt":null,"color":null,"fontFace":null,"bold":false,"italic":false,"strike":null,"highlight":null,"charSpacingPt":null}]}],"fontSizes":[],"colors":[],"fill":null,"line":null,"shapeType":"rect"},
+					{"id":3,"name":"LastText","kind":"text","graphicKind":null,"zIndex":1,"box":{"x":0.8333333333333334,"y":2.2222222222222223,"w":8.333333333333334,"h":0.4039063867016623},"rotation":0,"flipH":false,"flipV":false,"parentZIndex":null,"childZIndices":[],"text":"Last","textWrap":null,"autofit":"spAutoFit","autofitFontScale":null,"bodyInsets":{"left":0.1,"top":0.05,"right":0.1,"bottom":0.05},"textRuns":[{"text":"Last","fontSizePt":null,"color":null,"fontFace":null,"bold":false,"italic":false,"strike":null,"highlight":null,"charSpacingPt":null}],"paragraphs":[{"runs":[{"text":"Last","fontSizePt":null,"color":null,"fontFace":null,"bold":false,"italic":false,"strike":null,"highlight":null,"charSpacingPt":null}]}],"fontSizes":[],"colors":[],"fill":null,"line":null,"shapeType":"rect"}
+				]
+			},
+			{
+				"index": 1,
+				"name": "Slide 2",
+				"path": "ppt/slides/slide2.xml",
+				"size": {"widthIn":13.333,"heightIn":7.5},
+				"text": "",
+				"wordCount": 0,
+				"elements": [
+				]
+			}
+		],
+		"diagnostics": []
+	},
 	"textbox.pptx": {
 		"slideSize": {"widthIn":13.333,"heightIn":7.5},
 		"slides": [
