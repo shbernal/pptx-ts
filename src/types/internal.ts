@@ -294,6 +294,12 @@ export interface SlideRelChart extends OptsChartData {
 	 * via `<mc:AlternateContent>`. Set at define time from {@link isChartExType}.
 	 */
 	isChartEx?: boolean
+	/**
+	 * The pictures the chart part references (a chart or plot area's picture fill), each under the
+	 * relationship id the chart part gives it. The media rel is the slide's, marked
+	 * {@link SlideRelMedia.chartOwned}, so its `Target` is read at write time, after media dedupe.
+	 */
+	media?: Array<{ rId: number; rel: SlideRelMedia }>
 }
 // PRIVATE vvv
 export interface SlideRel {
@@ -350,6 +356,12 @@ export interface SlideRelMedia {
 	 * separate, perfectly ordinary image rel. Same escape hatch as {@link oleRelType}.
 	 */
 	model3dRelType?: string
+	/**
+	 * The picture of a chart's area fill, registered on the slide so the media pass loads, dedupes and
+	 * writes its part like any other picture. The chart part references it (see
+	 * {@link SlideRelChart.media}); the slide does not, so the slide's `.rels` leaves it out.
+	 */
+	chartOwned?: true
 	rId: number
 	/** Unescaped — see {@link SlideRel.Target}. Doubles as the zip entry name for embedded media. */
 	Target: string

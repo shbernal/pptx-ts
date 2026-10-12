@@ -457,6 +457,8 @@ export interface ExtractedChart {
 	chartXml: string
 	/** The chart's embedded `.xlsx` workbook, the data source PowerPoint opens on edit. */
 	embeddingBytes: Uint8Array
+	/** The pictures a chart or plot area's picture fill paints, keyed by the `rId` used in {@link chartXml}. */
+	pictures?: Array<{ rId: number; bytes: Uint8Array; extn: string; contentType: string }>
 	/**
 	 * Present only for a chartEx chart, and then always with both sidecars. A chartEx part
 	 * *requires* a chart-style and a color-style part or PowerPoint reports the deck as
