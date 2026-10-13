@@ -1,10 +1,10 @@
 /**
- * pptx-ts: SlideBuilder — write-side implementation of the public `Slide` interface
+ * pptx-ts: SlideBuilder, the write-side implementation of the public `Slide` interface
  *
  * What a slide is, and nothing about what can go on one. Every `add*` method comes from the
  * construct family that owns it, bound onto the instance from the list the presentation was
- * composed with (`families/shared.ts`); this class owns the slide's own state — its rels, its
- * objects, its number, its background — and the geometry accessors over it.
+ * composed with (`families/shared.ts`); this class owns the slide's own state (its rels, its
+ * objects, its number, its background) and the geometry accessors over it.
  *
  * The methods are bound rather than written here because a class method body is never shaken: one
  * that called `addChartDefinition` would put every plot module under `gen/chart/` in the graph of
@@ -98,7 +98,7 @@ export default class SlideBuilder {
 	 * The authoring methods, one per construct family, bound in the constructor.
 	 *
 	 * Declared here and assigned there: the signature each one keeps is the public one on
-	 * {@link Slide}, and a method the presentation was not composed with still answers — with the
+	 * {@link Slide}, and a method the presentation was not composed with still answers, with the
 	 * name of the family it needs, rather than `undefined is not a function`.
 	 */
 	declare public addAnimation: Slide['addAnimation']

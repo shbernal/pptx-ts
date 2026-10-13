@@ -6,9 +6,9 @@
  * edit/resize. See `docs/contributing/design/text-fit.md`.
  *
  * Calibration: every constant here is pinned against PowerPoint-authored fixtures
- * (`test/read/fixtures/autofit-calibration.json`). The model errs **conservative**
- * — it over-estimates width (raw advances, no kerning) and uses the calibrated
- * line pitch — so the computed `fontScale` is ≤ PowerPoint's and the text never
+ * (`test/read/fixtures/autofit-calibration.json`). The model errs **conservative**:
+ * it over-estimates width (raw advances, no kerning) and uses the calibrated
+ * line pitch, so the computed `fontScale` is ≤ PowerPoint's and the text never
  * overflows in either PowerPoint or LibreOffice.
  */
 
@@ -35,7 +35,7 @@ export const MIN_FONT_SCALE_PCT = 25
  * Conservative safety factors applied by the shrink solver (not by the pure
  * `measureHeightPt`). Raw `hmtx` advances summed without shaping still pack a line
  * a little tighter than PowerPoint, which lays text out at a device DPI and rounds
- * each glyph advance up — so PowerPoint wraps marginally earlier and its fitted
+ * each glyph advance up, so PowerPoint wraps marginally earlier and its fitted
  * box is marginally taller. Inflating measured width and height by these factors
  * makes the computed `fontScale` ≤ PowerPoint's across the calibration oracle
  * (`test/read/autofit-calibration-oracle.test.ts`: 0 violations over the Aptos
@@ -62,7 +62,7 @@ export interface FitRun {
  * generator's option bags follow (`options-internal.ts`): these are measurement records, built in
  * one place by `paragraphs.ts` and read in one place by the solver below, with `??` and
  * truthiness. Nothing spreads or enumerates them, so a key holding `undefined` cannot mean
- * anything different from an absent one — and the builder does produce every key on every run.
+ * anything different from an absent one, and the builder does produce every key on every run.
  * Saying so is more honest than making the builder omit keys nothing distinguishes.
  */
 export interface FitParagraph {
@@ -83,7 +83,7 @@ export interface FitBox {
 	 * `false` when the frame does not wrap (`wrap:false` / `wrap="none"`): text lays
 	 * out as one line per paragraph (no width-wrapping), and the shrink solver must
 	 * additionally keep the widest line within `innerWidthPt`. A too-wide line
-	 * overflows HORIZONTALLY — `normAutofit`'s vertical shrink never catches it, so
+	 * overflows HORIZONTALLY. `normAutofit`'s vertical shrink never catches it, so
 	 * without this check a non-wrapping line is never shrunk and spills out of the box
 	 * in PowerPoint. Defaults to wrapping (`true`), so table cells and `measureText`
 	 * are unaffected.
@@ -100,8 +100,8 @@ export interface ShrinkResult {
 }
 
 export type ShrinkOutcome =
-	| { kind: 'fits' } // already fits at 100% — no shrink needed
-	| { kind: 'unmeasurable' } // a run's face has no registered metrics — caller degrades
+	| { kind: 'fits' } // already fits at 100%; no shrink needed
+	| { kind: 'unmeasurable' } // a run's face has no registered metrics; caller degrades
 	| { kind: 'shrink'; result: ShrinkResult }
 
 interface WordToken {
@@ -122,7 +122,7 @@ const isWhitespace = (ch: string): boolean => ch === ' ' || ch === '\t' || ch ==
  *
  * **Hangul is deliberately absent.** UAX #14 makes Hangul breakable between
  * syllables, but PowerPoint does not: Korean is written with spaces between words
- * and the app breaks it like Latin. `autofit-cjk-wrap.pptx` pins that directly —
+ * and the app breaks it like Latin. `autofit-cjk-wrap.pptx` pins that directly:
  * the same box that lays out in 2 lines in Han or Kana takes 3 in Hangul, because
  * the run moves down whole. A Hangul run longer than one line still breaks between
  * syllables, but that is the over-long-token character-wrap fallback in
@@ -172,7 +172,7 @@ export function isCjkBreakCharacter(ch: string): boolean {
 /**
  * Tokenize one paragraph at a given `fontScalePct`. Words can span run boundaries
  * (a break is only allowed at whitespace, or either side of a per-character
- * breaking code point — see `isCjkBreakCharacter`). Returns `null` if any run's
+ * breaking code point; see `isCjkBreakCharacter`). Returns `null` if any run's
  * face has no registered metrics (the paragraph cannot be measured).
  */
 function tokenizeParagraph(
@@ -223,7 +223,7 @@ function tokenizeParagraph(
 /** Greedy `wrap=square` line layout for a tokenized paragraph. */
 interface LineLayout {
 	lines: number
-	/** Width (points) of the widest laid-out line — for natural/widest-line measurement. */
+	/** Width (points) of the widest laid-out line, for natural/widest-line measurement. */
 	maxLineWidthPt: number
 }
 
@@ -232,7 +232,7 @@ interface LineLayout {
  * laid-out line width. `maxLineWidthPt` tracks the running line width and records
  * it whenever a line completes (a wrap or the final line), so callers can measure
  * the actual text extent, not just the box width. Trailing whitespace counts
- * toward width, as PowerPoint counts it, which slightly over-reports — the
+ * toward width, as PowerPoint counts it, which slightly over-reports: the
  * conservative direction, consistent with the wrap model erring wide. The
  * PowerPoint behaviour this follows is tabled in `docs/contributing/design/text-fit.md`.
  */
@@ -363,24 +363,24 @@ export function measureHeightPt(
 
 /** What the resize solver concluded: it could not measure, or the inner height the text needs. */
 export type ResizeOutcome =
-	| { kind: 'unmeasurable' } // a run's face has no registered metrics — caller degrades
+	| { kind: 'unmeasurable' } // a run's face has no registered metrics; caller degrades
 	| { kind: 'resize'; neededInnerHeightPt: number }
 
 /**
  * Width used for wrap layout: the inner box width when wrapping, or unbounded for a
  * non-wrapping frame (`wrap:false`) so each paragraph lays out as a single line. A
  * non-wrapping frame's width constraint is enforced separately, against the widest
- * laid-out line — see {@link solveShrink}.
+ * laid-out line (see {@link solveShrink}).
  */
 function layoutWidthPt(box: FitBox): number {
 	return box.wrap === false ? Infinity : box.innerWidthPt
 }
 
 /**
- * Inner height (points) the text needs at full size — the value to bake into the
+ * Inner height (points) the text needs at full size: the value to bake into the
  * shape's `a:ext/@cy` for `fit: 'resize'` (`spAutoFit`). Unlike shrink, resize has
  * **no safety net**: an under-estimate overflows (there is no text scaling
- * fallback), so this errs **tall** — width is inflated (earlier wrap ⇒ more lines)
+ * fallback), so this errs **tall**. Width is inflated (earlier wrap ⇒ more lines)
  * and the laid-out height by the calibrated height factor, so the computed `cy` is
  * ≥ PowerPoint's and ≥ the LibreOffice-rendered height across the resize oracle.
  */
@@ -395,7 +395,7 @@ export function solveResize(paragraphs: FitParagraph[], box: FitBox, resolve: Me
  * Width and height both re-measured per scale. Conservative: because the model
  * over-estimates, the returned scale is ≤ PowerPoint's and the text never overflows.
  *
- * `lnSpcReduction` is left at 0 — dropping `fontScale` alone is provably
+ * `lnSpcReduction` is left at 0: dropping `fontScale` alone is provably
  * conservative (PowerPoint trades line-spacing reduction to keep the font *larger*,
  * so a reduction-free fit is always ≤ PowerPoint's scale). The reduction ramp
  * PowerPoint applies is recorded in `docs/contributing/design/text-fit.md`.
@@ -424,6 +424,6 @@ export function solveShrink(paragraphs: FitParagraph[], box: FitBox, resolve: Me
 	for (let scale = 100 - FONT_SCALE_STEP_PCT; scale >= MIN_FONT_SCALE_PCT; scale -= FONT_SCALE_STEP_PCT) {
 		if (fits(scale)) return { kind: 'shrink', result: { fontScalePct: scale, lnSpcReductionPct: 0 } }
 	}
-	// Even at the floor it overflows our conservative model — bake the floor as best effort.
+	// Even at the floor it overflows our conservative model, so bake the floor as best effort.
 	return { kind: 'shrink', result: { fontScalePct: MIN_FONT_SCALE_PCT, lnSpcReductionPct: 0 } }
 }

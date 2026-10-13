@@ -1,5 +1,5 @@
 /**
- * Thin wrapper over `@xmldom/xmldom` — the only module in `src/read/` that
+ * Thin wrapper over `@xmldom/xmldom`, the only module in `src/read/` that
  * imports it directly.
  *
  * `@xmldom/xmldom` ships its own DOM types that are NOT assignable to the
@@ -84,7 +84,7 @@ export function childElements(parent: Node): Element[] {
  * All *descendant* elements of `root` matching a namespace + local name, snapshotted into an
  * array. Unlike {@link getElements} (direct children only) this searches the whole subtree, and
  * unlike the live `HTMLCollection` that `getElementsByTagNameNS` returns, the result does not
- * change as the caller mutates the tree — which is what makes it safe to iterate while replacing
+ * change as the caller mutates the tree, which is what makes it safe to iterate while replacing
  * the very elements being iterated.
  *
  * Note the DOM's own exclusion: `root` itself is never a candidate, only its descendants.
@@ -130,7 +130,7 @@ function firstChildMatchingAny(parent: Node, qnames: readonly string[]): Element
 //
 // `src/read/` mutates the live DOM in place; these are the only sanctioned way
 // to create elements, set attributes, and keep a parent's children in the
-// sequence OOXML requires. They never mark a part dirty — callers own that.
+// sequence OOXML requires. They never mark a part dirty; callers own that.
 
 /** Create a namespaced element from a prefixed qname (e.g. `createElement(doc, 'a:off')`). */
 export function createElement(doc: Document, qname: string): Element {
@@ -193,7 +193,7 @@ export function removeAttr(element: Element, qname: string): void {
  * Get the first child element matching `qname`, creating and inserting it when
  * absent. A newly created element is inserted before the first existing child
  * whose qname appears in `before` (the schema successors of the new element),
- * or appended when none are present — keeping the parent's children in the
+ * or appended when none are present, keeping the parent's children in the
  * sequence order OOXML mandates.
  */
 export function getOrAddChild(parent: Element, qname: string, before: readonly string[] = []): Element {
@@ -285,7 +285,7 @@ export function boolAttr(element: Element, qname: string): boolean | null {
  *
  * `a:ST_Percentage` is a *union* in the Transitional profile: the fixed-point integer form
  * Office writes (`100%` → `100000`) and a decimal string with a literal `%` (`-?[0-9]+(\.[0-9]+)?%`),
- * which is the only form the Strict profile has. Both are read here — a reader that took only the
+ * which is the only form the Strict profile has. Both are read here. A reader that took only the
  * first dropped a schema-legal value silently, and the two are one `endsWith` apart.
  * @param value - the raw attribute value, or `null` when the attribute is absent
  */

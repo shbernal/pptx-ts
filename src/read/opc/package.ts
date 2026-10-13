@@ -23,7 +23,7 @@ const textEncoder = new TextEncoder()
  *
  * Fidelity contract: parts that are never mutated (`Part.markDirty()`) are
  * written back byte-identically by `save()`. Whole-zip byte-identity is not
- * promised — zip metadata and compression may differ — but part bodies, the
+ * promised (zip metadata and compression may differ), but part bodies, the
  * part-name set, and part order are preserved.
  */
 export class OpcPackage {
@@ -145,7 +145,7 @@ export class OpcPackage {
 	 * later `save()` neither re-emits it nor flushes a stale `.rels` for it. A relationship set
 	 * belongs to its part: one left behind would come back as the relationships of the next part
 	 * added under the same name. Low-level: it does not touch references *to* this part
-	 * (dangling rels are the caller's concern) nor cascade to parts this one referenced — see
+	 * (dangling rels are the caller's concern) nor cascade to parts this one referenced; see
 	 * {@link Presentation.removeSlide} for the slide-aware variant that unwires the presentation
 	 * and prunes orphans.
 	 */

@@ -10,7 +10,7 @@
  * placeholder frame comes from {@link makeXmlNotesSlideSkeleton}, and the body
  * paragraphs carry the same elements and attributes the write path emits for a plain
  * `pptx.addSlide().addNotes(text)`. `test/read/add-notes.test.ts` asserts that
- * equivalence, so the two cannot drift apart unnoticed — the same guarantee
+ * equivalence, so the two cannot drift apart unnoticed: the same guarantee
  * `src/ooxml/` gives the constants both halves share.
  *
  * The one difference is empty-element *spelling*: the write path emits `a:rPr` as an
@@ -65,7 +65,7 @@ function notesParagraphsXml(text: string): string {
 /**
  * Replace a notes body's paragraphs with `text`, in the body's own document.
  *
- * The path taken when the slide *already* has a notes part — an imported one, or one
+ * The path taken when the slide *already* has a notes part: an imported one, or one
  * an earlier `addNotes` wrote. Only the `a:p` children are replaced, so the part's
  * geometry, its `a:bodyPr`/`a:lstStyle`, and its other two placeholders survive. The
  * body's hyperlink relationships are deliberately *not* pruned: a caller replacing
@@ -112,7 +112,7 @@ function notesBodyTxBody(root: Element | null): Element | null {
  * When the slide already has a notes part, only the body paragraphs are rewritten
  * (see {@link replaceNotesParagraphs}). When it has none, the part is built and
  * wired: `slide → notesSlide`, and on the new part the two relationships a notes
- * slide always carries — `notesMaster` as rId1 and a `slide` back-reference as rId2,
+ * slide always carries: `notesMaster` as rId1 and a `slide` back-reference as rId2,
  * the ids and order the write path reserves.
  *
  * The notes master is resolved through {@link ensureNotesMasterForAuthoring}: this

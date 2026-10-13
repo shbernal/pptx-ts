@@ -4,9 +4,9 @@
  * Everything that must happen to authored slide state *before* any XML is built. Two callers
  * reach serialization and both need it:
  *
- *   - `package/assemble.ts` — the normal `write`/`stream`/`writeFile` path, building a
+ *   - `package/assemble.ts`: the normal `write`/`stream`/`writeFile` path, building a
  *     complete `.pptx`.
- *   - `PresentationCore.extractSlides()` — serializes slide bodies only, for splicing into
+ *   - `PresentationCore.extractSlides()`: serializes slide bodies only, for splicing into
  *     an already-loaded deck via `Presentation.appendSlides()` (`pptx-ts/read`).
  *
  * The second used to reimplement the first inline, kept in step by a comment that said
@@ -178,7 +178,7 @@ export function registerTransitionSounds(slides: PresSlideInternal[]): Map<PresS
 		// Derive the file extension from the data-URI mime, else the path, defaulting to wav.
 		// The mime's subtype is not itself an extension for the spellings PowerPoint actually
 		// uses (`audio/x-wav` for a transition sound), so it goes through the mapping rather
-		// than into the filename raw — see `audioExtensionForSubtype`.
+		// than into the filename raw (see `audioExtensionForSubtype`).
 		const dataMime = dataUriMediaType(sound.data ?? '')
 		const pathFile = sound.path ? ((sound.path.split('/').pop() ?? '').split('?')[0] ?? '') : ''
 		const extn = dataMime?.startsWith('audio/')

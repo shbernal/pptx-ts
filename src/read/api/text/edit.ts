@@ -19,7 +19,7 @@ import { InternalError } from '../../../errors.js'
  * Replace a text body's content (`a:txBody` or `a:txBody`-shaped element) with a
  * single paragraph and run, preserving the `a:rPr` of the body's first existing
  * run when there is one. Shared by {@link TextFrame.text} and `TableCell.text`.
- * Does **not** mark any part dirty — the caller owns the `Part` and must call
+ * Does **not** mark any part dirty: the caller owns the `Part` and must call
  * `markDirty()` after.
  */
 export function setTextBodyText(txBody: Element, value: string): void {
@@ -27,7 +27,7 @@ export function setTextBodyText(txBody: Element, value: string): void {
 	if (!doc) throw new InternalError('oxml/node-has-no-document', 'Cannot set text: text body has no owner document')
 
 	// Collapse to a single paragraph, dropping any extras, then let the paragraph-level
-	// setter do the rest — the run rule is the same one, stated once.
+	// setter do the rest. The run rule is the same one, stated once.
 	const paragraphs = getElements(txBody, 'a:p')
 	for (let i = paragraphs.length - 1; i >= 1; i--) {
 		const extra = paragraphs[i]
@@ -47,7 +47,7 @@ export function setTextBodyText(txBody: Element, value: string): void {
  * Sibling paragraphs are untouched, which is the whole difference from
  * {@link setTextBodyText} and the reason this exists: a SmartArt drawing cache packs several
  * nodes' text into one `dsp:txBody`, so collapsing the body there would delete the other
- * nodes' strings. Does **not** mark any part dirty — the caller owns the `Part`.
+ * nodes' strings. Does **not** mark any part dirty; the caller owns the `Part`.
  */
 export function setParagraphText(p: Element, value: string): void {
 	const doc = p.ownerDocument

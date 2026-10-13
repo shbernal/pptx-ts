@@ -8,7 +8,7 @@ import type { ShapeFillProps } from './style.js'
 import type { PATTERN_PRESETS, TextVerticalType } from '../ooxml/st-enums.js'
 
 /**
- * Coordinate value. A bare `number` is **always inches** — there is no magnitude-based unit
+ * Coordinate value. A bare `number` is **always inches**; there is no magnitude-based unit
  * guessing. For other units use an explicit string suffix:
  * - `number` → inches (e.g. `10.25`)
  * - `"<n>%"` → percentage of the slide axis (e.g. `"75%"`)
@@ -109,7 +109,7 @@ export type DataOrPathRequiredProps = (DataOrPathProps & { data: string }) | (Da
 export interface BackgroundProps extends DataOrPathProps, ShapeFillProps {}
 /**
  * What a `background` option accepts: a {@link BackgroundProps} object, or a bare
- * {@link Color} as shorthand for a solid background in that colour — the same shorthand
+ * {@link Color} as shorthand for a solid background in that colour, the same shorthand
  * every other fill site takes (see `FillOption`).
  * @example background: 'FF3399' // shorthand for { color: 'FF3399' }
  */
@@ -199,7 +199,7 @@ export interface RadialGradientFillProps {
 }
 export type GradientFillProps = LinearGradientFillProps | RadialGradientFillProps
 
-/** OOXML ST_PresetPatternVal — preset pattern names for `<a:pattFill prst="...">` */
+/** OOXML ST_PresetPatternVal: preset pattern names for `<a:pattFill prst="...">` */
 export type PatternPreset = (typeof PATTERN_PRESETS)[number]
 
 export interface PatternFillProps {
@@ -212,7 +212,7 @@ export interface PatternFillProps {
 }
 
 /**
- * Native PPTX picture (image) fill — fills a shape's interior with a bitmap
+ * Native PPTX picture (image) fill: fills a shape's interior with a bitmap
  * (`<a:blipFill>`). Provide exactly one of `path` or `data`; raster formats only
  * (PNG/JPEG/GIF/BMP/WebP). SVG is not yet supported as a fill source.
  */
@@ -249,7 +249,7 @@ export type Margin = number | [number, number, number, number]
 export type HAlign = 'left' | 'center' | 'right' | 'justify'
 export type VAlign = 'top' | 'middle' | 'bottom'
 /**
- * Text body `vert` attribute — flow/rotation direction of the text within its box.
+ * Text body `vert` attribute: flow/rotation direction of the text within its box.
  * Maps to `<a:bodyPr vert="…">` (ECMA-376 `ST_TextVerticalType`).
  */
 export type TextVertType = TextVerticalType

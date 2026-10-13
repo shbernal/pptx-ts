@@ -1,7 +1,7 @@
 /**
  * The value types the shape read-model returns.
  *
- * Declarations only — no element access, no theme resolution. They live apart from the classes
+ * Declarations only: no element access, no theme resolution. They live apart from the classes
  * that produce them so a consumer (or a sibling reader) can name a shape's effect, geometry or
  * recolour result without pulling in the whole shape hierarchy.
  *
@@ -39,7 +39,7 @@ export interface LineEnds {
  * One bound end of a connector (`p:nvCxnSpPr/p:cNvCxnSpPr/a:stCxn` or `a:endCxn`),
  * as read. A connector authored with `startShape`/`endShape` attaches each end to
  * a shape by that shape's `p:cNvPr/@id` plus a connection-site index; an unbound
- * end (the writer emits a bare `p:cNvCxnSpPr`) reports no site at all — see
+ * end (the writer emits a bare `p:cNvCxnSpPr`) reports no site at all; see
  * {@link Connector.startConnection}. This is the read counterpart of the write
  * API's `startShape`/`startShapeIdx` split, which binds by `objectName` and
  * resolves the name → id at serialize time.
@@ -51,7 +51,7 @@ export interface ConnectionSite {
 	siteIndex: number
 	/**
 	 * The bound shape resolved to a read-model shape via {@link Slide.shapeByIdDeep},
-	 * which descends into groups — so a connector bound to a shape nested in a group
+	 * which descends into groups, so a connector bound to a shape nested in a group
 	 * resolves the same as one bound to a top-level shape. `null` only when no shape
 	 * anywhere on the slide carries that id (a genuinely dangling binding), which is
 	 * faithful degradation and does not throw.
@@ -86,8 +86,8 @@ export interface OuterShadow {
 
 /**
  * A shape's inner shadow (`spPr/a:effectLst/a:innerShdw`), resolved against the
- * slide theme. Identical fields to {@link OuterShadow} — CT_InnerShadowEffect
- * carries the same `blurRad`/`dist`/`dir` + colour — but a distinct type so a
+ * slide theme. Identical fields to {@link OuterShadow} (CT_InnerShadowEffect
+ * carries the same `blurRad`/`dist`/`dir` + colour), but a distinct type so a
  * consumer can tell an inset shadow from a drop shadow. Distances in points,
  * direction in degrees, matching the write-side `shadow: { type: 'inner' }`.
  */
@@ -106,7 +106,7 @@ export interface InnerShadow {
 }
 
 /**
- * A shape's glow effect (`spPr/a:effectLst/a:glow`) — a coloured halo — resolved
+ * A shape's glow effect (`spPr/a:effectLst/a:glow`), a coloured halo, resolved
  * against the slide theme. The write-side `glow` option is a text glow: it writes
  * `a:glow` into each run's `a:rPr/a:effectLst`, which this does not read.
  */
@@ -121,10 +121,10 @@ export interface Glow {
 }
 
 /**
- * A shape's reflection effect (`spPr/a:effectLst/a:reflection`) — a mirrored fade
+ * A shape's reflection effect (`spPr/a:effectLst/a:reflection`): a mirrored fade
  * beneath the shape. This library's writer authors none, so this is a **read-only**
  * surface: a consumer that finds one should carry the part verbatim rather than
- * regenerate it. Only the attributes a faithful replica needs are decoded —
+ * regenerate it. Only the attributes a faithful replica needs are decoded:
  * distances in points (÷ 12700), directions in degrees (÷ 60000), and the start/end
  * alpha and position pairs as 0–1 fractions (the `1000`ths-of-a-percent source
  * ÷ 100000). All fields are optional; an attribute absent from the source is omitted.
@@ -149,7 +149,7 @@ export interface Reflection {
 }
 
 /**
- * A shape's soft-edge effect (`spPr/a:effectLst/a:softEdge`) — a feathered border.
+ * A shape's soft-edge effect (`spPr/a:effectLst/a:softEdge`): a feathered border.
  * Like {@link Reflection}, the writer authors none, so carry it verbatim. `@rad`
  * (the feather radius) ÷ 12700 → points.
  */
@@ -159,7 +159,7 @@ export interface SoftEdge {
 }
 
 /**
- * A shape's pattern fill (`spPr/a:pattFill`) — a two-colour preset hatch.
+ * A shape's pattern fill (`spPr/a:pattFill`): a two-colour preset hatch.
  *
  * Re-exported from `../pattern-fill.js`, which is where the decode lives now that slides,
  * shapes and tables all read the same element. The name stays here so `pptx-ts/read`'s
@@ -250,7 +250,7 @@ export interface CustomGeometryPath {
 	fill: string
 	/** Whether the path is stroked (`a:path/@stroke`). Default `true`. */
 	stroke: boolean
-	/** The path's segments in document order — order *is* the geometry. */
+	/** The path's segments in document order; order *is* the geometry. */
 	commands: GeometryCommand[]
 }
 
@@ -289,12 +289,12 @@ export interface AbsoluteFrame {
 /**
  * Why {@link Shape.absoluteFrame} could not resolve a frame.
  *
- * - `no-own-transform` — the shape states no `a:xfrm` of its own, or an incomplete
+ * - `no-own-transform`: the shape states no `a:xfrm` of its own, or an incomplete
  *   one: typically a placeholder inheriting its box from the layout. Nothing is
  *   wrong with the deck; the read model reports what the shape itself states.
- * - `group-transform-missing` — an enclosing `p:grpSp` states no complete
+ * - `group-transform-missing`: an enclosing `p:grpSp` states no complete
  *   `a:off`/`a:ext` **and** `a:chOff`/`a:chExt` pair, so its child space is unknown.
- * - `group-transform-degenerate` — an enclosing group's `a:chExt` is zero on an
+ * - `group-transform-degenerate`: an enclosing group's `a:chExt` is zero on an
  *   axis, so the child-space ratio the mapping divides by is undefined.
  *
  * A missing group transform outranks a degenerate one wherever the two meet in
@@ -305,7 +305,7 @@ export type AbsoluteFrameFailure = 'no-own-transform' | 'group-transform-missing
 
 /**
  * A group shape's own child coordinate space (`p:grpSpPr/a:xfrm/a:chOff` and
- * `a:chExt`) in EMU — the space its children's `a:off`/`a:ext` are authored in.
+ * `a:chExt`) in EMU: the space its children's `a:off`/`a:ext` are authored in.
  *
  * Named after the OOXML attributes rather than in the `left`/`top`/`width`/
  * `height` vocabulary the rest of the read model uses, because this is not a

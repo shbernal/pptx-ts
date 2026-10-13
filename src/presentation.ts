@@ -5,7 +5,7 @@
  * adapter (`index.ts`, `node.ts`, `browser.ts`). See the class doc below for the layout of
  * its body and where package assembly actually happens.
  *
- * Units: this library takes user coordinates in inches and converts to EMU on output — see
+ * Units: this library takes user coordinates in inches and converts to EMU on output. See
  * `units.ts` for the conversions and `STANDARD_LAYOUTS` for the built-in slide sizes.
  *
  * Derived from PptxGenJS (C) 2015-present Brent Ely (MIT), which in turn took some code from
@@ -116,7 +116,7 @@ function layoutSideInches(value: number | undefined, side: 'width' | 'height'): 
 }
 
 /**
- * Main presentation class and package export flow — the public entry point consumers
+ * Main presentation class and package export flow: the public entry point consumers
  * instantiate (`new PptxTs()`). Owns presentation-level state and metadata, collects
  * slides, and drives `write`/`writeFile`/`stream`. The actual OOXML string building is
  * delegated to the `gen-*` modules; runtime file/stream output goes through the injected
@@ -126,12 +126,12 @@ function layoutSideInches(value: number | undefined, side: 'width' | 'height'): 
  * Rough layout of the class body:
  *   - Metadata accessors      layout / author / company / title / theme / sections getters+setters
  *   - Private slide helpers    addNewSlide, getSlide, setSlideNumber
- *   - Public export methods    stream / write / writeFile — delegate packaging to `writePackage`
+ *   - Public export methods    stream / write / writeFile; delegate packaging to `writePackage`
  *   - Public authoring methods addSlide / defineLayout / defineSlideMaster / defineTableStyle
  *
  * Package assembly (`[Content_Types].xml`, the rels graph, per-part XML, the ZIP) lives in
  * `package/assemble.ts`; this class provides the deck state via {@link PresentationCore.packageSource}.
- * The live-DOM `tableToSlides()` is NOT here — it is added by the browser entry subclass
+ * The live-DOM `tableToSlides()` is NOT here; it is added by the browser entry subclass
  * (`browser.ts`) so it stays out of the Node build and out of the core chunk.
  */
 export default class PresentationCore {
@@ -311,7 +311,7 @@ export default class PresentationCore {
 	/**
 	 * slide layout definition objects, used for generating slide layout files.
 	 * `protected` (not `private`) so the browser entry subclass can resolve
-	 * `tableToSlides({ masterTitle })` against them — that method lives on the
+	 * `tableToSlides({ masterTitle })` against them. That method lives on the
 	 * browser build only (it reads a live DOM), see `browser.ts`.
 	 */
 	protected readonly _slideLayouts: SlideLayoutInternal[]
@@ -343,7 +343,7 @@ export default class PresentationCore {
 
 	/**
 	 * The built-in default layout, or a throw. `LAYOUTS` is a string-keyed map, so the lookup is
-	 * typed as possibly-missing at every call site even though the constructor registers it — and
+	 * typed as possibly-missing at every call site even though the constructor registers it, and
 	 * the two callers that need it were spelling the same guard and the same message.
 	 */
 	#requireDefaultLayout(): PresLayout {
@@ -447,7 +447,7 @@ export default class PresentationCore {
 		if (layout && this._slideLayouts.includes(layout)) setOrClear(nextOptions, 'masterTitle', layout._name)
 		// Preserve the originating slide's section for all auto-paged continuation slides.
 		// Search for the section that owns the current last slide rather than assuming it is
-		// the last section — the originating slide may not be at the tail of the deck.
+		// the last section: the originating slide may not be at the tail of the deck.
 		const lastSlide = this._slides[this._slides.length - 1]
 		const sourceSection = this._sections.find((sect) => sect._slides.some((s) => s._slideNum === lastSlide?._slideNum))
 		setOrClear(nextOptions, 'sectionTitle', sourceSection?.title)
@@ -502,14 +502,14 @@ export default class PresentationCore {
 	 * Author + serialize this presentation's slides as injectable descriptors,
 	 * WITHOUT producing a `.pptx` package. Runs the same media-encode, placeholder
 	 * backfill, and measured-fit passes `write()` uses, then serializes each slide
-	 * body and resolves its image media to decoded bytes — so a loaded deck can
+	 * body and resolves its image media to decoded bytes, so a loaded deck can
 	 * splice the slides in via `Presentation.appendSlides()` (see `pptx-ts/read`)
 	 * while keeping its own masters/layouts/theme byte-identical.
 	 *
 	 * Returns the deck's slide size (EMU, for the destination size check) and one
 	 * descriptor per authored slide. Charts, audio/video media, online media, and
 	 * internal slide-to-slide hyperlinks are surfaced as descriptors alongside the
-	 * serialized body — this method does not resolve them into a package; the append
+	 * serialized body. This method does not resolve them into a package; the append
 	 * path consumes each descriptor to reserve the parts and rebuild the rel graph.
 	 */
 	extractSlides = async (opts: { onMediaError?: 'throw' | 'placeholder' } = {}): Promise<ExtractedSlides> =>
@@ -658,11 +658,11 @@ export default class PresentationCore {
 
 	/**
 	 * Measure how tall text wraps at a given width, using the **same** calibrated wrap
-	 * model the export-time autofit bake uses — so a layout-time prediction matches the
+	 * model the export-time autofit bake uses, so a layout-time prediction matches the
 	 * value `fit:'shrink'`/`'resize'` would bake. Synchronous: register the face's metrics
 	 * first with {@link PptxTs.registerFontMetrics} (lookup is sync).
 	 *
-	 * Lets a consumer size its own geometry before export — grow a card to fit its text,
+	 * Lets a consumer size its own geometry before export: grow a card to fit its text,
 	 * reflow a grid, or detect overflow at layout time. Heights err **tall** (conservative),
 	 * so the returned height is ≥ what PowerPoint/LibreOffice render.
 	 * @param {string | TextProps[]} text - a string or run array (per-run options override the defaults in `opts`)
@@ -678,7 +678,7 @@ export default class PresentationCore {
 	/**
 	 * Convenience overflow check: `true` if `text` does not fit a box of inner size
 	 * `wIn`×`hIn` (inches) at full size. Because the model errs tall, this is a
-	 * **conservative** (slightly over-reporting) check — appropriate for a build-time
+	 * **conservative** (slightly over-reporting) check, appropriate for a build-time
 	 * warning, not a hard gate. An unmeasurable (unnamed theme-default) face reports
 	 * `false` (no overflow) so the linter does not false-positive on faces it cannot measure.
 	 * @param {string | TextProps[]} text - a string or run array
@@ -691,13 +691,13 @@ export default class PresentationCore {
 
 	/**
 	 * Compute the per-cell geometry of a table laid out at `opts.x`/`y`/`w`, without
-	 * adding it to a slide — so a consumer can place images or shapes precisely over
+	 * adding it to a slide, so a consumer can place images or shapes precisely over
 	 * cells. Column widths (cell `x`/`w`) are exact, derived from the same logic the
 	 * writer uses. Row heights (`y`/`h`) are exact when pinned by `rowH` (array or
 	 * scalar) or table `h`; an auto-height row is estimated with the same conservative
 	 * (tall) text model as {@link PptxTs.measureText} and flagged `heightExact:false`
 	 * (register the cell font via {@link PptxTs.registerFontMetrics} for an exact
-	 * estimate). Geometry is for a single, un-paginated table — `autoPage` paging is
+	 * estimate). Geometry is for a single, un-paginated table; `autoPage` paging is
 	 * not modeled.
 	 * @param {TableRow[]} rows - the same `rows` passed to `slide.addTable`
 	 * @param {TableProps} opts - the same table options (`x`, `y`, `w`, `colW`, `rowH`, `h`, …)
@@ -745,7 +745,7 @@ export default class PresentationCore {
 	}
 
 	/**
-	 * Assemble the current Presentation into its OOXML package parts WITHOUT zipping — the raw
+	 * Assemble the current Presentation into its OOXML package parts WITHOUT zipping: the raw
 	 * `path → bytes` contents `write()` would compress into the `.pptx`. Use this to stream parts
 	 * into a custom container, inspect individual parts, or feed a pipeline that does its own
 	 * archiving. To produce a real `.pptx` file, use {@link write} / {@link writeFile} instead.
@@ -762,7 +762,7 @@ export default class PresentationCore {
 	 */
 	async toParts(props?: PartsProps): Promise<PackagePart[]> {
 		const parts = await buildPackageParts(this.packageSource(), { onMediaError: props?.onMediaError })
-		// Drop the internal `store` (DEFLATE) hint — an fflate-era zip optimization, not an OOXML fact.
+		// Drop the internal `store` (DEFLATE) hint, an fflate-era zip optimization, not an OOXML fact.
 		return parts.map(({ path, data }) => ({ path, data }))
 	}
 

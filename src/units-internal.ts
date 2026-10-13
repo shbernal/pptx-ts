@@ -1,5 +1,5 @@
 /**
- * Generator-side unit conversion — the lenient layer over `units.ts`.
+ * Generator-side unit conversion: the lenient layer over `units.ts`.
  *
  * `units.ts` holds the strict, public primitives: one branded `Emu` type and converters that
  * take a number and throw on anything they cannot represent. This module holds what the
@@ -31,7 +31,7 @@ import type { DiagnosticCode, InvalidOptionErrorCode } from './codes.js'
 import type { Coord, PresLayout } from './types/index.js'
 
 /**
- * Resolve a user `Coord` (x/y/w/h) to EMU — the single user-coordinate → EMU boundary.
+ * Resolve a user `Coord` (x/y/w/h) to EMU, the single user-coordinate → EMU boundary.
  * - bare `number` → **inches** (no magnitude guessing); `"<n>%"` → percent of the slide axis;
  *   `"<n>in"`/`"<n>pt"`/`"<n>emu"` → explicit units (see {@link Coord} / {@link coordToEmu})
  * - `null`/`undefined` → 0 (callers may omit a coordinate)
@@ -79,7 +79,7 @@ export function inch2Emu(inches: number | string): Emu {
  * Margins are INCHES, consistent with the positional API (`x`/`y`/`w`/`h`) and the value
  * PowerPoint's own dialog shows (both the table cell-margin and the text-box internal-margin
  * fields are inches). Historically the library read these as POINTS (table cells used a magnitude
- * heuristic — `>= 1` points, `< 1` inches; text-box margins were straight points), so a legitimate
+ * heuristic: `>= 1` points, `< 1` inches; text-box margins were straight points), so a legitimate
  * fraction-of-an-inch value entered from the PowerPoint dialog became a tiny points value. Every
  * value is now inches. A `>= 1` value is honored as inches but warns once, because it is almost
  * certainly a legacy points value that should be divided by 72 (e.g. `10` points → `0.139` inches).
@@ -106,7 +106,7 @@ export function marginToEmu(inches: number): Emu {
  *
  * A scalar broadcasts to all four sides. The index order is the whole point of naming this:
  * the arrays are CSS order while `a:bodyPr`/`a:tcPr` name their insets left-first, so every
- * site that mapped it by hand spelled the same 3/0/1/2 shuffle — the text box's `_bodyProp`,
+ * site that mapped it by hand spelled the same 3/0/1/2 shuffle: the text box's `_bodyProp`,
  * the slide-number placeholder's `a:bodyPr`, and a table cell's `marL/R/T/B`.
  *
  * Each component goes through {@link marginToEmu}, so the legacy-points warning still fires
@@ -198,7 +198,7 @@ export function resolveSlideMarginsInches(
  * - an explicit `colW` **array** is per-column inches (`inch2Emu`); a non-finite slot
  *   falls back to the even-distribution width
  * - otherwise the table's already-resolved width (`totalWidthEmu`, EMU) is split evenly
- *   across `colCount` columns. (A scalar `colW` never reaches here — `addTableDefinition`
+ *   across `colCount` columns. (A scalar `colW` never reaches here; `addTableDefinition`
  *   converts it to `w` and clears `colW`.)
  *
  * IMPORTANT: the even path divides an **EMU** width. Passing the raw inches `options.w`
@@ -222,7 +222,7 @@ export function resolveTableColWidthsEmu(
 			// unusable falls back to the even-distribution width AND says so, for the reason
 			// `pinnedRowHeightInches` gives about the analogous `rowH` entry: it is something the
 			// caller wrote on purpose and the even split is not what they meant. An absent slot is
-			// not that — a sparse array is how a caller spells "distribute this one" — so it is
+			// not that (a sparse array is how a caller spells "distribute this one"), so it is
 			// silent, which is the same line that helper draws.
 			const n = colW[i]
 			if (typeof n === 'number' && Number.isFinite(n)) return Math.round(inch2Emu(n))
@@ -268,7 +268,7 @@ export function usableTableWidthEmu(
  * The single rule for whether one `rowH` entry pins a table row, in inches.
  *
  * An entry pins its row when it reads as a **finite number greater than zero**. Everything
- * else returns `null` — the row is sized from the table's own height, or grows to fit — and
+ * else returns `null` (the row is sized from the table's own height, or grows to fit), and
  * an entry that is present but unusable warns, because `rowH: [0, …]` and `rowH: [-1, …]`
  * are things a caller wrote on purpose and none of the readings this replaced was what they
  * meant. A missing slot is not that: an array with holes is how the auto-pager spells
@@ -277,7 +277,7 @@ export function usableTableWidthEmu(
  * Three call sites read `rowH` and they disagreed. The writer and the export-time fit pass
  * both used a truthiness test, so `0` fell through to the even split of `h`;
  * `pptx.tableLayout()` used `typeof === 'number'`, so `0` pinned the row at zero inches and
- * was then rescued by a default-line fallback — reporting 0.2in against the file's 2.0in,
+ * was then rescued by a default-line fallback, reporting 0.2in against the file's 2.0in,
  * and flagging it `heightExact`. A negative entry reached `<a:tr h="-914400">`.
  *
  * @param entry - one `rowH` array slot, or the scalar `rowH`
@@ -327,7 +327,7 @@ export function resolveCellMarginsInches(
 }
 
 /**
- * Resolve one table row's height to EMU — the row-height twin of
+ * Resolve one table row's height to EMU: the row-height twin of
  * {@link resolveTableColWidthsEmu}, shared by the table XML emitter, the export-time
  * measured-fit pass and `pptx.tableLayout()` so a prediction cannot disagree with what the
  * export bakes.
@@ -355,8 +355,8 @@ export function resolveTableRowHeightEmu(
 }
 
 /**
- * Convert points to EMU, leniently: anything that does not read as a finite number — a `NaN`,
- * an `Infinity`, a non-numeric string, `null` — becomes `0` rather than throwing.
+ * Convert points to EMU, leniently: anything that does not read as a finite number (a `NaN`,
+ * an `Infinity`, a non-numeric string, `null`) becomes `0` rather than throwing.
  *
  * That is the whole difference from {@link pointsToEmu} in `units.ts`, which throws on the same
  * input. Emitters use this one for the many optional size/width/offset options where a missing
@@ -393,13 +393,13 @@ export function mapStated<T extends number | string, R>(
 
 /**
  * Clamp a caller-supplied number into the range its schema type allows, warning when it had to
- * move. Returns the value in the caller's own unit — each helper below applies its own
+ * move. Returns the value in the caller's own unit; each helper below applies its own
  * arithmetic afterwards, because the inverting and non-inverting forms do not round alike.
  *
  * `NaN` throws rather than clamping: there is no nearest in-range value for it, and
  * `Math.min`/`Math.max` propagate it straight through to the attribute (`val="NaN"`), which is
  * exactly the degenerate output the range check exists to prevent. `Infinity` is not in that
- * category — it clamps to the bound like any other out-of-range number, and warns.
+ * category: it clamps to the bound like any other out-of-range number, and warns.
  *
  * **This is the one policy for an out-of-range number**, and it is the policy
  * `docs/contributing/development.md` ("Warn or throw?") describes: a finite value has a nearest legal
@@ -464,7 +464,7 @@ export function opacityToAlpha(opacity: number): number {
 }
 
 /**
- * Convert a percentage into a schema-valid fixed-percentage value (thousandths of a percent) —
+ * Convert a percentage into a schema-valid fixed-percentage value (thousandths of a percent),
  * the **non-inverting** sibling of {@link transparencyToAlpha}, for options the caller already
  * states as "how much", such as a chart series' fill opacity.
  *
@@ -546,13 +546,13 @@ export function lineWidthToEmu(widthPts: number | string, label = 'line width'):
 
 /**
  * Convert a shadow's blur radius or offset distance (points) to EMU clamped into
- * ST_PositiveCoordinate (0..27273042316900 EMU, i.e. 0-2147483647pt) — the type both
+ * ST_PositiveCoordinate (0..27273042316900 EMU, i.e. 0-2147483647pt), the type both
  * `blurRad` and `dist` carry on `a:outerShdw`/`a:innerShdw`.
  *
  * **The bound is the schema's, not the `0-100` / `0-200` those options document.** Those two
  * numbers are the limits of PowerPoint's own spinners, and a blur past them is unusual rather
  * than invalid: the file loads and paints. The one input that genuinely breaks the package is a
- * *negative* one, because the type is unsigned — so that is what this moves, on the same
+ * *negative* one, because the type is unsigned, so that is what this moves, on the same
  * reasoning `clampLineSpacingMultiplePct` in `gen/drawingml/clamp.ts` clamps to
  * ST_TextSpacingPercent rather than to the `0.0-9.99` its own option describes. Only values
  * PowerPoint reports as needing repair are worth moving.
@@ -565,7 +565,7 @@ export function positiveCoordinateEmu(pts: number | string, code: DiagnosticCode
  * Convert degrees to a DrawingML angle (60000ths of a degree), **without** wrapping.
  *
  * Most angles in the format are not modular: a connection site at 400 degrees, a polar adjust
- * handle whose range runs to 540, an arc that sweeps 400 degrees — each means something a
+ * handle whose range runs to 540, an arc that sweeps 400 degrees. Each means something a
  * reduction into 0..360 would destroy. Use this for those, and {@link convertRotationDegrees}
  * for the ones that genuinely are a rotation.
  *
@@ -592,7 +592,7 @@ function assertFiniteDegrees(d: number, what: string, code: AngleErrorCode): voi
 /**
  * Convert a shape or gradient rotation (degrees) to a DrawingML angle (60000ths of a degree).
  *
- * A rotation *is* modular — 800 degrees and 80 degrees point the same way — so the value is
+ * A rotation *is* modular (800 degrees and 80 degrees point the same way), so the value is
  * reduced with `% 360`. The reduction keeps the sign: `-45` stays `-45` rather than becoming
  * `315`, because both are valid `ST_Angle`, PowerPoint writes negative rotations itself, and
  * the read side reports back what was authored. Only an input outside -360..360 moves.

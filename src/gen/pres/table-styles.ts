@@ -7,8 +7,8 @@
  * PowerPoint does not need the definitions. `<a:tableStyleId>` is resolved against PowerPoint's
  * *own* table-style gallery, not against this part. Verified by render (PowerPoint desktop 16.0): a
  * deck pointed at a built-in GUID this part does not define paints correctly, while a
- * PowerPoint-authored deck whose style GUID is rewritten to a novel value — in both this part and
- * the slide, bytes otherwise identical — loses its styling entirely and falls back to the black
+ * PowerPoint-authored deck whose style GUID is rewritten to a novel value (in both this part and
+ * the slide, bytes otherwise identical) loses its styling entirely and falls back to the black
  * hairline grid. The same holds for a definition placed inline in the slide's `<a:tblPr>` as
  * `<a:tableStyle>`, and for one nominated by this part's `def=`. So a custom `<a:tblStyle>` is
  * unreachable markup in the supported target, whatever it says and wherever it sits. Brand

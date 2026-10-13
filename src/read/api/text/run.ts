@@ -54,8 +54,8 @@ export interface TextContext {
 	/** The theme the text resolves against: the colour maps, `fontScheme`, and the layout and master roots. */
 	ctx: ThemeContext
 	/**
-	 * The owning part's relationships, or `null` for text read without them — a SmartArt drawing's
-	 * cached text — whose run hyperlinks then report their raw `@r:id`, `@action` and `@tooltip`.
+	 * The owning part's relationships, or `null` for text read without them (a SmartArt drawing's
+	 * cached text), whose run hyperlinks then report their raw `@r:id`, `@action` and `@tooltip`.
 	 */
 	rels: Relationships | null
 	/**
@@ -98,13 +98,13 @@ export interface InheritedRunProps {
 /**
  * A paragraph's line spacing (`a:pPr/a:lnSpc`), in whichever of the two OOXML
  * forms the file uses: an exact point height (`a:spcPts`) or a percentage of the
- * single-line height (`a:spcPct` — e.g. `percent: 150` for 1.5× spacing).
+ * single-line height (`a:spcPct`, e.g. `percent: 150` for 1.5× spacing).
  */
 export type LineSpacing = { type: 'points'; valuePt: number } | { type: 'percent'; percent: number }
 
 /**
  * The bullet's own font, size and colour (`a:buFont` / `a:buSzPct` / `a:buSzPts` /
- * `a:buClr`) — the properties that style the glyph or number itself rather than
+ * `a:buClr`): the properties that style the glyph or number itself rather than
  * the text after it. Every field is `null` when the paragraph leaves it to be
  * inherited from the list style.
  *
@@ -112,7 +112,7 @@ export type LineSpacing = { type: 'points'; valuePt: number } | { type: 'percent
  * are carried alongside each kind rather than inside it.
  */
 export interface BulletStyle {
-	/** `a:buFont/@typeface` — the face the glyph is drawn in (a symbol font such as `Wingdings`), or `null`. */
+	/** `a:buFont/@typeface`: the face the glyph is drawn in (a symbol font such as `Wingdings`), or `null`. */
 	font: string | null
 	/** `a:buSzPct/@val` as a percentage of the run size (e.g. `80`; the raw attribute is thousandths of a percent), or `null`. */
 	sizePct: number | null
@@ -127,11 +127,11 @@ export interface BulletStyle {
  * children. Discriminated on `kind`, which is one of the four mutually
  * exclusive choices the schema allows:
  *
- * - `'none'`    — `a:buNone`, the bullet explicitly suppressed. Carries no style,
- *                 because there is no glyph to style.
- * - `'char'`    — `a:buChar`, a literal glyph.
- * - `'autoNum'` — `a:buAutoNum`, an auto-numbered list.
- * - `'picture'` — `a:buBlip`, an image used as the glyph.
+ * - `'none'`: `a:buNone`, the bullet explicitly suppressed. Carries no style,
+ *   because there is no glyph to style.
+ * - `'char'`: `a:buChar`, a literal glyph.
+ * - `'autoNum'`: `a:buAutoNum`, an auto-numbered list.
+ * - `'picture'`: `a:buBlip`, an image used as the glyph.
  *
  * A paragraph that names none of them inherits its bullet from the list style and
  * reports `null` rather than a member of this union.
@@ -140,7 +140,7 @@ export type BulletDetail =
 	| { kind: 'none' }
 	| ({
 			kind: 'char'
-			/** The glyph itself (`a:buChar/@char`) — a bare character, never a tagged string. */
+			/** The glyph itself (`a:buChar/@char`): a bare character, never a tagged string. */
 			char: string
 	  } & BulletStyle)
 	| ({
@@ -206,7 +206,7 @@ export class Run {
 		private readonly inherited: InheritedRunProps | null
 	) {}
 
-	/** The run's text (`a:t`), verbatim — whitespace is not normalized. */
+	/** The run's text (`a:t`), verbatim; whitespace is not normalized. */
 	get text(): string {
 		return firstChild(this.element, 'a:t')?.textContent ?? ''
 	}
@@ -274,7 +274,7 @@ export class Run {
 	/**
 	 * Strikethrough token (`a:rPr/@strike`: `noStrike` | `sngStrike` |
 	 * `dblStrike`), or `null` when unset (inherited from the style). Surfaced as
-	 * the raw token — `sngStrike` is the writer's single-strike value.
+	 * the raw token; `sngStrike` is the writer's single-strike value.
 	 */
 	get strike(): string | null {
 		return this.#rPrAttrRaw('strike')
@@ -294,8 +294,8 @@ export class Run {
 	 * `30`), negative for subscript (`-40`), or `null` when unset. Reported as the
 	 * percentage (`@baseline` ÷ 1000).
 	 *
-	 * `@baseline` is `a:ST_Percentage`, a union that also admits `"62.5%"` — the only form the
-	 * Strict profile has — so it is read through `parsePercentPoints` rather than as a bare number.
+	 * `@baseline` is `a:ST_Percentage`, a union that also admits `"62.5%"` (the only form the
+	 * Strict profile has), so it is read through `parsePercentPoints` rather than as a bare number.
 	 */
 	get baselinePct(): number | null {
 		const rPr = this.#rPr()
@@ -475,7 +475,7 @@ export class Run {
 	 * The colour this run effectively renders, resolved against the owning slide's
 	 * theme to a literal hex. It is the run's own solid fill
 	 * ({@link color}/{@link schemeColor}) when set; otherwise the shape's
-	 * `p:style/a:fontRef` colour, then — for a run inside a placeholder — the colour
+	 * `p:style/a:fontRef` colour, then (for a run inside a placeholder) the colour
 	 * it inherits from the placeholder/list-style chain (layout → master placeholder
 	 * `a:lstStyle` → master `p:txStyles`), then the presentation's
 	 * `p:defaultTextStyle`. `null` when the run sets no colour and inherits none, or the
@@ -483,8 +483,8 @@ export class Run {
 	 * `null` too when the run's own fill is not a solid colour (`a:noFill`, a gradient):
 	 * the run decides its own colour then, and the one it would otherwise inherit is not
 	 * what it paints in, the rule `Shape.resolvedFill` and `TableCell.resolvedFill` follow.
-	 * The returned {@link ResolvedColor} carries `effectiveHex` — the base colour with
-	 * its child transforms (`lumMod`/`shade`/…) applied — for the final rendered colour.
+	 * The returned {@link ResolvedColor} carries `effectiveHex`, the base colour with
+	 * its child transforms (`lumMod`/`shade`/…) applied, for the final rendered colour.
 	 */
 	get resolvedColor(): ResolvedColor | null {
 		const rPr = this.#rPr()
@@ -498,7 +498,7 @@ export class Run {
 	 * ({@link fontSizePt}) when set; otherwise, for a run inside a placeholder, the
 	 * size it inherits from the placeholder/list-style chain (paragraph `a:defRPr` →
 	 * slide `a:lstStyle` → layout → master placeholder `a:lstStyle` → master
-	 * `p:txStyles`). `null` when the run sets no size and inherits none — the
+	 * `p:txStyles`). `null` when the run sets no size and inherits none. This is the
 	 * resolved counterpart of {@link fontSizePt}, which reports only the run's own value.
 	 */
 	get resolvedSizePt(): number | null {
@@ -508,13 +508,14 @@ export class Run {
 	/**
 	 * The typeface this run effectively renders, resolved to a literal face name. It
 	 * is the run's own `a:latin` ({@link fontName}) when set; otherwise the face named
-	 * by the shape's `p:style/a:fontRef` (`idx` → theme major/minor font), then — for a
-	 * run inside a placeholder — the face it inherits from the placeholder/list-style
+	 * by the shape's `p:style/a:fontRef` (`idx` → theme major/minor font), then (for a
+	 * run inside a placeholder) the face it inherits from the placeholder/list-style
 	 * chain, then the presentation's `p:defaultTextStyle`. A `+mj-*`/`+mn-*`
-	 * major/minor theme-font token — on the run itself or reached through the chain —
+	 * major/minor theme-font token, on the run itself or reached through the chain,
 	 * is resolved through the theme `fontScheme` to its concrete face. `null` when the
-	 * run names no face and inherits none, or a token cannot be resolved — the resolved
-	 * counterpart of {@link fontName}, which reports the raw `@typeface` (possibly a token).
+	 * run names no face and inherits none, or a token cannot be resolved. This is the
+	 * resolved counterpart of {@link fontName}, which reports the raw `@typeface` (possibly a
+	 * token).
 	 */
 	get resolvedFontFace(): string | null {
 		const own = this.fontName
@@ -528,7 +529,7 @@ export class Run {
 	 * ({@link bold}) when set; otherwise, for a run inside a placeholder, the bold
 	 * state it inherits from the placeholder/list-style chain (paragraph `a:defRPr` →
 	 * slide `a:lstStyle` → layout → master placeholder `a:lstStyle` → master
-	 * `p:txStyles`). `null` when the run sets no `@b` and inherits none — the
+	 * `p:txStyles`). `null` when the run sets no `@b` and inherits none. This is the
 	 * resolved counterpart of {@link bold}, which reports only the run's own value.
 	 */
 	get resolvedBold(): boolean | null {
@@ -540,7 +541,7 @@ export class Run {
 	 * ({@link italic}) when set; otherwise, for a run inside a placeholder, the italic
 	 * state it inherits from the placeholder/list-style chain (paragraph `a:defRPr` →
 	 * slide `a:lstStyle` → layout → master placeholder `a:lstStyle` → master
-	 * `p:txStyles`). `null` when the run sets no `@i` and inherits none — the
+	 * `p:txStyles`). `null` when the run sets no `@i` and inherits none. This is the
 	 * resolved counterpart of {@link italic}, and the twin of {@link resolvedBold}:
 	 * `@b` and `@i` are siblings a master text style states together, so a deck that
 	 * can be authored with an inherited italic can be read back with one.

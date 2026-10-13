@@ -289,7 +289,7 @@ function makeXmlMasterTxStyles(textStyles: MasterTextStyleProps): string {
  * The built-in Office master's `<p:txStyles>`, used verbatim when `defineSlideMaster({ textStyles })`
  * was never called. Deliberately NOT built via `masterLevelXml`: a configured title level always
  * carries `marL="0"` (from `MASTER_TITLE_DEFAULT.marL`), but the true unconfigured default titleStyle
- * has no `marL`/`indent` attribute at all — a pre-existing asymmetry between the two paths, preserved
+ * has no `marL`/`indent` attribute at all: a pre-existing asymmetry between the two paths, preserved
  * exactly rather than unified.
  */
 function makeXmlMasterDefaultTxStyles(): string {
@@ -325,9 +325,9 @@ function makeXmlMasterDefaultTxStyles(): string {
 		defaultLevel(i + 1, { marL: base.marL, algn: base.algn }, '', base.sz, 'mn')
 	)
 
-	// NOTE: the source template's own indentation reaches the file here — each style block's
-	// children are preceded by two spaces and its own closing tag by one (see `fmt` below) —
-	// same class of quirk as `genXmlPlaceholder` in text-body.ts. Preserved, not reformatted.
+	// NOTE: the source template's own indentation reaches the file here. Each style block's
+	// children are preceded by two spaces and its own closing tag by one (see `fmt` below),
+	// the same class of quirk as `genXmlPlaceholder` in text-body.ts. Preserved, not reformatted.
 	return el(
 		'p:txStyles',
 		null,

@@ -154,8 +154,8 @@ export class Slide implements ShapeHost {
 	 * `fmtScheme` + `fontScheme`, plus the layout/master roots), walked once from
 	 * slide → layout → master → theme and cached on this proxy. Backs the read-model
 	 * resolved getters ({@link Shape.resolvedFill}, `Run.resolvedColor`,
-	 * `Run.resolvedSizePt`, `Run.resolvedFontFace`) so a `schemeClr` token — including
-	 * one delivered through a shape's `p:style` `fillRef`/`lnRef` — resolves to a
+	 * `Run.resolvedSizePt`, `Run.resolvedFontFace`) so a `schemeClr` token (including
+	 * one delivered through a shape's `p:style` `fillRef`/`lnRef`) resolves to a
 	 * literal hex, and a placeholder run's inherited size/typeface (a `+mj-*`/`+mn-*`
 	 * font token included) resolves to a literal value. The maps/roots are empty when
 	 * the theme chain is incomplete, in which case tokens simply stay unresolved.
@@ -212,7 +212,7 @@ export class Slide implements ShapeHost {
 	/**
 	 * Whether this slide draws the master's non-placeholder shapes
 	 * (`p:sld/@showMasterSp`). `xsd:boolean` defaulting to `true`, so an absent
-	 * attribute means shown — the same shape as {@link hidden}.
+	 * attribute means shown, the same shape as {@link hidden}.
 	 *
 	 * This is the switch that decides whether {@link SlideMaster.shapes} belongs on
 	 * *this* slide. A slide the author gave a full-bleed image or a section divider
@@ -241,7 +241,7 @@ export class Slide implements ShapeHost {
 	 * Set or clear the slide's show transition. Assigning `null` removes it.
 	 * Writing a transition with `durationMs` emits the `mc:AlternateContent` form
 	 * (a `p14` Choice carrying `p14:dur` plus a base `mc:Fallback`); otherwise the
-	 * bare `<p:transition>` is written. The node is inserted at its schema slot —
+	 * bare `<p:transition>` is written. The node is inserted at its schema slot,
 	 * after `p:clrMapOvr`, before `p:timing`/`p:extLst`. Marks the slide part dirty.
 	 *
 	 * The new transition is built from the current one before that is removed: it keeps the sound
@@ -312,14 +312,14 @@ export class Slide implements ShapeHost {
 	/**
 	 * Flatten the slide's build animations: remove the `<p:timing>` block so the
 	 * slide renders and edits as its final static state, with every shape shown at
-	 * once. Gated like {@link hasAnimations} — a `<p:timing>` that is purely a media
+	 * once. Gated like {@link hasAnimations}: a `<p:timing>` that is purely a media
 	 * loop (no `<p:bldP>` or `presetID`) is preserved so media playback survives.
 	 * Marks the slide part dirty and returns `true` only when a timing block was
 	 * removed.
 	 *
 	 * This removes click-through staging only; it does not delete shapes. If a slide
 	 * animated alternating states over the same region, the flattened render shows
-	 * them all at once — keep that distinct from removing staged/duplicate shapes.
+	 * them all at once. Keep that distinct from removing staged/duplicate shapes.
 	 */
 	flattenAnimations(): boolean {
 		const root = this.part.dom.documentElement
@@ -337,7 +337,7 @@ export class Slide implements ShapeHost {
 	}
 
 	/**
-	 * All text on the slide, flattened in document order — the read-model
+	 * All text on the slide, flattened in document order: the read-model
 	 * counterpart to {@link TextFrame.text} one level up. Every text-bearing shape
 	 * contributes its text, recursing into groups ({@link GroupShape}) and reading
 	 * table cells ({@link GraphicFrame.table}) and SmartArt node text
@@ -384,12 +384,12 @@ export class Slide implements ShapeHost {
 	}
 
 	/**
-	 * The slide's speaker-note text — the companion to {@link text} for the notes
+	 * The slide's speaker-note text, the companion to {@link text} for the notes
 	 * that {@link text} deliberately excludes. Delegates to {@link notesSlide}: finds
 	 * the notes body placeholder (`p:ph` `type="body"`) and flattens its text frame
 	 * the same way {@link TextFrame.text} does (paragraphs joined by `\n`).
 	 *
-	 * Returns `null` when the slide has **no notes slide part at all** — distinct
+	 * Returns `null` when the slide has **no notes slide part at all**, distinct
 	 * from `''`, which means a notes slide exists but its body is empty (PowerPoint
 	 * often attaches an empty notes slide to every slide). Only the body placeholder
 	 * is read; the slide-thumbnail (`sldImg`) and slide-number (`sldNum`)
@@ -401,14 +401,14 @@ export class Slide implements ShapeHost {
 	}
 
 	/**
-	 * The slide's speaker-note body as a navigable {@link TextFrame} — the rich
+	 * The slide's speaker-note body as a navigable {@link TextFrame}: the rich
 	 * companion to {@link notesText}, which flattens the same body to a plain string.
 	 * Walk `paragraphs → runs` to recover per-run formatting (bold/italic/underline,
 	 * colour, size, face) and any notes hyperlink that {@link notesText} discards.
 	 *
 	 * `null` when the slide has **no notes slide part** (the same boundary
 	 * {@link notesText} returns `null` at), and also when a notes part exists but
-	 * carries no body-placeholder text frame — there is then no frame to hand back
+	 * carries no body-placeholder text frame; there is then no frame to hand back
 	 * (whereas {@link notesText} reports `''` for that empty-body case). Convenience
 	 * for `notesSlide.textFrame`; see {@link notesSlide} for the whole modeled notes
 	 * slide (its `sldImg`/`sldNum` placeholders and their geometry).
@@ -421,9 +421,9 @@ export class Slide implements ShapeHost {
 	 * The slide's speaker-notes slide (`notesSlideN.xml`) as a modeled
 	 * {@link NotesSlide}, or `null` when the slide has no notes slide part. Beyond the
 	 * body text {@link notesText}/{@link notesTextFrame} surface, this exposes the
-	 * notes slide's three placeholders — the slide thumbnail (`slideImage`), the notes
-	 * body, and the slide-number field (`slideNumber`) — each with its geometry and
-	 * (where present) a navigable text frame.
+	 * notes slide's three placeholders, each with its geometry and (where present) a
+	 * navigable text frame: the slide thumbnail (`slideImage`), the notes body, and the
+	 * slide-number field (`slideNumber`).
 	 *
 	 * The writer authors all three placeholders but leaves `sldImg`/`sldNum` with an
 	 * empty `p:spPr`, so on an authored deck their geometry reads `null` while an
@@ -484,7 +484,7 @@ export class Slide implements ShapeHost {
 	 * carries its body text, `created` timestamp, marker position (EMU), its author
 	 * resolved through the deck-wide {@link Presentation.modernCommentAuthors}
 	 * registry (`@authorId` GUID → name/initials), and its reply thread nested under
-	 * `replies`. Read-only — the writer authors the legacy schema; see
+	 * `replies`. Read-only: the writer authors the legacy schema; see
 	 * {@link Presentation.commentSchema} to tell which schema a deck uses.
 	 */
 	get modernComments(): ModernComment[] {
@@ -494,7 +494,7 @@ export class Slide implements ShapeHost {
 	/**
 	 * The slide's programmatic tags (`p:custDataLst/p:tags` on the slide part,
 	 * resolved to `ppt/tags/tagN.xml`) as `{ name, val }` string pairs, `[]` when it
-	 * has none. Host/add-in metadata with no visible rendering and no writer —
+	 * has none. Host/add-in metadata with no visible rendering and no writer:
 	 * read-only, preserved byte-for-byte on round-trip. Deck-level tags are
 	 * {@link Presentation.tags}.
 	 */
@@ -505,7 +505,7 @@ export class Slide implements ShapeHost {
 	/**
 	 * The slide's effective background (`p:cSld/p:bg`), decoded into a typed
 	 * {@link SlideBackground}. Resolved through the inheritance chain: the slide's
-	 * own `p:bg` wins; failing that the slideLayout's, then the slideMaster's — the
+	 * own `p:bg` wins; failing that the slideLayout's, then the slideMaster's. The
 	 * result's `source` records which supplied it. `null` when nothing in the chain
 	 * defines a background.
 	 *
@@ -542,7 +542,7 @@ export class Slide implements ShapeHost {
 	 * `slide.slideNumber`, or added to a master defined with `slideNumber`; its geometry and run formatting
 	 * read off the returned {@link AutoShape} the same as any placeholder.
 	 *
-	 * Scoped to the slide's *own* shape tree — a slide number inherited purely from
+	 * Scoped to the slide's *own* shape tree: a slide number inherited purely from
 	 * the master's `p:hf`/placeholder (with no shape on the slide) is a master-level
 	 * concern this getter does not resolve.
 	 */
@@ -561,7 +561,7 @@ export class Slide implements ShapeHost {
 
 	/**
 	 * The first shape *anywhere* in the slide's shape tree with the given drawing id
-	 * (`p:cNvPr/@id`), descending into groups — unlike {@link shapeById}, which scans
+	 * (`p:cNvPr/@id`), descending into groups, unlike {@link shapeById}, which scans
 	 * only top-level shapes. Walked pre-order (a group is visited before its children),
 	 * matching how the writer allocates ids. `undefined` when no shape carries that id.
 	 *
@@ -682,7 +682,7 @@ export class Slide implements ShapeHost {
 	 * afterwards through {@link notesTextFrame}.
 	 *
 	 * The counterpart to the read side's `notesText`/`notesTextFrame`/`notesSlide`
-	 * getters, and the way to annotate a slide that has **no notes part at all** —
+	 * getters, and the way to annotate a slide that has **no notes part at all**:
 	 * the state an `importSlide` without `{ importNotes: true }` leaves behind, and
 	 * the one a `notesTextFrame` edit cannot reach because there is no frame to
 	 * hand back. Calling it on a slide that already has notes replaces the body

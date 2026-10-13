@@ -4,7 +4,7 @@
  *
  * A parent carries at most one `EG_FillProperties` choice, so setting a solid
  * fill first clears any competing choice, then inserts `a:solidFill` in document
- * order. These helpers never mark a part dirty — callers own that.
+ * order. These helpers never mark a part dirty; callers own that.
  */
 import { InvalidOptionError } from '../../errors.js'
 import { isHexColor, stripHash } from '../../hex-color.js'

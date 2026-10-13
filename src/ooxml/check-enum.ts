@@ -3,7 +3,7 @@
  *
  * **Why validate at all.** A value outside its `ST_` union makes the containing part
  * schema-invalid, and PowerPoint reports that as a *corrupt file* rather than as a mis-set
- * option — so the cost of letting one through is a deck that will not open, attributed to
+ * option, so the cost of letting one through is a deck that will not open, attributed to
  * nothing in particular. Both halves therefore check before a value reaches the XML.
  *
  * **Why two policies.** They differ deliberately, and the difference is about where the value
@@ -18,7 +18,7 @@
  *
  * Before this module the two policies were spread across three near-identical private validators
  * (two in `gen/`, one in `read/`), each with its own wording; adding an enum meant writing a
- * fourth. The policy split is worth keeping — the triplication was not.
+ * fourth. The policy split is worth keeping. The triplication was not.
  */
 
 import type { DiagnosticCode, InvalidOptionErrorCode } from '../codes.js'
@@ -27,7 +27,7 @@ import { InvalidOptionError } from '../errors.js'
 
 /**
  * Check a value against its `ST_` union, reporting and dropping it when outside (the write-path
- * policy — see the module note).
+ * policy, described in the module note).
  *
  * `undefined`/`null` returns `null` without reporting: an unset option is not an invalid one, and
  * it is by far the common case.
@@ -60,8 +60,8 @@ export function checkEnumOrWarn<T extends string>(
 }
 
 /**
- * Check a value against its `ST_` union, throwing when outside (the read/edit-path policy — see
- * the module note).
+ * Check a value against its `ST_` union, throwing when outside (the read/edit-path policy, described
+ * in the module note).
  * @param value - the value the caller asked for
  * @param valid - the enum's members
  * @param attribute - the attribute's name, for the message

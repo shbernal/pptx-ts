@@ -16,7 +16,7 @@ import { resolveFillKind } from '../drawingml/fill.js'
  * Adds a background image or color to a slide definition.
  *
  * Only an image background does anything here: it is the one that needs a media relationship.
- * A colour — object or the bare-string shorthand — carries no rel and is emitted straight from
+ * A colour (object or the bare-string shorthand) carries no rel and is emitted straight from
  * `slide.background` at serialize time.
  *
  * The rel id and the part name come from the shared allocators. This used to take the id as

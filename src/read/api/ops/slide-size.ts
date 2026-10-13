@@ -9,9 +9,9 @@
  * except `importSlide`, and only when a rescale had been asked for.
  *
  * The two conditions are separated here, and the codes now mean what their names say:
- * - `import/slide-size-unknown` — a deck does not declare `p:sldSz`, so there is no size to
+ * - `import/slide-size-unknown`: a deck does not declare `p:sldSz`, so there is no size to
  *   compare and no rescale to compute. Nothing the caller passes can make it comparable.
- * - `import/slide-size-mismatch` — both sizes are known and they differ. This one *is*
+ * - `import/slide-size-mismatch`: both sizes are known and they differ. This one *is*
  *   answerable, which is why each caller supplies the escape hatch it offers.
  */
 
@@ -27,7 +27,7 @@ function fmt(size: SlideSize | null): string {
  * Both decks' sizes, or a throw when either deck does not declare one.
  *
  * Returned rather than asserted because every caller that needs both sizes known needs the
- * values too — to compute a rescale — and TypeScript cannot narrow two parameters from one
+ * values too, to compute a rescale, and TypeScript cannot narrow two parameters from one
  * assertion signature.
  *
  * @param target - this deck's slide size
@@ -70,7 +70,7 @@ export function requireEqualSlideSize(
 	)
 }
 
-/** Whether both sizes are known and equal — the question a caller with a rescale asks first. */
+/** Whether both sizes are known and equal: the question a caller with a rescale asks first. */
 export function slideSizesMatch(target: SlideSize | null, incoming: SlideSize | null): boolean {
 	return !!target && !!incoming && target.widthEmu === incoming.widthEmu && target.heightEmu === incoming.heightEmu
 }

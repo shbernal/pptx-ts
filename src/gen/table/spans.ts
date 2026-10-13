@@ -4,8 +4,8 @@
  * The spans decide two allocations, on two different paths, and both used to trust the caller:
  * the merge grid's `new Array(colspan - 1)` in `gen/slide/objects/table.ts`, and the auto-pager's
  * per-column depth array, sized from a column count that is a sum of colspans
- * (`gen/table/autopage.ts`). `new Array(4294967294).fill(undefined)` is not a slow path — V8
- * aborts on the allocation and there is no exception to catch — so a table built with
+ * (`gen/table/autopage.ts`). `new Array(4294967294).fill(undefined)` is not a slow path: V8
+ * aborts on the allocation and there is no exception to catch. So a table built with
  * `autoPage: true` and one without needed the same guard, which is why it lives here rather than
  * in either of them.
  *
@@ -33,14 +33,14 @@ export const MAX_TABLE_SPAN = 1000
  * Validate one cell's `colspan`/`rowspan`, warning and falling back to `1` when it is not a whole
  * number in `1..MAX_TABLE_SPAN`.
  *
- * `undefined` is the common case and means "no span" — it warns about nothing and returns `1`.
+ * `undefined` is the common case and means "no span": it warns about nothing and returns `1`.
  * Everything else is caller error: `NaN`, a negative, a fraction and a span past the ceiling all
  * describe a table that cannot be built (a fractional span silently truncates, a negative one
  * shifts every column after it, an enormous one is the allocation above).
  *
  * The parameter is typed `unknown` because this is also **the** reading of a span for the six
  * sites that consume one after {@link withCheckedSpans} has run. Those had six different
- * coercions — `Number(x) ? … : 1`, `Math.max(1, Number(x) || 1)`, `x ?? 1` — which agreed only
+ * coercions (`Number(x) ? … : 1`, `Math.max(1, Number(x) || 1)`, `x ?? 1`), which agreed only
  * on the values that were already valid, and one of them let a non-numeric span reach a grid
  * column count as `NaN`. Reading a span through one function is what stops them drifting apart
  * again if the up-front check is ever moved.
@@ -71,7 +71,7 @@ export function resolveSpan(value: unknown, kind: 'colspan' | 'rowspan'): number
  * Re-clone `rows` with every out-of-range `colspan`/`rowspan` corrected to `1`.
  *
  * Runs once, up front, so the column count, the `_hmerge`/`_vmerge` dummies, the auto-pager's
- * grid and the emitted `gridSpan`/`rowSpan` attributes all read the same number — checking at
+ * grid and the emitted `gridSpan`/`rowSpan` attributes all read the same number. Checking at
  * each of those sites instead would warn several times per bad cell and could still disagree.
  *
  * A cell whose spans are fine is passed through by identity, not copied: `_spanOrigin` links the
@@ -103,7 +103,7 @@ export function withCheckedSpans(rows: TableCellInternal[][]): TableCellInternal
 }
 
 /**
- * Whether a cell carries a hyperlink — on the cell itself, or on any run of its `text` when that
+ * Whether a cell carries a hyperlink, on the cell itself or on any run of its `text` when that
  * is a run array.
  *
  * The table's black text default is direct formatting on the cell's runs, so on a linked cell it

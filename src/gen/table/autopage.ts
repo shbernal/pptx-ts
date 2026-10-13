@@ -43,8 +43,8 @@ type AutoPageCell = TableCellInternal & {
  * A cell for the pager's working grid, carrying the source cell's options only when it has some.
  *
  * Every one of these used to be an inline `{ …, options: cell.options }`, which put an `options`
- * key holding `undefined` on a cell whose source had none. Readers cannot see the difference —
- * they all go through `cell.options?.…` — but a `TableCellProps` bag *is* spread in
+ * key holding `undefined` on a cell whose source had none. Readers cannot see the difference
+ * (they all go through `cell.options?.…`), but a `TableCellProps` bag *is* spread in
  * `gen/define/table.ts` (`{ ...colDef, ...headerRow, ...cell.options }`), where the two states
  * are not the same thing. So the model keeps one spelling of absent.
  * @param text - the cell's content, a string or the run list the pager is accumulating
@@ -416,8 +416,8 @@ export function getSlidesForTableRows(
 
 		// GUARD: a non-positive height, or one too small to fit even a single line of the base font,
 		// means no row ever fits. That previously emitted degenerate empty overflow pages (rows:[]),
-		// which made the recursive addTable throw "Array expected", or — with `h` smaller than one
-		// line — placed one row per slide forever. Ignore the unusable height, fall back to the full
+		// which made the recursive addTable throw "Array expected", or (with `h` smaller than one
+		// line) placed one row per slide forever. Ignore the unusable height, fall back to the full
 		// slide area between margins, and warn once rather than emit a broken table.
 		const emuBaseLineH = autoPageLineHeightEmu(
 			resolveCellFontSize(null, tableProps),
@@ -531,7 +531,7 @@ export function getSlidesForTableRows(
 	// passes one width per column.
 	if (!tablePropW && Array.isArray(tableProps.colW)) {
 		// The `0` seed is what `colW: []` needs: an empty array is truthy, so it reached an
-		// unseeded `reduce` and threw a raw `TypeError` — a failure this library did not raise as
+		// unseeded `reduce` and threw a raw `TypeError`, a failure this library did not raise as
 		// a `PptxTsError`. Seeded, it totals `0`, which falls through to `usableTableWidthEmu`
 		// exactly where `colW: undefined` lands. That is the reading intended: an empty array is a
 		// caller stating no columns, not a table of width zero.
@@ -561,7 +561,7 @@ export function getSlidesForTableRows(
 	// row index. A single-number `rowH` is left to propagate via table options (it applies uniformly,
 	// so it needs no per-row remapping); only the array form is index-sensitive after pagination.
 	// Whether a slot pins its row is `pinnedRowHeightInches`, the same rule the writer applies to
-	// the array this builds — a `0` accepted here and rejected there is how the two readings drift.
+	// the array this builds; a `0` accepted here and rejected there is how the two readings drift.
 	const resolveRowH = (origRowIdx: number): number | undefined =>
 		Array.isArray(tableProps.rowH) ? (pinnedRowHeightInches(tableProps.rowH[origRowIdx]) ?? undefined) : undefined
 
@@ -685,7 +685,7 @@ export function getSlidesForTableRows(
 	}
 
 	tableRows.forEach((row, iRow) => {
-		// A: Row variables — detect active rowspan at the start of this row so we can
+		// A: Row variables. Detect active rowspan at the start of this row so we can
 		// suppress page breaks that would split a rowspan group across slides.
 		const hasActiveRowSpan = spannedFromAbove(iRow)
 		// B: Create new row in data model
@@ -774,7 +774,7 @@ export function getSlidesForTableRows(
 			let tgtCell = currTableRow[currCellIdx] // NOTE: may be redefined below (a new row may be created, thus changing this value)
 
 			// 2: create a new slide if there is insufficient room for the current row,
-			// but never break inside a rowspan group — keep spanned rows together.
+			// but never break inside a rowspan group; keep spanned rows together.
 			if (emuTabCurrH + emuLineMaxH > emuSlideTabH && !keepRowTogether) {
 				if (tableProps.verbose) {
 					console.log('\n|-----------------------------------------------------------------------|')

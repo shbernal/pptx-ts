@@ -1,5 +1,5 @@
 /**
- * pptx-ts: Zoom Definition (Slide / Section / Summary Zoom — Insert ▸ Zoom).
+ * pptx-ts: Zoom Definition (Slide / Section / Summary Zoom, from Insert ▸ Zoom).
  *
  * Resolves a zoom's target(s) to the ids the emitter needs (`sldId` / section GUID), registers
  * the preview-image media rel and the `.../slide` fallback rel(s), lays out the Summary Zoom grid,
@@ -110,7 +110,7 @@ function pushZoomObject(
 	target._slideObjects.push(newObject)
 }
 
-/** Slide Zoom — one tile linking to a single target slide. */
+/** Slide Zoom: one tile linking to a single target slide. */
 export function addSlideZoomDefinition(target: PresSlideInternal, opts: SlideZoomProps): void {
 	if (!opts?.target) {
 		warn(
@@ -143,7 +143,7 @@ export function addSlideZoomDefinition(target: PresSlideInternal, opts: SlideZoo
 	})
 }
 
-/** Section Zoom — one tile linking to the start of a named section. */
+/** Section Zoom: one tile linking to the start of a named section. */
 export function addSectionZoomDefinition(
 	target: PresSlideInternal,
 	opts: SectionZoomProps,
@@ -175,7 +175,7 @@ export function addSectionZoomDefinition(
 }
 
 /**
- * Summary Zoom — a grid of tiles, one per section (excluding the host slide's own section).
+ * Summary Zoom: a grid of tiles, one per section (excluding the host slide's own section).
  * All tiles share the single placeholder/cover image; each links to its section's first slide.
  */
 export function addSummaryZoomDefinition(
@@ -183,7 +183,7 @@ export function addSummaryZoomDefinition(
 	opts: SummaryZoomProps,
 	sections: SectionInternalProps[]
 ): void {
-	// Exclude the section that contains this (host) slide — a summary does not link to itself.
+	// Exclude the section that contains this (host) slide; a summary does not link to itself.
 	const hostSection = sections.find((s) => s._slides.some((sl) => sl._slideNum === target._slideNum))
 	const targets = sections.filter((s) => s !== hostSection && s._slides.length > 0)
 	if (targets.length === 0) {

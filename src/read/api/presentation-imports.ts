@@ -70,7 +70,7 @@ export function importSlide(
 	if (!sourceSlide) throw new InvalidOptionError('slide/index-out-of-range', `No slide at index ${index} to import`)
 
 	// 1. Pre-flight: slide sizes must match unless the caller opts into a rescale. Either way
-	//    both decks have to declare one — a rescale cannot be computed from a size that is
+	//    both decks have to declare one: a rescale cannot be computed from a size that is
 	//    not there, and neither can a comparison.
 	const target = deck.slideSize
 	const incoming = source.slideSize
@@ -281,7 +281,7 @@ export function importSlides(deck: Presentation, requests: readonly ImportSlides
 
 	// 3c. Rescale each rescaling source's pages onto this deck's canvas. Nothing
 	//     to do where the sizes already match, and the memo makes the shared layout
-	//     and master — which `'copy'` semantics rescale alongside the page — move
+	//     and master (which `'copy'` semantics rescale alongside the page) move
 	//     exactly once however many of that source's pages the batch brought over.
 	for (const request of planned) {
 		const mode = rescaleBySource.get(request.source.opc)
@@ -586,7 +586,7 @@ export function importShapes(
 
 		// Drag media/charts/embeddings across and rewrite refs to fresh host rels.
 		// A scope per shape: media are shared through `relIdMap`, but the chart or
-		// diagram under this frame is its own — importing one chart shape twice must
+		// diagram under this frame is its own. Importing one chart shape twice must
 		// not point both frames at one chart part (see `page-owned.ts`).
 		rewriteCarriedRels(imported, importCtx, sourceRels, target.partName, targetRels, relIdMap, newOwnedScope())
 

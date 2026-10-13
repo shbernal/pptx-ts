@@ -45,8 +45,8 @@ export function createGlowElement(options: TextGlowProps, defaults: TextGlowProp
  * it with other effects (e.g. glow) inside one `a:effectLst`, or wrap a lone shadow via
  * {@link createShadowEffectLst}.
  *
- * Colors go through {@link createColorElement}, so scheme colors (e.g. `accent1`) are honored
- * — earlier per-site copies hardcoded `a:srgbClr` and silently emitted invalid OOXML for them.
+ * Colors go through {@link createColorElement}, so scheme colors (e.g. `accent1`) are honored;
+ * earlier per-site copies hardcoded `a:srgbClr` and silently emitted invalid OOXML for them.
  * @param {ShadowPropsInternal} options shadow properties
  * @param {ShadowPropsInternal} defaults defaults for unspecified properties in `options`
  * @see http://officeopenxml.com/drwSp-effects.php
@@ -98,7 +98,7 @@ export function createShadowEffectLst(options: ShadowPropsInternal | undefined, 
  * from an RGBA colour's alpha byte, and a colour with no `#` and no alpha byte.
  *
  * **Pure.** It used to normalize the caller's object *in place* and return it, and its four call
- * sites split on which of the two contracts they used — two assigned the result, two discarded it
+ * sites split on which of the two contracts they used: two assigned the result, two discarded it
  * and relied on the mutation. That made the obvious cleanup a trap: making it pure without
  * converting every caller silently drops `transparency` and RGBA alpha on every text run, because
  * `_alpha` is what `genXmlTextRunProperties` reads and nothing else writes it. The value now
@@ -123,7 +123,7 @@ export function normalizeShadowOptions(shadow?: ShadowProps | null): ShadowProps
 		corrected.type = 'outer'
 	}
 
-	// OPT: `angle` — clamped into ST_PositiveFixedAngle's 0-359 and rounded to whole degrees.
+	// OPT: `angle`, clamped into ST_PositiveFixedAngle's 0-359 and rounded to whole degrees.
 	// The absence check is `undefined`, not truthiness: `0` is a legal angle (a shadow cast to
 	// the right), and under `if (corrected.angle)` a `NaN` fell through the guard entirely and
 	// reached the emitter, which wrote `dir="NaN"` into the package.
@@ -154,7 +154,7 @@ export function normalizeShadowOptions(shadow?: ShadowProps | null): ShadowProps
 			corrected.color = stripHash(corrected.color)
 		}
 
-		// 8-char hex (RGBA) — derive `_alpha` from the alpha byte (only when `transparency`
+		// 8-char hex (RGBA): derive `_alpha` from the alpha byte (only when `transparency`
 		// didn't already set one), then strip the alpha byte from the color so emit sites
 		// produce valid 6-char `<a:srgbClr val="…"/>`.
 		const rgba = splitRgbaHex(corrected.color)

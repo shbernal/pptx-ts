@@ -3,7 +3,7 @@
  *
  * **The tier.** The emitted script reuses the *source deck itself* as its template:
  * `Presentation.fromTemplate` strips a package's slides while leaving its masters, layouts,
- * theme, and document properties byte-identical, so the chrome is never regenerated — it is
+ * theme, and document properties byte-identical, so the chrome is never regenerated: it is
  * the original. Only the slides are rebuilt, through the public write API, and grafted back
  * with `appendSlides`. That is why this tier's fidelity note list is short: everything the
  * converter cannot see or cannot write is confined to slide content, and the whole of the
@@ -16,11 +16,11 @@
  * **Order is not rearranged.** Slides are emitted in source order and every operation
  * appends, so `p:sldIdLst` comes out in the original order without any position arithmetic.
  * Contiguous slides sharing a layout share one generator, because `appendSlides` binds
- * every slide in one call to a single layout — the batching is forced by that signature,
+ * every slide in one call to a single layout. The batching is forced by that signature,
  * not chosen for tidiness.
  *
  * **This module may add fidelity notes.** A loss can belong to the *tier* rather than to
- * the conversion — a slide's `p:cSld@name` is read fine and would survive a byte copy, but
+ * the conversion. A slide's `p:cSld@name` is read fine and would survive a byte copy, but
  * has no public write-API setter, so it dies here and nowhere else. {@link PrintedScript}
  * therefore returns the notes that actually apply to *this* output, which is also the set a
  * round-trip check should exclude from its diff.
@@ -54,7 +54,7 @@ import {
 export interface PrintScriptOptions extends CommonPrintOptions {
 	/**
 	 * Path the emitted script loads its template from, resolved against the script's own
-	 * location. This is the **source deck unchanged** — `fromTemplate` strips its slides.
+	 * location. This is the **source deck unchanged**; `fromTemplate` strips its slides.
 	 * @default './template.pptx'
 	 */
 	templatePath?: string
@@ -173,8 +173,8 @@ function transcriptionOfCarried(note: FidelityNote, carried: ReadonlySet<number>
  * `appendSlides` binds one layout per call and a carried slide is not authored at all.
  *
  * Every layout `const` is hoisted above the first statement rather than emitted where it is
- * first used. `deck.layouts()` is a snapshot of the gallery, and `importSlide` — the call a
- * carried slide prints — grows that gallery with the source slide's own layout and master.
+ * first used. `deck.layouts()` is a snapshot of the gallery, and `importSlide` (the call a
+ * carried slide prints) grows that gallery with the source slide's own layout and master.
  * Resolving a handle after one has run is therefore resolving against a deck that has already
  * moved; capturing every handle up front is the only ordering that cannot.
  */

@@ -89,7 +89,7 @@ export function addConnectorDefinition(target: PresSlideInternal, opts: Connecto
 
 	// Optional shape binding (<a:stCxn>/<a:endCxn>). The target id is resolved at serialize time,
 	// through the slide's shape-id allocator; here we just capture the name + site index.
-	// The site index must be a non-negative integer — a bad idx makes PowerPoint repair the connector.
+	// The site index must be a non-negative integer; a bad idx makes PowerPoint repair the connector.
 	const resolveCxn = (
 		shapeName: string | undefined,
 		idx: number | undefined,

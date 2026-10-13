@@ -2,12 +2,12 @@
  * Read-model proxies for a slide's speaker-notes slide (`notesSlideN.xml`).
  *
  * A notes slide is a small, fixed surface: a shape tree of exactly three
- * placeholders — the slide thumbnail (`sldImg`), the notes body (`body`), and the
- * slide number (`sldNum`) — and never groups, pictures, connectors, or charts.
+ * placeholders (the slide thumbnail `sldImg`, the notes body `body`, and the
+ * slide number `sldNum`) and never groups, pictures, connectors, or charts.
  * So it is modeled with a dedicated {@link NotesPlaceholder} rather than the full
  * slide shape hierarchy: each placeholder exposes its `type`/`name`/`id`, its
- * geometry (EMU, `null` when the part carries no `a:xfrm`), and — for the body and
- * the slide-number field — a navigable {@link TextFrame}.
+ * geometry (EMU, `null` when the part carries no `a:xfrm`), and, for the body and
+ * the slide-number field, a navigable {@link TextFrame}.
  *
  * The writer authors all three placeholders but leaves the `sldImg`/`sldNum`
  * `p:spPr` empty (no `a:xfrm`), so on an *authored* deck geometry reads `null`; an
@@ -19,7 +19,7 @@
  * a literal hex, and with the notes part's own relationships so a notes hyperlink
  * resolves its url. The body frame is additionally given a placeholder context, so a
  * body run that sets no own size/face/bold resolves its *inherited* value from the
- * notesMaster's `p:notesStyle` — the notes analogue of a slide placeholder's
+ * notesMaster's `p:notesStyle`, the notes analogue of a slide placeholder's
  * `Run.resolved*` chain.
  */
 import type { OpcPackage } from '../opc/package.js'
@@ -40,8 +40,8 @@ import { buildShapes, findShapeByIdDeep, type AnyShape, type ShapeHost } from '.
  * `a:xfrm` and are `null` when it inherits geometry from the notesMaster (the case
  * on an authored deck, whose `sldImg`/`sldNum` carry an empty `p:spPr`).
  *
- * A notes placeholder IS a {@link Placeholder} — identity, geometry and the escape hatch are
- * the same twelve members read off the same `p:sp`, down to `p:ph` being found the same way —
+ * A notes placeholder IS a {@link Placeholder}. Identity, geometry and the escape hatch are
+ * the same twelve members read off the same `p:sp`, down to `p:ph` being found the same way,
  * so it extends one rather than repeating it. Two things are its own: the flattened
  * {@link text} convenience, and a {@link textFrame} that threads the notesMaster inheritance
  * context onto the body frame.
@@ -53,7 +53,7 @@ export class NotesPlaceholder extends Placeholder {
 	 * runs round-trip a slide's authored notes; the `sldNum` placeholder's frame
 	 * holds the slide-number `a:fld`, whose value surfaces through `TextFrame.text`.
 	 *
-	 * Overrides {@link Placeholder.textFrame} for the inheritance context alone — see below.
+	 * Overrides {@link Placeholder.textFrame} for the inheritance context alone (see below).
 	 */
 	override get textFrame(): TextFrame | null {
 		const txBody = firstChild(this.sp, 'p:txBody')
@@ -74,7 +74,7 @@ export class NotesPlaceholder extends Placeholder {
 }
 
 /**
- * A slide's speaker-notes slide (`notesSlideN.xml`) as a modeled object — the deep
+ * A slide's speaker-notes slide (`notesSlideN.xml`) as a modeled object: the deep
  * companion to {@link Slide.notesText}. Exposes the notes
  * shape tree as {@link NotesPlaceholder}s ({@link body}/{@link slideImage}/
  * {@link slideNumber}) plus the body {@link textFrame} the older getters flatten.
@@ -97,7 +97,7 @@ export class NotesSlide implements ShapeHost {
 		return this.part.partName
 	}
 
-	/** The notes part's own relationships — a notes hyperlink resolves through these. */
+	/** The notes part's own relationships; a notes hyperlink resolves through these. */
 	get relationships(): Relationships {
 		return this.opc.relationshipsFor(this.partName)
 	}
@@ -106,7 +106,7 @@ export class NotesSlide implements ShapeHost {
 	 * The notes shape tree as full shapes, in document order.
 	 *
 	 * A notes slide holds nothing but its three placeholders, so {@link placeholders} is the
-	 * view to read. This one exists because a notes slide is a {@link ShapeHost} — which is
+	 * view to read. This one exists because a notes slide is a {@link ShapeHost}, which is
 	 * what lets a {@link NotesPlaceholder} be the same {@link AutoShape} view of its `p:sp`
 	 * that a master or layout placeholder is, rather than a second reading of one.
 	 */

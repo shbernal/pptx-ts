@@ -1,11 +1,11 @@
 /**
- * The non-solid halves of a surface's fill — `a:gradFill` and `a:pattFill` — as
+ * The non-solid halves of a surface's fill (`a:gradFill` and `a:pattFill`) as
  * `ShapeFillProps`.
  *
  * Shared by a shape's fill, a table's background, and a table cell's, which are the same
  * two elements read from three containers. `ShapeProps.fill`, `TableProps.tableFill` and
  * `TableCellProps.fill` are all `ShapeFillProps`, so the mapping is identical and only the
- * note's `where` prefix differs — the same reasoning that keeps `pictureFillOption` in one
+ * note's `where` prefix differs. It is the same reasoning that keeps `pictureFillOption` in one
  * place rather than one copy per surface.
  */
 import type { GradientFill } from '../../read/api/gradient.js'
@@ -51,7 +51,7 @@ export function gradientStops(gradient: GradientFill, notes: NoteScope, where: F
 		.map((stop) => {
 			// Scoped by `where`, like the two notes below it. Hardcoding the shape spelling meant a
 			// table background's gradient stop recorded `fill.gradient.schemeToken`, whose entry
-			// excuses a difference on `fill` — while the difference itself lands on `tableFill`,
+			// excuses a difference on `fill`, while the difference itself lands on `tableFill`,
 			// which the table mapper keeps deliberately distinct. A declared, genuine loss was
 			// therefore reported as an undeclared defect, and on a line gradient the note's prose
 			// said "fill" about a stroke.
@@ -129,7 +129,7 @@ function radialCenter(gradient: GradientFill, notes: NoteScope, where: FillNoteS
 
 /**
  * A read hatch as `ShapeFillProps` with `type: 'pattern'`, or `undefined` when the pattern
- * names no preset — `a:pattFill/@prst` is what selects the hatch, so without it there is
+ * names no preset. `a:pattFill/@prst` is what selects the hatch, so without it there is
  * nothing to reproduce.
  *
  * Each colour takes the ladder every other colour does. `PatternFillProps.fgColor`/`bgColor` are
@@ -203,7 +203,7 @@ export interface FillSubject {
  * The order is the whole of it, and it is not arbitrary: an explicit `a:noFill` is a statement
  * and comes first; then the non-solid members, because a surface carrying one holds no
  * `a:solidFill` for the colour legs to find and `resolvedFill` would answer with a style's
- * banding colour the source never showed; then the colour ladder — a writable scheme token, the
+ * banding colour the source never showed; then the colour ladder: a writable scheme token, the
  * surface's own literal, the resolved literal.
  *
  * Three copies of this walked three subjects that expose the same accessor names, and they had
@@ -248,7 +248,7 @@ export function surfaceFill(
 	if (subject.fillColor != null) return compact({ color: literalColor(subject.fillColor), transparency })
 
 	// A styled surface with no fill of its own takes the style's banding, and the style GUID
-	// travels with the table — so emitting nothing here is not a loss, it is what keeps the copy
+	// travels with the table, so emitting nothing here is not a loss, it is what keeps the copy
 	// responsive to its own style.
 	if (opts.styled && subject.hasOwnFill === false) return undefined
 

@@ -37,11 +37,11 @@ export function noteHidden(notes: NoteScope): void {
 	)
 }
 
-/* ===== position, fill, line, effects — shared by every shape kind ===== */
+/* ===== position, fill, line, effects: shared by every shape kind ===== */
 
 /**
  * Rotation and flips. Taken from `absoluteFrame`, which composes enclosing group rotations
- * and XOR-composes group flips — the same reason position is absolute. Inside a group that
+ * and XOR-composes group flips, the same reason position is absolute. Inside a group that
  * carries its own transform (`groups`), the shape's own, from {@link groupSpaceFrame}.
  */
 export function transformOptions(
@@ -62,7 +62,7 @@ export function transformOptions(
  *
  * Prefers the raw scheme token over `resolvedFill` for the same reason run colour does: a
  * token keeps tracking the destination theme. `resolvedFill` is the fallback because it is
- * the only accessor that sees a `p:style/a:fillRef` — a shape styled entirely from the
+ * the only accessor that sees a `p:style/a:fillRef`: a shape styled entirely from the
  * theme has no `a:solidFill` of its own, so without it the shape would come out unfilled.
  */
 export function fillOption(shape: AnyShape, ctx: MapContext): IrValue | undefined {
@@ -154,7 +154,7 @@ function noteLineLosses(
  *
  * This is where the measured silent loss lives. When a shape takes its outline from
  * `p:style/a:lnRef`, `resolvedLine` supplies the colour but `lineWidthPt` and `lineDash`
- * both report `null` — the theme's `a:lnStyleLst` entry, where the width and dash actually
+ * both report `null`. The theme's `a:lnStyleLst` entry, where the width and dash actually
  * live, has no accessor. Emitting the colour and noting the rest is the honest outcome;
  * inventing a width would be worse, because it would look deliberate.
  */
@@ -311,5 +311,5 @@ export function styleOptions(shape: AnyShape, ctx: MapContext): Record<string, I
 /**
  * An `AutoShape` becomes an `addShape` when it is bare geometry and an `addText` when it
  * carries text. A shape with both takes the `addText` form, because `addShape` has no text
- * argument while `addText` accepts a `shape` option — so only that form expresses both.
+ * argument while `addText` accepts a `shape` option, so only that form expresses both.
  */

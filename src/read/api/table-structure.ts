@@ -3,8 +3,8 @@
  * merging and unmerging cells.
  *
  * The one fact that makes this tractable is that a stored table's grid is already
- * **rectangular**. Unlike the write path — which receives lopsided row arrays and has to
- * build the merge grid itself (`gen/slide/objects/table.ts` STEP 3) — every `a:tr` in a
+ * **rectangular**. Unlike the write path, which receives lopsided row arrays and has to
+ * build the merge grid itself (`gen/slide/objects/table.ts` STEP 3), every `a:tr` in a
  * conformant `a:tbl` holds exactly one `a:tc` per grid column, with the covered half of each
  * span present and flagged. So "the cell at (r, c)" is simply the c-th `a:tc` of the r-th
  * `a:tr`, and an edit's whole job is keeping that rectangle true.
@@ -58,7 +58,7 @@ function cellsOf(tr: Element): Element[] {
 	return getElements(tr, 'a:tc')
 }
 
-/** The table's `a:tblGrid`, or a thrown error — `CT_Table` requires one. */
+/** The table's `a:tblGrid`, or a thrown error: `CT_Table` requires one. */
 function gridOf(tbl: Element): Element {
 	const grid = firstChild(tbl, 'a:tblGrid')
 	if (!grid)
@@ -90,7 +90,7 @@ export function isVMerge(tc: Element): boolean {
 }
 
 /**
- * Set a span attribute, removing it when the span collapses to 1 — the schema default, and
+ * Set a span attribute, removing it when the span collapses to 1: the schema default, and
  * what PowerPoint itself writes for an unmerged cell.
  */
 function setSpan(tc: Element, name: 'gridSpan' | 'rowSpan', value: number): void {
@@ -250,7 +250,7 @@ export function insertRow(tbl: Element, index?: number): Element {
 	}
 
 	const tr = createElement(doc, 'a:tr')
-	// `@h` is required on CT_TableRow. Zero means "auto — as tall as the content needs",
+	// `@h` is required on CT_TableRow. Zero means "auto: as tall as the content needs",
 	// which is the right default for a row nobody has sized.
 	setAttr(tr, 'h', '0')
 	for (let col = 0; col < colCount; col++) {
@@ -378,8 +378,8 @@ export function removeColumn(tbl: Element, index: number): void {
 /**
  * Merge the rectangle `(row1, col1)`–`(row2, col2)` into one cell.
  *
- * The top-left cell becomes the origin; every other cell in the rectangle becomes a covered cell
- * — flagged, given the spans PowerPoint repeats on a region's first row and column, and emptied,
+ * The top-left cell becomes the origin; every other cell in the rectangle becomes a covered cell:
+ * flagged, given the spans PowerPoint repeats on a region's first row and column, and emptied,
  * since a covered cell is never rendered.
  *
  * **The covered cells' text moves into the origin**, as PowerPoint's own Merge Cells does: each

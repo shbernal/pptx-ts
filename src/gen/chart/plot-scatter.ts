@@ -35,7 +35,7 @@ import {
 } from './chart-parts.js'
 
 /**
- * The `<c:spPr>` a scatter data label carries: no fill, no outline, no effects — the label is
+ * The `<c:spPr>` a scatter data label carries: no fill, no outline, no effects. The label is
  * text on the plot rather than a box. Both label builders in this file spelled it out.
  */
 const TRANSPARENT_LABEL_SPPR = el('c:spPr', null, [
@@ -50,7 +50,7 @@ const TRANSPARENT_LABEL_SPPR = el('c:spPr', null, [
  *
  * Each `<a:fld>` id is minted per build. A field id has to be unique, which is a property a
  * derived id would have to reproduce without an oracle for how far that uniqueness has to
- * reach — so the ids stay random and the *comparison* gives: `NORMALIZERS` in
+ * reach. So the ids stay random and the *comparison* gives: `NORMALIZERS` in
  * `scripts/pptx-parts.mjs` erases exactly these two field types before the byte-identity gate
  * diffs a part. Do not "fix" the nondeterminism here.
  */

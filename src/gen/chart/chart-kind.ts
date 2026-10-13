@@ -2,7 +2,7 @@
  * pptx-ts: chart-kind predicates
  *
  * The classification questions the chart emitters ask about a chart's `_type`, in one place.
- * There is nothing clever here — each is the comparison the call sites were already writing —
+ * There is nothing clever here (each is the comparison the call sites were already writing),
  * but writing it once is what keeps `bubble3d` from being forgotten at the eleventh site the
  * way it has been at a few of the first ten.
  *

@@ -102,7 +102,7 @@ export interface TextBaseProps {
 	 * {@link breakLine} is not the only paragraph boundary: two adjacent runs whose `align`
 	 * differs start a new one, so stating it on the opening run alone splits the paragraph in
 	 * two. That is the mirror of {@link bullet}, {@link paraMarginLeft} and {@link paraIndent},
-	 * which are read from the opening run only. Neither mistake changes the run count — the
+	 * which are read from the opening run only. Neither mistake changes the run count: the
 	 * only symptom is a differently shaped paragraph, with no error.
 	 * @default 'left'
 	 */
@@ -119,7 +119,7 @@ export interface TextBaseProps {
 	breakLine?: boolean
 	/**
 	 * Preset text warp / WordArt shape (`<a:bodyPr><a:prstTxWarp prst="..">`), which
-	 * bends the text along a preset path (arch, circle, wave, …) — the whole
+	 * bends the text along a preset path (arch, circle, wave, …): the whole
 	 * `ST_TextShapeType` set.
 	 * @example 'textArchUp' // bend text along an upward arch (e.g. a label following a ring/arc)
 	 * @example 'textCircle'
@@ -131,7 +131,7 @@ export interface TextBaseProps {
 	 * - pass object options for custom bullet
 	 * - `false` is the *explicit off*: it writes `<a:buNone/>` plus `marL="0" indent="0"`,
 	 *   which overrides whatever bullet the layout's or master's list style sets for this level
-	 * - `'inherit'` states nothing at all — no bullet child and no margin attributes — so
+	 * - `'inherit'` states nothing at all (no bullet child and no margin attributes), so
 	 *   the list style keeps reaching the paragraph
 	 * - omitting the option means `'inherit'` on a placeholder definition
 	 *   (`defineSlideMaster({ objects })`), and on text filling a placeholder the layout
@@ -142,8 +142,8 @@ export interface TextBaseProps {
 	 * an inherited margin under a drawn bullet.
 	 *
 	 * When a shape's text is an array of runs, state this on the **opening run only**. A run
-	 * that draws a bullet starts a new paragraph by itself, so repeating it — the placement
-	 * that {@link align} requires — turns one three-run paragraph into three one-run
+	 * that draws a bullet starts a new paragraph by itself, so repeating it (the placement
+	 * that {@link align} requires) turns one three-run paragraph into three one-run
 	 * paragraphs. A paragraph takes its properties from its first run.
 	 * @default false, or `'inherit'` on a placeholder
 	 */
@@ -172,7 +172,7 @@ export interface TextBaseProps {
 	 *
 	 * Applied to the Latin (`<a:latin>`) and complex-script (`<a:cs>`) font slots, matching
 	 * how PowerPoint writes a font picked from the UI. The East Asian slot (`<a:ea>`) is left
-	 * to inherit from the theme unless `fontFaceEA` is set — forcing a Latin-only face into the
+	 * to inherit from the theme unless `fontFaceEA` is set. Forcing a Latin-only face into the
 	 * East Asian slot duplicates/ghosts text in Office 365.
 	 * @example 'Arial' // Arial font
 	 */
@@ -209,12 +209,12 @@ export interface TextBaseProps {
 	 */
 	lang?: string
 	/**
-	 * First-line indent (points) — `a:pPr/@indent`, the offset of the paragraph's FIRST line
+	 * First-line indent (points): `a:pPr/@indent`, the offset of the paragraph's FIRST line
 	 * from {@link paraMarginLeft}. Negative hangs the first line to the left of the body, which
 	 * is what a bulleted paragraph does; positive indents it to the right, the "first line
 	 * indented" prose form. PowerPoint: Paragraph > Indentation > Special.
 	 * - `'inherit'` writes no `@indent` at all, so the paragraph takes whatever its list style
-	 *   (`a:lstStyle` → placeholder → layout → master) sets — the same third state
+	 *   (`a:lstStyle` → placeholder → layout → master) sets: the same third state
 	 *   {@link bullet} spells, on the attribute beside it
 	 * - omitting the option keeps the bullet-derived default: a drawn bullet hangs the first
 	 *   line by its margin, `bullet: false` writes `indent="0"`, `bullet: 'inherit'` writes
@@ -228,12 +228,12 @@ export interface TextBaseProps {
 	 */
 	paraIndent?: number | 'inherit'
 	/**
-	 * Left margin of the paragraph (points) — `a:pPr/@marL`, where the paragraph's body text
+	 * Left margin of the paragraph (points): `a:pPr/@marL`, where the paragraph's body text
 	 * starts. This is the paragraph's own margin, not the text frame's internal padding
 	 * (`margin`) and not the discrete outline level (`indentLevel`, which writes `a:p/@lvl`).
 	 * PowerPoint: Paragraph > Indentation > Before text.
 	 * - `'inherit'` writes no `@marL` at all, so the paragraph takes whatever its list style
-	 *   (`a:lstStyle` → placeholder → layout → master) sets — the third state that omission
+	 *   (`a:lstStyle` → placeholder → layout → master) sets, the third state that omission
 	 *   cannot spell, since omitting it writes the bullet-derived default
 	 * - omitting the option keeps that default: a drawn bullet writes its own margin (see
 	 *   `bullet.indent`), `bullet: false` writes `marL="0"`, `bullet: 'inherit'` writes nothing
@@ -277,8 +277,8 @@ export interface TextBaseProps {
 	 * - `style` is the full `ST_TextUnderlineType` enumeration (ECMA-376 §20.1.10.81)
 	 * - `'none'` is the *explicit off*: it writes `a:rPr/@u="none"`, which overrides an
 	 *   underline the run would otherwise inherit from its list style, placeholder, layout or
-	 *   master. Omitting the option instead states nothing and lets that inheritance stand —
-	 *   the two are different facts, not two spellings of one.
+	 *   master. Omitting the option instead states nothing and lets that inheritance stand.
+	 *   The two are different facts, not two spellings of one.
 	 * - `true` is shorthand for `{ style: 'sng' }`, a single line. `false` states nothing, as omitting
 	 *   the option does, so an inherited underline stands; `{ style: 'none' }` is the explicit off.
 	 * @default (unset) inherit
@@ -341,7 +341,7 @@ export interface TextFitShrinkProps {
 export interface TextPropsOptions extends PlaceholderPositionProps, DataOrPathProps, TextBaseProps, ObjectNameProps {
 	/**
 	 * Preset-geometry start/end angles for text frames (`shape` + these build `<a:prstGeom>`
-	 * adjustment guides through the shared emitter — `genXmlPresetGeom` reads them whether
+	 * adjustment guides through the shared emitter, and `genXmlPresetGeom` reads them whether
 	 * the object is a shape or a styled text frame).
 	 */
 	angleRange?: [number, number]
@@ -443,7 +443,7 @@ export interface TextPropsOptions extends PlaceholderPositionProps, DataOrPathPr
 	glow?: TextGlowProps
 	hyperlink?: HyperlinkProps
 	/**
-	 * Outline level of the paragraph (`a:p/@lvl`) — which of the list style's nine levels the
+	 * Outline level of the paragraph (`a:p/@lvl`): which of the list style's nine levels the
 	 * paragraph takes its bullet, indent and typography from.
 	 * - range: 0-8, whole numbers only (`ST_TextIndentLevelType`); anything else is reported
 	 *   under `text/invalid-indent-level` and ignored
@@ -469,7 +469,7 @@ export interface TextPropsOptions extends PlaceholderPositionProps, DataOrPathPr
 	 */
 	lineSpacingMultiple?: number
 	/**
-	 * Margin (inches) — the text-frame internal margin/padding
+	 * Margin (inches): the text-frame internal margin/padding
 	 * - PowerPoint: Format Shape > Shape Options > Size & Properties > Text Box > Left/Right/Top/Bottom margin (shown in inches)
 	 * - array order is `[top, right, bottom, left]`
 	 * - a value `>= 1` is honored as inches but warns once (it is likely a legacy points value; divide by 72)
@@ -532,7 +532,7 @@ export interface TextPropsOptions extends PlaceholderPositionProps, DataOrPathPr
 	 * Shadow options. **Which shadow depends on which bag it is on**, and the two are different
 	 * effects rather than two spellings of one:
 	 *
-	 * - on the options passed to `addText` — the *shape's* bag — it is the shape's drop shadow
+	 * - on the options passed to `addText` (the *shape's* bag), it is the shape's drop shadow
 	 *   (`p:spPr/a:effectLst`), PowerPoint's Shape Effects ▸ Shadow;
 	 * - on a run's own `options` inside the text array, it is the *text* shadow
 	 *   (`a:rPr/a:effectLst`), PowerPoint's Text Effects ▸ Shadow.
@@ -546,13 +546,13 @@ export interface TextPropsOptions extends PlaceholderPositionProps, DataOrPathPr
 	shadow?: ShadowProps
 	shape?: SHAPE_NAME
 	/**
-	 * Strikethrough (`a:rPr/@strike`, `ST_TextStrikeType` — ECMA-376 §20.1.10.78)
+	 * Strikethrough (`a:rPr/@strike`, `ST_TextStrikeType`, ECMA-376 §20.1.10.78)
 	 * - `true` is `'sngStrike'`; `'dblStrike'` is the double rule
 	 * - `'noStrike'` is the *explicit off*: it writes `strike="noStrike"`, which overrides a
 	 *   strikethrough the run would otherwise inherit from its list style, placeholder, layout
 	 *   or master
 	 * - `false`, like leaving the option out, writes no attribute at all and so states
-	 *   *nothing* — the run keeps whatever it inherits. This matches `bold`/`italic`, whose
+	 *   *nothing*: the run keeps whatever it inherits. This matches `bold`/`italic`, whose
 	 *   falsy arm is likewise an omission; reach for `'noStrike'` when the intent is "not
 	 *   struck" rather than "unspecified"
 	 * @default (unset) inherit
@@ -594,8 +594,8 @@ export interface TextProps {
 	 */
 	math?: string
 	/**
-	 * Emit this item's `math` equation *inline* — an `<a14:m><m:oMath>` run flowing mid-paragraph
-	 * between the surrounding plain text runs — instead of as its own centered display-math
+	 * Emit this item's `math` equation *inline* (an `<a14:m><m:oMath>` run flowing mid-paragraph
+	 * between the surrounding plain text runs) instead of as its own centered display-math
 	 * paragraph. Has no effect unless `math` is set. Pair with the bare-`<m:oMath>` inline form of
 	 * the equation: `latexToOmml(tex, { display: false })` or `mathmlToOmml(mathml)`.
 	 * @example addText([{ text: 'where ' }, { math: latexToOmml('x^2+1=y', { display: false }), inline: true }, { text: ' holds' }])
@@ -605,7 +605,7 @@ export interface TextProps {
 
 /**
  * Options for layout-time text measurement ({@link PptxTs.measureText}).
- * Inches for width, points for type/spacing — the consumer-facing units. The
+ * Inches for width, points for type/spacing: the consumer-facing units. The
  * measured face must have metrics registered via {@link PptxTs.registerFontMetrics}
  * (a named face without exact metrics uses a conservative heuristic; an unnamed
  * theme-default face is unmeasurable).
@@ -634,7 +634,7 @@ export interface MeasureTextOptions {
 }
 
 /**
- * Result of {@link PptxTs.measureText}. Heights err **tall** (conservative) —
+ * Result of {@link PptxTs.measureText}. Heights err **tall** (conservative):
  * they match the value the export-time autofit bake uses, so the laid-out height is
  * ≥ what PowerPoint/LibreOffice render. Use it to grow a container; for an overflow
  * check it may slightly over-report (good for a warning, not a hard gate).
@@ -642,10 +642,10 @@ export interface MeasureTextOptions {
 export interface TextMeasurement {
 	/** Laid-out height in inches at the given `fontSize` (conservative/tall). */
 	heightIn: number
-	/** Number of wrapped lines (conservative — the model wraps marginally early). */
+	/** Number of wrapped lines (conservative: the model wraps marginally early). */
 	lineCount: number
 	/**
-	 * Width in inches of the widest laid-out line (conservative — the model wraps
+	 * Width in inches of the widest laid-out line (conservative: the model wraps
 	 * marginally early, so this errs slightly wide). With an unconstrained `wIn` it
 	 * is the natural single-line width; constrained, it is the widest wrapped line.
 	 * A box set to this width will not re-wrap the text.
@@ -655,7 +655,7 @@ export interface TextMeasurement {
 	measurable: boolean
 	/**
 	 * The **named** faces laid out with the conservative average-advance heuristic
-	 * instead of their real metrics — i.e. faces with no registered metrics. Empty
+	 * instead of their real metrics, i.e. faces with no registered metrics. Empty
 	 * when every run was measured exactly (and for an unmeasurable result, which
 	 * guessed nothing). The numbers stay conservative (they err tall/wide), but a
 	 * non-empty list means they are an approximation, not a measurement; register
@@ -663,7 +663,7 @@ export interface TextMeasurement {
 	 */
 	approximatedFaces: string[]
 	/**
-	 * Code points in the measured text — sorted, deduplicated — whose run resolved to a
+	 * Code points in the measured text (sorted, deduplicated) whose run resolved to a
 	 * **registered** face that has no glyph for them. Empty for fully covered text.
 	 *
 	 * Unlike everything else here, a non-empty list means the numbers are **not reliably
@@ -675,7 +675,7 @@ export interface TextMeasurement {
 	 * and the text overflow. Register a face that covers them (or set an explicit
 	 * `fontFace` on those runs) before trusting the height.
 	 *
-	 * Faces with no registered metrics are not audited — they measure through the
+	 * Faces with no registered metrics are not audited: they measure through the
 	 * cmap-less heuristic and are reported in {@link approximatedFaces} instead.
 	 * `String.fromCodePoint(...uncoveredCodepoints)` renders the list.
 	 */

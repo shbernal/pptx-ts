@@ -198,8 +198,8 @@ function reportMismatchedSeries(options: ChartOptsInternal, data: OptsChartDataI
  * object is shared across two charts.
  *
  * Nested objects are copied wherever a normalizer writes into them. `structuredClone` is
- * deliberately not used: it would deep-copy the `ChartMulti[]` on `_type` — breaking the series
- * identity the combo emit path depends on — and throws on a stray function in an untyped
+ * deliberately not used: it would deep-copy the `ChartMulti[]` on `_type`, breaking the series
+ * identity the combo emit path depends on, and throws on a stray function in an untyped
  * caller's option bag.
  * @param opts - caller-supplied chart options
  */
@@ -211,7 +211,7 @@ function copyChartOptions(opts: ChartOpts | ChartOptsInternal): ChartOptsInterna
 		copy.plotArea = { ...copy.plotArea }
 		if (copy.plotArea.border) copy.plotArea.border = { ...copy.plotArea.border }
 		// `typeof === 'object'`, not just truthy: `fill` takes a bare colour string as the
-		// solid-fill shorthand, and spreading a string produces `{0:'F',1:'F',…}` — an object
+		// solid-fill shorthand, and spreading a string produces `{0:'F',1:'F',…}`, an object
 		// that names neither `color` nor `type`, so `isStatedFill` rejected it and the area
 		// came out `<a:noFill/>`. A string is immutable and needs no defensive copy anyway.
 		if (typeof copy.plotArea.fill === 'object') copy.plotArea.fill = { ...copy.plotArea.fill }
@@ -232,7 +232,7 @@ function copyChartOptions(opts: ChartOpts | ChartOptsInternal): ChartOptsInterna
  * A border width the emitter can use: a positive, finite number of points.
  *
  * `0` counts as "not stated" here and takes the default, which is what the truthiness test
- * this replaces already did. What it adds is `Infinity` and a negative — neither is a width,
+ * this replaces already did. What it adds is `Infinity` and a negative. Neither is a width,
  * and a negative one reached `a:ln/@w` as a negative attribute.
  */
 function isUsableBorderWidth(width: number | undefined): width is number {
@@ -800,7 +800,7 @@ function normalizeChartPlotAreaOptions(options: ChartOptsInternal): void {
 	// a statement of the form `x = x || !x ? x : <default>`, but `a || !a` is true for every
 	// value of `a`, so the alternative never ran and the whole statement was an identity
 	// assignment. Every consumer reads these as plain truthiness (`opts.showPercent ? 1 : 0`,
-	// `!opts.showDataTableKeys ? 0 : 1`), which makes an absent option behave as `false` — and
+	// `!opts.showDataTableKeys ? 0 : 1`), which makes an absent option behave as `false`, and
 	// that is what the public types document (`@default false` on `showDataTable`,
 	// `showPercent`, `v3DRAngAx`). Removing the dead statements changes no emitted byte;
 	// *applying* the defaults those ternaries appear to promise would, so do not "restore"
@@ -935,7 +935,7 @@ function reportChartExOptions(stated: ChartOptsInternal, type: ChartType): void 
 function normalizeChartOptions(options: ChartOptsInternal): void {
 	// An empty array is not a palette, so it means what saying nothing means: the built-in
 	// default for this chart type. It used to survive this pass (`Array.isArray([])` is true)
-	// and meet the plot builders' fallback instead, which was the *bar* palette on every type —
+	// and meet the plot builders' fallback instead, which was the *bar* palette on every type,
 	// so `{ chartColors: [] }` on a pie was neither the caller's colours nor the pie default.
 	options.chartColors = options.chartColors?.length ? options.chartColors : defaultChartPalette(options._type)
 	options.plotArea = options.plotArea || {}
@@ -1151,7 +1151,7 @@ export function addChartDefinition(
 	// package-unique chart part filename is assigned at write time by a per-presentation
 	// pass in `buildPackageParts` (`package/assemble.ts`, STEP 2). A module-global counter
 	// here was never reset, so two identical decks built in one process emitted different
-	// chart part filenames — same input, different bytes.
+	// chart part filenames: same input, different bytes.
 	const chartId = target._relsChart.length + 1
 	const resultObject: SlideObject = {
 		_type: SlideObjectType.chart,
@@ -1221,7 +1221,7 @@ export function addChartDefinition(
 	reportTextBaseKeys(options)
 	options._type = tmpTypes ?? asChartType(type as CHART_NAME)
 	// Default only what the caller omitted. The guard used to be `!isNaN(Number(x))`, which is
-	// false for every `Coord` that is not a bare number — so `x: '50%'` and `x: '2in'` were
+	// false for every `Coord` that is not a bare number, so `x: '50%'` and `x: '2in'` were
 	// thrown away and replaced by 1 inch, and a `NaN` was too, silently. `getSmartParseNumber`
 	// is what vets a coordinate, and it reports a bad one instead of guessing.
 	//
@@ -1244,7 +1244,7 @@ export function addChartDefinition(
 	)
 	// Was the one definer still counting `_slideObjects` for its default name, which numbers a
 	// chart by how many charts are *currently* on the slide rather than by how many have been
-	// added — the difference `nextObjectNameIdx` exists for.
+	// added: the difference `nextObjectNameIdx` exists for.
 	options.objectName = resolveObjectName(target, SlideObjectType.chart, {
 		label: 'Chart',
 		kind: 'chart',
@@ -1311,7 +1311,7 @@ export function addChartDefinition(
 
 	// E: Options: combo subcharts
 	// A `ChartMulti` entry's options override the chart-level ones at emit time, so they have to
-	// go through the same clamps and enum corrections — keyed to that subchart's own plot type.
+	// go through the same clamps and enum corrections, keyed to that subchart's own plot type.
 	if (Array.isArray(options._type)) {
 		options._type.forEach((sub) => {
 			// Safe to assign: these entries are the copies built above, not the caller's objects.
@@ -1323,7 +1323,7 @@ export function addChartDefinition(
 	// three-value High-Low-Close style and warn (rather than corrupt) when the number of data
 	// series doesn't match the style, since PowerPoint expects an exact count per style.
 	if (options._type === ChartType.stock) {
-		// The same table the plot builder lays the series out from — a second copy here is how the
+		// The same table the plot builder lays the series out from. A second copy here is how the
 		// warning and the emitted chart came to disagree about what a style expects.
 		// A style it does not recognise used to become `hlc` in silence.
 		const stockStyle = chartEnum(options.stockStyle, STOCK_STYLES, 'stockStyle') ?? 'hlc'

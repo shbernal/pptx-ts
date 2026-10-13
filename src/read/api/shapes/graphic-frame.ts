@@ -1,5 +1,5 @@
 /**
- * A graphic frame (`p:graphicFrame`) — the host element for a table, a chart, a chartEx
+ * A graphic frame (`p:graphicFrame`): the host element for a table, a chart, a chartEx
  * chart, or a SmartArt diagram.
  *
  * Which one it holds is told by the `a:graphicData/@uri`, so the accessors below each check
@@ -19,7 +19,7 @@ import { Table } from '../table.js'
 import { Shape } from './base.js'
 import type { PaintSurface } from './oxml.js'
 
-/** A graphic frame (`p:graphicFrame`) — host for tables, charts and SmartArt diagrams. */
+/** A graphic frame (`p:graphicFrame`), the host for tables, charts and SmartArt diagrams. */
 export class GraphicFrame extends Shape {
 	readonly shapeType = 'graphicFrame' as const
 
@@ -66,7 +66,7 @@ export class GraphicFrame extends Shape {
 	}
 
 	/**
-	 * The `a:graphicData/@uri` verbatim — the namespace naming what this frame hosts, or
+	 * The `a:graphicData/@uri` verbatim: the namespace naming what this frame hosts, or
 	 * `null` when the frame carries no `a:graphicData`.
 	 *
 	 * Every `has*` predicate is a comparison against this, so a frame whose URI matches none

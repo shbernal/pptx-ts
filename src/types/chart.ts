@@ -172,11 +172,11 @@ export interface ChartErrorBarOptions extends StrokeProps {
 	barType?: ErrorBarType
 	/**
 	 * How `value` (or `plusValues`/`minusValues`) is interpreted.
-	 * - `'fixedVal'` — fixed amount in axis units
-	 * - `'percentage'` — percent of each value (e.g. `value: 5` → ±5%)
-	 * - `'stdDev'` — `value` standard deviations
-	 * - `'stdErr'` — standard error (ignores `value`)
-	 * - `'cust'` — explicit per-point amounts via `plusValues`/`minusValues`
+	 * - `'fixedVal'`: fixed amount in axis units
+	 * - `'percentage'`: percent of each value (e.g. `value: 5` → ±5%)
+	 * - `'stdDev'`: `value` standard deviations
+	 * - `'stdErr'`: standard error (ignores `value`)
+	 * - `'cust'`: explicit per-point amounts via `plusValues`/`minusValues`
 	 * @default 'fixedVal'
 	 */
 	valueType?: ErrorBarValueType
@@ -221,7 +221,7 @@ export interface OptsChartGridLine extends StrokeProps {
 	 *
 	 * `'none'` omits the gridlines entirely and is the same statement as `type: 'none'`;
 	 * `'solid'`, `'dash'` and `'dot'` are `a:prstDash` presets and map onto `dashType`
-	 * unchanged — note that this `'dash'` is the literal `dash` preset, where
+	 * unchanged. Note that this `'dash'` is the literal `dash` preset, where
 	 * {@link StrokeProps.type}`: 'dash'` means `sysDash`.
 	 * @deprecated Use {@link StrokeProps.dashType} (or `type: 'none'`). `dashType` and an
 	 *   explicit `type` both win when set.
@@ -247,7 +247,7 @@ export interface ChartPropsFillLine {
 	 * PowerPoint: Format Chart Area/Plot Area > Fill
 	 *
 	 * Omitting `fill` leaves the area transparent (`<a:noFill/>`), as does a `fill` that
-	 * states neither a `color` nor a `type` — `transparency` alone is not a fill, since
+	 * states neither a `color` nor a `type`: `transparency` alone is not a fill, since
 	 * there is no colour for the alpha to apply to.
 	 *
 	 * `type: 'image'` paints a picture, which the chart part references through a relationship of
@@ -275,7 +275,7 @@ export interface ChartPropsBase {
 	 * Series colours, cycled: series (or, on a pie/doughnut, data point) `n` takes
 	 * `chartColors[n % chartColors.length]`, so a shorter list repeats rather than running out.
 	 *
-	 * Omitting it, or passing an empty array, both mean the same thing — the built-in default
+	 * Omitting it, or passing an empty array, both mean the same thing: the built-in default
 	 * palette for the chart type. Two spellings of "I named no colours"; there is no third state
 	 * that suppresses the fills.
 	 */
@@ -306,7 +306,7 @@ export interface ChartPropsBase {
 	 */
 	showBubbleSize?: boolean
 	/**
-	 * Enable data labels, with a meaning that is **overloaded per plot type** — it is not a
+	 * Enable data labels, with a meaning that is **overloaded per plot type**. It is not a
 	 * plain duplicate of {@link ChartPropsBase.showValue}:
 	 * - pie / doughnut: shows the **category name** (`c:showCatName`);
 	 * - scatter: turns on the labels {@link ChartPropsDataLabel.dataLabelFormatScatter} describes,
@@ -391,7 +391,7 @@ export interface ChartPropsBase {
 	/**
 	 * Per-series style overrides.
 	 *
-	 * Element at index N applies to the **Nth series of the chart** — the same number the series
+	 * Element at index N applies to the **Nth series of the chart**, the same number the series
 	 * carries in `<c:idx>`/`<c:order>`. For most plots that is its position in `data`; on a combo
 	 * it counts across every subchart in order, so a bar(2) + line(1) combo reaches the line at
 	 * index 2. A scatter or bubble series counts one lower than its position, because the X row in
@@ -447,9 +447,9 @@ export interface ChartPropsAxisCat {
 	 * Show every Nth category label (`c:tickLblSkip`, `ST_Skip`), e.g. `2` for every other one.
 	 * - a whole number of at least 1; anything else warns and leaves the element off
 	 *
-	 * Pass a number. The `string` half is a compatibility hangover — this was typed as a
+	 * Pass a number. The `string` half is a compatibility hangover (this was typed as a
 	 * free-form string and emitted verbatim, which both rejected the natural `2` and let
-	 * `'every other'` reach the attribute — and is read with `Number()` like any other.
+	 * `'every other'` reach the attribute), and is read with `Number()` like any other.
 	 */
 	catAxisLabelFrequency?: number | string
 	catAxisLabelPos?: TickLabelPosition
@@ -567,7 +567,7 @@ export interface ChartPropsAxisSer {
 	serAxisLabelFrequency?: number | string
 	serAxisLabelPos?: TickLabelPosition
 	/**
-	 * The series axis line, as a stroke — the same {@link StrokeProps} the other two axes and
+	 * The series axis line, as a stroke: the same {@link StrokeProps} the other two axes and
 	 * every gridline take. See {@link ChartPropsAxisCat.catAxisLine}.
 	 *
 	 * The series axis is the third axis of a 3-D chart, and it was the one axis whose line
@@ -643,7 +643,7 @@ export interface ChartPropsAxisVal {
 	valAxisLabelPos?: TickLabelPosition
 	valAxisLabelRotate?: number
 	/**
-	 * The value axis line, as a stroke — the same {@link StrokeProps} the other two axes and
+	 * The value axis line, as a stroke: the same {@link StrokeProps} the other two axes and
 	 * every gridline take. See {@link ChartPropsAxisCat.catAxisLine}.
 	 */
 	valAxisLine?: StrokeProps
@@ -684,7 +684,7 @@ export interface ChartPropsAxisVal {
 	valAxisMaxVal?: number
 	valAxisMinorTickMark?: ChartAxisTickMark
 	/**
-	 * Spacing between minor tick marks on the value axis (`c:minorUnit`) — the sibling
+	 * Spacing between minor tick marks on the value axis (`c:minorUnit`), the sibling
 	 * `valAxisMajorUnit` had had for years, while the category and series axes carried both.
 	 * - PowerPoint: Format Axis > Axis Options > Units > Minor
 	 */
@@ -773,7 +773,7 @@ export interface ChartPropsChartLine {
 	 */
 	lineDash?: ChartLineDash
 	/**
-	 * Per-series dash type overrides; index matches the series order in the `data` array — and on a
+	 * Per-series dash type overrides; index matches the series order in the `data` array, and on a
 	 * combo, the order across every subchart, the same index `seriesOptions` uses.
 	 * - entries shorter than the series count fall back to `lineDash`
 	 * - example: `['solid', 'dash', 'lgDash']` gives each series its own dash pattern
@@ -830,7 +830,7 @@ export interface ChartPropsChartPie {
 }
 /**
  * `ST_RadarStyle` and this library's two aliases for it, derived from the member tuples in
- * `src/ooxml/st-enums.ts` — the same ones the definer validates a value against, so the type a
+ * `src/ooxml/st-enums.ts`, the same ones the definer validates a value against, so the type a
  * caller is checked against and the list that gates the XML cannot disagree.
  */
 export type { RadarStyle, RadarStyleAlias } from '../ooxml/st-enums.js'
@@ -865,7 +865,7 @@ export interface ChartPropsChartWaterfall {
  * today is which side of each bin interval is closed.
  *
  * NOTE: explicit bin geometry (fixed bin width / bin count / overflow / underflow) is not yet
- * supported — PowerPoint desktop rejects the decks those settings produce, so they are deferred.
+ * supported: PowerPoint desktop rejects the decks those settings produce, so they are deferred.
  */
 export interface ChartExBinning {
 	/** Which side of each bin interval is closed: `'r'` (right, the default) or `'l'` (left). */
@@ -886,7 +886,7 @@ export interface ChartPropsChartHistogram {
  */
 export interface ChartExStatistics {
 	/**
-	 * How the first/third quartiles are computed: `'exclusive'` (PowerPoint's default — the median
+	 * How the first/third quartiles are computed: `'exclusive'` (PowerPoint's default: the median
 	 * is excluded when splitting the halves) or `'inclusive'`.
 	 */
 	quartileMethod?: 'inclusive' | 'exclusive'
@@ -913,7 +913,7 @@ export interface ChartPropsChartBoxWhisker {
  * PowerPoint resolves against its Bing-backed geography database when the deck is opened.
  *
  * These fields tell PowerPoint how to interpret ambiguous region names (e.g. "Georgia" the country
- * vs. the US state). They do NOT change what pptx-ts writes beyond the `<cx:geography>` hint —
+ * vs. the US state). They do NOT change what pptx-ts writes beyond the `<cx:geography>` hint:
  * the actual map is resolved and rendered by PowerPoint 2016+/Microsoft 365 at open time, so the
  * region names must match PowerPoint's geography database or the map renders blank.
  */
@@ -933,12 +933,12 @@ export interface ChartPropsChartRegionMap {
 }
 export interface ChartPropsChartStock {
 	/**
-	 * Stock (high-low-close) chart style — selects how many value series the chart expects and how
+	 * Stock (high-low-close) chart style: selects how many value series the chart expects and how
 	 * they are drawn. The data series must be supplied in the exact order implied by the style:
-	 * - `'hlc'` — High, Low, Close (3 series). The close is marked with a dot.
-	 * - `'ohlc'` — Open, High, Low, Close (4 series). Open→close is drawn as up/down bars.
-	 * - `'vhlc'` — Volume, High, Low, Close (4 series). Volume is a column on its own axis.
-	 * - `'vohlc'` — Volume, Open, High, Low, Close (5 series). Volume column + up/down bars.
+	 * - `'hlc'`: High, Low, Close (3 series). The close is marked with a dot.
+	 * - `'ohlc'`: Open, High, Low, Close (4 series). Open→close is drawn as up/down bars.
+	 * - `'vhlc'`: Volume, High, Low, Close (4 series). Volume is a column on its own axis.
+	 * - `'vohlc'`: Volume, Open, High, Low, Close (5 series). Volume column + up/down bars.
 	 *
 	 * `<c:hiLowLines>` connect the high/low of each category in every style.
 	 * @default 'hlc'
@@ -1114,7 +1114,7 @@ export interface ChartOpts
 		ObjectNameProps,
 		PlaceholderPositionProps {
 	/**
-	 * Chart type — required when using the canonical `addChart(data, options)` signature.
+	 * Chart type. Required when using the canonical `addChart(data, options)` signature.
 	 * - Omit only for multi-type (combo) charts, where each `ChartMulti` entry carries its own `type`.
 	 */
 	type?: CHART_NAME

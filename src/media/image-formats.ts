@@ -2,8 +2,8 @@
  * The image formats this library recognises, one row each.
  *
  * Four tables used to answer overlapping questions about the same nine formats in three
- * directions — extension → content type on the write path, content type → extension on the read
- * and script paths, magic bytes → both in the sniffer — and a fifth partial re-derived the same
+ * directions (extension → content type on the write path, content type → extension on the read
+ * and script paths, magic bytes → both in the sniffer), and a fifth partial re-derived the same
  * signatures to read pixel dimensions. They had already drifted: `image/jpeg` resolved to `jpeg`
  * in one and `jpg` in another, `image/tiff` to `tiff` and `tif`, and the GIF signature was four
  * bytes in one place and three in another, so a file could be measured but not sniffed.
@@ -30,7 +30,7 @@ interface ImageFormat {
 	/** Other extensions a caller may spell the format with; each resolves to {@link contentType}. */
 	readonly altExts: readonly string[]
 	/**
-	 * The extension for a *file on disk* — the asset a printed script writes beside itself. It
+	 * The extension for a *file on disk*: the asset a printed script writes beside itself. It
 	 * differs from {@link ext} for two formats (`jpg`, `tif`) because those are the spellings
 	 * desktop viewers and file managers recognise, and an asset directory is read by people. It
 	 * names no part and is in no package, so it is free to differ.

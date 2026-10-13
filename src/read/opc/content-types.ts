@@ -71,7 +71,7 @@ export class ContentTypes {
 
 	/**
 	 * Drop the `Override` for `partName` if present (e.g. when a part is removed).
-	 * `Default` rules by extension are left untouched — they may still serve other
+	 * `Default` rules by extension are left untouched; they may still serve other
 	 * parts. Marks the overlay dirty when something was removed.
 	 */
 	removeOverride(partName: string): void {

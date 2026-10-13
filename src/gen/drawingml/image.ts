@@ -68,12 +68,12 @@ export const ImageSizingXml = {
 
 /**
  * The blipFill children for a vector source the caller gave no `sizing` for: letterbox it to its
- * own aspect ratio inside its frame, the way `sizing: 'contain'` would — an SVG carries an
+ * own aspect ratio inside its frame, the way `sizing: 'contain'` would. An SVG carries an
  * intrinsic ratio, and stretching a glyph into a box that disagrees with it is never the intent.
  *
  * Returns `null` when the two ratios already agree, which is the overwhelmingly common case (a
  * square icon in a square box). The caller then emits the plain `<a:stretch>` it always did, so
- * this default costs nothing — neither bytes nor a behaviour change — until it actually differs.
+ * this default costs nothing (neither bytes nor a behaviour change) until it actually differs.
  * @param imgSize - the vector's intrinsic size (viewBox or width/height)
  * @param boxDim - the picture's displayed frame
  * @returns the `<a:srcRect>` + `<a:stretch>` children, or `null` if no letterboxing is needed

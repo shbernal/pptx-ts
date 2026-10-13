@@ -3,17 +3,17 @@ import type { RuntimeAdapter } from './types.js'
 import { fetchFontBytes, fetchMediaBase64, placeholderSvgPreview } from './fetch-media.js'
 
 /**
- * The adapter for a runtime that is neither Node nor a browser — Deno, Bun, an edge worker,
+ * The adapter for a runtime that is neither Node nor a browser: Deno, Bun, an edge worker,
  * anything that imports the bare `pptx-ts` specifier without resolving the `node` or
  * `browser` export condition.
  *
  * It implements everything that is genuinely host-neutral and refuses only what is not.
  * `fetch`, `btoa` and `TextEncoder` exist in all of these runtimes, so remote media and fonts
- * load here exactly as they do in a browser — which is why every method but `writeFile` is now
+ * load here exactly as they do in a browser, which is why every method but `writeFile` is now
  * the shared implementation in {@link ./fetch-media} rather than a copy of it. What is missing
  * is a *destination*: there is no `node:fs` to write to and no `document` to hand a download to,
  * so {@link RuntimeAdapter.writeFile} throws a named error rather than guessing. Everything that
- * returns bytes to the caller — `write`, `stream`, `toParts` — works normally, which is the
+ * returns bytes to the caller (`write`, `stream`, `toParts`) works normally, which is the
  * shape that suits a worker anyway.
  *
  * Media loading is fetch-only here: a bare filesystem path has no meaning without a filesystem,

@@ -1,7 +1,7 @@
 /**
  * Orphan pruning after a part stops being referenced.
  *
- * Removing a slide can strand the parts only it used — its notes slide, media, chart parts. This
+ * Removing a slide can strand the parts only it used: its notes slide, media, chart parts. This
  * walks that fringe: a part is dropped when nothing left in the package (or the package root)
  * still resolves an internal relationship to it, and the parts *it* referenced are then examined
  * the same way. Shared chrome (masters, layouts, themes, the notes master) is exempt, so a deck

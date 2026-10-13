@@ -1,9 +1,9 @@
 /**
  * pptx-ts: the `<a:lvlNpPr>` list-style level and the theme-font `<a:defRPr>` inside it.
  *
- * A deck states its text defaults in four places — the presentation's `p:defaultTextStyle`, the
- * notesMaster's `p:notesStyle`, and the slide master's built-in and configured `p:txStyles` —
- * and all four write the same level element around the same run-property block: a `solidFill`
+ * A deck states its text defaults in four places: the presentation's `p:defaultTextStyle`, the
+ * notesMaster's `p:notesStyle`, and the slide master's built-in and configured `p:txStyles`.
+ * All four write the same level element around the same run-property block: a `solidFill`
  * over one colour, then the `latin`/`ea`/`cs` triple pointing at one theme font family. They
  * differed in the size, in whether `b`/`i` were carried, and in whether the colour and the
  * Latin face were overridable, which is what the parameters here are.

@@ -3,7 +3,7 @@
  *
  * Emits a `zoom` slide object as an `<mc:AlternateContent>`. The `mc:Choice` carries the real
  * `<p:graphicFrame>` in the 2016 zoom namespaces, read by PowerPoint 2016+; the `mc:Fallback`
- * carries a hyperlinked preview picture — or, for a Summary Zoom, a group of them — so older
+ * carries a hyperlinked preview picture (or, for a Summary Zoom, a group of them), so older
  * consumers still get a clickable navigation thumbnail. See `gen/define/zoom.ts`.
  */
 
@@ -49,7 +49,7 @@ const P166_NS = 'http://schemas.microsoft.com/office/powerpoint/2016/6/main'
 /**
  * The `p166:blipFill` + `p166:spPr` (preview image + framed tile) shared by a zoom tile's `zmPr`.
  *
- * The same body `previewPicBody` builds for a `p:pic`, one namespace over — which is the only
+ * The same body `previewPicBody` builds for a `p:pic`, one namespace over, which is the only
  * thing that ever differed between them.
  */
 function zoomBlipSpPr(previewRid: number, xf: XfrmFrame): string {
@@ -66,7 +66,7 @@ function zoomObjEl(
 ): string {
 	const { prefix, obj } = ZOOM_VARIANTS[variant]
 	const objAttrs: XmlAttrs = variant === 'slide' ? { sldId: tile.sldId ?? null } : { sectionId: tile.sectionId ?? null }
-	// zmPr attrs: id, (Slide Zoom only) returnToParent, transitionDur — matching PowerPoint's order.
+	// zmPr attrs: id, (Slide Zoom only) returnToParent, transitionDur, matching PowerPoint's order.
 	const zmAttrs: XmlAttrs = { id: tile.zmPrId }
 	if (variant === 'slide') zmAttrs['returnToParent'] = xsdBool(returnToParent)
 	zmAttrs['transitionDur'] = transitionDur
@@ -77,7 +77,7 @@ function zoomObjEl(
 	)
 }
 
-/** The `mc:Fallback` picture (or grouped pictures) — a hyperlinked thumbnail for pre-2016 consumers. */
+/** The `mc:Fallback` picture (or grouped pictures): a hyperlinked thumbnail for pre-2016 consumers. */
 function zoomFallbackPic(
 	picId: number,
 	objectName: string | undefined,
@@ -101,8 +101,8 @@ function zoomFallbackPic(
 						null,
 						// PowerPoint's zoom-tile lock set, and fixed on purpose even though `ZoomBaseProps`
 						// now has an `objectLock`: this is the `mc:Fallback` picture, which only a pre-2016
-						// consumer draws, and `a:picLocks` and `a:graphicFrameLocks` accept different flags
-						// — folding the caller's graphic-frame set onto it would warn about every flag the
+						// consumer draws, and `a:picLocks` and `a:graphicFrameLocks` accept different flags;
+						// folding the caller's graphic-frame set onto it would warn about every flag the
 						// two element types do not share. The caller's locks go on the `mc:Choice` frame
 						// below, which is the object PowerPoint actually manipulates. Routed through
 						// `genXmlObjectLock` so the attribute order is the table's rather than this
@@ -120,7 +120,7 @@ function zoomFallbackPic(
 /**
  * Render a `zoom` slide object to its `<mc:AlternateContent>` XML. The `mc:Choice` carries the real
  * `<p:graphicFrame>` (Slide/Section/Summary Zoom in the 2016 zoom namespaces, read by PowerPoint
- * 2016+); the `mc:Fallback` carries a hyperlinked picture — or, for a Summary Zoom, a group of them —
+ * 2016+); the `mc:Fallback` carries a hyperlinked picture (or, for a Summary Zoom, a group of them),
  * so pre-2016 consumers still get a clickable navigation thumbnail. See `gen/define/zoom.ts`.
  */
 export function renderZoomObject(ctx: RenderContext): string {

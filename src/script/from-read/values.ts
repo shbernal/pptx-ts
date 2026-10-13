@@ -13,7 +13,7 @@
  *   *throws*, since `appendSlides` compares the two decks' EMU sizes for equality after
  *   converting the declared inches back. Six decimal places is the minimum
  *   at which `Math.round(printed × 914400)` provably returns the original EMU, bounding the
- *   drift at 0.4572 EMU — about half a millionth of an inch. Rounding shorter to suppress
+ *   drift at 0.4572 EMU, about half a millionth of an inch. Rounding shorter to suppress
  *   `0.5000000001`-style noise trades a cosmetic problem for a real geometry loss.
  */
 import type { IrValue } from '../ir.js'
@@ -37,7 +37,7 @@ export function emu(value: number): string {
 
 /**
  * Points → inches, at the same proven precision as {@link inches}. Needed because the read
- * model reports text-body insets in points while the write API's `margin` takes inches —
+ * model reports text-body insets in points while the write API's `margin` takes inches,
  * and warns on a value `>= 1`, on the assumption that it is a points value passed by
  * mistake, so handing it points would both mis-scale the text and produce a warning.
  */
@@ -51,7 +51,7 @@ export function pointsToInches(pt: number): number {
  * re-resolves against the destination theme and so keeps the deck recolourable, which is
  * the whole reason a theme colour was authored.
  *
- * Only the tokens the write path's `clrMap` covers survive as tokens — the other seven
+ * Only the tokens the write path's `clrMap` covers survive as tokens. The other seven
  * `ST_SchemeColorVal` values degrade to a hex literal there anyway, so passing them through
  * would produce a silently different colour. Callers hand those to {@link literalColor}
  * instead after recording a note.
@@ -74,7 +74,7 @@ export function isWritableSchemeToken(token: string | null): boolean {
  * note) when the token is one of the seven the write path cannot carry, or `undefined` when
  * the source names no token at all.
  *
- * `undefined` means "this leg has nothing to say" — the caller's own-colour ladder decides
+ * `undefined` means "this leg has nothing to say": the caller's own-colour ladder decides
  * from there. Seven sites make this decision and four of them made it correctly: the table
  * fill, the cell fill and the cell border all returned an unwritable token *raw*, so a cell
  * filled `<a:schemeClr val="dk1"/>` emitted `fill: { color: 'dk1' }` and the generated script
@@ -110,16 +110,16 @@ export function schemeColorOption(
  *
  * The ladder, in order:
  *
- * 1. a **writable scheme token** — kept as a token, so the copy keeps tracking its theme;
+ * 1. a **writable scheme token**, kept as a token, so the copy keeps tracking its theme;
  * 2. the surface's **own literal**, where the read model separates it from the resolved one;
  * 3. an **unwritable token**, noted and baked to the literal it resolves to;
  * 4. the **resolved literal**, for the colour models the write API's hex option cannot name;
- * 5. `undefined` — nothing to say, and the caller's own arm decides from there.
+ * 5. `undefined`: nothing to say, and the caller's own arm decides from there.
  *
  * Steps 2 and 3 cannot both apply: `a:solidFill` holds exactly one colour child, so a surface
  * has either an `a:srgbClr` or an `a:schemeClr` and never both. That is what makes one order
- * safe for all six sites, which is worth stating because the six had three orders between them
- * — one put the own literal first, one never consulted it at all, and one tested the token for
+ * safe for all six sites, which is worth stating because the six had three orders between them:
+ * one put the own literal first, one never consulted it at all, and one tested the token for
  * `null` before calling. {@link schemeColorOption} extracted the middle step and the ladder
  * around it stayed copied.
  *
@@ -224,8 +224,8 @@ export function literalColor(hex: string): string {
 /**
  * Build an IR object from possibly-absent parts, dropping every `undefined`.
  *
- * Every mapper funnels through this. An IR must spell "absent" exactly one way — a
- * missing key — or two IRs describing the same deck compare unequal because one wrote
+ * Every mapper funnels through this. An IR must spell "absent" exactly one way (a
+ * missing key), or two IRs describing the same deck compare unequal because one wrote
  * `{ bold: undefined }` and the other wrote `{}`. That would surface as phantom
  * round-trip failures, so the invariant is enforced in one place rather than trusted to
  * every call site.
@@ -245,7 +245,7 @@ export function compact(source: Record<string, IrValue | undefined>): Record<str
 	return any ? out : undefined
 }
 
-/** {@link compact}, but always an object — for a required options argument. */
+/** {@link compact}, but always an object, for a required options argument. */
 export function compactRequired(source: Record<string, IrValue | undefined>): Record<string, IrValue> {
 	return compact(source) ?? {}
 }
@@ -351,7 +351,7 @@ export interface ShapeBox {
 }
 
 /**
- * Where a shape sits on the slide, or `null` when nothing places it — in which case a
+ * Where a shape sits on the slide, or `null` when nothing places it, in which case a
  * `shape.frameUnresolved` note has been recorded and the caller drops the shape.
  *
  * `absoluteFrame` rather than the raw `left`/`top` for a top-level shape, where the two are
@@ -365,7 +365,7 @@ export interface ShapeBox {
  * its default position. Neither is where the source put it, and the second looks deliberate, so
  * every kind now drops the shape and says so.
  *
- * Takes the `Shape` base rather than `AnyShape` so a `p:graphicFrame` — a table or a chart —
+ * Takes the `Shape` base rather than `AnyShape` so a `p:graphicFrame` (a table or a chart)
  * gets the same fallback and the same note. It had its own `positionOfFrame`, which returned
  * `{}` in exactly the case this fallback exists for, with no note: `absoluteFrame` is `null`
  * whenever an enclosing group lacks a usable transform, so a table inside such a group emitted
@@ -375,11 +375,11 @@ export function frameOf(shape: Shape, notes: NoteScope, groups?: readonly GroupT
 	const frame = groups ? groupSpaceFrame(shape, groups) : shape.absoluteFrame
 	if (frame) return frame
 
-	// No usable absolute frame — a placeholder taking its geometry from the layout or master, or
+	// No usable absolute frame: a placeholder taking its geometry from the layout or master, or
 	// a shape inside a group whose own transform is missing or degenerate. `resolvedFrame` walks
 	// that chain, and using it is not optional: omitting the geometry does *not* leave it to be
 	// inherited, because a regenerated slide's placeholder inherits nothing. It produces
-	// `x=0 y=0 w=<slide width> h=0` — a zero-height box in the corner, which is broken output
+	// `x=0 y=0 w=<slide width> h=0`, a zero-height box in the corner, which is broken output
 	// rather than lossy output.
 	const resolved = shape.resolvedFrame
 	if (!resolved) {

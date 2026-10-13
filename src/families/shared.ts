@@ -3,7 +3,7 @@
  *
  * A construct family is one value: everything the library knows about charts, or tables, or
  * speaker notes, reachable through a single name. What that value carries is what the write path
- * needs handed to it rather than imported — today the methods a family adds to a slide and the
+ * needs handed to it rather than imported. Today that is the methods a family adds to a slide and the
  * child descriptors it recognises inside a slide master or a group.
  *
  * It has to be a value rather than a set of imports for the same reason the shape walk is handed
@@ -89,7 +89,7 @@ export type SlideAuthorMethod =
 
 /**
  * One family method's author: the public signature, with the slide it authors onto in front and
- * the return dropped. Chaining is not the author's business — `SlideBuilder` returns the slide
+ * the return dropped. Chaining is not the author's business: `SlideBuilder` returns the slide
  * from every bound method, so an author that returned one could only return the same one.
  */
 type Author<M extends SlideAuthorMethod> = (slide: SlideBuilder, ...args: Parameters<Slide[M]>) => void
@@ -175,7 +175,7 @@ export const PRESENTATION_METHOD_FAMILIES: Readonly<Record<keyof PresentationAut
 export type ChildDescriptorKey = 'chart' | 'image' | 'line' | 'rect' | 'roundRect' | 'shape' | 'text'
 
 /**
- * Which family supplies each child descriptor, as data — the counterpart to
+ * Which family supplies each child descriptor, as data. It is the counterpart to
  * {@link SLIDE_METHOD_FAMILIES}, and for the same reason: a descriptor key that reaches a
  * presentation composed without its family has to be able to name the family it is missing.
  *
@@ -197,7 +197,7 @@ type ChildDescriptor<K extends ChildDescriptorKey> = Extract<SlideMasterObject, 
 
 /**
  * The child descriptors a list of families recognises. A descriptor whose key is missing is one
- * nothing composed can author, and both walks warn — naming the family behind the key when
+ * nothing composed can author, and both walks warn, naming the family behind the key when
  * {@link CHILD_DESCRIPTOR_FAMILIES} has one, so a `{ chart: … }` in a master's `objects` on a
  * chartless presentation says what to compose rather than disappearing from the deck.
  */
@@ -293,7 +293,7 @@ export function familyMethodUnavailable(call: string, family: FamilyName): never
 }
 
 /**
- * A presentation author with its context already supplied — what a method on the presentation
+ * A presentation author with its context already supplied: what a method on the presentation
  * calls, having nothing left to pass but its own arguments.
  */
 export type BoundPresentationAuthor<F> = F extends (ctx: PresentationAuthorContext, ...args: infer A) => infer R

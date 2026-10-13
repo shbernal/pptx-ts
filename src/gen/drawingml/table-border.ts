@@ -11,8 +11,8 @@ import { borderLine, createLineCap, resolveBorderDash } from './line.js'
 import { el, raw, voidEl } from '../oxml/el.js'
 
 /**
- * One `<a:lnX>` border element. Every side of a table cell — the four edges and the two
- * diagonals — is a `CT_LineProperties`, so they differ only in element name.
+ * One `<a:lnX>` border element. Every side of a table cell (the four edges and the two
+ * diagonals) is a `CT_LineProperties`, so they differ only in element name.
  * @param {string} name - the element's local name (`lnL`, `lnTlToBr`, …)
  * @param {BorderProps} border - the resolved border for that side
  * @return {string} the border element XML

@@ -4,8 +4,8 @@
  * The per-shape `<p:spTree>` builder: `slideObjectToXml` walks a slide/layout's objects
  * (recursing into groups, allocating `<p:cNvPr>` ids as it goes) and looks each one up in the
  * renderer table its caller supplied. This module knows which object kinds are shapes; it does
- * not know what any of their XML looks like, and importing a renderer here would undo that — see
- * `RendererTable` in `objects/shared.ts`. The group render and the slide-number placeholder stay
+ * not know what any of their XML looks like, and importing a renderer here would undo that (see
+ * `RendererTable` in `objects/shared.ts`). The group render and the slide-number placeholder stay
  * here because both consume the slide-wide child-id counter the walk maintains.
  * `slideObjectRelationsToXml` emits the matching `.rels` targets.
  */
@@ -62,7 +62,7 @@ import { xsdBool, xsdBoolIfTrue } from '../../ooxml/xsd-boolean.js'
 import { checkEnumOrWarn } from '../../ooxml/check-enum.js'
 import { TEXT_CAPS_TYPES, TEXT_SHAPE_TYPES, TEXT_UNDERLINE_TYPES, TEXT_VERTICAL } from '../../ooxml/st-enums.js'
 
-/** The four axes that make up an explicit group frame. All or nothing — see `givenGroupFrameAxes`. */
+/** The four axes that make up an explicit group frame. All or nothing; see `givenGroupFrameAxes`. */
 const GROUP_FRAME_AXES = ['x', 'y', 'w', 'h'] as const
 
 /**
@@ -70,14 +70,14 @@ const GROUP_FRAME_AXES = ['x', 'y', 'w', 'h'] as const
  *
  * A group frame is explicit only when **all four** are given; anything less falls back to
  * auto-bounds on every axis. Partial frames used to be honoured per-axis, which let the unset ones
- * take the shared per-object defaults (`x=0`, `y=0`, `cx=75%` of the layout width, `cy=0`) — so
+ * take the shared per-object defaults (`x=0`, `y=0`, `cx=75%` of the layout width, `cy=0`), so
  * `addGroup([rect], { x: 5, y: 2 })` emitted a zero-height group whose width was a silent
  * slide-width fraction, and every child of it then re-read as `null` through the read path's
  * degenerate-`chExt` guard.
  *
  * Per-axis fallback was the other candidate, but it cannot mean what it reads like: the writer keeps
  * an identity child space (`chOff/chExt == off/ext`), so a group's frame never moves or scales its
- * children — it only places the selection handle and the rotate pivot. `{ x: 5 }` would leave the
+ * children; it only places the selection handle and the rotate pivot. `{ x: 5 }` would leave the
  * children where they were and put the group's box somewhere they are not. Falling back whole, with
  * a warning, keeps the group box around its content and says so out loud.
  * @param options - the group object's options
@@ -101,7 +101,7 @@ const hasCompleteGroupFrame = (options: ObjectOptions): boolean =>
  * `<a:ext cx>`/`<a:ext cy>` are `ST_PositiveCoordinate` (ECMA-376 Part 1, `CT_PositiveSize2D`), so a
  * negative extent is schema-invalid. PowerPoint rejects the *whole* presentation with "The file or
  * directory is corrupted and unreadable" (0x80070570) and names no shape, part, or slide, while
- * LibreOffice renders the same package happily — so the defect is invisible until the deck reaches
+ * LibreOffice renders the same package happily, so the defect is invisible until the deck reaches
  * PowerPoint.
  *
  * A signed delta is the natural way to write "draw from A to B" (`{ x: x0, y: y0, w: x1 - x0, h: y1 - y0 }`),
@@ -197,7 +197,7 @@ function resolveObjectFrame(
  * Whether this part has a real slide number to cache in a `slidenum` field.
  *
  * Only a slide does. A master leaves `_slideNum` null and a layout carries the internal 1000+
- * counter that keeps layout media keys from colliding with slide media — neither is a page
+ * counter that keeps layout media keys from colliding with slide media. Neither is a page
  * number, and neither belongs in the field's cached text.
  */
 function hasRealSlideNumber(slide: PresSlideInternal | SlideLayoutInternal | SlideMasterInternal): boolean {
@@ -209,7 +209,7 @@ function hasRealSlideNumber(slide: PresSlideInternal | SlideLayoutInternal | Sli
  *
  * Unique `objectName` values are what consumers (e.g. semantic manifests) rely on, so
  * collisions are flagged loudly. Deliberately NOT `warnOnce`: this runs per emit, and two
- * `write()` calls are two separate exports — a caller capturing diagnostics around the second
+ * `write()` calls are two separate exports, and a caller capturing diagnostics around the second
  * would otherwise be told its deck is clean because the first one had already said otherwise. Groups are recursed into: a group's children are
  * `<p:cNvPr>`-named on this same slide, so a child colliding with a top-level object (or with a
  * child of another group) is a collision the Selection Pane shows, and checking only the top
@@ -277,8 +277,8 @@ function slideBackgroundXml(slide: PresSlideInternal | SlideLayoutInternal | Sli
 				])
 			)
 		)
-		// A background paints whenever it names one — `fillNamesPaint`, the same test the stroke
-		// side uses. This gate used to accept a `color` or the literal `type: 'gradient'`, so a
+		// A background paints whenever it names one (`fillNamesPaint`, the same test the stroke
+		// side uses). This gate used to accept a `color` or the literal `type: 'gradient'`, so a
 		// background authored as `{ gradient }`, `{ pattern }` or `{ type: 'pattern', … }` was
 		// dropped without a word and the slide came out inheriting the master.
 	} else if (fillNamesPaint(slide.background)) {
@@ -298,7 +298,7 @@ function slideBackgroundXml(slide: PresSlideInternal | SlideLayoutInternal | Sli
  * The slide-number placeholder shape.
  *
  * Emitted after every authored object, so its `<p:cNvPr>` id can come from the same monotonic
- * counter the walk has been advancing — the caller allocates it and passes it in.
+ * counter the walk has been advancing; the caller allocates it and passes it in.
  *
  * @param slide - the slide, layout or master being emitted
  * @param snProps - the part's slide-number properties, read but never written: a serializer
@@ -395,7 +395,7 @@ function slideNumberPlaceholderXml(
 	strSlideXml += el('a:lstStyle', null, raw(el('a:lvl1pPr', null, raw(defRPr))), { openPrefix: '  ' })
 
 	// Anything not starting c/r falls back to 'l'. This used to be preceded by a write of
-	// `'left'` back onto `snProps`, justified as "other readers rely on it" — the only other
+	// `'left'` back onto `snProps`, justified as "other readers rely on it", but the only other
 	// reader is this line, and it already defaults.
 	const snAlignRaw = snProps.align ?? 'left'
 	const snAlign = snAlignRaw.startsWith('c') ? 'ctr' : snAlignRaw.startsWith('r') ? 'r' : 'l'
@@ -414,7 +414,7 @@ function slideNumberPlaceholderXml(
 				// `<a:t>` inside an `a:fld` is the *cached* rendering of the field, so it is only a
 				// slide number where there is a slide number to cache. A master has none
 				// (`_slideNum` is null) and a layout carries the internal 1000+ counter, so this
-				// used to ship `<a:t>null</a:t>` in every master and `<a:t>1004</a:t>` in a layout —
+				// used to ship `<a:t>null</a:t>` in every master and `<a:t>1004</a:t>` in a layout,
 				// invisible in PowerPoint, which recomputes the field on open, but read straight
 				// out by anything that takes the cache at face value (a text extractor, a search
 				// indexer, this library's own read path). What PowerPoint itself caches on a master
@@ -508,7 +508,7 @@ export function slideObjectToXml(
 	const shapeIds = collectSlideShapeIds(slide._slideObjects)
 
 	// Resolve an object's bounds in EMU. For an auto-sized group (a `group` object with no explicit
-	// x/y/w/h) this recurses into `_groupObjects` and returns their bounding box — so a parent group
+	// x/y/w/h) this recurses into `_groupObjects` and returns their bounding box, so a parent group
 	// can size around a nested auto-sized child group. The group rendering below uses the same helper
 	// for both a child's bounds and a group's own off/ext, keeping every level consistent.
 	const resolveObjBounds = (obj: SlideObject): { x: number; y: number; cx: number; cy: number } => {
@@ -535,7 +535,7 @@ export function slideObjectToXml(
 		return { x: frame.x, y: frame.y, cx: frame.cx, cy: frame.cy }
 	}
 
-	// Render one slide object — and, for a group, its children recursively — to an XML fragment.
+	// Render one slide object (and, for a group, its children recursively) to an XML fragment.
 	// Closes over `slide` and `childIdxAlloc`. Uses a local
 	// `strSlideXml` accumulator (shadowing the slide-level one) so the existing per-object
 	// `strSlideXml +=` appends compose into the returned fragment unchanged.
@@ -554,7 +554,7 @@ export function slideObjectToXml(
 		const { x, y, cx, cy, flipX, flipY, placeholder: placeholderObj } = resolveObjectFrame(slideItemObj, slide)
 
 		// The `<a:xfrm>` placement attributes, shared by every shape kind that has a transform.
-		// NOTE: order is byte-significant (flipH, flipV, rot), and `null` means omitted — `rotate: 0`
+		// NOTE: order is byte-significant (flipH, flipV, rot), and `null` means omitted: `rotate: 0`
 		// stays absent, and any other rotation, `NaN` included, goes to the converter.
 		// A flip derived from a negative extent XORs with the author's own: `{ w: -2, flipH: true }`
 		// is a box mirrored twice, i.e. not mirrored at all.
@@ -566,12 +566,12 @@ export function slideObjectToXml(
 
 		// B: Add OBJECT to the current Slide.
 		// Each renderer below is called from here and nowhere else, so everything resolved above
-		// travels as one `RenderContext` — including `itemOpts`, already normalized in step A. Six
+		// travels as one `RenderContext`, including `itemOpts`, already normalized in step A. Six
 		// of them used to take the whole `slideItemObj` and re-run `options = options || {}` as
 		// their first statement, on an argument their only caller had already fixed; that
 		// assignment existed to re-narrow the type, and threading the narrowed value in does the
 		// same job without a mutation in the middle of an emit pass. If one of them ever gains a
-		// second call site, normalizing is that caller's job — a contract stated once at the
+		// second call site, normalizing is that caller's job: a contract stated once at the
 		// boundary beats a defensive copy of it in every callee.
 		const ctx: RenderContext = {
 			obj: slideItemObj,
@@ -585,9 +585,9 @@ export function slideObjectToXml(
 		}
 
 		switch (slideItemObj._type) {
-			// The ten shape families, all routed the same way. The arms are still spelled out —
-			// `_type` is what tells a shape family from a group or from a non-shape member, and the
-			// `never` at the bottom only holds while every member is named — but the *code* each one
+			// The ten shape families, all routed the same way. The arms are still spelled out
+			// (`_type` is what tells a shape family from a group or from a non-shape member, and the
+			// `never` at the bottom only holds while every member is named), but the *code* each one
 			// reaches is `renderers`', not this module's. That is the whole point of the indirection:
 			// a program that writes text boxes should not link the chart emitter, and a named import
 			// in a reachable function body is retained whether the branch runs or not.
@@ -604,7 +604,7 @@ export function slideObjectToXml(
 				const render = renderers[slideItemObj._type]
 				// A family with no renderer is a routing bug, not an empty shape. The object was
 				// authored, so it has already reserved a `<p:cNvPr>` id, and anything that referred to
-				// it — a connector binding, an animation target, a group's bounding box — is emitted
+				// it (a connector binding, an animation target, a group's bounding box) is emitted
 				// against a shape that would silently not be there.
 				if (!render)
 					throw new InternalError(
@@ -677,7 +677,7 @@ export function slideObjectToXml(
 				// Rendered by its owning table, through `renderTableObject` above.
 				break
 			case SlideObjectType.hyperlink:
-				// A relationship type, not a shape — it reaches the shape tree only as the `a:hlinkClick`
+				// A relationship type, not a shape. It reaches the shape tree only as the `a:hlinkClick`
 				// carried by whatever shape owns the link.
 				break
 			case SlideObjectType.online:
@@ -700,7 +700,7 @@ export function slideObjectToXml(
 	})
 
 	// STEP 4: Add slide numbers (if any) last.
-	// One past the highest id the allocator handed out — the same slot the group-child counter
+	// One past the highest id the allocator handed out: the same slot the group-child counter
 	// used to reach. A hardcoded id here (formerly 25) aliases a shape or group-child id once a
 	// slide holds enough objects, which PowerPoint repairs. Resolved here rather than inside the
 	// emitter so a part with no slide number does not consume an id. The highest id is the last one
@@ -750,7 +750,7 @@ export function defaultRelIdStart(slide: PresSlideInternal | SlideLayoutInternal
  * `selfPath` is the emitting part's own path, and it is required because a relationship target
  * resolves against the part that states it. An internal slide link used to be written
  * `slide${n}.xml` whatever the part, which is right from `ppt/slides/` and names nothing from
- * `ppt/slideLayouts/` or `ppt/slideMasters/` — so a `hyperlink: { slide }` on an object given to
+ * `ppt/slideLayouts/` or `ppt/slideMasters/`, so a `hyperlink: { slide }` on an object given to
  * `defineSlideMaster({ objects })` wrote a dangling relationship.
  * @param {PresSlideInternal | SlideLayoutInternal | SlideMasterInternal} slide - slide, layout or master whose relations are being transformed
  * @param {{ target: string; type: string }[]} defaultRels - array of default relations
@@ -770,7 +770,7 @@ export function slideObjectRelationsToXml(
 	 * told from the first by the first already being there.
 	 *
 	 * Two things about the shape. It holds raw Targets rather than escaped ones, because this
-	 * asks about the model and not about markup — the probe used to substring-scan the emitted
+	 * asks about the model and not about markup. The probe used to substring-scan the emitted
 	 * XML for ` Target="…"`, which forced the caller to escape by hand with the same escaper the
 	 * builder uses or the two drifted apart, and cost O(rels squared) in string scanning.
 	 *
@@ -791,7 +791,7 @@ export function slideObjectRelationsToXml(
 				rels.push(externalHyperlinkRel(rel.rId, rel.Target))
 			}
 		}
-		// NOTE: there is no `else` here on purpose. `_rels` only ever holds hyperlinks —
+		// NOTE: there is no `else` here on purpose. `_rels` only ever holds hyperlinks:
 		// it is initialized empty (`slide.ts`) and the three sites that append to it
 		// (`define/hyperlinks.ts` ×2, `define/image.ts`) all push `SlideObjectType.hyperlink`.
 		// The notesSlide rel every slide needs comes from `defaultRels` in `makeXmlSlideRel`.
@@ -817,7 +817,7 @@ export function slideObjectRelationsToXml(
 			rels.push(media(rel.oleRelType))
 		} else if (rel.model3dRelType) {
 			// Likewise a 3D model payload: its content type is `model/gltf.binary`, which matches none
-			// of the sniffs below — and they have no `else`, so without this branch the rel would be
+			// of the sniffs below, and they have no `else`, so without this branch the rel would be
 			// silently dropped and the slide would carry a dangling `r:embed`.
 			rels.push(media(rel.model3dRelType))
 		} else if (relType.includes('image')) {

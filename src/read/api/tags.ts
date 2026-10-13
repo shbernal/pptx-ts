@@ -1,5 +1,5 @@
 /**
- * Read the programmatic **tags** attached to an owner part — a slide or the
+ * Read the programmatic **tags** attached to an owner part: a slide or the
  * presentation itself. A tag is a simple `@name`/`@val` string pair PowerPoint
  * (or an add-in) stores out-of-band from the visible content, referenced from the
  * owner via `p:custDataLst/p:tags@r:id` and materialized in a `ppt/tags/tagN.xml`
@@ -17,7 +17,7 @@ import { OFFICE_REL } from '../../ooxml/rel-types.js'
 /** The owner → tags-part relationship type. Only this module follows one. */
 const TAGS_REL_TYPE = OFFICE_REL + 'tags'
 
-/** One programmatic tag (`p:tag`) — a name/value string pair. */
+/** One programmatic tag (`p:tag`): a name/value string pair. */
 export interface Tag {
 	/** The tag's `@name`. */
 	name: string

@@ -6,17 +6,17 @@
  * alongside the base ECMA-376 ones and tells them apart by namespace rather than by name.
  * The write API's `TransitionType` is a closed union of 21 base names. Passing the read
  * model's string straight through would therefore produce a script that does not compile
- * for exactly the decks a converter is most likely to meet — a modern transition is what
+ * for exactly the decks a converter is most likely to meet: a modern transition is what
  * PowerPoint's own UI offers first. So {@link WRITABLE_TYPES} is the filter, and a name that
  * does not survive it becomes a fidelity note rather than a compile error.
  *
  * **Why `speed` is always emitted.** `spd` is absent from most PowerPoint-authored
  * transitions (its schema default is `fast`) and the read model reports the default rather
  * than the absence, so there is nothing to distinguish "absent" from "explicitly fast". That
- * is harmless on its own — both read back as `fast`. What is *not* harmless is omitting it
+ * is harmless on its own, since both read back as `fast`. What is *not* harmless is omitting it
  * when a duration is present: the write path then derives the bucket from `durationMs`
  * (`transitionSpeedForDuration`), and PowerPoint's own pairing does not always agree with
- * that formula — the sound fixture carries `spd="slow"` with `p14:dur="2000"`, which the
+ * that formula: the sound fixture carries `spd="slow"` with `p14:dur="2000"`, which the
  * derivation happens to reproduce, while a 600ms `fast` transition would come back `med`.
  * Emitting the read value verbatim removes the derivation from the path entirely, which is
  * the same discipline the rest of the IR follows: state what was read, never recompute it.
@@ -44,11 +44,11 @@ const WRITABLE_TYPES: ReadonlySet<string> = new Set(TRANSITION_TYPES)
  * The namespace check does no work on PowerPoint's own output and is kept anyway. Every one
  * of the 21 modern effect names in the probed table (`conveyor`, `morph`, `vortex`, …) is
  * distinct from every base name, so today the name lookup alone would reach the same verdict
- * — measured, not assumed. But "is this a base ECMA-376 transition" is a question about the
+ * (measured, not assumed). But "is this a base ECMA-376 transition" is a question about the
  * *namespace*, and answering it by name would be relying on that disjointness holding for
  * every namespace Microsoft ever adds. The write path emits `p:${type}` unconditionally, so
  * the cost of being wrong is a modern effect silently rewritten as a base one with the same
- * name and no note — a conversion that reports itself as faithful. `script-ir.test.ts`
+ * name and no note: a conversion that reports itself as faithful. `script-ir.test.ts`
  * authors a `p14:fade` to keep this branch honest, since no fixture can.
  */
 function isWritable(info: TransitionInfo): boolean {
@@ -59,7 +59,7 @@ function isWritable(info: TransitionInfo): boolean {
  * Map a slide's transition, recording a note for anything that does not survive.
  *
  * Returns `undefined` both when the slide has no transition and when it has one this
- * library cannot author — the difference between those two is what the note carries.
+ * library cannot author. The difference between those two is what the note carries.
  */
 export function transitionToIr(slide: Slide, ctx: MapContext): TransitionIr | undefined {
 	const { notes, assets } = ctx
@@ -97,7 +97,7 @@ export function transitionToIr(slide: Slide, ctx: MapContext): TransitionIr | un
 /**
  * The transition's sound (`p:sndAc`), in the two forms OOXML gives it.
  *
- * The stop-previous form is pure structure — no relationship, no media part — so it maps
+ * The stop-previous form is pure structure (no relationship, no media part), so it maps
  * unconditionally. A start sound is an embedded WAV reached through the slide's own
  * relationships, which is the only place in this converter that resolves an `r:embed` by
  * hand: every other media reference arrives already resolved to a partname by the read

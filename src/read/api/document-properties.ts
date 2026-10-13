@@ -1,5 +1,5 @@
 /**
- * Read a deck's document properties — the `docProps/core.xml` core properties
+ * Read a deck's document properties: the `docProps/core.xml` core properties
  * (Dublin Core title/subject/creator + OPC keywords/revision/timestamps), the
  * `docProps/app.xml` extended properties, and the `docProps/custom.xml`
  * user-defined name/value pairs. These are the read counterparts of the write-side
@@ -61,7 +61,7 @@ export interface CoreProperties {
 }
 
 /**
- * Decoded `docProps/app.xml` — the *extended* properties, which are the producer's own
+ * Decoded `docProps/app.xml`: the *extended* properties, which are the producer's own
  * account of the deck rather than the author's metadata. Every field is optional (present
  * only when the element is).
  *
@@ -72,14 +72,14 @@ export interface CoreProperties {
  * true, and `company` is the one this library's write API can set.
  */
 export interface ExtendedProperties {
-	/** `<Application>` — the producing application, e.g. `Microsoft Office PowerPoint`. */
+	/** `<Application>`: the producing application, e.g. `Microsoft Office PowerPoint`. */
 	application?: string
-	/** `<AppVersion>` — that application's version, in its own `major.minor` spelling (`16.0000`). */
+	/** `<AppVersion>`: that application's version, in its own `major.minor` spelling (`16.0000`). */
 	appVersion?: string
 	/** `<Company>` (the write-side `pptx.company`). */
 	company?: string
 	/**
-	 * `<TitlesOfParts>` — the flat `vt:lpstr` vector naming the deck's fonts, themes and slide
+	 * `<TitlesOfParts>`: the flat `vt:lpstr` vector naming the deck's fonts, themes and slide
 	 * titles in one list. It is the vector as written, NOT split by section: `<HeadingPairs>`
 	 * holds the counts that partition it, and this library does not read them, so the caller
 	 * that wants the slide titles alone has to pair the two itself.
@@ -176,7 +176,7 @@ export function readExtendedProperties(opc: OpcPackage): ExtendedProperties {
  * number; real types (`r4`/`r8`/`decimal`) → number; `bool` → boolean;
  * `filetime`/`date` → the **raw string** (see {@link CoreProperties} on
  * timestamps). Any unrecognized `vt:` element falls back to its text content as a
- * string — lossy but never throws.
+ * string, which is lossy but never throws.
  */
 function decodeValue(vt: Element): CustomPropertyValue {
 	const text = vt.textContent ?? ''

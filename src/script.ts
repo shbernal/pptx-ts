@@ -4,13 +4,13 @@
  *
  * **Why this is its own subsystem.** It depends on both halves of the library: it reads a
  * deck through `pptx-ts/read` and targets the write API's option types. That rules out
- * living inside either. `src/read/` in particular is documented as isomorphic — bytes in,
- * bytes out, no `node:fs` — and a converter whose output is *source text* rather than a
+ * living inside either. `src/read/` in particular is documented as isomorphic (bytes in,
+ * bytes out, no `node:fs`), and a converter whose output is *source text* rather than a
  * package would quietly break that guarantee for everyone importing `pptx-ts/read`.
  *
  * **What it is not.** This is not a lossless round-trip. Some of a deck cannot be
  * expressed through the public write API, and some of it cannot even be seen through the
- * public read API — measurement against the fixture corpus found the read side is the
+ * public read API. Measurement against the fixture corpus found the read side is the
  * tighter of the two. Rather than warn about that to a log, every loss is a
  * {@link FidelityNote} attached to the IR, which makes the losses testable: a round-trip
  * check excludes exactly the noted fields and treats any other difference as a defect.
@@ -53,10 +53,10 @@ export type {
 export { LAYOUT_NOTE_PREFIX } from './script/fidelity.js'
 export type { Cause, Disposition, FidelityNote } from './script/fidelity.js'
 
-// Error taxonomy — see `entry-errors.ts`. Re-exported from every entry so `instanceof`
+// Error taxonomy: see `entry-errors.ts`. Re-exported from every entry so `instanceof`
 // works whichever subpath a consumer imports.
 export * from './entry-errors.js'
 
-// Diagnostics — see `entry-diagnostics.ts`. Re-exported from every entry so a consumer of any
+// Diagnostics: see `entry-diagnostics.ts`. Re-exported from every entry so a consumer of any
 // subpath can install a handler for the warnings that subpath emits.
 export * from './entry-diagnostics.js'

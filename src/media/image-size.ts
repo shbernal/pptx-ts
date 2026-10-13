@@ -2,8 +2,8 @@
  * Intrinsic image geometry: reading a natural pixel size out of header bytes, and the
  * `<a:srcRect>` crop math that fits that natural size into a display box.
  *
- * Shared by both sides of the library — the write path (`addImage({ sizing })`) and the read
- * API's `Picture.setImage({ fit })` — which is why it lives outside `gen/` and `read/`.
+ * Shared by both sides of the library, the write path (`addImage({ sizing })`) and the read
+ * API's `Picture.setImage({ fit })`, which is why it lives outside `gen/` and `read/`.
  * Everything here is synchronous and pure: headers only, never pixel decoding.
  */
 
@@ -14,8 +14,8 @@ import { IMAGE_FORMATS } from './image-formats.js'
 /**
  * Read the intrinsic dimensions of an image from its header bytes.
  * - synchronous: parses only file-format headers, never decodes pixels
- * - raster: PNG, JPEG, GIF, BMP, TIFF, and WebP (VP8 / VP8L / VP8X) — natural pixels
- * - vector: SVG — intrinsic size from the root `<svg>` width/height or viewBox
+ * - raster: PNG, JPEG, GIF, BMP, TIFF, and WebP (VP8 / VP8L / VP8X): natural pixels
+ * - vector: SVG, with the intrinsic size from the root `<svg>` width/height or viewBox
  * - unrecognized formats return `null` (no measurable intrinsic size)
  *
  * Used by image `sizing: 'cover' | 'contain'` to compute an aspect-correct
@@ -29,7 +29,7 @@ export function getImageSizeFromBase64(dataB64: string): { w: number; h: number 
 }
 
 /**
- * Read the intrinsic dimensions of an image from raw header bytes — the
+ * Read the intrinsic dimensions of an image from raw header bytes: the
  * byte-level core shared by {@link getImageSizeFromBase64} and the read API's
  * `Picture.setImage({ fit })`, which already holds the media bytes.
  * @param {Uint8Array} b - image bytes

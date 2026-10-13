@@ -5,12 +5,12 @@
  * (`style{N}.xml`, `cs:chartStyle`) and a chart-color-style part (`colors{N}.xml`,
  * `cs:colorStyle`), linked from the chartEx part's `.rels` via the MS `chartStyle` /
  * `chartColorStyle` relationship types. This is NOT optional: PowerPoint reports a chartEx deck
- * that lacks them as corrupt (0x80070570) — a failure the OOXML schema validator does not catch,
+ * that lacks them as corrupt (0x80070570), a failure the OOXML schema validator does not catch,
  * found via the desktop COM smoke (`pnpm run test:com`).
  *
  * The two payloads below are PowerPoint's own generic, chart-type-agnostic defaults (the same
  * boilerplate Office writes for any new chartEx chart), captured verbatim and shipped as a static
- * template — analogous to the default theme/worksheet boilerplate the library already embeds. They
+ * template, analogous to the default theme/worksheet boilerplate the library already embeds. They
  * reference theme scheme colors, so they adapt to the deck theme without per-chart customization.
  */
 

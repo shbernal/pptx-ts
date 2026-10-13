@@ -8,7 +8,7 @@
  *   when the duration matches a coarse `spd` speed bucket; and
  * - **wrapped** `<mc:AlternateContent>` carrying a `<mc:Choice Requires="p14">`
  *   whose `p:transition` adds the precise `p14:dur` (milliseconds), plus a base
- *   `<mc:Fallback>` without it — emitted for an off-bucket exact duration.
+ *   `<mc:Fallback>` without it. This form is emitted for an off-bucket exact duration.
  *
  * The getter prefers the `p14` Choice (so `durationMs` is recovered); the setter
  * emits the `mc:AlternateContent` form when `durationMs` is set and the bare form
@@ -29,7 +29,7 @@ import {
 	type Element,
 } from '../oxml/dom.js'
 
-/** `ST_TransitionSpeed` — the coarse speed bucket (`spd`), default `fast`. */
+/** `ST_TransitionSpeed`: the coarse speed bucket (`spd`), default `fast`. */
 export type TransitionSpeed = 'slow' | 'med' | 'fast'
 
 /** Decoded slide transition (`p:transition`), as returned by {@link Slide.transition}. */
@@ -151,7 +151,7 @@ export function findTransition(root: Element): { transition: Element; outer: Ele
 		const choice = firstChild(altContent, 'mc:Choice')
 		const transition = choice ? firstChild(choice, 'p:transition') : null
 		if (transition) return { transition, outer: altContent }
-		// Degenerate AlternateContent with only a Fallback — still surface it.
+		// Degenerate AlternateContent with only a Fallback: still surface it.
 		const fallback = firstChild(altContent, 'mc:Fallback')
 		const fbTransition = fallback ? firstChild(fallback, 'p:transition') : null
 		if (fbTransition) return { transition: fbTransition, outer: altContent }

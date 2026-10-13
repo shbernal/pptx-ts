@@ -1,5 +1,5 @@
 /**
- * Decoding a shape's `a:effectLst` — shadow, glow, reflection, soft edge.
+ * Decoding a shape's `a:effectLst`: shadow, glow, reflection, soft edge.
  *
  * Free functions over `(effectLst, ctx)` rather than methods, because that is all they ever
  * needed: the block was five getters and two private helpers on `Shape` whose only reference
@@ -8,7 +8,7 @@
  * per-concern modules `shapes/` already has (`oxml.ts`, `geometry.ts`).
  *
  * Every decoder returns `null` for an absent element rather than an empty object, and leaves an
- * unstated attribute off its result rather than defaulting it — "absent" and "stated as the
+ * unstated attribute off its result rather than defaulting it. "Absent" and "stated as the
  * default" are different facts about the source part, and a replica that has to carry the
  * effect needs to know which it is.
  */
@@ -49,7 +49,7 @@ function effect(effectLst: Element | null, qname: string): Element | null {
  */
 function readShadow(shdw: Element, ctx: ColorContext): OuterShadow {
 	// `a:EG_ColorChoice` is a required, single-member group, so the colour element is the shadow's
-	// only child and taking the first one is both correct and total — the same thing `glow` below
+	// only child and taking the first one is both correct and total, the same thing `glow` below
 	// does. Naming `a:srgbClr` and `a:schemeClr` explicitly dropped the other four models on the
 	// floor: `a:sysClr` resolves everywhere else in the read model, and this library emits
 	// `a:prstClr` itself (`gen/slide/notes.ts`). `resolveColor` now answers for five of the six

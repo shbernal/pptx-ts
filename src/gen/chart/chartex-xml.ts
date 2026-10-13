@@ -1,7 +1,7 @@
 /**
  * pptx-ts: chartEx (`cx:`) Chart Assembly
  *
- * Builds a chartEx chart part `ppt/charts/chartEx{N}.xml` — the `<cx:chartSpace>` for the
+ * Builds a chartEx chart part `ppt/charts/chartEx{N}.xml`: the `<cx:chartSpace>` for the
  * Office-2016 chart family (currently `waterfall`, `funnel`, `treemap`, `sunburst`, `histogram`,
  * `pareto`, `boxWhisker`, `regionMap`).
  * This is the chartEx analogue of
@@ -33,7 +33,7 @@ import { type XsdBool, xsdBool } from '../../ooxml/xsd-boolean.js'
 
 /**
  * Map a chartEx {@link ChartType} to its `<cx:series layoutId>` token (the CT_SeriesLayout value
- * PowerPoint keys the chart geometry on). Throws on anything it does not own — see the `default`
+ * PowerPoint keys the chart geometry on). Throws on anything it does not own; see the `default`
  * arm for which members those are and why reaching it is a routing bug.
  */
 function chartExLayoutId(type: ChartType): string {
@@ -54,8 +54,8 @@ function chartExLayoutId(type: ChartType): string {
 		case ChartType.regionMap:
 			return 'regionMap'
 		default:
-			// The unmatched members are the classic 2007 catalog — owned by `makeChartType` in
-			// `./chart-xml` — plus `pareto`, which is multi-series and is diverted to `makeParetoSeries`
+			// The unmatched members are the classic 2007 catalog (owned by `makeChartType` in
+			// `./chart-xml`) plus `pareto`, which is multi-series and is diverted to `makeParetoSeries`
 			// before any single layoutId is asked for. Both are unreachable through `isChartExType`
 			// routing; `''` here used to emit `<cx:series layoutId="">`, which PowerPoint cannot render.
 			throw new InternalError(
@@ -69,7 +69,7 @@ function chartExLayoutId(type: ChartType): string {
 /**
  * A deterministic `uniqueId` GUID for a `<cx:series>`, derived from the chart's package-global id.
  * PowerPoint stamps a random GUID here; deriving it keeps output byte-stable (the project pins
- * chart determinism — the package-wide id this derives from is assigned at write time in
+ * chart determinism; the package-wide id this derives from is assigned at write time in
  * `package/assemble.ts`, STEP 2). `seriesIdx`
  * distinguishes multiple series within one chart (pareto emits two), varying the 4th GUID group so
  * every series still gets a distinct id.
@@ -86,10 +86,10 @@ function chartExLegendPos(pos: string | undefined): string {
 /**
  * The `<cx:axisId>` binding on a `<cx:series>` (which value/category axis the series plots against).
  *
- * NOTE — a schema-vs-PowerPoint divergence (the exact mirror of the histogram `binCount` gotcha):
+ * NOTE: a schema-vs-PowerPoint divergence (the exact mirror of the histogram `binCount` gotcha):
  * the OpenXML SDK models `cx:axisId` as an `OpenXmlLeafTextElement`, so the OOXML validator only
  * accepts the text-content form `<cx:axisId>1</cx:axisId>` and flags the `val` attribute as
- * undeclared. But PowerPoint desktop REFUSES to open a deck using the text form (0x80070570) — it
+ * undeclared. But PowerPoint desktop REFUSES to open a deck using the text form (0x80070570). It
  * writes and requires the ATTRIBUTE form `<cx:axisId val="1"/>` (matching the classic `c:axId`).
  * PowerPoint is the authoritative oracle here, so the attribute form is emitted; the resulting
  * validator complaint on `cx:axisId/@val` is expected and whitelisted in the schema-case test.
@@ -100,13 +100,13 @@ function makeChartExAxisId(id: number): string {
 
 /**
  * Build the histogram `<cx:binning>` element from the caller's `binning` opt. PowerPoint bins the
- * raw observations automatically; the only control wired here is `intervalClosed` — whether each
+ * raw observations automatically; the only control wired here is `intervalClosed`: whether each
  * bin interval is right-closed (`"r"`, PowerPoint's default) or left-closed (`"l"`).
  *
  * NOTE: explicit bin geometry (`binCount`/`binSize` child elements, `underflow`/`overflow`
  * attributes) is intentionally NOT emitted. Although `<cx:binCount>`/`<cx:binSize>` pass OOXML
  * schema validation (they are declared children of `cx:binning` in the OpenXML SDK), PowerPoint
- * desktop refuses to open a deck that contains them (0x80004005) — so shipping them would corrupt
+ * desktop refuses to open a deck that contains them (0x80004005), so shipping them would corrupt
  * the file. They stay deferred until their real requirements are pinned down against PowerPoint.
  */
 function makeChartExBinning(binning: ChartExBinning | undefined): string {
@@ -114,7 +114,7 @@ function makeChartExBinning(binning: ChartExBinning | undefined): string {
 }
 
 /**
- * Build the box-and-whisker `<cx:layoutPr>` body — a `<cx:visibility>` toggle set plus a
+ * Build the box-and-whisker `<cx:layoutPr>` body: a `<cx:visibility>` toggle set plus a
  * `<cx:statistics>` quartile-method choice, in that document order (what PowerPoint itself emits).
  * All flags default to PowerPoint's own defaults: exclusive quartiles, mean marker on, outlier
  * points on, the mean-line and the full non-outlier scatter off. Booleans map to the `0`/`1`
@@ -135,16 +135,16 @@ function makeBoxWhiskerLayoutPr(stats: ChartExStatistics | undefined): string {
 }
 
 /**
- * Build the region-map `<cx:layoutPr>` body — a single `<cx:geography>` hint telling PowerPoint how
+ * Build the region-map `<cx:layoutPr>` body: a single `<cx:geography>` hint telling PowerPoint how
  * to interpret the category labels as geographic region names. `cultureLanguage`/`cultureRegion`
  * (both schema-REQUIRED) resolve ambiguous names (e.g. "Georgia" the country vs. the US state);
  * `attribution` is Bing's fixed acknowledgement string.
  *
- * NOTE — PowerPoint itself also nests a `<cx:geoCache>` here holding a base64 binary blob: its
+ * NOTE: PowerPoint itself also nests a `<cx:geoCache>` here holding a base64 binary blob: its
  * cached Bing geometry for the resolved regions. That blob is produced by an online Bing lookup and
  * cannot be reproduced offline, so it is intentionally OMITTED. PowerPoint re-resolves the geography
  * from the region names when the deck is opened (verified over COM: the deck opens and reads back as
- * a regionMap either way) — this is why a region map is documented as best-effort/write-only and
+ * a regionMap either way). This is why a region map is documented as best-effort/write-only and
  * renders blank if the names don't match PowerPoint's geography database.
  */
 function makeGeographyLayoutPr(geo: ChartExGeography | undefined): string {
@@ -182,7 +182,7 @@ function makeChartExDataLabels(rel: SlideRelChart): string {
 }
 
 /**
- * Build the pareto `<cx:series>` PAIR — pareto is the first chartEx layout that emits more than one
+ * Build the pareto `<cx:series>` PAIR; pareto is the first chartEx layout that emits more than one
  * series. Series 0 is a `clusteredColumn` bound to value axis 1 whose `<cx:aggregation/>` tells
  * PowerPoint to sum the values per category, sort the bars descending, and drive the cumulative
  * line. Series 1 is the `paretoLine` itself: it carries `ownerIdx="0"` (it derives its data from
@@ -272,8 +272,8 @@ const CHARTEX_CAT_GAP_WIDTH: Partial<Record<ChartType, string>> = {
 /**
  * Build the `<cx:axis>` list for a layout, matched to what PowerPoint itself emits for each.
  *
- * Four of the five axis-bearing layouts are the same pair — a category axis (id 0) and a
- * gridlined value axis (id 1) — differing only in gap width, so they are a table rather than
+ * Four of the five axis-bearing layouts are the same pair, a category axis (id 0) and a
+ * gridlined value axis (id 1), differing only in gap width, so they are a table rather than
  * four arms. The two that are not: the **funnel** has a SINGLE category axis, which PowerPoint
  * numbers id 1, with no value axis and no gridlines (its bars run horizontally off one
  * category scale); and the **pareto** adds a third axis for its cumulative line.

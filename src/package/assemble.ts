@@ -1,10 +1,10 @@
 /**
  * Package assembly: turn an authored presentation's internal state into the full set of
  * OOXML package parts and hand the bytes to the ZIP writer. This is the write-side
- * "packaging" layer — `[Content_Types].xml`, the `_rels` graph, docProps, theme, the
- * per-slide/layout/master parts, and media rels — split out of the authoring class
+ * "packaging" layer (`[Content_Types].xml`, the `_rels` graph, docProps, theme, the
+ * per-slide/layout/master parts, and media rels), split out of the authoring class
  * (`PptxTs`) so that class stays a façade over slide authoring. The parts a construct
- * family adds on top of that skeleton — charts, comments, notes — come from the part
+ * family adds on top of that skeleton (charts, comments, notes) come from the part
  * contributors it is handed, so nothing here names a family.
  *
  * The entry point `writePackage` takes a structural {@link PackageSource} that the
@@ -63,12 +63,12 @@ export interface PackageSource {
 	/**
 	 * Which renderer emits each shape family, handed down to every part that carries a shape tree
 	 * (slides, layouts, the master). It travels with the deck state rather than being imported by
-	 * the shape walk so that the set of families a program links is the caller's to decide — see
-	 * `RendererTable` in `gen/slide/objects/shared.ts`.
+	 * the shape walk so that the set of families a program links is the caller's to decide (see
+	 * `RendererTable` in `gen/slide/objects/shared.ts`).
 	 */
 	readonly renderers: RendererTable
 	/**
-	 * Which construct families add parts to the package — the chart parts and their embedded
+	 * Which construct families add parts to the package: the chart parts and their embedded
 	 * workbooks, the comment parts, the notes slides. Travels with the deck state for the same
 	 * reason `renderers` does: naming the emitters here would link every family's part builders
 	 * into every program that writes a deck. See `PartContributor` in `parts/shared.ts`.
@@ -111,7 +111,7 @@ const ALREADY_COMPRESSED_MEDIA_EXTN = new Set([
 ])
 
 /**
- * Extensions whose payload is itself a ZIP archive — the embedded OPC packages an OLE object can
+ * Extensions whose payload is itself a ZIP archive: the embedded OPC packages an OLE object can
  * carry (`addOleObject`). Deflating a zip inside a zip buys nothing, so these are STOREd like the
  * already-compressed media above. No media/image rel ever uses one of these extensions, so decks
  * without an OLE object are unaffected.
@@ -161,7 +161,7 @@ function createMediaParts(slide: PartTarget, zip: ZipWriter, written: Set<string
 
 /**
  * One emitted OOXML package part, before zipping: its slash-path, already-encoded bytes, and
- * whether it is added with `store` (DEFLATE skipped — already-compressed media/fonts). This is
+ * whether it is added with `store` (DEFLATE skipped for already-compressed media/fonts). This is
  * the build-side seam {@link buildPackageParts} returns and {@link zipPackageParts} consumes;
  * the `store` hint is an fflate-era zip optimization kept internal so re-zipping stays
  * byte-identical. A public parts API exposes only `{ path, data }`.
@@ -178,7 +178,7 @@ interface InternalPackagePart {
  * media de-dup, chart-part-id assignment, and measured-fit passes before the synchronous
  * XML pass reads slide state. The bytes are the same the ZIP writer would compress; splitting the
  * assembly from the zip lets the byte-identity harness (and a future parts API) read parts
- * directly. Only `onMediaError` is meaningful here — compression/output shape are zip concerns
+ * directly. Only `onMediaError` is meaningful here; compression/output shape are zip concerns
  * handled by {@link zipPackageParts}.
  */
 export async function buildPackageParts(
@@ -211,7 +211,7 @@ export async function buildPackageParts(
 	return await encodeMediaForTargets(mediaTargets, source.runtime, onMediaError).then(async () => {
 		// PERF: Collapse identical media to a single package part across the entire deck.
 		// Each target (slide/layout/master) namespaces its media `Target` by slide, so the
-		// same image used on multiple slides — or loaded from the same path — otherwise
+		// same image used on multiple slides (or loaded from the same path) otherwise
 		// embeds one copy per use. By now `encodeSlideMediaRels` has populated every
 		// `rel.data`, so we can point later duplicates at the first occurrence's `Target`
 		// (slide `.rels` reference media by rId, and sharing a part across slides is valid
@@ -238,8 +238,8 @@ export async function buildPackageParts(
 		// packages. Chart parts share one `ppt/charts/` namespace across slides, layouts, and
 		// the master, so the id must be package-wide; `addChartDefinition` only sets a
 		// target-local placeholder. This is the authoritative assignment consumed by content
-		// types, slide rels, and the chart/embedding parts below — all emitted after this pass.
-		// A never-reset module global in `gen/define/chart.ts` previously drove this — same
+		// types, slide rels, and the chart/embedding parts below, all emitted after this pass.
+		// A never-reset module global in `gen/define/chart.ts` previously drove this: same
 		// input, different bytes. `gen/chart/chartex-xml.ts` derives its series GUIDs from
 		// the id assigned here, so both depend on this pass staying authoritative.
 		let chartPartIdx = 0
@@ -340,7 +340,7 @@ export async function buildPackageParts(
 
 /**
  * Zip an ordered list of package parts into the output shape `props.outputType` selects. Re-adds
- * each part to a fresh {@link ZipWriter} in order — preserving each part's `store` hint — so the
+ * each part to a fresh {@link ZipWriter} in order (preserving each part's `store` hint), so the
  * archive is byte-identical to assembling straight into one writer. Compression and output type
  * are the only zip-level knobs; part assembly happened in {@link buildPackageParts}.
  */

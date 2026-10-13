@@ -3,10 +3,10 @@
  * → theme walk that turns a `schemeClr` token into a literal hex, plus the
  * `a:solidFill` helper the read-model colour getters share.
  *
- * One implementation backs two callers — the read-model getters
+ * One implementation backs two callers: the read-model getters
  * (`Slide.themeContext` → `Shape.resolvedFill` / `Run.resolvedColor`) and the
  * `importSlide` `theme: 'preserve'` flatten path, which layers its `fmtScheme` /
- * background needs on top of {@link resolveSlideThemeParts} — so a token resolves
+ * background needs on top of {@link resolveSlideThemeParts}. So a token resolves
  * identically whether it is read or baked.
  */
 import { applyColorTransforms, type ColorTransform } from '../oxml/color-transform.js'
@@ -68,7 +68,7 @@ function documentElement(opc: OpcPackage, partName: string | null): Element | nu
 /**
  * The presentation's `p:defaultTextStyle` (`presentation.xml`, reached via the
  * package `officeDocument` relationship), or `null` when absent. This is
- * PowerPoint's lowest-priority text fallback — the bottom tier of a slide run's
+ * PowerPoint's lowest-priority text fallback: the bottom tier of a slide run's
  * size/colour/face/bold resolution (see `ThemeContext.defaultTextStyle`).
  */
 function presentationDefaultTextStyle(opc: OpcPackage): Element | null {
@@ -128,7 +128,7 @@ export function resolveSlideColorContext(opc: OpcPackage, parts: SlideThemeParts
 		// a placeholder-inherited value the same way the flatten path does.
 		layoutRoot,
 		masterRoot,
-		// The presentation's default text style — the lowest-priority tier a slide run
+		// The presentation's default text style: the lowest-priority tier a slide run
 		// (placeholder or not) falls back to when it resolves nothing above it.
 		defaultTextStyle: presentationDefaultTextStyle(opc),
 	}
@@ -148,7 +148,7 @@ export function resolveSlideColorContext(opc: OpcPackage, parts: SlideThemeParts
  * are deliberately left absent. Instead the notesMaster's `p:notesStyle` is carried
  * as `notesStyle`, and the notes body `TextFrame` is built with a placeholder
  * context (see `NotesPlaceholder`) so a body run's
- * effective size/face/bold (and inherited colour) resolve against it — the notes
+ * effective size/face/bold (and inherited colour) resolve against it, the notes
  * analogue of the slide placeholder chain. The maps are empty when the
  * notesMaster/theme chain is incomplete, in which case tokens stay unresolved.
  */
@@ -164,7 +164,7 @@ export function resolveNotesColorContext(opc: OpcPackage, notesPartName: string)
 		// literal face; the writer's notesStyle uses +mn-lt, so an authored notes run that
 		// omits its own face resolves through here.
 		...themeTier(themeElements),
-		// The notesMaster's text style — the tier a notes-body run's inherited
+		// The notesMaster's text style: the tier a notes-body run's inherited
 		// size/face/bold/colour resolves against (see `ThemeContext.notesStyle`).
 		notesStyle: masterRoot ? firstChild(masterRoot, 'p:notesStyle') : null,
 	}
@@ -174,7 +174,7 @@ export function resolveNotesColorContext(opc: OpcPackage, notesPartName: string)
  * The colour context a *slide master*'s own getters resolve against: the master's
  * `p:clrMap` plus its theme's `clrScheme`/`fmtScheme`/`fontScheme` (walked master →
  * theme). Backs the text frames of `SlideMaster`'s
- * placeholders — a master placeholder run's own `schemeClr` resolves to a literal
+ * placeholders: a master placeholder run's own `schemeClr` resolves to a literal
  * hex the same way a slide run's does. `masterRoot` is carried so an inherited
  * placeholder value still resolves against the master's own text styles. The maps
  * are empty when the theme is missing, in which case tokens stay unresolved.
@@ -194,7 +194,7 @@ export function resolveMasterColorContext(opc: OpcPackage, masterPartName: strin
  * The colour context a *slide layout*'s own getters resolve against: walk layout →
  * master → theme. The effective `clrMap` is the layout's own
  * `p:clrMapOvr/a:overrideClrMapping` when present (rare), else the master's
- * `p:clrMap` — the layout's usual `a:masterClrMapping` means "inherit the master
+ * `p:clrMap`. The layout's usual `a:masterClrMapping` means "inherit the master
  * map". `clrScheme`/`fmtScheme`/`fontScheme` come from the master's theme, and both
  * `layoutRoot`/`masterRoot` are carried for inherited-placeholder resolution. Backs
  * the text frames of `SlideLayout`'s placeholders.
@@ -257,8 +257,8 @@ export interface PlaceholderRef {
  * The colour a run effectively renders when its own `a:rPr` defines none,
  * resolved to a full {@link ResolvedColor}. Walks the inheritance the way
  * PowerPoint does: the paragraph's `a:pPr/a:defRPr` colour, then the slide text
- * body's `a:lstStyle` colour for the run's `level`, then — only for a placeholder
- * run — the placeholder's layout → master → master-`p:txStyles` chain (via
+ * body's `a:lstStyle` colour for the run's `level`, then (only for a placeholder
+ * run) the placeholder's layout → master → master-`p:txStyles` chain (via
  * {@link placeholderInheritedFill}), then the presentation's `p:defaultTextStyle`
  * for the run's level (`ctx.defaultTextStyle`). The first tier that defines a
  * colour wins. `ph` is `null` for a non-placeholder run, which skips the
@@ -288,11 +288,11 @@ export function resolveInheritedRunColor(
 /**
  * The `a:defRPr` tiers a run resolves an inherited character property against, in
  * priority order: the paragraph's `a:pPr/a:defRPr`, then the slide text body's
- * `a:lstStyle` level `a:defRPr`, then — only for a placeholder run — the
+ * `a:lstStyle` level `a:defRPr`, then (only for a placeholder run) the
  * placeholder's layout → master → master-`p:txStyles` chain (via
  * {@link placeholderInheritedDefRPrs}), then the presentation's
  * `p:defaultTextStyle` level `a:defRPr` (`ctx.defaultTextStyle`). The first tier
- * that defines the property wins — each property resolves independently, mirroring
+ * that defines the property wins; each property resolves independently, mirroring
  * how the colour resolver walks the same chain. `ph` is `null` for a
  * non-placeholder run, which skips the placeholder chain but still reaches
  * `p:defaultTextStyle`.
@@ -368,8 +368,8 @@ export function resolveInheritedRunFontFace(
  * {@link resolveInheritedRunSize}: the first `a:defRPr/@<name>` in the paragraph →
  * slide → (placeholder) layout → master → `p:txStyles` → `p:defaultTextStyle`
  * chain. The first tier that *states* the attribute wins, and its value is parsed
- * by {@link boolValue} — the same `xsd:boolean` parser the run's own `bold`/`italic`
- * getters use — so an unparseable value reports `null` rather than being read as
+ * by {@link boolValue} (the same `xsd:boolean` parser the run's own `bold`/`italic`
+ * getters use), so an unparseable value reports `null` rather than being read as
  * `false`. `null` when nothing in the chain states it.
  */
 function resolveInheritedRunFlag(
@@ -470,7 +470,7 @@ export function resolveInheritedFrame(ph: PlaceholderRef, ctx: ThemeContext): Re
  *
  * `hex` is the **base** token colour and `transforms` reports the colour-transform
  * children (`lumMod`/`lumOff`/`shade`/`tint`/`alpha`/…) in document order as
- * `{ name, value }` pairs — both kept for traceability and for the
+ * `{ name, value }` pairs, both kept for traceability and for the
  * `theme: 'preserve'` flatten path that re-emits the transforms verbatim.
  *
  * `effectiveHex` is the colour a renderer actually paints: `hex` with its
@@ -487,8 +487,8 @@ export interface ResolvedColor {
 
 /**
  * Resolve a DrawingML colour *element* (every `a:EG_ColorChoice` member except
- * `a:scrgbClr` — see `read/oxml/theme.ts`) against `ctx` into a full
- * {@link ResolvedColor} — base hex, raw transform list,
+ * `a:scrgbClr`; see `read/oxml/theme.ts`) against `ctx` into a full
+ * {@link ResolvedColor}: base hex, raw transform list,
  * and the `effectiveHex`/`alpha` after applying those transforms. `null` when the
  * element cannot be made literal (unmapped token, or a colour model we do not
  * resolve). Shared by the solid-fill and gradient-stop colour reads.
@@ -562,7 +562,7 @@ export function resolveSolidFillColor(container: Element | null, ctx: ColorConte
  * `Shape.resolvedFill` when the shape carries no
  * explicit `spPr` fill choice. `null` when there is no `fillRef`, it cannot be
  * resolved, or the indexed style entry is not a solid fill (a gradient style fill
- * has no single colour — read it through `gradientStops` instead).
+ * has no single colour; read it through `gradientStops` instead).
  */
 export function resolveStyleFillColor(shape: Element, ctx: ThemeContext): ResolvedColor | null {
 	const style = firstChild(shape, 'p:style')
@@ -593,7 +593,7 @@ export interface StyleFontRef {
 
 /**
  * Resolve the text colour and typeface a shape derives from its `p:style/a:fontRef`
- * (the style-matrix font reference) — the tier PowerPoint applies to a shape's runs
+ * (the style-matrix font reference): the tier PowerPoint applies to a shape's runs
  * just below their own `a:rPr` and above the placeholder/`p:defaultTextStyle` chain.
  * The `a:fontRef` child colour resolves through `ctx` like any other (it can carry
  * `lumMod`/`shade` transforms); `@idx` (`major`|`minor`|`none`) maps to the theme's

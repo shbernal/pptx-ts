@@ -5,7 +5,7 @@
  * elements resolved against the same tiers: a `Slide`,
  * a `SlideLayout`, and a
  * `SlideMaster`. A shape proxy therefore holds a
- * back-reference to its *host* rather than to a slide specifically — it needs the
+ * back-reference to its *host* rather than to a slide specifically. It needs the
  * owning part (to mark dirty and to build text frames against), that part's
  * relationships (image embeds, hyperlinks, chart parts), the deck's package (to
  * reach a referenced part), the host's resolved theme context (so a `schemeClr`
@@ -31,7 +31,7 @@ export interface ShapeHost {
 	readonly partName: string
 	/** The package the host belongs to, for reaching a referenced part (image, chart, …). */
 	readonly opc: OpcPackage
-	/** {@link part}'s relationships — image embeds, hyperlinks, chart references. */
+	/** {@link part}'s relationships: image embeds, hyperlinks, chart references. */
 	readonly relationships: Relationships
 	/** The host's resolved colour/font context, backing every `resolved*` getter. */
 	themeContext(): ThemeContext

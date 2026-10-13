@@ -2,15 +2,15 @@
  * pptx-ts: the chart contribution to a written package
  *
  * The expensive one. A chart rel pulls in its `chart.xml`, the embedded workbook PowerPoint opens
- * when the user edits the data, the chart part's own rels, and — for a chartEx chart — the
+ * when the user edits the data, the chart part's own rels, and (for a chartEx chart) the
  * style/colors sidecars without which PowerPoint reports the deck as corrupt. `createExcelWorksheet`
  * reaches every plot module, axis and sidecar builder under `gen/chart/`, which is why the packager
  * must not name it: doing so put ~22 kB gzip of chart code in the graph of a text-only deck.
  *
  * What is *not* here: the pass that assigns each chart rel its `globalId`, filename and Target.
- * That is package-wide ordering rather than chart knowledge — it numbers across slides, layouts and
+ * That is package-wide ordering rather than chart knowledge. It numbers across slides, layouts and
  * the master before anything is written, and `gen/chart/chartex-xml.ts` derives series GUIDs from
- * the id it hands out — so it stays on the core path in `package/assemble.ts`.
+ * the id it hands out, so it stays on the core path in `package/assemble.ts`.
  */
 
 import type { ZipWriter } from '../../zip.js'

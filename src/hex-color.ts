@@ -2,7 +2,7 @@
  * pptx-ts: hex colour text, in the one spelling both halves use.
  *
  * A caller may write a colour with or without a leading `#`, and the library accepts both
- * everywhere — which means every site that validates or parses one strips it first. Those
+ * everywhere, which means every site that validates or parses one strips it first. Those
  * strips had drifted into three spellings across six sites, and one of them was not
  * anchored: `.replace('#', '')` takes the `#` out of `'FF00#0'` and hands `'FF000'` on, which
  * then fails the six-digit test and takes a different branch than the anchored forms would.
@@ -10,8 +10,8 @@
  * test at each site.
  *
  * This lives at the root rather than under `gen/` or `read/` because both halves need it:
- * the emitters strip on the way in, the readers strip on the way back out — and for the same
- * reason the *validation* belongs here too. `REGEX_HEX_COLOR` used to live in
+ * the emitters strip on the way in, the readers strip on the way back out. For the same
+ * reason, the *validation* belongs here too. `REGEX_HEX_COLOR` used to live in
  * `constants-internal.ts`, which is a write-side module the read path cannot import, so the read
  * path re-spelled the regex; so did one write-side site. Six sites, three spellings of one fact.
  */
@@ -24,7 +24,7 @@
  */
 const REGEX_HEX_COLOR = /^[0-9a-fA-F]{6}$/
 
-/** An 8-hex RGBA colour, `#` already stripped — {@link splitRgbaHex}'s test. */
+/** An 8-hex RGBA colour, `#` already stripped: {@link splitRgbaHex}'s test. */
 const REGEX_ARGB_HEX = /^[0-9a-fA-F]{8}$/
 
 /** Strip a single leading `#` from a colour, leaving any other character alone. */
@@ -59,8 +59,8 @@ function isArgbHex(value: string): boolean {
  * unchanged with no alpha.
  *
  * `#` is stripped first, so both spellings reach the same answer. Two sites parsed this by
- * hand — `createColorElement`, which turns the alpha into an `<a:alpha>` sibling, and
- * `normalizeShadowOptions`, which turns it into a shadow's `_alpha` — and they divided by 255 at
+ * hand (`createColorElement`, which turns the alpha into an `<a:alpha>` sibling, and
+ * `normalizeShadowOptions`, which turns it into a shadow's `_alpha`), and they divided by 255 at
  * different points in their arithmetic.
  * @param value - the caller's colour, with or without a leading `#`
  */

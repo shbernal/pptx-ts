@@ -8,8 +8,8 @@
  *
  * The single most important thing this module does is record what it cannot carry.
  * Measurement against the fixture corpus found the binding constraint is the *read* side,
- * not the write side — several constructs the write API can express have no accessor at
- * all — so a converter that mapped only what it could see would produce clean-looking
+ * not the write side (several constructs the write API can express have no accessor at
+ * all), so a converter that mapped only what it could see would produce clean-looking
  * output with silent visual losses. The clearest is theme-referenced line styling: a shape
  * whose outline comes from `p:style/a:lnRef` reports a colour through `resolvedLine` but
  * reports `null` for width and dash, because there is a resolved-colour path and no
@@ -18,7 +18,7 @@
  *
  * The same dispatch serves the deck's *chrome*: {@link masterObject} re-tags a call as an
  * entry in a `defineSlideMaster({ objects })` array, so a rectangle on a layout is transcribed
- * by the code that transcribes one on a slide. Sharing it is the point — a second mapper would
+ * by the code that transcribes one on a slide. Sharing it is the point: a second mapper would
  * be a second set of decisions about the same OOXML, drifting from this one silently.
  */
 import {
@@ -73,7 +73,7 @@ import { PLACEHOLDER_TYPES } from '../../ooxml/st-enums.js'
 import { glowOption, lineOption, noteHidden, shadowOption, styleOptions, transformOptions } from './shape-paint.js'
 
 /**
- * Map one shape. Returns `null` when the shape produces no call at all — a note is always
+ * Map one shape. Returns `null` when the shape produces no call at all. A note is always
  * recorded in that case, so a dropped shape is never silent.
  */
 export function shapeCall(shape: AnyShape, ctx: MapContext): CallIr | null {
@@ -273,7 +273,7 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 
 	// No text and no geometry of its own: an empty placeholder, whose shape comes from the
 	// layout it inherits. `addShape` needs a preset name and `addText` would author an
-	// invisible empty box, so the shape is dropped — which matches how it renders in a
+	// invisible empty box, so the shape is dropped, which matches how it renders in a
 	// slideshow, where an unfilled placeholder shows nothing. It is still a loss in the
 	// editor, so it is declared rather than assumed harmless.
 	if (preset === null) {
@@ -455,8 +455,8 @@ function customGeometryPoints(box: ShapeBox, custom: CustomGeometry): IrValue {
 					})
 					break
 				case 'arcTo':
-					// An arcTo carries no end point on either side — the renderer derives it from
-					// the pen position, radii and swept angle — so this maps one-to-one.
+					// An arcTo carries no end point on either side (the renderer derives it from
+					// the pen position, radii and swept angle), so this maps one-to-one.
 					points.push({
 						curve: { type: 'arc', wR: px(command.wR), hR: py(command.hR), stAng: command.stAng, swAng: command.swAng },
 					})
@@ -473,7 +473,7 @@ function customGeometryPoints(box: ShapeBox, custom: CustomGeometry): IrValue {
 /**
  * A `Picture` becomes `addImage`, with its bytes carried as an asset.
  *
- * PowerPoint authors embedded audio and video as a picture too — the poster frame is the
+ * PowerPoint authors embedded audio and video as a picture too: the poster frame is the
  * blip, and the media itself hangs off `p:nvPr` as `a:videoFile`/`a:audioFile`. That becomes
  * `addMedia` ({@link mediaCall}). Media `addMedia` cannot author, linked from outside the package,
  * is declared and kept as its poster frame.
@@ -502,7 +502,7 @@ function pictureCall(shape: Picture, ctx: MapContext): CallIr | null {
 	}
 
 	// The vector part wins when there is one. A PowerPoint SVG picture is an `asvg:svgBlip`
-	// extension over a raster fallback, and the fallback is the lossy copy — taking it would
+	// extension over a raster fallback, and the fallback is the lossy copy. Taking it would
 	// throw away the vector for no reason, since `addImage` accepts SVG bytes directly and
 	// regenerates a fallback of its own.
 	const partName = shape.svgPartName ?? shape.imagePartName
@@ -561,8 +561,8 @@ function pictureCall(shape: Picture, ctx: MapContext): CallIr | null {
 		line: lineOption(shape, notes),
 		...recolorOptions(shape, notes),
 		// `crop`, not `sizing`. Both exist and they are not interchangeable: `crop` is
-		// `a:srcRect` emitted verbatim as percentage edge insets — the exact model the read
-		// model reports — while `sizing: 'crop'` cuts a window in *displayed inches* against
+		// `a:srcRect` emitted verbatim as percentage edge insets (the exact model the read
+		// model reports), while `sizing: 'crop'` cuts a window in *displayed inches* against
 		// the image's measured natural size. Feeding fractions to `sizing` read them as
 		// inches, which shrank every cropped picture to a fraction of its box.
 		crop,
@@ -690,7 +690,7 @@ function recolorOptions(shape: Picture, notes: NoteScope): Record<string, IrValu
  * `ConnectorProps` keys that {@link lineOption} can produce. A connector styles its stroke
  * with *flat* options rather than the nested `line` object every other shape takes, and it
  * accepts a strict subset: no `transparency`, no gradient stroke, and its own `type` names
- * the routing (`straight`/`elbow`/`curved`), not a fill kind — so spreading a line option
+ * the routing (`straight`/`elbow`/`curved`), not a fill kind, so spreading a line option
  * object into it wholesale would both drop silently and collide.
  */
 const CONNECTOR_LINE_KEYS = [
@@ -891,7 +891,7 @@ function connectorBindings(shape: Connector, ctx: MapContext): Record<string, Ir
  * function rather than a condition spelled at each site: `graphicFrameCall` needs it to pick
  * a fidelity note, and `hasUnwritableContent` in `from-read/deck.ts` needs it to decide
  * whether the printer must copy the slide instead of transcribing it. Those were two
- * hand-maintained lists, they disagreed — the deck-level one named extended charts only — and
+ * hand-maintained lists, they disagreed (the deck-level one named extended charts only), and
  * a SmartArt slide was therefore transcribed with a hole where the graphic had been. The two
  * consequences are the same for every member, so the membership has to be too.
  */
@@ -952,8 +952,8 @@ function graphicFrameCall(shape: GraphicFrame, ctx: MapContext): CallIr | null {
  * Children keep slide-absolute coordinates, which is not a compromise here: `addGroup`
  * holds an identity child coordinate space (`chOff/chExt == off/ext`) at every depth
  * precisely so they can. Nested groups therefore nest rather than flatten. What does not
- * survive is a source group with a *non*-identity child space — that group scales its
- * contents when resized and the emitted one will not — so that case, and only that case,
+ * survive is a source group with a *non*-identity child space: that group scales its
+ * contents when resized and the emitted one will not, so that case, and only that case,
  * is noted.
  *
  * Charts, tables and placeholders are excluded from groups by the write API, so a group holding
@@ -1083,19 +1083,19 @@ function commonShapeVariant(call: CallIr): IrValue | null {
 /* ===== a layout's own shapes ===== */
 
 /**
- * One shape from a **layout's** shape tree as a `SlideMasterObject` — an entry in the
+ * One shape from a **layout's** shape tree as a `SlideMasterObject`: an entry in the
  * `objects` array of a `defineSlideMaster` call.
  *
  * Everything about the shape itself is decided by {@link shapeCall}, so a rectangle on a
  * layout is transcribed by the same code that transcribes one on a slide and cannot drift
  * from it. Only the *envelope* differs: `objects` is a key-tagged union rather than a method
- * name plus arguments — the same shape `GroupChildProps` takes — which is why this reads as a
+ * name plus arguments (the same shape `GroupChildProps` takes), which is why this reads as a
  * sibling of {@link asGroupChild}.
  *
  * `notes` must already be a `layoutShapeScope`, so the slide vocabulary this borrows lands
  * under `layout.` and cannot be mistaken for a loss on a slide.
  *
- * Two methods have no variant in the union. `addGroup` never reaches here — the layout walk
+ * Two methods have no variant in the union. `addGroup` never reaches here: the layout walk
  * flattens a group into its children first, since children already carry slide-absolute
  * coordinates. `addTable` genuinely has nowhere to go, and is the one kind this reports as
  * lost.

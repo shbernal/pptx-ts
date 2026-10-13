@@ -1,5 +1,5 @@
 /**
- * An auto shape, text box, or placeholder (`p:sp`) — the only shape kind that holds text.
+ * An auto shape, text box, or placeholder (`p:sp`): the only shape kind that holds text.
  */
 
 import { firstChild } from '../../oxml/dom.js'

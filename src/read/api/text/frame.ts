@@ -23,8 +23,8 @@ import { Paragraph } from './paragraph.js'
 import { setTextBodyText } from './edit.js'
 /**
  * A text frame's body properties (`a:bodyPr`), as read from a shape. Carries the
- * inset/anchor/vertical-text settings that govern where text sits inside its box
- * — the difference between a label that clears a left rail and one that overlaps
+ * inset/anchor/vertical-text settings that govern where text sits inside its box:
+ * the difference between a label that clears a left rail and one that overlaps
  * it. Only **explicitly set** attributes are reported; an absent inset means the
  * PowerPoint default (`lIns`/`rIns` = 0.1", `tIns`/`bIns` = 0.05").
  */
@@ -64,10 +64,10 @@ export interface ListStyleDefaults {
 
 /**
  * A text frame's vertical-autofit mode, read from its `a:bodyPr` autofit child:
- * - `'none'`       — `a:noAutofit`, or no autofit child at all (the box has a fixed
- *                    size and text can overflow); write-side `fit: 'none'`.
- * - `'normAutofit'`— `a:normAutofit` (shrink text to fit); write-side `fit: 'shrink'`.
- * - `'spAutoFit'`  — `a:spAutoFit` (resize the shape to fit text); write-side `fit: 'resize'`.
+ * - `'none'`: `a:noAutofit`, or no autofit child at all (the box has a fixed
+ *   size and text can overflow); write-side `fit: 'none'`.
+ * - `'normAutofit'`: `a:normAutofit` (shrink text to fit); write-side `fit: 'shrink'`.
+ * - `'spAutoFit'`: `a:spAutoFit` (resize the shape to fit text); write-side `fit: 'resize'`.
  */
 export type AutofitMode = 'none' | 'normAutofit' | 'spAutoFit'
 
@@ -75,8 +75,8 @@ export class TextFrame {
 	constructor(
 		private readonly txBody: Element,
 		/**
-		 * What the frame is read against — its part, the theme, the part's relationships and the
-		 * inheritance its runs fall back through — handed on to each {@link Paragraph} and {@link Run}.
+		 * What the frame is read against (its part, the theme, the part's relationships and the
+		 * inheritance its runs fall back through), handed on to each {@link Paragraph} and {@link Run}.
 		 */
 		private readonly context: TextContext
 	) {}
@@ -114,7 +114,7 @@ export class TextFrame {
 	/**
 	 * The frame's body properties (`a:bodyPr`: insets, anchor, vertical text), or
 	 * `null` when there is no `a:bodyPr`. Only explicitly-set insets are reported
-	 * (a missing side is the PowerPoint default — see {@link BodyProperties}).
+	 * (a missing side is the PowerPoint default; see {@link BodyProperties}).
 	 */
 	get bodyProperties(): BodyProperties | null {
 		const bodyPr = firstChild(this.txBody, 'a:bodyPr')
@@ -147,7 +147,7 @@ export class TextFrame {
 	 * layout → master placeholder `a:bodyPr`. `null` when nothing in the chain sets
 	 * one (PowerPoint then defaults to top). Unlike {@link bodyProperties}'s
 	 * `anchor` (own attribute only), this surfaces the inherited anchor a
-	 * placeholder title relies on — the difference between a top- and
+	 * placeholder title relies on: the difference between a top- and
 	 * centre-anchored title that own-attribute reads alone cannot see.
 	 */
 	get resolvedAnchor(): string | null {
@@ -161,8 +161,8 @@ export class TextFrame {
 
 	/**
 	 * The frame's vertical-autofit mode (`a:bodyPr` autofit child), or `null` when
-	 * there is no `a:bodyPr`. A `bodyPr` with no autofit child — or an explicit
-	 * `a:noAutofit` — reads `'none'`. See {@link AutofitMode}. This is the deep-model
+	 * there is no `a:bodyPr`. A `bodyPr` with no autofit child, or an explicit
+	 * `a:noAutofit`, reads `'none'`. See {@link AutofitMode}. This is the deep-model
 	 * counterpart of `inspectPptx`'s per-shape `autofit`; unlike the shallow surface
 	 * it hangs off the navigable text frame.
 	 */
@@ -177,8 +177,8 @@ export class TextFrame {
 	/**
 	 * The baked shrink scale of a `normAutofit` frame as a percent (62.5 = 62.5%),
 	 * or `null` when the frame has no `a:normAutofit` or bakes no scale. A bare
-	 * `<a:normAutofit/>` (write-side `fit: 'shrink'`) carries no scale — PowerPoint
-	 * computes it on edit and draws at 100% until then — so it too reads `null`; an
+	 * `<a:normAutofit/>` (write-side `fit: 'shrink'`) carries no scale (PowerPoint
+	 * computes it on edit and draws at 100% until then), so it too reads `null`; an
 	 * explicit scale comes from `fit: { type: 'shrink', fontScale }`.
 	 */
 	get autofitFontScale(): number | null {

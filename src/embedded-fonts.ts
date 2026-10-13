@@ -5,7 +5,7 @@
  * `appendSlides`, `src/read/api/ops/embedded-fonts.ts`).
  *
  * Embedded fonts are three coordinated pieces (ECMA-376 transitional):
- *  1. binary font parts `/ppt/fonts/fontN.fntdata` — the **raw** TTF/OTF bytes
+ *  1. binary font parts `/ppt/fonts/fontN.fntdata`, holding the **raw** TTF/OTF bytes
  *     (PresentationML does not obfuscate embedded fonts), content type
  *     `application/x-fontdata` via a single `fntdata` Default extension;
  *  2. one `font` relationship per face from `presentation.xml`;
@@ -27,7 +27,7 @@ import { EMBEDDED_FONT_SLOTS } from './ooxml/st-enums.js'
 
 /** Extension for the binary font parts (`/ppt/fonts/fontN.fntdata`). */
 export const FONT_DATA_EXTENSION = 'fntdata'
-/** Content type for a `.fntdata` part — one `Default` covers every font part. */
+/** Content type for a `.fntdata` part. One `Default` covers every font part. */
 export const FONT_DATA_CONTENT_TYPE = 'application/x-fontdata'
 /** Relationship type from `presentation.xml` to a font part (one per face). */
 export const FONT_REL_TYPE = FONT_REL
@@ -47,9 +47,9 @@ export interface EmbeddedFontFace {
 	bytes?: Uint8Array
 }
 
-/** A typeface family with 1..4 embedded faces — one `p:embeddedFont` entry. */
+/** A typeface family with 1..4 embedded faces: one `p:embeddedFont` entry. */
 export interface EmbeddedFont {
-	/** `p:font/@typeface` — MUST match the family name used in run/`fontFace` typefaces or PowerPoint won't bind it. */
+	/** `p:font/@typeface`. MUST match the family name used in run/`fontFace` typefaces or PowerPoint won't bind it. */
 	typeface: string
 	panose?: string
 	pitchFamily?: number

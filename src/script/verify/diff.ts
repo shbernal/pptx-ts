@@ -3,7 +3,7 @@
  * from, everywhere the fidelity notes did not say it would not?
  *
  * **Why a projection diff and not byte identity.** The output package is not the input
- * package and never will be — different rel ids, different shape ids, a regenerated shape
+ * package and never will be: different rel ids, different shape ids, a regenerated shape
  * tree, `dirty="0"` on every run. Comparing bytes would report a total mismatch for every
  * deck and prove nothing. So the comparison happens one level up, on the IR: run the same
  * `readModelToIr` over the source deck and over the deck the script produced, and compare
@@ -25,7 +25,7 @@
  * 2. *The converter need not be injective.* Two different source constructs can map to the
  *    same call, and then the round trip agrees while the deck has changed. Measured, not
  *    hypothetical: the mapper once read an explicit `a:buNone` as the glyph `n`, so a
- *    bulletless paragraph gained a bullet — and because the output's real `n` bullet read
+ *    bulletless paragraph gained a bullet, and because the output's real `n` bullet read
  *    back through the same wrong mapping, the diff was clean. Mutation testing is what
  *    catches that class, and a mutation that survives here is a statement about this
  *    check's reach rather than a mistake in it.
@@ -47,7 +47,7 @@ import { DECK_PROP_KEYS, type IrValue } from '../ir.js'
 /**
  * Which way a difference points.
  *
- * `lost` and `changed` are the ones the fidelity contract governs — the source said
+ * `lost` and `changed` are the ones the fidelity contract governs: the source said
  * something the output does not, or says differently. `added` is the write path being
  * explicit where the source was implicit, which is *usually* harmless and is reported
  * separately for a reason worth stating: this diff cannot tell whether the value the write
@@ -63,12 +63,12 @@ export type DifferenceKind = 'lost' | 'added' | 'changed'
  * This list exists because `added` differences cannot simply be waved through. Mutation
  * testing settled that: dropping the converter's explicit `valign` left the write path to
  * centre every text body, which showed up as an `added` and nothing failed. So `added` is
- * held to the same standard as the rest — a note must declare it, or its field must appear
+ * held to the same standard as the rest: a note must declare it, or its field must appear
  * here with a reason.
  *
  * Every entry names a write-path default whose *correctness* the round trip has no way to
  * assess, because the source's counterpart was inherited and the read model cannot resolve
- * what it was inheriting. That is an honest "unknown", not an "ignore" — each one names a
+ * what it was inheriting. That is an honest "unknown", not an "ignore". Each one names a
  * gap in the reader that could be closed later, and teaching the reader to resolve one turns
  * its entry here into a real comparison.
  */
@@ -100,7 +100,7 @@ const WRITER_DEFAULTS: Record<string, string> = {
 	// explicit width is exactly the theme-`lnRef` case `line.width` already declares unread.
 	'line.width':
 		'an outline with no explicit width takes the write path’s 1pt default; the source’s came from the unread theme line style',
-	// A shape with no geometry of its own — an unfilled placeholder — has no preset to name.
+	// A shape with no geometry of its own (an unfilled placeholder) has no preset to name.
 	shape: 'a shape that inherits its geometry from a layout is emitted as a plain rectangle',
 	// The image renderer falls back to the image path for `p:cNvPr/@descr` when it is given no alt
 	// text, and `altText: ''` does not suppress that, so a source picture with no description comes
@@ -116,7 +116,7 @@ const WRITER_DEFAULTS: Record<string, string> = {
 	showLeaderLines: 'leader lines are on by default in the write path',
 	// The five docProps the write path seeds in its constructor ('pptx-ts',
 	// 'pptx-ts Presentation', '1'). A source deck that declared none of a given property gets
-	// the library's, and there is no way to unset one — assigning `''` writes an empty element
+	// the library's, and there is no way to unset one: assigning `''` writes an empty element
 	// rather than removing it. Unlike the entries above, this is a *write*-side candidate, not
 	// a read-side one: the fix is a way to author a deck with a property genuinely absent.
 	// Restricted to `added` by construction, so a printer that stopped writing docProps still
@@ -134,21 +134,21 @@ export interface IrDifference {
 	/** Source shape name, when the difference sits inside a call that has one. */
 	shapeName: string | null
 	/**
-	 * Shape names nested inside the same call — a group's children. A note scoped to one of
+	 * Shape names nested inside the same call: a group's children. A note scoped to one of
 	 * these also declares differences reported against the call that carries it.
 	 */
 	nestedNames: string[]
 	/** Where in the slide's projection, e.g. `calls[4].args[1].line.width`. */
 	path: string
 	/**
-	 * The option name the difference is about — the last object key on {@link path}, or
+	 * The option name the difference is about: the last object key on {@link path}, or
 	 * `'*'` when a whole call is present on one side only. This is what a note's `construct`
 	 * is matched against, which is why `construct` has to name a field path rather than
 	 * describe one.
 	 */
 	field: string
 	kind: DifferenceKind
-	/** The source value, JSON-encoded and truncated for reporting. `'—'` when absent. */
+	/** The source value, JSON-encoded and truncated for reporting. An em dash (`'\u2014'`) when absent. */
 	expected: string
 	/** The output value, likewise. */
 	actual: string
@@ -173,7 +173,7 @@ export interface RoundTripReport {
 	 * Notes that matched no difference.
 	 *
 	 * **Not a defect signal, despite the obvious reading.** Most notes name constructs the
-	 * read model cannot see at all — a bullet's `a:buFont`, a shape's theme `effectRef` —
+	 * read model cannot see at all (a bullet's `a:buFont`, a shape's theme `effectRef`),
 	 * so they are absent from *both* IRs and there is nothing for them to match. A note
 	 * here is a candidate for review, not a stale claim.
 	 */
@@ -182,7 +182,7 @@ export interface RoundTripReport {
 
 /**
  * Every note construct this table knows how to match, for a test to check against. The
- * `layout.` spellings are not listed — they resolve through {@link isKnownNoteConstruct},
+ * `layout.` spellings are not listed; they resolve through {@link isKnownNoteConstruct},
  * which is what a corpus check should use.
  */
 export function knownNoteConstructs(): string[] {
@@ -192,7 +192,7 @@ export function knownNoteConstructs(): string[] {
 /**
  * Compare the deck a script was generated from against the deck it produced.
  *
- * `notes` must be the set that actually applies to the printed output — `printScript`'s
+ * `notes` must be the set that actually applies to the printed output: `printScript`'s
  * returned `notes`, not `DeckIr.fidelity`. The two differ in both directions: the printer
  * suppresses notes its tier rescues and adds ones its tier causes, so diffing against the
  * IR's own list would both over- and under-exclude.
@@ -260,12 +260,12 @@ export function diffDeckIr(expected: CanonicalDeck, actual: CanonicalDeck, notes
  * deck-scoped note (which carries `slideNumber: null` and matches any slide) can declare one.
  * Masters align by **title**, not by position, for the same reason calls align by shape name:
  * the write path always emits a blank layout of its own at gallery position 0, so positional
- * alignment reports every layout in the deck as renamed and buries the one real difference —
- * that extra layout — under a shift.
+ * alignment reports every layout in the deck as renamed and buries the one real difference
+ * (that extra layout) under a shift.
  *
  * And, exactly as with shape names, a title is only usable as a key where it is *unique on
- * both sides*. Uniqueness is supposed to be an invariant here — the converter deduplicates
- * titles because a title is also what `addSlide({ masterTitle })` binds on — but keying on it
+ * both sides*. Uniqueness is supposed to be an invariant here (the converter deduplicates
+ * titles because a title is also what `addSlide({ masterTitle })` binds on), but keying on it
  * unconditionally makes the check assume the thing it should be testing: a mutation that
  * removed the deduplication left two layouts sharing a title, both expected entries matched
  * the same actual one, and the round trip came back clean. Falling back to position when the
@@ -282,7 +282,7 @@ function diffChrome(expected: CanonicalChrome, actual: CanonicalChrome, out: IrD
 	// A whole master appearing or disappearing is reported *scoped to its title*, using the
 	// same `shapeName` channel a shape-scoped note uses. Without that, one note declaring the
 	// blank layout the write path always adds would carry `field: 'master'` and excuse every
-	// added layout — which is what a mutation that stopped deduplicating layout titles proved.
+	// added layout, which is what a mutation that stopped deduplicating layout titles proved.
 	const report = (
 		path: string,
 		kind: DifferenceKind,
@@ -314,7 +314,7 @@ function diffChrome(expected: CanonicalChrome, actual: CanonicalChrome, out: IrD
 			return
 		}
 		// A layout's decoration rides inside this one value, so a note scoped to one of those
-		// shapes has no call of its own to be matched against — the same problem a group's child
+		// shapes has no call of its own to be matched against: the same problem a group's child
 		// has on a slide, and the same answer.
 		diffValue(before, after, `chrome.masters[${index}]`, 'master', {
 			slideNumber: 0,
@@ -354,8 +354,8 @@ function diffSlide(expected: CanonicalSlide, actual: CanonicalSlide, out: IrDiff
 	at('notesRuns', 'notesRuns', expected.notesRuns, actual.notesRuns)
 	at('slideNumber', 'slideNumber', expected.slideNumber, actual.slideNumber)
 	// Structural rather than whole-value, unlike those above: a transition is a small object
-	// whose parts are lost independently — the append path drops an embedded sound while
-	// keeping the effect — and a whole-value compare would force the note that declares the
+	// whose parts are lost independently (the append path drops an embedded sound while
+	// keeping the effect), and a whole-value compare would force the note that declares the
 	// sound to carry `field: 'transition'`, which would then excuse a wrong type or duration too.
 	diffValue(expected.transition, actual.transition, 'transition', 'transition', {
 		slideNumber: number,
@@ -497,7 +497,7 @@ function scalarDifference(
  * becomes `['calls', 'args', 'line', 'width']`.
  *
  * Both exclusion mechanisms used to match the terminal key alone, at any depth anywhere in the
- * IR — so `type` (written about a fill's solid default) excused an added `bullet.type`, waving
+ * IR, so `type` (written about a fill's solid default) excused an added `bullet.type`, waving
  * through a character bullet that came back as a numbered list; `title` (written about
  * `docProps`) excused an added chart title; and `width` (written about `a:ln/@w`) excused an
  * added table-cell bevel or border width. Matching a suffix keeps every bare key working where
@@ -506,7 +506,7 @@ function scalarDifference(
 function pathKeys(difference: IrDifference): string[] {
 	const keys = difference.path.split('.').map((segment) => segment.replace(/\[[^\]]*\]/g, ''))
 	// A handful of differences are synthesised rather than walked, and name a `field` the path
-	// does not end in — a whole master reported at `chrome.masters[11]` with `field: 'master'`.
+	// does not end in: a whole master reported at `chrome.masters[11]` with `field: 'master'`.
 	// Appending it keeps those matchable while leaving every walked difference untouched.
 	return keys[keys.length - 1] === difference.field ? keys : [...keys, difference.field]
 }
@@ -560,8 +560,8 @@ function declaringNote(difference: IrDifference, notes: FidelityNote[]): Fidelit
 	for (const note of notes) {
 		if (note.slideNumber !== null && note.slideNumber !== difference.slideNumber) continue
 		// A layout-shape note is about the chrome, which the diff reports in the deck-level bucket.
-		// Without this a themed outline on a layout — recorded with no slide number, and named
-		// after a shape whose name repeats between the layout and the slides bound to it — would
+		// Without this a themed outline on a layout (recorded with no slide number, and named
+		// after a shape whose name repeats between the layout and the slides bound to it) would
 		// excuse the same difference on a *slide*, which is a loss nothing declared.
 		if (note.construct.startsWith(LAYOUT_NOTE_PREFIX) && difference.slideNumber !== 0) continue
 		// A shape-scoped note covers only that shape; a slide- or deck-scoped one covers any, which
@@ -588,7 +588,7 @@ function noteFields(construct: string): readonly string[] | undefined {
 }
 
 /**
- * `true` when the coverage table can match this construct — directly or through the
+ * `true` when the coverage table can match this construct, directly or through the
  * layout-shape fallback. The check a corpus test runs over every note both printers emit.
  */
 export function isKnownNoteConstruct(construct: string): boolean {

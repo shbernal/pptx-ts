@@ -2,7 +2,7 @@
  * OOXML namespace URIs, by their canonical prefix.
  *
  * A namespace URI is a fact about the format, not about reading or writing one, so it belongs
- * here rather than on either side — the same reasoning `rel-types.ts` states at length, and for
+ * here rather than on either side, by the same reasoning `rel-types.ts` states at length, and for
  * the same failure mode: these are long, near-identical strings, and a typo does not throw. It
  * silently matches nothing on the read side and produces a part PowerPoint ignores on the write
  * side.

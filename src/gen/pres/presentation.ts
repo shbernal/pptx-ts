@@ -68,7 +68,7 @@ function sectionsExtLst(sections: SectionInternalProps[]): string {
 export function makeXmlPresentation(pres: PresentationPropsInternal): string {
 	// NOTE: the double space before saveSubsetFonts/embedTrueTypeFonts when
 	// rtlMode is unset is a pre-existing template artifact (verified against
-	// the byte-identity baseline) — the literal space around `${rtl}` survives
+	// the byte-identity baseline): the literal space around `${rtl}` survives
 	// even when the interpolation is empty. el()'s attrs always normalize to
 	// single-space separators, so this opening tag stays a raw template rather
 	// than being forced through the builder.
@@ -80,7 +80,7 @@ export function makeXmlPresentation(pres: PresentationPropsInternal): string {
 		`xmlns:p="${OOXML_NS.p}" ${pres.rtlMode ? 'rtl="1"' : ''} ${(pres.embeddedFonts || []).some((font) => font.faces.some((face) => face.bytes)) ? 'embedTrueTypeFonts="1" saveSubsetFonts="0"' : 'saveSubsetFonts="1"'} autoCompressPictures="0"${pres.firstSlideNum !== 1 ? ` firstSlideNum="${pres.firstSlideNum}"` : ''}>`
 
 	// SPEC (ECMA-376 Part 1 §19.2.1.26): sldMasterIdLst, then notesMasterIdLst
-	// BEFORE sldIdLst — emitting notesMasterIdLst after sldIdLst (or after
+	// BEFORE sldIdLst. Emitting notesMasterIdLst after sldIdLst (or after
 	// sldSz/notesSz) violates the schema and is flagged by OpenXmlValidator as
 	// Sch_UnexpectedElementContentExpectingComplex.
 	const sldMasterIdLst = el(
@@ -106,7 +106,7 @@ export function makeXmlPresentation(pres: PresentationPropsInternal): string {
 	const sldSz = voidEl('p:sldSz', { cx: width, cy: height, type: slideSizeType(width, height) })
 	const notesSz = voidEl('p:notesSz', { cx: pres.presLayout.height, cy: pres.presLayout.width })
 
-	// Embedded fonts (CT_Presentation index 7 — after notesSz, before defaultTextStyle).
+	// Embedded fonts (CT_Presentation index 7, after notesSz, before defaultTextStyle).
 	// rIds continue past the fixed presentation rels and must match makeXmlPresentationRels.
 	const fonts = pres.embeddedFonts || []
 	const flat = flattenEmbeddedFaces(fonts, presentationFontRelStart(pres.slides))

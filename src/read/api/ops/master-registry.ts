@@ -63,7 +63,7 @@ export function registerMaster(dest: DeckTarget, masterPartName: string): void {
 /**
  * Move the `p:sldMasterId` entries for `masterPartNames` to the front of
  * `p:sldMasterIdLst`, preserving their existing relative order, so the first of
- * them becomes the deck's `Designs(1)` — the theme PowerPoint's Design tab shows.
+ * them becomes the deck's `Designs(1)`, the theme PowerPoint's Design tab shows.
  * Reorders the id list only; relationships, ids, and all other parts are left as
  * they are. A no-op when the named masters already lead (idempotent re-call).
  */
@@ -77,7 +77,7 @@ export function promoteMasters(dest: DeckTarget, masterPartNames: string[]): voi
 	const promote = new Set(masterPartNames)
 	const entries = getElements(lst, 'p:sldMasterId')
 	// Entries whose relationship resolves to a promoted master, kept in their
-	// current order, then everyone else in theirs — a stable partition.
+	// current order, then everyone else in theirs: a stable partition.
 	const isPromoted = (entry: Element): boolean => {
 		const relId = attr(entry, 'r:id')
 		return relId ? promote.has(rels.resolveTarget(relId)) : false
@@ -96,7 +96,7 @@ export function promoteMasters(dest: DeckTarget, masterPartNames: string[]): voi
  * unique across the WHOLE presentation, not just within their own list. A duplicate
  * anywhere in this space makes PowerPoint report the file as corrupt on open
  * ("found a problem with content" / 0x80070570), even though LibreOffice silently
- * tolerates it — so an imported master AND each of its layouts must take an id past
+ * tolerates it. So an imported master AND each of its layouts must take an id past
  * the max of both the master-id list and every layout-id list. Recomputed per
  * allocation so ids appended earlier in the same import are counted.
  *

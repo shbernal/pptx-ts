@@ -1,6 +1,6 @@
 /**
- * charcheck: keep em dashes out of what a reader sees, on the site, in the docs and in
- * the README.
+ * charcheck: keep em dashes out of what a reader sees, on the site, in the docs, in the
+ * README and in the API reference that TypeDoc builds from the comments in `src/`.
  *
  * The banned characters are built from their code points rather than written literally,
  * so this file does not report itself.
@@ -89,13 +89,24 @@ export default {
 			// Site config and theme code: string literals only. That is where the nav labels,
 			// the tagline and the meta description live, and it is the only text in these
 			// files a visitor can read. The `.mjs` files are the showcase decks, whose strings
-			// are the slide text the demos page previews. Comments keep their dashes, as they
-			// do repo-wide.
+			// are the slide text the demos page previews. Comments here keep their dashes; the
+			// comments that publish are the ones in `src/`, and the rule below covers them.
 			id: 'no-em-dash-in-site-text',
 			chars: DASHES,
 			scope: 'strings',
 			message: MESSAGE,
 			include: ['docs/.vitepress/config.mts', 'docs/.vitepress/theme/**/*.ts', 'www/**/*.ts', 'www/**/*.mjs'],
+		},
+		{
+			// Library source: comments only. The TSDoc comments in `src/` become the API
+			// reference pages, which `GENERATED` skips because TypeDoc writes them, so this is
+			// where those pages are checked. Ordinary comments are held to the same rule: a
+			// reader of the source sees them, and splitting the two would mean a rule per tag.
+			id: 'no-em-dash-in-source-comments',
+			chars: DASHES,
+			scope: 'comments',
+			message: MESSAGE,
+			include: ['src/**/*.ts'],
 		},
 	],
 	ignore: GENERATED,

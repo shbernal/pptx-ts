@@ -3,7 +3,7 @@
  *
  * Every user-facing warning is routed through {@link warn} / {@link warnOnce} rather than calling
  * `console.warn` directly, so there is one place to apply a consistent prefix and one place a
- * consumer can take over — see {@link setDiagnosticHandler}. This module has no *runtime* imports
+ * consumer can take over (see {@link setDiagnosticHandler}). This module has no *runtime* imports
  * so it can be used from anywhere without risking an import cycle; `codes.ts` is types only and is
  * erased at compile time, so it does not cost that property.
  *
@@ -19,7 +19,7 @@ export type { DiagnosticCode }
 
 /** One diagnostic emitted by the library. */
 export interface Diagnostic {
-	/** Stable condition identifier — see {@link DiagnosticCode}. Branch on this, not on the text. */
+	/** Stable condition identifier; see {@link DiagnosticCode}. Branch on this, not on the text. */
 	readonly code: DiagnosticCode
 	/** Human-readable explanation. Free to change in any release; do not parse it. */
 	readonly message: string
@@ -27,7 +27,7 @@ export interface Diagnostic {
 	 * Structured context for the condition, when a site has any to give.
 	 *
 	 * Every rejection of an `ST_` enum value populates it: `checkEnumOrWarn` (`ooxml/check-enum.ts`)
-	 * carries `received` — the value the caller passed — and `valid`, the whole legal list, plus
+	 * carries `received` (the value the caller passed) and `valid`, the whole legal list, plus
 	 * whatever the call site adds. That reaches a handler for a line dash type, a table cell's 3-D
 	 * preset and a table's horizontal overflow, among others. Nothing else populates it yet, so a
 	 * handler must still treat the field as optional and must not assume a particular key is there
@@ -95,7 +95,7 @@ const seen = new Set<string>()
  *
  * "Once" is **process-global**, the same scope {@link setDiagnosticHandler} has and for the
  * same reason: the emitting code is a tree of free functions in `gen/**` with no presentation
- * in scope. The consequence is different, though, and worth stating on its own — a process that
+ * in scope. The consequence is different, though, and worth stating on its own: a process that
  * builds several decks does not get a second report of a condition an earlier deck already
  * tripped, so the second deck's diagnostics are incomplete rather than merely unattributed.
  * {@link resetDiagnosticState} is how a host that cares gets each build a clean slate.
@@ -123,7 +123,7 @@ export function warnOnce(code: DiagnosticCode, message: string, detail?: Readonl
  * building decks from user input accumulates one entry per distinct bad value with no way to
  * release them.
  *
- * This does not touch the handler — {@link setDiagnosticHandler} owns that, and the two are
+ * This does not touch the handler. {@link setDiagnosticHandler} owns that, and the two are
  * reset independently on purpose: a host usually installs its handler once and wants it to
  * survive.
  */

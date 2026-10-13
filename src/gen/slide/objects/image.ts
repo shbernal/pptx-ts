@@ -45,7 +45,7 @@ export function renderImageObject(ctx: RenderContext): string {
 	// `slideObjectToXml`). Read it rather than re-narrowing the field: this function has exactly
 	// one call site, and a contract stated there beats a defensive re-assignment here.
 	// The media bytes this picture points at. Not available synchronously in `addImage()`, but
-	// populated by now — which is why every question that needs the image itself (its natural
+	// populated by now, which is why every question that needs the image itself (its natural
 	// size, whether it is a vector) is answered here rather than at definition time.
 	const mediaRel = (slide._relsMedia || []).find((rel) => rel.rId === slideItemObj.imageRid)
 	const naturalSize = (): { w: number; h: number } | null => imageNaturalSize(slideItemObj, slide)
@@ -175,7 +175,7 @@ export function renderImageObject(ctx: RenderContext): string {
 		const boxY = getSmartParseNumber(sizing.y || 0, 'Y', slide._presLayout)
 
 		// `cover`/`contain` crop the *source* bitmap, so the srcRect must be derived from the
-		// image's natural pixel ratio — not the displayed box (options.w/h). Measure it from the
+		// image's natural pixel ratio, not the displayed box (options.w/h). Measure it from the
 		// embedded media bytes; if unmeasurable (SVG/unknown format) fall back to display dims + warn.
 		// `crop` keeps display EMU: its contract treats the displayed extent as the crop frame.
 		let cropSize: { w: number; h: number } = { w: drawnW, h: drawnH }
@@ -195,7 +195,7 @@ export function renderImageObject(ctx: RenderContext): string {
 		drawnW = boxW
 		drawnH = boxH
 	} else {
-		// No `sizing` at all. A raster fills its box — that box was chosen for it, and PowerPoint
+		// No `sizing` at all. A raster fills its box: that box was chosen for it, and PowerPoint
 		// does the same. A vector does not: an SVG states its own aspect ratio in a viewBox, and a
 		// glyph squashed to a box that disagrees is a defect, not a layout choice. So a measurable
 		// vector letterboxes here by default, and `sizing: { type: 'stretch' }` opts back out.

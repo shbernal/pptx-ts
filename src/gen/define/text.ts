@@ -68,7 +68,7 @@ export function addTextDefinition(
 	// `SlideBuilder.addText`'s string shorthand hands the same object to both, so `cleanOpts` runs
 	// over it twice, and the second pass emits bytes the first cannot (see the line-defaults case in
 	// `test/regression/text/text-definition.test.ts`). Copying each reference separately would
-	// quietly change that shape's `<a:ln>`. The caller is protected either way — the aliasing is
+	// quietly change that shape's `<a:ln>`. The caller is protected either way: the aliasing is
 	// between two objects this function now owns.
 	//
 	// Nested option objects the caller supplies (`shadow`, `fill`) are deliberately still shared:
@@ -107,7 +107,7 @@ export function addTextDefinition(
 		text: textObjects,
 		options: objectOptions,
 	}
-	// One index for the whole text object, taken here rather than inside `cleanOpts` — that runs once
+	// One index for the whole text object, taken here rather than inside `cleanOpts`. That runs once
 	// for the object and again for every run, so naming from inside it would burn an index per run.
 
 	function cleanOpts(itemOpts: ObjectOptionsInternal): TextPropsOptions {
@@ -234,7 +234,7 @@ export function addTextDefinition(
 			// of `numCol`/`anchor`/`vert` wins for all of them.
 			itemOpts._bodyProp = { ...itemOpts._bodyProp }
 			// A placeholder inherits its anchor from the layout, so the key comes off rather than
-			// being written as an `undefined` — this bag is spread onto a slide's options in A.3.
+			// being written as an `undefined`, because this bag is spread onto a slide's options in A.3.
 			setOrClear(itemOpts._bodyProp, 'anchor', !itemOpts.placeholder ? TextAnchor.ctr : undefined) // VALS: [t,ctr,b]
 			// `textDirection` is the documented public option; `vert` is a legacy/extended alias kept as an
 			// escape hatch for the full ST_TextVerticalType range (eaVert, mongolianVert, wordArtVertRtl).
@@ -303,13 +303,13 @@ export function addTextDefinition(
 	// STEP 1-A: A text box with no height stated anywhere gets 0.3in of it.
 	//
 	// `addShapeDefinition` defaults all four axes; this path defaulted none, so `addText('hi',
-	// { x, y, w })` emitted `<a:ext cy="0">` — the degenerate zero-size object the project's own
+	// { x, y, w })` emitted `<a:ext cy="0">`, the degenerate zero-size object the project's own
 	// API rules say to refuse. There WAS a rescue for it, in the text serializer, guarded by
 	// `!itemOpts.line`; step C above has written `itemOpts.line = itemOpts.line || {}` since
 	// before that guard existed, so the guard was never once true and the rescue never ran.
 	//
 	// Two things move it here rather than fixing the guard in place. It sits beside the other
-	// defaults, where the caller's own value is still distinguishable from silence — `h: 0`
+	// defaults, where the caller's own value is still distinguishable from silence: `h: 0`
 	// stated explicitly is kept, exactly as `addShapeDefinition` keeps it, which the serializer
 	// could not do because a stated zero and an absent height both arrive there as `cy === 0`.
 	// And the exemption the guard was reaching for is a *shape* question, not a line-options
@@ -323,7 +323,7 @@ export function addTextDefinition(
 		Object.assign(newObject.options, resolveAuthoredFrame(newObject.options, { h: 0.3 }, 'addText'))
 
 	// STEP 1a: Selection Pane identity (`objectName`). Set once here, on the shape-level object
-	// only — not inside `cleanOpts`, which also runs per text run (STEP 2 below). `Slide.addText`'s
+	// only, not inside `cleanOpts`, which also runs per text run (STEP 2 below). `Slide.addText`'s
 	// single-string convenience form reuses the same options object for both the shape and its lone
 	// run, so encoding this inside `cleanOpts` encoded a caller-supplied name twice. A placeholder's
 	// default identity is its declared name (falling back to its type, then its idx). Placeholders
@@ -360,7 +360,7 @@ export function addTextDefinition(
 	// STEP 2: Create/Clean text options
 	textObjects.forEach((item) => (item.options = cleanOpts(item.options || {})))
 
-	// STEP 3: Create hyperlinks — for the SHAPE and for its runs, which are two `hlinkClick`
+	// STEP 3: Create hyperlinks for the SHAPE and for its runs, which are two `hlinkClick`
 	// elements resolving two relationship ids (`p:cNvPr`'s and each `a:rPr`'s). Handing over the
 	// run list alone left the shape's `r:id` pointing at a relationship nothing had minted; it went
 	// unseen while `addText`'s bare-string form gave the shape's own options object to its one run,

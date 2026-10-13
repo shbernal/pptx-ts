@@ -8,7 +8,7 @@
  *    paragraphs; `TextProps[]` is one flat array where a paragraph boundary is a
  *    `breakLine` flag on the item that *precedes* it. So the last run of each paragraph
  *    carries the break, and a paragraph's own properties are replicated onto each of its
- *    runs — the write path reads alignment and spacing off whichever run starts a line.
+ *    runs, because the write path reads alignment and spacing off whichever run starts a line.
  *
  * 2. **Vocabularies differ on both sides of the same concept.** OOXML spells alignment
  *    `l`/`ctr`/`r`/`just`, the write API spells it `left`/`center`/`right`/`justify`; two
@@ -19,7 +19,7 @@
  * Run-level reads prefer the *explicit* value over the resolved one, but only where leaving
  * the option out really does leave the value inherited. That is the part worth checking
  * rather than assuming: the round-trip harness found that an omitted run colour and an
- * omitted vertical anchor are both filled in by the write path — black, and centred — so
+ * omitted vertical anchor are both filled in by the write path (black, and centred), so
  * "stay quiet and let it inherit" was silently repainting text and re-anchoring bodies. Both
  * now emit the *resolved* value with a note, which freezes it against a later theme edit and
  * renders correctly, in preference to staying faithful in the IR and wrong on the slide.
@@ -80,13 +80,13 @@ const AUTO_NUMBER_TYPES: ReadonlySet<string> = new Set(TEXT_AUTONUM_SCHEMES)
 /**
  * `Paragraph.bulletDetail` → the write API's `bullet` option.
  *
- * This function used to take a **tagged** string — `'none'`, `'char:<glyph>'` or
- * `'autoNum:<type>'` — and its first version read it as a bare glyph. The result was silent
+ * This function used to take a **tagged** string (`'none'`, `'char:<glyph>'` or
+ * `'autoNum:<type>'`), and its first version read it as a bare glyph. The result was silent
  * and universal: a paragraph that explicitly suppressed its bullet (`a:buNone`, which is most
  * of them) came back with a literal `n` bullet, because `'none'.codePointAt(0)` is `n`; a real
  * character bullet came back as `c`, from the `char:` tag; and a numbered list came back as
  * `a`. Every converted deck was affected and nothing failed, which is why the round-trip check
- * exists — and why the accessor is now a discriminated union with no parsing left to get wrong.
+ * exists, and why the accessor is now a discriminated union with no parsing left to get wrong.
  */
 function bulletOption(bullet: BulletDetail, ctx: MapContext): IrValue {
 	const { notes } = ctx
@@ -134,7 +134,7 @@ function bulletOption(bullet: BulletDetail, ctx: MapContext): IrValue {
 
 	// Zero-padded to four digits, and that is load-bearing rather than cosmetic: the write
 	// path tests `characterCode` against /^[0-9A-Fa-f]{4}$/ and, on a miss, warns to the
-	// console and substitutes its own default glyph. So "6E" — a perfectly good code point —
+	// console and substitutes its own default glyph. So "6E", a perfectly good code point,
 	// silently became a different bullet character, visible only in the rendered slide.
 	const code = bullet.char.codePointAt(0) ?? 0x2022
 	if (code > 0xffff) {
@@ -153,8 +153,8 @@ function bulletOption(bullet: BulletDetail, ctx: MapContext): IrValue {
  *
  * A stated margin carries as its number. An *absent* one is the interesting case, because
  * leaving the key out does not reproduce it: every `bullet` state except `'inherit'` makes the
- * write path put a margin on the element — its hanging default for a drawn bullet, zero for
- * `bullet: false` — so a paragraph that inherits its margin has to ask for silence explicitly.
+ * write path put a margin on the element (its hanging default for a drawn bullet, zero for
+ * `bullet: false`), so a paragraph that inherits its margin has to ask for silence explicitly.
  * Under `bullet: 'inherit'` nothing is written either way and the key would be noise, which is
  * why the bullet option decides rather than the paragraph being asked twice.
  * @param {number|null} valuePt - the paragraph's own margin in points, `null` when unset
@@ -181,7 +181,7 @@ function startAtOption(startAt: number | null): Record<string, IrValue> {
  * The bullet's own font, size and colour (`a:buFont` / `a:buSzPct` / `a:buClr`) as the write
  * API's `fontFace` / `size` / `color`.
  *
- * `a:buSzPts` has no write-API counterpart — `bullet.size` is a percentage of the run size —
+ * `a:buSzPts` has no write-API counterpart (`bullet.size` is a percentage of the run size),
  * so an absolute bullet size is the one part of this that still cannot carry.
  */
 function bulletStyle(bullet: BulletStyle, notes: NoteScope): Record<string, IrValue> {
@@ -196,7 +196,7 @@ function bulletStyle(bullet: BulletStyle, notes: NoteScope): Record<string, IrVa
 
 	// 25–400% is ST_TextBulletSizePercent's range, and the write path clamps an out-of-range
 	// value to the nearest bound rather than accepting it. Print the clamped number so the
-	// script says what the deck will get, and declare the difference — printing the source
+	// script says what the deck will get, and declare the difference. Printing the source
 	// value instead would make the script warn on every run.
 	const sizePct = bullet.sizePct
 	const clampedPct = sizePct === null ? null : Math.min(400, Math.max(25, sizePct))
@@ -238,8 +238,8 @@ function bulletColor(bullet: BulletStyle, notes: NoteScope): string | undefined 
 /**
  * Per-run character formatting, shared by shape text and table-cell text.
  *
- * The three decoration tokens carry their **explicit off** — `u="none"`, `strike="noStrike"`,
- * `cap="none"` — rather than collapsing it into the unstated case. Stating one is a different
+ * The three decoration tokens carry their **explicit off** (`u="none"`, `strike="noStrike"`,
+ * `cap="none"`) rather than collapsing it into the unstated case. Stating one is a different
  * fact from stating nothing: run properties resolve down the `a:lstStyle` → placeholder →
  * layout → master chain, so a run that would take `u="sng"` from its list style and states
  * `u="none"` is *not* underlined, while the same run with the attribute dropped is. Only an
@@ -415,7 +415,7 @@ function runColor(run: Run, leftUncoloured: boolean, notes: NoteScope): string |
 	// A run with no colour of its own inherits one, and leaving the option out does *not* pass
 	// that inheritance along: `addText` fills an uncoloured non-placeholder run with
 	// DEF_FONT_COLOR, so omitting it repaints the text black. That makes this a loss either
-	// way, and which loss depends on whether the inherited colour can be resolved — so the two
+	// way, and which loss depends on whether the inherited colour can be resolved, so the two
 	// outcomes are declared separately rather than under one note that would overstate one and
 	// understate the other.
 	const inherited = run.resolvedColor
@@ -608,7 +608,7 @@ function paragraphOptions(paragraph: Paragraph, ctx: MapContext): Record<string,
 			'this paragraph explicitly sets zero space before or after (a:spcBef / a:spcAft of 0), which suppresses the spacing its list style would otherwise apply; the write path treats 0 as "unset" and emits nothing, so the inherited spacing comes back'
 		)
 	}
-	// `text.indent` used to be filed here — a paragraph's own `a:pPr/@marL` and `@indent` had no
+	// `text.indent` used to be filed here: a paragraph's own `a:pPr/@marL` and `@indent` had no
 	// write option at all, so every margin it stated was replaced by whatever the `bullet` state
 	// wrote. `paraMarginLeft` / `paraIndent` state them now, so the mapper carries the values
 	// instead of excusing their loss and the note is gone rather than unmapped.
@@ -628,7 +628,7 @@ function paragraphOptions(paragraph: Paragraph, ctx: MapContext): Record<string,
 			rtlMode: paragraph.rtl ? true : undefined,
 			tabStops: tabStopsOption(paragraph),
 			// A paragraph with no bullet child of its own states nothing, and `'inherit'` is
-			// how the write path says that. `undefined` would NOT do — an omitted `bullet`
+			// how the write path says that. `undefined` would NOT do: an omitted `bullet`
 			// emits an explicit `a:buNone`, which suppresses whatever the destination list
 			// style has. That was this converter's most frequent loss (`text.bullet.inherited`,
 			// 34 of 44 corpus fixtures) until the option gained a third state. Resolved above
@@ -670,7 +670,7 @@ function noteUnwritableBreaks(paragraph: Paragraph, notes: NoteScope): void {
  * Flatten a text frame into the `TextProps[]` first argument of `addText`.
  *
  * An empty paragraph becomes an item with empty text and a `breakLine`, which is how a
- * blank line survives — dropping it would silently close up vertical space the author put
+ * blank line survives; dropping it would silently close up vertical space the author put
  * there deliberately.
  * @param leftUncoloured - the write path leaves the shape's uncoloured runs uncoloured: the shape is
  *   written back as a `placeholder`, whose runs inherit from the layout, or it carries a hyperlink,
@@ -701,7 +701,7 @@ export function textRuns(frame: TextFrame, ctx: MapContext, leftUncoloured = fal
 			const isLastRun = runIndex === runs.length - 1
 			// `bullet` goes on the first run only, unlike the other paragraph properties. The
 			// write path treats a bullet on a run that is *not* starting a line as a request for
-			// a new paragraph — and clears that run's `breakLine` while it is at it — so
+			// a new paragraph (and clears that run's `breakLine` while it is at it), so
 			// replicating the bullet split every bulleted paragraph that had more than one run.
 			// It reads paragraph properties off whichever run opens the line, so once is enough.
 			const continuation = { ...paraOpts }
@@ -742,7 +742,7 @@ function frameLanguage(frame: TextFrame, notes: NoteScope): string | undefined {
 }
 
 /**
- * Frame-level layout for the `TextPropsOptions` second argument — everything that belongs
+ * Frame-level layout for the `TextPropsOptions` second argument: everything that belongs
  * to the body as a whole rather than to any paragraph.
  *
  * `resolvedAnchor` is the one place a *resolved* read is the right one: vertical anchoring
@@ -767,7 +767,7 @@ export function textFrameOptions(frame: TextFrame, notes: NoteScope): Record<str
 		compact({
 			lang: frameLanguage(frame, notes),
 			// Spelled out even when nothing in the source set it. `resolvedAnchor` returning
-			// null means PowerPoint would default the body to top — but `addText` defaults a
+			// null means PowerPoint would default the body to top, but `addText` defaults a
 			// non-placeholder body to *centre*, so leaving the option out re-anchors the text.
 			valign: anchor === null ? 'top' : ANCHOR_TO_VALIGN[anchor],
 			// `@wrap` is `square`/`none` in OOXML and a boolean in the write API.
@@ -790,8 +790,8 @@ export function textFrameOptions(frame: TextFrame, notes: NoteScope): Record<str
  * bare `<a:normAutofit/>`, so the two get different spellings. ECMA-376 §21.1.2.1.3 defaults
  * each attribute to 100%/0% only when it is **omitted**; PowerPoint recomputes an unbaked
  * scale on edit and draws the baked one exactly as written until then. Flattening both to
- * `'shrink'` therefore re-emits a frame that paints its text at full size — a deck baked at
- * `fontScale="40000"` comes back two and a half times too large — and the object form is
+ * `'shrink'` therefore re-emits a frame that paints its text at full size (a deck baked at
+ * `fontScale="40000"` comes back two and a half times too large), and the object form is
  * already what the write API accepts, so nothing has to be lost here.
  *
  * Out-of-range percentages are the one arm that still loses something. The write path rejects
@@ -833,7 +833,7 @@ function bakedPct(value: number | null, name: 'fontScale' | 'lnSpcReduction', no
  *
  * Emitted as the four-tuple whenever any inset is set, since a partial tuple is not
  * expressible; an unset side takes PowerPoint's own default rather than zero, so those are
- * spelled out — defaulting them to 0 would visibly reflow every body that sets one side.
+ * spelled out; defaulting them to 0 would visibly reflow every body that sets one side.
  */
 
 export function marginOption(body: BodyProperties | null): IrValue | undefined {

@@ -41,8 +41,8 @@ const SHAPE_NAME_ALIASES: { [key: string]: SHAPE_NAME } = {
  */
 export function addShapeDefinition(target: PresSlideInternal, shapeName: SHAPE_NAME, opts: ShapeProps): void {
 	// Take ownership of the options before touching them, the same way `addTextDefinition` does.
-	// Everything below writes normalization back onto whatever object it is handed — the `line`
-	// defaults and the assigned `objectName` above all — so without the copy a style literal reused
+	// Everything below writes normalization back onto whatever object it is handed (the `line`
+	// defaults and the assigned `objectName` above all), so without the copy a style literal reused
 	// across shapes carries one shape's settings to the next:
 	//
 	//   slide.addShape('rect', STYLE)            // STYLE now holds `objectName: 'Shape 1'`
@@ -52,7 +52,7 @@ export function addShapeDefinition(target: PresSlideInternal, shapeName: SHAPE_N
 	//
 	// Nested caller objects (`fill`) stay shared by reference, as in `addTextDefinition`: the image
 	// fill's rel id is registered through that reference and read back at emit time. `shadow` does
-	// not — `normalizeShadowOptions` returns a fresh bag, so a shadow literal shared across shapes
+	// not: `normalizeShadowOptions` returns a fresh bag, so a shadow literal shared across shapes
 	// gives each of them its own normalized copy and comes back as the caller wrote it.
 	// `test/regression/shape/shared-shadow.test.ts` pins that the shared literal keeps emitting the
 	// same `<a:effectLst>` on every shape.
@@ -95,7 +95,7 @@ export function addShapeDefinition(target: PresSlideInternal, shapeName: SHAPE_N
 		resolveAuthoredFrame(options, { x: 1, y: 1, w: 1, h: 1 }, 'addShape', newObject.shape === ShapeType.line)
 	)
 	// Shapes are `_type === text` objects, so they share the text-box name bucket (`Shape 1`,
-	// `Text 2`, …) — which is what stops a shape and a text box colliding on one index.
+	// `Text 2`, …), which is what stops a shape and a text box colliding on one index.
 	options.objectName = resolveObjectName(target, SlideObjectType.text, {
 		label: 'Shape',
 		kind: 'shape',

@@ -5,8 +5,8 @@
  *
  * It is a **projection over `pptx-ts/read`**, not a second reader. `read` gives a
  * navigable, mutable model of a package and answers questions in the shape of the
- * OOXML tree; this answers one flat question — "what is on the slides, and where"
- * — in the shape a linter, an overlap check, or a diffing tool wants. The two used
+ * OOXML tree; this answers one flat question ("what is on the slides, and where")
+ * in the shape a linter, an overlap check, or a diffing tool wants. The two used
  * to be independent implementations over two different XML parsers, which meant
  * every read-side fix had to be made twice and a divergence between them was
  * invisible to every test. Now the model below is the only reader, and this file
@@ -16,7 +16,7 @@
  * `Presentation` re-exported:
  * - **Only geometry a shape carries itself.** A placeholder that inherits its box
  *   from the layout is omitted rather than resolved (`absoluteFrame`, not
- *   `resolvedFrame`) — the snapshot reports what the slide states.
+ *   `resolvedFrame`): the snapshot reports what the slide states.
  * - **A `p:graphicFrame` is a box, not its contents.** A table, chart or SmartArt
  *   graphic is reported as one element with its box, its kind, and the text a
  *   reader sees on the slide, but its structure is not flattened: no per-run
@@ -37,7 +37,7 @@ import { ABSENT_SLIDE_SIZE_EMU } from './ooxml/slide-size.js'
 /**
  * Input to the inspect surface. A `string` is a **filesystem path** (Node) read
  * from disk; pass `Uint8Array`/`ArrayBuffer`/`Blob`/`number[]` for an in-memory
- * archive. (A string is a path, not JSZip's latin1 binary content — see
+ * archive. (A string is a path, not JSZip's latin1 binary content; see
  * `ZipInput`.)
  */
 export type PptxInspectInputValue = string | number[] | Uint8Array | ArrayBuffer | Blob
@@ -76,7 +76,7 @@ export interface PptxTextRun {
 
 /**
  * One paragraph (`a:p`): its runs in document order. Preserves the paragraph/line
- * boundaries that the flat {@link PptxSlideElement.textRuns} list discards — needed
+ * boundaries that the flat {@link PptxSlideElement.textRuns} list discards, needed
  * to measure a `wrap="none"` frame line-by-line (each paragraph is one unwrapped line).
  */
 export interface PptxParagraph {
@@ -85,7 +85,7 @@ export interface PptxParagraph {
 
 /**
  * What an element is. `'group'` is a `p:grpSp` container: it has its own identity,
- * box, and fill, but no text of its own — its content is the elements that name it
+ * box, and fill, but no text of its own. Its content is the elements that name it
  * in {@link PptxSlideElement.parentZIndex}. `'graphicFrame'` is a `p:graphicFrame`
  * hosting a table, a chart or a SmartArt graphic; {@link PptxSlideElement.graphicKind}
  * says which, and it keeps that kind even when it carries text (a `'text'` element is
@@ -97,15 +97,15 @@ export type PptxSlideElementKind = 'text' | 'image' | 'shape' | 'group' | 'graph
  * What a `'graphicFrame'` element hosts, read from its `a:graphicData/@uri`:
  * a table (`a:tbl`), a classic chart (`c:chart`), a 2016-family chart
  * (`cx:chartSpace`: waterfall/funnel/treemap/…), or a SmartArt diagram. `'other'`
- * is a frame whose URI matches none of those — an OLE object, an ink part, a 3D
- * model — reported as a box so it is not silently missing from the slide.
+ * is a frame whose URI matches none of those (an OLE object, an ink part, a 3D
+ * model), reported as a box so it is not silently missing from the slide.
  */
 export type PptxGraphicKind = 'table' | 'chart' | 'chartEx' | 'diagram' | 'other'
 
 /**
  * Vertical-autofit mode of a text frame, read from the `a:bodyPr` child element:
  * - `'none'`: no autofit (`a:noAutofit`, or no autofit child at all). The box has a
- *   fixed height the text must fit inside — a genuine overflow candidate.
+ *   fixed height the text must fit inside: a genuine overflow candidate.
  * - `'normAutofit'`: shrink text to fit (`a:normAutofit`, pptx-ts `fit: 'shrink'`).
  *   Text is downscaled rather than overflowing.
  * - `'spAutoFit'`: resize shape to fit text (`a:spAutoFit`, pptx-ts `fit: 'resize'`).
@@ -145,7 +145,7 @@ export interface PptxSlideElement {
 	zIndex: number
 	/**
 	 * Position and size in **slide-absolute** inches, composing every enclosing
-	 * group transform — directly comparable across elements whether or not they are
+	 * group transform, so it is directly comparable across elements whether or not they are
 	 * grouped. For a rotated element this is the unrotated placement box (the box
 	 * PowerPoint writes after Ungroup); see {@link rotation}.
 	 */
@@ -168,7 +168,7 @@ export interface PptxSlideElement {
 	 * this is the text the structure puts on the slide (table cells in row order,
 	 * SmartArt node text), which is what {@link PptxSlideInspection.text} and
 	 * `wordCount` then count; a chart contributes nothing, matching `Slide.text` on
-	 * the read model. That text has no {@link textRuns} or {@link paragraphs} here —
+	 * the read model. That text has no {@link textRuns} or {@link paragraphs} here;
 	 * per-run formatting inside a structure is what this surface does not flatten.
 	 */
 	text: string
@@ -229,7 +229,7 @@ export const DEFAULT_INSPECT_SLIDE_SIZE: PptxSlideSize = Object.freeze({
  * ──────────────────────────────────────────────────────────────────────────── */
 
 /**
- * Load a `.pptx` as an {@link OpcPackage} — the same package model `pptx-ts/read`
+ * Load a `.pptx` as an {@link OpcPackage}, the same package model `pptx-ts/read`
  * uses, so a caller that starts here can hand the result straight to
  * `Presentation.fromPackage()` without re-reading the bytes.
  *
@@ -252,7 +252,7 @@ export async function readPptxTextPart(pptxPackage: OpcPackage, path: string): P
 }
 
 /**
- * Read a package part as raw bytes — the binary sibling of {@link readPptxTextPart}
+ * Read a package part as raw bytes: the binary sibling of {@link readPptxTextPart}
  * for embedded media (SVG/PNG/EMF blobs, fonts, …) that must not be UTF-8 decoded.
  * Returns `null` when the part is absent. The `Uint8Array` is browser-isomorphic;
  * Node consumers can wrap it with `Buffer.from(...)` if they need Buffer methods.
@@ -296,7 +296,7 @@ export async function readPresentationSize(
 }
 
 /**
- * Every slide in the deck, in **presentation order** (`p:sldIdLst`) — the order
+ * Every slide in the deck, in **presentation order** (`p:sldIdLst`): the order
  * PowerPoint shows them in, which is not the order their parts are named once a
  * deck has been reordered.
  */
@@ -332,7 +332,7 @@ export async function extractSlides(pptxPackage: OpcPackage, size?: PptxSlideSiz
  * `presentation.xml`. Callers here are auditing files they did not author, so a
  * package that is a valid OPC container but not a presentation reports an empty
  * deck rather than throwing. `presentationPart` is the throw site: it rejects a
- * package with no — or more than one — office-document relationship.
+ * package with no office-document relationship, or with more than one.
  */
 function presentationOf(pptxPackage: OpcPackage): Presentation | null {
 	const presentation = Presentation.fromPackage(pptxPackage)
@@ -391,7 +391,7 @@ function harvest(shapes: AnyShape[], parentZIndex: number | null, out: Harvested
 
 /**
  * Turn harvested shapes into elements, dropping the ones with no resolvable slide
- * position. A dropped shape keeps its zIndex — the numbers are positions in the
+ * position. A dropped shape keeps its zIndex: the numbers are positions in the
  * shape tree, and renumbering them would silently repoint every `parentZIndex`.
  */
 function flatten(harvested: HarvestedShape[], slidePath: string): PptxSlideElement[] {
@@ -481,7 +481,7 @@ function graphicKindOf(frame: GraphicFrame): PptxGraphicKind {
 
 /**
  * The text a graphic frame puts on the slide: table cells in row order, or SmartArt
- * node text. Charts contribute nothing, matching `Slide.text` on the read model — a
+ * node text. Charts contribute nothing, matching `Slide.text` on the read model: a
  * chart's strings are data labels and axis titles that PowerPoint itself does not
  * treat as slide body text.
  *
@@ -541,7 +541,7 @@ function reportUnresolvable(shape: AnyShape, zIndex: number, slidePath: string):
 	const failure = shape.absoluteFrameFailure
 	// No own `a:xfrm` at all: the shape inherits its geometry from a layout
 	// placeholder, which this surface deliberately does not resolve. Nothing is
-	// wrong with the deck, so nothing is reported. (`null` cannot reach here — the
+	// wrong with the deck, so nothing is reported. (`null` cannot reach here; the
 	// caller only calls this for a shape whose frame did not resolve.)
 	if (failure === null || failure === 'no-own-transform') return
 
@@ -568,10 +568,10 @@ function round(value: number, digits: number): number {
 	return Math.round(value * factor) / factor
 }
 
-// Error taxonomy — see `entry-errors.ts`. Re-exported from every entry so `instanceof`
+// Error taxonomy: see `entry-errors.ts`. Re-exported from every entry so `instanceof`
 // works whichever subpath a consumer imports.
 export * from './entry-errors.js'
 
-// Diagnostics — see `entry-diagnostics.ts`. Re-exported from every entry so a consumer of any
+// Diagnostics: see `entry-diagnostics.ts`. Re-exported from every entry so a consumer of any
 // subpath can install a handler for the warnings that subpath emits.
 export * from './entry-diagnostics.js'

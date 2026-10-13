@@ -21,7 +21,7 @@ import type { TextBaseProps, TextFitShrinkProps, TextProps, TextPropsOptions } f
  * A `<table>` element, from whatever DOM implementation the caller has.
  *
  * Deliberately *not* `lib.dom`'s `Element`. `lib.dom`'s types are built for a browser, and a
- * non-browser DOM's element type — happy-dom's, jsdom's — declares its own members and does
+ * non-browser DOM's element type (happy-dom's, jsdom's) declares its own members and does
  * not satisfy them, so demanding `Element` would reject from TypeScript exactly the
  * implementations `pptx-ts/html` exists to accept. Requiring the three members the conversion
  * actually calls keeps a mistyped argument an error while letting every real DOM through.
@@ -111,12 +111,12 @@ export interface TableToSlidesProps extends Omit<TableProps, 'autoPage' | 'colW'
 	slideMargin?: Margin
 }
 /**
- * A table cell's corner-to-corner rules (`a:tcPr/a:lnTlToBr` / `a:lnBlToTr`) — the
+ * A table cell's corner-to-corner rules (`a:tcPr/a:lnTlToBr` / `a:lnBlToTr`), the
  * "Diagonal Down Border" / "Diagonal Up Border" of PowerPoint's border gallery.
  *
  * Deliberately its own object rather than two more entries on {@link TableCellProps.border}'s
  * tuple: widening that tuple to six would break every existing caller for a construct almost
- * no deck uses, and the two diagonals are not edges — they do not participate in the
+ * no deck uses, and the two diagonals are not edges: they do not participate in the
  * perimeter, and they are not inherited by a merged region's covered cells.
  *
  * @example diagonal: { tlToBr: { type:'solid', color:'C00000', width:1 } } // strike a cell out
@@ -130,7 +130,7 @@ export interface TableCellDiagonals {
 }
 /**
  * The four `a:cell3D` enumerations, derived from the `ST_` member tuples in
- * `src/ooxml/st-enums.ts` — the same tuples the emitter validates a value against, so the type
+ * `src/ooxml/st-enums.ts`, the same tuples the emitter validates a value against, so the type
  * a caller is checked against and the list that gates the XML cannot disagree.
  */
 export type { BevelPresetType, LightRigDirection, LightRigType, PresetMaterialType } from '../ooxml/st-enums.js'
@@ -138,8 +138,8 @@ export type { BevelPresetType, LightRigDirection, LightRigType, PresetMaterialTy
  * A cell's 3-D bevel (`a:tcPr/a:cell3D`).
  *
  * A minimal surface over `CT_Cell3D`, which is a required `a:bevel` plus an optional
- * `a:lightRig`. PowerPoint's table UI exposes no control for it — it reaches a deck through a
- * theme's table style or through another producer — so this exists to author and reproduce
+ * `a:lightRig`. PowerPoint's table UI exposes no control for it (it reaches a deck through a
+ * theme's table style or through another producer), so this exists to author and reproduce
  * one, not as a general 3-D model.
  */
 export interface TableCell3DProps {
@@ -213,7 +213,7 @@ export interface TableCellProps extends TextBaseProps {
 	 * - a single `BorderProps` is broadcast to all four sides
 	 * - an array is read in **TRBL** order (`[top, right, bottom, left]`)
 	 *
-	 * Overrides the table-level {@link TableProps.border} default entirely — the two do not
+	 * Overrides the table-level {@link TableProps.border} default entirely; the two do not
 	 * merge per side. A `null` entry is a hole: that edge is left out of `a:tcPr` and keeps
 	 * inheriting from the table style, while `{ type: 'none' }` writes an explicit no-line
 	 * that overrides it. For the two corner-to-corner rules see {@link diagonal}; for the
@@ -221,11 +221,11 @@ export interface TableCellProps extends TextBaseProps {
 	 */
 	border?: BorderProps | [BorderProps | null, BorderProps | null, BorderProps | null, BorderProps | null]
 	/**
-	 * The cell's corner-to-corner rules — PowerPoint's "Diagonal Down/Up Border".
+	 * The cell's corner-to-corner rules: PowerPoint's "Diagonal Down/Up Border".
 	 *
 	 * Kept off {@link border}'s tuple on purpose: see {@link TableCellDiagonals}. A diagonal
 	 * on a merged cell is one stroke across the whole region, so only the span origin carries
-	 * it — the covered cells inherit the origin's *edges* but never its diagonals.
+	 * it. The covered cells inherit the origin's *edges* but never its diagonals.
 	 * @example diagonal: { tlToBr: { type:'solid', color:'C00000' } } // strike the cell out
 	 */
 	diagonal?: TableCellDiagonals
@@ -238,7 +238,7 @@ export interface TableCellProps extends TextBaseProps {
 	 * left-aligned text in a wide cell, `anchorCtr: true` centres the ragged-right column of
 	 * lines as a unit while keeping their left edges flush with each other.
 	 *
-	 * `false` is the schema default, so it emits nothing — the same reasoning as
+	 * `false` is the schema default, so it emits nothing, the same reasoning as
 	 * `horzOverflow: 'clip'`.
 	 * @default false
 	 */
@@ -254,9 +254,9 @@ export interface TableCellProps extends TextBaseProps {
 	 */
 	colspan?: number
 	/**
-	 * Cell fill — a solid color, or a picture that fills the cell (`a:blipFill` in
+	 * Cell fill: a solid color, or a picture that fills the cell (`a:blipFill` in
 	 * the cell's `a:tcPr`, stretched to the cell box). A picture fill embeds the
-	 * image as slide media; identical sources are embedded once. Raster only —
+	 * image as slide media; identical sources are embedded once. Raster only:
 	 * an SVG source warns and is ignored, matching shape fills. A bare {@link Color} is
 	 * shorthand for a solid fill ({@link FillOption}).
 	 * @example 'FF0000' // hex color (red), shorthand for { color:'FF0000' }
@@ -275,13 +275,13 @@ export interface TableCellProps extends TextBaseProps {
 	 * This is **not** a text-wrap switch, despite the name. Lines always wrap to the column
 	 * width; only an individual character too wide to fit on a line by itself is affected, so
 	 * it matters for oversized display type, wide CJK/emoji glyphs, and icon fonts in a narrow
-	 * column. PowerPoint has no per-cell no-wrap at all — `wrap="none"` on a cell's `a:bodyPr`
+	 * column. PowerPoint has no per-cell no-wrap at all: `wrap="none"` on a cell's `a:bodyPr`
 	 * is discarded on the next save (probe:
 	 * `test/read/fixtures/authoring/probe-table-cell-wrap.ps1`).
 	 * `'clip'` is written as asked but is the schema default, so PowerPoint drops the
-	 * attribute again the first time it saves the deck — the visible result is the same
+	 * attribute again the first time it saves the deck. The visible result is the same
 	 * either way, and leaving this unset emits nothing at all.
-	 * @default (unset — PowerPoint clips)
+	 * @default (unset; PowerPoint clips)
 	 * @example 'overflow' // a 60pt glyph in a 0.5in column draws whole instead of being cut
 	 */
 	horzOverflow?: TextHorzOverflowType
@@ -298,7 +298,7 @@ export interface TableCellProps extends TextBaseProps {
 	/**
 	 * Shrink cell text to fit when it would overflow the cell's fixed height.
 	 * - `'shrink'` measures the wrapped text and bakes a **reduced literal font size**
-	 *   onto the cell's runs so the text fits — PowerPoint does not support text
+	 *   onto the cell's runs so the text fits. PowerPoint does not support text
 	 *   autofit (`normAutofit`) inside table cells, so there is no font-scale flag to
 	 *   set; the size itself is lowered, which both PowerPoint and LibreOffice render
 	 *   identically with no edit/resize.
@@ -375,7 +375,7 @@ export interface TableProps extends PlaceholderPositionProps, TextBaseProps, Obj
 	 *
 	 * Steers the default table width, `fitColumns: 'shrink'`, and every page the auto-pager
 	 * creates. It was declared on {@link TableToSlidesProps} only, while the pager read it on
-	 * both paths — so from `addTable` it worked at run time and the type rejected it, and the
+	 * both paths, so from `addTable` it worked at run time and the type rejected it, and the
 	 * table definer ignored it either way, which made "does my table respect `slideMargin`"
 	 * depend on whether `autoPage` was on.
 	 */
@@ -389,15 +389,15 @@ export interface TableProps extends PlaceholderPositionProps, TextBaseProps, Obj
 	 */
 	autoPagePlaceholder?: boolean
 	/**
-	 * Default border for **every cell** in the table — not the table's outer perimeter.
+	 * Default border for **every cell** in the table, not the table's outer perimeter.
 	 *
 	 * A single `BorderProps` is broadcast to all four sides of each cell; an array is read
 	 * in TRBL order and applied to each cell's own four sides. So
 	 * `border: [{type:'solid'}, {type:'none'}, {type:'solid'}, {type:'none'}]` gives *every*
-	 * cell a top and bottom rule — a full set of horizontal grid lines, not a rule at the
+	 * cell a top and bottom rule: a full set of horizontal grid lines, not a rule at the
 	 * top and bottom of the table. A cell's own `options.border` overrides this entirely.
 	 *
-	 * A `null` entry is a hole — that edge inherits from the table style — where
+	 * A `null` entry is a hole (that edge inherits from the table style), where
 	 * `{ type: 'none' }` writes an explicit no-line that overrides it. Authoring nothing at
 	 * all depends on {@link tableStyle}: a styled table leaves every edge absent so the style
 	 * paints its grid, and a table with no style takes four no-fill sides, which is what keeps
@@ -411,7 +411,7 @@ export interface TableProps extends PlaceholderPositionProps, TextBaseProps, Obj
 	 */
 	border?: BorderProps | [BorderProps | null, BorderProps | null, BorderProps | null, BorderProps | null]
 	/**
-	 * Border for the table's outer perimeter only — the top edge of the first row, the
+	 * Border for the table's outer perimeter only: the top edge of the first row, the
 	 * bottom edge of the last row, the left edge of the first column and the right edge of
 	 * the last column.
 	 *
@@ -422,7 +422,7 @@ export interface TableProps extends PlaceholderPositionProps, TextBaseProps, Obj
 	 * own `options.border`) already put there.
 	 *
 	 * Applied **after** every other border source, so it wins on the sides it touches and
-	 * leaves the interior alone — the "outline the table, no interior grid" case is
+	 * leaves the interior alone. The "outline the table, no interior grid" case is
 	 * `outerBorder` with no `border` at all. Merged cells are handled: a span's covered cells
 	 * inherit the origin's borders, so a colspan straddling the last column still gets the
 	 * right-hand rule.
@@ -509,7 +509,7 @@ export interface TableProps extends PlaceholderPositionProps, TextBaseProps, Obj
 	/**
 	 * Lay the table out right-to-left.
 	 * Emits `rtl="1"` on `<a:tblPr>`, which mirrors the column order so the first
-	 * column renders on the right — the correct layout for RTL scripts (Arabic, Hebrew).
+	 * column renders on the right, the correct layout for RTL scripts (Arabic, Hebrew).
 	 * This controls only the table/column direction; per-cell text direction is set
 	 * with each cell's `rtlMode` option.
 	 * @default false
@@ -525,7 +525,7 @@ export interface TableProps extends PlaceholderPositionProps, TextBaseProps, Obj
 	 *
 	 * **Only a built-in GUID renders.** PowerPoint resolves `<a:tableStyleId>` against
 	 * its own table-style gallery and never reads a style definition out of the package,
-	 * so a GUID it does not recognise leaves the table with PowerPoint's no-style look —
+	 * so a GUID it does not recognise leaves the table with PowerPoint's no-style look:
 	 * a black hairline grid. For brand colours use direct formatting instead:
 	 * `headerRow`, `columns[i]`, the table-level {@link border} / {@link fill}, or per-cell
 	 * options. See `docs/tables.md` → "Apply a built-in table style".
@@ -539,7 +539,7 @@ export interface TableProps extends PlaceholderPositionProps, TextBaseProps, Obj
 	 * This is how a header is styled distinctly from the body: each property is merged
 	 * onto every cell of row 0 (`fill`, `color`, `bold`, `align`, `border`, etc.).
 	 *
-	 * Precedence (highest wins), matching how PowerPoint resolves styling — direct cell
+	 * Precedence (highest wins), matching how PowerPoint resolves styling, where direct cell
 	 * formatting overrides a table-style region:
 	 * 1. explicit per-cell `options` on a row-0 cell
 	 * 2. this `headerRow`
@@ -555,13 +555,13 @@ export interface TableProps extends PlaceholderPositionProps, TextBaseProps, Obj
 	 * Per-column default cell styling, applied as direct per-cell formatting.
 	 *
 	 * `columns[i]` is merged onto every cell that starts in column `i` (`fill`, `color`,
-	 * `bold`, `align`, `valign`, `border`, `margin`, …), so a wide **colored** matrix —
-	 * per-column fills, maturity-gradient headers — does not require hand-writing a fill
+	 * `bold`, `align`, `valign`, `border`, `margin`, …), so a wide **colored** matrix
+	 * (per-column fills, maturity-gradient headers) does not require hand-writing a fill
 	 * onto every cell. Entries may be sparse (`columns[2]` alone styles only column 2);
 	 * an `undefined`/omitted entry leaves that column untouched. The whole option is
 	 * optional and degrades cleanly to today's text-on-white when not given.
 	 *
-	 * Precedence (highest wins), matching how PowerPoint resolves styling — direct cell
+	 * Precedence (highest wins), matching how PowerPoint resolves styling, where direct cell
 	 * formatting overrides a table-style region:
 	 * 1. explicit per-cell `options`
 	 * 2. `headerRow` (row 0 only)
@@ -589,7 +589,7 @@ export interface TableProps extends PlaceholderPositionProps, TextBaseProps, Obj
 	 */
 	columns?: TableCellProps[]
 	/**
-	 * Default cell background — **stamped onto every cell**, not painted behind the table.
+	 * Default cell background, **stamped onto every cell**, not painted behind the table.
 	 *
 	 * Each cell that does not set its own `options.fill` (or take one from `headerRow` /
 	 * `columns[i]`) gets this as its own `a:tcPr` fill. A picture fill is embedded once and
@@ -597,8 +597,8 @@ export interface TableProps extends PlaceholderPositionProps, TextBaseProps, Obj
 	 *
 	 * Visually this is usually what you want, but it is not what a source deck contains, and
 	 * it has one real consequence: because every cell ends up explicitly filled, a cell that
-	 * later gets its own fill has nothing to fall back to. For a genuine table background —
-	 * one `a:tblPr` fill that cells sit on top of — use {@link tableFill}. A bare
+	 * later gets its own fill has nothing to fall back to. For a genuine table background
+	 * (one `a:tblPr` fill that cells sit on top of), use {@link tableFill}. A bare
 	 * {@link Color} is shorthand for a solid fill ({@link FillOption}).
 	 * @example 'FF0000' // hex color (red), shorthand for { color:'FF0000' }
 	 * @example { color:'FF0000' } // hex color (red)
@@ -608,18 +608,18 @@ export interface TableProps extends PlaceholderPositionProps, TextBaseProps, Obj
 	 */
 	fill?: FillOption
 	/**
-	 * The table's own background (`a:tblPr` fill) — one fill behind the whole table that
+	 * The table's own background (`a:tblPr` fill): one fill behind the whole table that
 	 * every cell sits on top of.
 	 *
 	 * The counterpart to {@link fill}, and the difference is where the paint lands rather
 	 * than how it looks: `fill` copies a colour onto every cell, while this writes a single
-	 * fill on the table itself. That matters when a cell is meant to be transparent — with
+	 * fill on the table itself. That matters when a cell is meant to be transparent: with
 	 * `tableFill`, an unfilled cell shows the table background through; with `fill` there is
 	 * no such thing as an unfilled cell. It is also what a deck read back from PowerPoint
 	 * actually carries, so a replica reproduces the source's structure rather than an
 	 * equivalent-looking flattening of it.
 	 *
-	 * Takes the same {@link FillOption} a cell does — solid, gradient, pattern or picture,
+	 * Takes the same {@link FillOption} a cell does: solid, gradient, pattern or picture,
 	 * or a bare {@link Color} as shorthand for a solid fill.
 	 * @example 'F2F2F2' // shorthand for { color:'F2F2F2' }
 	 * @example { color:'F2F2F2' } // a light background behind the whole table
@@ -640,7 +640,7 @@ export interface TableProps extends PlaceholderPositionProps, TextBaseProps, Obj
 	 * value and anything that does not read as a finite number are not heights, so they do
 	 * not pin: the row is sized from the table's `h` instead, or grows to fit if there is
 	 * none, and a `table/invalid-row-height` diagnostic says so. A *missing* array slot, or
-	 * `null` in it, is different and is silent — that is how an auto-height row is spelled.
+	 * `null` in it, is different and is silent; that is how an auto-height row is spelled.
 	 *
 	 * The reading is shared by everything that answers a question about row height: the
 	 * emitted `<a:tr h>`, the export-time measured-fit pass, the auto-pager, and
@@ -661,7 +661,7 @@ export interface TableCell {
 	/**
 	 * Cell content: a plain string, or an array of `TableCell` runs for mixed formatting.
 	 * (A `number` is still coerced to a string at runtime for plain-JS callers, but is no
-	 * longer part of the type — pass `String(n)` from TypeScript.)
+	 * longer part of the type; pass `String(n)` from TypeScript.)
 	 */
 	text?: string | TableCell[]
 	options?: TableCellProps
@@ -690,8 +690,8 @@ export interface TableRowSlide {
 	/**
 	 * The column grid (inches) the pager measured this page against, one entry per grid column.
 	 *
-	 * The pager resolves `colW` — normalizing a short array, and distributing the usable width
-	 * when the caller gave none — and the emitted table has to use the same grid, or the widths
+	 * The pager resolves `colW` (normalizing a short array, and distributing the usable width
+	 * when the caller gave none), and the emitted table has to use the same grid, or the widths
 	 * the text was wrapped to are not the widths it is drawn in. This carried it by writing
 	 * back onto the options bag it was handed, which made a reused bag change the next call's
 	 * output; it rides out here instead.

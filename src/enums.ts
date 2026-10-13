@@ -261,8 +261,8 @@ export enum AlignH {
 /**
  * @deprecated The enum form of `VAlign`, which no option actually takes. Use the `VAlign`
  * string union (`'top' | 'middle' | 'bottom'`) or, for a text body's own anchoring,
- * {@link TextAnchor}. Unlike its sibling {@link AlignH} — which `TextPropsOptions.align`
- * really is typed as — nothing in the library reads this, so it is a third spelling of a
+ * {@link TextAnchor}. Unlike its sibling {@link AlignH} (which `TextPropsOptions.align`
+ * really is typed as), nothing in the library reads this, so it is a third spelling of a
  * two-spelling fact. It will be removed in the next major.
  */
 export enum AlignV {
@@ -313,7 +313,7 @@ export type CONNECTOR_PRESET_NAME = (typeof EXTRA_SHAPE_PRESETS)[number]
 
 /**
  * Every shape geometry name pptx-ts can serialize without corrupting the
- * package: the OOXML preset geometries (`ST_ShapeType` — `ShapeType` values
+ * package: the OOXML preset geometries (`ST_ShapeType`: `ShapeType` values
  * plus the unexposed connectors above) and `custGeom` (freeform paths, emitted
  * as `<a:custGeom>` rather than `<a:prstGeom>`). Used to reject bogus presets
  * before they become an invalid `<a:prstGeom prst="...">` that triggers
@@ -327,7 +327,7 @@ export const VALID_SHAPE_PRESETS: ReadonlySet<string> = new Set<string>([
 /**
  * Narrow a public `CHART_NAME` to the internal `ChartType` enum. Because
  * `CHART_NAME` is derived from `ChartType`, every `CHART_NAME` value is by
- * construction a valid enum value, so this conversion is total and safe — it is
+ * construction a valid enum value, so this conversion is total and safe. It is
  * the single boundary cast that lets internal code compare against the enum
  * (enum-to-enum) instead of enum-to-string.
  */
@@ -342,7 +342,7 @@ const CHART_TYPES: ReadonlySet<string> = new Set<string>(Object.values(ChartType
  * Is `name` a chart type this library emits?
  *
  * `CHART_NAME` constrains TypeScript callers, but `addChart` is reachable from plain JavaScript
- * where nothing enforces the union — and the two emitters partition the catalog between them by
+ * where nothing enforces the union, and the two emitters partition the catalog between them by
  * `switch`, so an off-catalog string has no arm in either and cannot produce a plot. Checked once
  * at define time (`gen/define/chart.ts`) so the caller hears about it at the call that was wrong,
  * rather than getting a chart-shaped hole in the deck.
@@ -371,8 +371,8 @@ const CHARTEX_TYPES: ReadonlySet<string> = new Set<string>([
 ])
 
 /**
- * Is `type` a chartEx (cx:) chart? Accepts a `ChartType`/`CHART_NAME` string; anything else —
- * including a combo-chart `ChartMulti[]` array or `undefined` — is not a chartEx type (combos are
+ * Is `type` a chartEx (cx:) chart? Accepts a `ChartType`/`CHART_NAME` string; anything else
+ * (including a combo-chart `ChartMulti[]` array or `undefined`) is not a chartEx type (combos are
  * classic-only), so those return `false`.
  */
 export function isChartExType(type: unknown): boolean {
@@ -400,7 +400,7 @@ export enum SlideObjectType {
 /**
  * Maps a friendly `ConnectorType` to its OOXML connector preset *family*. `straight`
  * has a single fixed preset; `elbow` and `curved` select a member by bend count
- * (`bentConnector{3,4,5}` / `curvedConnector{3,4,5}`) — see `connectorPresetFor`.
+ * (`bentConnector{3,4,5}` / `curvedConnector{3,4,5}`); see `connectorPresetFor`.
  *
  * Not exported: `connectorPresetFor`, eleven lines below, is its only reader, and
  * `docs/contributing/architecture.md` puts internal OOXML generators off the published surface unless

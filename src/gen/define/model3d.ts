@@ -1,23 +1,23 @@
 /**
- * pptx-ts: 3D model Definition (`addModel3d()` — PowerPoint's Insert ▸ 3D Models).
+ * pptx-ts: 3D model Definition (`addModel3d()`, PowerPoint's Insert ▸ 3D Models).
  *
  * Registers the `.glb` payload as an embedded media part plus a preview-picture image rel, and
  * pushes a `SlideObject{ _type: model3d, model3d }` for `gen/slide/objects/model3d.ts` to emit as
  * an `<mc:AlternateContent>` wrapping a `<p:graphicFrame>`.
  *
  * Ground truth for the package-level choices here (verified against a deck authored by PowerPoint
- * via `Shapes.Add3DModel` — `test/read/fixtures/model3d.pptx`):
+ * via `Shapes.Add3DModel`, `test/read/fixtures/model3d.pptx`):
  *   - the payload is referenced with the Microsoft `…/office/2017/06/relationships/model3d` rel
- *     type and registered by a content-type `Default` for `glb` — `model/gltf.binary`, spelled
+ *     type and registered by a content-type `Default` for `glb`: `model/gltf.binary`, spelled
  *     with a dot, not the `model/gltf-binary` of the IANA-style media type;
  *   - both the payload and the preview picture live in `ppt/media/`, the payload named `model3dN`;
- *   - the preview picture is an ordinary image rel, referenced twice — once by `am3d:raster`'s
+ *   - the preview picture is an ordinary image rel, referenced twice: once by `am3d:raster`'s
  *     `am3d:blip` and once by the `mc:Fallback` picture.
  *
  * Camera: PowerPoint derives its camera from the model's bounding box (it normalizes the largest
  * extent to 1 metre, then frames the resulting bounding sphere). This library does not parse
  * glTF, so it emits the camera PowerPoint wrote for a 2×2×2 cube and lets the caller override the
- * scale — see `docs/3d-models.md`.
+ * scale (see `docs/3d-models.md`).
  */
 import { SlideObjectType } from '../../enums.js'
 import type { Model3dProps, Model3dPoint, Model3dCameraProps } from '../../types/model3d.js'
@@ -41,7 +41,7 @@ const AM3D_RATIO_DEN = 1000000
 
 /**
  * The camera PowerPoint wrote for the 2×2×2 cube fixture, in caller units (metres / degrees).
- * `z` is `sqrt(3)/2 / sin(22.5°)` — the bounding sphere of a 1-metre cube framed at a 45° fov.
+ * `z` is `sqrt(3)/2 / sin(22.5°)`: the bounding sphere of a 1-metre cube framed at a 45° fov.
  */
 const DEFAULT_CAMERA = {
 	pos: { x: 0, y: 0, z: 2.2630334 },
@@ -118,7 +118,7 @@ export function addModel3dDefinition(target: PresSlideInternal, opt: Model3dProp
 
 	// STEP 2: Resolve the camera and the object's own options before touching the rel table, so an
 	// invalid option throws without leaving a half-registered part behind. A 3D model has no aspect
-	// ratio and the library never opens the payload, so — as with `addOleObject` — there is no
+	// ratio and the library never opens the payload, so (as with `addOleObject`) there is no
 	// natural size to measure.
 	const camera = resolveCamera(opt.camera, opt.meterPerModelUnit)
 	const options = framedObjectOptions(target, SlideObjectType.model3d, opt, {
@@ -143,7 +143,7 @@ export function addModel3dDefinition(target: PresSlideInternal, opt: Model3dProp
 		extra: { model3dRelType: MODEL3D_REL },
 	})
 
-	// STEP 4: Register the preview picture. Unlike OLE's silent placeholder, say so out loud — a
+	// STEP 4: Register the preview picture. Unlike OLE's silent placeholder, say so out loud: a
 	// missing preview is invisible in PowerPoint, which draws the live model on screen, in exports
 	// and in print, and shows up only in another application, i.e. long after the deck was checked.
 	if (!opt.preview?.path && !opt.preview?.data) {

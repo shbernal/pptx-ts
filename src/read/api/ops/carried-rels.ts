@@ -4,7 +4,7 @@
  * When a shape or decoration is deep-copied out of a source deck, every relationship
  * reference it carries (`r:embed` on a picture fill, `r:id` on a chart frame, `r:link` on a
  * linked image, …) still names an id in the *source* part's relationship list. Left alone
- * those ids either dangle or — worse — silently resolve to whatever the destination part
+ * those ids either dangle or, worse, silently resolve to whatever the destination part
  * happens to have under the same id. This rewrites each one to a fresh relationship on the
  * destination part, copying the referenced part into the destination package on first sight.
  *
@@ -83,8 +83,8 @@ function carryRel(
 			'relationship/not-found',
 			`Relationships of ${sourceRels.sourcePartName}: no relationship with id ${id}`
 		)
-	// The dedupe cache is for what may be shared. A part the carried content owns —
-	// the chart under a copied frame, the diagram under a copied SmartArt — is copied
+	// The dedupe cache is for what may be shared. A part the carried content owns
+	// (the chart under a copied frame, the diagram under a copied SmartArt) is copied
 	// into its scope instead, so carrying the same shape twice does not hand two
 	// frames one chart part, which is a deck PowerPoint refuses to open.
 	const ownsIt = owned !== undefined && rel.targetMode !== 'External' && !isSharedByPageCopies(rel.type)

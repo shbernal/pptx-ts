@@ -31,7 +31,7 @@ export interface GradientStop {
 }
 
 /**
- * A gradient fill (`a:gradFill`), as read from a container — the stops plus the
+ * A gradient fill (`a:gradFill`), as read from a container: the stops plus the
  * geometry that a bare stop list omits. `linear` gradients carry an
  * {@link GradientFill.angleDeg} (the `a:lin/@ang` direction); `radial`/`path`
  * gradients carry a {@link GradientFill.path} shape (`a:path/@path`, e.g.

@@ -24,8 +24,8 @@ import { InternalError, InvalidOptionError } from '../../../errors.js'
  * graphicFrame transform and table grid on the slide; in `copy` mode also
  * rescales the imported layout and master shape trees (resolved via the
  * slide → layout → master rel chain) so inherited placeholder/background geometry
- * stays aligned. `preserve`/`restyle` rebind to this deck's own master/layout —
- * already the destination size — so only the slide is touched. Geometry only:
+ * stays aligned. `preserve`/`restyle` rebind to this deck's own master/layout,
+ * already the destination size, so only the slide is touched. Geometry only:
  * font sizes and line widths are left as authored.
  */
 export function rescaleImportedGeometry(

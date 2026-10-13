@@ -124,11 +124,11 @@ export function getDuplicateObjectNames(names: string[]): string[] {
  *
  * Counting is the normal case: a slide's rels are minted in order, so one past the
  * total is free. It is not enough on its own, because a rel can arrive on a slide
- * carrying an id minted somewhere else — auto-paging re-registers a repeated header
+ * carrying an id minted somewhere else: auto-paging re-registers a repeated header
  * row's hyperlink on each overflow slide under the id stamped on the shared
  * hyperlink object (`gen/define/hyperlinks.ts`). That id is then held but not
  * counted-to, so the next mint could hand out the same number and the part would
- * declare two `Relationship` elements sharing an `Id` — invalid OPC, and PowerPoint
+ * declare two `Relationship` elements sharing an `Id`. That is invalid OPC, and PowerPoint
  * resolves such a reference to whichever comes first. Hence the scan: start where
  * the count says, then step over anything the slide already holds.
  * @param {PresSlideInternal} target - the slide to use
@@ -189,7 +189,7 @@ function mediaSlideKey(target: PresSlideInternal): string {
  * `embeddings`.
  *
  * The trailing number counts a target's media parts from one, and it is read *before* the
- * push that consumes the name — so this must be called in the object literal being pushed,
+ * push that consumes the name, so this must be called in the object literal being pushed,
  * not hoisted above an earlier push, which would rename every part after it. Eight sites
  * spelled the rule out by hand with `_relsMedia.length + 1` inline; naming it is what lets
  * the off-by-one convention be stated once and read.
@@ -210,7 +210,7 @@ export function nextMediaTarget(
 
 /**
  * The `path` a media rel carries when its bytes came inline as `data` and there is no file to
- * name — `preencoded.png`, `preencoded.mp4`. Nothing loads it: the media pass tells it apart
+ * name: `preencoded.png`, `preencoded.mp4`. Nothing loads it: the media pass tells it apart
  * with {@link isPreencodedPath}.
  *
  * The spelling still reaches a deck. An image object with no alt text falls back to its path for

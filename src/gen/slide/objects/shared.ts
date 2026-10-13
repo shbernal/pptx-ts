@@ -2,7 +2,7 @@
  * pptx-ts: helpers shared by more than one slide-object renderer
  *
  * The `<p:cNvPr>` element, its `<a:hlinkClick>` children and the `<a:ln>` outline are each
- * emitted by several shape kinds. They live here — rather than in the dispatch module — so a
+ * emitted by several shape kinds. They live here, rather than in the dispatch module, so a
  * renderer never has to import from its own caller.
  */
 
@@ -37,9 +37,9 @@ import { prstGeomRect } from '../../drawingml/geometry.js'
  * Everything a renderer needs is here, and that is now a requirement rather than an observation:
  * a renderer is called through {@link RendererTable}, so it takes this and nothing else. Two used
  * to take a second argument. The connector's `shapeIds` map is genuine context and moved onto this
- * interface; the image's `{ imgWidth, imgHeight }` was `frame.cx`/`frame.cy` under another name —
- * the dispatch captured them from the same two variables the frame is built from, two statements
- * apart — so it reads the frame instead.
+ * interface; the image's `{ imgWidth, imgHeight }` was `frame.cx`/`frame.cy` under another name
+ * (the dispatch captured them from the same two variables the frame is built from, two statements
+ * apart), so it reads the frame instead.
  */
 export interface RenderContext {
 	/** The slide object being emitted. */
@@ -48,20 +48,20 @@ export interface RenderContext {
 	 * Its `<p:cNvPr>` id, from the one allocator (`collectSlideShapeIds`).
 	 *
 	 * Every renderer used to recompute it as `idx + 2` off the walk index, and the group walk
-	 * kept a second counter for children — so the map that answers a forward reference (a
+	 * kept a second counter for children, so the map that answers a forward reference (a
 	 * connector's `a:stCxn`, an animation's `p:spTgt spid`) and the ids actually emitted were two
 	 * derivations that had to be kept in step by hand.
 	 */
 	shapeId: number
 	/**
-	 * Every object's id, not just this one's — the whole map `shapeId` was read out of.
+	 * Every object's id, not just this one's: the whole map `shapeId` was read out of.
 	 *
 	 * A forward reference resolves through it: a connector names its endpoints by `objectName`
 	 * and has to answer with the id the target will be emitted with, which the walk has not
 	 * reached yet.
 	 */
 	shapeIds: ReadonlyMap<SlideObject, number>
-	/** The page it belongs to — a slide, a layout or the master. */
+	/** The page it belongs to: a slide, a layout or the master. */
 	slide: PresSlideInternal | SlideLayoutInternal | SlideMasterInternal
 	/** The resolved box in EMU: normalized for negative extents, then overridden by a placeholder. */
 	frame: { x: number; y: number; cx: number; cy: number }
@@ -112,7 +112,7 @@ export function slideTextColor(page: RenderContext['slide']): string {
 export type ObjectRenderer = (ctx: RenderContext) => string
 
 /**
- * Which renderer emits each shape family — the dispatch's whole knowledge of what a family's XML
+ * Which renderer emits each shape family: the dispatch's whole knowledge of what a family's XML
  * looks like, supplied to it from outside.
  *
  * It has to come from outside. A named import inside a reachable function body is retained
@@ -238,7 +238,7 @@ export function xfrmEl(
  * A group's `<a:xfrm>`: the box, then an IDENTITY child coordinate space (`chOff`/`chExt` equal
  * to `off`/`ext`).
  *
- * The identity is the contract `docs/groups.md` and the measured-fit solver both rest on — a
+ * The identity is the contract `docs/groups.md` and the measured-fit solver both rest on: a
  * group never scales its children, so a grouped shape's authored size is its rendered size.
  * Three group emitters spelled the four-child block out.
  * @param frame - the box, in EMU
@@ -282,13 +282,13 @@ export function spTreeEl(children: readonly string[]): string {
  *
  * The child order is the point. `CT_GraphicalObjectFrame` sequences
  * `nvGraphicFramePr` → `xfrm` → `graphic`, and PowerPoint reports a frame that gets it wrong as
- * a corrupt file (0x80070570) rather than as a bad element — a failure the five emitters that
+ * a corrupt file (0x80070570) rather than as a bad element, a failure the five emitters that
  * build one (chart, table, OLE, zoom, 3D model) each had to be right about separately.
  *
  * `nvGraphicFramePr` stays the caller's to build and is *not* folded in here. The five differ in
- * every part of it — an empty `<p:cNvGraphicFramePr>` for a chart against four different
+ * every part of it (an empty `<p:cNvGraphicFramePr>` for a chart against four different
  * `<a:graphicFrameLocks>` default sets, a `<p:nvPr>` that is empty for three and carries a
- * placeholder (and, for a table, a `p14:modId` extension) for the other two — and each of those
+ * placeholder (and, for a table, a `p14:modId` extension) for the other two), and each of those
  * differences is deliberate and documented where it is made.
  *
  * @param opts.nvGraphicFramePr - the already-serialized `<p:nvGraphicFramePr>`
@@ -325,7 +325,7 @@ export function graphicFrameEl(opts: {
  *
  * Fixed rather than taken from the caller's `objectLock`, and that is true of every construct
  * that emits one: the fallback picture is what a consumer *without* the feature draws, while the
- * caller's locks belong on the `mc:Choice` frame — the object PowerPoint itself manipulates. The
+ * caller's locks belong on the `mc:Choice` frame, the object PowerPoint itself manipulates. The
  * two element types also accept different flags, so folding a `graphicFrameLocks` set onto a
  * `picLocks` would warn about every flag they do not share. Routed through `genXmlObjectLock` so
  * attribute order comes from `PICTURE_LOCK_ATTRS` (`gen/drawingml/locks.ts`) rather than from a literal, and a flag
@@ -349,7 +349,7 @@ export const FALLBACK_PICTURE_LOCKS = Object.freeze({
 /**
  * The drawn half of an `mc:Fallback` preview picture: the `<p:blipFill>` onto the cached image
  * and the `<p:spPr>` that places it. Identical in the OLE, zoom and 3D-model emitters, which is
- * everything a preview picture is apart from its `<p:nvPicPr>` — and there the three differ on
+ * everything a preview picture is apart from its `<p:nvPicPr>`, and there the three differ on
  * purpose (an id-less `cNvPr` for OLE, a hyperlinked one for a zoom tile, `noCrop` for a model),
  * so each keeps its own.
  * @param previewRid - the relationship id of the cached image

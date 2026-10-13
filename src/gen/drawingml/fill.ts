@@ -171,7 +171,7 @@ export function genXmlImageFill(props: ShapeFillPropsInternal | undefined): stri
 	// fill emitted before `crop` existed.
 	const srcRect = props.image?.crop ? genXmlImageCropRect(props.image.crop, 'image fill', '') : voidEl('a:srcRect')
 	return el('a:blipFill', { dpi: 0, rotWithShape: 1 }, [
-		// `<a:blip>` stays paired even with no `alphaModFix` child — the arity rule.
+		// `<a:blip>` stays paired even with no `alphaModFix` child (the arity rule).
 		raw(el('a:blip', { 'r:embed': `rId${props._imgRid}` }, raw(blipInner))),
 		raw(srcRect),
 		raw(STRETCH_FILL_RECT),
@@ -189,7 +189,7 @@ type FillKind = NonNullable<ShapeFillProps['type']>
  * `type: 'none'` needs in order to mean anything (`{ type: 'none', color }` must stay
  * transparent), so it is the rule everywhere rather than one kind's exception.
  *
- * With no `type`, the first sub-object present selects the kind, in declaration order —
+ * With no `type`, the first sub-object present selects the kind, in declaration order:
  * `gradient`, then `pattern`, then `image`. Setting two without a `type` is already a
  * contradiction; the order exists so the answer is stated rather than emergent.
  *
@@ -215,15 +215,15 @@ type LineFillKind = Exclude<FillKind, 'image'>
 /**
  * {@link resolveFillKind} for a stroke, which has one kind fewer.
  *
- * `<a:ln>`'s paint child is `EG_LineFillProperties` — `a:noFill`, `a:solidFill`, `a:gradFill`,
- * `a:pattFill` — with no `a:blipFill` among them, so a picture stroke has no OOXML expression
+ * `<a:ln>`'s paint child is `EG_LineFillProperties` (`a:noFill`, `a:solidFill`, `a:gradFill`,
+ * `a:pattFill`), with no `a:blipFill` among them, so a picture stroke has no OOXML expression
  * and `ShapeLineProps` subtracts `image` from the fill props it inherits. This is where the
  * subtraction is enforced at run time, for the JS caller TypeScript cannot stop: the request
  * is refused rather than painted as nothing, because emitting a blipFill inside `a:ln` is a
  * package PowerPoint reports as needing repair, and emitting nothing is a stroke the caller
  * asked to be a picture and got in the theme colour without being told.
  *
- * Every stroke site resolves through here — the two `define/` rebuilds and the emitter — so
+ * Every stroke site resolves through here (the two `define/` rebuilds and the emitter), so
  * the refusal names the call the caller made rather than surfacing at serialization time.
  */
 export function resolveLineKind(props: ShapeLineProps | undefined): LineFillKind {
@@ -244,7 +244,7 @@ export function resolveLineKind(props: ShapeLineProps | undefined): LineFillKind
  * a fill child for an empty props object would paint them default black.
  *
  * "Said nothing" is narrower than "is empty". `'inherit'` is the explicit spelling of the
- * same silence and is false here. `'none'` is a statement — `<a:noFill/>` — and is true.
+ * same silence and is false here. `'none'` is a statement (`<a:noFill/>`) and is true.
  * A `'solid'` kind needs a `color` to be saying anything; every other kind carries its
  * payload in its own sub-object, so its presence is the statement.
  *
@@ -264,7 +264,7 @@ export function fillNamesPaint(props: Color | ShapeFillProps | ShapeLineProps | 
 /**
  * Reject the empty-colour spelling of a missing value, in either shape a fill can wear.
  *
- * `''` and `{ color: '' }` say the same thing — the caller had no colour — and only the
+ * `''` and `{ color: '' }` say the same thing (the caller had no colour), and only the
  * second used to reach {@link createColorElement} and paint black. Both fold back onto
  * *absence* here, which is not the same as "emit nothing": what an absent fill means is the
  * surface's own rule, and a text box's absent fill is `<a:noFill/>`. So a site whose absence
@@ -282,8 +282,8 @@ export function rejectEmptyFill(props: Color | ShapeFillProps | ShapeLineProps |
 /**
  * A solid paint for {@link genXmlColorSelection}, carrying `transparency` only when one was set.
  *
- * Every caller assembles this out of an optional source — `border.transparency`,
- * `opts.transparency` — and writing the key with an `undefined` in it would be a second spelling
+ * Every caller assembles this out of an optional source (`border.transparency`,
+ * `opts.transparency`), and writing the key with an `undefined` in it would be a second spelling
  * of "no transparency": one that reads the same here, but not in a bag that is spread over
  * another. So the key is simply absent, which is this codebase's one spelling of unset.
  * @param color - the colour to paint, already resolved against whatever default applies
@@ -296,7 +296,7 @@ export function solidPaint(color: Color, transparency: number | undefined): Shap
 /**
  * Emit the fill group a set of fill/line props asks for, dispatching on
  * {@link resolveFillKind}. Returns '' for props that name nothing to paint, so a caller
- * with an optional paint can hand this whatever it has — including `undefined`.
+ * with an optional paint can hand this whatever it has, including `undefined`.
  * @param {Color | ShapeFillProps | ShapeLineProps | undefined} props fill props
  * @returns XML string
  */
@@ -308,7 +308,7 @@ export function genXmlColorSelection(props: Color | ShapeFillProps | ShapeLinePr
 	// Both spellings of the caller's missing value, folded onto the one answer. A bare `''`
 	// is falsy and would otherwise fall past the guard below and emit nothing without a word;
 	// `{ color: '' }` is truthy and used to fall through to `createColorElement`, which
-	// painted DEF_FONT_COLOR — visible black on a shape the caller expected to inherit,
+	// painted DEF_FONT_COLOR: visible black on a shape the caller expected to inherit,
 	// while the bare spelling of the same intent inherited silently. `fillNamesPaint` already
 	// answered "names no paint" for both, so the two functions disagreed about one input.
 	if (rejectEmptyFill(props, 'color')) return ''
@@ -322,7 +322,7 @@ export function genXmlColorSelection(props: Color | ShapeFillProps | ShapeLinePr
 		}
 
 		switch (fillType) {
-			// `type: 'none'` is an explicit *no fill*, not the absence of a statement — the
+			// `type: 'none'` is an explicit *no fill*, not the absence of a statement. It is the
 			// same distinction `genXmlLineFill` already makes on the stroke side. Emitting
 			// nothing leaves the interior to `p:style/a:fillRef` or the placeholder, so a
 			// shape authored transparent came out painted in the theme's accent colour.

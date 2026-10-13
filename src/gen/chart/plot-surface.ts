@@ -4,7 +4,7 @@
  * Emits the classic `<c:surface3DChart>` (a 3-D surface) or `<c:surfaceChart>` (a 2-D
  * contour / top view), selected by the `surface3D` option; `wireframe` toggles the
  * mesh-only look. A surface chart interpolates a colored sheet over the category (X) and
- * series (Z) axes with the value as height (Y), so — like `bar3D` — it needs all three
+ * series (Z) axes with the value as height (Y), so, like `bar3D`, it needs all three
  * axes and a `<c:view3D>` + floor/side/back walls (emitted by the surface branch of
  * `makeChartHeaderXml`). Reached through {@link ./chart-xml}'s `makeChartType` dispatch.
  */

@@ -30,15 +30,15 @@ type LockAttrName =
 /**
  * Both halves of "the tables mirror `ObjectLockProps`", checked rather than asserted in a comment.
  *
- * No single table can be exhaustive — the four locking elements accept different attribute
- * subsets, and each table's order is byte-significant — so the claim is about their union. A key
+ * No single table can be exhaustive (the four locking elements accept different attribute
+ * subsets, and each table's order is byte-significant), so the claim is about their union. A key
  * added to the interface and to no table makes the second entry `never`, and a name in a table
  * that is not a key of the interface makes the first one `never`; either way `true` stops being
  * assignable and this fails to compile.
  *
  * Nothing imports it and nothing ever will: the `export` is what keeps it from being reported as
  * an unused binding, which is the one thing that would get an assertion like this deleted. Left
- * exported deliberately rather than by oversight — this note is the difference between the two.
+ * exported deliberately rather than by oversight; this note is the difference between the two.
  * `@public` tells knip the same thing.
  * @public
  */

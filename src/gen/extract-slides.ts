@@ -3,8 +3,8 @@
  *
  * The serialization pass behind `Presentation.extractSlides()`: it runs the same
  * pre-serialization work a write does (`./prepare`), serializes each slide body, and resolves
- * everything the body *references* — image media, audio/video, online video, hyperlinks,
- * charts, notes, comments — into descriptors the read side's `appendSlides` can splice into a loaded
+ * everything the body *references* (image media, audio/video, online video, hyperlinks,
+ * charts, notes, comments) into descriptors the read side's `appendSlides` can splice into a loaded
  * deck without touching that deck's masters, layouts or theme.
  *
  * Nothing here resolves a descriptor into a package part. Reserving parts and rebuilding the
@@ -36,7 +36,7 @@ import { buildNotesSlideRels, makeXmlNotesMaster, makeXmlNotesSlide } from './sl
 import { makeXmlTheme } from './pres/theme.js'
 
 /**
- * The slice of a deck's state an extraction reads — the same fields `PackageSource` carries for a
+ * The slice of a deck's state an extraction reads: the same fields `PackageSource` carries for a
  * write, minus the custom properties, which reach no slide. `presentation` supplies the slides,
  * the canvas size and the embedded fonts, and is what the notes master's theme is built from.
  */
@@ -46,7 +46,7 @@ interface ExtractSource {
 	readonly fontMetrics: FontMetricsRegistry
 	/**
 	 * Which renderer emits each shape family. An extracted body is the same XML a write would put
-	 * in the slide part, so it is emitted through the same table rather than a fixed one — see
+	 * in the slide part, so it is emitted through the same table rather than a fixed one; see
 	 * `RendererTable` in `slide/objects/shared.ts`.
 	 */
 	readonly renderers: RendererTable
@@ -67,7 +67,7 @@ type RelsByRid = ReadonlyMap<number, PresSlideInternal['_relsMedia'][number]>
  * (rId=mediaRid), the MS-2007 `media` rel (mediaRid+1, sharing one Target),
  * and the preview image rel (mediaRid+2). The body references all three; we
  * surface the descriptor so appendSlides can reproduce the rel graph. Online
- * media (external link) is excluded — it has a different rel shape and no part.
+ * media (external link) is excluded: it has a different rel shape and no part.
  */
 function avMediaOf(slide: PresSlideInternal, relByRid: RelsByRid): ExtractedSlide['avMedia'] {
 	return slide._slideObjects
@@ -176,7 +176,7 @@ function hyperlinksOf(slide: PresSlideInternal): ExtractedSlide['hyperlinks'] {
  * A Target that does not read as a slide number throws rather than passing `NaN` on to the
  * append path's rel-graph rebuild, where it surfaces as "links to source slide NaN" a whole
  * subsystem later. `addText` writes this Target itself, so the condition is a defect on this
- * side rather than bad input — an {@link InternalError}, like the chart router's own.
+ * side rather than bad input: an {@link InternalError}, like the chart router's own.
  */
 function slideLinksOf(rels: readonly SlideRel[]): ExtractedSlide['slideLinks'] {
 	return rels
@@ -226,8 +226,8 @@ export async function extractSlides(
 	// A link to a slide the deck does not have is refused before anything is prepared, as on a write.
 	requireSlideLinksInDeck(deckSlides)
 
-	// STEP 1+2: The same pre-serialization pass `buildPackageParts` runs — register transition
-	// sounds, backfill placeholders, encode media, bake measured fit — so extracted bodies match a
+	// STEP 1+2: The same pre-serialization pass `buildPackageParts` runs (register transition
+	// sounds, backfill placeholders, encode media, bake measured fit), so extracted bodies match a
 	// normal write by construction rather than by keeping two copies in step. See `gen/prepare.ts`.
 	// Only slides here: this emits no layout or master parts.
 	const transitionSoundRIds = registerTransitionSounds(deckSlides)

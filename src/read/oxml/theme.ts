@@ -17,7 +17,7 @@
  *   order to *bake* it into a slide.
  *
  * They must agree, so they share this. The passes that write results back into a part live with
- * the other import operations, not here — this module deliberately has no mutating exports.
+ * the other import operations, not here; this module deliberately has no mutating exports.
  * Placeholder-inheritance resolution (what a placeholder gets from its layout/master chain) is
  * its own concern and lives in `placeholder-inherit.ts`.
  */
@@ -44,7 +44,7 @@ const DIRECT_SLOT_TOKENS = new Set(['dk1', 'lt1', 'dk2', 'lt2'])
 
 /**
  * The colour-resolution context: the two maps that turn a DrawingML colour
- * reference into a literal hex — the effective colour map (token → `clrScheme`
+ * reference into a literal hex: the effective colour map (token → `clrScheme`
  * slot, honouring any slide `clrMapOvr`) and the resolved colour scheme (slot →
  * 6-hex RGB). Shared by the read-model colour getters and `ThemeContext`.
  */
@@ -58,7 +58,7 @@ export interface ColorContext {
  * {@link ColorContext} maps, the live `a:fmtScheme` for style-matrix resolution, and the roots
  * of the inheritance chain a placeholder reads through.
  *
- * Every root here is **read-only** — nothing in this module or in `placeholder-inherit.ts`
+ * Every root here is **read-only**: nothing in this module or in `placeholder-inherit.ts`
  * mutates one. The import-time flatten pass extends this with the one field it needs to write
  * from (see `FlattenContext` in `read/api/ops/flatten.ts`).
  */
@@ -90,18 +90,18 @@ export interface ThemeContext extends ColorContext {
 	 * context it is absent, so the slide placeholder chain (layout/master
 	 * `a:lstStyle` → `p:txStyles`) is unaffected. It is the notes analogue of the
 	 * master `p:txStyles` category style, keyed by level rather than placeholder
-	 * type. Read-only — never mutated.
+	 * type. Read-only, never mutated.
 	 */
 	notesStyle?: Element | null
 	/**
 	 * The presentation's `p:defaultTextStyle` (a `CT_TextListStyle` from
-	 * `presentation.xml`), keyed by level — PowerPoint's lowest-priority text
+	 * `presentation.xml`), keyed by level: PowerPoint's lowest-priority text
 	 * fallback, applying to any run (placeholder or not) that resolves nothing
 	 * above it. Only ever set on a *slide* context (see `resolveSlideColorContext`);
 	 * absent on notes/master/layout contexts, so their chains are unaffected. A table
 	 * cell's text is read against a copy that holds the slide master's `p:otherStyle`
 	 * here instead, the tier PowerPoint resolves cell text through (`TableCell.textFrame`).
-	 * Read-only — never mutated.
+	 * Read-only, never mutated.
 	 */
 	defaultTextStyle?: Element | null
 	/**
@@ -112,7 +112,7 @@ export interface ThemeContext extends ColorContext {
 	 * The lookup is a full subtree scan, and reading one run's five inherited properties used
 	 * to perform ten of them: each property walks the tier chain, and each tier walk scans a
 	 * layout and a master. The answer depends only on the roots and the `(type, idx)` asked
-	 * for, and the roots on a context never change — so it is computed once per context.
+	 * for, and the roots on a context never change, so it is computed once per context.
 	 *
 	 * The memo lives here rather than in a module-level cache keyed by the root element
 	 * because that is what scopes it correctly: a context is built per `Slide`/`TemplatePart`
@@ -170,8 +170,8 @@ export function isA(el: Element | null, local: string): boolean {
  * `50%` is linear-light or sRGB-encoded decides the answer and neither the schema nor the
  * transform work in `color-transform.ts` settles it. Guessing would produce a colour that is
  * wrong by a gamma curve and says nothing about it, which is worse than reporting no colour.
- * Closing it needs a render oracle — a deck with an `a:scrgbClr` fill authored in PowerPoint
- * and the painted pixel read back — not a reading of the schema.
+ * Closing it needs a render oracle (a deck with an `a:scrgbClr` fill authored in PowerPoint
+ * and the painted pixel read back), not a reading of the schema.
  */
 function colorElementHex(color: Element | null): string | null {
 	if (!color) return null
@@ -204,7 +204,7 @@ export interface ResolvedColorRef {
  * literal (unmapped token, or a colour model we do not flatten).
  *
  * Five of `a:EG_ColorChoice`'s six members resolve: `a:srgbClr`, `a:sysClr`, `a:schemeClr`,
- * `a:prstClr` (through the {@link presetColorHex} table) and `a:hslClr`. `a:scrgbClr` does not —
+ * `a:prstClr` (through the {@link presetColorHex} table) and `a:hslClr`. `a:scrgbClr` does not;
  * see {@link colorElementHex} for why that one is a `null` rather than a guess.
  */
 export function resolveColor(color: Element | null, ctx: ColorContext): ResolvedColorRef | null {
@@ -248,11 +248,11 @@ export function resolveThemeFont(typeface: string | null, fontScheme: Element | 
 
 /**
  * Swap one colour element for another, MOVING the old element's transform children onto the new
- * one — and, optionally, seeding it with a set of transforms of its own first.
+ * one and, optionally, seeding it with a set of transforms of its own first.
  *
  * The move is the whole rule the flatten path exists to preserve: only the base reference is
  * swapped, never the transform math. Three sites implemented it and a fourth cloned instead of
- * moving, each with its own `while (old.firstChild) …` loop — duplication of exactly the one
+ * moving, each with its own `while (old.firstChild) …` loop: duplication of exactly the one
  * invariant that must not vary.
  *
  * Transform ORDER matters and is the reason `seed` is separate: `substitutePhClr` puts the
@@ -290,7 +290,7 @@ export function fmtEntry(ctx: ThemeContext, listName: string, idx: number): Elem
 }
 
 /**
- * Build the explicit fill element a `p:style` `a:fillRef` resolves to — the indexed
+ * Build the explicit fill element a `p:style` `a:fillRef` resolves to: the indexed
  * `fmtScheme` `fillStyleLst`/`bgFillStyleLst` entry (deep-cloned) with its `phClr`
  * replaced by the ref's resolved colour. Pure: mutates neither the ref nor the
  * theme. `null` when the ref is absent, `idx` is 0/unset, or the entry or its
@@ -310,7 +310,7 @@ export function styleRefFill(fillRef: Element | null, ctx: ThemeContext): Elemen
 }
 
 /**
- * Build the explicit `a:ln` element a `p:style` `a:lnRef` resolves to — the indexed
+ * Build the explicit `a:ln` element a `p:style` `a:lnRef` resolves to: the indexed
  * `fmtScheme` `lnStyleLst` entry (deep-cloned) with its `phClr` replaced by the
  * ref's resolved colour. Pure; the line/read counterpart of {@link styleRefFill}.
  */

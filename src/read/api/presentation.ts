@@ -3,7 +3,7 @@
  * navigable, typed view of the deck (slides → shapes → text), backed by the
  * live DOM so the same nodes can later be mutated.
  *
- * The class holds the model and the deck-level plumbing every operation needs — the part
+ * The class holds the model and the deck-level plumbing every operation needs: the part
  * index, the slide list, the copy registry that lets repeated imports from one source share
  * what they already copied, and the `p:sldIdLst` wiring. The operations themselves live in
  * `ops/`, one job per module, taking this deck as an argument. The slide-import machinery
@@ -13,7 +13,7 @@
  * The four import entry points went the same way, and {@link appendSlides} after them: their
  * contracts stay here as the doc comments a caller reads, and their bodies live in
  * `presentation-imports.ts` and `ops/append-slides.ts`. Those bodies are the one thing in this
- * directory that is not independent of this class — they reach back for {@link importContext},
+ * directory that is not independent of this class. They reach back for {@link importContext},
  * {@link insertSlidePart} and {@link rescaledParts}, which {@link cloneSlide} reads too and so
  * could not travel with them. Those three are `@internal` for that and nothing else.
  */
@@ -82,7 +82,7 @@ import {
 	importSlides as importSlidesInto,
 } from './presentation-imports.js'
 
-/** Content type of the main part in a `.potx` template package — flipped to {@link PRESENTATION_MAIN_CONTENT_TYPE} by {@link Presentation.fromTemplate}. */
+/** Content type of the main part in a `.potx` template package, flipped to {@link PRESENTATION_MAIN_CONTENT_TYPE} by {@link Presentation.fromTemplate}. */
 const PRESENTATION_TEMPLATE_MAIN_CONTENT_TYPE =
 	'application/vnd.openxmlformats-officedocument.presentationml.template.main+xml'
 
@@ -215,7 +215,7 @@ export class Presentation {
 	/**
 	 * The deck's embedded font families (`p:embeddedFontLst` in `presentation.xml`),
 	 * `[]` when it embeds none. Each entry names the typeface and resolves every
-	 * embedded face's `r:id` to the absolute partname of its `.fntdata` binary — the
+	 * embedded face's `r:id` to the absolute partname of its `.fntdata` binary: the
 	 * read counterpart to the write-side `pptx.embedFont` / `importSlide({ embedFonts })`
 	 * carry. An entry whose `p:font` has no `@typeface`, or a face whose `r:id` is
 	 * missing or dangling, is skipped (faithful degradation, no throw). Read-only.
@@ -244,7 +244,7 @@ export class Presentation {
 	 * `ppt/authors.xml`), `[]` when the deck carries no modern comments. Unlike the
 	 * legacy {@link commentAuthors}, each entry is keyed by a GUID `id` (plus
 	 * `userId`/`providerId`); each slide's {@link Slide.modernComments} resolves its
-	 * `@authorId` against this list. Read-only — the writer emits legacy comments.
+	 * `@authorId` against this list. Read-only: the writer emits legacy comments.
 	 */
 	get modernCommentAuthors(): ModernCommentAuthor[] {
 		return readModernCommentAuthors(this.opc, this.presentationPart.partName)
@@ -277,7 +277,7 @@ export class Presentation {
 	 * The deck's extended document properties (`docProps/app.xml`): the producing
 	 * application and its version, the company, and the flat `TitlesOfParts` vector.
 	 * `{}` when the deck carries no extended-properties part. The read counterpart of
-	 * the write-side `pptx.company` setter — the only one of the four this library
+	 * the write-side `pptx.company` setter, the only one of the four this library
 	 * writes from a caller's value; the other three it states about itself.
 	 *
 	 * A deliberate subset of the part: see {@link ExtendedProperties} for why the
@@ -301,7 +301,7 @@ export class Presentation {
 	 * The deck-level programmatic tags (`p:custDataLst/p:tags` on `presentation.xml`,
 	 * resolved to `ppt/tags/tagN.xml`) as `{ name, val }` string pairs, `[]` when the
 	 * deck carries none. These are add-in/host metadata with no visible rendering and
-	 * no writer — read-only, preserved byte-for-byte on round-trip. Per-slide tags are
+	 * no writer. They are read-only, preserved byte-for-byte on round-trip. Per-slide tags are
 	 * {@link Slide.tags}.
 	 */
 	get tags(): Tag[] {
@@ -321,7 +321,7 @@ export class Presentation {
 	 * charts, SmartArt diagrams and OLE embeddings, each with the subtree under it
 	 * (a chart's embedded workbook comes along; the image inside its user-shapes
 	 * drawing stays shared). PowerPoint refuses to open a deck where two slides
-	 * resolve to one chart or diagram, so this is not tidiness — see
+	 * resolve to one chart or diagram, so this is not tidiness; see
 	 * `page-owned.ts` for the rule and the evidence behind it.
 	 */
 	cloneSlide(index: number, options: { at?: number } = {}): Slide {
@@ -335,11 +335,11 @@ export class Presentation {
 		const newPartName = opc.reservePartNameLike(sourcePart.partName)
 		const newPart = opc.addPart(newPartName, sourcePart.contentType, sourcePart.serialize())
 
-		// 2. Give the clone the slide's relationships (targets resolve identically — same dir),
+		// 2. Give the clone the slide's relationships (targets resolve identically: same dir),
 		//    with copies of the parts the page owned and the shared ones left shared. Through
 		//    the live relationship set, not the `.rels` part bytes: a page this session
 		//    imported or edited holds its rels in memory until the deck is saved, and copying
-		//    the bytes gave such a clone no relationships at all — a slide whose `r:id`s
+		//    the bytes gave such a clone no relationships at all: a slide whose `r:id`s
 		//    resolved to nothing.
 		rebuildClonedPageRels(this, sourcePart, newPartName)
 
@@ -352,7 +352,7 @@ export class Presentation {
 	 * `p:sldId` entry and the presentation→slide relationship are dropped, the slide
 	 * part and its `.rels` are deleted, and any part the slide *privately* owned
 	 * (its notes slide, slide-only media, charts/embeddings) that no remaining part
-	 * references is pruned too — recursively. Shared deck chrome (layout, master,
+	 * references is pruned too, recursively. Shared deck chrome (layout, master,
 	 * theme, …) is never pruned, so the deck stays renderable; removing every slide
 	 * leaves a valid master/layout-only package (a template shell). The slide also
 	 * leaves every custom show and section it was in, which stay even when that
@@ -417,9 +417,9 @@ export class Presentation {
 	 * Append a copy of `source.slides[index]` to this presentation and return it.
 	 *
 	 * Unlike {@link cloneSlide} (same-deck duplicate), this copies a slide across
-	 * a package boundary: it brings the connected sub-graph the slide depends on —
-	 * its `slideLayout` → `slideMaster` → `theme`, plus any media, charts, and
-	 * embeddings — into this package under fresh partnames, rewriting every
+	 * a package boundary: it brings the connected sub-graph the slide depends on
+	 * (its `slideLayout` → `slideMaster` → `theme`, plus any media, charts, and
+	 * embeddings) into this package under fresh partnames, rewriting every
 	 * partname, relationship id, and content-type registration so the result is a
 	 * self-consistent OPC package. Parts of this (target) package that are not
 	 * touched stay byte-identical, matching `cloneSlide`'s fidelity contract.
@@ -427,7 +427,7 @@ export class Presentation {
 	 * Only the layout(s) actually used by imported slides are copied; the imported
 	 * master's `p:sldLayoutIdLst` is pruned to exactly those, mirroring how
 	 * PowerPoint's "Reuse Slides" brings a slide across. Parts shared by repeated
-	 * imports from the same source deck are copied once and reused — every part
+	 * imports from the same source deck are copied once and reused: every part
 	 * except the page itself. Importing the same source slide twice yields two
 	 * independent copies over one shared layout/master/theme, which is what lets a
 	 * deck show one page twice (verbatim, then edited).
@@ -436,7 +436,7 @@ export class Presentation {
 	 * into the slide XML and the slide is bound to this deck's existing
 	 * master/layout; with `{ theme: 'restyle' }` the slide is bound to this deck's
 	 * master/layout with its theme references left symbolic, so it re-brands to the
-	 * destination palette — see {@link ImportSlideOptions}.
+	 * destination palette. See {@link ImportSlideOptions}.
 	 *
 	 * By default the source slide size must equal this presentation's. Pass
 	 * `{ rescale: 'fit' | 'stretch' }` to rescale the imported geometry onto this
@@ -456,7 +456,7 @@ export class Presentation {
 	 * Import selected pages from one or more loaded source presentations as one
 	 * batch. Each imported page lands at its `outputIndex` in the complete
 	 * destination slide list after the batch, and the returned array is parallel
-	 * to `requests` — `result[i]` is the page `requests[i]` asked for, whatever
+	 * to `requests`: `result[i]` is the page `requests[i]` asked for, whatever
 	 * order the output positions were given in.
 	 *
 	 * Everything is checked before a single byte of this deck moves: every request
@@ -469,13 +469,13 @@ export class Presentation {
 	 * The batch also decides what a `slide → slide` link means: an internal link
 	 * on a selected page must target another **selected** page (or one this deck
 	 * already contains via an earlier import from that source), and is rewritten
-	 * to the fresh partname — importing page 3 of 10 does not drag pages 1–2
+	 * to the fresh partname. Importing page 3 of 10 does not drag pages 1–2
 	 * across as dependencies, and never strands the link. This mirrors
 	 * `appendSlides`' `import/unresolved-slide-link`, which the write side already
 	 * enforces for generator decks.
 	 *
 	 * One request is one output page, so naming the same source page in several
-	 * requests is how you ask for several independent copies of it — the page part
+	 * requests is how you ask for several independent copies of it; the page part
 	 * is the one thing an import never shares, exactly as in {@link importSlide}.
 	 * Everything under it (layout, master, theme, media) is still copied once and
 	 * shared. Where such a page is the target of a `slide → slide` link, the link
@@ -486,7 +486,7 @@ export class Presentation {
 	 * Speaker notes travel per request: `{ importNotes: true }` carries that page's
 	 * `notesSlide` part across, wired to the new page and bound to a single
 	 * `notesMaster` under the same 0..1 rule {@link importSlide} and
-	 * {@link appendSlides} follow — the destination's own master wins when it has
+	 * {@link appendSlides} follow: the destination's own master wins when it has
 	 * one. Notes are part of the up-front dry run too, so a batch that would fail
 	 * carrying them is refused with the deck still byte-identical. A page named in
 	 * several requests gets its own copy of its notes each time, as of everything
@@ -514,9 +514,9 @@ export class Presentation {
 
 	/**
 	 * Graft slide master(s) from another open package into this one and return what
-	 * was copied. Unlike {@link importSlide} — which brings a master across only as
+	 * was copied. Unlike {@link importSlide}, which brings a master across only as
 	 * the dependency of an imported *slide* and prunes it to the one layout that
-	 * slide uses — this copies a master together with its **whole** layout family
+	 * slide uses, this copies a master together with its **whole** layout family
 	 * and attaches it to no slide: the master and its layouts land in this deck's
 	 * layout gallery (PowerPoint's *Insert ▸ New Slide* / *Layout* picker) without
 	 * changing any existing slide.
@@ -549,7 +549,7 @@ export class Presentation {
 
 	/**
 	 * The deck's slide masters, in `p:sldMasterIdLst` order, as modeled
-	 * {@link SlideMaster}s — the typed read model over the shared chrome (each
+	 * {@link SlideMaster}s: the typed read model over the shared chrome (each
 	 * master's colour map, theme, placeholders, and the layouts built on it). Walk
 	 * `pres.masters()[i].layouts` for the rich layout model, or use {@link layouts}
 	 * for the flat {@link LayoutHandle} gallery {@link appendSlides} binds to.
@@ -563,7 +563,7 @@ export class Presentation {
 	}
 
 	/**
-	 * The deck's slide layouts, in master then layout order — the gallery a new
+	 * The deck's slide layouts, in master then layout order: the gallery a new
 	 * slide can bind to. Each {@link LayoutHandle} addresses one layout for
 	 * {@link appendSlides}; the `name` is its `p:cSld@name`. Read-only enumeration:
 	 * it copies nothing and leaves the package byte-identical.
@@ -587,8 +587,8 @@ export class Presentation {
 	/**
 	 * Append generator-produced slides onto this deck, binding each to an existing
 	 * layout, and return the new {@link Slide}s. This is the hybrid
-	 * "generate-onto-existing" path: the deck's masters, layouts, theme — and every
-	 * other untouched part — stay **byte-identical** (only `presentation.xml`, its
+	 * "generate-onto-existing" path: the deck's masters, layouts, theme, and every
+	 * other untouched part stay **byte-identical** (only `presentation.xml`, its
 	 * `.rels`, `[Content_Types].xml`, and the freshly-added slide/media parts
 	 * change), because the existing chrome is never regenerated.
 	 *
@@ -602,13 +602,13 @@ export class Presentation {
 	 * Charts and internal slide-to-slide hyperlinks are carried across: chart parts
 	 * (chart XML + `.rels` + embedded workbook) are injected under fresh names, and a
 	 * `slide:N` link is repointed at the Nth appended slide's new partname. A chartEx
-	 * (Office 2016 — waterfall, funnel, treemap, ...) chart carries too, as its own
+	 * (Office 2016: waterfall, funnel, treemap, ...) chart carries too, as its own
 	 * `chartEx{N}.xml` part behind the MS chartEx rel, with the style and color-style
 	 * sidecars PowerPoint requires alongside it.
 	 *
 	 * The generator's presentation-level embedded fonts (`pptx.embedFont`) are also
 	 * carried into this deck and merged into its `p:embeddedFontLst`, de-duped by
-	 * typeface + face slot — so author-side embedded fonts survive the append onto a
+	 * typeface + face slot, so author-side embedded fonts survive the append onto a
 	 * template that may itself already embed fonts.
 	 *
 	 * Embedded audio/video is carried too: the media part backs the ECMA audio/video rel
@@ -619,7 +619,7 @@ export class Presentation {
 	 * Speaker notes ride across too: a slide authored with `addNotes` gets a `notesSlide`
 	 * part wired back to it, with its hyperlink rels preserved. A notes slide must bind to
 	 * a notes master, and a template commonly has none, so the generator's is installed
-	 * (with the theme its `.rels` needs) — but only when this deck has none of its own, so
+	 * (with the theme its `.rels` needs), but only when this deck has none of its own, so
 	 * an existing notes master and its styling always win.
 	 *
 	 * Review comments (`addComment`) ride across as a comments part per slide. Their
@@ -632,7 +632,7 @@ export class Presentation {
 	 * - Appended slides are concrete absolute-positioned content with no placeholder
 	 *   inheritance from the bound layout; the binding governs theme/`clrMap`
 	 *   resolution and the "based on" link, not placeholder geometry. Author with
-	 *   concrete colours — any `schemeClr` re-resolves against the destination theme.
+	 *   concrete colours: any `schemeClr` re-resolves against the destination theme.
 	 * - Source and destination slide sizes must match (no geometry rescale).
 	 */
 	async appendSlides(source: SlideSource, options: AppendSlidesOptions): Promise<Slide[]> {
@@ -640,8 +640,8 @@ export class Presentation {
 	}
 
 	/**
-	 * Copy one shape — an autoshape, picture, table/chart graphic frame, connector,
-	 * or group — from `source.shapes[shapeIndex]` onto `target`, returning the new
+	 * Copy one shape (an autoshape, picture, table/chart graphic frame, connector,
+	 * or group) from `source.shapes[shapeIndex]` onto `target`, returning the new
 	 * {@link Shape}. `target` must be a slide of *this* presentation; `source` may
 	 * belong to any open presentation.
 	 *
@@ -652,7 +652,7 @@ export class Presentation {
 	 * so they cannot collide with the host. With `theme: 'preserve'` (default) the
 	 * shape's theme references are baked to literals against the *source* theme so it
 	 * renders the same on a foreign host; `restyle` leaves them symbolic to re-brand;
-	 * `copy` brings the XML across untouched — see {@link ImportShapeOptions}.
+	 * `copy` brings the XML across untouched. See {@link ImportShapeOptions}.
 	 *
 	 * Differing slide sizes need `{ rescale }` (see {@link ImportShapeOptions.rescale});
 	 * a lifted `preserve` placeholder is baked self-contained and demoted to a plain
@@ -687,7 +687,7 @@ export class Presentation {
 
 	/**
 	 * @internal The parts whose geometry a rescale has already rewritten, and in which mode.
-	 * Exposed for `presentation-imports.ts` as a live map the callee adds to — the memo is what
+	 * Exposed for `presentation-imports.ts` as a live map the callee adds to. The memo is what
 	 * makes a layout or master shared across repeated imports from one source scale exactly
 	 * once, so like the copy registry it has to outlive the call that fills it.
 	 */
@@ -698,7 +698,7 @@ export class Presentation {
 	/**
 	 * @internal Open an import out of `source`: this deck as the destination, paired with
 	 * the copy registry for that package (created on first use). The registry is held on
-	 * the class rather than in the context because it must outlive any one call — that is
+	 * the class rather than in the context because it must outlive any one call: that is
 	 * what makes a second import from the same source reuse the layout, master, theme, and
 	 * media it already copied instead of duplicating them, and it is why the import bodies
 	 * in `presentation-imports.ts` call back here rather than carrying it with them.
@@ -722,7 +722,7 @@ export class Presentation {
 		// the read model cannot see: `slides` counts the list, so the deck reports
 		// the slide it does not have and the failure surfaces only when someone
 		// opens the file. Every caller here hands over a part it just materialized,
-		// so this cannot fire on caller input — only on the import machinery
+		// so this cannot fire on caller input, only on the import machinery
 		// handing back a part it should have copied (issue #18). Refusing at the
 		// call is the difference between a thrown error and a bad deliverable.
 		for (const rel of presRels) {
@@ -765,7 +765,7 @@ export class Presentation {
 	 * A slide id one past the highest existing, but at least ST_SlideId's minimum.
 	 *
 	 * The module named and enforced that minimum and not the maximum, so a deck near the ceiling
-	 * got an out-of-range `p:sldId/@id` written with no diagnostic — the package then needs
+	 * got an out-of-range `p:sldId/@id` written with no diagnostic. The package then needs
 	 * repair, for a reason nothing reported. Past the ceiling there is no "next" id to hand out,
 	 * so the allocation falls back to the lowest id in range that the deck is not already using;
 	 * a deck holding every one of the two billion has no legal answer and says so.

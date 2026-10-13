@@ -20,17 +20,17 @@
  * rendered `offsetWidth`, which reproduces the table's real proportions. Nothing outside a
  * browser lays a table out, so `offsetWidth` is `0` there and the conversion falls back: it uses
  * the computed CSS `width`s when the stylesheet states them for every column in one unit, and
- * an equal split when it does not. A fallback and not a graceful loss of precision — `offsetWidth`
+ * an equal split when it does not. A fallback and not a graceful loss of precision: `offsetWidth`
  * is the border box and computed `width` the content box, so padding alone can put the two bases
  * in different proportions and the same table can come out with different column widths on either
  * side of a layout engine. To pin widths regardless, put `data-pptx-width` (exact
- * inches) or `data-pptx-min-width` (a floor) on the cells of the table's first row — those win
+ * inches) or `data-pptx-min-width` (a floor) on the cells of the table's first row. Those win
  * outright on every path. On a cell that spans, the value is the *cell's* width and divides
  * across the columns it covers, the same way a measured or CSS width does.
  *
- * Everything else — cell text (with `<br>` preserved as a line break), colspan/rowspan,
+ * Everything else (cell text with `<br>` preserved as a line break, colspan/rowspan,
  * computed colors, weight, alignment, padding, borders, and auto-paging across as many slides
- * as the rows need — works the same wherever it runs.
+ * as the rows need) works the same wherever it runs.
  * @example
  * ```ts
  * import { PptxTs } from 'pptx-ts'
@@ -67,10 +67,10 @@ export function tableToSlides(
 export type { TableToSlidesHost }
 export type { TableToSlidesDocument, TableToSlidesElement, TableToSlidesProps } from './types/index.js'
 
-// Error taxonomy — see `entry-errors.ts`. Re-exported from every entry so `instanceof`
+// Error taxonomy: see `entry-errors.ts`. Re-exported from every entry so `instanceof`
 // works whichever subpath a consumer imports.
 export * from './entry-errors.js'
 
-// Diagnostics — see `entry-diagnostics.ts`. Re-exported from every entry so a consumer of any
+// Diagnostics: see `entry-diagnostics.ts`. Re-exported from every entry so a consumer of any
 // subpath can install a handler for the warnings that subpath emits.
 export * from './entry-diagnostics.js'

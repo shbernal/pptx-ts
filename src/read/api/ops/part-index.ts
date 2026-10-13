@@ -3,7 +3,7 @@
  *
  * The `p:sldMasterIdLst` / `p:sldLayoutIdLst` entries hold relationship ids, not partnames, so
  * every traversal has to resolve through the owning part's relationships. These are the
- * source-side reads that do it — used against a *foreign* presentation as often as against this
+ * source-side reads that do it, used against a *foreign* presentation as often as against this
  * one, which is why they take the deck rather than living on it.
  */
 

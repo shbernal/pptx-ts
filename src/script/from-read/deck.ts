@@ -6,9 +6,9 @@
  * round-trip check can compare two runs directly.
  *
  * The one judgement made at this level rather than per-shape is {@link SlideSource}. A
- * slide holding a construct the write API cannot express *at all* — a graphic frame with a
+ * slide holding a construct the write API cannot express *at all* (a graphic frame with a
  * complete reader and no emitter, which today means an extended chart, a SmartArt diagram,
- * an OLE object or ink — cannot be honestly transcribed, because the output would silently
+ * an OLE object or ink) cannot be honestly transcribed, because the output would silently
  * differ from the source. Such a slide is marked `carried` so the printer copies it instead.
  * That decision has to be made here, before any shape is mapped, since it is a property of
  * the slide as a whole.
@@ -201,7 +201,7 @@ function deckProps(pres: Presentation, notes: NoteScope): DeckPropsIr {
  * The deck's layouts keyed by partname, each resolved to what a printer needs to bind to
  * it: its gallery position and whether its name identifies it on its own.
  *
- * Built once per deck rather than per slide — `layouts()` walks every master's layout list,
+ * Built once per deck rather than per slide: `layouts()` walks every master's layout list,
  * and the uniqueness question is about the gallery as a whole, so asking it per slide would
  * be both quadratic and unable to see layouts no slide happens to use.
  */
@@ -295,7 +295,7 @@ function slideToIr(
  * carried slide. Descends into groups, since a group can host a graphic frame.
  *
  * Membership comes from {@link unwritableFramePayload}, which `graphicFrameCall` also uses to
- * pick its note — one enumeration, so the two cannot drift apart again. This test named
+ * pick its note: one enumeration, so the two cannot drift apart again. This test named
  * extended charts alone until then, which is why a slide holding SmartArt (or an OLE object,
  * or ink) was transcribed as `authored` and rendered with a hole where the graphic had been.
  */

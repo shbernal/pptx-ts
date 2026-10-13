@@ -2,7 +2,7 @@
  * {@link IrValue} → TypeScript source text.
  *
  * This module is deliberately the dumbest part of the subsystem. It knows nothing about
- * decks, shapes, or units — only how a value is spelled. Every semantic decision was made
+ * decks, shapes, or units, only how a value is spelled. Every semantic decision was made
  * upstream in the read half, which is what lets the printed text be checked by comparing
  * IRs rather than by reading source: if this file were allowed to interpret, the same
  * construct could mean two things depending on which half you asked.
@@ -34,7 +34,7 @@ const TAB_COLUMNS = 2
 const IDENTIFIER = /^[A-Za-z_$][A-Za-z0-9_$]*$/
 
 /**
- * Resolves an {@link AssetRef} to the source text that stands in for it — a `const`
+ * Resolves an {@link AssetRef} to the source text that stands in for it: a `const`
  * identifier when assets are written as files, an inline `data:` literal otherwise. The
  * printer takes this as a callback rather than deciding itself, because the choice belongs
  * to the caller's output layout, not to how a value is spelled.
@@ -46,7 +46,7 @@ export type AssetPrinter = (ref: AssetRef) => string
  *
  * Deck text is arbitrary user content, so every case below is reachable in practice: a
  * quote, a backslash, a hard line break inside a run. `JSON.stringify` would handle those
- * correctly — it is avoided here for the quote style, not for correctness.
+ * correctly. It is avoided here for the quote style, not for correctness.
  */
 export function printString(value: string): string {
 	let out = "'"
@@ -71,7 +71,7 @@ export function printString(value: string): string {
 				const code = char.codePointAt(0) ?? 0
 				// C0/C1 controls have no visible spelling, so a raw one is invisible corruption.
 				// U+2028/U+2029 have been legal inside a string literal since ES2019 and do not
-				// strictly need escaping for a modern engine — they are escaped anyway because
+				// strictly need escaping for a modern engine. They are escaped anyway because
 				// they remain line terminators everywhere *else* in the grammar, and a file that
 				// depends on that distinction is a poor thing to hand to an unknown toolchain.
 				// A lone surrogate (half a pair with no other half) has no UTF-8 encoding, so written raw
@@ -180,7 +180,7 @@ export function printValue(value: IrValue, indentLevel: number, asset: AssetPrin
  * A call's argument list, either inline after `prefix` or one argument per line.
  *
  * The decision is made on the *whole* call rather than per argument, so a call either reads
- * as one line or as a list — never as a short first argument followed by a hanging brace,
+ * as one line or as a list, never as a short first argument followed by a hanging brace,
  * which is what a per-argument rule produces.
  */
 export function printArguments(prefix: string, args: IrValue[], indentLevel: number, asset: AssetPrinter): string {

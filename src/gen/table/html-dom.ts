@@ -8,14 +8,14 @@
  *
  * Only real *measurement* is out of active scope (see `docs/contributing/scope-and-policy.md`): without a layout engine
  * `offsetWidth` is `0`, so widths fall back to computed CSS then to an equal split. A fallback
- * rather than a degradation, and the distinction is load-bearing — see {@link pickColWidthBasis},
+ * rather than a degradation, and the distinction is load-bearing; see {@link pickColWidthBasis},
  * whose two bases measure different boxes.
  *
  * **Coverage.** This file used to be excluded from the report, on the grounds that only the
  * browser entry imported it and the `dist/browser*.js` globs therefore swallowed it. Both
  * halves of that are stale: `pptx-ts/html` imports it too, so tsdown emits it as its own
  * `dist/html-dom-*.js` chunk, and those globs are gone from `vitest.config.ts` entirely. It
- * is covered code now — against happy-dom by the Node suite
+ * is covered code now: against happy-dom by the Node suite
  * (test/regression/html/html-to-slides-node.test.ts) and, for the measured width basis that no
  * Node DOM can produce, in a real Chromium (test/browser/table-widths.spec.ts).
  */
@@ -46,8 +46,8 @@ import { InvalidOptionError } from '../../errors.js'
 
 /**
  * CSS `text-align` / `vertical-align` values this converter can express as a table cell's own
- * alignment. The two logical values map onto the physical pair; everything else — `justify`,
- * `initial`, a value the browser did not resolve — is absent here and so leaves the cell's
+ * alignment. The two logical values map onto the physical pair; everything else (`justify`,
+ * `initial`, a value the browser did not resolve) is absent here and so leaves the cell's
  * alignment alone.
  */
 const CSS_TEXT_ALIGN: Record<string, HAlign> = {
@@ -63,7 +63,7 @@ type MarginTuple = [number, number, number, number]
 type BorderTuple = [BorderProps, BorderProps, BorderProps, BorderProps]
 /**
  * What `tableToSlides` needs a presentation to be: somewhere to put slides, and a layout to
- * size them against. Structural on purpose — stating the two members rather than naming the
+ * size them against. Structural on purpose: stating the two members rather than naming the
  * class is what lets the free function on `pptx-ts/html` take any presentation instance
  * (Node, browser, or standalone) without the entry importing one.
  */
@@ -78,7 +78,7 @@ export type TableToSlidesHost = {
  *
  * Resolving this once up front is what decouples the flow from `window`/`document`. Given the
  * element itself, both halves come from the element's own `ownerDocument`/`defaultView`, so no
- * global is read at all — which is what lets the same implementation run outside a browser.
+ * global is read at all, which is what lets the same implementation run outside a browser.
  */
 type DomContext = {
 	table: Element
@@ -86,7 +86,7 @@ type DomContext = {
 }
 
 /**
- * Stand-in for `getComputedStyle` on a document that has no view — a document produced by
+ * Stand-in for `getComputedStyle` on a document that has no view. A document produced by
  * parsing rather than by a browsing context has a `null` `defaultView` and therefore no
  * cascade to compute against. Every property reads as `''`, which every consumer below
  * already treats as "not set", so styling degrades to defaults instead of throwing.
@@ -116,7 +116,7 @@ function resolveStyleReader(doc: Document | null): (el: Element) => CSSStyleDecl
  * This is the one place the public structural element type ({@link TableToSlidesElement},
  * which any DOM satisfies) is narrowed to `lib.dom`'s `Element`, so the rest of the flow can
  * be written against ordinary DOM types. The cast is safe in the only sense that matters here:
- * everything downstream reads standard members and tolerates them being absent — that is what
+ * everything downstream reads standard members and tolerates them being absent. That is what
  * makes the conversion portable in the first place.
  * @param {TableToSlidesElement | string} target - the table element, or the id of one
  * @param {TableToSlidesProps} options - generation options (may carry an explicit `document`)
@@ -155,7 +155,7 @@ function resolveDomContext(target: TableToSlidesElement | string, options: Table
  *
  * Lives here rather than beside the other color code in `gen/drawingml/color.ts` because
  * `getComputedStyle` colors are the only thing in the package that arrives as RGB
- * components — nothing else in the library calls this.
+ * components; nothing else in the library calls this.
  * @param {number} c - component color
  * @returns {string} hex string
  */
@@ -181,12 +181,12 @@ function rgbToHex(r: number, g: number, b: number): string {
  *
  * `StrokeProps.width` is in **points**, so the px magnitude is converted through
  * {@link htmlCssPxToPoints} rather than copied across: a `1px` CSS border is 0.75pt, not 1pt.
- * This was the third read in this file to make that mistake and the last one left — the font
+ * This was the third read in this file to make that mistake and the last one left. The font
  * size and the cell padding were each corrected against `DEFAULT_PX_PER_INCH` on their own, and
  * routing this one through the same converter is what stops a fourth from drifting apart again.
  *
  * Preserves *fractional* widths: a hairline CSS border such as `0.5px` must not be rounded to
- * `0pt` and silently vanish — the table serializer (`ptsToEmuLenient`) emits fractional points just
+ * `0pt` and silently vanish. The table serializer (`ptsToEmuLenient`) emits fractional points just
  * fine, so there is no reason to integer-round here. A
  * computed width of `0` (or a non-finite value) yields `{ type: 'none' }` so we never emit a
  * zero-width line. `''`, `auto` and `3em` are non-finite for the same reason
@@ -206,12 +206,12 @@ export function htmlBorderToProps(widthStr: string, colorStr: string): BorderPro
  *
  * A browser normalizes every computed color to `rgb()`/`rgba()`, which is why the flow below
  * originally only parsed that form. Outside a browser there is no normalization step, so a
- * computed color comes back however the stylesheet wrote it — `#ff0000` is what happy-dom
+ * computed color comes back however the stylesheet wrote it: `#ff0000` is what happy-dom
  * returns. Feeding that to the `rgb()` parser produced `Number('#ff0000')` → `NaN` → the
  * literal color string `"NANNANNAN"`, an invalid value emitted without complaint.
  *
- * Handles `rgb()`/`rgba()` and `#rgb`/`#rrggbb`. Everything else — a named color, a `color()`
- * function, an empty string — returns `undefined` rather than a guess, so the caller can
+ * Handles `rgb()`/`rgba()` and `#rgb`/`#rrggbb`. Everything else (a named color, a `color()`
+ * function, an empty string) returns `undefined` rather than a guess, so the caller can
  * apply its own default instead of emitting nonsense.
  *
  * A fully transparent color (`alpha === 0`) also returns `undefined`: it states the absence of
@@ -231,7 +231,7 @@ export function cssColorToHex(value: string | null | undefined): string | undefi
 		if (parts.length > 3 && Number(parts[3]) === 0) return undefined
 		// Clamp and round before hex conversion: a browser always computes whole 0-255
 		// channels, but nothing guarantees another DOM does, and `(255.5).toString(16)`
-		// is `"ff.8"` — a malformed color rather than a wrong one.
+		// is `"ff.8"`: a malformed color rather than a wrong one.
 		const [r = 0, g = 0, b = 0] = channels.map((channel) => Math.max(0, Math.min(255, Math.round(channel))))
 		return rgbToHex(r, g, b)
 	}
@@ -279,8 +279,8 @@ const CSS_LENGTH = /^\s*(-?(?:\d+\.?\d*|\.\d+))\s*(px|%)?\s*$/i
  * Parse a single computed CSS length in **px** to its numeric magnitude.
  *
  * A bare number is read as px (computed styles do not emit one, but an inline `style` read
- * back by a non-browser DOM can). Everything else — `''`, `auto`, `3em`, and deliberately
- * `30%` — is `NaN`: a percentage is meaningful only relative to something, so it cannot be
+ * back by a non-browser DOM can). Everything else (`''`, `auto`, `3em`, and deliberately
+ * `30%`) is `NaN`: a percentage is meaningful only relative to something, so it cannot be
  * turned into an absolute length here. (Percentages *are* usable as a proportional column
  * basis; that is {@link parseCssWidthBasis}'s job, not this one's.) Callers decide what a
  * `NaN` means for them.
@@ -299,7 +299,7 @@ export function parseCssPx(value: string | null | undefined): number {
  *
  * This is the file's **one** px→pt conversion, and it is one because the same mistake was made
  * three separate times under the same stale "px to pt 1:1" note. A default `16px` cell emitted
- * `sz="1600"` — 16pt, a third larger than the 12pt the browser rendered; the cell padding read
+ * `sz="1600"`: 16pt, a third larger than the 12pt the browser rendered; the cell padding read
  * a px magnitude as the inches `TableCellProps.margin` wants, until 2026-07-31; and a `1px`
  * border was emitted as 1pt, a third too thick. Each was found and corrected on its own, and
  * the next went on being wrong, because there was no shared converter for a sweep to land on.
@@ -309,7 +309,7 @@ export function parseCssPx(value: string | null | undefined): number {
  *
  * CSS defines the reference pixel as 1/96in, so the conversion is the same density the `"<n>px"`
  * coordinate unit uses. An `em`, a `%` or a keyword has no absolute size here and comes back
- * `NaN`, which each caller reads as its own kind of absence — the font size is left off the
+ * `NaN`, which each caller reads as its own kind of absence: the font size is left off the
  * cell, and a border becomes `{ type: 'none' }`.
  * @param value - computed CSS value, e.g. `"16px"`
  * @returns the length in points, or `NaN` when the value is not an absolute px length
@@ -322,7 +322,7 @@ function htmlCssPxToPoints(value: string): number {
  * Parse a whole row of computed CSS widths into a column basis, or reject the set.
  *
  * The result is only ever used *proportionally* (each column's share of the total), so the
- * unit does not have to be absolute — it only has to be the same for every column. Hence:
+ * unit does not have to be absolute; it only has to be the same for every column. Hence:
  *
  * - all `px` (or bare numbers) → their magnitudes
  * - all `%` → their magnitudes; `[25%, 25%, 50%]` is a perfectly good 1:1:2 basis
@@ -354,13 +354,13 @@ export function parseCssWidthBasis(values: readonly string[]): number[] {
 /**
  * Choose which vector the proportional column math runs on, falling back as bases run out.
  *
- * `offsetWidth` is the ideal basis — it is the width the table actually rendered at — but it
+ * `offsetWidth` is the ideal basis (it is the width the table actually rendered at), but it
  * requires a layout engine, and reports `0` for every cell both in a hidden table and on any
  * DOM outside a browser. So:
  *
- * 1. **measured** (`offsetWidth`) when it carries any width at all — the browser path, unchanged
+ * 1. **measured** (`offsetWidth`) when it carries any width at all: the browser path, unchanged
  * 2. **CSS widths** when the stylesheet states them (see {@link parseCssWidthBasis})
- * 3. **equal split** otherwise — a basis of all-ones, which the existing proportional math
+ * 3. **equal split** otherwise: a basis of all-ones, which the existing proportional math
  *    turns into equal columns for free
  *
  * Only the basis changes; `data-pptx-width` / `data-pptx-min-width` overrides still apply
@@ -368,15 +368,15 @@ export function parseCssWidthBasis(values: readonly string[]): number[] {
  *
  * **The first two bases do not measure the same box, and the docs used to imply they did.**
  * `offsetWidth` is the border box; a computed `width` is the content box. Padding alone
- * separates them — `test/browser/harness/table.html` is built so it does, giving 1:1 measured
- * against 2:1 from CSS on one table — so choosing arm 2 over arm 1 can change a table's column
+ * separates them (`test/browser/harness/table.html` is built so it does, giving 1:1 measured
+ * against 2:1 from CSS on one table), so choosing arm 2 over arm 1 can change a table's column
  * *proportions*, not just their precision. That is why the fixture discriminates at all, and why
  * "degrades to computed CSS" was the wrong word for it everywhere it appeared.
  *
  * Left as-is rather than reconciled. Normalizing arm 2 to the border box would need the computed
  * padding and border widths, which the DOMs that reach arm 2 need not resolve either (a `%`
  * padding computes to nothing usable without layout), so it would converge the two only
- * sometimes — and it would collapse the one discriminator the browser lane has, turning
+ * sometimes, and it would collapse the one discriminator the browser lane has, turning
  * `table-widths.spec.ts` back into a test that passes whether or not the measured arm ran.
  * A caller who needs both runtimes to agree on a column states it with `data-pptx-width`.
  * @param {readonly number[]} measured - per-column `offsetWidth`
@@ -397,8 +397,8 @@ type GridCellSpans = { colspan?: number; rowspan?: number }
  * Read a `colspan`/`rowspan` as the number of grid tracks it covers.
  *
  * Lenient on purpose: `0`, a negative, a fraction, an unparseable attribute and an absent one all
- * mean `1`. A bad span attribute should cost its own cell nothing and the rest of the grid nothing
- * — the alternative, propagating a `NaN` or a negative into the column walk, shifts every
+ * mean `1`. A bad span attribute should cost its own cell nothing and the rest of the grid nothing.
+ * The alternative, propagating a `NaN` or a negative into the column walk, shifts every
  * subsequent column.
  * @param {unknown} value - the raw attribute value
  * @returns {number} tracks covered, at least 1
@@ -415,16 +415,16 @@ function gridSpan(value: unknown, kind: 'colspan' | 'rowspan'): number {
 /**
  * Measure the column grid a set of table rows actually occupies.
  *
- * An HTML table is not a rectangle of cells — a row states only the cells it *starts*, so its
+ * An HTML table is not a rectangle of cells: a row states only the cells it *starts*, so its
  * length says nothing about how many grid columns it fills: a `colspan` fills several, and a
  * `rowspan` started higher up fills one without the row mentioning it. The pptx side has no such
  * model: `<a:tblGrid>` declares N columns and every `<a:tr>` must carry N `<a:tc>`. Something has
- * to translate, and that is a walk of the standard HTML table model — cells pack left to right,
+ * to translate, and that is a walk of the standard HTML table model: cells pack left to right,
  * skipping columns still held by a rowspan above.
  *
  * Returns the grid width and, per row, how many columns that row reaches. The difference between
  * the two is exactly the padding a ragged row needs; the merge cells for `colspan`/`rowspan` are
- * *not* padding — the table emitter synthesizes those itself, so they are counted as filled here.
+ * *not* padding. The table emitter synthesizes those itself, so they are counted as filled here.
  *
  * Spans are read through {@link gridSpan}, so a bad attribute cannot shift the whole grid. The
  * occupancy bookkeeping underneath is {@link createRowSpanOccupancy}, shared with
@@ -458,7 +458,7 @@ export function measureGridColumns(rows: readonly (readonly GridCellSpans[])[]):
 /**
  * Widen a column-width basis to cover a grid wider than the row it was derived from.
  *
- * The basis comes from one row — the first with cells — but the grid is as wide as the *widest*
+ * The basis comes from one row (the first with cells), but the grid is as wide as the *widest*
  * row, and those need not agree (a single spanning header over a wider body is the common shape).
  * The columns the source row never described get the average of the ones it did, so they read as
  * ordinary columns rather than as a zero-width sliver; with no usable basis at all they get `1`,
@@ -490,7 +490,7 @@ type TextCell = {
 /**
  * Read a cell's text, with `<br>` surviving as a newline.
  *
- * `innerText` is the right answer in a browser — it is the *rendered* text, so it already
+ * `innerText` is the right answer in a browser: it is the *rendered* text, so it already
  * collapses whitespace, honors `display: none`, and turns `<br>` into `"\n"`. But it is an
  * HTML-spec extra tied to rendering, and outside a browser it is either absent (jsdom does not
  * implement it, so every cell would come out empty) or present but not actually rendered
@@ -498,7 +498,7 @@ type TextCell = {
  *
  * So both are computed and the better one wins: a `childNodes` walk that maps `<br>` to a line
  * break and collapses whitespace per line, and `innerText`. `innerText` is preferred unless it
- * dropped a line break the walk found — the one thing that provably makes it not the rendered
+ * dropped a line break the walk found, the one thing that provably makes it not the rendered
  * text. Neither can know about `text-transform` without a browser.
  * @param {TextCell} cell - the table cell element
  * @returns {string} cell text, `<br>`-separated lines joined by `"\n"`
@@ -536,7 +536,7 @@ export function readCellText(cell: TextCell): string {
 	}
 	const walked = lines.map((line) => line.replace(/\s+/g, ' ').trim()).join('\n')
 
-	// Prefer `innerText` — except when the walk found line breaks it dropped. A DOM that does
+	// Prefer `innerText`, except when the walk found line breaks it dropped. A DOM that does
 	// not render can still expose an `innerText` property that is really just `textContent`
 	// (happy-dom returns `"ab"` for `a<br>b`), and that one is not the rendered text this
 	// wants: it has silently lost the cell's line structure. Where it kept the breaks, it is
@@ -554,11 +554,11 @@ export function readCellText(cell: TextCell): string {
  * Resolve `options.masterTitle` to the slide layout it names, so the auto-pager can take that
  * master's margins.
  *
- * The layout registry is a presentation *internal* — it is not on {@link TableToSlidesHost},
+ * The layout registry is a presentation *internal*. It is not on {@link TableToSlidesHost},
  * and the public `slideLayouts` getter deliberately hides the `_name` this matches on. Rather
  * than widen either, read it defensively: a host that has no registry simply resolves no
  * master, which is what a caller passing a bare `{ addSlide, presLayout }` object should get.
- * The alternative — dropping the lookup on the free-function path — would make `masterTitle`
+ * The alternative (dropping the lookup on the free-function path) would make `masterTitle`
  * silently do nothing there, which is a trap.
  * @param {TableToSlidesHost} pptx - the presentation the slides are being added to
  * @param {string} masterTitle - the `title` passed to `defineSlideMaster`
@@ -578,7 +578,7 @@ type TablePart = 'thead' | 'tbody' | 'tfoot'
  * A row's cells, via `HTMLTableRowElement.cells`.
  *
  * Read off the structural shape rather than the `lib.dom` type so a DOM that does not implement
- * the collection degrades to "this row has no cells" instead of throwing — the same tolerance
+ * the collection degrades to "this row has no cells" instead of throwing, the same tolerance
  * every other DOM read in this file has.
  * @param {Element} row - a `<tr>`
  * @returns {HTMLTableCellElement[]} the row's cells, in document order
@@ -595,7 +595,7 @@ function rowCells(row: Element): HTMLTableCellElement[] {
  * for two reasons the query cannot fix:
  *
  * - **A row need not be in a section.** `<table><tr>…` is valid authored markup, and a table built
- *   with `createElement`/`appendChild` has no `<tbody>` at all — the HTML *parser* inserts one, the
+ *   with `createElement`/`appendChild` has no `<tbody>` at all: the HTML *parser* inserts one, the
  *   DOM API does not. Those rows matched none of the three selectors and were silently dropped,
  *   which is how a perfectly good table reached `addTable` with zero rows and threw
  *   `addTable: Array expected!` (upstream gitbrent/PptxGenJS#1005).
@@ -605,7 +605,7 @@ function rowCells(row: Element): HTMLTableCellElement[] {
  * Each row's own parentage settles both questions: it names the section the row belongs to (the
  * head/body/foot split still matters downstream, for repeating header rows on auto-paged slides),
  * and it says whether the row is this table's at all. The ownership check is not redundant with
- * using `rows` — happy-dom's `rows` is itself a descendant walk, so a nested table's rows arrive
+ * using `rows`: happy-dom's `rows` is itself a descendant walk, so a nested table's rows arrive
  * there too. Checking is what makes the answer the same on every DOM.
  * @param {Element} table - the `<table>` being converted
  * @returns {Array<{ row: Element, part: TablePart }>} rows in emission order
@@ -655,7 +655,7 @@ export function genTableToSlides(
 	// Own the options before touching them, the way `addTextDefinition`, `addShapeDefinition`
 	// and `addTableDefinition` each do. This function resolves the slide margin, the column
 	// widths, the head rows and the per-page `y` into its working bag; writing those into the
-	// caller's object made a reused bag change the next call's output — most visibly `y`, left
+	// caller's object made a reused bag change the next call's output, most visibly `y`, left
 	// holding the continuation start, so the second call's first table began where the first
 	// call's *second* page did.
 	const opts: TableToSlidesPropsInternal = { ...options }
@@ -669,7 +669,7 @@ export function genTableToSlides(
 	let arrInchMargins: [number, number, number, number] = [0.5, 0.5, 0.5, 0.5] // TRBL-style
 	let intTabW = 0
 
-	// REALITY-CHECK: resolve the table (and its style reader) before anything else — this is
+	// REALITY-CHECK: resolve the table (and its style reader) before anything else. This is
 	// also where a missing/unresolvable table id fails.
 	const ctx = resolveDomContext(target, opts)
 
@@ -729,7 +729,7 @@ export function genTableToSlides(
 	const { columns: intColCnt, filled: arrRowFilled } = measureGridColumns(
 		domRows.map(({ row }) => rowCells(row).map(spansOf))
 	)
-	// A table with no rows — or only empty ones — has nothing to convert. Say so here: the failure
+	// A table with no rows (or only empty ones) has nothing to convert. Say so here: the failure
 	// used to surface far downstream as `Reduce of empty array with no initial value` out of the
 	// auto-pager, or as `addTable: Array expected!`, neither of which names the table.
 	const srcRow = domRows.find(({ row }) => rowCells(row).length > 0)
@@ -772,7 +772,7 @@ export function genTableToSlides(
 	}
 
 	// The width-source row can be narrower than the grid (one spanning header over a wider body),
-	// so widen the basis to the full grid before the proportional calc — that way the calc still
+	// so widen the basis to the full grid before the proportional calc. That way the calc still
 	// divides the slide across *every* column instead of overflowing it by the missing ones.
 	const arrBasisColW = extendColBasis(pickColWidthBasis(arrTabColW, arrCssColW), intColCnt)
 	arrBasisColW.forEach((colW) => {
@@ -783,7 +783,7 @@ export function genTableToSlides(
 	arrBasisColW.forEach((colW, idxW) => {
 		const intCalcWidth = Number(((Number(emuSlideTabW) * ((colW / intTabW) * 100)) / 100 / EMU_PER_INCH).toFixed(2))
 		// A `data-pptx-width` on a spanning cell states that *cell's* width, so it divides across
-		// the columns the cell covers — exactly as its `offsetWidth` and its CSS width do above.
+		// the columns the cell covers, exactly as its `offsetWidth` and its CSS width do above.
 		// A column past the source row's reach has no cell to be overridden by.
 		const src = arrColSrc[idxW]
 		const intSetWidth = src ? Number(src.cell.getAttribute('data-pptx-width')) / src.span : 0
@@ -835,7 +835,7 @@ export function genTableToSlides(
 			// A CSS value this table has no spelling for leaves the key off rather than writing an
 			// `undefined` into it, so the cell keeps whatever alignment it inherits. The guard and
 			// the ternary chain they replace could not disagree, but only because every value the
-			// guard admitted had an arm — the `: undefined` tail was unreachable, and a sixth CSS
+			// guard admitted had an arm. The `: undefined` tail was unreachable, and a sixth CSS
 			// value added to one list and not the other would have made it reachable and silent.
 			const align = CSS_TEXT_ALIGN[style.getPropertyValue('text-align')]
 			if (align) cellOpts.align = align
@@ -845,7 +845,7 @@ export function genTableToSlides(
 			// C: Add padding [margin] (if any)
 			// NOTE: `TableCellProps.margin` is INCHES, so computed px must be converted, not copied.
 			// CSS defines the reference pixel as 1/96in, and mirroring what the browser rendered is
-			// this conversion's whole job — so resolve at `DEFAULT_PX_PER_INCH`, the same density the
+			// this conversion's whole job, so resolve at `DEFAULT_PX_PER_INCH`, the same density the
 			// `"<n>px"` coordinate unit uses. (Until 2026-07-31 the px magnitude was assigned straight
 			// through under a stale "px->pt 1:1" note left from when cell margin was points; that made
 			// a 4px pad a *4 inch* inset and tripped the legacy-points warning on any pad >= 1px.)
@@ -890,11 +890,11 @@ export function genTableToSlides(
 		})
 
 		// Normalize a ragged row up to the grid width. HTML tolerates a short row and just leaves
-		// the tail of the grid empty; pptx does not — `<a:tblGrid>` declares the column count and a
+		// the tail of the grid empty; pptx does not: `<a:tblGrid>` declares the column count and a
 		// row with fewer `<a:tc>` is a malformed table PowerPoint has to repair. The missing cells
 		// are blank rather than a copy of a neighbour: the source table never stated them, so there
 		// is nothing to carry over. Columns held by a `rowspan` from above are already counted as
-		// filled — the table emitter synthesizes those merge cells itself.
+		// filled, since the table emitter synthesizes those merge cells itself.
 		for (let idxPad = arrRowFilled[idxRow] ?? 0; idxPad < intColCnt; idxPad++) {
 			arrObjTabCells.push({ _type: SlideObjectType.tablecell, text: '', options: {} })
 		}
@@ -937,7 +937,7 @@ export function genTableToSlides(
 			autoPage: false,
 		}
 		// `y` is set on `opts` a few lines up on every branch, but only where the caller stated one
-		// does it belong on the table's own props — an absent `y` is what lets `addTable` apply its
+		// does it belong on the table's own props. An absent `y` is what lets `addTable` apply its
 		// own default.
 		if (opts.y !== undefined) slideTableProps.y = opts.y
 		newSlide.addTable(slide.rows, slideTableProps)

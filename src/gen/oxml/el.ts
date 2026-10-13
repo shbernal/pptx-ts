@@ -2,7 +2,7 @@
  * pptx-ts: XML element builder (write-side substrate)
  *
  * The write path historically concatenated template strings and called
- * `encodeXmlEntities` by hand at every interpolation — the source of escaping,
+ * `encodeXmlEntities` by hand at every interpolation, the source of escaping,
  * attribute-order and child-sequence bugs. This builder centralizes escaping
  * while reproducing today's exact byte layout, so a migration onto it can be
  * gated on strict byte-identity (`pnpm run byte-identity:check`) rather than on
@@ -15,7 +15,7 @@
  * 1. Self-closing is decided by ARITY, never by child value. `el()` always emits
  *    a paired tag; `voidEl()` always self-closes. This matters because
  *    `encodeXmlEntities(undefined)` returns `''`, so a value-based rule would
- *    turn today's `<dc:title></dc:title>` into `<dc:title/>` — a silent byte
+ *    turn today's `<dc:title></dc:title>` into `<dc:title/>`, a silent byte
  *    regression on every optional-text element in the tree.
  *
  *    Escaping is split to match: attribute values go through `encodeXmlAttrValue`
@@ -45,9 +45,9 @@ export type XmlAttrs = Record<string, string | number | null | undefined>
 
 /**
  * Byte-layout control. Omit for flat output.
- * - `openPrefix` — emitted before `<name`
- * - `childPrefix` — emitted before each child
- * - `closePrefix` — emitted before the closing delimiter (`</name>`, or `/>` for `voidEl`)
+ * - `openPrefix`: emitted before `<name`
+ * - `childPrefix`: emitted before each child
+ * - `closePrefix`: emitted before the closing delimiter (`</name>`, or `/>` for `voidEl`)
  */
 export interface XmlFmt {
 	openPrefix?: string
@@ -74,7 +74,7 @@ function openTag(name: string, attrs: XmlAttrs | null | undefined, fmt: XmlFmt |
 }
 
 /**
- * Paired element: `<name …>children</name>` — emitted even when `children` is
+ * Paired element: `<name …>children</name>`, emitted even when `children` is
  * empty or `undefined`. Text children are escaped; `raw()` children are not.
  */
 export function el(name: string, attrs?: XmlAttrs | null, children?: XmlChild | XmlChild[], fmt?: XmlFmt): string {
@@ -88,7 +88,7 @@ export function el(name: string, attrs?: XmlAttrs | null, children?: XmlChild | 
 }
 
 /**
- * Self-closing element: `<name …/>`. `fmt.closePrefix` goes before the `/>` — a
+ * Self-closing element: `<name …/>`. `fmt.closePrefix` goes before the `/>`. A
  * handful of emitters write `<a:avLst />` with a space there, and that space is
  * byte-significant like any other.
  */

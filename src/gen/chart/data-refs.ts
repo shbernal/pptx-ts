@@ -5,7 +5,7 @@
  * accessors over the normalized (internal) chart-series arrays, and the builders that
  * turn a (column, row) into an absolute reference into the chart's embedded `Sheet1`.
  * The embedded-workbook builder ({@link ../chart/embed-xlsx}) writes the cells; the
- * chart-XML builder ({@link ../chart/chart-xml}) points `<c:f>` formulas back at them —
+ * chart-XML builder ({@link ../chart/chart-xml}) points `<c:f>` formulas back at them,
  * so this mapping lives in one place to keep column letters and `$`-anchoring from
  * drifting between the two sides.
  */

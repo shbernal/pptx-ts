@@ -128,7 +128,7 @@ export function lineEndEl(tag: 'a:headEnd' | 'a:tailEnd', value: string | undefi
  *
  * TypeScript's excess-property check already rejects a stray key on a border written
  * *inline* at the call site. It deliberately does not fire when the border is built as
- * a variable first (`const b = {...}; addTable(rows, { border: b })`) — a variable may
+ * a variable first (`const b = {...}; addTable(rows, { border: b })`), since a variable may
  * legitimately be a supertype. That exemption covers precisely the reuse pattern a
  * shared grid style encourages, so the mistake reaches here typed as valid and the
  * wrong-named value is discarded during generation. A `.pptx` gives no other signal:
@@ -155,8 +155,8 @@ function warnUnknownBorderKeys(border: BorderProps): void {
  * than taking the default: `lineWidthToEmu` refuses `NaN` and clamps `Infinity` to the top of
  * `ST_LineWidth`, as it does for every other line width.
  *
- * Every `BorderProps` the library reads — table cell borders, table-style regions, and
- * every chart border — resolves its width through here, so this doubles as the one
+ * Every `BorderProps` the library reads (table cell borders, table-style regions, and
+ * every chart border) resolves its width through here, so this doubles as the one
  * place that can vet a border's shape for all of them ({@link warnUnknownBorderKeys}).
  * @param {BorderProps} border - border properties (may carry `width`)
  * @param {number} defaultPt - width to use when `width` is not a number
@@ -220,7 +220,7 @@ export function createLineCap(lineCap?: LineCap): string {
  *
  * `<a:ln>` takes almost the same fill group as a shape interior, so a stroke can be a gradient
  * or a pattern as well as a solid color. Which one is asked for is {@link resolveLineKind}'s
- * answer, shared with the shape interior — the stroke side used to infer `gradient` from its
+ * answer, shared with the shape interior. The stroke side used to infer `gradient` from its
  * sub-object while the interior inferred nothing, so the same `{ gradient }` spelling painted a
  * gradient outline and a black fill. "Almost" is the picture fill: `EG_LineFillProperties` has
  * no `a:blipFill`, and `resolveLineKind` is where that is refused.
@@ -248,20 +248,20 @@ export function genXmlLineFill(line: ShapeLineProps): string {
  * Four builders used to turn a `BorderProps` into a line element, each with its own
  * defaults, and the differences between them were only visible by reading all four: a
  * chart data point's outline, a chart-area or plot-area border, the `<c:spPr>` line the
- * plot and chart space share, and a table cell's six edges. They agree on the shape —
- * `w` and `cap` on the element, a solid paint from `color`/`transparency`, then an
- * optional dash and whatever the schema allows after it — and disagree only on what fills
+ * plot and chart space share, and a table cell's six edges. They agree on the shape
+ * (`w` and `cap` on the element, a solid paint from `color`/`transparency`, then an
+ * optional dash and whatever the schema allows after it) and disagree only on what fills
  * those slots. Those are this function's parameters, so each caller is now a named
  * argument set rather than a re-derivation.
  *
  * Two things are deliberately *not* parameters. A stroke that paints nothing is spelled
  * differently by each caller (a bare `<a:ln><a:noFill/></a:ln>` for a chart, an
  * attribute-carrying `w="0"` rule for a table cell, and nothing at all for a data point,
- * whose caller decides whether to emit it) — see {@link noStrokeLine} for the shared
+ * whose caller decides whether to emit it); see {@link noStrokeLine} for the shared
  * spelling of the first. And the colour default is taken on `||`, not `??`, so an empty
  * `color` reads as *unstated* rather than reaching the colour validator as a bad value:
  * three of the four callers used to hand `''` straight through, which warns
- * `color/invalid-value` and paints `DEF_FONT_COLOR` — black — instead of the border
+ * `color/invalid-value` and paints `DEF_FONT_COLOR` (black) instead of the border
  * default they had named a line earlier. The chart-border builder already read it this way,
  * and `dataBorder` is the only one of the other three a caller can actually reach with an
  * empty string; the rest resolve their colour in the definition step first.
@@ -308,7 +308,7 @@ export function borderLine(
  * The `<a:ln>` that paints no stroke at all: an explicit `<a:noFill/>` on a bare element.
  *
  * This is the chart side's spelling of "no line" and is a different statement from a
- * {@link borderLine} whose paint is absent — an omitted `a:ln` inherits the theme's
+ * {@link borderLine} whose paint is absent: an omitted `a:ln` inherits the theme's
  * `a:lnRef`, where this overrides it. A table cell spells the same intent with the
  * attributes still on the element and `w="0"`, which is why that one is not this.
  * @returns the `<a:ln><a:noFill/></a:ln>` element XML

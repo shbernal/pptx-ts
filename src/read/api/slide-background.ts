@@ -2,9 +2,9 @@
  * Read a slide's effective background (`p:cSld/p:bg`), decoded into a typed union.
  *
  * A background lives on the slide itself, or is inherited from its slideLayout,
- * else its slideMaster — the {@link SlideBackground.source} field records which.
+ * else its slideMaster; the {@link SlideBackground.source} field records which.
  * The writer authors solid-colour, gradient, pattern and image backgrounds (all FAITHFUL);
- * theme-indexed (`p:bgRef`) backgrounds are read-only for imported decks — surface
+ * theme-indexed (`p:bgRef`) backgrounds are read-only for imported decks. Surface
  * them so a codegen pass can carry the part rather than fake it. A
  * `themeRef` additionally resolves its `idx` through the slide theme's `fmtScheme`
  * to a concrete {@link BackgroundFill} in `resolvedFill`, so a consumer can ask what
@@ -36,8 +36,8 @@ export type BackgroundSource = 'slide' | 'layout' | 'master'
  * top-level variants add {@link BackgroundSource}, and it is what a `themeRef`'s
  * `SlideBackground.resolvedFill` carries.
  *
- * The `image` variant keeps `relId`/`partName` at the top level — the fields
- * callers already read — and adds the full {@link PictureFill} (stretch/tile
+ * The `image` variant keeps `relId`/`partName` at the top level (the fields
+ * callers already read) and adds the full {@link PictureFill} (stretch/tile
  * geometry, crop, alpha) under `picture`.
  */
 export type BackgroundFill =
@@ -52,7 +52,7 @@ export type BackgroundFill =
  * `type`. Every variant carries {@link BackgroundSource}. `solid`/`gradient`/`pattern`/`image`
  * are what the writer authors and round-trip faithfully; `themeRef` is read-only
  * (imported decks) and `none` is an explicit `a:noFill`. A `themeRef`
- * keeps its raw `idx` for fidelity and also exposes `resolvedFill` — the concrete
+ * keeps its raw `idx` for fidelity and also exposes `resolvedFill`, the concrete
  * fill that `idx` resolves to through the slide theme's `fmtScheme` (`null` when the
  * theme/entry cannot be resolved).
  */
@@ -100,13 +100,13 @@ function decodeBackgroundFill(container: Element, ctx: ThemeContext, rels: Relat
 /**
  * Resolve a `p:bgRef`'s `idx` into the concrete {@link BackgroundFill} it renders
  * as, through the slide theme's `fmtScheme`. A `p:bgRef` is a
- * `CT_StyleMatrixReference` — the same shape as a shape's `a:fillRef` — so
+ * `CT_StyleMatrixReference` (the same shape as a shape's `a:fillRef`), so
  * {@link styleRefFill} builds the indexed `bgFillStyleLst`/`fillStyleLst` entry with
  * its `phClr` substituted by the bgRef's colour, and the resulting fill element is
  * decoded like a `p:bgPr`. `null` when the theme has no `fmtScheme`, the entry is
  * absent, or the colour cannot be resolved.
  *
- * `themeRels` — not the owning slide/layout/master's rels — is what an `a:blipFill`
+ * `themeRels`, not the owning slide/layout/master's rels, is what an `a:blipFill`
  * entry's `r:embed` resolves against: the fill element is lifted out of the *theme*
  * part, so its relationship id is scoped to that part. Several stock Office themes
  * (Ion, Facet, …) put a picture in the third `bgFillStyleLst` slot, so a deck using

@@ -65,7 +65,7 @@ import { InvalidOptionError, PackageReadError } from '../../errors.js'
 import { EMU_PER_POINT } from '../../units.js'
 
 /**
- * One border as {@link TableCell.setBorder} takes it — the write-side mirror of
+ * One border as {@link TableCell.setBorder} takes it: the write-side mirror of
  * {@link CellBorder}, which is what reading one gives back.
  *
  * Deliberately not `CellBorder` itself: that type reports every field, `null` included, so
@@ -81,7 +81,7 @@ export interface TableCellBorderEdit {
 	color?: string
 	/** Theme colour token (e.g. `accent1`); preferred over {@link color} when both are set. */
 	schemeColor?: string
-	/** Write an explicit `a:noFill` — a deliberately suppressed edge, not an absent one. */
+	/** Write an explicit `a:noFill`: a deliberately suppressed edge, not an absent one. */
 	noFill?: boolean
 }
 
@@ -103,7 +103,7 @@ export interface TableCellStyleContext {
  * One edge border of a table cell (`a:tcPr/a:lnL|lnR|lnT|lnB|lnTlToBr|lnBlToTr`).
  * Mirrors the `a:ln`-style decode used for shape strokes: {@link widthPt} from
  * `@w` (EMU → points), {@link dash} from `a:prstDash/@val`, and the stroke colour as a
- * {@link ColorRef} — the cell-border counterpart of a shape's line accessors.
+ * {@link ColorRef}. This is the cell-border counterpart of a shape's line accessors.
  */
 export interface CellBorder {
 	/** Border width in points (`@w` is EMU; 12700 EMU = 1pt), or `null` when unset. */
@@ -117,7 +117,7 @@ export interface CellBorder {
 	 * theme: a `lumMod`-darkened accent carried forward as a literal hex stops tracking its theme.
 	 */
 	colorRef: ColorRef
-	/** `true` when the edge is an explicit no-border (`a:noFill`) — a deliberately suppressed side. */
+	/** `true` when the edge is an explicit no-border (`a:noFill`): a deliberately suppressed side. */
 	noFill: boolean
 	/**
 	 * The line end cap (`@cap`) as the raw OOXML token (`flat`, `rnd`, `sq`), or `null` when unset.
@@ -256,7 +256,7 @@ export class TableCell {
 	 * The cell's `a:tcPr`, creating it when absent.
 	 *
 	 * `CT_TableCell` sequences `a:txBody` then `a:tcPr` then `a:extLst`, so a newly created
-	 * one is inserted before `a:extLst` — appending it blindly would put it after and make
+	 * one is inserted before `a:extLst`; appending it blindly would put it after and make
 	 * the part invalid. Every setter below goes through here for that reason.
 	 */
 	#getOrAddTcPr(): Element {
@@ -282,7 +282,7 @@ export class TableCell {
 	}
 
 	/**
-	 * Set (or clear) `a:tcPr/@horzOverflow` — what a single glyph too wide for the cell does.
+	 * Set (or clear) `a:tcPr/@horzOverflow`: what a single glyph too wide for the cell does.
 	 * `null` removes the attribute; so does `'clip'` in effect, since it is the schema
 	 * default, but the attribute is still written as asked.
 	 * @throws {InvalidOptionError} when the value is outside `ST_TextHorzOverflowType`
@@ -308,7 +308,7 @@ export class TableCell {
 	 *
 	 * Partial: only the sides named are touched, so `{ left: 0 }` flushes the text left and
 	 * leaves the other three alone. A side given as `null` has its attribute removed, which
-	 * returns it to the schema default (91440 EMU left/right, 45720 top/bottom) — not to
+	 * returns it to the schema default (91440 EMU left/right, 45720 top/bottom), not to
 	 * zero. Pass `{}` to change nothing.
 	 * @throws {InvalidOptionError} when a value is not a finite number
 	 */
@@ -334,7 +334,7 @@ export class TableCell {
 	}
 
 	/**
-	 * Set (or clear) one of the cell's six borders — the four edges and the two diagonals.
+	 * Set (or clear) one of the cell's six borders: the four edges and the two diagonals.
 	 *
 	 * `null` removes the element entirely, which is "inherit", and is a different thing from
 	 * `{ noFill: true }`, which writes an explicit no-border and suppresses whatever would
@@ -406,7 +406,7 @@ export class TableCell {
 	 * `null` removes the `a:solidFill` and lets the cell inherit from the table style again.
 	 * That is not the same as {@link noFill}, which writes an explicit `a:noFill` and so
 	 * suppresses the inherited shading. Any competing fill choice (`a:gradFill`,
-	 * `a:blipFill`, …) is dropped first — `EG_FillProperties` admits one.
+	 * `a:blipFill`, …) is dropped first, since `EG_FillProperties` admits one.
 	 * @throws {InvalidOptionError} when `color` is not a 6-digit hex string
 	 */
 	setFillColor(color: string | null): void {
@@ -423,7 +423,7 @@ export class TableCell {
 	}
 
 	/**
-	 * Write an explicit `<a:noFill/>` on the cell — a transparent cell that shows the table
+	 * Write an explicit `<a:noFill/>` on the cell: a transparent cell that shows the table
 	 * background (or the slide) through. Distinct from `setFillColor(null)`, which removes
 	 * the fill and lets the table style's shading apply again.
 	 */
@@ -456,23 +456,23 @@ export class TableCell {
 
 	/**
 	 * The cell's solid fill resolved against the table's theme colour context to a
-	 * literal hex — the table-cell counterpart of
+	 * literal hex. It is the table-cell counterpart of
 	 * {@link AutoShape.resolvedFill}. The cell's own
 	 * `a:tcPr/a:solidFill` wins; when the cell defines none, this falls back to the
 	 * table **style** graph (the `firstRow`/banded/`wholeTbl` shading the
-	 * `a:tableStyleId` supplies — see {@link Table.resolvedStyle}), so a styled cell
+	 * `a:tableStyleId` supplies; see {@link Table.resolvedStyle}), so a styled cell
 	 * with an empty `a:tcPr` reports the colour PowerPoint actually renders rather
 	 * than `null`.
 	 *
 	 * A cell that carries *some other* fill choice (`a:blipFill`/`a:gradFill`/
 	 * `a:pattFill`/`a:noFill`) overrides the style graph in PowerPoint, so this
-	 * reports `null` for one rather than falling through to the inherited shading —
+	 * reports `null` for one rather than falling through to the inherited shading,
 	 * the same guard {@link AutoShape.resolvedFill} applies to
 	 * the style matrix. Read {@link pictureFill} for an image-filled cell. Also
 	 * `null` when neither source yields a solid colour (an
 	 * unmapped token, an explicit style `a:noFill`). The returned
 	 * {@link ResolvedColor} carries `effectiveHex` (the base colour with its
-	 * `lumMod`/`lumOff`/… transforms applied) — read that for the final colour.
+	 * `lumMod`/`lumOff`/… transforms applied); read that for the final colour.
 	 */
 	get resolvedFill(): ResolvedColor | null {
 		if (this.hasOwnFill) return resolveSolidFillColor(this.#tcPr(), this.themeContext)
@@ -484,7 +484,7 @@ export class TableCell {
 	 * child), as opposed to inheriting one from the table style's header/banding rules.
 	 *
 	 * This is the flag that disambiguates {@link resolvedFill}, which deliberately reports
-	 * either — it answers "what colour does this cell render as", and both sources are valid
+	 * either: it answers "what colour does this cell render as", and both sources are valid
 	 * answers to that. Anything that has to reproduce the cell rather than describe it needs
 	 * to know which: baking an inherited banding colour into a copy makes the copy look right
 	 * until someone changes its table style, and then nothing moves. `false` for a cell whose
@@ -496,20 +496,20 @@ export class TableCell {
 	}
 
 	/**
-	 * `true` when the cell sets an explicit no-fill (`a:tcPr/a:noFill`) — a deliberately
+	 * `true` when the cell sets an explicit no-fill (`a:tcPr/a:noFill`): a deliberately
 	 * transparent cell showing the table background (or the slide) through. The cell-side
 	 * counterpart of {@link AutoShape.fillNoFill}, and what
 	 * {@link noFill} writes.
 	 *
 	 * {@link hasOwnFill} is not this question: it is `true` for *any* `EG_FillProperties`
 	 * child, so on its own it cannot separate a suppressed fill from a gradient or an image
-	 * one — and every colour accessor ({@link resolvedFill}, {@link fillSchemeColor})
+	 * one, and every colour accessor ({@link resolvedFill}, {@link fillSchemeColor})
 	 * reports `null` for a no-fill cell exactly as it does for a
 	 * cell that inherits its shading from the table style. Deriving it as "has a fill of its
 	 * own, and no accessor recognises it" instead of reading it has two failure modes: it
 	 * folds `a:grpFill` in with `a:noFill`, and its meaning changes silently the day a
-	 * further fill kind gets an accessor. The two paint completely differently — an
-	 * inherited banding colour versus nothing at all — so a consumer that cannot tell them
+	 * further fill kind gets an accessor. The two paint completely differently (an
+	 * inherited banding colour versus nothing at all), so a consumer that cannot tell them
 	 * apart paints a transparent cell in the style's shading.
 	 */
 	get fillNoFill(): boolean {
@@ -585,7 +585,7 @@ export class TableCell {
 	 * `null` when the cell defines none. Each present edge decodes to a
 	 * {@link CellBorder} (width / dash / resolved colour + its raw token and transform
 	 * list / suppressed flag);
-	 * absent edges are `null`. Cell borders are the biggest visible table gap — a
+	 * absent edges are `null`. Cell borders are the biggest visible table gap: a
 	 * replica built only from geometry and fill draws every cell edge-to-edge with
 	 * no rule, so this surfaces the per-side stroke the writer's `border` option emits.
 	 */
@@ -628,7 +628,7 @@ export class TableCell {
 
 	/**
 	 * Whether the cell's whole text **block** is centred horizontally within it
-	 * (`a:tcPr/@anchorCtr`). `false` when unset — that is the schema default, and it is
+	 * (`a:tcPr/@anchorCtr`). `false` when unset; that is the schema default, and it is
 	 * what PowerPoint writes nothing for.
 	 *
 	 * Distinct from a paragraph's `align`, which decides where each *line* sits inside the
@@ -672,12 +672,12 @@ export class TableCell {
 	 *
 	 * This is what {@link headerIds} references: a data cell names the header cells that
 	 * govern it by their `@id`, which is how a complex table tells a screen reader what a
-	 * value means. Unrelated to the shape-level `p:cNvPr/@id` — it is an `xs:string` scoped
+	 * value means. Unrelated to the shape-level `p:cNvPr/@id`: it is an `xs:string` scoped
 	 * to the table, not a slide-wide numeric id.
 	 *
 	 * **PowerPoint does not write this and strips it on save**, so it will read `null` on
 	 * any deck PowerPoint has saved, however it was produced. It is surfaced for decks from
-	 * other producers. There is deliberately no write-API counterpart — see
+	 * other producers. There is deliberately no write-API counterpart; see
 	 * `test/read/fixtures/authoring/probe-table-cell-a11y-and-3d.ps1` for the measurement.
 	 */
 	get id(): string | null {
@@ -687,7 +687,7 @@ export class TableCell {
 	/**
 	 * The `@id`s of the header cells that govern this cell
 	 * (`a:tcPr/a:headers/a:header/@val`), in document order. Empty when the cell declares no
-	 * header association — which is the common case, since only a complex table needs one.
+	 * header association, which is the common case, since only a complex table needs one.
 	 *
 	 * Carries the same caveat as {@link id}: PowerPoint strips `a:headers` on save, so this
 	 * is empty on any PowerPoint-saved deck. `Table.firstRowHeader` (`a:tblPr/@firstRow`) is
@@ -705,7 +705,7 @@ export class TableCell {
 	/**
 	 * How the cell treats a glyph too wide for its text width (`a:tcPr/@horzOverflow`):
 	 * `'clip'` cuts it at the cell edge, `'overflow'` lets it draw past. `null` when unset
-	 * (PowerPoint clips). Not a wrap flag — cell text always wraps to the column width.
+	 * (PowerPoint clips). Not a wrap flag: cell text always wraps to the column width.
 	 */
 	get horzOverflow(): string | null {
 		const tcPr = this.#tcPr()

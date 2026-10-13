@@ -17,8 +17,8 @@ import type { LineEndType, PresetLineDashVal } from '../ooxml/st-enums.js'
  * paint. This is that vocabulary; {@link BorderProps} is an alias of it, and the chart
  * option bag now takes it wherever it used to spell a stroke by hand.
  *
- * Defaults are **per site**, not per interface — a table border's absent `width` is 1 pt, a
- * chart gridline's is whatever `DEF_CHART_GRIDLINE` says — so each consumer documents its own
+ * Defaults are **per site**, not per interface (a table border's absent `width` is 1 pt, a
+ * chart gridline's is whatever `DEF_CHART_GRIDLINE` says), so each consumer documents its own
  * rather than this type claiming one for all of them.
  *
  * {@link ShapeLineProps} is deliberately *not* an alias: a shape stroke is a **paint**, so its
@@ -39,7 +39,7 @@ export interface StrokeProps {
 	 * onto `sysDash`. Set this to pick the exact `a:prstDash` preset instead:
 	 * `dashType: 'lgDashDot'` emits `<a:prstDash val="lgDashDot"/>`.
 	 *
-	 * **Precedence.** When both are set, `dashType` wins over `type` for the dash pattern —
+	 * **Precedence.** When both are set, `dashType` wins over `type` for the dash pattern:
 	 * `{ type: 'solid', dashType: 'sysDot' }` draws a dotted rule. The one exception is
 	 * `type: 'none'`, which suppresses the stroke entirely and is decided before any dash
 	 * pattern is chosen. An unrecognized value warns and falls back to what `type` implies.
@@ -47,7 +47,7 @@ export interface StrokeProps {
 	 */
 	dashType?: PresetLineDashVal
 	/**
-	 * Stroke colour — a 6-digit hex RGB or a `SchemeColor` token.
+	 * Stroke colour: a 6-digit hex RGB or a `SchemeColor` token.
 	 * @example 'FF3399'
 	 * @example SchemeColor.accent1
 	 */
@@ -188,7 +188,7 @@ export interface ShadowProps {
  * shorthand for a solid fill in that colour.
  *
  * `'FF0000'` and `{ color: 'FF0000' }` are the same statement and emit the same
- * `<a:solidFill>` — the shorthand is lossless, not a lesser spelling, and every other key on
+ * `<a:solidFill>`. The shorthand is lossless, not a lesser spelling, and every other key on
  * the object (`transparency`, `gradient`, `pattern`, `image`) is simply one the shorthand has
  * no way to say. Reach for the object as soon as you need any of them.
  *
@@ -224,7 +224,7 @@ export interface ShapeFillProps {
 	 * `'none'` and `'inherit'` are different states, and both have to be spelled out
 	 * because omitting `fill` is not one of them: the shape/text-box emitter defaults a
 	 * missing `fill` to `<a:noFill/>`.
-	 * - `'none'` emits `<a:noFill/>` — an explicit transparent interior.
+	 * - `'none'` emits `<a:noFill/>`, an explicit transparent interior.
 	 * - `'inherit'` emits no fill child at all, leaving the interior to
 	 *   `p:style/a:fillRef` or the placeholder. This is the only way to author that
 	 *   state from `addShape`/`addText`.
@@ -234,7 +234,7 @@ export interface ShapeFillProps {
 	 * inherit, so `'inherit'` is merely the explicit form of the default.
 	 *
 	 * **Omitting `type` is not the same as omitting the fill.** Setting `gradient`,
-	 * `pattern` or `image` selects that kind on its own — the sub-object is the statement,
+	 * `pattern` or `image` selects that kind on its own: the sub-object is the statement,
 	 * and `type` is how you say something the sub-objects cannot. Where both are given and
 	 * they disagree, **the explicit `type` wins** and the sub-object is ignored, because
 	 * that is the only rule under which `{ type: 'none', gradient }` can still mean
@@ -272,16 +272,16 @@ export interface ShapeFillProps {
  *
  * **A picture stroke is not one of them**, which is why `image` and `type: 'image'` are
  * subtracted from the inherited fill props rather than carried. `<a:ln>`'s paint child is
- * `EG_LineFillProperties` — `a:noFill`, `a:solidFill`, `a:gradFill`, `a:pattFill` and
- * nothing else — so unlike a shape interior a stroke has no `a:blipFill` slot to put a
+ * `EG_LineFillProperties` (`a:noFill`, `a:solidFill`, `a:gradFill`, `a:pattFill` and
+ * nothing else), so unlike a shape interior a stroke has no `a:blipFill` slot to put a
  * bitmap in, and a package that emitted one is what PowerPoint answers with a repair
  * prompt. The interface carried `image` from `ShapeFillProps` regardless, and no call site
  * ever registered the media for it, so a picture stroke reached the emitter with no rel and
  * painted nothing. It is now spelled out as unsupported: a JS caller who sets it anyway
  * gets `line/image-fill-unsupported`.
  *
- * A stroke also does not take the bare-colour shorthand a fill does — see {@link FillOption}
- * for why. Spell it `line: { color: 'FF0000' }`.
+ * A stroke also does not take the bare-colour shorthand a fill does (see {@link FillOption}
+ * for why). Spell it `line: { color: 'FF0000' }`.
  */
 export interface ShapeLineProps extends Omit<ShapeFillProps, 'type' | 'image'> {
 	/**
@@ -301,7 +301,7 @@ export interface ShapeLineProps extends Omit<ShapeFillProps, 'type' | 'image'> {
 	 */
 	width?: number
 	/**
-	 * Dash type — the full `ST_PresetLineDashVal` set, so any dash a source deck can
+	 * Dash type: the full `ST_PresetLineDashVal` set, so any dash a source deck can
 	 * carry can also be authored and replicated.
 	 * @default 'solid', or inherited when `type` is `'inherit'`
 	 */
@@ -312,11 +312,11 @@ export interface ShapeLineProps extends Omit<ShapeFillProps, 'type' | 'image'> {
 	 */
 	cap?: LineCap
 	/**
-	 * Begin arrow type — the `ST_LineEndType` set (`a:headEnd/@type`).
+	 * Begin arrow type: the `ST_LineEndType` set (`a:headEnd/@type`).
 	 */
 	beginArrowType?: LineEndType
 	/**
-	 * End arrow type — the `ST_LineEndType` set (`a:tailEnd/@type`).
+	 * End arrow type: the `ST_LineEndType` set (`a:tailEnd/@type`).
 	 */
 	endArrowType?: LineEndType
 	// FUTURE: beginArrowSize (1-9)
@@ -343,7 +343,7 @@ export interface ConnectorProps {
 	/**
 	 * Number of adjustable bends (jogs) for an `elbow` / `curved` connector. Selects the
 	 * preset variant and how many `adj` values it accepts:
-	 * - `1` → `bentConnector3` / `curvedConnector3` (one jog) — the default
+	 * - `1` → `bentConnector3` / `curvedConnector3` (one jog), the default
 	 * - `2` → `bentConnector4` / `curvedConnector4` (two jogs)
 	 * - `3` → `bentConnector5` / `curvedConnector5` (three jogs)
 	 *
@@ -368,13 +368,13 @@ export interface ConnectorProps {
 	 * The shape's `objectName` must be set and unique on the slide. `x1`/`y1` remain the static
 	 * fallback geometry (and are used if the name can't be resolved).
 	 *
-	 * A shape inside a group is a valid target — group children are named on the same slide. The
+	 * A shape inside a group is a valid target: group children are named on the same slide. The
 	 * connector itself is not an {@link Slide.addGroup} child, but {@link Slide.groupObjects} can
 	 * group one that is already on the slide.
 	 */
 	startShape?: string
 	/**
-	 * Connection-site index on `startShape` (0-based; the valid range is preset-dependent — a
+	 * Connection-site index on `startShape` (0-based; the valid range is preset-dependent: a
 	 * shape's `<a:cxnLst>` enumerates its sites). Ignored without `startShape`.
 	 * @default 0
 	 */
@@ -386,7 +386,7 @@ export interface ConnectorProps {
 	 * @default 0
 	 */
 	endShapeIdx?: number
-	/** Start point X — inches, or a `Coord` such as `'50%'` / `'2in'` */
+	/** Start point X: inches, or a `Coord` such as `'50%'` / `'2in'` */
 	x1: Coord
 	/** Start point Y */
 	y1: Coord

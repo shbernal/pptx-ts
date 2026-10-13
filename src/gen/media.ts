@@ -130,8 +130,8 @@ export function encodeSlideMediaRels(
 					if (rel.isSvgPng) await writeSvgPreview(rel, runtime, onMediaError)
 					// A path-deduped rel can itself be an SVG-PNG preview (the same SVG *file*
 					// placed 2+ times on one slide: each placement pushes its own fallback rel).
-					// Such dupes are skipped by STEP 5 — its `rel.data` filter runs synchronously,
-					// before this async load populates `dupe.data` — so convert them here, or the
+					// Such dupes are skipped by STEP 5 (its `rel.data` filter runs synchronously,
+					// before this async load populates `dupe.data`), so convert them here, or the
 					// fallback keeps raw SVG bytes in a `.png` part and corrupts the deck.
 					await Promise.all(
 						dupes.filter((dupe) => dupe.isSvgPng).map((dupe) => writeSvgPreview(dupe, runtime, onMediaError))

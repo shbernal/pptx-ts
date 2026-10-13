@@ -2,8 +2,8 @@
  * pptx-ts: media (audio / video / online video) slide-object serialization
  *
  * Emits a `media` slide object as a `<p:pic>` carrying the required preview image. The online
- * and embedded forms differ in exactly two tokens — the EG_Media choice element and whether the
- * paired `<p14:media>` rel binds by `r:link` or `r:embed` — so they share one body.
+ * and embedded forms differ in exactly two tokens (the EG_Media choice element and whether the
+ * paired `<p14:media>` rel binds by `r:link` or `r:embed`), so they share one body.
  */
 
 import { genXmlObjectLock, PICTURE_LOCK_ATTRS } from '../../drawingml/locks.js'
@@ -46,7 +46,7 @@ export function renderMediaObject(ctx: RenderContext): string {
 				null,
 				[
 					// cNvPr/@id must be unique across every shape on the slide, so it uses the slide-object
-					// index (idx + 2) like all other shapes — NOT mediaRid, which lives in the relationship-id
+					// index (idx + 2) like all other shapes, NOT mediaRid, which lives in the relationship-id
 					// space and collides with a sibling shape's idx (duplicate ids => PowerPoint reports the
 					// file corrupt, 0x80070570). The preview image is still bound via <a:blip r:embed> below.
 					raw(

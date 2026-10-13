@@ -26,12 +26,12 @@ export interface ShapeAdjustValue {
  * A geometry guide (`<a:gd>` inside a `custGeom`'s `<a:gdLst>`): a named construction formula
  * that connection sites, adjust handles, and the text rect can reference by name.
  * - `name` is a `ST_GeomGuideName` token, e.g. `'w2'`.
- * - `formula` is a `ST_GeomGuideFormula` — a space-delimited op + args string emitted verbatim,
+ * - `formula` is a `ST_GeomGuideFormula`: a space-delimited op + args string emitted verbatim,
  *   e.g. the multiply-divide op `"* / w 1 2"` written without the inner space (w × 1 ÷ 2), or
  *   `'val 10800'`. This is an advanced escape hatch: the arguments are not interpreted, only
  *   escaped. The leading operation *is* checked against the 17 ECMA-376 §20.1.9.11 operations
  *   (multiply-divide, add-subtract, add-divide, if-else, `abs`, `at2`, `cat2`, `cos`, `max`,
- *   `min`, `mod`, `pin`, `sat2`, `sin`, `sqrt`, `tan`, `val` — see `GEOM_GUIDE_OPS` in
+ *   `min`, `mod`, `pin`, `sat2`, `sin`, `sqrt`, `tan`, `val`; see `GEOM_GUIDE_OPS` in
  *   `src/gen/drawingml/geometry.ts` for the literal tokens), because an unknown one emits
  *   schema-shaped but semantically dead geometry that PowerPoint answers with a repair prompt;
  *   such a guide is warned about and skipped.
@@ -55,7 +55,7 @@ export interface ShapeConnectionSite {
 	y: Coord | string
 }
 
-/** An XY adjust handle (`<a:ahXY>`) — a draggable handle, optionally bound to guides. */
+/** An XY adjust handle (`<a:ahXY>`): a draggable handle, optionally bound to guides. */
 export interface ShapeAdjustHandleXY {
 	x: Coord | string
 	y: Coord | string
@@ -67,7 +67,7 @@ export interface ShapeAdjustHandleXY {
 	maxY?: Coord | string
 }
 
-/** A polar adjust handle (`<a:ahPolar>`) — radius/angle rather than XY. */
+/** A polar adjust handle (`<a:ahPolar>`): radius/angle rather than XY. */
 export interface ShapeAdjustHandlePolar {
 	x: Coord | string
 	y: Coord | string
@@ -143,7 +143,7 @@ export interface ShapeProps extends PositionProps, ObjectNameProps {
 	line?: ShapeLineProps
 	/**
 	 * Points (only for ShapeType.custGeom)
-	 * - type: 'arc' (no end point — it is computed from the pen position, radii and sweep)
+	 * - type: 'arc' (no end point; it is computed from the pen position, radii and sweep)
 	 * - `hR` Shape Arc Height Radius
 	 * - `wR` Shape Arc Width Radius
 	 * - `stAng` Shape Arc Start Angle (degrees, not wrapped into 0..360)
@@ -153,20 +153,20 @@ export interface ShapeProps extends PositionProps, ObjectNameProps {
 	 */
 	points?: GeometryPoint[]
 	/**
-	 * Geometry guides (`<a:gdLst>`) for a `custGeom` shape — named construction formulas that
+	 * Geometry guides (`<a:gdLst>`) for a `custGeom` shape: named construction formulas that
 	 * connection sites / adjust handles can reference. Advanced: each `formula` is emitted verbatim.
 	 * @example [{ name: 'w2', formula: 'val 10800' }]
 	 */
 	guides?: ShapeGuide[]
 	/**
-	 * Connection sites (`<a:cxnLst>`) for a `custGeom` shape — the points a connector can attach to.
+	 * Connection sites (`<a:cxnLst>`) for a `custGeom` shape: the points a connector can attach to.
 	 * Positions are absolute in the object's own space (like `points`); a `startShapeIdx`/`endShapeIdx`
 	 * on an `addConnector` indexes into this list.
 	 * @example [{ ang: 0, x: 1, y: 0 }, { ang: 180, x: 0, y: 1 }]
 	 */
 	connectionSites?: ShapeConnectionSite[]
 	/**
-	 * Adjust handles (`<a:ahLst>`) for a `custGeom` shape — draggable handles (XY or polar),
+	 * Adjust handles (`<a:ahLst>`) for a `custGeom` shape: draggable handles (XY or polar),
 	 * optionally bound to guides via `gdRef*`.
 	 */
 	adjustHandles?: ShapeAdjustHandle[]

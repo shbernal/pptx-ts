@@ -3,8 +3,8 @@
  *
  * Compute the `<p:cNvPr>` id every slide shape (including group children) is
  * rendered with, and resolve an `objectName` back to that id. References that
- * must name a shape before the render walk reaches it — a connector's
- * `<a:stCxn>`, an animation's `<p:spTgt spid>` — go through these helpers, so
+ * must name a shape before the render walk reaches it (a connector's
+ * `<a:stCxn>`, an animation's `<p:spTgt spid>`) go through these helpers, so
  * they are shared by both the slide-object renderer and the animation builder.
  */
 
@@ -63,8 +63,8 @@ export function shapeIdCount(obj: SlideObject): number {
  * map names a shape that exists.
  *
  * This **mirrors** the allocation in `slideObjectToXml`, which hands out ids as it walks the tree.
- * A reference that must name an id *before* the walk reaches it — a connector's `<a:stCxn>`, an
- * animation's `<p:spTgt spid>` — cannot wait for that, so it resolves through this map instead.
+ * A reference that must name an id *before* the walk reaches it (a connector's `<a:stCxn>`, an
+ * animation's `<p:spTgt spid>`) cannot wait for that, so it resolves through this map instead.
  * The two must stay in step: `test/regression/shape/group-shapes.test.ts` parses the emitted `cNvPr` ids
  * back out and asserts each reference points at the shape it names, so drift fails there.
  * @param slideObjects - the slide's top-level objects

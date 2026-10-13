@@ -47,7 +47,7 @@ export function createSlideMaster(props: SlideMasterProps, target: SlideLayoutIn
 				placeholderOptions.placeholder = name
 				placeholderOptions._placeholderType = type
 				placeholderOptions._placeholderIdx = statedIdx ?? 100 + idx
-				// An empty placeholder is spelled as a run with no `text` key at all — `TextProps.text`
+				// An empty placeholder is spelled as a run with no `text` key at all. `TextProps.text`
 				// is optional and the emitters read it with `||`, so a key holding `undefined` would
 				// be a second spelling of the same thing.
 				const placeholderRun: TextProps = placeholder.text === undefined ? {} : { text: placeholder.text }

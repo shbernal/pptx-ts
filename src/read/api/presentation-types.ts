@@ -27,7 +27,7 @@ export interface SlideSize {
  * pull their bytes without hand-parsing the presentation part or its rels.
  */
 export interface EmbeddedFontInfo {
-	/** `p:font/@typeface` — the family name PowerPoint binds the embed to. */
+	/** `p:font/@typeface`: the family name PowerPoint binds the embed to. */
 	typeface: string
 	/** `p:font/@panose`, or `null` when the entry declares none. */
 	panose: string | null
@@ -51,7 +51,7 @@ export interface ImportSlideOptions {
 	 * - `'copy'` (default): bring the slide's own `slideLayout → slideMaster →
 	 *   theme` subgraph across, so the slide renders byte-for-byte as authored.
 	 *   A deck stitched from N sources then carries N themes/masters.
-	 * - `'preserve'`: *flatten then attach* — bake the source theme's colours and
+	 * - `'preserve'`: *flatten then attach*. Bake the source theme's colours and
 	 *   style-matrix fills into the slide XML (so its pixels do not change), then
 	 *   bind it to this deck's existing master/layout instead of importing the
 	 *   source theme. The result is a single-theme file whose imported slides are
@@ -70,7 +70,7 @@ export interface ImportSlideOptions {
 	 *   master `preserve` deliberately drops. Set {@link carryMasterGraphics} to
 	 *   bake them onto the slide instead.
 	 * - `'restyle'`: re-brand to *this* deck. Rebind the slide to this deck's
-	 *   master/layout exactly like `preserve` but **skip the flatten** — leave every
+	 *   master/layout exactly like `preserve` but **skip the flatten**: leave every
 	 *   `a:schemeClr`, style-matrix ref (`fillRef`/`lnRef`/`effectRef`/`fontRef`),
 	 *   and `p:bg` `bgRef` symbolic so they re-resolve against the *destination*
 	 *   theme. The slide keeps its geometry, text, and structure but adopts this
@@ -82,7 +82,7 @@ export interface ImportSlideOptions {
 	 *   Anything the source authored as a literal `a:srgbClr` has no theme reference
 	 *   to re-resolve and stays exactly that colour, so a slide with a baked literal
 	 *   palette re-brands little or nothing. Use `restyle` for slides built against
-	 *   theme colours/style matrices, not hardcoded RGB — or set {@link remapLiterals}
+	 *   theme colours/style matrices, not hardcoded RGB, or set {@link remapLiterals}
 	 *   to force-remap literals and copy table styles. Re-brand is inherently a
 	 *   visual change (a source `accent1` light-on-dark can invert against a dark
 	 *   destination `accent1`), so its output needs visual QA. A restyled table
@@ -97,11 +97,11 @@ export interface ImportSlideOptions {
 	 * slides whose palette is partly hardcoded. When `true` it does two things the
 	 * plain re-brand cannot:
 	 *
-	 * - **Literal colours** — every literal `a:srgbClr` equal to a *source*-theme
+	 * - **Literal colours**: every literal `a:srgbClr` equal to a *source*-theme
 	 *   `clrScheme` slot is rewritten back to a symbolic `a:schemeClr` (routed through
 	 *   the source `clrMap`), so it re-resolves against this deck's theme instead of
 	 *   staying its authored RGB. A literal matching no source slot is left untouched.
-	 * - **Table styles** — any `@tableStyleId` the slide references is copied from the
+	 * - **Table styles**: any `@tableStyleId` the slide references is copied from the
 	 *   source `tableStyles.xml` into this deck's (same id, idempotent, leaving an id
 	 *   the destination already defines alone), so a restyled table keeps its style
 	 *   instead of falling back. The copied definition is itself symbolic, so it
@@ -115,13 +115,13 @@ export interface ImportSlideOptions {
 	/**
 	 * `preserve`/`restyle` modes only. When `true`, bake the source
 	 * `slideLayout`/`slideMaster` shape-tree decorations (everything on those shape
-	 * trees *except* placeholders — logos, accent curves, footers drawn as shapes)
+	 * trees *except* placeholders: logos, accent curves, footers drawn as shapes)
 	 * onto the imported slide, behind its own content, so master/layout branding
 	 * survives the rebind to this deck's master. Their media are copied across.
 	 *
 	 * Under `preserve` the carried decorations' theme references are flattened like
 	 * the slide's own content; under `restyle` they are left symbolic and so
-	 * re-brand to the destination palette along with the slide — note a carried
+	 * re-brand to the destination palette along with the slide. Note that a carried
 	 * source logo could recolour unexpectedly under a different palette.
 	 *
 	 * Off by default: it raises fidelity for cover/closer/divider slides at the
@@ -133,7 +133,7 @@ export interface ImportSlideOptions {
 
 	/**
 	 * Zero-based insert position in `p:sldIdLst` (deck order). `0` makes the
-	 * imported slide first; an `at` past the current slide count — or omitting it —
+	 * imported slide first; an `at` past the current slide count, or omitting it,
 	 * appends. Use it to place brand bookends (cover at `0`, closer appended)
 	 * around generator-authored interior slides regardless of import order.
 	 */
@@ -142,14 +142,14 @@ export interface ImportSlideOptions {
 	/**
 	 * Carry the *source deck's* embedded fonts (`p:embeddedFontLst` in its
 	 * `presentation.xml`) into this deck, so an imported slide that renders with an
-	 * embedded face keeps it on machines that lack the font. Off by default —
+	 * embedded face keeps it on machines that lack the font. Off by default:
 	 * fonts live on the presentation, not the slide, so they are only worth copying
 	 * when you want the embed to travel.
 	 *
 	 * The font binary parts are copied under fresh `/ppt/fonts/` names (deduped via
 	 * the per-source copy registry, so repeated imports copy each face once), the
 	 * `application/x-fontdata` Default is added, and entries are merged into this
-	 * deck's `p:embeddedFontLst` — de-duplicated by `typeface` + face slot, so a
+	 * deck's `p:embeddedFontLst`, de-duplicated by `typeface` + face slot, so a
 	 * face this deck already embeds is reused rather than duplicated. The carry is a
 	 * whole-deck operation (it copies *all* the source's embedded fonts, not just the
 	 * faces this one slide uses), since the source list does not record which slide
@@ -170,7 +170,7 @@ export interface ImportSlideOptions {
 	 *   distorts shapes and cannot faithfully reposition rotated shapes. Matches
 	 *   "Maximize".
 	 *
-	 * Only *geometry* is rescaled — every top-level shape/group/graphicFrame
+	 * Only *geometry* is rescaled: every top-level shape/group/graphicFrame
 	 * transform (`a:off`/`a:ext`) and table grid (`a:gridCol@w`, `a:tr@h`). Font
 	 * sizes, line widths, and other absolute sizes are left as authored, so heavy
 	 * down-scaling can leave text overflowing its (now smaller) box. In `copy` mode
@@ -212,12 +212,12 @@ export interface ImportShapeOptions {
 	 *   neither re-resolves against the host's placeholder of the same type/idx nor
 	 *   collides with it. The safe default for composing across decks.
 	 * - `'restyle'`: leave the shape's theme references symbolic so it re-brands to
-	 *   the host theme. Only *symbolic* colours re-brand — literal `a:srgbClr` the
+	 *   the host theme. Only *symbolic* colours re-brand; literal `a:srgbClr` the
 	 *   source baked in stays put (same limitation as `importSlide` restyle).
 	 * - `'copy'`: bring the shape's XML across untouched; only sane when the host
 	 *   already shares the source theme.
 	 *
-	 * Unlike a slide import this never runs the slide-scoped background passes — a
+	 * Unlike a slide import this never runs the slide-scoped background passes: a
 	 * background belongs to a slide, not to a composed shape.
 	 */
 	theme?: 'preserve' | 'restyle' | 'copy'
@@ -241,13 +241,13 @@ export interface ImportShapeOptions {
 	 * shape's geometry onto this deck's canvas instead (mirrors
 	 * {@link ImportSlideOptions.rescale}, scoped to one shape):
 	 *
-	 * - `'fit'` (or `true`): uniform scale by `min(sx, sy)`, slack centered — the
+	 * - `'fit'` (or `true`): uniform scale by `min(sx, sy)`, slack centered. The
 	 *   shape keeps its aspect ratio (circles stay circles, rotations hold) and
 	 *   lands at the position it would occupy on a centered copy of the source
 	 *   canvas. Matches PowerPoint's "Ensure Fit".
 	 * - `'stretch'`: independent per-axis scale; distorts. Matches "Maximize".
 	 *
-	 * Only *geometry* is rescaled — the shape/group/graphicFrame transform
+	 * Only *geometry* is rescaled: the shape/group/graphicFrame transform
 	 * (`a:off`/`a:ext`) and any table grid (`a:gridCol@w`, `a:tr@h`). Font sizes,
 	 * line widths, and other absolute sizes are left as authored, so heavy
 	 * down-scaling can leave text overflowing its (now smaller) box. Explicit
@@ -262,7 +262,7 @@ export interface ImportShapeOptions {
 	 * click-group(s) and `<p:bldP>` are copied into the destination `p:timing`
 	 * (created if absent), their `spid` references remapped to the shape's new id and
 	 * their `<p:cTn>` ids renumbered to stay collision-free, and appended after any
-	 * existing build — mirroring how PowerPoint merges a pasted shape's animation
+	 * existing build, mirroring how PowerPoint merges a pasted shape's animation
 	 * (see the `import-animation-merge` oracle). @default false
 	 */
 	carryAnimation?: boolean
@@ -293,7 +293,7 @@ export interface ImportSlideMastersOptions {
 	/**
 	 * Require the source and destination slide sizes to match (default `true`).
 	 * A grafted master is shipped into the layout gallery, not applied to existing
-	 * slides — but a layout authored at a different canvas size shows up mis-scaled
+	 * slides, but a layout authored at a different canvas size shows up mis-scaled
 	 * in that gallery, so the guard is on by default. Pass `false` to graft anyway.
 	 */
 	requireEqualSize?: boolean
@@ -302,15 +302,15 @@ export interface ImportSlideMastersOptions {
 	 * Carry the *source deck's* embedded fonts (`p:embeddedFontLst` in its
 	 * `presentation.xml`) into this deck, so a slide later bound to a grafted layout
 	 * keeps that layout's embedded faces on machines that lack the font locally.
-	 * Off by default — fonts live on the presentation, not the master, and copying
-	 * them can add megabytes — so they are only worth carrying when you want the
+	 * Off by default. Fonts live on the presentation, not the master, and copying
+	 * them can add megabytes, so they are only worth carrying when you want the
 	 * embed to travel with the gallery.
 	 *
 	 * Semantics are identical to {@link ImportSlideOptions.embedFonts}: binaries are
 	 * copied under fresh `/ppt/fonts/` names (deduped via the per-source copy
 	 * registry, so a re-call carries each face once), the `application/x-fontdata`
 	 * Default is added, and entries merge into this deck's `p:embeddedFontLst`
-	 * de-duplicated by `typeface` + face slot. The carry is a whole-deck operation —
+	 * de-duplicated by `typeface` + face slot. The carry is a whole-deck operation:
 	 * it copies *all* the source's embedded fonts, not only the faces the grafted
 	 * masters use, since the source list does not record which face belongs to which
 	 * master.
@@ -325,16 +325,16 @@ export interface ImportSlideMastersOptions {
 	 * only adding new ones, so it is opt-in like {@link embedFonts}.
 	 *
 	 * Without it a grafted master's layouts arrive but its table styling does not, and
-	 * a new table falls back to whatever default this deck carries — for a generated
+	 * a new table falls back to whatever default this deck carries: for a generated
 	 * deck, a stub whose default is the standard *Medium Style 2 - Accent 1*. The
 	 * mismatch is visible: the same table renders in a different accent than it would
 	 * in the source deck.
 	 *
 	 * Styles union by `styleId` (a style this deck already defines wins, so a re-call
-	 * is idempotent), while `a:tblStyleLst@def` — the default table style — is
+	 * is idempotent), while `a:tblStyleLst@def` (the default table style) is
 	 * **source-wins**. Carrying the styles without the `def` would not fix the
 	 * mismatch: the standard default GUID is one most templates *also* define, so the
-	 * default would still resolve to the wrong style. The carry is whole-deck — it
+	 * default would still resolve to the wrong style. The carry is whole-deck: it
 	 * copies *all* the source's table styles, not only those the grafted masters use,
 	 * since `tableStyles.xml` does not record which style belongs to which master.
 	 * @default false
@@ -347,7 +347,7 @@ export interface ImportSlideMastersOptions {
 	 * leads is a statement about what the deck *is*, so it is the caller's call rather
 	 * than a side effect of grafting.
 	 *
-	 * `p:sldMasterIdLst` order is not part of theme resolution — a slide resolves
+	 * `p:sldMasterIdLst` order is not part of theme resolution: a slide resolves
 	 * through its own layout's master, so this changes no existing slide's appearance.
 	 * What it changes is the deck's identity in PowerPoint's UI: the list's first entry
 	 * becomes `Designs(1)`, which is the theme the Design tab shows and the one
@@ -381,7 +381,7 @@ export interface LayoutHandle {
  * One authored slide, extracted from a generator for injection into an existing
  * package. The slide body XML references its media/hyperlinks by relationship id
  * only, so {@link Presentation.appendSlides} preserves each `rId` and only
- * repoints its target — see {@link SlideSource}.
+ * repoints its target (see {@link SlideSource}).
  */
 export interface ExtractedSlide {
 	/** Standalone `<p:sld>` part body (XML declaration + namespaces included). */
@@ -400,15 +400,15 @@ export interface ExtractedSlide {
 	slideLinks: Array<{ rId: number; sourceSlideNumber: number }>
 	/**
 	 * Embedded audio/video the body references. Each item is one media binary backed
-	 * by two rels sharing a Target — the ECMA `audio`/`video` rel (`mediaRid`) and the
-	 * MS-2007 `media` rel (`msMediaRid`) — plus a separate preview image rel
+	 * by two rels sharing a Target, the ECMA `audio`/`video` rel (`mediaRid`) and the
+	 * MS-2007 `media` rel (`msMediaRid`), plus a separate preview image rel
 	 * (`previewRid`). {@link Presentation.appendSlides} reproduces this rel graph.
 	 */
 	avMedia: AvMediaItem[]
 	/**
 	 * Online (external-link) video the body references. Each item is two *external*
-	 * rels sharing one link Target — the ECMA `video` rel (`mediaRid`) and the MS-2007
-	 * `media` rel (`msMediaRid`) — with **no** media binary part. The poster frame is a
+	 * rels sharing one link Target, the ECMA `video` rel (`mediaRid`) and the MS-2007
+	 * `media` rel (`msMediaRid`), with **no** media binary part. The poster frame is a
 	 * normal image rel carried by {@link media}. {@link Presentation.appendSlides}
 	 * wires the two external rels without reserving a media part or content type.
 	 */
@@ -458,9 +458,9 @@ export interface ExtractedNotes {
  * body uses to reference it.
  *
  * A classic (2007, `c:chartSpace`) chart is one part plus its embedded workbook. A chartEx
- * (Office 2016 — waterfall, funnel, treemap, ...) chart is a different part in a different
+ * (Office 2016: waterfall, funnel, treemap, ...) chart is a different part in a different
  * namespace, reached through a different relationship type, and PowerPoint reports it as
- * corrupt without its two style sidecars — so {@link chartEx} carries them and its presence
+ * corrupt without its two style sidecars, so {@link chartEx} carries them and its presence
  * is what tells the two shapes apart.
  */
 export interface ExtractedChart {
@@ -475,7 +475,7 @@ export interface ExtractedChart {
 	/**
 	 * Present only for a chartEx chart, and then always with both sidecars. A chartEx part
 	 * *requires* a chart-style and a color-style part or PowerPoint reports the deck as
-	 * corrupt (`0x80070570`) — schema-valid but unopenable — so these are not optional and
+	 * corrupt (`0x80070570`), schema-valid but unopenable, so these are not optional and
 	 * {@link Presentation.appendSlides} injects them alongside the chart part.
 	 */
 	chartEx?: {
@@ -535,10 +535,10 @@ export interface ExtractedSlides {
 	 * A notes master to fall back on, present only when at least one slide carries notes.
 	 *
 	 * A notes slide must bind to a notes master, and a destination template often has
-	 * none — a deck authored without speaker notes carries no `notesMaster` part. So the
+	 * none: a deck authored without speaker notes carries no `notesMaster` part. So the
 	 * generator's own notes master rides along, and {@link Presentation.appendSlides}
 	 * installs it (with its theme) **only** when the destination has none. When the
-	 * destination already has one, it wins and this is discarded — matching the
+	 * destination already has one, it wins and this is discarded, matching the
 	 * `importNotes` policy, where the destination's notes styling also wins.
 	 */
 	notesMaster?: { xml: string; themeXml: string }
@@ -582,7 +582,7 @@ export interface ImportSlidesRequest {
 	 * the slide copy drops the `notesSlide` relationship, so the imported page
 	 * arrives without notes.
 	 *
-	 * Per request rather than per batch because a stitch mixes sources — the
+	 * Per request rather than per batch because a stitch mixes sources: the
 	 * notes of a library's cover page are worth carrying where a scratch deck's
 	 * are not. The deck-wide half of the policy is not per request: a
 	 * presentation holds at most one `notesMaster`, so the destination's own is

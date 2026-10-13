@@ -2,7 +2,7 @@
  * Shared picture-fill reader for DrawingML fill-bearing containers: a shape's
  * `p:spPr`, a table cell's `a:tcPr`, and a slide's `p:bg/p:bgPr`. Decodes an
  * `a:blipFill` into the embedded image reference plus the geometry that decides
- * how the image covers the surface — stretch vs tile, the source crop, and the
+ * how the image covers the surface: stretch vs tile, the source crop, and the
  * tile offsets/scale.
  *
  * A picture fill is not a colour, so the solid-fill accessors
@@ -44,7 +44,7 @@ export interface PictureFillTile {
 /**
  * A picture (image) fill (`a:blipFill`) read from a fill-bearing container. The
  * image itself is {@link relId} / {@link partName}; the rest is the geometry a
- * faithful replica needs — {@link mode} (`stretch` or `tile`), the source crop
+ * faithful replica needs: {@link mode} (`stretch` or `tile`), the source crop
  * {@link srcRect}, the destination inset {@link fillRect}, and {@link tile}.
  *
  * Rect fields follow the read API's fraction convention (see
@@ -94,7 +94,7 @@ function readTile(tile: Element): PictureFillTile {
 
 /**
  * Read an `a:blipFill` from a container (`p:spPr`, `a:tcPr`, or `p:bgPr`) into a
- * {@link PictureFill}. `rels` — the *owning part's* relationships — resolves the
+ * {@link PictureFill}. `rels` (the *owning part's* relationships) resolves the
  * blip's `r:embed` to an absolute partname; pass `null` (or omit) to read the
  * geometry without resolving the image. `null` when the container's fill is not
  * a picture.

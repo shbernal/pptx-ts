@@ -8,7 +8,7 @@
  *
  * Width is summed from **raw `hmtx` advances with no kerning/shaping** (GPOS/GSUB
  * are deliberately ignored): kerning almost always narrows a line, so raw advances
- * over-estimate width — the conservative direction (shrink a touch too much, never
+ * over-estimate width, the conservative direction (shrink a touch too much, never
  * overflow). See `docs/contributing/design/text-fit.md` ("Font metrics provider").
  */
 
@@ -54,7 +54,7 @@ class OpentypeFontMetrics implements FontMetrics {
 
 	advanceWidthPt(text: string, sizePt: number, charSpacingPt = 0): number {
 		if (!text) return 0
-		// Sum raw per-glyph `hmtx` advances via cmap (charToGlyph) — deliberately
+		// Sum raw per-glyph `hmtx` advances via cmap (charToGlyph), deliberately
 		// NOT getAdvanceWidth(), which runs GPOS/GSUB shaping (kerning narrows lines,
 		// and some lookups even throw). Raw advances over-estimate width, the
 		// conservative direction. `for..of` iterates code points (astral-safe).
@@ -125,7 +125,7 @@ let heuristicSingleton: FontMetrics | undefined
 /**
  * Shared, font-independent `FontMetrics` used when a named face has no registered
  * metrics but the deck has opted into measured fit (some other face is registered).
- * Approximate but conservative — see `heuristicCharRatio`. A deck with no
+ * Approximate but conservative; see `heuristicCharRatio`. A deck with no
  * registered metrics at all does not engage measured fit, so this never fires there.
  */
 export function getHeuristicFontMetrics(): FontMetrics {
@@ -218,7 +218,7 @@ export class FontMetricsRegistry {
 	 * Coverage of code point `cp` for `face`, read from the registered font's cmap:
 	 * `true`/`false` when a variant of `face` is registered (see {@link get} for the
 	 * exact→regular→any-variant fallback), or `undefined` when the face has **no**
-	 * registered metrics — "unknown", deliberately distinct from a `false`
+	 * registered metrics: "unknown", deliberately distinct from a `false`
 	 * "registered but not covered". A coverage audit must not treat an unregistered
 	 * face as fully covered, so callers get `undefined` here rather than the per-face
 	 * {@link FontMetrics.hasCodepoint} boolean (which, for the heuristic fallback,
@@ -236,7 +236,7 @@ export class FontMetricsRegistry {
 	/** Resolve metrics for a run, falling back from exact variant → regular → any variant. */
 	get(face: string | undefined | null, bold = false, italic = false): FontMetrics | undefined {
 		// A run with no explicit face inherits the theme font, which we cannot resolve
-		// reliably here — treat as unregistered so measured fit degrades gracefully.
+		// reliably here, so treat it as unregistered and let measured fit degrade gracefully.
 		if (typeof face !== 'string' || face.length === 0) return undefined
 		const exact = this.map.get(this.key(face, bold, italic))
 		if (exact) return exact

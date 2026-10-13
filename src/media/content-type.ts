@@ -2,7 +2,7 @@
  * OPC content types for embedded media parts, keyed by file extension.
  *
  * Both mappings reproduce what PowerPoint itself authors rather than the IANA-preferred
- * spelling — a package that disagrees (e.g. `audio/mp3` for an `.mp3`) is the kind of thing
+ * spelling. A package that disagrees (e.g. `audio/mp3` for an `.mp3`) is the kind of thing
  * PowerPoint offers to repair.
  */
 
@@ -42,7 +42,7 @@ export function dataUriMediaType(data: string): string | null {
  * A `data:` URI states its mime type outright, so it wins over `path`: the bytes are the thing
  * being embedded, and a caller may supply them with no path at all (or with a path whose
  * extension disagrees with the payload). The extension chosen here names the media part *and*,
- * via {@link imageContentType}, decides the `<Default>` the package declares for it — so
+ * via {@link imageContentType}, decides the `<Default>` the package declares for it, so
  * getting it from a placeholder path is how a deck ends up declaring `image/png` over SVG
  * bytes, which is exactly the mismatch PowerPoint offers to "repair".
  *
@@ -70,7 +70,7 @@ export function imageExtensionForSource(path: string, data: string): string {
  *
  * Needed because a caller supplying sound bytes as a `data:` URI states a *content type*
  * (`data:audio/x-wav;base64,…`), while the media part needs a *filename*. Taking the subtype
- * verbatim produces `audio1.x-wav` — legal, since the package would then declare a matching
+ * verbatim produces `audio1.x-wav`. That is legal, since the package would then declare a matching
  * `<Default Extension="x-wav"/>`, but a file type that does not exist and that no other tool
  * recognises. `audio/x-wav` in particular is not an edge case: it is exactly what PowerPoint
  * authors for an embedded transition sound, so it arrives on any deck read back in.

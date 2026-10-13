@@ -36,8 +36,8 @@ export type OptionalKeysOf<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? K : 
  * `T`, but every *optional* property may also be spelled as a present `undefined`.
  *
  * Under `exactOptionalPropertyTypes` a `foo?: T` says the key is either absent or holds a `T`.
- * That distinction is real for a bag that is **stored, spread or enumerated** — `{ ...defaults,
- * ...options }` inherits from an absent key and is overridden by a present `undefined` — and
+ * That distinction is real for a bag that is **stored, spread or enumerated** (`{ ...defaults,
+ * ...options }` inherits from an absent key and is overridden by a present `undefined`), and
  * those bags keep the strict declaration, with `delete` as their one spelling of absent (the
  * write-side twin of `compact()` in `script/from-read/values.ts`).
  *
@@ -51,7 +51,7 @@ export type OptionalKeysOf<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? K : 
 export type MaybeUndefined<T> = Omit<T, OptionalKeysOf<T>> & { [K in OptionalKeysOf<T>]?: T[K] | undefined }
 
 /**
- * Internal, wire-normalized shadow shape produced by `normalizeShadowOptions` — not part of the
+ * Internal, wire-normalized shadow shape produced by `normalizeShadowOptions`, not part of the
  * public `ShadowProps` input. `_alpha` (0.0 fully transparent – 1.0 fully opaque) is the alpha
  * derived from the public `transparency` option (or a color's embedded alpha byte); it is what
  * every emit site reads, so downstream code stays unit-agnostic about the public percent scale.
@@ -99,7 +99,7 @@ export interface TextBulletPropsInternal extends TextBulletProps {
  * Text options carrying the two members the emitters write onto them.
  *
  * `_bodyProp` is the normalized `a:bodyPr` the definer builds out of the caller's `align`,
- * `valign`, `margin`, `columns`, `textDirection` and `textWarp` — a *derived* shape, not an
+ * `valign`, `margin`, `columns`, `textDirection` and `textWarp`: a *derived* shape, not an
  * input, which is what made its presence on the public interface a de-facto API nobody
  * intended. `_lineIdx` is the paragraph index the run emitter stamps while walking an array
  * of runs.
@@ -255,7 +255,7 @@ export interface ChartOptsInternal extends ChartOpts {
 	_type?: ChartType | ChartMultiInternal[] // internal, normalized from `CHART_NAME`
 }
 /**
- * A combo subchart's option overrides after `addChartDefinition` vetted them — the one bag in the
+ * A combo subchart's option overrides after `addChartDefinition` vetted them: the one bag in the
  * generator where a key may be *present* and hold `undefined`.
  *
  * Everywhere else "unset" has exactly one spelling, an absent key: `compact()` enforces it on the
@@ -264,7 +264,7 @@ export interface ChartOptsInternal extends ChartOpts {
  * chart-level options at emit time (`{ ...rel.opts, ...type.options }` in `gen/chart/chart-xml.ts`),
  * where a present `undefined` suppresses the chart-level value and an absent key inherits it.
  * Suppressing is the intent: the subchart supplied an override the schema rejects, and the
- * chart-level value is one it never asked for — inheriting it would be a different chart than
+ * chart-level value is one it never asked for. Inheriting it would be a different chart than
  * either party described. For a combo chart the chart-level pass cannot vet these itself, since
  * `_type` is an array there and every type-keyed correction matches no branch.
  */
@@ -308,7 +308,7 @@ export interface SlideRel {
 	 * Relationship target, stored **unescaped**. Every emitter escapes it on the way out
 	 * (`gen/slide/object.ts`, `gen/slide/notes.ts`, and `read/opc/relationships.ts` for the
 	 * append path). Escaping at definition time instead would double-escape on append,
-	 * where the serializer escapes again — so `&` in a hyperlink or online-video URL must
+	 * where the serializer escapes again, so `&` in a hyperlink or online-video URL must
 	 * arrive here verbatim.
 	 */
 	Target: string
@@ -339,7 +339,7 @@ export interface SlideRelMedia {
 	isSvgPng?: boolean
 	svgSize?: { w: number; h: number }
 	/**
-	 * Embedded OLE object part (`addOleObject`): the `.rels` `Type` URI to emit — `.../package` for
+	 * Embedded OLE object part (`addOleObject`): the `.rels` `Type` URI to emit: `.../package` for
 	 * an embedded OPC package (xlsx/docx/pptx, themselves zips) or `.../oleObject` for a generic OLE
 	 * server blob (ECMA-376 Part 1 §15.2.10). Present only on OLE payload rels, where it takes
 	 * precedence over the image/audio/video branch in `slideObjectRelationsToXml` and `type` carries
@@ -348,7 +348,7 @@ export interface SlideRelMedia {
 	 */
 	oleRelType?: string
 	/**
-	 * Embedded 3D model part (`addModel3d`): the `.rels` `Type` URI to emit — the Microsoft
+	 * Embedded 3D model part (`addModel3d`): the `.rels` `Type` URI to emit: the Microsoft
 	 * `…/office/2017/06/relationships/model3d` type, which no `includes('image'|'audio'|'video')`
 	 * sniff would ever reach. Present only on the `.glb` payload rel, where it takes precedence
 	 * over the image/audio/video branch in `slideObjectRelationsToXml` and `type` carries the
@@ -363,7 +363,7 @@ export interface SlideRelMedia {
 	 */
 	chartOwned?: true
 	rId: number
-	/** Unescaped — see {@link SlideRel.Target}. Doubles as the zip entry name for embedded media. */
+	/** Unescaped; see {@link SlideRel.Target}. Doubles as the zip entry name for embedded media. */
 	Target: string
 }
 export interface SlideObject {
@@ -406,7 +406,7 @@ export interface SlideObject {
 export interface Model3dInternal {
 	/** rId of the embedded `.glb` part rel (see {@link SlideRelMedia.model3dRelType}). */
 	modelRid: number
-	/** rId of the preview picture's image rel — shared by `am3d:blip` and the `mc:Fallback` `p:pic`. */
+	/** rId of the preview picture's image rel, shared by `am3d:blip` and the `mc:Fallback` `p:pic`. */
 	previewRid: number
 	/** `am3d:camera/am3d:pos` (`@x`/`@y`/`@z`). */
 	pos: { x: number; y: number; z: number }
@@ -425,9 +425,9 @@ interface OleInternal {
 	objectRid: number
 	/** rId of the preview picture's image rel (`p:pic > a:blip@r:embed`). */
 	previewRid: number
-	/** `p:oleObj@progId` — the OLE server PowerPoint launches on double-click. */
+	/** `p:oleObj@progId`: the OLE server PowerPoint launches on double-click. */
 	progId: string
-	/** `p:oleObj@name` — the object's kind as PowerPoint labels it (`Worksheet`, `Document`, …). */
+	/** `p:oleObj@name`: the object's kind as PowerPoint labels it (`Worksheet`, `Document`, …). */
 	name: string
 	/** `p:oleObj@showAsIcon`; omitted when false, matching PowerPoint. */
 	showAsIcon: boolean

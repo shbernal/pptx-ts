@@ -3,7 +3,7 @@
  *
  * A `.rels` part is mostly one-off entries, written where the part that needs
  * them is built. This module holds the ones **more than one part** writes, so
- * that the attribute set stays a single fact — a `Relationship` whose `Type` and
+ * that the attribute set stays a single fact. A `Relationship` whose `Type` and
  * `TargetMode` disagree between two writers does not throw, it produces a link
  * PowerPoint silently drops.
  */
@@ -20,7 +20,7 @@ import { HYPERLINK_REL, PACKAGE_REL_NS } from '../../ooxml/rel-types.js'
  * passed `rId3` or `3`, with seven more written inline in `gen/slide/`. The attribute set and
  * its order are byte-significant, so one writer is the only way they stay one fact.
  *
- * `target` is passed **unescaped** — `voidEl` escapes it on the way out. `gen/slide/object.ts`
+ * `target` is passed **unescaped**; `voidEl` escapes it on the way out. `gen/slide/object.ts`
  * depends on that: it computes the escaped form separately to compare a rel against the bytes
  * already emitted, and the two escapers must not drift.
  * @param {string | number} id - the relationship id; a number gets the `rId` prefix
@@ -59,7 +59,7 @@ export function relationshipsEl(rels: readonly string[], fmt?: XmlFmt): string {
 /**
  * A complete `.rels` part: the XML declaration, a CRLF, then {@link relationshipsEl}.
  *
- * The embedded workbook's parts are the exception and use {@link relationshipsEl} directly —
+ * The embedded workbook's parts are the exception and use {@link relationshipsEl} directly:
  * they follow the declaration with nothing, and two of them end with a bare newline.
  */
 export function relationshipsPart(rels: readonly string[], fmt?: XmlFmt): string {

@@ -1,13 +1,13 @@
 /**
  * pptx-ts: Chart Embedded-Workbook Generation
  *
- * Builds the embedded `.xlsx` workbook that backs a chart's cached data — the data
+ * Builds the embedded `.xlsx` workbook that backs a chart's cached data: the data
  * source PowerPoint opens when a user edits the chart. `createExcelWorksheet` writes
  * the workbook plus the chart part + its `.rels` into the presentation package;
  * `buildEmbeddedWorksheet` and `chartPartBodies` are also used by slide extraction
  * (`PptxTs.extractSlides`), whose chart relationships `appendSlides` rebuilds itself against the
  * parts it reserves. Everything here is a pure string/bytes
- * builder — no I/O beyond the passed-in ZipWriter, no mutation of the presentation model.
+ * builder: no I/O beyond the passed-in ZipWriter, no mutation of the presentation model.
  *
  * The chart's `chart.xml` DrawingML lives in `./chart-xml.ts`; the series↔worksheet-cell
  * mapping the two sides share lives in `./data-refs.ts`.
@@ -79,7 +79,7 @@ const XLSX_THEME_XML =
 
 /**
  * Build the chart's embedded Excel workbook as a standalone OPC package and
- * return its bytes — the data source PowerPoint opens when a user edits the
+ * return its bytes: the data source PowerPoint opens when a user edits the
  * chart's data. Pure (no zip side effects), so both the package write path
  * ({@link createExcelWorksheet}) and the read-side injection path
  * (`PptxTs.extractSlides`) can reuse it.
@@ -179,7 +179,7 @@ export function buildEmbeddedWorksheet(chartObject: SlideRelChart): Uint8Array {
 			zipExcel.add(
 				'xl/_rels/workbook.xml.rels',
 				XML_DECL +
-					// Ids are deliberately out of order (3/2/1/4) — that is how this part has
+					// Ids are deliberately out of order (3/2/1/4); that is how this part has
 					// always been emitted, and rel order is byte-significant.
 					relationshipsEl([
 						relationshipEl('rId3', OFFICE_REL + 'styles', 'styles.xml'),
@@ -235,7 +235,7 @@ export function buildEmbeddedWorksheet(chartObject: SlideRelChart): Uint8Array {
 		zipExcel.add('xl/tables/table1.xml', buildXlsxTable(layout))
 		zipExcel.add('xl/worksheets/sheet1.xml', buildXlsxSheet(data, layout))
 
-		// Done — return the embedded workbook bytes for the caller to place.
+		// Done: return the embedded workbook bytes for the caller to place.
 		return zipExcel.toBytes()
 	}
 }
@@ -342,7 +342,7 @@ function buildXlsxSheet(data: OptsChartDataInternal[], layout: WorksheetLayout):
 	 * reached this sheet (`?? ''` at the call sites) and which Excel reads back as an empty cell.
 	 * A **non-finite** number is the same thing: `<v>Infinity</v>` (or `NaN`, or `INF`) is not a
 	 * number Excel will parse, and it refuses the whole workbook with 0x3EC rather than skipping
-	 * the cell — a failure PowerPoint hides, because it does not parse the embedding on open. It
+	 * the cell. PowerPoint hides that failure, because it does not parse the embedding on open. It
 	 * surfaces on "Edit Data", by which point the chart's own cache is already clean: `numCachePt`
 	 * (`./chart-parts.ts`) and the chartEx numeric dimension (`./chartex-data.ts`) both drop a
 	 * non-finite point, with a `chart/non-finite-value` warning, before it reaches the chart part.
@@ -503,7 +503,7 @@ export function chartPartBodies(rel: SlideRelChart): ChartPartBodies {
 export async function createExcelWorksheet(chartObject: SlideRelChart, zip: ZipWriter): Promise<string> {
 	const names = chartPartNames(chartObject.globalId, chartObject.isChartEx)
 
-	// 1: Embed the workbook. The xlsx is itself a zip, so STORE it — re-DEFLATING
+	// 1: Embed the workbook. The xlsx is itself a zip, so STORE it: re-DEFLATING
 	//    already-compressed bytes wastes CPU.
 	zip.add(`ppt/embeddings/${names.workbookName}`, buildEmbeddedWorksheet(chartObject), { store: true })
 
@@ -512,7 +512,7 @@ export async function createExcelWorksheet(chartObject: SlideRelChart, zip: ZipW
 	const bodies = chartPartBodies(chartObject)
 	if (bodies.chartEx) {
 		// chartEx charts REQUIRE a chart-style + color-style part or PowerPoint reports the deck as
-		// corrupt (schema-valid but unopenable) — see gen/chart/chartex-style.ts.
+		// corrupt (schema-valid but unopenable); see gen/chart/chartex-style.ts.
 		zip.add(`ppt/charts/${names.colorsName}`, bodies.chartEx.colorsXml)
 		zip.add(`ppt/charts/${names.styleName}`, bodies.chartEx.styleXml)
 		zip.add(

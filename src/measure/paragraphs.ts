@@ -26,7 +26,7 @@ export type RunOpts = TextPropsOptions & ObjectOptionsInternal
  * {@link extractParagraphs} have.
  *
  * Both used to take a full `SlideObject`, which is why both of their table call sites had to
- * write `{ text: cell.text, options: eff } as unknown as SlideObject` — a cell's `text` is
+ * write `{ text: cell.text, options: eff } as unknown as SlideObject`: a cell's `text` is
  * `string | TableCellInternal[]` and a slide object's is `TextProps[]`, so nothing weaker than a
  * double cast would fit. Naming the two fields these functions actually read makes a table
  * cell an ordinary argument, and a `SlideObject` still one too.
@@ -46,7 +46,7 @@ export function normalizeRuns(obj: RunSource): TextProps[] {
 	if (text == null) return []
 	if (typeof text === 'string' || typeof text === 'number') return [{ text: String(text), options: opts }]
 	// `pickDefined` for `text`: a run that carries none keeps the key off, which is what the
-	// `TextProps` the generator builds do — this list is handed straight to `extractParagraphs`
+	// `TextProps` the generator builds do. This list is handed straight to `extractParagraphs`
 	// and, from the table path, compared against runs that came from there.
 	if (!Array.isArray(text) && typeof text === 'object' && 'text' in text) {
 		const t = text as TextProps
@@ -178,7 +178,7 @@ export function resolveBodyInsetsEmu(opts: RunOpts): InsetsEmu {
 /**
  * Resolve the inner box (shape minus insets) in points; null if degenerate.
  *
- * Reads the object's own `opts.w/h` with no ancestor walk — correct only because a group keeps an
+ * Reads the object's own `opts.w/h` with no ancestor walk. That is correct only because a group keeps an
  * identity child coordinate space (`chOff/chExt == off/ext`, see the `gen/slide/object.ts` group renderer and
  * `docs/groups.md`), so a group never scales its children and a grouped text box's authored w/h is its
  * true rendered size. `applyMeasuredFit` reaches here for grouped text via its explicit group descent
@@ -209,7 +209,7 @@ export function computeBox(obj: SlideObject, presLayout: PresSlideInternal['_pre
 export function anchorTopShareOfDelta(opts: RunOpts): number {
 	// `_bodyProp.anchor` is the resolved valign ('t' | 'ctr' | 'b'); default 'ctr'.
 	const anchor = (opts._bodyProp ?? {}).anchor
-	if (anchor === TextAnchor.t) return 0 // grow downward — top fixed
-	if (anchor === TextAnchor.b) return 1 // grow upward — bottom fixed
+	if (anchor === TextAnchor.t) return 0 // grow downward, top fixed
+	if (anchor === TextAnchor.b) return 1 // grow upward, bottom fixed
 	return 0.5 // centered growth (default)
 }

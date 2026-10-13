@@ -5,12 +5,12 @@
  * carries its numbers twice: once in an embedded `.xlsx` workbook, and once as *cached*
  * values inside the chart XML itself (`c:tx`, `c:cat`, `c:val`) so a viewer can render
  * without opening the workbook. Probing the fixtures showed the cache is complete for
- * every chart the write API can express, so the workbook never needs cracking — which
+ * every chart the write API can express, so the workbook never needs cracking, which
  * removes a whole spreadsheet parser from this project's dependency surface.
  *
  * The one seam is blanks. The read model reports `(number | null)[]`, since a cached point
  * may legitimately be empty, while `OptsChartData.values` is `number[]`. A blank becomes
- * `0`, which is a visible change on a line chart — a gap turns into a dip to the axis — so
+ * `0`, which is a visible change on a line chart (a gap turns into a dip to the axis), so
  * it is noted rather than quietly coerced.
  *
  * A rebuilt chart also gets a *regenerated* workbook rather than the source one, so
@@ -144,7 +144,7 @@ export function chartCall(frame: GraphicFrame, chart: Chart, ctx: MapContext): C
 	}
 
 	// BELOW the guard above, deliberately. Recorded unconditionally, a chart with no cached
-	// series emitted two notes — one saying it was dropped, one saying it was rebuilt — and this
+	// series emitted two notes (one saying it was dropped, one saying it was rebuilt), and this
 	// one maps to `['*']`, so on a dropped chart it also excused every difference on that frame:
 	// the widest exclusion in the table, applied to the case it least describes.
 	notes.note(
@@ -1517,7 +1517,7 @@ function metadataOption(chart: Chart): IrValue | undefined {
 }
 
 /**
- * Per-series fill colours as `chartColors`, which is positional — entry `n` colours series
+ * Per-series fill colours as `chartColors`, which is positional: entry `n` colours series
  * `n`. A series with no explicit fill takes the theme's accent for its position, which the
  * read model does not resolve, so the whole option is dropped unless every series names a
  * colour; a partial list would silently recolour the unnamed ones.

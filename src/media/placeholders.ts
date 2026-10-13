@@ -3,7 +3,7 @@
  *
  * Their own module because of where the bundler puts them, not because they group naturally.
  * The chunker splits by module, so a constant is pulled into every chunk that reaches the module
- * declaring it — and these lived in `constants-internal.ts` beside `XML_DECL`, `DEF_FONT_SIZE`
+ * declaring it, and these lived in `constants-internal.ts` beside `XML_DECL`, `DEF_FONT_SIZE`
  * and the rest of the vocabulary all of `src/gen/` imports. The rule that follows: a payload
  * measured in kilobytes does not share a module with vocabulary, however tidy that grouping reads.
  *

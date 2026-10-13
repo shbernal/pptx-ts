@@ -14,7 +14,7 @@ import { renderedSlideObjects, resolveObjectNameToId } from '../slide/shape-ids.
 import { ANIM_PRESET_IDENTITY, type AnimPresetIdentity } from '../../ooxml/anim-presets.js'
 
 /**
- * Resolved animation target's shape id (`spid`), or `null` when it cannot be resolved — in which
+ * Resolved animation target's shape id (`spid`), or `null` when it cannot be resolved. In that
  * case the effect is dropped, so every `null` warns rather than leaving the animation silently
  * missing from the deck.
  *
@@ -26,10 +26,10 @@ import { ANIM_PRESET_IDENTITY, type AnimPresetIdentity } from '../../ooxml/anim-
  *
  * `shapeIndex` is a 0-based index into the top-level objects that RENDER, which is the same
  * sequence `collectSlideShapeIds` allocates along; group children take ids past that range. It
- * counted `_slideObjects` itself, and four of that array's members draw nothing — so `addNotes`
+ * counted `_slideObjects` itself, and four of that array's members draw nothing, so `addNotes`
  * before the first shape shifted every index by one and `shapeIndex: 0` addressed the notes.
  * An index outside `[0, renderedCount)` would emit a `<p:spTgt spid>` naming no shape on the
- * slide — a dangling spid PowerPoint reports as a repair (0x80070570) — so it warns and drops,
+ * slide (a dangling spid PowerPoint reports as a repair, 0x80070570), so it warns and drops,
  * exactly like an unresolvable `objectName` does.
  * @param shapeIds - the slide's shape ids, from `collectSlideShapeIds`
  * @param slideObjects - the slide's top-level objects, which a `shapeIndex` addresses
@@ -287,7 +287,7 @@ export function buildAnimationSeq(animations: ResolvedAnimation[], next: () => n
 		} else if (trigger === 'afterPrevious') {
 			subs.push({ delay: lastSub.delay + lastSub.longest, longest: duration, effects: [entry] })
 		} else {
-			// withPrevious — join the current sub-step
+			// withPrevious: join the current sub-step
 			lastSub.effects.push(entry)
 			lastSub.longest = Math.max(lastSub.longest, duration)
 		}

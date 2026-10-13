@@ -11,12 +11,12 @@ import { ALL_CONSTRUCT_FAMILIES } from './entry-families.js'
 import { createNodeRuntime } from './runtime/node.js'
 
 /**
- * The Node entry, reached through the `node` export condition — a consumer importing the bare
+ * The Node entry, reached through the `node` export condition. A consumer importing the bare
  * `pptx-ts` specifier under Node lands here without naming this subpath.
  *
  * Same authoring API as every other entry (see `entry-surface.ts`); the runtime adapter is what
  * differs. This one can reach the filesystem, so `writeFile` writes a real file and media may be
- * loaded from a path — both of which throw on the runtime-agnostic entry.
+ * loaded from a path, both of which throw on the runtime-agnostic entry.
  */
 export class PptxTs extends PresentationCore {
 	constructor() {

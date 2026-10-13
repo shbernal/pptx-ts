@@ -27,7 +27,7 @@ import { elOrVoid, voidEl } from '../oxml/el.js'
 const ALPHA_TAG = '<a:alpha'
 
 /**
- * Emit a bare DrawingML color element — either `<a:schemeClr>` (scheme color) or `<a:srgbClr>`
+ * Emit a bare DrawingML color element: either `<a:schemeClr>` (scheme color) or `<a:srgbClr>`
  * (hex RGB). This is a low-level primitive: it is the shared building block for every color
  * context (solid fills, gradient stops, `<a:alpha>` on shadows/glow, line fills, highlight,
  * underline, patterns, …), so it is intentionally NOT limited to solid fills and cannot be
@@ -35,7 +35,7 @@ const ALPHA_TAG = '<a:alpha'
  *
  * When you specifically want a *solid fill*, prefer `genXmlColorSelection` (`fill.ts`), which
  * wraps this in `<a:solidFill>…</a:solidFill>` and also handles `alpha`/`transparency` and the
- * gradient/pattern/image fill types — reach for `createColorElement` directly only when you
+ * gradient/pattern/image fill types. Reach for `createColorElement` directly only when you
  * need the raw color element (e.g. inside `<a:ln>`, `<a:gs>`, an effect, or a highlight).
  * @param {string|SCHEME_COLORS} colorStr - hex RGB (e.g. "FFFF00") or a scheme color constant (e.g. SchemeColor.ACCENT1)
  * @param {string} [innerElements] - additional elements that adjust the color, nested inside the color element
@@ -49,7 +49,7 @@ export function createColorElement(colorStr: string | SCHEME_COLORS, innerElemen
 		)
 		colorStr = DEF_FONT_COLOR
 	}
-	// An empty string reaches here only from a slot that *requires* a colour — a gradient
+	// An empty string reaches here only from a slot that *requires* a colour: a gradient
 	// stop, a duotone half. There is no "inherit" state to fall back to, so this
 	// is the one place `''` still paints: it is reported under its own code, with a message
 	// that names the real problem rather than `"" is not a valid scheme color`.
@@ -62,13 +62,13 @@ export function createColorElement(colorStr: string | SCHEME_COLORS, innerElemen
 	}
 	let colorVal = stripHash(colorStr || '')
 
-	// 8-char hex (RGBA) — strip the alpha byte to a sibling <a:alpha val="N"/>,
+	// 8-char hex (RGBA): strip the alpha byte to a sibling <a:alpha val="N"/>,
 	// continue with the leading 6-char RGB through the existing validation. This keeps
 	// fill/text/line/glow paths from silently falling back to DEF_FONT_COLOR on RGBA input.
 	const rgba = splitRgbaHex(colorVal)
 	if (rgba.alpha !== undefined) {
 		// If the caller already supplied an explicit <a:alpha> (e.g. shadow/glow `opacity`),
-		// it wins — do NOT add a second alpha from the RGBA byte, which would emit two
+		// it wins. Do NOT add a second alpha from the RGBA byte, which would emit two
 		// <a:alpha> children and produce schema-invalid OOXML (CT_SRgbColor allows one).
 		if (!innerElements?.includes(ALPHA_TAG))
 			innerElements = alphaEl(Math.round(rgba.alpha * PERCENT_SCALE)) + (innerElements || '')
@@ -110,8 +110,8 @@ export function isColorValue(value: unknown): boolean {
  *
  * `''` is not a spelling of "no paint": omission already spells that, and `'inherit'` and
  * `'none'` spell the other two states a paint can be in. It reaches the library from the
- * caller's own missing value — an unset template field, `row.accent` on a row that has none
- * — so the useful answer is to say so and then behave exactly as omitting the option would
+ * caller's own missing value (an unset template field, `row.accent` on a row that has none),
+ * so the useful answer is to say so and then behave exactly as omitting the option would
  * have. What it must not do is coerce to {@link DEF_FONT_COLOR}, which paints visible black
  * on a shape the caller expected to keep the theme's paint.
  *
@@ -137,7 +137,7 @@ export function rejectEmptyColor(value: unknown, option: string): boolean {
  *
  * The `x ?? DEFAULT` and `x || DEFAULT` this replaces disagreed about `''`: the first passed
  * it through to be painted black or dropped, the second quietly resolved it to the default.
- * Here it is one rule — an empty string is a missing value, reported and then resolved the
+ * Here it is one rule: an empty string is a missing value, reported and then resolved the
  * way an absent option is.
  * @param value - the caller's colour option, possibly absent or empty
  * @param fallback - what an absent option resolves to at this site

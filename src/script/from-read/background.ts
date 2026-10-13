@@ -59,7 +59,7 @@ export const MASTER_BACKGROUND: BackgroundTier = {
 /**
  * Map one tier's background onto the write API's `background` option.
  *
- * `undefined` means *say nothing* — the caller omits the key, and the slide or layout takes
+ * `undefined` means *say nothing*: the caller omits the key, and the slide or layout takes
  * whatever it would have inherited. That is the right answer for an absent background, and it
  * is also what a recorded loss falls back to. It is not the answer for a slide's explicit
  * `a:noFill`, which turns off the layout background the slide would otherwise inherit: that
@@ -81,8 +81,8 @@ export function backgroundIr(
 	if (background.type !== 'themeRef') return fillIr(background, notes, assets, tier)
 
 	// `p:bgRef` indexes the theme's background fill list, which the write path cannot author.
-	// The read model resolves it, so the fill survives even though the reference — and
-	// therefore its response to a theme change — does not.
+	// The read model resolves it, so the fill survives even though the reference (and
+	// therefore its response to a theme change) does not.
 	const fill = background.resolvedFill
 	const ir = fill ? fillIr(fill, notes, assets, tier) : undefined
 	if (fill && ir) {

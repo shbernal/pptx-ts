@@ -3,11 +3,11 @@
  *
  * It owns everything a shape has regardless of kind: non-visual identity (id / name / hidden /
  * description / decorative), geometry through the subclass-supplied `a:xfrm`, and the `p:spPr`
- * surface — fill, line, gradient, effects — resolved against the host's theme. Kind-specific
+ * surface (fill, line, gradient, effects) resolved against the host's theme. Kind-specific
  * reads live on the subclasses in the sibling modules.
  *
- * A proxy holds a back-reference to its owning {@link ShapeHost} — a `Slide`, a `SlideLayout` or a
- * `SlideMaster` — so it can resolve relationships and theme colours, and so a mutation can mark
+ * A proxy holds a back-reference to its owning {@link ShapeHost} (a `Slide`, a `SlideLayout` or a
+ * `SlideMaster`), so it can resolve relationships and theme colours, and so a mutation can mark
  * that host's part dirty.
  */
 
@@ -83,12 +83,12 @@ import { pruneSpids } from '../animation.js'
 // against real PowerPoint output ("Mark as decorative").
 const ADEC_NS = 'http://schemas.microsoft.com/office/drawing/2017/decorative'
 
-/** Common base for every shape in a shape tree — a slide's, a layout's, or a master's. */
+/** Common base for every shape in a shape tree: a slide's, a layout's, or a master's. */
 export abstract class Shape {
 	constructor(
 		protected readonly element: Element,
 		/**
-		 * The part that owns this shape's tree — a `Slide`, a `SlideLayout`, or a
+		 * The part that owns this shape's tree: a `Slide`, a `SlideLayout`, or a
 		 * `SlideMaster`. Narrow it with `instanceof` when you need the concrete class;
 		 * {@link ShapeHost.partName} tells the tiers apart without one.
 		 */
@@ -155,7 +155,7 @@ export abstract class Shape {
 	/**
 	 * Whether the shape is explicitly hidden (`p:cNvPr/@hidden="1"`); `false` when
 	 * the attribute is unset. A hidden shape stays in the slide XML but is not
-	 * rendered — decks use it as a fallback layer (e.g. a duotone-recolour source
+	 * rendered. Decks use it as a fallback layer (e.g. a duotone-recolour source
 	 * sitting behind the visible icon), so a faithful reader must distinguish it
 	 * from the drawn shapes.
 	 */
@@ -228,7 +228,7 @@ export abstract class Shape {
 	/**
 	 * Whether the shape is flagged **decorative** (`p:cNvPr/a:extLst/a:ext`
 	 * uri `{C183D7F6-…}` / `adec:decorative@val`), PowerPoint's "Mark as
-	 * decorative" — a purely visual element assistive tech should skip. `false`
+	 * decorative": a purely visual element assistive tech should skip. `false`
 	 * when the extension is absent. A decorative shape typically has no
 	 * {@link description}; the two are alternatives, not companions.
 	 */
@@ -311,8 +311,8 @@ export abstract class Shape {
 
 	/**
 	 * Clockwise rotation in degrees (`a:xfrm/@rot` ÷ 60000), or `null` when the
-	 * shape has no own transform. A present xfrm with no `@rot` reads as `0`, so
-	 * — mirroring {@link left}/{@link top}/{@link width}/{@link height} — `null`
+	 * shape has no own transform. A present xfrm with no `@rot` reads as `0`, so,
+	 * mirroring {@link left}/{@link top}/{@link width}/{@link height}, `null`
 	 * ("inherits layout geometry") stays distinct from `0` ("has a transform, not
 	 * rotated"). The value is faithful to the XML and not normalised to a signed
 	 * range, so a `@rot` past 360° (e.g. a negative angle stored as `19216344`)
@@ -362,7 +362,7 @@ export abstract class Shape {
 	 * equal the shape's own transform values.
 	 *
 	 * `null` when the shape (or any enclosing group) has no own transform, or a
-	 * group's `a:chExt` is degenerate (zero) — there is then no resolvable frame.
+	 * group's `a:chExt` is degenerate (zero). There is then no resolvable frame.
 	 * {@link absoluteFrameFailure} says which of those it was.
 	 *
 	 * A rotated shape's returned `left`/`top` remain PowerPoint's unrotated
@@ -378,7 +378,7 @@ export abstract class Shape {
 	 * Why {@link absoluteFrame} is `null`, or `null` when it resolved.
 	 *
 	 * `absoluteFrame` reports one `null` for three different situations, and only a
-	 * caller that wants to *report* the unresolvable shape needs them apart — an
+	 * caller that wants to *report* the unresolvable shape needs them apart: an
 	 * inherited placeholder box is ordinary, a group with no usable `a:xfrm` is not.
 	 * The distinction is not recoverable from the `null`, and re-deriving it means
 	 * walking the same ancestry a second time, so it is named here instead. See
@@ -423,8 +423,8 @@ export abstract class Shape {
 			{ box, rotation: rotationDegrees(xfrm), flipH: transformFlipH(xfrm), flipV: transformFlipV(xfrm) },
 			groups
 		)
-		// `composeGroupFrame` returns `null` for exactly one reason — a group's zero
-		// `a:chExt` — and it is the authority on that rule. Re-testing `chExt` here to
+		// `composeGroupFrame` returns `null` for exactly one reason (a group's zero
+		// `a:chExt`), and it is the authority on that rule. Re-testing `chExt` here to
 		// name the failure would put the rule in two places for no gain.
 		if (!frame) return 'group-transform-degenerate'
 		return {
@@ -439,7 +439,7 @@ export abstract class Shape {
 	}
 
 	#setOffset(axis: 'x' | 'y', value: number): void {
-		// An offset may be negative — a shape can sit off the left or top edge — so it needs the
+		// An offset may be negative (a shape can sit off the left or top edge), so it needs the
 		// finite check and nothing more. Both setters used a private `toEmu` that also rejected a
 		// negative *extent* under its own `coord/negative`; `checkPositiveEmu` is the rule the
 		// rest of the read model's setters already apply, and `ST_PositiveCoordinate` has no room
@@ -501,13 +501,13 @@ export abstract class Shape {
 	}
 
 	/**
-	 * `true` when the shape sets an explicit no-fill (`spPr/a:noFill`) — a
+	 * `true` when the shape sets an explicit no-fill (`spPr/a:noFill`): a
 	 * deliberately transparent surface. The fill-side counterpart of
 	 * {@link lineNoFill}, and the only accessor that separates it from a shape
 	 * carrying no fill child at all (one inheriting through `p:style/a:fillRef`):
-	 * every other fill accessor — {@link fillColor}, {@link fillSchemeColor},
+	 * every other fill accessor ({@link fillColor}, {@link fillSchemeColor},
 	 * {@link resolvedFill}, {@link gradientFill}, {@link patternFill},
-	 * {@link pictureFill} — reports `null` for both. The two paint completely
+	 * {@link pictureFill}) reports `null` for both. The two paint completely
 	 * differently, so a consumer that cannot tell them apart paints a transparent
 	 * shape in the theme's accent colour.
 	 */
@@ -517,7 +517,7 @@ export abstract class Shape {
 	}
 
 	/**
-	 * Set an explicit `<a:noFill/>` on the shape — a transparent surface. This is
+	 * Set an explicit `<a:noFill/>` on the shape: a transparent surface. This is
 	 * distinct from clearing the fill (`fillColor = null`), which removes the
 	 * `a:solidFill` and lets the fill inherit from the shape's style/placeholder.
 	 * Read it back with {@link fillNoFill}.
@@ -553,7 +553,7 @@ export abstract class Shape {
 	/**
 	 * The line/border dash style (`spPr/a:ln/a:prstDash/@val`), e.g. `'dash'`,
 	 * `'lgDashDot'`, `'sysDot'`, or `null` when the line is solid/unset. A faithful
-	 * replica of dashed dividers and dashed card borders needs this — it is
+	 * replica of dashed dividers and dashed card borders needs this: it is
 	 * otherwise invisible in {@link lineColor}/{@link lineWidthPt} alone.
 	 */
 	get lineDash(): string | null {
@@ -561,7 +561,7 @@ export abstract class Shape {
 	}
 
 	/**
-	 * `true` when the shape sets an explicit no-line (`spPr/a:ln/a:noFill`) — a
+	 * `true` when the shape sets an explicit no-line (`spPr/a:ln/a:noFill`): a
 	 * deliberately border-less shape. Distinct from simply having no `a:ln`
 	 * (an inherited line), which {@link resolvedLine} cannot tell apart: both
 	 * report `null`. A replica that relies on a shadow instead of a border needs
@@ -585,8 +585,8 @@ export abstract class Shape {
 	}
 
 	/**
-	 * The line end cap (`spPr/a:ln/@cap`) as the raw OOXML token — `'flat'`,
-	 * `'rnd'` (round) or `'sq'` (square) — or `null` when unset (PowerPoint's
+	 * The line end cap (`spPr/a:ln/@cap`) as the raw OOXML token, `'flat'`,
+	 * `'rnd'` (round) or `'sq'` (square), or `null` when unset (PowerPoint's
 	 * default is `flat`). The write API authors this attribute through
 	 * `ShapeLineProps.cap`, so without the accessor a deck this library produced
 	 * could not be read back without losing it.
@@ -602,8 +602,8 @@ export abstract class Shape {
 	}
 
 	/**
-	 * The line alignment (`spPr/a:ln/@algn`) as the raw OOXML token — `'ctr'`
-	 * (centred on the shape's outline) or `'in'` (inset, drawn wholly inside it) —
+	 * The line alignment (`spPr/a:ln/@algn`) as the raw OOXML token, `'ctr'`
+	 * (centred on the shape's outline) or `'in'` (inset, drawn wholly inside it),
 	 * or `null` when unset. It shifts a thick outline by half its width, so it
 	 * changes where the border sits relative to the fill.
 	 */
@@ -630,7 +630,7 @@ export abstract class Shape {
 	 * shape uses preset geometry / none. The faithful, multi-path counterpart of
 	 * {@link presetGeometry}: each `a:path` keeps its own path-unit viewport
 	 * (`w`/`h`) and ordered {@link GeometryCommand}s. Coordinates are raw path-unit
-	 * integers, not EMU — pair the path `w`/`h` with the shape's box size to map
+	 * integers, not EMU. Pair the path `w`/`h` with the shape's box size to map
 	 * them into slide space.
 	 *
 	 * Not an auto-shape-only property either: a picture clipped to a freeform (what
@@ -704,7 +704,7 @@ export abstract class Shape {
 	 * The shape's gradient fill with its geometry (`spPr/a:gradFill`), or `null`
 	 * when the fill is not a gradient. Unlike {@link gradientStops} (stops only),
 	 * this also carries the linear {@link GradientFill.angleDeg} or the
-	 * {@link GradientFill.path} shape — the geometry a faithful replica needs and
+	 * {@link GradientFill.path} shape: the geometry a faithful replica needs and
 	 * which the bare stop list omits.
 	 */
 	get gradientFill(): GradientFill | null {
@@ -716,8 +716,8 @@ export abstract class Shape {
 	 * The shape's line/border **gradient** stroke (`spPr/a:ln/a:gradFill`), or
 	 * `null` when the line is a solid, absent, or inherited border (see
 	 * {@link resolvedLine}). The line counterpart of {@link gradientFill}: a
-	 * gradient-stroked connector — common for faded process arrows in styled decks
-	 * — otherwise surfaces only its {@link lineWidthPt}, dropping the colour
+	 * gradient-stroked connector (common for faded process arrows in styled decks)
+	 * otherwise surfaces only its {@link lineWidthPt}, dropping the colour
 	 * entirely, so a replica cannot reproduce the stroke.
 	 */
 	get lineGradient(): GradientFill | null {
@@ -785,7 +785,7 @@ export abstract class Shape {
 	/**
 	 * The shape's reflection (`spPr/a:effectLst/a:reflection`), or `null` when it has
 	 * none. Read-only: this library authors no reflection, so a replica should carry
-	 * the part rather than regenerate it — see {@link Reflection}.
+	 * the part rather than regenerate it (see {@link Reflection}).
 	 */
 	get reflection(): Reflection | null {
 		return readReflection(this.#effectLst())
@@ -802,7 +802,7 @@ export abstract class Shape {
 	/**
 	 * The shape's pattern (hatch) fill (`spPr/a:pattFill`), or `null` when the fill
 	 * is not a pattern. Surfaces the {@link PatternFill.preset} name and both
-	 * colours resolved against the host's theme — the pattern counterpart of
+	 * colours resolved against the host's theme: the pattern counterpart of
 	 * {@link resolvedFill}, which reports `null` for a non-solid fill and so drops a
 	 * hatched surface entirely.
 	 */
@@ -814,8 +814,8 @@ export abstract class Shape {
 	/**
 	 * The shape's picture (image) fill (`spPr/a:blipFill`), or `null` when the fill
 	 * is not a picture. The image-fill counterpart of {@link patternFill}: a shape
-	 * whose *surface* is an image is not a {@link Picture} — it is an autoShape with
-	 * a blip fill — and {@link resolvedFill} reports `null` for one, so without this
+	 * whose *surface* is an image is not a {@link Picture} (it is an autoShape with
+	 * a blip fill), and {@link resolvedFill} reports `null` for one, so without this
 	 * an image-filled shape reads as unfilled. Carries the embedded image
 	 * ({@link PictureFill.relId}/{@link PictureFill.partName}) plus the stretch/tile
 	 * geometry.
@@ -825,7 +825,7 @@ export abstract class Shape {
 		return props ? readPictureFill(props, this.host.relationships) : null
 	}
 
-	/** The shape's effect list (`spPr/a:effectLst`), or `null` — what `shapes/effects.ts` decodes. */
+	/** The shape's effect list (`spPr/a:effectLst`), or `null`: what `shapes/effects.ts` decodes. */
 	#effectLst(): Element | null {
 		const props = this.properties()
 		return props ? firstChild(props, 'a:effectLst') : null
@@ -833,11 +833,11 @@ export abstract class Shape {
 
 	/**
 	 * The shape's solid fill resolved against the host's theme
-	 * ({@link Slide.themeContext}) to a literal hex — the resolved counterpart of
+	 * ({@link Slide.themeContext}) to a literal hex: the resolved counterpart of
 	 * {@link fillColor}/{@link fillSchemeColor}, which report the raw reference.
 	 * `null` when the shape has no `a:solidFill` (a gradient/none/inherited fill)
 	 * or the colour cannot be made literal. The returned {@link ResolvedColor}
-	 * carries the base `hex` and raw transforms, and `effectiveHex` — the base with
+	 * carries the base `hex` and raw transforms, and `effectiveHex`, the base with
 	 * its colour transforms (`lumMod`/`shade`/…) applied (read that for the final
 	 * rendered colour).
 	 *
@@ -854,7 +854,7 @@ export abstract class Shape {
 
 	/**
 	 * The shape's line/border solid fill resolved against the host's theme to a
-	 * literal hex — the resolved counterpart of {@link lineColor}/{@link lineSchemeColor}.
+	 * literal hex: the resolved counterpart of {@link lineColor}/{@link lineSchemeColor}.
 	 * `null` when the shape has no `a:ln/a:solidFill` or it cannot be made literal.
 	 * Like {@link resolvedFill}, the result carries `effectiveHex` (the base colour
 	 * with its transforms applied) for the final rendered colour.

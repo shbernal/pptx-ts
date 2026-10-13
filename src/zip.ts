@@ -13,7 +13,7 @@ import { bytesToBinaryString } from './media/binary-string.js'
 /**
  * ZIP backend seam for the write path.
  *
- * fflate is functional — one `{path: bytes}` map in, one `Uint8Array` out — so
+ * fflate is functional (one `{path: bytes}` map in, one `Uint8Array` out), so
  * every contact with the backend is isolated here rather than spread across the
  * incremental builder calls the JSZip API encouraged. Callers accumulate entries
  * with {@link ZipWriter.add} (strings are UTF-8 encoded; already-decoded media
@@ -98,7 +98,7 @@ export class ZipWriter {
  * byte source.
  *
  * Note: unlike JSZip's `loadAsync`, a string is NOT a latin1 binary-content
- * string. That JSZip-compat interpretation was a footgun — every real consumer
+ * string. That JSZip-compat interpretation was a footgun: every real consumer
  * passes a path, and a path silently became garbage bytes → "Not a valid ZIP
  * archive". To read a `binarystring`/`base64` write-path output back in, convert
  * it to bytes first (e.g. `Uint8Array.from(atob(b64), c => c.charCodeAt(0))`).
@@ -112,7 +112,7 @@ export type ZipInput = ZipInputValue | Promise<ZipInputValue>
  * Read-path counterpart to {@link ZipWriter}: fflate's `unzipSync` needs a
  * `Uint8Array`, so the JSZip-style input auto-detection that `loadAsync` did is
  * reproduced by `toUint8Array` first. Directory markers (keys ending in
- * `/`) are dropped — fflate surfaces them but no consumer wants empty-dir
+ * `/`) are dropped: fflate surfaces them but no consumer wants empty-dir
  * entries, and the write path emits none.
  */
 export async function readZip(input: ZipInput): Promise<Map<string, Uint8Array>> {
@@ -154,7 +154,7 @@ async function toUint8Array(input: ZipInput): Promise<Uint8Array> {
  * Read a `.pptx` (or any zip) from a filesystem path into bytes. Node-only:
  * `node:fs` is imported lazily so the browser build stays free of a Node
  * dependency, and a missing filesystem (browser) or missing file both throw a
- * clear error naming the path — never the opaque "Not a valid ZIP archive".
+ * clear error naming the path, never the opaque "Not a valid ZIP archive".
  */
 async function readFileAsBytes(filePath: string): Promise<Uint8Array> {
 	let readFile: (typeof import('node:fs/promises'))['readFile']
@@ -210,10 +210,10 @@ function convertZipOutput(bytes: Uint8Array, type: ZIP_OUTPUT_TYPE): string | Ar
 	}
 }
 
-// Error taxonomy — see `entry-errors.ts`. Re-exported from every entry so `instanceof`
+// Error taxonomy: see `entry-errors.ts`. Re-exported from every entry so `instanceof`
 // works whichever subpath a consumer imports.
 export * from './entry-errors.js'
 
-// Diagnostics — see `entry-diagnostics.ts`. Re-exported from every entry so a consumer of any
+// Diagnostics: see `entry-diagnostics.ts`. Re-exported from every entry so a consumer of any
 // subpath can install a handler for the warnings that subpath emits.
 export * from './entry-diagnostics.js'

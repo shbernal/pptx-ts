@@ -1,13 +1,13 @@
 /**
- * pptx-ts: 3D model types (PowerPoint's Insert ▸ 3D Models — `slide.addModel3d()`).
+ * pptx-ts: 3D model types (PowerPoint's Insert ▸ 3D Models, `slide.addModel3d()`).
  *
  * A 3D model is a glTF binary (`.glb`) embedded in the package and drawn live by PowerPoint
  * 2019+. It is emitted as a `<p:graphicFrame>` in the 2017 `am3d` namespace, wrapped in
- * `<mc:AlternateContent>` with a picture fallback — the same structural shape as a zoom.
+ * `<mc:AlternateContent>` with a picture fallback, the same structural shape as a zoom.
  *
  * PREVIEW IMAGE: PowerPoint 2019+ draws the live model on screen, in a slide exported as a
- * picture, in a PDF export and in print. Everything else — PowerPoint 2016 and earlier, and
- * applications with no 3D renderer, such as LibreOffice — draws the preview picture in the
+ * picture, in a PDF export and in print. Everything else (PowerPoint 2016 and earlier, and
+ * applications with no 3D renderer, such as LibreOffice) draws the preview picture in the
  * `mc:Fallback` branch. pptx-ts is Node-first and cannot rasterize a 3D scene, so it emits a
  * neutral gray **placeholder** when `preview` is omitted. Supply one for any deck meant to read
  * correctly outside PowerPoint. This is the same bargain `addOleObject()`'s `cover` makes.
@@ -30,7 +30,7 @@ export interface Model3dPoint {
  * Camera override for `addModel3d()`, mapping onto `am3d:camera`.
  *
  * The defaults are what PowerPoint itself wrote for a 2×2×2 cube, and they are correct for any
- * model whose bounding box is roughly cubic **once `meterPerModelUnit` is right** — the camera is
+ * model whose bounding box is roughly cubic **once `meterPerModelUnit` is right**. The camera is
  * expressed in metres, so the scale is what actually decides framing.
  *
  * PowerPoint's own rule, measured against three models: it normalizes the model's largest
@@ -76,7 +76,7 @@ export interface Model3dCameraProps {
  */
 interface Model3dBaseProps extends PositionProps, ObjectNameProps {
 	/**
-	 * Picture of the model shown wherever the live 3D view is unavailable — a raster image `path`
+	 * Picture of the model shown wherever the live 3D view is unavailable: a raster image `path`
 	 * (Node/local) or base64 `data:` URI.
 	 * - the library cannot render a 3D scene, so when this is omitted a neutral gray placeholder is
 	 *   embedded; PowerPoint 2019+ draws the live model on screen, in exports and in print, but older
@@ -91,13 +91,13 @@ interface Model3dBaseProps extends PositionProps, ObjectNameProps {
 	 */
 	camera?: Model3dCameraProps
 	/**
-	 * Metres per model unit (`am3d:trans/am3d:meterPerModelUnit`) — the scale that decides how
+	 * Metres per model unit (`am3d:trans/am3d:meterPerModelUnit`): the scale that decides how
 	 * large the model is in the scene the {@link camera} looks at.
 	 *
 	 * This is the single override most models need. PowerPoint sets it to `1 / maxExtent`, where
 	 * `maxExtent` is the model's largest bounding-box dimension in model units, which normalizes
-	 * every model to 1 metre across. pptx-ts does not parse the `.glb`, so it cannot measure that
-	 * — it defaults to `0.5`, correct for a model 2 units across. A model 100 units across left at
+	 * every model to 1 metre across. pptx-ts does not parse the `.glb`, so it cannot measure that;
+	 * it defaults to `0.5`, correct for a model 2 units across. A model 100 units across left at
 	 * the default is a 50-metre object with the camera 2.26 metres from its centre, i.e. the
 	 * viewer is inside it.
 	 * - range: greater than 0
@@ -106,7 +106,7 @@ interface Model3dBaseProps extends PositionProps, ObjectNameProps {
 	 */
 	meterPerModelUnit?: number
 	/**
-	 * Alt text (`p:cNvPr@descr`) — what a screen reader announces for the model.
+	 * Alt text (`p:cNvPr@descr`): what a screen reader announces for the model.
 	 */
 	altText?: string
 }

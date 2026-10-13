@@ -50,7 +50,7 @@ export class Table {
 	 * from the deck's `tableStyles.xml`, or `null` when the table names no
 	 * `a:tableStyleId`, the deck has no `tableStyles.xml`, or the id is a built-in
 	 * `[MS-OE376]` style the deck does not materialise. This is what supplies the
-	 * banded-row / header shading a cell with no own fill inherits — read the
+	 * banded-row / header shading a cell with no own fill inherits. Read the
 	 * resolved per-cell colour off {@link TableCell.resolvedFill}.
 	 *
 	 * Resolved afresh on every read, not through the per-instance memo the cells share, so an
@@ -126,7 +126,7 @@ export class Table {
 	 * `{5940675A-B579-460E-94D1-54222C63F5DA}`, or `null` when the table carries no
 	 * `a:tableStyleId`. This is the reference into `ppt/tableStyles.xml` (or a
 	 * built-in `[MS-OE376]` style) that supplies the banded-row / header shading the
-	 * `firstRow`/`bandRow` flags activate — without it a replica loses the whole
+	 * `firstRow`/`bandRow` flags activate. Without it a replica loses the whole
 	 * table style, so it is the read counterpart of the writer's `tableStyle` option.
 	 */
 	get styleId(): string | null {
@@ -143,7 +143,7 @@ export class Table {
 	 * This is the table-level counterpart of {@link TableCell.resolvedFill}, and it is a
 	 * genuinely different thing from a cell fill: a `a:tblPr` fill sits *behind* the grid, so
 	 * a cell with no fill of its own shows it through. Reports `null` for a non-solid choice
-	 * (`a:blipFill`/`a:gradFill`/`a:pattFill`/`a:noFill`) — read {@link pictureFill} for an
+	 * (`a:blipFill`/`a:gradFill`/`a:pattFill`/`a:noFill`); read {@link pictureFill} for an
 	 * image background.
 	 */
 	get resolvedFill(): ResolvedColor | null {
@@ -275,7 +275,7 @@ export class Table {
 	 * Remove the row at `index`, with its content.
 	 *
 	 * A cell in the row that *continues* a vertical merge shortens that merge. A cell that
-	 * *starts* one hands the region to its first continuation, which becomes the new origin —
+	 * *starts* one hands the region to its first continuation, which becomes the new origin:
 	 * the merged region survives one row shorter, and only the removed row's own text is lost.
 	 * @throws {InvalidOptionError} when `index` is out of range
 	 */
@@ -317,7 +317,7 @@ export class Table {
 	 * never rendered.
 	 *
 	 * A rectangle that cuts through an existing merge is **rejected**, not silently widened
-	 * to fit — the caller asked for a specific region, and quietly producing a different one
+	 * to fit. The caller asked for a specific region, and quietly producing a different one
 	 * is how a layout ends up wrong with nothing to point at. Unmerge first.
 	 * @throws {InvalidOptionError} when an index is out of range, the range covers one cell,
 	 *   or it partially overlaps an existing merge

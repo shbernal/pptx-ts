@@ -2,19 +2,19 @@
  * OPC relationship type URIs and part content types, and the schema-URI bases they are built from.
  *
  * These are long, near-identical strings that differ in one path segment, which makes a typo
- * both easy to write and invisible on review — a wrong URI does not throw, it silently matches
+ * both easy to write and invisible on review: a wrong URI does not throw, it silently matches
  * nothing on the read side and produces a part PowerPoint ignores or rejects on the write side.
  *
  * **Why this module is neither `gen/` nor `read/`.** Both halves need the same URIs, and for a
  * while each kept its own copy (`gen/oxml/schema-uris.ts`, `read/api/rel-types.ts`), with a note
  * in both saying a shared home was "a separate decision". It is this module: a rel type is a fact
  * about the OOXML package format, not about writing or reading one, so neither side should own it.
- * A divergence between the two copies would mean the writer emitting a rel the reader cannot find
- * — a round-trip bug with no compile-time signal.
+ * A divergence between the two copies would mean the writer emitting a rel the reader cannot find,
+ * a round-trip bug with no compile-time signal.
  *
  * Only types used by more than one module live here. A rel type exactly one module cares about
  * (`tags`, `oleObject`, the modern comments part, …) stays declared next to the code that reads or
- * emits it — hoisting those would trade a definition you can see for one you have to go and find,
+ * emits it. Hoisting those would trade a definition you can see for one you have to go and find,
  * and buy nothing. A writer and a reader of the same part count as two modules even when each
  * names the string once: that pair is exactly the divergence this module exists to prevent.
  *
@@ -28,7 +28,7 @@ import { OOXML_NS } from './namespaces.js'
 const SCHEMA_BASE = 'http://schemas.openxmlformats.org/'
 
 /**
- * Prefix for `.rels` `Type` URIs — append the type name (`slide`, `image`, `theme`, …).
+ * Prefix for `.rels` `Type` URIs; append the type name (`slide`, `image`, `theme`, …).
  * Exported for the write side, which builds one-off rel types at their call sites.
  */
 export const OFFICE_REL = SCHEMA_BASE + 'officeDocument/2006/relationships/'
@@ -103,7 +103,7 @@ export const MODEL3D_REL = MS_REL + '2017/06/relationships/model3d'
 
 /** A slide → a classic (`c:`) chart part. */
 export const CHART_REL = OFFICE_REL + 'chart'
-/** A slide → a chartEx (`cx:`, Office 2016) chart part — an MS rel, not the ECMA `chart` one. */
+/** A slide → a chartEx (`cx:`, Office 2016) chart part: an MS rel, not the ECMA `chart` one. */
 export const CHARTEX_REL = MS_REL + '2014/relationships/chartEx'
 /** A chart part → its mandatory style sidecar. */
 export const CHART_STYLE_REL = MS_REL + '2011/relationships/chartStyle'
@@ -186,8 +186,8 @@ export const MODERN_COMMENT_AUTHORS_CONTENT_TYPE = MS_POWERPOINT_CONTENT + 'auth
 /**
  * How far a shared part's ownership reaches.
  *
- * - `deck`: chrome the whole deck owns — masters, layouts, themes, the property parts, the author
- *   registries. A page points at it and never owns it, and it is not an orphan just because the
+ * - `deck`: chrome the whole deck owns (masters, layouts, themes, the property parts, the author
+ *   registries). A page points at it and never owns it, and it is not an orphan just because the
  *   slide that last reached it is gone.
  * - `media`: a blob PowerPoint stores once and points every shape that shows it at. Page copies
  *   share it, but one that nothing references any more is an orphan.

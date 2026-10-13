@@ -1,10 +1,10 @@
 /**
- * pptx-ts: option-bag normalization helpers — one spelling of absent.
+ * pptx-ts: option-bag normalization helpers for one spelling of absent.
  *
  * `exactOptionalPropertyTypes` draws a line this library needs drawn: a `foo?: T` declaration says
  * the key is either *missing* or holds a `T`, and a key present with an `undefined` in it is a
- * third state. Readers here cannot see that state — every option is read with truthiness or `?.`
- * — but spreads can, and the generator spreads these bags constantly: a layout placeholder's
+ * third state. Readers here cannot see that state (every option is read with truthiness or
+ * `?.`), but spreads can, and the generator spreads these bags constantly: a layout placeholder's
  * options onto a slide's, a column default under a cell's own, a combo subchart's overrides onto
  * the chart's. There the side that wins is decided by whether the key *exists*, not by what it
  * holds, so "the caller said nothing" and "the caller said nothing, in writing" produce different
@@ -23,8 +23,8 @@ import type { OptionalKeysOf } from './types/internal.js'
 /**
  * Write a normalized value onto an option bag, spelling "no value" as an *absent* key.
  *
- * Reach for this wherever a normalizer's result may be nothing —
- * `setOrClear(opts, 'holeSize', clampChartPct(opts.holeSize, 10, 90, 'holeSize'))` — rather than
+ * Reach for this wherever a normalizer's result may be nothing, as in
+ * `setOrClear(opts, 'holeSize', clampChartPct(opts.holeSize, 10, 90, 'holeSize'))`, rather than
  * assigning the result directly, which leaves the caller's rejected value replaced by an
  * `undefined` instead of removed.
  *

@@ -4,7 +4,7 @@
  * **What these are for.** `getOrAddChild(parent, qname, before)` / `insertInOrder(parent, node,
  * before)` place a newly created child before the first sibling named in `before`. So `before`
  * must list exactly the children that legally *follow* the one being inserted. Get it wrong and
- * the part is schema-invalid — which PowerPoint reports as a corrupt file, not as a bad option,
+ * the part is schema-invalid, which PowerPoint reports as a corrupt file, not as a bad option,
  * so the failure surfaces far from its cause with no compile-time signal.
  *
  * **Why they are derived, not written out.** These successor lists used to be hand-maintained,
@@ -27,21 +27,21 @@ import { InternalError } from '../errors.js'
 /**
  * One step of a schema sequence: a single element, or a choice group whose members are mutually
  * exclusive. A group is spelled as an array so {@link successorsOf} can treat every member as
- * occupying the same slot — the successors of `a:solidFill` are what follows the *whole*
+ * occupying the same slot: the successors of `a:solidFill` are what follows the *whole*
  * `EG_FillProperties` group, not its sibling choices.
  */
 type SequenceStep = string | readonly string[]
 
 /**
- * `EG_FillProperties` — the mutually exclusive fill choices, in schema order.
+ * `EG_FillProperties`: the mutually exclusive fill choices, in schema order.
  * @see ECMA-376 Part 1 §20.1.8 (DrawingML fill group)
  */
 export const FILL_CHOICES = ['a:noFill', 'a:solidFill', 'a:gradFill', 'a:blipFill', 'a:pattFill', 'a:grpFill'] as const
 
-/** `EG_EffectProperties` — the two mutually exclusive effect containers. */
+/** `EG_EffectProperties`: the two mutually exclusive effect containers. */
 const EFFECT_CHOICES = ['a:effectLst', 'a:effectDag'] as const
 
-/** `EG_Geometry` — the two mutually exclusive geometry choices. */
+/** `EG_Geometry`: the two mutually exclusive geometry choices. */
 const GEOMETRY_CHOICES = ['a:custGeom', 'a:prstGeom'] as const
 
 /**
@@ -49,7 +49,7 @@ const GEOMETRY_CHOICES = ['a:custGeom', 'a:prstGeom'] as const
  *
  * `member` may name a single element or any member of a choice group; either way the result
  * starts after the step it occupies, so a choice member never lists its own siblings. Throws on
- * an unknown name rather than returning `[]` — an empty successor list silently *appends*, which
+ * an unknown name rather than returning `[]`. An empty successor list silently *appends*, which
  * is exactly the corruption these lists exist to prevent, so a typo must fail loudly and at
  * module-load time rather than produce a subtly out-of-order part at run time.
  */
@@ -79,7 +79,7 @@ const SPPR_SEQUENCE: readonly SequenceStep[] = [
  * `CT_Shape` (`p:sp`), in declaration order.
  *
  * `p:pic` (`CT_Picture`) and `p:cxnSp` (`CT_Connector`) are not this type, but their successors
- * of `p:spPr` are a *subset* of this one's in the same relative order — both run `p:spPr`,
+ * of `p:spPr` are a *subset* of this one's in the same relative order: both run `p:spPr`,
  * `p:style`, `p:extLst` and neither has a `p:txBody`. So {@link SHAPE_AFTER_SPPR} serves all
  * three: naming an element that cannot occur in a given parent is inert, because the successor
  * list is only ever matched against children that are actually there.
@@ -89,7 +89,7 @@ const SP_SEQUENCE: readonly SequenceStep[] = ['p:nvSpPr', 'p:spPr', 'p:style', '
 
 /**
  * `CT_GroupShapeProperties` (`p:grpSpPr`), in declaration order. A group carries no `a:ln` and
- * no `a:sp3d` — which is exactly why it needs its own successor lists rather than borrowing the
+ * no `a:sp3d`, which is exactly why it needs its own successor lists rather than borrowing the
  * shape ones.
  * @see ECMA-376 Part 1 §20.1.2.2.19
  */
@@ -163,7 +163,7 @@ export const TCPR_SEQUENCE: readonly string[] = [
 ]
 
 /**
- * For each `a:tcPr` child, the children that must follow it — i.e. what a new one is inserted
+ * For each `a:tcPr` child, the children that must follow it, i.e. what a new one is inserted
  * *before*. Every child gets an entry, so a caller can look one up by qname.
  */
 export const TCPR_AFTER: Record<string, string[]> = Object.fromEntries(
@@ -191,14 +191,14 @@ export const GRPSPPR_AFTER_XFRM = successorsOf(GRPSPPR_SEQUENCE, 'a:xfrm')
 export const GRPSPPR_FILL_AFTER = successorsOf(GRPSPPR_SEQUENCE, 'a:solidFill')
 
 /**
- * Successors of `p:grpSpPr` within `p:grpSp` — every drawable child, plus `p:contentPart` and
+ * Successors of `p:grpSpPr` within `p:grpSp`: every drawable child, plus `p:contentPart` and
  * `p:extLst`. Derived rather than written out, which is the whole point of this module: the
  * literal it replaces named five of the seven.
  */
 export const GROUP_AFTER_GRPSPPR = successorsOf(GROUP_SHAPE_SEQUENCE, 'p:grpSpPr')
 
 /**
- * Successors of `p:spPr` within `p:sp`, and equally within `p:pic` / `p:cxnSp` — see
+ * Successors of `p:spPr` within `p:sp`, and equally within `p:pic` / `p:cxnSp`. See
  * {@link SP_SEQUENCE} for why one list covers all three. `p:blipFill` and the `p:nv*Pr` wrapper
  * precede `p:spPr`, so slicing the sequence drops them without anyone having to remember to.
  */
@@ -223,8 +223,8 @@ export const RPR_LATIN_AFTER = successorsOf(RPR_SEQUENCE, 'a:latin')
 // --- p:presentation ----------------------------------------------------------
 
 /**
- * `CT_Presentation` (`p:presentation`), in declaration order. Every child is a single element —
- * there are no choice groups — so the declaration is a plain string list.
+ * `CT_Presentation` (`p:presentation`), in declaration order. Every child is a single element
+ * (there are no choice groups), so the declaration is a plain string list.
  * @see ECMA-376 Part 1 §19.2.1.26
  */
 const PRESENTATION_SEQUENCE: readonly SequenceStep[] = [
@@ -263,7 +263,7 @@ export const PRESENTATION_AFTER_EMBEDDED_FONT_LST = successorsOf(PRESENTATION_SE
 const EMBEDDED_FONT_ENTRY_SEQUENCE: readonly string[] = ['p:font', ...EMBEDDED_FONT_SLOTS.map((slot) => `p:${slot}`)]
 
 /**
- * For each `p:embeddedFont` child, the children that must follow it — i.e. what a new one is
+ * For each `p:embeddedFont` child, the children that must follow it, i.e. what a new one is
  * inserted *before*. Every child gets an entry, so a caller can look one up by qname.
  */
 export const EMBEDDED_FONT_ENTRY_AFTER: Record<string, string[]> = Object.fromEntries(

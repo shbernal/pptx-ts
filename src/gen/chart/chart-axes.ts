@@ -336,7 +336,7 @@ export function makeValAxis(opts: ChartOptsInternal, valAxisId: string): string 
 	)
 
 	// Where this axis meets its category axis: an explicit position, an explicit rule, or the
-	// default — a right/top axis crosses at the maximum, everything else at zero.
+	// default: a right/top axis crosses at the maximum, everything else at zero.
 	const crosses = axisCrossing(
 		opts.catAxisCrossesAt,
 		axisPos === 'r' || axisPos === 't' ? 'max' : 'autoZero',

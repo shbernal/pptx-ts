@@ -10,14 +10,14 @@ import type { PresSlideInternal } from '../../types/internal.js'
 import { validateObjectName } from '../utils.js'
 
 /**
- * Take the next slide-wide index for `type`'s default Selection Pane name — 0-based here, and
+ * Take the next slide-wide index for `type`'s default Selection Pane name: 0-based here, and
  * offset to the 1-based name by {@link resolveObjectName}.
  *
  * Default names used to be derived by counting the matching objects already in
  * `target._slideObjects`. `buildGroupObject` splices group children back out of that array, so the
  * count never advanced past them and a later top-level object reused a grouped child's name. This
  * counter is immune to the splice: every object of a kind consumes an index when it is added,
- * whether it stays top-level or moves into a group — at any nesting depth, since `target` stays the
+ * whether it stays top-level or moves into a group, at any nesting depth, since `target` stays the
  * slide all the way down.
  *
  * Shapes and text boxes deliberately share the `text` bucket (both are `_type === text`), which is
@@ -37,7 +37,7 @@ export function nextObjectNameIdx(target: PresSlideInternal, type: SlideObjectTy
 
 /**
  * The Selection Pane name an object takes: the caller's, validated and kept as they wrote it, or the
- * next default for its kind — `Shape 1`, `Image 1`, `Group 1`, `Slide Zoom 1`, …
+ * next default for its kind: `Shape 1`, `Image 1`, `Group 1`, `Slide Zoom 1`, …
  *
  * The name is stored raw and escaped once, when `cNvPrOpen` writes it. It used to be escaped here,
  * so any path that handed a stored name back in as a supplied one escaped it a second time: a layout
@@ -45,7 +45,7 @@ export function nextObjectNameIdx(target: PresSlideInternal, type: SlideObjectTy
  *
  * Eleven definers wrote this out, and the index base they appended used to disagree: six counted
  * from 0 (`Shape 0`, `Text 0`, `Image 0`, `Connector 0`, `Media 0`, `Table 0`), four from 1
- * (`Group 1`, `Object 1`, `3D Model 1`, and the zoom tiles), and `addChart` neither — it derived
+ * (`Group 1`, `Object 1`, `3D Model 1`, and the zoom tiles), and `addChart` neither: it derived
  * `Chart 0` by counting the chart objects already on the slide, which is the numbering this
  * counter exists to replace ({@link nextObjectNameIdx}).
  *
@@ -55,15 +55,15 @@ export function nextObjectNameIdx(target: PresSlideInternal, type: SlideObjectTy
  * name outside this counter is the slide-number placeholder, which the slide emitter writes as
  * `Slide Number Placeholder 0`.
  *
- * The index is taken unconditionally — including when the caller supplied a name — so an object's
+ * The index is taken unconditionally, including when the caller supplied a name, so an object's
  * index is its ordinal among its kind. See {@link nextObjectNameIdx}.
  *
  * @param target - slide (or master) the object is being added to
  * @param type - the object's `_type`, which selects the counter bucket
  * @param spec - `label` opens the default name, `kind` names the API in a validation warning, and
  *   `supplied` is the caller's own name when they gave one. `fallback` replaces the `label N`
- *   default for a kind that has a better one to offer — a placeholder is named after the
- *   placeholder it fills — and is used as given, since it is the library's own string rather than
+ *   default for a kind that has a better one to offer (a placeholder is named after the
+ *   placeholder it fills) and is used as given, since it is the library's own string rather than
  *   the caller's and has nothing to validate.
  */
 export function resolveObjectName(

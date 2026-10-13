@@ -1,12 +1,12 @@
 /**
- * pptx-ts: OLE / Embedded Object Definition (`addOleObject()` — PowerPoint's Insert ▸ Object).
+ * pptx-ts: OLE / Embedded Object Definition (`addOleObject()`, PowerPoint's Insert ▸ Object).
  *
  * Registers the payload as an embedded package part plus a preview-picture image rel, and pushes a
  * `SlideObject{ _type: oleObject, ole }` for `gen/slide/objects/ole.ts` to emit as a `<p:graphicFrame>`.
  *
  * Ground truth for the two package-level choices here (verified against a deck authored by
  * PowerPoint via `Shapes.AddOLEObject`):
- *   - an embedded Office file (xlsx/docx/pptx — each an OPC package in its own right) is referenced
+ *   - an embedded Office file (xlsx/docx/pptx, each an OPC package in its own right) is referenced
  *     with the `.../relationships/package` rel type and gets a content-type `Default` for its
  *     extension; only a non-package OLE server blob uses `.../relationships/oleObject` with a `.bin`
  *     part (ECMA-376 Part 1 §15.2.10);
@@ -22,7 +22,7 @@ import { pushMediaRel } from './image-rel.js'
 import { InvalidOptionError } from '../../errors.js'
 import { OD_CONTENT, OFFICE_REL, PACKAGE_REL, PPTX_CONTENT_TYPE, XLSX_CONTENT_TYPE } from '../../ooxml/rel-types.js'
 
-/** Rel type for a generic OLE-server blob — a compound-file `.bin` (ECMA-376 Part 1 §15.2.10). */
+/** Rel type for a generic OLE-server blob: a compound-file `.bin` (ECMA-376 Part 1 §15.2.10). */
 const OLE_OBJECT_REL = OFFICE_REL + 'oleObject'
 
 interface OleFormat {
@@ -32,7 +32,7 @@ interface OleFormat {
 	relType: string
 	/** Default `p:oleObj@progId`. */
 	progId: string
-	/** Default `p:oleObj@name` — how PowerPoint labels the object's kind. */
+	/** Default `p:oleObj@name`: how PowerPoint labels the object's kind. */
 	name: string
 }
 
@@ -92,7 +92,7 @@ const EXTN_BY_CONTENT_TYPE = new Map(
 /**
  * Resolve the embedded part's extension from whatever the caller gave us, in decreasing order of
  * explicitness: `extn`, the `data:` URI's MIME, the `path`'s extension, then the `progId`. Anything
- * unrecognized becomes `bin`, the generic OLE blob — which is what PowerPoint itself writes for a
+ * unrecognized becomes `bin`, the generic OLE blob, which is what PowerPoint itself writes for a
  * shell-packaged payload, so an unknown extension never leaks into `[Content_Types].xml`.
  */
 function resolvePartExtn(opt: OleObjectProps): string {
@@ -145,7 +145,7 @@ export function addOleObjectDefinition(target: PresSlideInternal, opt: OleObject
 	const imgW = oleImageSize(opt.imgW, 'imgW')
 	const imgH = oleImageSize(opt.imgH, 'imgH')
 
-	// STEP 2: Resolve the payload format — part extension, content type, rel type, progId — and the
+	// STEP 2: Resolve the payload format (part extension, content type, rel type, progId) and the
 	// object's own options. The library never opens the payload, so there is no natural size to measure.
 	const extn = resolvePartExtn(opt)
 	const format = OLE_FORMATS[extn] ?? BIN_FORMAT

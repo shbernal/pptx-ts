@@ -9,22 +9,22 @@
  * turns that base hex + transform list into the final rendered hex, so a consumer
  * never hand-computes a tint/shade again.
  *
- * Colour-space model (verified against PowerPoint output — see
+ * Colour-space model (verified against PowerPoint output; see
  * `test/read/color-transform.test.ts`): the working colour is kept canonical as
  * sRGB between transforms; each transform converts into the space its family
  * operates in, applies, and converts back to sRGB. Transforms apply in **document
  * order** (ECMA-376 §20.1.2.3).
  *
- *  - `lumMod` / `lumOff` — luminance (L) in HSL: `L' = L·mod + off`. PowerPoint's
+ *  - `lumMod` / `lumOff`: luminance (L) in HSL: `L' = L·mod + off`. PowerPoint's
  *    "Lighter/Darker N%" family.
- *  - `satMod` / `satOff` — saturation (S) in HSL.
- *  - `hueMod` / `hueOff` — hue (H) in HSL (`hueMod` scales, `hueOff` offsets by
+ *  - `satMod` / `satOff`: saturation (S) in HSL.
+ *  - `hueMod` / `hueOff`: hue (H) in HSL (`hueMod` scales, `hueOff` offsets by
  *    degrees). Not exercised by any current source; implemented for completeness.
- *  - `shade` — toward black in **linear** RGB: `c' = c·k`.
- *  - `tint` — toward white in **linear** RGB: `c' = c·k + (1−k)`.
- *  - `alpha` / `alphaMod` / `alphaOff` — opacity, returned alongside the hex
+ *  - `shade`: toward black in **linear** RGB: `c' = c·k`.
+ *  - `tint`: toward white in **linear** RGB: `c' = c·k + (1−k)`.
+ *  - `alpha` / `alphaMod` / `alphaOff`: opacity, returned alongside the hex
  *    (never folded into RGB).
- *  - `comp` / `inv` / `gray` / `gamma` / `invGamma` — pass-through for now (no
+ *  - `comp` / `inv` / `gray` / `gamma` / `invGamma`: pass-through for now (no
  *    current source needs them; add when one does).
  *
  * All DrawingML percentage values are stored in thousandths of a percent
@@ -111,8 +111,8 @@ function hslToRgb({ h, s, l }: { h: number; s: number; l: number }): { r: number
 /**
  * An `a:hslClr` triple → 6-hex sRGB, or `null` when any of the three is unparseable.
  *
- * The colour space is the one `lumMod`/`satMod` already work in — DrawingML's HSL is sRGB-HSL,
- * which is what the transform family below is verified against — so this shares that conversion
+ * The colour space is the one `lumMod`/`satMod` already work in (DrawingML's HSL is sRGB-HSL,
+ * which is what the transform family below is verified against), so this shares that conversion
  * rather than introducing a second one. Units are the schema's: `@hue` is
  * `a:ST_PositiveFixedAngle`, i.e. 60,000ths of a degree, and `@sat`/`@lum` are `a:ST_Percentage`
  * (see {@link parsePercent}). Saturation and luminance are clamped to 0–1; hue wraps.
@@ -131,7 +131,7 @@ export function hslClrToHex(hue: string | null, sat: string | null, lum: string 
 /**
  * Apply an ordered list of DrawingML colour transforms to a base sRGB hex,
  * returning the effective sRGB hex (and opacity, when an `alpha*` modifier set
- * it). Pure: no DOM, no theme lookup — the caller has already resolved the base
+ * it). Pure: no DOM, no theme lookup; the caller has already resolved the base
  * colour and extracted each modifier's `{ name, value }`.
  *
  * An unparseable base hex is returned unchanged (with no transforms applied); an
