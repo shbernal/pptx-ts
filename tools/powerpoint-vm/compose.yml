@@ -5,13 +5,13 @@
 #
 # Settings come from .env beside this file (copy .env.example). They are prefixed VM_ because
 # compose prefers the shell's environment over .env, and USERNAME is already set in most shells.
-name: ts-pptx-powerpoint
+name: pptx-ts-powerpoint
 services:
   windows:
     # Pinned: a new tag can change the answer file and the setup scripts this VM's provisioning
     # relies on (autologon, the C:\OEM\install.bat hook, the \\host.lan\Data share).
     image: dockurr/windows:6.06
-    container_name: ts-pptx-powerpoint
+    container_name: pptx-ts-powerpoint
     environment:
       # Windows 11 Pro rather than the lighter LTSC edition: Microsoft 365 Apps support on LTSC
       # is not clearly documented, and Pro is what PowerPoint users actually run.
