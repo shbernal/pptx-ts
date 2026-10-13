@@ -39,8 +39,8 @@ import { InvalidOptionError } from '../../../errors.js'
 import { ptToHundredths } from '../../../units.js'
 import { RPR_FILL_AFTER, RPR_LATIN_AFTER } from '../../../ooxml/sequence.js'
 import { ptFromEmu, ptFromHundredths } from '../coords.js'
-import { readGlow } from '../shapes/effects.js'
-import type { Glow } from '../shapes/types.js'
+import { readGlow, readInnerShadow, readOuterShadow } from '../shapes/effects.js'
+import type { Glow, InnerShadow, OuterShadow } from '../shapes/types.js'
 import type { TableCellTextStyle } from '../table-style-resolve.js'
 
 /**
@@ -362,6 +362,25 @@ export class Run {
 	get glow(): Glow | null {
 		const rPr = this.#rPr()
 		return readGlow(rPr && firstChild(rPr, 'a:effectLst'), this.context.ctx)
+	}
+
+	/**
+	 * The run's own outer shadow (`a:rPr/a:effectLst/a:outerShdw`), resolved against the slide
+	 * theme, or `null`. The read counterpart of a run's `shadow` option and of a table cell's,
+	 * which writes it on every run of the cell; a shape's shadow is `Shape.shadow`.
+	 */
+	get shadow(): OuterShadow | null {
+		const rPr = this.#rPr()
+		return readOuterShadow(rPr && firstChild(rPr, 'a:effectLst'), this.context.ctx)
+	}
+
+	/**
+	 * The run's own inner shadow (`a:rPr/a:effectLst/a:innerShdw`), resolved against the slide
+	 * theme, or `null`. What a run's `shadow: { type: 'inner' }` writes.
+	 */
+	get innerShadow(): InnerShadow | null {
+		const rPr = this.#rPr()
+		return readInnerShadow(rPr && firstChild(rPr, 'a:effectLst'), this.context.ctx)
 	}
 
 	/** The run's text outline (`a:rPr/a:ln`), or `null` when it has none. The read counterpart of `outline`. */

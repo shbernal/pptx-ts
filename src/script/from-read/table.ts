@@ -121,6 +121,7 @@ export function tableCall(frame: GraphicFrame, table: Table, ctx: MapContext): C
 		hasBandedColumns: table.bandedColumns ? true : undefined,
 		hasFirstColumn: table.firstColumnHeader ? true : undefined,
 		hasLastColumn: table.lastColumnFooter ? true : undefined,
+		rtl: table.rtl ? true : undefined,
 		colW: columnWidths.every((w) => w === null) ? undefined : columnWidths.map((w) => inches(w ?? 0)),
 		// An auto row among fixed ones is `null`, the silent spelling of an unpinned row. It used to be
 		// `0`, which `addTable` rejects as not a height, with a `table/invalid-row-height` warning.

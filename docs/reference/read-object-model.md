@@ -401,7 +401,7 @@ A run's own getters and its resolved getters answer different questions:
 - [`underline`](api/read/classes/Run.md#underline) takes an `ST_TextUnderlineType` token such as `sng`, and throws `text/invalid-underline` for any other value.
 - [`strike`](api/read/classes/Run.md#strike) and [`caps`](api/read/classes/Run.md#caps) report the raw token, because the attribute has three states. [`baselinePct`](api/read/classes/Run.md#baselinepct) is a percent: the write side's superscript is `30` and its subscript `-40`.
 - [`charSpacingPt`](api/read/classes/Run.md#charspacingpt) and [`highlight`](api/read/classes/Run.md#highlight) are read-only.
-- [`language`](api/read/classes/Run.md#language), [`eastAsianFontName`](api/read/classes/Run.md#eastasianfontname), [`glow`](api/read/classes/Run.md#glow), [`outline`](api/read/classes/Run.md#outline) and [`underlineColor`](api/read/classes/Run.md#underlinecolor) are read-only and `null` when unset. `fontName` is the Latin slot, and `glow` is the run's own, not the shape's.
+- [`language`](api/read/classes/Run.md#language), [`eastAsianFontName`](api/read/classes/Run.md#eastasianfontname), [`glow`](api/read/classes/Run.md#glow), [`shadow`](api/read/classes/Run.md#shadow), [`innerShadow`](api/read/classes/Run.md#innershadow), [`outline`](api/read/classes/Run.md#outline) and [`underlineColor`](api/read/classes/Run.md#underlinecolor) are read-only and `null` when unset. `fontName` is the Latin slot, and `glow` and the two shadows are the run's own, not the shape's.
 
 ### Autofit
 
