@@ -49,6 +49,17 @@ test("an example's download is the deck its code builds", async ({ page }) => {
 	expect(slide).toContain('<a:gradFill')
 })
 
+test('an example that imports from the library runs against the copy the page builds with', async ({ page }) => {
+	// The fence on "Core concepts" opens with `import { textRuns } from "pptx-ts"`. The hoisted
+	// import has to resolve in the bundle the way the component's own import does.
+	await page.goto('./getting-started/concepts')
+	const example = page.locator('figure.live-example').first()
+	await example.scrollIntoViewIfNeeded()
+	await expect(example).toHaveAttribute('data-status', 'ready', { timeout: 30_000 })
+
+	await expect(example.locator('.slide-frame').first()).toContainText('Revenue up 12%')
+})
+
 test('a page without a live example loads none of the machinery', async ({ browser }) => {
 	// The control first: on a page with examples the component's chunk is requested, so the
 	// pattern below is one that would match if the machinery leaked onto other pages.

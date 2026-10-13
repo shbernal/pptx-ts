@@ -278,7 +278,9 @@ at the page under `pnpm run docs:dev` before committing it.
 
 A fence written ` ```ts live ` renders as its code, then the slide that code builds and a
 download button, through `www/live/`. The body runs with `pptx`, a fresh presentation, and
-`slide`, its first slide, in scope, and nothing else: no imports. It may `await` and add slides.
+`slide`, its first slide, in scope. It may open with `import` lines from `pptx-ts` or one of its
+entries, such as `pptx-ts/math`, and the build fails on an import of anything else, because the body
+runs in Node under the test and in a browser on the page. It may `await` and add slides.
 A body that opens with its own `const slide = pptx.addSlide()`, as a reader's code would, gets
 only `pptx`, so the deck has no empty slide in front of it.
 Mark a snippet live only when it is a whole call; leave a bare option object as a plain `ts`

@@ -50,7 +50,9 @@ is the code that runs, and nothing is evaluated from a string:
    into the page's `<script setup>`, joining one the author wrote. A template expression cannot
    hold a dynamic `import()`, which is why the import is hoisted rather than inline.
 3. The Vite plugin in the same file serves that module: the body wrapped by `wrapSnippet` into
-   `export default async function (pptx, slide) { ... }`, compiled by esbuild. A body that
+   `export default async function (pptx, slide) { ... }`, compiled by esbuild. The `import`
+   lines a body opens with move above that function, and only `pptx-ts` and its entries may be
+   imported, since the same body runs in Node under the test. A body that
    declares its own `slide` gets only `pptx`, and the module's `ownsSlide` export tells the
    caller not to make a first slide.
 4. The component waits until it scrolls near the viewport, then builds a presentation from the

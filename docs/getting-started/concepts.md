@@ -70,7 +70,7 @@ Text is a plain string, or an array of runs when parts of it need different form
 `{ text, options }`. `textRun(text, options)` builds one, and `textRuns([...])` gives an array held
 in a variable the type `addText` expects:
 
-```ts
+```ts live
 import { textRuns } from "pptx-ts"
 
 const headline = textRuns([
