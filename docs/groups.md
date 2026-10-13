@@ -242,7 +242,7 @@ Each entry is a `SlideObjectInfo`:
 
 Group children are named on the slide like top-level objects, so a connector end or an animation can point at one.
 
-```ts
+```ts live
 slide.addGroup([{ rect: { x: 1, y: 1, w: 2, h: 1, objectName: "boxInGroup" } }], { objectName: "Grp" })
 slide.addConnector({ type: "elbow", x1: 3, y1: 1.5, x2: 6, y2: 4.5, startShape: "boxInGroup", startShapeIdx: 3 })
 slide.addAnimation({ preset: "fadeIn", objectName: "boxInGroup" })

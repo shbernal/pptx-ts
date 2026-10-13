@@ -158,7 +158,7 @@ colour or a `type`. `{ gradient: { ... } }` on its own leaves the chart area tra
 
 ## Patterns
 
-```ts
+```ts live
 slide.addShape("rect", {
   x: 1, y: 1, w: 4, h: 2,
   fill: { type: "pattern", pattern: { preset: "diagCross", fgColor: "1F3A5F", bgColor: "FFFFFF" } },
