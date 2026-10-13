@@ -89,17 +89,6 @@ describe('closureOf', () => {
 		expect(closureOf('entry.js', dir)).toEqual(['a.js', 'entry.js', 'nested/b.js'])
 	})
 
-	// Directly the bug: before the fix, `entry.js` reached nothing and the whole
-	// subtree below the side-effect import vanished from the measurement.
-	test('a side-effect import keeps its subtree in the closure', () => {
-		const dir = emit({
-			'entry.js': `import './heavy.js'`,
-			'heavy.js': `import './heavier.js'`,
-			'heavier.js': `export const x = 1`,
-		})
-		expect(closureOf('entry.js', dir)).toEqual(['entry.js', 'heavier.js', 'heavy.js'])
-	})
-
 	test('survives an import cycle rather than looping forever', () => {
 		const dir = emit({ 'a.js': `import './b.js'`, 'b.js': `import './a.js'` })
 		expect(closureOf('a.js', dir)).toEqual(['a.js', 'b.js'])

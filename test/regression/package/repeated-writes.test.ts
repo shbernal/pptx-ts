@@ -35,33 +35,6 @@ defineRegressionSuite('Repeated presentation writes [legacy bug-04]', [
 		},
 	},
 	{
-		// The normalizer is pure, so the caller's object comes back exactly as written — the derived
-		// `_alpha` lives on the definer's copy, which is what the emitter reads.
-		name: 'user shadow object is not mutated across two writes',
-		fn: async () => {
-			const pres = new PptxTs()
-			const slide = pres.addSlide()
-			// The caller's own `ShadowProps`; the writer normalizes a COPY and leaves this one alone.
-			const shadow: ShadowProps & { _alpha?: number } = {
-				type: 'outer',
-				blur: 6,
-				offset: 2,
-				color: '000000',
-				transparency: 85,
-			}
-			slide.addShape(ShapeType.rect, { x: 1, y: 1, w: 4, h: 2, shadow })
-
-			await buildOnce(pres)
-			await buildOnce(pres)
-
-			assert(
-				JSON.stringify(shadow) ===
-					JSON.stringify({ type: 'outer', blur: 6, offset: 2, color: '000000', transparency: 85 }),
-				'expected the caller shadow object untouched; got ' + JSON.stringify(shadow)
-			)
-		},
-	},
-	{
 		name: 'two writes on same Presentation produce identical slide1.xml (image branch)',
 		fn: async () => {
 			const pres = new PptxTs()

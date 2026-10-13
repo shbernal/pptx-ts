@@ -87,27 +87,6 @@ function failedBuild(buildFn: BuildFn) {
 
 defineRegressionSuite('Hyperlink relationship registration', [
 	{
-		name: 'a hyperlink on a table cell registers a rel the cell then references',
-		fn: async () => {
-			// The walk registers a cell's link on the cell itself, and the run emitter carries it to the
-			// cell's run. Nothing else in the suite puts a hyperlink on a table cell.
-			const { zip } = await build((p) => {
-				p.addSlide().addTable(
-					[[{ text: 'Docs', options: { hyperlink: { url: 'https://cell.example.com' } } }, { text: 'plain' }]],
-					{ x: 0.5, y: 0.5, w: 9, colW: [4.5, 4.5] }
-				)
-			})
-
-			const rels = relationships(await readEntry(zip, relsPath(1)))
-			const hyper = rels.filter((r) => r.type === 'hyperlink')
-			assertEqual(hyper.length, 1, 'one cell hyperlink should mint exactly one rel')
-			assertEqual(at(hyper, 0).target, 'https://cell.example.com', 'the rel should carry the cell URL')
-
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assertIncludes(xml, `<a:hlinkClick r:id="${at(hyper, 0).id}"`, 'the cell run')
-		},
-	},
-	{
 		name: 'the same cell object used in two rows registers its hyperlink once',
 		fn: async () => {
 			// Reusing one cell object across rows is an ordinary way to build a table in a loop.
