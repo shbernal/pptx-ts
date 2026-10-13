@@ -48,6 +48,7 @@ are stored byte-for-byte as saved by PowerPoint.
 | `table-cell-image-fill.pptx` | Microsoft Office PowerPoint | 16.0000 | 1     |
 | `table-cell-horzoverflow.pptx` | Microsoft Office PowerPoint | 16.0000 | 1 |
 | `table-styles.pptx`    | Microsoft Office PowerPoint    | 16.0000    | 1      |
+| `table-styles-builtin.pptx` | Microsoft Office PowerPoint | 16.0000 | 74     |
 | `placeholder-inherit.pptx` | Microsoft Office PowerPoint | 16.0000  | 1      |
 | `placeholder-footer-trio.pptx` | Microsoft Office PowerPoint | 16.0000 | 1  |
 | `picture-media.pptx`   | Microsoft Office PowerPoint    | 16.0000    | 1      |
@@ -170,6 +171,7 @@ cf3c352dfd81ccdd0938637a047ab54f67b879410a5b1e88fdc6e4411315c1e7  table-cell-sty
 618758569d7f63c3075513078e2bf70caf36ab05efd4ece41f14225b8489b3fb  table-cell-image-fill.pptx
 85692cee1389f1c9ee79e253ef4d8636e136bf6c501cddb99d1171c33edc5a08  table-cell-horzoverflow.pptx
 9fb63bf437c6be154c7e791538fa7a71f1ef3bbd1ce959a33f610d3e65e259c1  table-styles.pptx
+f83fb8dbeda40c66a93c3704d9cad1089cdbcc6d200359bce5428a928af666b5  table-styles-builtin.pptx
 5da5cfe0594970bc5029f1bbb1778d1b2a11894b0e178bdd476626d3acc20c25  smartart-families.pptx
 ab30899b00edc9bfaffa9b40f762a5a9ee70c9ca8a5f08aa799007fe5030cb69  smartart-hyperlink.pptx
 c23ed32ac8e7aed1e3b3f985f5d50ff396547bd7e3fe43d04805a13438a0272e  table.pptx
@@ -290,6 +292,13 @@ d0349b049dec32cce83e2f04967e94e4484801cb6a7a972db3d9bf5c33a69996  media/tiny.mp4
     requires the interactive *Table Design ▸ right-click a style ▸ Set as Default Table
     Style*, then a re-save. Re-authoring the deck via the script alone will silently
     reset `def` to the standard GUID and weaken the test — redo the manual step.
+- `table-styles-builtin.pptx` — 74 slides, each with one 3×3 table bound to one of the
+  built-in [MS-OE376] table styles, in `TableStyle` enum order (`authoring/author-table-styles-builtin.ps1`,
+  which reads the GUIDs from `src/enums.ts`). Saving it made PowerPoint write all 74 `a:tblStyle`
+  definitions into `ppt/tableStyles.xml`. It is the source of the writer's built-in definitions:
+  `scripts/gen-builtin-table-styles.mjs` extracts them into `src/gen/pres/builtin-table-styles.ts`,
+  and `test/scripts/gen-builtin-table-styles.test.ts` holds every expanded definition to the bytes
+  here ([#241](https://github.com/shbernal/pptx-ts/issues/241)).
 - `table-cell-style.pptx` — a locally authored single-slide deck with one 2×2 table
   (`cell-style-table`) whose cells each isolate one `TableCell` appearance accessor,
   the fixture gate for those accessors. Authored via desktop
@@ -1260,6 +1269,7 @@ fixtures opened clean with no repair prompt:
 - [x] `math-omml.pptx` — Windows desktop PowerPoint, 2026-06-19 (authored via Word→PowerPoint paste + opened clean via COM)
 - [x] `math-omml-inline.pptx` — Windows desktop PowerPoint, 2026-07-07 (authored via Word→PowerPoint paste + opened clean via COM, no repair prompt)
 - [x] `table-styles.pptx` — Windows desktop PowerPoint, 2026-07-15 (COM-authored, then the default table style set interactively — no COM surface exists for it — and re-saved; reopened clean via COM, no repair prompt)
+- [x] `table-styles-builtin.pptx` — PowerPoint 16.0.20430.20146 on the worker VM, 2026-10-13 (authored + reopened clean via COM, no repair prompt)
 - [x] `table-cell-image-fill.pptx` — Windows desktop PowerPoint, 2026-07-27 (authored + reopened clean via COM, no repair prompt)
 - [x] `template.potx` — Windows desktop PowerPoint, 2026-06-24 (authored + reopened clean via COM, no repair prompt)
 - [x] `online-video.pptx` — Windows desktop PowerPoint, 2026-06-24 (authored + opened clean via COM)

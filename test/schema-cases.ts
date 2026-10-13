@@ -1139,6 +1139,20 @@ export default [
 		},
 	},
 	{
+		// One table per built-in style, so `ppt/tableStyles.xml` carries all 74 definitions the
+		// writer can emit (#241). They are PowerPoint's own markup, but the part is written here.
+		name: 'tableStyles.xml with every built-in table style defined',
+		fn: async () => {
+			const { TableStyle } = await import('../dist/index.js')
+			const { buf } = await build((p) => {
+				for (const tableStyle of Object.values(TableStyle)) {
+					p.addSlide().addTable([[{ text: 'A' }, { text: 'B' }]], { x: 1, y: 1, w: 4, tableStyle })
+				}
+			})
+			await expectNoSchemaErrors(buf, 'table-styles-all-builtin')
+		},
+	},
+	{
 		name: 'table cell border with line caps',
 		fn: async () => {
 			const { buf } = await build((p) => {

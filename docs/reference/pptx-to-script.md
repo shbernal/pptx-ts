@@ -156,70 +156,70 @@ Pass `PrintedScript.notes` to [`diffDeckIr()`](api/script/functions/diffDeckIr.m
 
 ## Known losses
 
-The counts come from `pnpm run script:census`, run in a clone of the repository over `test/read/fixtures/`. That directory holds 60 `.pptx` fixtures, and all 60 convert. The census reads `.pptx` files only, so it skips the `template.potx` beside them.
+The counts come from `pnpm run script:census`, run in a clone of the repository over `test/read/fixtures/`. That directory holds 61 `.pptx` fixtures, and all 61 convert. The census reads `.pptx` files only, so it skips the `template.potx` beside them.
 
 A count is the number of fixtures that raise the note at least once. Each fixture targets a few constructs, so a count shows what the corpus exercises, not how often a construct occurs in real decks. The table lists only constructs some fixture raises. [`knownNoteConstructs()`](api/script/functions/knownNoteConstructs.md) returns the full catalogue.
 
-The Output column says where the note fires. A construct that fires in both outputs has the same count in each. A construct under the `layout.` prefix is the slide construct of the same name, raised while re-authoring a layout's shapes. Across the corpus the standalone output raises 899 notes and the template-anchored output 457, which is 3 to 12 more per deck.
+The Output column says where the note fires. A construct that fires in both outputs has the same count in each. A construct under the `layout.` prefix is the slide construct of the same name, raised while re-authoring a layout's shapes. Across the corpus the standalone output raises 980 notes and the template-anchored output 531, which is 3 to 12 more per deck.
 
 | Construct | Output | Cause | What happens | Fixtures |
 | --- | --- | --- | --- | --- |
-| `text.color.inherited` | Both | unsupported | A run with no colour of its own gets its inherited colour baked in, because the write path paints an uncoloured run black. It stops following theme changes. A link, a run in a shape that carries a link of its own, and a run in a shape that carries as a `placeholder` are the exceptions: the write path leaves those uncoloured too, so a link keeps the theme hyperlink colour and a placeholder run its layout's | 35/60 |
-| `line.width` | Both | unread | An outline taken from the theme line style (`p:style/a:lnRef`) keeps its colour and loses its width and dash | 10/60 |
-| `shape.frameInherited` | Both | unsupported | A shape positioned by its layout or master gets that position baked in, and stops following edits to the layout or master | 9/60 |
-| `chart.workbook` | Both | unsupported | The chart is rebuilt from its cached values. The plotted numbers match, and the workbook's formulas, extra columns and formatting are gone | 5/60 |
-| `chart.schemeToken` | Both | unwritable | A chart line or text colour outside the ten mapped scheme tokens, or one with a theme transform such as `a:lumMod`, takes the default colour | 4/60 |
-| `diagram.all` | Both | unwritable | No write API builds SmartArt. The template-anchored output copies the slide, and the standalone output drops the diagram | 3/60 |
-| `slide.animation` | Both | unwritable | A build effect `addAnimation` cannot write is dropped: one in an interactive sequence, such as PowerPoint's click-to-play media trigger, a preset other than the eight `addAnimation` writes, or one whose target has no name unique on its slide. An effect that builds part of a shape's text builds the whole shape. An after-previous step that starts at a delay of its own plays when the step before it ends | 3/60 |
-| `text.endParagraph.lang` | Both | unwritable | Paragraphs that end in different languages (`a:endParaRPr/@lang`) all end in `en-US`. Their runs keep their languages | 3/60 |
-| `text.hyperlink.underline` | Both | unwritable | A link that states no underline comes back stating `u="sng"`. It looks the same | 3/60 |
-| `chart.dataPoints` | Both | unwritable | A data point or pie slice in a theme colour, a pattern or an outline of its own comes back in the series' colour or its own literal fill. A radar's or bubble's own points are dropped | 2/60 |
-| `chart.xLabels` | Both | unwritable | A scatter or bubble chart plotted against text X labels plots at the same positions, and the labels are gone | 2/60 |
-| `group.childSpace` | Both | unsupported | The children of a group that scales them are printed pre-scaled, so resizing the group no longer rescales them | 2/60 |
-| `shape.empty` | Both | unsupported | A shape with no text and no geometry of its own, such as an unfilled placeholder, is omitted | 2/60 |
-| `slide.comment.modern` | Both | unwritable | Modern (`p188`) review comments are dropped. Legacy comments carry as `addComment` | 2/60 |
-| `text.equation` | Both | unread | An OMML equation is dropped from its shape | 2/60 |
-| `chart.axis` | Both | unwritable | An axis crossing at the other axis' maximum or minimum crosses at zero, and a custom display unit is dropped. A combo's secondary axis takes a setting its primary axis states and it does not | 1/60 |
-| `chart.blanks` | Both | unwritable | A blank cached data point becomes 0, so a line chart dips to the axis where the source showed a break | 1/60 |
-| `chart.combo` | Both | unwritable | A combo whose plots `addChart` cannot combine becomes a single chart of its first plot's type. A combo it can combine (area, bar, line and scatter plots) keeps its plots, and numbers its series plot by plot, so a source that numbers them otherwise changes its legend and colour order | 1/60 |
-| `chart.invertIfNegative` | Both | unwritable | A series that inverts its negative bars (`c:invertIfNegative`) draws them in the series' colour | 1/60 |
-| `chart.labels` | Both | unwritable | Data labels lose a legend key, a category name on any chart but a pie or doughnut, and text of their own on any chart but a scatter | 1/60 |
-| `connector.binding` | Both | unsupported | A connector bound to a shape with no name, a name another shape on the slide shares, or one that is not written, no longer follows it | 1/60 |
-| `fill.gradient.path` | Both | unwritable | A `rect` path gradient becomes radial | 1/60 |
-| `fill.schemeToken` | Both | unwritable | A fill colour outside the ten mapped scheme tokens is baked to hex | 1/60 |
-| `graphicFrame.unknown` | Both | unread | A graphic frame the reader does not decode, such as a 3D model, an OLE object or ink, is dropped. The template-anchored output copies the slide | 1/60 |
-| `image.svg` | Both | unsupported | An SVG picture keeps its vector part. The write path generates a new raster fallback in place of the source's | 1/60 |
-| `line.arrowSize` | Both | unwritable | Arrowheads render at the default width and length | 1/60 |
-| `line.schemeToken` | Both | unwritable | An outline colour outside the ten mapped scheme tokens is baked to hex | 1/60 |
-| `media.audioVideo` | Both | unwritable | Audio or video linked from outside the package, or inside a group or on a layout, becomes a still image of its poster frame | 1/60 |
-| `shape.custGeom.guides` | Both | unwritable | A picture clipped to a freeform, or a freeform holding text, keeps its path and loses its guides, adjust handles and connection sites, which only `addShape` takes | 1/60 |
-| `shape.placeholder` | Both | unwritable | A placeholder whose `p:ph` type or `idx` has no `placeholder` spelling becomes a plain shape with its inherited geometry and styling baked in. A title, and any text placeholder with one of the six types the string form names and no `idx`, carries as that string. Any other text placeholder, and a filled picture, table or chart placeholder, carries as a `placeholder: { type, idx }` binding | 1/60 |
-| `slide.background` | Both | unwritable | A slide background taken from the theme (`p:bgRef`) is baked to the fill it resolves to | 1/60 |
-| `table.cell.fill.picture.geometry` | Both | unwritable | A cell's picture fill keeps its image. Its tiling, destination inset, DPI and rotate-with-shape setting do not carry | 1/60 |
-| `table.rowAuto` | Both | unsupported | Auto-height rows get an even share of the table height instead of fitting their content | 1/60 |
-| `table.style` | Both | unsupported | A table with no style ID takes the output deck's default table style | 1/60 |
-| `text.bullet.schemeToken` | Both | unwritable | A bullet colour outside the ten mapped scheme tokens is baked to hex | 1/60 |
-| `text.field` | Both | unread | The text of a date or footer field, or of a slide number beside other text, is dropped | 1/60 |
-| `text.kern` | Both | unwritable | A spaced run that states no kerning comes back stating `kern="0"`, because the write path turns kerning off on spaced text it is given no kerning for | 1/60 |
-| `text.paraSpaceZero` | Both | unwritable | An explicit zero space before or after a paragraph is dropped, so the list style's spacing comes back | 1/60 |
-| `slide.carried` | Template-anchored | unwritable | A slide holding a frame the write API cannot author is copied from the source. It renders the same, and the script does not describe its contents | 4/60 |
-| `slide.layout` | Template-anchored | unsupported | Several source layouts share the slide's layout name, so the slide binds to a gallery position | 1/60 |
-| `deck.docProps` | Standalone | unwritable | Keywords, description, category, content status and last-modified-by are dropped | 60/60 |
-| `deck.docPropsDefault` | Standalone | unwritable | A title, author, subject, revision or company the source left blank gets the library's value | 60/60 |
-| `master.default` | Standalone | unsupported | The layout gallery gains a blank `DEFAULT` layout ahead of the source layouts | 60/60 |
-| `master.placeholders` | Standalone | unsupported | A layout placeholder a slide on that layout leaves out is not re-declared, because the write path would seed an empty copy onto that slide | 60/60 |
-| `master.txStyles` | Standalone | unread | Placeholder text falls back to built-in size, face, colour, indent and bullet per list level | 60/60 |
-| `theme.fmtScheme` | Standalone | unread | The theme's fill, line and effect style lists become Office's | 60/60 |
-| `master.background` | Standalone | unwritable | A layout background taken from the theme is baked to the fill it resolves to | 59/60 |
-| `master.decoration` | Standalone | unwritable | Shapes on a slide master are dropped | 6/60 |
-| `master.name` | Standalone | unwritable | A tab or line break in a layout name becomes a space | 5/60 |
-| `layout.text.color.inherited` | Standalone | unsupported | As `text.color.inherited`, on a layout shape | 4/60 |
-| `master.colorMap` | Standalone | unwritable | A remapped colour map becomes the identity map, so scheme colours resolve to different hex values | 4/60 |
-| `layout.group` | Standalone | unwritable | A group on a layout becomes loose shapes in the same positions | 2/60 |
-| `layout.fill.gradient.schemeToken` | Standalone | unwritable | A gradient stop colour on a layout shape, outside the ten mapped tokens, is baked to hex | 1/60 |
-| `layout.fill.schemeToken` | Standalone | unwritable | As `fill.schemeToken`, on a layout shape | 1/60 |
-| `master.multiple` | Standalone | unsupported | Several slide masters collapse into one, with the first master's theme and colour map | 1/60 |
-| `master.nameCollision` | Standalone | unsupported | A repeated layout name gets a suffix, such as `Title Slide (2)` | 1/60 |
+| `text.color.inherited` | Both | unsupported | A run with no colour of its own gets its inherited colour baked in, because the write path paints an uncoloured run black. It stops following theme changes. A link, a run in a shape that carries a link of its own, and a run in a shape that carries as a `placeholder` are the exceptions: the write path leaves those uncoloured too, so a link keeps the theme hyperlink colour and a placeholder run its layout's | 36/61 |
+| `line.width` | Both | unread | An outline taken from the theme line style (`p:style/a:lnRef`) keeps its colour and loses its width and dash | 10/61 |
+| `shape.frameInherited` | Both | unsupported | A shape positioned by its layout or master gets that position baked in, and stops following edits to the layout or master | 9/61 |
+| `chart.workbook` | Both | unsupported | The chart is rebuilt from its cached values. The plotted numbers match, and the workbook's formulas, extra columns and formatting are gone | 5/61 |
+| `chart.schemeToken` | Both | unwritable | A chart line or text colour outside the ten mapped scheme tokens, or one with a theme transform such as `a:lumMod`, takes the default colour | 4/61 |
+| `diagram.all` | Both | unwritable | No write API builds SmartArt. The template-anchored output copies the slide, and the standalone output drops the diagram | 3/61 |
+| `slide.animation` | Both | unwritable | A build effect `addAnimation` cannot write is dropped: one in an interactive sequence, such as PowerPoint's click-to-play media trigger, a preset other than the eight `addAnimation` writes, or one whose target has no name unique on its slide. An effect that builds part of a shape's text builds the whole shape. An after-previous step that starts at a delay of its own plays when the step before it ends | 3/61 |
+| `text.endParagraph.lang` | Both | unwritable | Paragraphs that end in different languages (`a:endParaRPr/@lang`) all end in `en-US`. Their runs keep their languages | 3/61 |
+| `text.hyperlink.underline` | Both | unwritable | A link that states no underline comes back stating `u="sng"`. It looks the same | 3/61 |
+| `chart.dataPoints` | Both | unwritable | A data point or pie slice in a theme colour, a pattern or an outline of its own comes back in the series' colour or its own literal fill. A radar's or bubble's own points are dropped | 2/61 |
+| `chart.xLabels` | Both | unwritable | A scatter or bubble chart plotted against text X labels plots at the same positions, and the labels are gone | 2/61 |
+| `group.childSpace` | Both | unsupported | The children of a group that scales them are printed pre-scaled, so resizing the group no longer rescales them | 2/61 |
+| `shape.empty` | Both | unsupported | A shape with no text and no geometry of its own, such as an unfilled placeholder, is omitted | 2/61 |
+| `slide.comment.modern` | Both | unwritable | Modern (`p188`) review comments are dropped. Legacy comments carry as `addComment` | 2/61 |
+| `text.equation` | Both | unread | An OMML equation is dropped from its shape | 2/61 |
+| `chart.axis` | Both | unwritable | An axis crossing at the other axis' maximum or minimum crosses at zero, and a custom display unit is dropped. A combo's secondary axis takes a setting its primary axis states and it does not | 1/61 |
+| `chart.blanks` | Both | unwritable | A blank cached data point becomes 0, so a line chart dips to the axis where the source showed a break | 1/61 |
+| `chart.combo` | Both | unwritable | A combo whose plots `addChart` cannot combine becomes a single chart of its first plot's type. A combo it can combine (area, bar, line and scatter plots) keeps its plots, and numbers its series plot by plot, so a source that numbers them otherwise changes its legend and colour order | 1/61 |
+| `chart.invertIfNegative` | Both | unwritable | A series that inverts its negative bars (`c:invertIfNegative`) draws them in the series' colour | 1/61 |
+| `chart.labels` | Both | unwritable | Data labels lose a legend key, a category name on any chart but a pie or doughnut, and text of their own on any chart but a scatter | 1/61 |
+| `connector.binding` | Both | unsupported | A connector bound to a shape with no name, a name another shape on the slide shares, or one that is not written, no longer follows it | 1/61 |
+| `fill.gradient.path` | Both | unwritable | A `rect` path gradient becomes radial | 1/61 |
+| `fill.schemeToken` | Both | unwritable | A fill colour outside the ten mapped scheme tokens is baked to hex | 1/61 |
+| `graphicFrame.unknown` | Both | unread | A graphic frame the reader does not decode, such as a 3D model, an OLE object or ink, is dropped. The template-anchored output copies the slide | 1/61 |
+| `image.svg` | Both | unsupported | An SVG picture keeps its vector part. The write path generates a new raster fallback in place of the source's | 1/61 |
+| `line.arrowSize` | Both | unwritable | Arrowheads render at the default width and length | 1/61 |
+| `line.schemeToken` | Both | unwritable | An outline colour outside the ten mapped scheme tokens is baked to hex | 1/61 |
+| `media.audioVideo` | Both | unwritable | Audio or video linked from outside the package, or inside a group or on a layout, becomes a still image of its poster frame | 1/61 |
+| `shape.custGeom.guides` | Both | unwritable | A picture clipped to a freeform, or a freeform holding text, keeps its path and loses its guides, adjust handles and connection sites, which only `addShape` takes | 1/61 |
+| `shape.placeholder` | Both | unwritable | A placeholder whose `p:ph` type or `idx` has no `placeholder` spelling becomes a plain shape with its inherited geometry and styling baked in. A title, and any text placeholder with one of the six types the string form names and no `idx`, carries as that string. Any other text placeholder, and a filled picture, table or chart placeholder, carries as a `placeholder: { type, idx }` binding | 1/61 |
+| `slide.background` | Both | unwritable | A slide background taken from the theme (`p:bgRef`) is baked to the fill it resolves to | 1/61 |
+| `table.cell.fill.picture.geometry` | Both | unwritable | A cell's picture fill keeps its image. Its tiling, destination inset, DPI and rotate-with-shape setting do not carry | 1/61 |
+| `table.rowAuto` | Both | unsupported | Auto-height rows get an even share of the table height instead of fitting their content | 1/61 |
+| `table.style` | Both | unsupported | A table with no style ID takes the output deck's default table style | 1/61 |
+| `text.bullet.schemeToken` | Both | unwritable | A bullet colour outside the ten mapped scheme tokens is baked to hex | 1/61 |
+| `text.field` | Both | unread | The text of a date or footer field, or of a slide number beside other text, is dropped | 1/61 |
+| `text.kern` | Both | unwritable | A spaced run that states no kerning comes back stating `kern="0"`, because the write path turns kerning off on spaced text it is given no kerning for | 1/61 |
+| `text.paraSpaceZero` | Both | unwritable | An explicit zero space before or after a paragraph is dropped, so the list style's spacing comes back | 1/61 |
+| `slide.carried` | Template-anchored | unwritable | A slide holding a frame the write API cannot author is copied from the source. It renders the same, and the script does not describe its contents | 4/61 |
+| `slide.layout` | Template-anchored | unsupported | Several source layouts share the slide's layout name, so the slide binds to a gallery position | 1/61 |
+| `deck.docProps` | Standalone | unwritable | Keywords, description, category, content status and last-modified-by are dropped | 61/61 |
+| `deck.docPropsDefault` | Standalone | unwritable | A title, author, subject, revision or company the source left blank gets the library's value | 61/61 |
+| `master.default` | Standalone | unsupported | The layout gallery gains a blank `DEFAULT` layout ahead of the source layouts | 61/61 |
+| `master.placeholders` | Standalone | unsupported | A layout placeholder a slide on that layout leaves out is not re-declared, because the write path would seed an empty copy onto that slide | 61/61 |
+| `master.txStyles` | Standalone | unread | Placeholder text falls back to built-in size, face, colour, indent and bullet per list level | 61/61 |
+| `theme.fmtScheme` | Standalone | unread | The theme's fill, line and effect style lists become Office's | 61/61 |
+| `master.background` | Standalone | unwritable | A layout background taken from the theme is baked to the fill it resolves to | 60/61 |
+| `master.decoration` | Standalone | unwritable | Shapes on a slide master are dropped | 6/61 |
+| `master.name` | Standalone | unwritable | A tab or line break in a layout name becomes a space | 5/61 |
+| `layout.text.color.inherited` | Standalone | unsupported | As `text.color.inherited`, on a layout shape | 4/61 |
+| `master.colorMap` | Standalone | unwritable | A remapped colour map becomes the identity map, so scheme colours resolve to different hex values | 4/61 |
+| `layout.group` | Standalone | unwritable | A group on a layout becomes loose shapes in the same positions | 2/61 |
+| `layout.fill.gradient.schemeToken` | Standalone | unwritable | A gradient stop colour on a layout shape, outside the ten mapped tokens, is baked to hex | 1/61 |
+| `layout.fill.schemeToken` | Standalone | unwritable | As `fill.schemeToken`, on a layout shape | 1/61 |
+| `master.multiple` | Standalone | unsupported | Several slide masters collapse into one, with the first master's theme and colour map | 1/61 |
+| `master.nameCollision` | Standalone | unsupported | A repeated layout name gets a suffix, such as `Title Slide (2)` | 1/61 |
 
 ### Carried without a note
 

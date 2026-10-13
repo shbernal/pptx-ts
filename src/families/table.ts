@@ -9,6 +9,7 @@
 import { SlideObjectType } from '../enums.js'
 import { renderTableObject } from '../gen/slide/objects/table.js'
 import { addTableDefinition } from '../gen/define/table.js'
+import { tableContributor } from '../package/parts/table.js'
 import type { ConstructFamily } from './shared.js'
 
 export const tableFamily = {
@@ -31,4 +32,5 @@ export const tableFamily = {
 	renderers: {
 		[SlideObjectType.table]: renderTableObject,
 	},
+	parts: tableContributor,
 } satisfies ConstructFamily

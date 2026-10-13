@@ -61,6 +61,7 @@ export const ALLOWED = new Set([
 	'test/regression/text/text-fit.test',
 	'test/regression/text/text-run-xml.test',
 	'test/schema-cases',
+	'test/scripts/gen-builtin-table-styles.test',
 ])
 
 /**

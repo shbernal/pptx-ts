@@ -186,6 +186,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A deck defines the built-in table styles its tables use.** `ppt/tableStyles.xml` named the
+  default style and defined none, so a table written with `tableStyle` read back with a `null`
+  `Table.resolvedStyle` and no style fill on any cell, and a renderer working from the file drew
+  it unstyled. The part now carries PowerPoint's own definition of each built-in style a table
+  names, captured from a PowerPoint-saved deck. PowerPoint paints from its gallery as before; a
+  deck without a styled table is unchanged ([#241](https://github.com/shbernal/pptx-ts/issues/241)).
+
 - **A `null` axis and `underline: true` hold on every object they reach.** Text with `placeholder` and
   `x: null` was placed at 0 rather than at the layout placeholder's left edge, as an image, a table
   and a chart already were. `underline: true` on a table cell or a slide number wrote no underline;

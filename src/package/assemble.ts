@@ -295,7 +295,10 @@ export async function buildPackageParts(
 			zip.add('ppt/theme/theme2.xml', themeXml)
 			zip.add(PRESENTATION_PATH, makeXmlPresentation(pres))
 			zip.add('ppt/presProps.xml', makeXmlPresProps())
-			zip.add('ppt/tableStyles.xml', makeXmlTableStyles())
+			zip.add(
+				'ppt/tableStyles.xml',
+				makeXmlTableStyles(contributors.flatMap((contributor) => contributor.parts?.tableStyles?.(pres) ?? []))
+			)
 			zip.add('ppt/viewProps.xml', makeXmlViewProps())
 
 			// C: Create a Layout/Master/Rel/Slide file for each SlideLayout and Slide

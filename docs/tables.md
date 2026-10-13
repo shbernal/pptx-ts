@@ -185,6 +185,7 @@ slide.addTable(rows, {
 - The `has*` flags choose which regions of the style paint. Without `tableStyle` they paint nothing.
 - `hasHeader` also marks the first row as a header for PowerPoint's accessibility checker, so set it on any table with a header row.
 - PowerPoint paints only its own built-in styles. It looks the style up in its gallery and never reads a style definition from the file, so a custom table style cannot render. Brand colours go through `headerRow`, `columns`, `fill` and cell options.
+- The deck carries the definition of each built-in style its tables use in `ppt/tableStyles.xml`, as PowerPoint writes it, so a reader that renders from the file can resolve the style. [`Table.resolvedStyle`](reference/read-object-model.md) and a cell's `resolvedFill` read it.
 - A styled table with no `border` leaves every edge to the style. Set `border: { type: 'none' }` to keep the style's fills and drop its grid.
 
 ## Fill cells and the table background

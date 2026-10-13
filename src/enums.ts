@@ -455,8 +455,9 @@ export enum BulletType {
  * Built-in PowerPoint table style IDs.
  *
  * Each value is the GUID that goes into `<a:tableStyleId>` inside `<a:tblPr>`.
- * These 74 GUIDs are the complete set defined in [MS-OE376] §5.1.6.10 and are
- * resolved by PowerPoint without embedding any style definition in the file.
+ * These 74 GUIDs are the complete set defined in [MS-OE376] §5.1.6.10. PowerPoint
+ * resolves them from its own gallery; the deck also carries the definition of each one
+ * its tables use in `ppt/tableStyles.xml`, as PowerPoint writes it, for other readers.
  *
  * Only these enum members are supported. Raw GUID strings are not accepted;
  * use `TableStyle` members exclusively.
