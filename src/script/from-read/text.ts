@@ -35,6 +35,7 @@ import type { NoteScope } from '../fidelity.js'
 import type { IrValue } from '../ir.js'
 import type { MapContext } from './context.js'
 import { hasEquation } from './detect.js'
+import { shadowValue } from './shape-paint.js'
 import {
 	alphaToTransparency,
 	ANCHOR_TO_VALIGN,
@@ -284,6 +285,7 @@ export function runOptions(
 		transparency: color === undefined ? undefined : alphaToTransparency(run.resolvedColor?.alpha),
 		outline: outlineOption(run, notes),
 		glow: runGlowOption(run, notes),
+		shadow: shadowValue(run.shadow, run.innerShadow, notes),
 		highlight: run.highlight ? literalColor(run.highlight.effectiveHex) : undefined,
 		caps: orUndefined(run.caps),
 		baseline: orUndefined(run.baselinePct),

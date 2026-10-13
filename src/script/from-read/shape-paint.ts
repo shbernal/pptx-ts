@@ -10,6 +10,7 @@
  * here rather than quietly thinned.
  */
 import type { AnyShape } from '../../read/api/shapes.js'
+import type { InnerShadow, OuterShadow } from '../../read/api/shapes/types.js'
 import type { NoteScope } from '../fidelity.js'
 import { type IrValue } from '../ir.js'
 import { LINE_END_TYPES } from '../../ooxml/st-enums.js'
@@ -243,8 +244,19 @@ export function shadowOption(shape: AnyShape, notes: NoteScope): IrValue | undef
 		)
 	}
 
-	const outer = shape.shadow
-	const source = outer ?? shape.innerShadow
+	return shadowValue(shape.shadow, shape.innerShadow, notes)
+}
+
+/**
+ * An outer or inner shadow as `ShadowProps`, the outer one winning. Shared by a shape's shadow
+ * and a run's, which the write path emits through the same `createShadowElement`.
+ */
+export function shadowValue(
+	outer: OuterShadow | null,
+	inner: InnerShadow | null,
+	notes: NoteScope
+): IrValue | undefined {
+	const source = outer ?? inner
 	if (!source) return undefined
 
 	return compact({

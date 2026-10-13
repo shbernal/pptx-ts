@@ -233,7 +233,7 @@ These constructs carry in both outputs and raise no note.
 | A picture bullet (`a:buBlip`) | `bullet: { image: { data }, size }`, the image carried as an asset |
 | An explicit off: `u="none"`, `strike="noStrike"`, `cap="none"` | `underline: { style: 'none' }`, `strike: 'noStrike'`, `caps: 'none'` |
 | Superscript and subscript | `baseline` |
-| A run's language, East Asian face, glow, outline, transparency and underline colour | `lang`, `fontFaceEA`, `glow`, `outline`, `transparency` and `underline.color` |
+| A run's language, East Asian face, glow, shadow, outline, transparency and underline colour | `lang`, `fontFaceEA`, `glow`, `shadow`, `outline`, `transparency` and `underline.color`. A table cell takes its first run's `shadow` as the cell's |
 | The language every paragraph of a text ends in (`a:endParaRPr/@lang`) | `lang` on the text. A run in another language states its own |
 | A line break between two runs (`a:br`) | `softBreakBefore` on the run after it |
 | Right-to-left paragraphs and tab stops | `rtlMode` and `tabStops` |

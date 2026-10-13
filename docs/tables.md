@@ -488,7 +488,7 @@ for (const slide of deck.slides) {
 await writeFile('deck-edited.pptx', await deck.save())
 ```
 
-- `Table` has `rows`, `rowCount`, `columnCount`, `columnWidths` (EMU), `styleId`, `resolvedStyle`, `firstRowHeader`, `bandedRows`, and its background through `resolvedFill`, `gradientFill`, `patternFill` and `pictureFill`.
+- `Table` has `rows`, `rowCount`, `columnCount`, `columnWidths` (EMU), `styleId`, `resolvedStyle`, the six Table Style Options (`firstRowHeader`, `lastRowFooter`, `bandedRows`, `bandedColumns`, `firstColumnHeader`, `lastColumnFooter`), `rtl`, and its background through `resolvedFill`, `gradientFill`, `patternFill` and `pictureFill`.
 - `TableCell` has `text`, `textFrame`, `gridSpan`, `rowSpan`, `isMergeContinuation`, `borders` (four edges and two diagonals), `marginsEmu`, `anchor`, `anchorCtr`, `verticalText`, `horzOverflow`, `cell3D`, and its fill.
 - `resolvedFill` is the colour a cell renders, table style banding included. `hasOwnFill` says whether that colour is the cell's own. Check it before copying a colour, or the copy stops following its style.
 - A stored table has a cell for every grid position, with covered cells present and marked `isMergeContinuation`.

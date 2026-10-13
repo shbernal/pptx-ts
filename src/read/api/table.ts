@@ -232,6 +232,14 @@ export class Table {
 	}
 
 	/**
+	 * Whether the table reads right to left (`a:tblPr/@rtl`), from `addTable`'s `rtl`: its columns
+	 * run from the right edge, so column 0 is the rightmost.
+	 */
+	get rtl(): boolean {
+		return this.#tblPrFlag('rtl')
+	}
+
+	/**
 	 * The cell at `(rowIndex, columnIndex)` (both zero-based), or `null` when out
 	 * of range. Column index counts `a:tc` elements in the row, so a cell that
 	 * spans columns (`gridSpan`) occupies a single index here.
