@@ -193,6 +193,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   among the runs), and a shape's replays as `{ math, inline }` in that place. A table cell's is
   still noted, now as `table.cell.equation` / `unwritable`
   ([#259](https://github.com/shbernal/pptx-ts/issues/259)).
+- **A custom-geometry path value can name a guide, on both sides.** A path point, `arcTo` radius or
+  angle that named a guide (`<a:pt x="g0"/>`) read back as `0`, and `GeometryPoint` refused a name
+  with `coord/invalid-format`, so a guide could never shape the drawn outline. `GeometryCommand`
+  values are now `GeometryCoordinate` (a number or the guide name), `GeometryPoint` takes a name
+  wherever a site or handle already did, and `readModelToIr` replays it
+  ([#255](https://github.com/shbernal/pptx-ts/issues/255)).
 - **`fromTemplate` restarts each comment author's numbering.** It strips the template's slides and
   their comments, but each author in `commentAuthors.xml` kept its `lastIdx`, so a comment replayed
   onto the shell was numbered after one the deck no longer has: a deck with one comment replayed as

@@ -182,7 +182,7 @@ describe('deck IR — geometry', () => {
 			const frame = defined(origin.absoluteFrame)
 			const expected = firstPath.commands
 				.filter((command) => 'x' in command)
-				.map((command) => Math.round((command.x * frame.width) / firstPath.w))
+				.map((command) => Math.round((Number(command.x) * frame.width) / firstPath.w))
 			const actual = arrayOf(at(irArgs(shape)[1], 'points'))
 				.filter((point) => at(point, 'x') !== undefined)
 				.slice(0, expected.length)
@@ -242,7 +242,7 @@ describe('deck IR — geometry', () => {
 			const frame = defined(origin.absoluteFrame)
 			const expected = path.commands
 				.filter((command) => 'x' in command)
-				.map((command) => Math.round((command.x * frame.width) / path.w))
+				.map((command) => Math.round((Number(command.x) * frame.width) / path.w))
 			const options = optionsOf(name)
 			const actual = arrayOf(options.points)
 				.filter((point) => at(point, 'x') !== undefined)

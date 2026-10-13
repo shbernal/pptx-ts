@@ -79,12 +79,13 @@ describe('Shape.customGeometry — path attribute defaults + degenerate points',
 		assertEqual(path.stroke, false, 'stroke="0" reads false')
 	})
 
-	test('a non-numeric a:pt coordinate degrades to 0 rather than crashing', () => {
+	// A non-numeric `ST_AdjCoordinate` is a guide name, kept as written rather than read as 0 (#255).
+	test('a non-numeric a:pt coordinate reads as the guide name it is, without crashing', () => {
 		const path = onlyPath(`<a:path w="10" h="10"><a:moveTo><a:pt x="not-a-number" y="also"/></a:moveTo></a:path>`)
 		assertEqual(
 			JSON.stringify(path.commands[0]),
-			JSON.stringify({ cmd: 'moveTo', x: 0, y: 0 }),
-			'unparseable coordinates → 0'
+			JSON.stringify({ cmd: 'moveTo', x: 'not-a-number', y: 'also' }),
+			'non-numeric coordinates → guide names'
 		)
 	})
 
