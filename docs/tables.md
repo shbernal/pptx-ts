@@ -174,14 +174,22 @@ For banded rows in brand colours, set `fill` on the cells of every other row as 
 
 ## Apply a built-in table style
 
-```ts
+```ts live
 import { TableStyle } from 'pptx-ts'
 
-slide.addTable(rows, {
-  tableStyle: TableStyle.MEDIUM_STYLE_2_ACCENT_1,
-  hasHeader: true,
-  hasBandedRows: true,
-})
+slide.addTable(
+  [
+    [{ text: 'Region' }, { text: 'Q1' }, { text: 'Q2' }],
+    [{ text: 'North' }, { text: '120' }, { text: '145' }],
+    [{ text: 'South' }, { text: '98' }, { text: '110' }],
+  ],
+  {
+    x: 1, y: 1, w: 8, h: 1.5,
+    tableStyle: TableStyle.MEDIUM_STYLE_2_ACCENT_1,
+    hasHeader: true,
+    hasBandedRows: true,
+  },
+)
 ```
 
 - The `has*` flags choose which regions of the style paint. Without `tableStyle` they paint nothing.
