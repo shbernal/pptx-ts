@@ -177,13 +177,31 @@ export type { PatternFill } from '../pattern-fill.js'
  * must be scaled by the consumer against the shape's box. `arcTo` angles are in
  * **degrees** (the raw `60000`ths-of-a-degree values divided by 60000), matching
  * the write DSL's degree input.
+ *
+ * Any of them may instead be the name of a guide whose value it takes (`ST_AdjCoordinate` /
+ * `ST_AdjAngle`): one of the geometry's own {@link CustomGeometry.guides}, or a built-in such as
+ * `w`, `hc` or `cd4`. A name is returned as written, never resolved.
  */
 export type GeometryCommand =
-	| { cmd: 'moveTo'; x: number; y: number }
-	| { cmd: 'lnTo'; x: number; y: number }
-	| { cmd: 'cubicBezTo'; x1: number; y1: number; x2: number; y2: number; x: number; y: number }
-	| { cmd: 'quadBezTo'; x1: number; y1: number; x: number; y: number }
-	| { cmd: 'arcTo'; wR: number; hR: number; stAng: number; swAng: number }
+	| { cmd: 'moveTo'; x: GeometryCoordinate; y: GeometryCoordinate }
+	| { cmd: 'lnTo'; x: GeometryCoordinate; y: GeometryCoordinate }
+	| {
+			cmd: 'cubicBezTo'
+			x1: GeometryCoordinate
+			y1: GeometryCoordinate
+			x2: GeometryCoordinate
+			y2: GeometryCoordinate
+			x: GeometryCoordinate
+			y: GeometryCoordinate
+	  }
+	| { cmd: 'quadBezTo'; x1: GeometryCoordinate; y1: GeometryCoordinate; x: GeometryCoordinate; y: GeometryCoordinate }
+	| {
+			cmd: 'arcTo'
+			wR: GeometryCoordinate
+			hR: GeometryCoordinate
+			stAng: GeometryCoordinate
+			swAng: GeometryCoordinate
+	  }
 	| { cmd: 'close' }
 
 /**

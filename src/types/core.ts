@@ -262,10 +262,19 @@ export type TextVertType = TextVerticalType
  * The `arc` node carries no `x`/`y`: an `<a:arcTo>` has no explicit end point. The renderer
  * derives it from the current pen position, the radii and the swept angle, so an end point
  * authored here would be discarded (a warning is emitted if one is supplied).
+ *
+ * Any coordinate, radius or angle may instead name a guide, which is written verbatim (the
+ * `ST_AdjCoordinate` / `ST_AdjAngle` string form): one declared in the shape's `guides`, or a
+ * built-in such as `'w'`, `'hc'` or `'cd4'`. A coordinate counts as a name when it starts with a
+ * letter or `_`; an angle, when it is a string at all.
  */
 export type GeometryPoint =
-	| { x: Coord; y: Coord; moveTo?: boolean }
-	| { curve: { type: 'arc'; hR: Coord; wR: Coord; stAng: number; swAng: number } }
-	| { x: Coord; y: Coord; curve: { type: 'cubic'; x1: Coord; y1: Coord; x2: Coord; y2: Coord } }
-	| { x: Coord; y: Coord; curve: { type: 'quadratic'; x1: Coord; y1: Coord } }
+	| { x: Coord | string; y: Coord | string; moveTo?: boolean }
+	| { curve: { type: 'arc'; hR: Coord | string; wR: Coord | string; stAng: number | string; swAng: number | string } }
+	| {
+			x: Coord | string
+			y: Coord | string
+			curve: { type: 'cubic'; x1: Coord | string; y1: Coord | string; x2: Coord | string; y2: Coord | string }
+	  }
+	| { x: Coord | string; y: Coord | string; curve: { type: 'quadratic'; x1: Coord | string; y1: Coord | string } }
 	| { close: true }

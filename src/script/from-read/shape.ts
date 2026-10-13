@@ -224,10 +224,10 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 	}
 
 	if (custom) {
-		const points = customGeometryPoints(box, custom)
 		// A freeform holding text is an `addText` with the same points: this arm used to return
 		// `addShape` before the text arm below, so a freeform's text was discarded.
 		if (frame !== null) {
+			const points = customGeometryPoints(box, custom, notes, false)
 			noteUnwritableCustGeomLists(custom, 'addText', notes)
 			const options = compact({
 				...common,
@@ -246,6 +246,7 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 				nameOf(shape)
 			)
 		}
+		const points = customGeometryPoints(box, custom, notes, true)
 		const options = compact({ ...common, ...addShapeLine(style['line']), points, ...custGeomListOptions(custom) })
 		return irCall('addShape', ['custGeom', options ?? {}], nameOf(shape))
 	}
@@ -327,7 +328,7 @@ function noteUnwritableCustGeomLists(custom: CustomGeometry, method: string, not
 		'shape.custGeom.guides',
 		'dropped',
 		'unwritable',
-		`custGeom guides, adjust handles and connection sites (a:gdLst / a:ahLst / a:cxnLst) are addShape options, and ${method} takes the freeform's points alone, so only the path outline carries`
+		`custGeom guides, adjust handles and connection sites (a:gdLst / a:ahLst / a:cxnLst) are addShape options, and ${method} takes the freeform's points alone, so only the path outline carries, with any path value that names one of those guides written as 0`
 	)
 }
 
@@ -387,7 +388,7 @@ function pictureClipOptions(shape: Picture, box: ShapeBox, notes: NoteScope): Re
 	const custom = shape.customGeometry
 	if (custom) {
 		noteUnwritableCustGeomLists(custom, 'addImage', notes)
-		return { points: customGeometryPoints(box, custom) }
+		return { points: customGeometryPoints(box, custom, notes, false) }
 	}
 	const preset = shape.presetGeometry
 	return preset === null || preset === 'rect' ? {} : { shape: preset, ...adjustOptions(shape) }
@@ -423,14 +424,31 @@ function adjustOptions(shape: AutoShape | Picture): Record<string, IrValue | und
  * transform cannot be composed that is `null`, the shape is placed at its resolved box, and
  * scaling by 1 would print its points in raw path units.
  */
-function customGeometryPoints(box: ShapeBox, custom: CustomGeometry): IrValue {
+function customGeometryPoints(
+	box: ShapeBox,
+	custom: CustomGeometry,
+	notes: NoteScope,
+	carriesGuides: boolean
+): IrValue {
 	const points: IrValue[] = []
+	const declared = new Set(custom.guides.map((guide) => guide.name))
+	let scaledName = false
 
 	for (const path of custom.paths) {
 		const sx = path.w > 0 ? box.width / path.w : 1
 		const sy = path.h > 0 ? box.height / path.h : 1
-		const px = (v: number): string => emu(v * sx)
-		const py = (v: number): string => emu(v * sy)
+		// A guide name is printed as written. Its value is a length in the path's own units, which
+		// the replay's viewport (the box) only matches when the source's did, so a name in a scaled
+		// path is approximated. A call that takes no `guides` cannot declare the shape's own, so a
+		// name of one writes 0 rather than a reference to nothing.
+		const name = (v: string): string => {
+			if (!carriesGuides && declared.has(v)) return emu(0)
+			if (sx !== 1 || sy !== 1) scaledName = true
+			return v
+		}
+		const px = (v: GeometryCoordinate): string => (typeof v === 'number' ? emu(v * sx) : name(v))
+		const py = (v: GeometryCoordinate): string => (typeof v === 'number' ? emu(v * sy) : name(v))
+		const angle = (v: GeometryCoordinate): IrValue => (typeof v === 'number' ? v : name(v))
 
 		for (const command of path.commands) {
 			switch (command.cmd) {
@@ -458,7 +476,13 @@ function customGeometryPoints(box: ShapeBox, custom: CustomGeometry): IrValue {
 					// An arcTo carries no end point on either side (the renderer derives it from
 					// the pen position, radii and swept angle), so this maps one-to-one.
 					points.push({
-						curve: { type: 'arc', wR: px(command.wR), hR: py(command.hR), stAng: command.stAng, swAng: command.swAng },
+						curve: {
+							type: 'arc',
+							wR: px(command.wR),
+							hR: py(command.hR),
+							stAng: angle(command.stAng),
+							swAng: angle(command.swAng),
+						},
 					})
 					break
 				case 'close':
@@ -467,6 +491,13 @@ function customGeometryPoints(box: ShapeBox, custom: CustomGeometry): IrValue {
 			}
 		}
 	}
+	if (scaledName)
+		notes.note(
+			'shape.custGeom.guides',
+			'approximated',
+			'unwritable',
+			"a path value names a guide in a path whose viewport (a:path/@w, @h) is not the shape's size, and points are authored in the shape's own space, so the guide's value is read at a different scale"
+		)
 	return points
 }
 
