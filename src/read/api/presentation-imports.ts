@@ -43,6 +43,7 @@ import { sourceFlattenContext } from './ops/flatten-context.js'
 import { importSlidePreserve, importSlideRestyle, planSlideRebind } from './ops/import-slide.js'
 import { promoteMasters } from './ops/master-registry.js'
 import { carryNotes } from './ops/notes-master.js'
+import { carryCommentAuthors } from './ops/comments.js'
 import { layoutPartNamesOf, slideMasterPartNames } from './ops/part-index.js'
 import {
 	copyPart,
@@ -131,6 +132,9 @@ export function importSlide(
 			options.rescale === true ? 'fit' : options.rescale
 		)
 	}
+
+	// 2c. Renumber the comments the page brought against this deck's author registry.
+	carryCommentAuthors(deck, source, newPartName)
 
 	// 3. Wire the new slide into the presentation (rel + p:sldId entry) at `at`.
 	const slide = deck.insertSlidePart(newPart, options.at)
@@ -270,6 +274,10 @@ export function importSlides(deck: Presentation, requests: readonly ImportSlides
 			throw new InternalError('import/part-went-missing', `Imported slide part went missing: ${request.destPartName}`)
 		return { ...request, destPart }
 	})
+
+	// Then renumber the comments each page brought against this deck's author registry, in
+	// request order. Not part of `copyBatch`, whose dry run writes nothing.
+	for (const request of planned) carryCommentAuthors(deck, request.source, request.destPartName)
 
 	// 3c. Rescale each rescaling source's pages onto this deck's canvas. Nothing
 	//     to do where the sizes already match, and the memo makes the shared layout
