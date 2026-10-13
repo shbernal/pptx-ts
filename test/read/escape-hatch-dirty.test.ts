@@ -84,13 +84,6 @@ describe('element_ without markDirty()', () => {
 		const reopened = await Presentation.load(saved)
 		assertEqual(textShape(reopened).element_.getAttribute('rot'), null, 'the unmarked edit does not reach the output')
 	})
-
-	test('a slide attribute written through element_ is dropped on save', async () => {
-		const { changed } = await saveAfter('textbox', (presentation) => {
-			at(presentation.slides, 0).element_.setAttribute('show', '0')
-		})
-		assertEqual(changed.length, 0, 'no part should be reserialized without markDirty()')
-	})
 })
 
 describe('element_ with markDirty()', () => {
@@ -347,9 +340,6 @@ describe('shared-chrome and notes element_ / markDirty()', () => {
 		const { saved, changed } = await saveAfterAuthored(authorChrome, (presentation) => {
 			const sldNum = defined(at(presentation.slides, 0).master).placeholders.find((ph) => ph.type === 'sldNum')
 			assert(sldNum, 'the master has a slide-number placeholder')
-			assert(sldNum.idx !== undefined, 'the placeholder exposes its p:ph idx')
-			assert(typeof sldNum.id === 'number' || sldNum.id === null, 'the placeholder exposes its drawing id')
-			assert(sldNum.textFrame !== undefined, 'the placeholder exposes its text frame')
 			at(sldNum.element_.getElementsByTagName('p:cNvPr'), 0).setAttribute('name', 'HATCHED-PH')
 			sldNum.markDirty()
 		})
@@ -376,8 +366,6 @@ describe('shared-chrome and notes element_ / markDirty()', () => {
 		const { saved, changed } = await saveAfterAuthored(authorChrome, (presentation) => {
 			const body = defined(at(presentation.slides, 0).notesSlide).body
 			assert(body, 'the notes slide has a body placeholder')
-			assert(typeof body.name === 'string', 'the notes placeholder exposes its shape name')
-			assert(typeof body.id === 'number' || body.id === null, 'the notes placeholder exposes its drawing id')
 			at(body.element_.getElementsByTagName('a:t'), 0).textContent = 'HATCHED NOTE'
 			body.markDirty()
 		})

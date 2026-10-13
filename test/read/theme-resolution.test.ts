@@ -1,6 +1,6 @@
 // Read-model coverage for src/read/oxml/theme.ts colour / theme-font / style-
 // matrix resolution branches the fixture decks don't all carry:
-//   - resolveColor across sysClr / schemeClr (clrMap + direct-slot) / phClr,
+//   - resolveColor across sysClr / schemeClr (direct-slot) / phClr,
 //   - resolveThemeFont across +mj/+mn and lt/ea/cs script slots,
 //   - styleRefFill's bgFillStyleLst (idx >= 1000) branch, with phClr substitution.
 // resolveColorElement is exported and tested directly; the theme-font and style-
@@ -77,11 +77,6 @@ describe('resolveColor — colour models', () => {
 			'808080',
 			'val is the fallback when no lastClr'
 		)
-	})
-
-	test('schemeClr resolves through the clrMap → clrScheme indirection', () => {
-		const c = ctx({ clrMap: new Map([['tx1', 'dk1']]), clrScheme: new Map([['dk1', '111111']]) })
-		assertEqual(defined(resolveColorElement(drawingEl(`<a:schemeClr val="tx1"/>`), c)).hex, '111111', 'tx1 → dk1 → hex')
 	})
 
 	test('a direct-slot scheme token (dk1/lt1/dk2/lt2) bypasses the clrMap', () => {

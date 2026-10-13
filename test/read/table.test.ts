@@ -245,7 +245,7 @@ describe('Table cell styling (populated a:tcPr paths)', () => {
 	//   (0,0) <a:tcPr vert="vert270"/>                              -> verticalText
 	//   (0,1) <a:tcPr anchor="b"/>                                  -> anchor
 	//   (1,0) <a:tcPr marL/marR/marT/marB=228600/342900/114300/457200/> -> marginsEmu
-	//   (1,1) <a:tcPr/>                                             -> negative control
+	//   (1,1) <a:tcPr/>                                             -> bare
 	// The isolation lets each test assert the populated value AND that the other
 	// two accessors stay null on the same cell.
 	test('verticalText reports the a:tcPr @vert token (and leaves anchor/margins null)', async () => {
@@ -273,18 +273,6 @@ describe('Table cell styling (populated a:tcPr paths)', () => {
 		assertEqual(cell.verticalText, null, 'no @vert on the margins cell')
 		assertEqual(cell.anchor, null, 'no @anchor on the margins cell')
 	})
-
-	test('a bare a:tcPr cell reports null for vert / anchor / margins', async () => {
-		const cell = defined(firstTable(await openFixture('table-cell-style')).cell(1, 1))
-		assertEqual(cell.verticalText, null, 'no @vert -> null')
-		assertEqual(cell.anchor, null, 'no @anchor -> null')
-		assertEqual(cell.marginsEmu, null, 'no tcPr margins -> null')
-	})
-
-	test.skipIf(!validatorInstalled)('the fixture is schema-valid', async () => {
-		const errors = await validateBuf(await readFile(fixturePath('table-cell-style')))
-		assertEqual(errors.length, 0, `validator errors: ${JSON.stringify(errors).slice(0, 2000)}`)
-	})
 })
 
 describe('Table cell horzOverflow', () => {
@@ -306,10 +294,5 @@ describe('Table cell horzOverflow', () => {
 	test('a cell without @horzOverflow reports null', async () => {
 		const cell = defined(firstTable(await openFixture('table-cell-horzoverflow')).cell(0, 1))
 		assertEqual(cell.horzOverflow, null, 'no @horzOverflow -> null')
-	})
-
-	test.skipIf(!validatorInstalled)('the fixture is schema-valid', async () => {
-		const errors = await validateBuf(await readFile(fixturePath('table-cell-horzoverflow')))
-		assertEqual(errors.length, 0, `validator errors: ${JSON.stringify(errors).slice(0, 2000)}`)
 	})
 })

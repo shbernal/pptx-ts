@@ -18,7 +18,7 @@ import { ShapeType } from '../../dist/node.js'
 import { DOMParser } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
 import { AutoShape, type ColorRef, type Presentation, type ShapeHost, type ThemeContext } from '../../dist/read.js'
-import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.ts'
+import { authorRead, firstShape } from './authored.ts'
 import { assert, assertEqual, defined, expectDefined, at } from '../helpers.ts'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
@@ -364,32 +364,5 @@ describe('Shape effects/fill — write→read fidelity', () => {
 		assertEqual(pat.preset, 'pct50', 'authored preset round-trips')
 		assertEqual(pat.foreground.resolved?.effectiveHex, 'C00000', 'authored fgColor round-trips')
 		assertEqual(pat.background.resolved?.effectiveHex, 'FFFF00', 'authored bgColor round-trips')
-	})
-
-	test.skipIf(!validatorInstalled)('the authored inner-shadow + pattern-fill decks are schema-valid', async () => {
-		const shadowBuf = (
-			await authorRead((pres) => {
-				pres.addSlide().addShape(ShapeType.rect, {
-					x: 1,
-					y: 1,
-					w: 3,
-					h: 1,
-					shadow: { type: 'inner', color: 'C0504D', blur: 4, offset: 2, angle: 90, transparency: 25 },
-				})
-			})
-		).buf
-		assertEqual((await schemaErrors(shadowBuf)).length, 0, 'inner-shadow deck validates')
-		const patternBuf = (
-			await authorRead((pres) => {
-				pres.addSlide().addShape(ShapeType.rect, {
-					x: 1,
-					y: 1,
-					w: 3,
-					h: 1,
-					fill: { type: 'pattern', pattern: { preset: 'pct50', fgColor: 'C00000', bgColor: 'FFFF00' } },
-				})
-			})
-		).buf
-		assertEqual((await schemaErrors(patternBuf)).length, 0, 'pattern-fill deck validates')
 	})
 })

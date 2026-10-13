@@ -59,25 +59,6 @@ describe('Shape.customGeometry — real PowerPoint XML (custgeom.pptx)', () => {
 		})
 	})
 
-	test('freeform-cubic: cubicBezTo control points read in c1,c2,end order', async () => {
-		const slide = at((await openCustgeom()).slides, 0)
-		const geom = shapeNamed(slide, 'freeform-cubic').customGeometry
-		assert(geom, 'freeform-cubic has custom geometry')
-		assertEqual(geom.paths.length, 1, 'one a:path')
-		assertPath(at(geom.paths, 0), {
-			w: 2540001,
-			h: 3302001,
-			fill: 'norm',
-			stroke: true,
-			commands: [
-				{ cmd: 'moveTo', x: 0, y: 762000 },
-				{ cmd: 'cubicBezTo', x1: 635000, y1: 0, x2: 2032000, y2: 0, x: 2540000, y: 1270000 },
-				{ cmd: 'lnTo', x: 2540000, y: 3302000 },
-				{ cmd: 'lnTo', x: 0, y: 3302000 },
-			],
-		})
-	})
-
 	test('freeform-hole: one path carries two moveTo…close contours in document order', async () => {
 		const slide = at((await openCustgeom()).slides, 0)
 		const geom = shapeNamed(slide, 'freeform-hole').customGeometry

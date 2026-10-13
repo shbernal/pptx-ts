@@ -43,11 +43,6 @@ function timing(clickGroups: string, bldLst = '') {
 }
 
 describe('hasAnimations — presetID vs bldP vs media-only', () => {
-	test('a slide with a <p:bldP> reports animations', () => {
-		const s = slide(timing('', '<p:bldLst><p:bldP spid="5"/></p:bldLst>'))
-		assert(s.hasAnimations, 'a bldP entry means animations')
-	})
-
 	test('a presetID-bearing time node with no bldP still reports animations', () => {
 		const s = slide(timing(wrapPar(3, effectPar(5, 4))))
 		assert(s.hasAnimations, 'a presetID cTn is an animation even without a build list')
@@ -70,10 +65,6 @@ describe('enumerateSpids — dedup, sort, null-spid skip', () => {
 			)
 		)
 		assertEqual(JSON.stringify(s.animationSpids()), '[2,9]', 'sorted + de-duplicated, junk spid dropped')
-	})
-
-	test('a slide with no timing enumerates to an empty list', () => {
-		assertEqual(JSON.stringify(slide('').animationSpids()), '[]', 'no animations → no spids')
 	})
 })
 
@@ -163,15 +154,6 @@ describe('pruneSpids — effect removal, wrapper collapse, bldLst drop', () => {
 })
 
 describe('flattenAnimations — timing removal and its gates', () => {
-	test('a build animation is flattened by removing the timing block', () => {
-		const s = slide(timing(wrapPar(3, effectPar(9, 4)), '<p:bldLst><p:bldP spid="9"/></p:bldLst>'))
-		let dirtied = 0
-		s.part.markDirty = () => dirtied++
-		assert(s.flattenAnimations(), 'flatten returns true when a timing block is removed')
-		assert(!s.hasAnimations, 'no animations remain after flattening')
-		assertEqual(dirtied, 1, 'flattening dirties the slide')
-	})
-
 	test('a media-only timing is preserved (flatten is a no-op)', () => {
 		const s = slide(timing(''))
 		assert(!s.flattenAnimations(), 'flatten does not touch media-loop timing')

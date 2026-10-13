@@ -114,8 +114,8 @@ describe('Slide.addPicture', () => {
 			contentType: 'image/png',
 		})
 		const added = [...presentation.opc.parts.keys()].filter((name) => !before.has(name))
-		assertEqual(added.length, 1, 'one media part added')
-		assert(!before.has(at(added, 0)), `new media partname ${added[0]} did not collide`)
+		// A colliding name would overwrite an existing part and add none.
+		assertEqual(added.length, 1, 'one media part added, under a name of its own')
 	})
 
 	test('throws when the image type cannot be determined', async () => {

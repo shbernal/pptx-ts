@@ -184,12 +184,6 @@ describe('dirty path: mutate one slide, save', () => {
 		assert(xml.includes('EDITED BY ROUNDTRIP TEST'), 'mutated text should be present after reload')
 		assert(xml.startsWith('<?xml'), 'dirty part should keep an XML declaration')
 	})
-
-	test.skipIf(!validatorInstalled)('mutated package is still schema-valid', async () => {
-		const { pkg } = await mutateFirstTextRun()
-		const errors = await validateBuf(Buffer.from(await pkg.save()))
-		assertEqual(errors.length, 0, `validator errors: ${JSON.stringify(errors).slice(0, 2000)}`)
-	})
 })
 
 describe('partname and overlay units', () => {

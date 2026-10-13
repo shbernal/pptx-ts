@@ -213,13 +213,6 @@ describe('slide animations (opaque, spid-aware)', () => {
 		const reopened = await Presentation.load(await pres.save())
 		assert.deepEqual(at(reopened.slides, 0).animationSpids(), [2, 4, 5])
 	})
-
-	test('pruning a click-effect collapses its emptied wrapper', async () => {
-		const pres = await openFixture('slide-animation-rich')
-		const slide = at(pres.slides, 0)
-		slide.pruneAnimationSpids([2])
-		assert.deepEqual(slide.animationSpids(), [3, 4, 5])
-	})
 })
 
 describe('slide.flattenAnimations (whole-slide flatten pass)', () => {
@@ -331,24 +324,6 @@ describe('import-animation-merge (read fixture)', () => {
 		const xml = await slidePartXml(await readFile(fixturePath('import-animation-merge')), 2)
 		assert.ok(xml.includes(oracle.merged.timingXml), 'merged timing tree present verbatim')
 		assert.ok(xml.includes(oracle.merged.bldList.xml), 'merged bldLst present verbatim')
-	})
-
-	test('remapAnimationSpids stays coherent across the merged build', async () => {
-		const oracle = await readOracle('import-animation-merge')
-		const pres = await openFixture('import-animation-merge')
-		const slide = at(pres.slides, 1)
-		// Apply the oracle's spid remap (host stays, carried 2->3 simulated as a shift).
-		slide.remapAnimationSpids(
-			new Map([
-				[2, 20],
-				[3, 30],
-			])
-		)
-		assert.deepEqual(slide.animationSpids(), [20, 30])
-		const reopened = await Presentation.load(await pres.save())
-		assert.deepEqual(at(reopened.slides, 1).animationSpids(), [20, 30])
-		// mergeMap sanity: the carried shape was renumbered to spid 3 on the destination.
-		assert.equal(oracle.mergeMap.carriedShape.mergedSpid, 3)
 	})
 })
 

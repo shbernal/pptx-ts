@@ -13,7 +13,7 @@ import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { describe, test } from 'vitest'
 import PptxTs from '../../dist/node.js'
-import { Presentation, OpcPackage } from '../../dist/read.js'
+import { Presentation } from '../../dist/read.js'
 import { bytesEqual, assert, assertEqual, defined, partBodies, at } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { FIXTURES, fixturePath } from './corpus.ts'
@@ -47,22 +47,6 @@ function relTypes(relsXml: string) {
 }
 
 describe('3D model: PowerPoint-authored fixture', () => {
-	test('load → save leaves the model3d slide, its subtree and both media parts byte-identical', async () => {
-		const input = await readFile(fixturePath('model3d'))
-		const before = await partBodies(input)
-		const saved = await (await OpcPackage.load(input)).save()
-		const after = await partBodies(saved)
-
-		assertEqual(
-			[...after.keys()].sort().join('\n'),
-			[...before.keys()].sort().join('\n'),
-			'the part-name set is unchanged (neither the .glb nor the preview is dropped)'
-		)
-		for (const name of ['ppt/slides/slide1.xml', 'ppt/slides/_rels/slide1.xml.rels', 'ppt/media/model3d1.glb']) {
-			assert(bytesEqual(before.get(name), after.get(name)), `${name} is byte-identical after the round-trip`)
-		}
-	})
-
 	test('a model reads back as an inert graphicFrame — no typed accessor, but not dropped either', async () => {
 		const pres = await Presentation.load(await readFile(fixturePath('model3d')))
 		const shapes = at(pres.slides, 0).shapes

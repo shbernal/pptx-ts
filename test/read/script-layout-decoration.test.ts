@@ -31,7 +31,6 @@ import { execFile } from 'node:child_process'
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { promisify } from 'node:util'
-import { fileURLToPath } from 'node:url'
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import PptxTs, { ChartType } from '../../dist/node.js'
@@ -55,25 +54,16 @@ import {
 	type IrValue,
 } from '../../dist/script.js'
 import { assert, assertEqual, defined, readEntry, take, at as atIndex } from '../helpers.ts'
-import { FIXTURES } from './corpus.ts'
+import { SCRATCH, openFixture, readFixture } from './corpus.ts'
 import { at, opt, arrayOf, objectOf } from './ir-path.ts'
 
 const run = promisify(execFile)
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const REPO = path.join(__dirname, '..', '..')
-// Inside the repo: an emitted script imports this package by its published name, which Node
-// resolves by the self-reference rule only from a path under the package root.
-const SCRATCH = path.join(REPO, '.tmp')
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 
 /** A 1×1 PNG — the blip's bytes are irrelevant here, only that they make the round trip. */
 const PNG_1x1 =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP8z8DwHwAFAAH/Re1ZlAAAAABJRU5ErkJggg=='
-
-async function load(name: string) {
-	return Presentation.load(await readFile(path.join(FIXTURES, name)))
-}
 
 /** Every `SlideLayout` in a deck, in the gallery order the IR's `layoutIndex` addresses. */
 function layoutsOf(presentation: Presentation): SlideLayout[] {
@@ -157,7 +147,7 @@ describe('layout decoration — the IR, read against the deck rather than the co
 		// mapped one object per shape. A placeholder becomes a `{ placeholder }` definition only when
 		// every slide on the layout fills it: the write path seeds an unfilled one onto each slide, so
 		// re-declaring one a slide left out would put an empty ghost on it (#165).
-		const presentation = await load('mixed.pptx')
+		const presentation = await openFixture('mixed.pptx')
 		const layout = atIndex(layoutsOf(presentation), 0)
 		assertEqual(layout.name, 'Diapositive de titre', 'the fixture layout this test is about')
 
@@ -194,7 +184,7 @@ describe('layout decoration — the IR, read against the deck rather than the co
 		// unmoved, which they do because `absoluteFrame` composes the enclosing group's offset,
 		// rotation, flips and child-space scaling — so the oracle is the read model's own frame,
 		// not the converter's arithmetic.
-		const presentation = await load('mixed.pptx')
+		const presentation = await openFixture('mixed.pptx')
 		const layout = atIndex(layoutsOf(presentation), 0)
 		const groups = layout.shapes.filter(isGroupShape)
 		assert(groups.length > 0, 'the layout carries at least one group')
@@ -231,7 +221,7 @@ describe('layout decoration — the IR, read against the deck rather than the co
 		// source's. Baking `accent2` to a hex would survive the round trip and quietly stop the
 		// output deck from recolouring — the round trip compares two IRs, and a hex on both sides
 		// agrees with itself.
-		const presentation = await load('mixed.pptx')
+		const presentation = await openFixture('mixed.pptx')
 		const layout = atIndex(layoutsOf(presentation), 0)
 		// The ten `p:clrMap` slots the write path can name. The other seven degrade to a literal
 		// there anyway, so the converter bakes them deliberately and says so — the leg below.
@@ -270,7 +260,7 @@ describe('layout decoration — the IR, read against the deck rather than the co
 		// PowerPoint's line tool authors a `p:cxnSp`, so a rule under a title is usually a
 		// connector — 18 of the 45 shapes the corpus's layouts actually draw. `objects` has no
 		// connector variant, so the alternative to this arm is dropping every one of them.
-		const presentation = await load('read-stress.pptx')
+		const presentation = await openFixture('read-stress.pptx')
 		const layouts = layoutsOf(presentation)
 		const index = layouts.findIndex((layout) => decorationOf(layout.shapes).some((s) => s.shapeType === 'connector'))
 		assert(index >= 0, 'the fixture has a layout with connectors on it')
@@ -292,7 +282,7 @@ describe('layout decoration — the IR, read against the deck rather than the co
 	})
 
 	test('a decorative text box keeps its text and its text-box-ness', async () => {
-		const presentation = await load('read-stress.pptx')
+		const presentation = await openFixture('read-stress.pptx')
 		const layouts = layoutsOf(presentation)
 		const index = layouts.findIndex((layout) => layout.name === 'Quote with Caption')
 		assert(index >= 0, 'the fixture has the layout with decorative quote marks on it')
@@ -323,7 +313,7 @@ describe('layout decoration — the IR, read against the deck rather than the co
 		// rather than the two this file names. A shape that reached neither the `objects` array nor
 		// a note is a silent loss, which is the failure mode the notes exist to make impossible.
 		for (const name of ['mixed.pptx', 'read-stress.pptx', 'theme-colors.pptx', 'gradient-fill.pptx']) {
-			const presentation = await load(name)
+			const presentation = await openFixture(name)
 			const ir = readModelToIr(presentation)
 			const noted = new Set(
 				ir.fidelity.filter((note) => note.construct.startsWith(LAYOUT_NOTE_PREFIX)).map((note) => note.shapeName)
@@ -340,7 +330,7 @@ describe('layout decoration — the IR, read against the deck rather than the co
 
 describe('layout decoration — the emitted script rebuilds it, with no template in reach', () => {
 	test('the output deck’s layouts carry the source’s decoration, and only on the layouts', async () => {
-		const bytes = await readFile(path.join(FIXTURES, 'read-stress.pptx'))
+		const bytes = await readFixture('read-stress.pptx')
 		const source = await Presentation.load(bytes)
 		const { ir, output, report } = await runStandalone(bytes)
 		assertEqual(report.undeclared.length, 0, 'no undeclared round-trip difference')
@@ -378,7 +368,7 @@ describe('layout decoration — the emitted script rebuilds it, with no template
 		// The oracle's half of the claim above. Without it, the round trip passes just as happily
 		// against a converter that emits no `objects` at all, because nothing would then differ
 		// between two sides that are both empty.
-		const { ir, outputIr, printed } = await runStandalone(await readFile(path.join(FIXTURES, 'read-stress.pptx')))
+		const { ir, outputIr, printed } = await runStandalone(await readFixture('read-stress.pptx'))
 		const perturbed = canonicalDeckIr(outputIr)
 		const victim = perturbed.chrome.masters.find((master) => {
 			const objects = at(master, 'objects')
@@ -399,7 +389,7 @@ describe('layout decoration — the emitted script rebuilds it, with no template
 		// the ones that do. Tier B reuses the source deck as its template, so every layout — and
 		// every loss in re-authoring one — is somebody else's problem.
 		for (const name of ['mixed.pptx', 'read-stress.pptx']) {
-			const ir = readModelToIr(await load(name))
+			const ir = readModelToIr(await openFixture(name))
 			const standalone = printStandaloneScript(ir).notes.filter((n) => n.construct.startsWith(LAYOUT_NOTE_PREFIX))
 			const anchored = printScript(ir).notes.filter((n) => n.construct.startsWith(LAYOUT_NOTE_PREFIX))
 			assert(standalone.length > 0, `${name}: the standalone tier declares its layout losses`)
@@ -541,7 +531,7 @@ describe('layout placeholder definitions', () => {
 	test("a PowerPoint layout's definitions a slide leaves out stay out, and are noted", async () => {
 		// placeholder-inherit.pptx's one slide is on "Title and Text", which also defines a date, a
 		// footer and a slide number the slide does not show; its other layouts are unused.
-		const ir = readModelToIr(await load('placeholder-inherit.pptx'))
+		const ir = readModelToIr(await openFixture('placeholder-inherit.pptx'))
 		const used = defined(atIndex(ir.slides, 0).layout).index
 		const typesOf = (index: number) =>
 			allObjectsOfLayout(ir, index)
