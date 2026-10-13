@@ -3,9 +3,12 @@
 //
 // A converter reads geometry as EMU and colours as raw `a:schemeClr/@val` tokens, then has
 // to re-express both through the write API. These tests make the resulting precision and
-// vocabulary boundaries executable rather than inferred from type declarations: widening
-// `Margin`/`colW` to `Coord`, or extending `SchemeColor` towards the full
-// `ST_SchemeColorVal` set, should fail here and be recorded as a deliberate change.
+// vocabulary boundaries executable, because the types do not state all of them: `Margin` and
+// `colW` are typed `number`, but a fill `color` is `HexColor | ThemeColor` with `HexColor` an
+// alias of `string`, and the string form of `placeholder` is any string, so neither type
+// narrows the scheme or placeholder vocabulary. Widening `Margin`/`colW` to `Coord`, or extending
+// the scheme tokens the writer maps towards the full `ST_SchemeColorVal` set, should fail here
+// and be recorded as a deliberate change.
 import type { Slide } from '../../../dist/node.js'
 import { defineRegressionSuite, assert, assertIncludes, slideXml, assertRejects } from '../../helpers.ts'
 
@@ -155,7 +158,8 @@ defineRegressionSuite('EMU-exact geometry and scheme-colour passthrough', [
 	{
 		name: 'the 7 unmapped ST_SchemeColorVal tokens degrade to a hex fallback, not schemeClr',
 		fn: async () => {
-			// ECMA-376 ST_SchemeColorVal has 17 values; `SchemeColor` covers 10. The read path
+			// ECMA-376 ST_SchemeColorVal has 17 values; `SchemeColor` and `ThemeColor` cover 10. The
+			// type takes the other 7 (a `color` is any string), so the boundary is the writer's. The read path
 			// reports `a:schemeClr/@val` verbatim, so the other 7 can reach a converter, and
 			// `createColorElement` degrades them to DEF_FONT_COLOR with only a console warning —
 			// i.e. it repaints the shape black. A converter must therefore resolve these against
@@ -167,8 +171,8 @@ defineRegressionSuite('EMU-exact geometry and scheme-colour passthrough', [
 				)
 				assert(
 					!xml.includes(`<a:schemeClr val="${token}"`),
-					`"${token}" reached the slide as a schemeClr; the write path is not supposed to accept it. ` +
-						`If SchemeColor was widened deliberately, a converter may stop flattening this token.`
+					`"${token}" reached the slide as a schemeClr; the writer is not supposed to map it. ` +
+						`If the mapped scheme tokens were widened deliberately, a converter may stop flattening this token.`
 				)
 				assertIncludes(xml, '<a:srgbClr val="000000"/>', `fallback fill for unmapped token ${token}`)
 			}
@@ -177,8 +181,8 @@ defineRegressionSuite('EMU-exact geometry and scheme-colour passthrough', [
 	{
 		name: 'a placeholder-bound shape always carries its own explicit a:xfrm',
 		fn: async () => {
-			// So `placeholder` and geometry are independent, not alternatives: authoring
-			// `placeholder: 'title'` never makes the shape inherit layout geometry. Omitting
+			// With no layout placeholder of that name, `placeholder` and geometry are independent:
+			// `placeholder: 'title'` gives the shape no layout geometry to inherit. Omitting
 			// x/y/w/h does not yield inheritance either — it yields a degenerate box (cy="0").
 			// A converter must therefore always print concrete geometry, and may print
 			// `placeholder` on top of it purely for semantics/accessibility.
@@ -194,14 +198,14 @@ defineRegressionSuite('EMU-exact geometry and scheme-colour passthrough', [
 		},
 	},
 	{
-		name: 'only 6 of the 16 ST_PlaceholderType values are expressible; the rest emit no type',
+		name: 'a bare placeholder string emits only the 6 PlaceholderType values as a type',
 		fn: async () => {
-			// `PlaceholderType` covers title/body/pic/chart/tbl/media. `genXmlPlaceholder` drops
-			// an unrecognised type silently rather than emitting an invalid attribute, so a
-			// source `ctrTitle`/`subTitle`/`ftr`/… degrades to an untyped `<p:ph>`. There is also
-			// no public setter for `idx` (`_placeholderIdx` is internal), so placeholder identity
-			// cannot be fully reproduced. Both are semantic losses, not visual ones — geometry is
-			// always explicit — but they must be declared, not discovered.
+			// The string form of `placeholder` is typed `string`: it names a layout placeholder, not a
+			// type. With no layout placeholder of that name, the writer emits it as the `p:ph` type
+			// only when it is one of `PlaceholderType`'s title/body/pic/chart/tbl/media, and drops any
+			// other string rather than emitting an invalid attribute, so `ctrTitle`/`subTitle`/`ftr`/…
+			// given this way degrade to an untyped `<p:ph>`. A converter that needs those types, or an
+			// `idx`, states them through the `{ type, idx }` binding form instead.
 			for (const token of ['title', 'body', 'pic', 'chart', 'tbl', 'media']) {
 				const xml = await probeSlideXml((slide) => slide.addText('x', { placeholder: token, x: 1, y: 1, w: 4, h: 1 }))
 				assertIncludes(xml, `type="${token}"`, `p:ph for expressible type ${token}`)
@@ -210,8 +214,8 @@ defineRegressionSuite('EMU-exact geometry and scheme-colour passthrough', [
 				const xml = await probeSlideXml((slide) => slide.addText('x', { placeholder: token, x: 1, y: 1, w: 4, h: 1 }))
 				assert(
 					!xml.includes(`type="${token}"`),
-					`"${token}" was emitted as a p:ph type; PlaceholderType is not supposed to cover it. ` +
-						`If the vocabulary was widened deliberately, a converter can reproduce more placeholder types.`
+					`"${token}" was emitted as a p:ph type from a bare string; only PlaceholderType's values are. ` +
+						`If the string form was widened deliberately, a converter can reproduce more placeholder types with it.`
 				)
 			}
 		},

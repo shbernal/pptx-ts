@@ -187,9 +187,9 @@ defineRegressionSuite('Shared chart fragments', [
 		fn: async () => {
 			const ok = await chartFor(ChartType.line, [{ name: 'S', labels: ['2026-01-01', '2026-02-01'], values: [1, 2] }], {
 				catLabelFormatCode: 'yyyy-mm',
-				// @ts-expect-error the type spells time units in lower case; the runtime folds case
+				// @ts-expect-error accepted leniency, not API: the type spells time units in lower case, the runtime folds case
 				catAxisBaseTimeUnit: 'Days',
-				// @ts-expect-error the type spells time units in lower case; the runtime folds case
+				// @ts-expect-error accepted leniency, not API: the type spells time units in lower case, the runtime folds case
 				catAxisMajorTimeUnit: 'MONTHS',
 				catAxisMinorTimeUnit: 'years',
 			})

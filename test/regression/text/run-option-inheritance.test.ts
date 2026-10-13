@@ -118,7 +118,7 @@ defineRegressionSuite('Run options inherited from the shape', [
 				['btm', 'b'],
 				['MIDDLE', 'ctr'],
 			] as [string, string][]) {
-				// @ts-expect-error ctr, btm and MIDDLE are accepted at runtime but are not VAlign members
+				// @ts-expect-error accepted leniency, not API: ctr, btm and MIDDLE resolve at runtime but are not VAlign members
 				const xml = await slideFor('hi', { valign })
 				assert(
 					new RegExp(`<a:bodyPr[^>]*\\banchor="${anchor}"`).test(xml),
