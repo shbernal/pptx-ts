@@ -334,7 +334,7 @@ Every read value that carries a colour carries a [`ColorRef`](api/read/interface
 | --- | --- | --- | --- | --- |
 | Outer shadow | [`shadow`](api/read/classes/Shape.md#shadow) | `a:outerShdw` | Yes, from `shadow: { type: 'outer' }` on shapes, text boxes and images | Yes |
 | Inner shadow | [`innerShadow`](api/read/classes/Shape.md#innershadow) | `a:innerShdw` | Yes, from `shadow: { type: 'inner' }` | Yes |
-| Glow | [`glow`](api/read/classes/Shape.md#glow) | `a:glow` | No. The write-side `glow` option puts `a:glow` in the text run properties, which no getter reads. | Yes |
+| Glow | [`glow`](api/read/classes/Shape.md#glow) | `a:glow` | No. The write-side `glow` option puts `a:glow` in the text run properties, where [`Run.glow`](api/read/classes/Run.md#glow) reads it. | Yes |
 | Reflection | [`reflection`](api/read/classes/Shape.md#reflection) | `a:reflection` | No | Yes |
 | Soft edge | [`softEdge`](api/read/classes/Shape.md#softedge) | `a:softEdge` | No | Yes |
 
