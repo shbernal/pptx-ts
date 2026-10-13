@@ -61,6 +61,7 @@ const copy = deck.cloneSlide(0, { at: 1 })
 - Only the layouts that imported slides use come across. An imported master lists only those layouts.
 - Imports from one source deck share what they copied. A second import from the same deck reuses the layout, master, theme and media the first one brought.
 - The slide part and the parts it owns are copied on every import, so importing one page twice gives two independent slides.
+- The slide's review comments come with it. Their authors merge into this deck's author list by name and initials, and each comment continues its author's numbering here.
 - A jump link from the page to another slide must point at a page an earlier import from the same deck brought across. Otherwise the import throws `import/unresolved-slide-link`. Import the target page first, or import both in one [batch](#import-several-slides-in-one-batch).
 - Before it changes the deck, the import checks the index, the slide sizes, the links, and each source part it will read. A refused import leaves the deck unchanged.
 
