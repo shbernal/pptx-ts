@@ -23,7 +23,7 @@ import { imageContentType } from '../media/content-type.js'
  * the classic-or-chartEx choice for the package writer too.
  */
 export function chartsOf(slide: PresSlideInternal): ExtractedSlide['charts'] {
-	return (slide._relsChart || []).map((rel) => ({
+	return slide._relsChart.map((rel) => ({
 		rId: rel.rId,
 		embeddingBytes: buildEmbeddedWorksheet(rel),
 		...chartPartBodies(rel),

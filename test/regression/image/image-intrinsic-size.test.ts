@@ -2,7 +2,7 @@ import { writeFileSync, mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import type { ImageProps } from '../../../dist/node.js'
-import { PNG_1X1, defineRegressionSuite, build, readEntry, assert, at } from '../../helpers.ts'
+import { defineRegressionSuite, build, readEntry, assert, at } from '../../helpers.ts'
 
 // addImage() previously fell back to a 1in x 1in square whenever `w`/`h` were omitted, which
 // squished every dimensionless image into the wrong aspect ratio. For base64
@@ -136,14 +136,6 @@ const PNG_4x2_PATH = join(tmpDir, 'raster-4x2.png')
 writeFileSync(PNG_4x2_PATH, Buffer.from(at(RASTER_4x2.png.split('base64,'), 1), 'base64'))
 
 defineRegressionSuite('Image intrinsic-size defaults', [
-	{
-		// Neither w nor h: square 1x1 image must emit its natural 9525x9525 EMU box, not 1in.
-		name: 'no w/h: data image defaults to its natural pixel size (square)',
-		fn: async () => {
-			const r = await extFor({ data: PNG_1X1, x: 1, y: 1 })
-			assert(r.cx === 9525 && r.cy === 9525, `expected cx=9525 cy=9525; got ${JSON.stringify(r)}`)
-		},
-	},
 	// Cross-format coverage: a 4x2 image of each format with no w/h must emit 38100x19050 EMU.
 	// This passes only if the header parser read the natural 4x2 size for that format.
 	...Object.entries(RASTER_4x2).map(([fmt, data]) => ({

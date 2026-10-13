@@ -54,22 +54,22 @@ export const chartContributor: PartContributor = {
 	order: 30,
 	parts: {
 		fromTargetRels(target: PartTarget, zip: ZipWriter): Promise<unknown>[] {
-			return (target._relsChart || []).map((rel) => createExcelWorksheet(rel, zip))
+			return target._relsChart.map((rel) => createExcelWorksheet(rel, zip))
 		},
 	},
 	contentTypes: {
 		defaults(pres: PresentationPropsInternal): ContentTypeDefault[] {
-			const targets: Array<PartTarget | undefined> = [...pres.slides, ...pres.slideLayouts, pres.masterSlide]
-			return targets.some((target) => (target?._relsChart || []).length > 0) ? [XLSX_DEFAULT] : []
+			const targets: PartTarget[] = [...pres.slides, ...pres.slideLayouts, pres.masterSlide]
+			return targets.some((target) => target._relsChart.length > 0) ? [XLSX_DEFAULT] : []
 		},
 		perSlide(slide: PresSlideInternal): ContentTypeOverride[] {
 			return slide._relsChart.flatMap((rel) => chartOverrides(rel))
 		},
 		perLayout(layout: SlideLayoutInternal): ContentTypeOverride[] {
-			return (layout._relsChart || []).flatMap((rel) => chartOverrides(rel, true))
+			return layout._relsChart.flatMap((rel) => chartOverrides(rel, true))
 		},
 		trailing(pres: PresentationPropsInternal): ContentTypeOverride[] {
-			return (pres.masterSlide?._relsChart || []).flatMap((rel) => chartOverrides(rel, true))
+			return pres.masterSlide._relsChart.flatMap((rel) => chartOverrides(rel, true))
 		},
 	},
 }

@@ -928,13 +928,6 @@ describe('Per-shape rotation / flip (rotation, flipH, flipV)', () => {
 		assertEqual(shape.flipH, false, 'no flipH reads false')
 	})
 
-	test('a present xfrm with no rot/flip reads rotation 0 and both flips false', () => {
-		const shape = spWithXfrm('<a:xfrm><a:off x="0" y="0"/><a:ext cx="100" cy="100"/></a:xfrm>')
-		assertEqual(shape.rotation, 0, 'a transform with no @rot is not rotated (0, not null)')
-		assertEqual(shape.flipH, false, 'no @flipH reads false')
-		assertEqual(shape.flipV, false, 'no @flipV reads false')
-	})
-
 	test('a shape with no own transform reads rotation null and flips false', () => {
 		const shape = spWithXfrm('')
 		assertEqual(shape.rotation, null, 'no a:xfrm → rotation null (inherits layout geometry)')

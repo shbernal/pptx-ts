@@ -167,38 +167,36 @@ export function addTextDefinition(
 			}
 
 			// A.3: Text targeting a placeholder need to inherit the placeholders options (eg: margin, valign, etc.)
-			if (itemOpts.placeholder && target._slideLayout && target._slideLayout._slideObjects) {
-				const placeHold = findLayoutPlaceholder(target._slideLayout, itemOpts.placeholder)
-				if (placeHold?.options) {
-					// A placeholder SUPPLIES an option; it never IMPOSES one. Every key the caller wrote
-					// on this bag wins, and the placeholder fills in the rest -- which is what "text
-					// targeting a placeholder inherits its options" means, and what makes a slide match
-					// its layout without silently discarding what the caller asked for.
-					//
-					// `{ ...itemOpts, ...placeHold.options }` was the other way round, so the placeholder
-					// won on every key it stated: `addText('x', { placeholder: 'body', valign: 'top' })`
-					// took the layout's anchor and the caller's `valign` did nothing.
-					//
-					// It is PowerPoint's own model. A layout placeholder given a bottom anchor and a 1in
-					// left inset, with the slide's placeholder then re-anchored to the top, writes
-					// `<a:bodyPr lIns="914400" anchor="b"/>` on the layout and `<a:bodyPr anchor="t"/>` on
-					// the slide: the slide states only what it overrides, the inset is simply absent, and
-					// the stated anchor is the one that applies (`placeholder-override.pptx`).
-					//
-					// `authoredKeys`, not "is the key present": `bullet` is defaulted to `false` a few
-					// lines above for exactly these objects, so testing presence would let that default
-					// beat the layout's bullet -- which is not the same statement as letting a caller
-					// beat it.
-					const stated = authoredKeys.get(itemOpts) ?? new Set<string>()
-					const inherited: Record<string, unknown> = {}
-					for (const [key, value] of Object.entries(placeholderOptionsForSlide(placeHold.options))) {
-						// A key the placeholder carries as an explicit `undefined` supplies nothing, and
-						// copying it would turn "the layout said nothing" into a stated `undefined` on a
-						// bag that is spread further downstream.
-						if (value !== undefined && !stated.has(key)) inherited[key] = value
-					}
-					itemOpts = { ...itemOpts, ...inherited }
+			const placeHold = findLayoutPlaceholder(target._slideLayout, itemOpts.placeholder)
+			if (placeHold?.options) {
+				// A placeholder SUPPLIES an option; it never IMPOSES one. Every key the caller wrote
+				// on this bag wins, and the placeholder fills in the rest -- which is what "text
+				// targeting a placeholder inherits its options" means, and what makes a slide match
+				// its layout without silently discarding what the caller asked for.
+				//
+				// `{ ...itemOpts, ...placeHold.options }` was the other way round, so the placeholder
+				// won on every key it stated: `addText('x', { placeholder: 'body', valign: 'top' })`
+				// took the layout's anchor and the caller's `valign` did nothing.
+				//
+				// It is PowerPoint's own model. A layout placeholder given a bottom anchor and a 1in
+				// left inset, with the slide's placeholder then re-anchored to the top, writes
+				// `<a:bodyPr lIns="914400" anchor="b"/>` on the layout and `<a:bodyPr anchor="t"/>` on
+				// the slide: the slide states only what it overrides, the inset is simply absent, and
+				// the stated anchor is the one that applies (`placeholder-override.pptx`).
+				//
+				// `authoredKeys`, not "is the key present": `bullet` is defaulted to `false` a few
+				// lines above for exactly these objects, so testing presence would let that default
+				// beat the layout's bullet -- which is not the same statement as letting a caller
+				// beat it.
+				const stated = authoredKeys.get(itemOpts) ?? new Set<string>()
+				const inherited: Record<string, unknown> = {}
+				for (const [key, value] of Object.entries(placeholderOptionsForSlide(placeHold.options))) {
+					// A key the placeholder carries as an explicit `undefined` supplies nothing, and
+					// copying it would turn "the layout said nothing" into a stated `undefined` on a
+					// bag that is spread further downstream.
+					if (value !== undefined && !stated.has(key)) inherited[key] = value
 				}
+				itemOpts = { ...itemOpts, ...inherited }
 			}
 
 			// B: Line defaults for a line-shaped text box.
@@ -358,7 +356,7 @@ export function addTextDefinition(
 	}
 
 	// STEP 2: Create/Clean text options
-	textObjects.forEach((item) => (item.options = cleanOpts(item.options || {})))
+	textObjects.forEach((item) => (item.options = cleanOpts(item.options)))
 
 	// STEP 3: Create hyperlinks for the SHAPE and for its runs, which are two `hlinkClick`
 	// elements resolving two relationship ids (`p:cNvPr`'s and each `a:rPr`'s). Handing over the

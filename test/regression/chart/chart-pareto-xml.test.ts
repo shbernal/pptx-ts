@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { build, readEntry, listEntries } from '../../helpers.ts'
+import { build, readEntry } from '../../helpers.ts'
 import { chartExPath } from './chart-parts.ts'
 
 // Pareto is the first MULTI-SERIES chartEx (cx:) layout. Confirmed against a chart PowerPoint
@@ -36,19 +36,6 @@ async function buildPareto(extra = {}) {
 }
 
 describe('pareto (multi-series chartEx) chart', () => {
-	test('emits a chartEx part with the mandatory sidecars, no classic chart part', async () => {
-		const { zip } = await buildPareto()
-		expect(chartExPath(zip)).toBe('ppt/charts/chartEx1.xml')
-		const contentTypes = await readEntry(zip, '[Content_Types].xml')
-		expect(contentTypes).toContain(
-			'<Override PartName="/ppt/charts/chartEx1.xml" ContentType="application/vnd.ms-office.chartex+xml"/>'
-		)
-		const entries = listEntries(zip)
-		expect(entries).toContain('ppt/charts/style1.xml')
-		expect(entries).toContain('ppt/charts/colors1.xml')
-		expect(entries.some((p) => /^ppt\/charts\/chart\d+\.xml$/.test(p))).toBe(false)
-	})
-
 	test('slide Choice requires the base feature namespace cx1', async () => {
 		const { zip } = await buildPareto()
 		const slide = await readEntry(zip, 'ppt/slides/slide1.xml')

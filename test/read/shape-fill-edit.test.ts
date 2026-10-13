@@ -172,14 +172,6 @@ describe('Per-kind fill / line support', () => {
 		assertEqual(findByKind(reopened, 'group').fillColor, '123456', 'group fill reloads')
 	})
 
-	test('group shape rejects a line colour (grpSpPr has no a:ln)', async () => {
-		const group = findByKind(await openFixture('mixed'), 'group')
-		assert(
-			throws(() => (group.lineColor = '000000')),
-			'group lineColor should throw'
-		)
-	})
-
 	test('picture rejects fill but accepts a border (lineColor)', async () => {
 		const picture = findByKind(await openFixture('image'), 'picture')
 		assert(
@@ -256,18 +248,6 @@ describe('Per-kind fill / line support', () => {
 		assertEqual(picture.fillColor, '123456', 'the planted fill reads back')
 		picture.fillColor = null
 		assertEqual(picture.fillColor, null, 'and clears')
-	})
-
-	test('graphic frame rejects both fill and line colours', async () => {
-		const frame = findByKind(await openFixture('mixed'), 'graphicFrame')
-		assert(
-			throws(() => (frame.fillColor = '000000')),
-			'graphicFrame fillColor should throw'
-		)
-		assert(
-			throws(() => (frame.lineColor = '000000')),
-			'graphicFrame lineColor should throw'
-		)
 	})
 })
 

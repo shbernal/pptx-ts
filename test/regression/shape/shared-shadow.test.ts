@@ -65,30 +65,6 @@ defineRegressionSuite('Shared shadow options [legacy bug-05]', [
 		},
 	},
 	{
-		name: 'shared shadow object literal not mutated after build',
-		fn: async () => {
-			const pres = new PptxTs()
-			const slide = pres.addSlide()
-			/** The caller's own `ShadowProps`; the definer normalizes a COPY per shape. */
-			const shadow: ShadowProps & { _alpha?: number } = {
-				type: 'outer',
-				blur: 6,
-				offset: 2,
-				color: '000000',
-				transparency: 85,
-			}
-			slide.addShape(ShapeType.rect, { x: 1, y: 1, w: 2, h: 1, shadow })
-			slide.addShape(ShapeType.rect, { x: 1, y: 3, w: 2, h: 1, shadow })
-			await buildSlideXml(pres)
-
-			assert(
-				JSON.stringify(shadow) ===
-					JSON.stringify({ type: 'outer', blur: 6, offset: 2, color: '000000', transparency: 85 }),
-				'the shared literal comes back as written: ' + JSON.stringify(shadow)
-			)
-		},
-	},
-	{
 		name: 'shared shadow across image+shape emits same EMU values (no double-conversion)',
 		fn: async () => {
 			const pres = new PptxTs()

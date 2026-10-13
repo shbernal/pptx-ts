@@ -2,12 +2,12 @@
 // matrix resolution branches the fixture decks don't all carry:
 //   - resolveColor across sysClr / schemeClr (clrMap + direct-slot) / phClr,
 //   - resolveThemeFont across +mj/+mn and lt/ea/cs script slots,
-//   - styleRefFill/styleRefLine with phClr substitution and the bgFillStyleLst
-//     (idx >= 1000) branch.
+//   - styleRefFill's bgFillStyleLst (idx >= 1000) branch, with phClr substitution.
 // resolveColorElement is exported and tested directly; the theme-font and style-
-// matrix legs go through the public Run.resolvedFontFace / Shape.resolvedFill /
-// Shape.resolvedLine getters over a synthetic TextFrame / AutoShape carrying a
-// hand-authored fontScheme / fmtScheme in its theme context.
+// matrix legs go through the public Run.resolvedFontFace / Shape.resolvedFill
+// getters over a synthetic TextFrame / AutoShape carrying a hand-authored
+// fontScheme / fmtScheme in its theme context. The fillRef / lnRef phClr
+// substitution itself is pinned on multi-theme.pptx (style-accessors.test.ts).
 
 import { DOMParser, type Element } from '@xmldom/xmldom'
 import { describe, test } from 'vitest'
@@ -119,10 +119,6 @@ describe('resolveThemeFont — +mj/+mn tokens across script slots', () => {
 		assertEqual(face('+mn-lt', f), 'Verdana', '+mn-lt → minorFont/latin')
 	})
 
-	test('a literal (non-token) face is returned verbatim', () => {
-		assertEqual(face('Rockwell', ctx({ fontScheme })), 'Rockwell', 'a plain face resolves to itself')
-	})
-
 	test('a token resolves to null with no fontScheme, or when the scheme slot is empty', () => {
 		assertEqual(face('+mn-lt', ctx()), null, 'no fontScheme → null')
 		// majorFont has no <a:ea>, so +mj-ea finds no face.
@@ -130,20 +126,7 @@ describe('resolveThemeFont — +mj/+mn tokens across script slots', () => {
 	})
 })
 
-describe('styleRef fill/line — phClr substitution + bgFillStyleLst', () => {
-	test('a fillRef solid entry has its phClr replaced by the ref colour', () => {
-		const fmtScheme = drawingEl(
-			`<a:fmtScheme><a:fillStyleLst>` +
-				`<a:solidFill><a:schemeClr val="phClr"/></a:solidFill>` +
-				`</a:fillStyleLst><a:lnStyleLst/><a:effectStyleLst/><a:bgFillStyleLst/></a:fmtScheme>`
-		)
-		const shape = autoShape(
-			`<p:sp><p:style><a:fillRef idx="1"><a:srgbClr val="FF0000"/></a:fillRef></p:style><p:spPr/></p:sp>`,
-			ctx({ fmtScheme })
-		)
-		assertEqual(defined(shape.resolvedFill).hex, 'FF0000', 'the ref colour fills in the phClr slot')
-	})
-
+describe('styleRef fill: phClr substitution + bgFillStyleLst', () => {
 	test('a fillRef idx >= 1000 selects the bgFillStyleLst', () => {
 		const fmtScheme = drawingEl(
 			`<a:fmtScheme><a:fillStyleLst/><a:lnStyleLst/><a:effectStyleLst/>` +
@@ -155,18 +138,5 @@ describe('styleRef fill/line — phClr substitution + bgFillStyleLst', () => {
 			ctx({ fmtScheme })
 		)
 		assertEqual(defined(shape.resolvedFill).hex, '00FF00', 'idx 1001 → bgFillStyleLst entry 1, phClr filled')
-	})
-
-	test('a lnRef resolves the style-matrix line colour', () => {
-		const fmtScheme = drawingEl(
-			`<a:fmtScheme><a:fillStyleLst/>` +
-				`<a:lnStyleLst><a:ln><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln></a:lnStyleLst>` +
-				`<a:effectStyleLst/><a:bgFillStyleLst/></a:fmtScheme>`
-		)
-		const shape = autoShape(
-			`<p:sp><p:style><a:lnRef idx="1"><a:srgbClr val="0000FF"/></a:lnRef></p:style><p:spPr/></p:sp>`,
-			ctx({ fmtScheme })
-		)
-		assertEqual(defined(shape.resolvedLine).hex, '0000FF', 'the lnRef colour fills the phClr in the lnStyleLst entry')
 	})
 })

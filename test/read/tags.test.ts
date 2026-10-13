@@ -1,14 +1,14 @@
 // Read the programmatic tags (`p:custDataLst/p:tags` → `ppt/tags/tagN.xml`) off a
 // genuine PowerPoint-authored fixture. tags.pptx was authored via desktop
 // PowerPoint COM (`Presentation.Tags.Add` + `Slide.Tags.Add`); the oracle is the
-// exact name/val pairs passed to `.Add`. Slide 2 is left tag-free to pin the
-// empty-owner → [] case. There is no writer for tags, so a fixture is the only
-// source (unlike the document-properties round-trip).
+// exact name/val pairs passed to `.Add`. The empty-owner → [] case is pinned on
+// empty.pptx. There is no writer for tags, so a fixture is the only source (unlike
+// the document-properties round-trip).
 
 import { describe, test } from 'vitest'
 
 import type { Tag } from '../../dist/read.js'
-import { assert, assertEqual, at, take } from '../helpers.ts'
+import { assertEqual, at, take } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 /** Render a tag list as "name=val,name=val" for order-preserving equality. */
@@ -26,13 +26,6 @@ describe('Presentation.tags / Slide.tags', () => {
 		const pres = await openFixture('tags')
 		const [slide1] = take(pres.slides, 1)
 		assertEqual(flatten(slide1.tags), 'REGION=EMEA,PRIORITY=high', 'slide 1 tags')
-	})
-
-	test('a tag-free slide reads as []', async () => {
-		const pres = await openFixture('tags')
-		const slide2 = at(pres.slides, 1)
-		assert(Array.isArray(slide2.tags), 'tags is an array')
-		assertEqual(slide2.tags.length, 0, 'slide 2 has no tags')
 	})
 
 	test('a deck with no tag parts → [] at every level', async () => {

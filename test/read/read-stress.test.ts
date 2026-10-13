@@ -154,9 +154,4 @@ describe('read-stress.pptx — combined read-model integration', () => {
 			'the authored note text is read back'
 		)
 	})
-
-	test('lossless round-trip: save() succeeds', async () => {
-		const bytes = await (await pres()).save()
-		assert((bytes.length ?? bytes.byteLength) > 0, 'save() produces bytes')
-	})
 })

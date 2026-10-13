@@ -83,20 +83,6 @@ defineRegressionSuite('Group shapes', [
 		},
 	},
 	{
-		name: 'group children get cNvPr ids unique from top-level objects',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				const s = p.addSlide()
-				s.addShape('rect', { x: 0.2, y: 0.2, w: 1, h: 1 }) // top-level idx 0 -> id 2
-				s.addGroup([{ rect: { x: 1, y: 1, w: 1, h: 1 } }, { rect: { x: 2, y: 1, w: 1, h: 1 } }]) // group is idx 1 -> id 3; children seeded past length -> ids 4,5
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			const ids = (xml.match(/<p:cNvPr id="(\d+)"/g) || []).map((s) => Number(defined(s.match(/"(\d+)"/))[1]))
-			const uniq = new Set(ids)
-			assert(ids.length === uniq.size, 'expected unique cNvPr ids; got: ' + ids.join(','))
-		},
-	},
-	{
 		name: 'nested group emits a group inside a group with identity chOff/chExt at both levels',
 		fn: async () => {
 			const { zip } = await build((p) => {

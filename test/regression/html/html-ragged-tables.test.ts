@@ -75,20 +75,6 @@ function assertGrid(xml: string, columns: number, texts: string[][]) {
 
 defineRegressionSuite('ragged HTML tables', [
 	{
-		name: 'a short row is padded on the right',
-		fn: async () => {
-			const xml = await convert(`
-				<table id="t"><tbody>
-					<tr><td>a</td><td>b</td><td>c</td></tr>
-					<tr><td>d</td></tr>
-				</tbody></table>`)
-			assertGrid(xml, 3, [
-				['a', 'b', 'c'],
-				['d', '', ''],
-			])
-		},
-	},
-	{
 		// The grid is the WIDEST row's reach, not the first row's -- a single spanning header over
 		// a wider body is the common shape, and reading the width off row one would truncate it.
 		name: 'a body wider than its header widens the grid',

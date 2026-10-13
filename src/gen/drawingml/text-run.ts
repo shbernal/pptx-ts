@@ -224,7 +224,7 @@ export function genXmlParagraphProperties(textObj: SlideObject | TextProps, isDe
 			const bullet: TextBulletPropsInternal = opts.bullet
 			const bulletImage = bullet.image
 			const isPictureBullet = !!(bulletImage && (bulletImage.path || bulletImage.data))
-			if (opts.bullet?.indent) bulletMarL = ptsToEmuLenient(opts.bullet.indent)
+			if (opts.bullet.indent) bulletMarL = ptsToEmuLenient(opts.bullet.indent)
 			// Every bullet form hangs the first line by the same margin, whichever glyph it draws.
 			defaultMarL = bulletHangMarL(bulletMarL, indentLevel)
 			defaultIndent = -bulletMarL
@@ -320,7 +320,7 @@ export function genXmlParagraphProperties(textObj: SlideObject | TextProps, isDe
 			// the `a:buNone` note just below, and it keeps `bullet: true` byte-identical to
 			// `bullet: { type: 'bullet' }`, which the object branch above now also leaves out.
 			strXmlBullet = buCharEl(undefined, BulletType.DEFAULT, 'bullet')
-		} else if (!opts.bullet) {
+		} else {
 			// We only add this when the user explicitely asks for no bullet, otherwise, it can override the master defaults!
 			// FIX: specify zero indent and marL or default will be hanging paragraph
 			defaultMarL = 0
@@ -423,14 +423,14 @@ export function genXmlTextRunProperties(opts: ObjectOptions | TextPropsOptions, 
 		sz: mapStated(opts.fontSize, clampFontSizeSz) ?? null,
 		// NOTE: `b`/`i` were written as `opts.bold ? '1' : '0'` inside a truthiness guard, so the
 		// "0" arm was unreachable: the emitted value is always "1".
-		b: xsdBoolIfTrue(opts?.bold),
-		i: xsdBoolIfTrue(opts?.italic),
-		strike: opts?.strike
+		b: xsdBoolIfTrue(opts.bold),
+		i: xsdBoolIfTrue(opts.italic),
+		strike: opts.strike
 			? typeof opts.strike === 'string'
 				? checkEnumOrWarn(opts.strike, TEXT_STRIKE_TYPES, 'text/invalid-strike', 'text `strike`')
 				: 'sngStrike'
 			: null,
-		cap: opts?.caps ? checkEnumOrWarn(opts.caps, TEXT_CAPS_TYPES, 'text/invalid-caps', 'text `caps`') : null,
+		cap: opts.caps ? checkEnumOrWarn(opts.caps, TEXT_CAPS_TYPES, 'text/invalid-caps', 'text `caps`') : null,
 		u: underline,
 		baseline,
 		spc: mapStated(opts.charSpacing, clampCharSpacingSpc) ?? null,
@@ -661,7 +661,7 @@ export function groupRunsIntoLines(arrTextObjects: RunProps[], opts: ObjectOptio
 		arrTexts.push(textObj)
 
 		// C: BreakLine begins new line **after** adding current text
-		if (arrTexts.length > 0 && textObj.options.breakLine) {
+		if (textObj.options.breakLine) {
 			// Avoid starting a para right as loop is exhausted
 			if (idx + 1 < arrTextObjects.length) {
 				arrLines.push(arrTexts)
@@ -894,9 +894,9 @@ export function renderTextParagraphsXml(
 				// A run with no colour after inheriting the shape's takes the slide's, decided now rather
 				// than when the text was added (#88). Onto a copy: the stored run keeps saying nothing,
 				// so a later `slide.color` reaches it on the next write.
-				const runOpts = _textRunObj.options as TextPropsOptionsInternal | undefined
+				const runOpts = _textRunObj.options
 				paraXml += genXmlTextRun(
-					runOpts?._slideColor && runOpts.color === undefined
+					runOpts._slideColor && runOpts.color === undefined
 						? { ..._textRunObj, options: { ...runOpts, color: slideColor } }
 						: _textRunObj
 				)

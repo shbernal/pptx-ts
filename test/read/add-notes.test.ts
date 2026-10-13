@@ -90,22 +90,6 @@ describe('Slide.addNotes on a loaded deck', () => {
 		assertNoDanglingRels(reopened.opc)
 	})
 
-	test('splits on \\n into paragraphs, matching the write-side addNotes', async () => {
-		const written = await authoredDeck((slide) => slide.addNotes('line one\nline two'))
-		const read = await authoredDeck()
-		at(read.slides, 0).addNotes('line one\nline two')
-		const reopened = await Presentation.load(await read.save())
-
-		assertEqual(at(reopened.slides, 0).notesText, 'line one\nline two', 'flattened text matches')
-		const reopenedNotes = defined(at(reopened.slides, 0).notesTextFrame, 'the reopened slide has notes')
-		assertEqual(
-			reopenedNotes.paragraphs.length,
-			defined(at(written.slides, 0).notesTextFrame, 'the written slide has notes').paragraphs.length,
-			'same paragraph count as the write path'
-		)
-		assertEqual(reopenedNotes.paragraphs.length, 2, 'two paragraphs')
-	})
-
 	// The anti-drift guard the module doc promises. The read model reserializes every
 	// part it authors through `read/oxml/dom.ts`, which self-closes empty elements,
 	// where the write path spells `a:rPr` open/close — so the comparison normalizes

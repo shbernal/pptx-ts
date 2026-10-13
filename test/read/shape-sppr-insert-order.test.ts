@@ -126,17 +126,11 @@ describe('a created p:grpSpPr lands in schema order', () => {
 		)
 	})
 
-	test('before the drawable children, which it already did', () => {
+	test('before the drawable children, which it already did, and after p:nvGrpSpPr, a predecessor', () => {
 		const { shape, xml } = grpSp(`${NV_GRP}<p:pic><p:nvPicPr/></p:pic>`)
 		shape.noFill()
 		const order = groupChildOrder(xml())
 		assert(order.indexOf('p:grpSpPr') < order.indexOf('p:pic'), 'p:grpSpPr must precede p:pic; got ' + order.join(', '))
-	})
-
-	test('and after p:nvGrpSpPr, which is a predecessor rather than a successor', () => {
-		const { shape, xml } = grpSp(`${NV_GRP}<p:pic><p:nvPicPr/></p:pic>`)
-		shape.noFill()
-		const order = groupChildOrder(xml())
 		assert(
 			order.indexOf('p:nvGrpSpPr') < order.indexOf('p:grpSpPr'),
 			'p:nvGrpSpPr must stay first; got ' + order.join(', ')

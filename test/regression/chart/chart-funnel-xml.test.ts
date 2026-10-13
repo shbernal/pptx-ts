@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { build, readEntry, listEntries } from '../../helpers.ts'
+import { build, readEntry } from '../../helpers.ts'
 import { chartExPath } from './chart-parts.ts'
 
 // Funnel is the second chartEx (cx:) chart type, landing on the subsystem waterfall introduced.
@@ -10,7 +10,7 @@ import { chartExPath } from './chart-parts.ts'
 //   - its plot area carries a SINGLE category axis (PowerPoint numbers it id="1") with no value
 //     axis and no gridlines — the funnel bars run off one category scale.
 // The shared chartEx wiring (chartex+xml content type, MS rel type, style/colors sidecars) is
-// asserted in full by chart-waterfall-xml; here we re-check the load-bearing pieces plus the deltas.
+// asserted in full by chart-waterfall-xml; here we pin the deltas.
 
 const DATA = [
 	{
@@ -35,27 +35,6 @@ async function buildFunnel(extra = {}) {
 }
 
 describe('funnel (chartEx) chart', () => {
-	test('emits a chartEx part with the mandatory style + color-style sidecars', async () => {
-		const { zip } = await buildFunnel()
-		const cxPath = chartExPath(zip)
-		expect(cxPath).toBe('ppt/charts/chartEx1.xml')
-
-		const contentTypes = await readEntry(zip, '[Content_Types].xml')
-		expect(contentTypes).toContain(
-			'<Override PartName="/ppt/charts/chartEx1.xml" ContentType="application/vnd.ms-office.chartex+xml"/>'
-		)
-		const entries = listEntries(zip)
-		expect(entries).toContain('ppt/charts/style1.xml')
-		expect(entries).toContain('ppt/charts/colors1.xml')
-
-		const slideRels = await readEntry(zip, 'ppt/slides/_rels/slide1.xml.rels')
-		expect(slideRels).toContain(
-			'Type="http://schemas.microsoft.com/office/2014/relationships/chartEx" Target="/ppt/charts/chartEx1.xml"'
-		)
-		// classic chart parts must NOT appear
-		expect(listEntries(zip).some((p) => /^ppt\/charts\/chart\d+\.xml$/.test(p))).toBe(false)
-	})
-
 	test('slide Choice requires the funnel feature namespace cx2 (not waterfall cx1)', async () => {
 		const { zip } = await buildFunnel()
 		const slide = await readEntry(zip, 'ppt/slides/slide1.xml')

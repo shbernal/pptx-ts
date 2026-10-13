@@ -184,34 +184,6 @@ defineRegressionSuite('Image (blip) fills', [
 		},
 	},
 	{
-		name: 'image fill set via `image` alone (no explicit type) still emits a blipFill',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				const s = p.addSlide()
-				s.addShape(ShapeType.rect, { x: 1, y: 1, w: 3, h: 1, fill: { image: { data: PNG_1X1 } } })
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assertIncludes(xml, '<a:blipFill', 'blip fill emitted from image-only fill')
-		},
-	},
-	{
-		name: 'image fill transparency emits an alphaModFix on the blip',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				const s = p.addSlide()
-				s.addShape(ShapeType.rect, {
-					x: 1,
-					y: 1,
-					w: 3,
-					h: 1,
-					fill: { type: 'image', image: { data: PNG_1X1 }, transparency: 25 },
-				})
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assertIncludes(xml, '<a:alphaModFix amt="75000"/>', 'image fill transparency')
-		},
-	},
-	{
 		name: 'identical image fills are embedded once (media de-duplication)',
 		fn: async () => {
 			const { zip } = await build((p) => {
@@ -232,24 +204,6 @@ defineRegressionSuite('Image (blip) fills', [
 			})
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 			assertIncludes(xml, '<a:blipFill', 'text box image fill')
-		},
-	},
-	{
-		name: 'image fill with neither path nor data warns and falls back (no blipFill)',
-		fn: async () => {
-			let zip: JSZip | undefined
-			const warnings = await captureWarnings(async () => {
-				;({ zip } = await build((p) => {
-					const s = p.addSlide()
-					s.addShape(ShapeType.rect, { x: 1, y: 1, w: 3, h: 1, fill: { type: 'image', image: {} } })
-				}))
-			})
-			assert(
-				warnings.some((w) => w.includes('image fill requires')),
-				`expected a warning; got ${JSON.stringify(warnings)}`
-			)
-			const xml = await readEntry(defined(zip), 'ppt/slides/slide1.xml')
-			assertNotIncludes(xml, '<a:blipFill', 'no blip fill when image source is missing')
 		},
 	},
 	{

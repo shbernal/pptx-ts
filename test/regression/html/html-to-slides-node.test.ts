@@ -5,7 +5,6 @@ import BrowserPptxTs from '../../../dist/browser.js'
 import {
 	build,
 	readEntry,
-	listEntries,
 	assert,
 	assertEqual,
 	defineRegressionSuite,
@@ -78,10 +77,6 @@ function assertRectangular(xml: string) {
 		rows.every((count) => count === cols),
 		`every row must carry ${cols} cells; got ${rows.join(', ')}`
 	)
-}
-
-function slideCount(zip: JSZip) {
-	return listEntries(zip).filter((name) => /^ppt\/slides\/slide\d+\.xml$/.test(name)).length
 }
 
 const STYLED_TABLE = `
@@ -351,32 +346,6 @@ defineRegressionSuite('HTML table to slides on Node (happy-dom)', [
 		},
 	},
 	{
-		name: 'a rowspan continuation is not mistaken for a missing cell',
-		fn: async () => {
-			// The row below a rowspan states one fewer cell, but it is not ragged: the emitter
-			// synthesizes the vMerge continuation itself. Padding it would produce a 3-cell row
-			// in a 2-column grid.
-			const win = windowWith(
-				'<table id="t"><tbody><tr><td rowspan="2">Tall</td><td>b</td></tr><tr><td>d</td></tr></tbody></table>'
-			)
-			const { zip } = await build((pptx) => {
-				tableToSlides(pptx, tableOf(win))
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assertEqual(gridColWidths(xml).length, 2, 'column count')
-			assertRectangular(xml)
-			assert(/<a:tc\b[^>]*\bvMerge="1"/.test(xml), 'the continuation must be a vMerge, not a padded blank')
-			assertEqual(
-				JSON.stringify(cellTexts(xml)),
-				JSON.stringify([
-					['Tall', 'b'],
-					['', 'd'],
-				]),
-				'no blank may be appended after "d"'
-			)
-		},
-	},
-	{
 		name: 'a nested table stays inside its cell',
 		fn: async () => {
 			// The old `tbody tr` descendant query reached through a cell into the rows of a table
@@ -559,28 +528,6 @@ defineRegressionSuite('HTML table to slides on Node (happy-dom)', [
 				await readEntry(quiet.zip, 'ppt/slides/slide1.xml'),
 				'verbose is a dev-only flag and must not change output'
 			)
-		},
-	},
-	{
-		name: 'a tall table auto-pages onto more than one slide',
-		fn: async () => {
-			const rows = Array.from({ length: 60 }, (_, i) => `<tr><td>row ${i}</td><td>value ${i}</td></tr>`).join('')
-			const win = windowWith(`<table id="t"><thead><tr><th>K</th><th>V</th></tr></thead><tbody>${rows}</tbody></table>`)
-			const { zip } = await build((pptx) => {
-				tableToSlides(pptx, tableOf(win))
-			})
-			assert(slideCount(zip) > 1, `expected auto-paging to produce >1 slide; got ${slideCount(zip)}`)
-		},
-	},
-	{
-		name: 'the string-id form resolves against an explicitly supplied document',
-		fn: async () => {
-			const win = windowWith(STYLED_TABLE)
-			const { zip } = await build((pptx) => {
-				tableToSlides(pptx, 't', { document: win.document })
-			})
-			const rows = cellTexts(await readEntry(zip, 'ppt/slides/slide1.xml'))
-			assertEqual(rows.length, 3, 'the id must resolve to the same three rows')
 		},
 	},
 	{

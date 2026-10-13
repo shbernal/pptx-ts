@@ -122,19 +122,19 @@ export default class SlideBuilder {
 	constructor(params: {
 		addSlide: (layout: SlideLayoutInternal | null) => PresSlideInternal
 		getSlide: (slideNum: number) => PresSlideInternal | undefined
-		getSections?: () => SectionInternalProps[]
+		getSections: () => SectionInternalProps[]
 		presLayout: PresLayout
 		setSlideNum: (value: SlideNumberProps) => void
 		slideId: number
 		slideRId: number
 		slideNumber: number
-		slideLayout?: SlideLayoutInternal
+		slideLayout: SlideLayoutInternal
 		authors: SlideAuthors
 		childAuthors: ChildAuthors
 	}) {
 		this.addSlide = params.addSlide
 		this.getSlide = params.getSlide
-		this.getSections = params.getSections ?? (() => [])
+		this.getSections = params.getSections
 		this._name = `Slide ${params.slideNumber}`
 		this._presLayout = params.presLayout
 		this._rId = params.slideRId
@@ -143,7 +143,7 @@ export default class SlideBuilder {
 		this._relsMedia = []
 		this._setSlideNum = params.setSlideNum
 		this._slideId = params.slideId
-		this._slideLayout = params.slideLayout || null
+		this._slideLayout = params.slideLayout
 		this._slideNum = params.slideNumber
 		this._slideObjects = []
 		this._childAuthors = params.childAuthors

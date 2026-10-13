@@ -111,7 +111,7 @@ export function axisLineStroke(opts: AxisLineOpts, axis: 'cat' | 'val' | 'ser'):
  * @param option - the option path to name in a diagnostic, as the caller spells it
  */
 export function scrubGridLine(glOpts: OptsChartGridLine, option = 'chart.gridLine'): void {
-	if (!glOpts || gridLineSuppressed(glOpts)) return
+	if (gridLineSuppressed(glOpts)) return
 	const width = glOpts.width ?? glOpts.size
 	if (width !== undefined && (!Number.isFinite(Number(width)) || width <= 0)) {
 		warn('chart/invalid-grid-line-size', `${option}.width must be greater than 0.`)

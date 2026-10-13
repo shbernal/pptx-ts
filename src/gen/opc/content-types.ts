@@ -78,15 +78,6 @@ export interface ContentTypeContributions {
 	readonly trailing: readonly ContentTypeOverride[]
 }
 
-/** Nothing beyond the skeleton: the shape a deck written with no construct families contributes. */
-export const NO_CONTENT_TYPE_CONTRIBUTIONS: ContentTypeContributions = Object.freeze({
-	defaults: [],
-	presentation: [],
-	perSlide: [],
-	perLayout: [],
-	trailing: [],
-})
-
 function contentDefault(extension: string, contentType: string): string {
 	return voidEl('Default', { Extension: extension, ContentType: contentType })
 }
@@ -108,25 +99,24 @@ function contributedOverride(entry: ContentTypeOverride): string {
 export function makeXmlContTypes(opts: {
 	slides: PresSlideInternal[]
 	slideLayouts: SlideLayoutInternal[]
-	masterSlide?: SlideMasterInternal
-	hasCustomProps?: boolean
-	embeddedFonts?: EmbeddedFont[]
-	contributions?: ContentTypeContributions
+	masterSlide: SlideMasterInternal
+	hasCustomProps: boolean
+	embeddedFonts: EmbeddedFont[]
+	contributions: ContentTypeContributions
 }): string {
-	const { slides, slideLayouts, masterSlide, hasCustomProps, embeddedFonts } = opts
-	const contributions = opts.contributions ?? NO_CONTENT_TYPE_CONTRIBUTIONS
+	const { slides, slideLayouts, masterSlide, hasCustomProps, embeddedFonts, contributions } = opts
 	const parts: string[] = [contentDefault('xml', 'application/xml'), contentDefault('rels', RELATIONSHIPS_CONTENT_TYPE)]
 
 	// STEP 1 - Emit Default Extension entries only for media types actually used by the deck.
 	// Walk slides + slideLayouts + masterSlide _relsMedia[] and dedupe by extension.
 	// Skip 'online' rels (no part written) and rels missing extn/type.
 	const extnTypeMap = new Map<string, string>()
-	const ctTargets: Array<{ _relsMedia?: SlideRelMedia[] }> = []
-	;(slides || []).forEach((s) => ctTargets.push(s))
-	;(slideLayouts || []).forEach((l) => ctTargets.push(l))
-	if (masterSlide) ctTargets.push(masterSlide)
+	const ctTargets: Array<{ _relsMedia: SlideRelMedia[] }> = []
+	slides.forEach((s) => ctTargets.push(s))
+	slideLayouts.forEach((l) => ctTargets.push(l))
+	ctTargets.push(masterSlide)
 	ctTargets.forEach((target) => {
-		;(target._relsMedia || []).forEach((rel) => {
+		target._relsMedia.forEach((rel) => {
 			if (rel.type === 'online' || !rel.extn || !rel.type) return
 			// A/V rel `type` is `${mtype}/${extn}` (e.g. `audio/mp3`); resolve the part's
 			// Default content type to what PowerPoint authors (`audio/mpeg`). Image rels
@@ -151,7 +141,7 @@ export function makeXmlContTypes(opts: {
 		parts.push(contentDefault(entry.extension, entry.contentType))
 	})
 	// Embedded fonts: one Default covers every `.fntdata` part (emitted only when fonts are embedded).
-	if ((embeddedFonts || []).some((font) => font.faces.some((face) => face.bytes))) {
+	if (embeddedFonts.some((font) => font.faces.some((face) => face.bytes))) {
 		parts.push(contentDefault(FONT_DATA_EXTENSION, FONT_DATA_CONTENT_TYPE))
 	}
 

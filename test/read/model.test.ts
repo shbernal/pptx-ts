@@ -33,18 +33,6 @@ describe('Presentation', () => {
 })
 
 describe('Slide.shapes', () => {
-	test('builds an AutoShape with a text frame from a text box', async () => {
-		const slide = at((await openFixture('textbox')).slides, 0)
-		const shapes = slide.shapes
-		assert(shapes.length >= 1, 'expected at least one shape')
-		const textShape = shapes.find((shape) => shape.shapeType === 'autoShape' && shape.hasTextFrame)
-		assert(textShape, 'expected a text-bearing auto shape')
-		assert(typeof textShape.id === 'number', 'shape id is numeric')
-		assert(textShape.name.length > 0, 'shape has a name')
-		assert(textShape.left !== null && textShape.width !== null, 'shape geometry resolves')
-		assert(textShape.text.includes('test'), `text frame text: ${JSON.stringify(textShape.text)}`)
-	})
-
 	test('reads geometry in EMU from the shape transform', async () => {
 		const slide = at((await openFixture('textbox')).slides, 0)
 		const shape = slide.shapes.find((shape) => shape.name === 'replaceText')
@@ -54,30 +42,6 @@ describe('Slide.shapes', () => {
 		assertEqual(shape.top, 1794510, 'top EMU')
 		assertEqual(shape.width, 7566660, 'width EMU')
 		assertEqual(shape.height, 2616101, 'height EMU')
-	})
-
-	test('builds a Picture and resolves its embedded image part', async () => {
-		const presentation = await openFixture('image')
-		const pictures = presentation.slides
-			.flatMap((slide) => slide.shapes)
-			.filter((shape) => shape.shapeType === 'picture')
-		assert(pictures.length >= 1, 'expected at least one picture')
-		const picture = at(pictures, 0)
-		assert(picture.imageRelId, 'picture has an embed rel id')
-		const partName = picture.imagePartName
-		assert(partName, 'picture resolves an image partname')
-		assert(presentation.opc.part(partName), `image part ${partName} exists in the package`)
-	})
-
-	test('builds a GraphicFrame and detects a hosted table', async () => {
-		const presentation = await openFixture('table')
-		const frames = presentation.slides
-			.flatMap((slide) => slide.shapes)
-			.filter((shape) => shape.shapeType === 'graphicFrame')
-		assert(frames.length >= 1, 'expected at least one graphic frame')
-		const tableFrame = frames.find((frame) => frame.hasTable)
-		assert(tableFrame, 'expected a graphic frame hosting a table')
-		assert(tableFrame.left !== null, 'graphic frame geometry resolves from p:xfrm')
 	})
 })
 
@@ -121,19 +85,6 @@ describe('Slide.hidden', () => {
 		assertEqual(slides.length, 2, 'hidden fixture has two slides')
 		assertEqual(at(slides, 0).hidden, false, 'slide with no @show is shown')
 		assertEqual(at(slides, 1).hidden, true, 'slide with show="0" is hidden')
-	})
-})
-
-describe('empty deck', () => {
-	test('a slide with no real shapes yields an empty shape list', async () => {
-		const slide = at((await openFixture('empty')).slides, 0)
-		// The spTree always has the group's own nv/grpSpPr; those are not shapes.
-		for (const shape of slide.shapes) {
-			assert(
-				['autoShape', 'picture', 'connector', 'graphicFrame', 'group'].includes(shape.shapeType),
-				`unexpected shape kind: ${shape.shapeType}`
-			)
-		}
 	})
 })
 

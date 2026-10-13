@@ -1340,7 +1340,6 @@ export function addChartDefinition(
 	reportMismatchedSeries(options, tmpData)
 
 	// STEP 4: Set props
-	resultObject._type = SlideObjectType.chart
 	resultObject.options = options
 	// The pictures first: each takes a slide relationship id, and `chartRid` has to be the id the
 	// chart's own relationship is pushed under below.

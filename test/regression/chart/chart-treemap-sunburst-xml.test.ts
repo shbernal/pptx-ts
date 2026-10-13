@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { build, readEntry, listEntries } from '../../helpers.ts'
+import { build, readEntry } from '../../helpers.ts'
 import type { CHART_NAME, ChartOpts } from '../../../dist/node.js'
 import { chartExPath } from './chart-parts.ts'
 
@@ -35,23 +35,6 @@ async function buildHier(type: CHART_NAME, extra: ChartOpts = {}) {
 }
 
 describe('treemap + sunburst (hierarchical chartEx) charts', () => {
-	test('emit a chartEx part with the mandatory style + color-style sidecars, no classic chart part', async () => {
-		for (const type of ['treemap', 'sunburst'] as const) {
-			const { zip } = await buildHier(type)
-			const cxPath = chartExPath(zip)
-			expect(cxPath).toBe('ppt/charts/chartEx1.xml')
-
-			const contentTypes = await readEntry(zip, '[Content_Types].xml')
-			expect(contentTypes).toContain(
-				'<Override PartName="/ppt/charts/chartEx1.xml" ContentType="application/vnd.ms-office.chartex+xml"/>'
-			)
-			const entries = listEntries(zip)
-			expect(entries).toContain('ppt/charts/style1.xml')
-			expect(entries).toContain('ppt/charts/colors1.xml')
-			expect(entries.some((p) => /^ppt\/charts\/chart\d+\.xml$/.test(p))).toBe(false)
-		}
-	})
-
 	test('slide Choice requires the base feature namespace cx1 (like waterfall, not funnel cx2)', async () => {
 		for (const type of ['treemap', 'sunburst'] as const) {
 			const { zip } = await buildHier(type)

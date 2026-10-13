@@ -1,7 +1,7 @@
 // Read-model coverage for src/read/api/slide.ts branches the existing suites
 // don't reach: the per-format image sniffer (picture-edit.test.ts only ever
-// adds a PNG), the addTextBox significant-whitespace path, Slide.placeholder
-// skipping a non-AutoShape, and the Slide.name getter.
+// adds a PNG), the addTextBox significant-whitespace path, and Slide.placeholder
+// skipping a non-AutoShape.
 //
 // Plus the slide-level read expansion (Slide.background / slideNumberPlaceholder,
 // TextFrame.autofit): asserted write→read through the shared harness, since the
@@ -10,7 +10,7 @@
 import { describe, test } from 'vitest'
 
 import type { Slide } from '../../dist/read.js'
-import { assert, assertEqual, assertRejects, defined, expectDefined, at } from '../helpers.ts'
+import { assert, assertEqual, assertRejects, defined, at } from '../helpers.ts'
 import { authorRead, schemaErrors, validatorInstalled } from './authored.ts'
 import { openFixture } from './corpus.ts'
 
@@ -103,13 +103,6 @@ describe('Slide misc read/edit edges', () => {
 		assertEqual(JSON.stringify(picture.placeholder), '{"type":"pic","idx":"100"}', 'the picture placeholder')
 	})
 
-	test('name reads p:cSld/@name (null when the slide is unnamed)', async () => {
-		const slide = at((await openFixture('empty')).slides, 0)
-		// The getter must not throw; an unnamed slide reads null.
-		const name = slide.name
-		assert(name === null || typeof name === 'string', `name is a string or null, got ${typeof name}`)
-	})
-
 	test('addTextBox with no text writes an empty paragraph', async () => {
 		const slide = at((await openFixture('empty')).slides, 0)
 		const box = slide.addTextBox(GEOM)
@@ -170,23 +163,13 @@ describe('Slide.background — write→read fidelity', () => {
 		)
 	})
 
-	test('a slide with no own background inherits the layout background (source=layout)', async () => {
-		const { presentation } = await authorRead((pres) => {
-			pres.addSlide() // no background set → falls through to the default layout's p:bg
-		})
-		const bg = at(presentation.slides, 0).background
-		expectDefined(bg, 'the effective background is inherited, not null')
-		assert(bg.type === 'themeRef', 'the default layout background is a theme-indexed p:bgRef')
-		assertEqual(bg.source, 'layout', 'inherited from the layout, not the slide')
-		assertEqual(bg.idx, 1001, 'the default background matrix index')
-	})
-
 	test('a themeRef background resolves its idx to the concrete theme fill', async () => {
 		const { presentation } = await authorRead((pres) => {
 			pres.addSlide() // inherits the default layout's p:bgRef idx=1001
 		})
 		const bg = defined(at(presentation.slides, 0).background)
 		assert(bg.type === 'themeRef', 'theme-indexed background')
+		assertEqual(bg.source, 'layout', 'inherited from the layout, not the slide')
 		assertEqual(bg.idx, 1001, 'raw idx kept for fidelity')
 		// idx 1001 → bgFillStyleLst entry 1 = <a:solidFill><a:schemeClr val="phClr"/></a:solidFill>;
 		// the bgRef's own <a:schemeClr val="bg1"/> supplies the phClr, and bg1 → lt1 → window (FFFFFF).

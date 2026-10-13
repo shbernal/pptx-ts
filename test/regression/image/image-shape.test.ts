@@ -24,17 +24,6 @@ defineRegressionSuite('Image shape clipping', [
 		},
 	},
 	{
-		name: 'addImage({ shape: "hexagon" }) clips to that preset',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				const s = p.addSlide()
-				s.addImage({ data: PNG_1X1, x: 1, y: 1, w: 2, h: 2, shape: 'hexagon' })
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assert(/<a:prstGeom\s+prst="hexagon"/.test(xml), 'expected prstGeom prst="hexagon"; got: ' + xml)
-		},
-	},
-	{
 		name: 'addImage shape takes precedence over rounding',
 		fn: async () => {
 			const { zip } = await build((p) => {

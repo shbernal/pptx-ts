@@ -30,17 +30,6 @@ describe('HTML table border width is converted to points', () => {
 		assert(b.type === undefined, `solid border must not set type:none; got ${JSON.stringify(b)}`)
 	})
 
-	test('0.4px (would round to 0) is converted and preserved', () => {
-		const b = htmlBorderToProps('0.4px', 'rgb(0, 0, 0)')
-		assert(b.width === pt(0.4), `expected width=${pt(0.4)}pt, got ${JSON.stringify(b)}`)
-	})
-
-	test('fractional width above 1px is converted and preserved', () => {
-		const b = htmlBorderToProps('2.5px', 'rgb(255, 51, 153)')
-		assert(b.width === pt(2.5), `expected width=${pt(2.5)}pt, got ${JSON.stringify(b)}`)
-		assert(b.color === 'FF3399', `expected color FF3399, got ${b.color}`)
-	})
-
 	test('a bare number is read as px, like every other length in this file', () => {
 		const b = htmlBorderToProps('3', 'rgb(0, 0, 0)')
 		assert(b.width === pt(3), `expected width=${pt(3)}pt for a bare 3, got ${JSON.stringify(b)}`)

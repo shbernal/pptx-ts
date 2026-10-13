@@ -131,7 +131,7 @@ export function renderZoomObject(ctx: RenderContext): string {
 	} = ctx
 	const zoom = slideItemObj.zoom
 	if (!zoom) return ''
-	const opts = slideItemObj.options || {}
+	const opts = ctx.itemOpts
 	const objectName = opts.objectName
 	const { uri, prefix, zm } = ZOOM_VARIANTS[zoom.variant]
 	const firstTile = zoom.tiles[0]

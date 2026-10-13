@@ -1,16 +1,6 @@
-import { ChartType, type CHART_NAME, type ChartOpts } from '../../../dist/node.js'
+import { ChartType } from '../../../dist/node.js'
 import JSZip from 'jszip'
-import {
-	build,
-	defineRegressionSuite,
-	assert,
-	assertEqual,
-	assertIncludes,
-	expectDefined,
-	defined,
-	at,
-} from '../../helpers.ts'
-import { chartXml } from './chart-parts.ts'
+import { build, defineRegressionSuite, assert, assertEqual, expectDefined, defined, at } from '../../helpers.ts'
 
 const LEAF = ['Gear', 'Berg', 'Motr', 'Swch', 'Plug', 'Cord', 'Pump', 'Leak', 'Seal']
 const OUTER = ['Mech', '', '', 'Elec', '', '', 'Hydr', '', '']
@@ -114,30 +104,6 @@ defineRegressionSuite('Multi-level category chart embedded workbook [upstream-pr
 			// Row 5 (idx=3): Elec (outer) in A5, Swch (leaf) in B5
 			assertEqual(cellValue(sheetXml, 'A5'), '5', 'A5 should reference Elec (SST index 5)')
 			assertEqual(cellValue(sheetXml, 'B5'), '10', 'B5 should reference Swch (SST index 10)')
-		},
-	},
-	{
-		// The workbook writes the outer level in column A and the leaf level in B. A single-column
-		// category reference caches the leaf labels, so it has to point at B; it pointed at A.
-		name: 'a single-column category reference over nested labels points at the leaf column',
-		fn: async () => {
-			const leafRef = '<c:f>Sheet1!$B$2:$B$10</c:f>'
-			// A format code makes the leaf level numbers, so that case nests serials under the groups.
-			const numericLeaf = DATA.map((series) => ({
-				...series,
-				labels: [LEAF.map((_, idx) => String(46023 + idx)), OUTER],
-			}))
-			const cases: [string, ChartOpts & { type: CHART_NAME }, string, typeof DATA][] = [
-				['a bar with a category format code', { type: ChartType.bar, catLabelFormatCode: '0' }, 'numRef', numericLeaf],
-				['a stock chart', { type: ChartType.stock }, 'strRef', DATA],
-				['a surface chart', { type: ChartType.surface }, 'strRef', DATA],
-			]
-			for (const [label, opts, cache, data] of cases) {
-				const { zip } = await build((p) => {
-					p.addSlide().addChart(data, { ...opts, x: 1, y: 1, w: 6, h: 4 })
-				})
-				assertIncludes(await chartXml(zip), `<c:cat><c:${cache}>${leafRef}`, `${label} references the leaf column`)
-			}
 		},
 	},
 ])

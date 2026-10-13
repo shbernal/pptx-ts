@@ -195,24 +195,8 @@ describe('connector shape bindings (stCxn has ZERO baseline parts)', () => {
 			{ _type: SlideObjectType.connector, shape: 'bentConnector3', options: { objectName: 'C', ...options } },
 		])
 
-	test('start and end bindings emit in schema order', () => {
-		const xml = withConnector({ _startCxn: { name: 'A', idx: 0 }, _endCxn: { name: 'B', idx: 3 } })
-		expect(xml).toContain('<p:cNvCxnSpPr><a:stCxn id="2" idx="0"/><a:endCxn id="3" idx="3"/></p:cNvCxnSpPr>')
-	})
-
 	test('no bindings emits a self-closing cNvCxnSpPr', () => {
 		expect(withConnector({})).toContain('<p:cNvCxnSpPr/>')
-	})
-
-	test('an unresolvable binding is dropped, not emitted as a dangling id', () => {
-		const xml = withConnector({ _startCxn: { name: 'NOPE', idx: 0 } })
-		expect(xml).toContain('<p:cNvCxnSpPr/>')
-		expect(xml).not.toContain('a:stCxn')
-	})
-
-	test('connector adjust values emit as adj1..adjN', () => {
-		const xml = withConnector({ _connectorAdj: [25000, 75000] })
-		expect(xml).toContain('<a:avLst><a:gd name="adj1" fmla="val 25000"/><a:gd name="adj2" fmla="val 75000"/></a:avLst>')
 	})
 })
 

@@ -27,7 +27,7 @@ function a14Math(mathXml: string): string {
  * @returns {string} an `<a:p>` math paragraph
  */
 export function genXmlMathParagraph(omml: string): string {
-	const trimmed = (omml || '').trim()
+	const trimmed = omml.trim()
 	const paraPr = el('m:oMathParaPr', null, raw(voidEl('m:jc', { 'm:val': 'centerGroup' })))
 	const mathXml = trimmed.startsWith('<m:oMathPara')
 		? trimmed
@@ -53,7 +53,7 @@ export function genXmlMathParagraph(omml: string): string {
  * @returns {string} an `<a14:m>` inline equation run
  */
 export function genXmlInlineMath(omml: string): string {
-	const trimmed = (omml || '').trim()
+	const trimmed = omml.trim()
 	// Extract a bare <m:oMath>…</m:oMath>. This both strips a display <m:oMathPara> wrapper and
 	// leaves an already-bare <m:oMath> untouched; inner-only OMML is wrapped in <m:oMath>.
 	const oMathMatch = trimmed.match(/<m:oMath[\s>][\s\S]*<\/m:oMath>/)

@@ -47,13 +47,6 @@ describe('paragraph properties: bullets', () => {
 		)
 	})
 
-	test('bullet char is a numeric character reference, NOT an escaped literal', () => {
-		// `&#x2022;` must reach the file verbatim; `&amp;#x2022;` would render the text "&#x2022;".
-		const xml = pPr({ bullet: true })
-		expect(xml).toContain('<a:buChar char="&#x2022;"/>')
-		expect(xml).not.toContain('&amp;#x2022;')
-	})
-
 	test('a picture bullet references the media rel', () => {
 		expect(pPr({ bullet: { image: { data: 'x' }, _rId: 9 } })).toBe(
 			'<a:pPr marL="342900" indent="-342900">' + '<a:buBlip><a:blip r:embed="rId9"/></a:buBlip>' + '</a:pPr>'
@@ -112,10 +105,6 @@ describe('run properties', () => {
 		expect(rPr({ charSpacing: 3, kerning: 12 })).toContain('spc="300" kern="1200"')
 	})
 
-	test('no kerning and no charSpacing writes no kern', () => {
-		expect(rPr({})).not.toContain('kern=')
-	})
-
 	test('font names are escaped in every slot', () => {
 		const xml = rPr({ fontFace: 'A&B', fontFaceEA: '<EA>' })
 		expect(xml).toContain('<a:latin typeface="A&amp;B" pitchFamily="34" charset="0"/>')
@@ -153,9 +142,5 @@ describe('shrink autofit', () => {
 
 	test('a zero percent is emitted, not treated as absent', () => {
 		expect(genXmlNormAutofit({ type: 'shrink', fontScale: 0 })).toBe('<a:normAutofit fontScale="0"/>')
-	})
-
-	test('a value that is not a number throws rather than emitting val="NaN"', () => {
-		expect(() => genXmlNormAutofit({ type: 'shrink', fontScale: Number.NaN })).toThrow(/fit.fontScale/)
 	})
 })

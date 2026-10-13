@@ -100,7 +100,7 @@ function resolveCamera(
 		lookAt: toAm3dUnits(camera?.lookAt, DEFAULT_CAMERA.lookAt, 'lookAt'),
 		up: { dx: up.x, dy: up.y, dz: up.z },
 		fov: Math.round(fovDeg * ANGLE_UNITS_PER_DEGREE),
-		meterPerModelUnitN: Math.round(scale * AM3D_RATIO_DEN),
+		meterPerModelUnitN,
 	}
 }
 

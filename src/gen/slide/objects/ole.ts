@@ -32,7 +32,7 @@ export function renderOleObject(ctx: RenderContext): string {
 	} = ctx
 	const ole = slideItemObj.ole
 	if (!ole) return ''
-	const opts = slideItemObj.options || {}
+	const opts = ctx.itemOpts
 
 	// Shared by both branches; attribute order matches PowerPoint's.
 	const oleAttrs: XmlAttrs = {

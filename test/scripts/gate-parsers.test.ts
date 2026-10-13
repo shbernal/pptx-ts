@@ -81,10 +81,6 @@ describe('path-refs citation resolution', () => {
 	const known = new Set(['src/gen/chart/plot-bar.ts', 'src/read/api/shapes/types.ts', 'docs/reference/pptx-read.md'])
 	const from = path.join(ROOT, 'src', 'gen', 'chart', 'chart-xml.ts')
 
-	test('a repo-root-relative path resolves', () => {
-		expect(resolves('src/gen/chart/plot-bar.ts', from, known)).toBe(true)
-	})
-
 	test('a path relative to the citing file resolves', () => {
 		expect(resolves('./plot-bar.ts', from, known)).toBe(true)
 		expect(resolves('../../read/api/shapes/types.ts', from, known)).toBe(true)

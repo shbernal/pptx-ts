@@ -43,13 +43,13 @@ async function writeSvgPreview(
  * Encode Image/Audio/Video into base64
  * @param {PresSlideInternal | SlideLayoutInternal | SlideMasterInternal} layout - slide, layout or master
  * @param {RuntimeAdapter} runtime - runtime adapter (Node/browser media loader)
- * @param {'throw' | 'placeholder'} onMediaError - failure policy: reject the export (default) or substitute a placeholder and warn
+ * @param {'throw' | 'placeholder'} onMediaError - failure policy: reject the export or substitute a placeholder and warn
  * @return {Promise} promise
  */
 export function encodeSlideMediaRels(
 	layout: PresSlideInternal | SlideLayoutInternal | SlideMasterInternal,
 	runtime: RuntimeAdapter,
-	onMediaError: 'throw' | 'placeholder' = 'throw'
+	onMediaError: 'throw' | 'placeholder'
 ): Array<Promise<string>> {
 	const imageProms: Array<Promise<string>> = []
 

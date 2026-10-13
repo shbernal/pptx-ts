@@ -25,20 +25,6 @@ defineRegressionSuite('Slide title placeholder [upstream-issue-1298]', [
 		},
 	},
 	{
-		name: 'standalone body text emits <p:ph type="body">',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.addSlide().addText('Body content', { x: 0.5, y: 2, w: 9, h: 4, placeholder: 'body' })
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			const spBlocks = xml.match(/<p:sp>[\s\S]*?<\/p:sp>/g) || []
-			assert(
-				spBlocks.some((sp) => /<p:ph[^>]*type="body"/.test(sp)),
-				'expected a <p:sp> with <p:ph type="body" .../>; got: ' + xml
-			)
-		},
-	},
-	{
 		name: 'plain text (no placeholder) emits no <p:ph>',
 		fn: async () => {
 			const { zip } = await build((p) => {

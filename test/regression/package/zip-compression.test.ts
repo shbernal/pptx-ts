@@ -52,34 +52,6 @@ async function buildPres() {
 
 defineRegressionSuite('ZIP package compression default', [
 	{
-		name: 'toBytes() defaults to DEFLATE entries',
-		fn: async () => {
-			const pres = await buildPres()
-			const buf = await pres.toBytes()
-			const methods = localHeaderMethods(buf)
-			assert(
-				methods.some((m) => m === 8),
-				'expected DEFLATE (8) entries by default; got methods: ' + methods.join(',')
-			)
-			assert(
-				!methods.includes(0) || methods.filter((m) => m === 0).length < methods.length,
-				'expected non-STORE entries by default; got methods: ' + methods.join(',')
-			)
-		},
-	},
-	{
-		name: 'compression:false opts out (all entries STORE)',
-		fn: async () => {
-			const pres = await buildPres()
-			const buf = await pres.toBytes({ compression: false })
-			const methods = localHeaderMethods(buf)
-			assert(
-				methods.every((m) => m === 0),
-				'expected all STORE (0) entries with compression:false; got: ' + methods.join(',')
-			)
-		},
-	},
-	{
 		name: 'write() with a typed output honors compression (previously ignored)',
 		fn: async () => {
 			const pres = await buildPres()

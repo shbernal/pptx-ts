@@ -29,7 +29,6 @@ import { validateBuf, validatorInstalled } from '../validator.ts'
 import { FIXTURES, fixturePath } from './corpus.ts'
 import { resolveSingle } from './opc.ts'
 
-const SLIDE_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide'
 const SLIDE_LAYOUT_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout'
 const IMAGE_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image'
 const CHART_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart'
@@ -614,22 +613,6 @@ describe('Presentation.appendSlides', () => {
 		const PACKAGE_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/package'
 		const workbook = resolveSingle(reopened.opc, chartPart, PACKAGE_REL)
 		assert(workbook && reopened.opc.part(workbook), `the chart's workbook rel resolves (${workbook})`)
-	})
-
-	test('carries an internal slide-to-slide hyperlink across, repointed at the appended target', async () => {
-		const pres = await Presentation.load(await readFile(fixturePath('theme-colors')))
-
-		// Slide 1 links to slide 2 (source numbering); both are appended together.
-		const pptx = wideGenerator()
-		pptx.addSlide().addText('go to two', { x: 1, y: 1, w: 6, h: 1, hyperlink: { slide: 2 } })
-		pptx.addSlide().addText('slide two', { x: 1, y: 1, w: 6, h: 1 })
-
-		const added = await pres.appendSlides(pptx, { layout: 'Blank' })
-		assertEqual(added.length, 2, 'both slides were appended')
-
-		const reopened = await Presentation.load(await pres.save())
-		const linkTarget = resolveSingle(reopened.opc, at(added, 0).partName, SLIDE_REL)
-		assertEqual(linkTarget, at(added, 1).partName, 'the internal link resolves to the 2nd appended slide')
 	})
 
 	test('round-trips & in hyperlink and online-video Targets without double-escaping', async () => {

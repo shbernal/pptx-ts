@@ -169,14 +169,6 @@ describe('inherited run size / face / bold / italic — the two upper tiers', ()
 		)
 	})
 
-	test('bold: a paragraph defRPr @b="1" resolves to an inherited true', () => {
-		assertEqual(
-			firstRun(placeholderFrame(`<a:p><a:pPr><a:defRPr b="1"/></a:pPr><a:r><a:t>x</a:t></a:r></a:p>`)).resolvedBold,
-			true,
-			'inherits an explicit bold from the paragraph defRPr'
-		)
-	})
-
 	test('a present-but-silent upper tier falls through to the next tier', () => {
 		// The paragraph defRPr sets only @b — no @sz, no a:latin — so size and face
 		// resolution must skip it and pick up the lstStyle level defRPr below.

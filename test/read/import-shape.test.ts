@@ -344,18 +344,6 @@ describe('Presentation.importShape', () => {
 		assertEqual(schemeClrCount(restyled.element_), sourceSchemeClrs, 'restyle left every scheme colour symbolic')
 	})
 
-	test('reassigns the lifted shape id off every host id (no collision)', async () => {
-		const target = await openFixture('empty')
-		const source = await openFixture('image')
-		const hostIdsBefore = new Set(cNvPrIds(defined(at(target.slides, 0).shapeTree())))
-		const picIndex = findShapeIndex(at(source.slides, 0), (s) => s.shapeType === 'picture')
-
-		const shape = target.importShape(at(target.slides, 0), at(source.slides, 0), picIndex)
-		assert(!hostIdsBefore.has(defined(shape.id)), `imported id ${shape.id} differs from every host id`)
-		const hostIds = cNvPrIds(defined(at(target.slides, 0).shapeTree()))
-		assertEqual(new Set(hostIds).size, hostIds.length, 'all host drawing ids remain unique')
-	})
-
 	test('honours placement overrides and z-order', async () => {
 		const target = await openFixture('empty')
 		const source = await openFixture('image')

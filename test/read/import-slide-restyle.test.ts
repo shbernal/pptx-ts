@@ -168,16 +168,6 @@ describe("Presentation.importSlide({ theme: 'restyle' })", () => {
 		assert(!/overrideClrMapping/.test(xml), 'the override colour mapping was removed')
 	})
 
-	test('leaves a literal srgbClr byte-identical (the limitation, as a guarantee)', async () => {
-		// slide5 has a literal yellow (srgbClr FFFF00) with no theme reference. restyle
-		// can only recolour symbolic colours, so this literal must survive untouched.
-		const target = await Presentation.load(await deckMixedRecoloredAccent1())
-		const source = await openFixture('mixed')
-		const imported = target.importSlide(source, THEMED_SLIDE_INDEX, { theme: 'restyle' })
-		const xml = await partXml(await target.save(), imported.partName)
-		assert(/<a:srgbClr val="FFFF00"/.test(xml), 'the source literal colour is unchanged by restyle')
-	})
-
 	test('does not bake an inherited background (leaves it symbolic to re-brand)', async () => {
 		// preserve bakes the slide's effective master/layout background onto the slide;
 		// restyle must NOT — leaving the background to re-resolve against the destination.

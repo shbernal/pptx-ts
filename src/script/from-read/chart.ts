@@ -871,10 +871,10 @@ function axisOptions(
 		catAxisMultiLevelLabels: cat?.noMultiLevelLabels === false ? true : undefined,
 		// A date axis is the writer's `c:dateAx` only with a category format, so its format carries
 		// with its time units, or the dates came back as text.
-		catLabelFormatCode: date ? (cat?.numberFormat?.formatCode ?? 'General') : undefined,
-		catAxisBaseTimeUnit: date ? (cat?.baseTimeUnit ?? undefined) : undefined,
-		catAxisMajorTimeUnit: date ? (cat?.majorTimeUnit ?? undefined) : undefined,
-		catAxisMinorTimeUnit: date ? (cat?.minorTimeUnit ?? undefined) : undefined,
+		catLabelFormatCode: date ? (cat.numberFormat?.formatCode ?? 'General') : undefined,
+		catAxisBaseTimeUnit: date ? (cat.baseTimeUnit ?? undefined) : undefined,
+		catAxisMajorTimeUnit: date ? (cat.majorTimeUnit ?? undefined) : undefined,
+		catAxisMinorTimeUnit: date ? (cat.minorTimeUnit ?? undefined) : undefined,
 
 		...sharedAxisOptions('val', val, grid.drawn.val, grid.color, notes),
 		valAxisMinVal: val?.min ?? undefined,
@@ -1438,7 +1438,7 @@ function plotGroupOptions(
 			stacked ? PLOT_DEFAULTS.stackedGapWidth : PLOT_DEFAULTS.gapWidth
 		)
 	} else if (type === 'line' || type === 'area') {
-		options['barGrouping'] = stacked ? (grouping ?? undefined) : undefined
+		options['barGrouping'] = stacked ? grouping : undefined
 	}
 	if (type === 'bar') {
 		options['barOverlapPct'] = differsNumber(group.overlapPct, stacked ? 100 : 0)

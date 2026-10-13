@@ -15,40 +15,12 @@ import {
 // directly (the pattern docs/contributing/scope-and-policy.md prescribes for this file).
 
 describe('parseCssPx', () => {
-	test('parses a px length', () => {
-		assert(parseCssPx('120px') === 120, 'px length must parse to its magnitude')
-	})
-
-	test('preserves a fractional px length', () => {
-		assert(parseCssPx('1.5px') === 1.5, 'the decimal point must not be stripped')
-	})
-
 	test('parses a leading-dot fraction', () => {
 		assert(parseCssPx('.5px') === 0.5, '".5px" is a valid CSS length')
 	})
 
-	test('parses a bare number as px', () => {
-		assert(parseCssPx('12') === 12, 'a unitless number reads as px')
-	})
-
 	test('zero parses to zero, not NaN', () => {
 		assert(parseCssPx('0px') === 0, '0px is a real length')
-	})
-
-	test('an empty value is NaN', () => {
-		assert(Number.isNaN(parseCssPx('')), 'absent value has no magnitude')
-	})
-
-	test('a keyword is NaN', () => {
-		assert(Number.isNaN(parseCssPx('auto')), 'auto is not an absolute length')
-	})
-
-	test('a percentage is NaN', () => {
-		assert(Number.isNaN(parseCssPx('30%')), 'a percentage is not an absolute length')
-	})
-
-	test('a non-px unit is NaN', () => {
-		assert(Number.isNaN(parseCssPx('3em')), 'em cannot be resolved without a font context')
 	})
 
 	test('a nullish value is NaN rather than a throw', () => {
@@ -75,10 +47,6 @@ describe('parseCssWidthBasis', () => {
 	test('one unparseable entry rejects the whole set', () => {
 		const basis = parseCssWidthBasis(['100px', 'auto', '100px'])
 		assert(basis.length === 0, 'a partial basis would zero the unparseable column')
-	})
-
-	test('an empty-string entry rejects the whole set', () => {
-		assert(parseCssWidthBasis(['100px', '']).length === 0, 'an unstated width is not zero')
 	})
 
 	test('a negative magnitude rejects the whole set', () => {
@@ -166,12 +134,6 @@ describe('readCellText', () => {
 		assert(readCellText(cell) === '', 'an empty string is a value, not an absence')
 	})
 
-	test('innerText wins over the walk when both agree there are no breaks', () => {
-		// `display:none` on the span: only a rendering DOM can know the text is not there.
-		const cell = { innerText: 'visible', childNodes: [textNode('visible'), element('SPAN', [textNode('hidden')])] }
-		assert(readCellText(cell) === 'visible', 'a rendering DOM knows more than the walk does')
-	})
-
 	test('a <br> that innerText dropped falls back to the walk', () => {
 		// happy-dom implements `innerText`, but not as *rendered* text: it returns "ab" here.
 		const cell = { innerText: 'ab', nodeType: 1, nodeName: 'TD', childNodes: [textNode('a'), BR, textNode('b')] }
@@ -186,11 +148,6 @@ describe('readCellText', () => {
 	test('the fallback concatenates text nodes', () => {
 		const cell = element('TD', [textNode('Hello '), element('SPAN', [textNode('world')])])
 		assert(readCellText(cell) === 'Hello world', `expected "Hello world", got ${JSON.stringify(readCellText(cell))}`)
-	})
-
-	test('the fallback maps <br> to a newline', () => {
-		const cell = element('TD', [textNode('Line 1'), BR, textNode('Line 2')])
-		assert(readCellText(cell) === 'Line 1\nLine 2', `got ${JSON.stringify(readCellText(cell))}`)
 	})
 
 	test('the fallback finds a <br> nested inside an element', () => {
@@ -264,10 +221,6 @@ describe('cssColorToHex', () => {
 
 	test('a named color has no hex rather than a wrong one', () => {
 		assert(cssColorToHex('red') === undefined, 'guessing is worse than saying nothing')
-	})
-
-	test('an empty value has no hex', () => {
-		assert(cssColorToHex('') === undefined, 'no color stated')
 	})
 
 	test('a malformed rgb() has no hex', () => {

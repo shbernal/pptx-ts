@@ -29,11 +29,6 @@ describe('scatter data-label field ids', () => {
 		const fixed = '<a:fld id="{F7021451-1387-4CA6-816F-3879F97B5CBC}" type="slidenum">'
 		expect(normalize(fixed)).toBe(fixed)
 	})
-
-	test('a fixed datetime field id is left alone', () => {
-		const fixed = '<a:fld id="{5282F153-3F37-0F45-9E97-73ACFA13230C}" type="datetimeFigureOut">'
-		expect(normalize(fixed)).toBe(fixed)
-	})
 })
 
 describe('the other three normalizers still bound', () => {

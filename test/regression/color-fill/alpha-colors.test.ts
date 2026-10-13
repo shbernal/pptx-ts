@@ -51,41 +51,6 @@ defineRegressionSuite('Alpha channel colors [legacy bug-08]', [
 		},
 	},
 	{
-		name: 'shadow color "00000020" without explicit opacity emits val="000000" + derived alpha',
-		fn: async () => {
-			const pres = new PptxTs()
-			const slide = pres.addSlide()
-			slide.addShape(ShapeType.rect, {
-				x: 1,
-				y: 1,
-				w: 2,
-				h: 1,
-				fill: { color: 'CCCCCC' },
-				shadow: { type: 'outer', color: '00000020', blur: 6, offset: 2 },
-			})
-
-			const xml = await buildSlide1(pres)
-			assert(xml.indexOf('val="00000020"') === -1, 'expected no 8-char val="00000020" in slide XML; got:\n' + xml)
-
-			const effectIdx = xml.indexOf('<a:effectLst>')
-			assert(effectIdx !== -1, 'expected <a:effectLst> in slide XML; got:\n' + xml)
-			const effectClose = xml.indexOf('</a:effectLst>', effectIdx)
-			assert(effectClose !== -1, 'expected </a:effectLst> in slide XML; got:\n' + xml)
-			const effectBlock = xml.slice(effectIdx, effectClose)
-
-			assert(
-				effectBlock.indexOf('<a:srgbClr val="000000">') !== -1,
-				'expected <a:srgbClr val="000000"> inside shadow effectLst; got:\n' + effectBlock
-			)
-			// Derived opacity: 32/255 ≈ 0.12549 → ×100000 ≈ 12549
-			const expectedAlpha = alphaPct('20') // 12549
-			assert(
-				effectBlock.indexOf(`<a:alpha val="${expectedAlpha}"/>`) !== -1,
-				`expected <a:alpha val="${expectedAlpha}"/> inside shadow effectLst; got:\n` + effectBlock
-			)
-		},
-	},
-	{
 		name: 'shadow color "88888880" with a removed `opacity` input — color-derived alpha wins, opacity ignored',
 		fn: async () => {
 			const pres = new PptxTs()

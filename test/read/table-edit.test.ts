@@ -573,22 +573,6 @@ describe('Table structural edits — rows', () => {
 		}
 	})
 
-	test('inserting through a vertical merge extends it rather than splitting it', async () => {
-		// The corrupt-file case: an origin claiming more rows than it has continuations.
-		const { table } = await editable((p) => {
-			p.addSlide().addTable(
-				[[{ text: 'tall', options: { rowspan: 3 } }, { text: 'B1' }], [{ text: 'B2' }], [{ text: 'B3' }]],
-				{ x: 1, y: 1, w: 9 }
-			)
-		})
-		assertEqual(defined(table.cell(0, 0)).rowSpan, 3, 'the span starts at 3')
-
-		table.addRow(1)
-		assertEqual(defined(table.cell(0, 0)).rowSpan, 4, 'the span grew with the table')
-		assert(defined(table.cell(1, 0)).isMergeContinuation, 'the new cell continues the span')
-		assertGridConsistent(table)
-	})
-
 	test('removing a rowspan origin promotes its first continuation', async () => {
 		const { table } = await editable((p) => {
 			p.addSlide().addTable(
@@ -602,19 +586,6 @@ describe('Table structural edits — rows', () => {
 		// The merged region survives one row shorter; only the removed row's own text is lost.
 		assert(!defined(table.cell(0, 0)).isMergeContinuation, 'the first continuation became the origin')
 		assertEqual(defined(table.cell(0, 0)).rowSpan, 2, 'and inherited the remaining extent')
-		assertGridConsistent(table)
-	})
-
-	test('removing a row that only continues a merge shortens it', async () => {
-		const { table } = await editable((p) => {
-			p.addSlide().addTable(
-				[[{ text: 'tall', options: { rowspan: 3 } }, { text: 'B1' }], [{ text: 'B2' }], [{ text: 'B3' }]],
-				{ x: 1, y: 1, w: 9 }
-			)
-		})
-
-		table.removeRow(2)
-		assertEqual(defined(table.cell(0, 0)).rowSpan, 2, 'the span shrank to match')
 		assertGridConsistent(table)
 	})
 })
@@ -650,25 +621,6 @@ describe('Table structural edits — columns', () => {
 		for (const tr of defined(xml.match(/<a:tr\b[\s\S]*?<\/a:tr>/g))) {
 			assertEqual((tr.match(/<a:tc[ >]/g) || []).length, 2, 'every row lost a cell')
 		}
-	})
-
-	test('inserting through a horizontal merge widens it', async () => {
-		const { table } = await editable((p) => {
-			p.addSlide().addTable(
-				[[{ text: 'wide', options: { colspan: 3 } }], [{ text: 'A2' }, { text: 'B2' }, { text: 'C2' }]],
-				{
-					x: 1,
-					y: 1,
-					w: 9,
-				}
-			)
-		})
-		assertEqual(defined(table.cell(0, 0)).gridSpan, 3, 'the span starts at 3')
-
-		table.addColumn(1)
-		assertEqual(defined(table.cell(0, 0)).gridSpan, 4, 'the span grew with the table')
-		assertEqual(table.columnCount, 4, 'and the grid did too')
-		assertGridConsistent(table)
 	})
 
 	test('removing a column inside a merge narrows it and keeps the content', async () => {

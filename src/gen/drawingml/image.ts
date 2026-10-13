@@ -46,7 +46,7 @@ export const ImageSizingXml = {
 		const b = imgSize.h - (boxDim.y + boxDim.h)
 		if (l < 0 || r < 0 || t < 0 || b < 0) {
 			const over = [
-				l < 0 && `x (${l < 0 ? -l : 0} past left edge)`,
+				l < 0 && `x (${-l} past left edge)`,
 				r < 0 && `x+w (${-r} past right edge)`,
 				t < 0 && `y (${-t} past top edge)`,
 				b < 0 && `y+h (${-b} past bottom edge)`,

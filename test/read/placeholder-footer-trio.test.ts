@@ -59,9 +59,4 @@ describe('read: footer-trio placeholder geometry inheritance', () => {
 			assertEqual(frame.height, MASTER[type].height, `${type} resolved height`)
 		})
 	}
-
-	test('the three boxes are distinct, so a trio mix-up would be caught (guards the fixture)', async () => {
-		const boxes = [MASTER.dt, MASTER.ftr, MASTER.sldNum].map((b) => `${b.left},${b.top},${b.width},${b.height}`)
-		assertEqual(new Set(boxes).size, 3, 'expected three distinct master boxes')
-	})
 })

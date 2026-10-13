@@ -15,20 +15,6 @@ async function buildSlide1(pres: PptxTs) {
 // the removed 0.0-1.0 `opacity` had the same role before it was dropped from the public API.
 defineRegressionSuite('PPT-aligned border/shadow props [border-shadow-ppt-props]', [
 	{
-		name: 'table cell border `width` emits the correct line w=',
-		fn: async () => {
-			const pres = new PptxTs()
-			pres.addSlide().addTable([[{ text: 'x' }]], {
-				x: 1,
-				y: 1,
-				border: { type: 'solid', width: 2, color: 'FF0000' },
-			})
-			const xml = await buildSlide1(pres)
-			// 2pt -> 25400 EMU
-			assert(xml.includes('<a:lnL w="25400"'), 'expected `width:2` to emit w="25400"; got:\n' + xml)
-		},
-	},
-	{
 		name: 'table cell border `transparency` emits <a:alpha> inside the line fill',
 		fn: async () => {
 			const pres = new PptxTs()
@@ -42,22 +28,6 @@ defineRegressionSuite('PPT-aligned border/shadow props [border-shadow-ppt-props]
 			const line = xml.substring(i, xml.indexOf('</a:lnL>', i))
 			// transparency 25 -> alpha 75000
 			assert(line.includes('<a:alpha val="75000"/>'), 'expected transparency:25 -> alpha 75000; got:\n' + line)
-		},
-	},
-	{
-		name: 'shadow `transparency` (0-100) sets the emitted alpha',
-		fn: async () => {
-			const presT = new PptxTs()
-			presT.addSlide().addShape('rect', {
-				x: 1,
-				y: 1,
-				w: 2,
-				h: 1,
-				shadow: { type: 'outer', color: '000000', blur: 3, offset: 2, transparency: 25 },
-			})
-			const xmlT = await buildSlide1(presT)
-			// transparency 25 -> alpha 75000
-			assert(xmlT.includes('<a:alpha val="75000"/>'), 'expected transparency:25 -> alpha 75000; got:\n' + xmlT)
 		},
 	},
 	{

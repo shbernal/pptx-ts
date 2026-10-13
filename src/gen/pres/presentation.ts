@@ -77,7 +77,7 @@ export function makeXmlPresentation(pres: PresentationPropsInternal): string {
 		// When fonts are embedded we carry WHOLE faces, so `embedTrueTypeFonts="1"` (so
 		// PowerPoint honors the embed) and `saveSubsetFonts="0"` (we did not subset).
 		// With no embedded fonts, keep the historical inert `saveSubsetFonts="1"`.
-		`xmlns:p="${OOXML_NS.p}" ${pres.rtlMode ? 'rtl="1"' : ''} ${(pres.embeddedFonts || []).some((font) => font.faces.some((face) => face.bytes)) ? 'embedTrueTypeFonts="1" saveSubsetFonts="0"' : 'saveSubsetFonts="1"'} autoCompressPictures="0"${pres.firstSlideNum !== 1 ? ` firstSlideNum="${pres.firstSlideNum}"` : ''}>`
+		`xmlns:p="${OOXML_NS.p}" ${pres.rtlMode ? 'rtl="1"' : ''} ${pres.embeddedFonts.some((font) => font.faces.some((face) => face.bytes)) ? 'embedTrueTypeFonts="1" saveSubsetFonts="0"' : 'saveSubsetFonts="1"'} autoCompressPictures="0"${pres.firstSlideNum !== 1 ? ` firstSlideNum="${pres.firstSlideNum}"` : ''}>`
 
 	// SPEC (ECMA-376 Part 1 §19.2.1.26): sldMasterIdLst, then notesMasterIdLst
 	// BEFORE sldIdLst. Emitting notesMasterIdLst after sldIdLst (or after
@@ -108,7 +108,7 @@ export function makeXmlPresentation(pres: PresentationPropsInternal): string {
 
 	// Embedded fonts (CT_Presentation index 7, after notesSz, before defaultTextStyle).
 	// rIds continue past the fixed presentation rels and must match makeXmlPresentationRels.
-	const fonts = pres.embeddedFonts || []
+	const fonts = pres.embeddedFonts
 	const flat = flattenEmbeddedFaces(fonts, presentationFontRelStart(pres.slides))
 	const rIdOf = new Map(flat.map((face) => [`${face.fontIndex}:${face.slot}`, face.rId]))
 	const embeddedFontLst = serializeEmbeddedFontLst(fonts, (fontIndex, slot) => rIdOf.get(`${fontIndex}:${slot}`))
@@ -119,7 +119,7 @@ export function makeXmlPresentation(pres: PresentationPropsInternal): string {
 		LEVEL_MARGINS_EMU.map((marL, i) => raw(defaultTextStyleLevel(i + 1, marL)))
 	)
 
-	const extLst = pres.sections && pres.sections.length > 0 ? sectionsExtLst(pres.sections) : ''
+	const extLst = pres.sections.length > 0 ? sectionsExtLst(pres.sections) : ''
 
 	return (
 		XML_DECL +

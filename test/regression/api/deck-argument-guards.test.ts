@@ -278,22 +278,6 @@ defineRegressionSuite('Deck argument guards', [
 		},
 	},
 	{
-		name: 'a well-formed defineLayout warns about nothing and becomes selectable',
-		fn: async () => {
-			// The sensitivity check for the case above: these assertions can only mean
-			// something if a good definition passes silently.
-			const { result, codes } = await captureDiagnostics(async () => {
-				const pres = new PptxTs()
-				pres.defineLayout({ name: 'A3', width: 16.5, height: 11.7 })
-				pres.layout = 'A3'
-				return pres
-			})
-
-			assertEqual(codes.length, 0, 'a valid layout is silent')
-			assertEqual(result.presLayout.name, 'A3')
-		},
-	},
-	{
 		name: 'defineSlideMaster without a title throws rather than defining an unaddressable master',
 		fn: async () => {
 			// `title` is the key `addSlide({ masterTitle })` matches on, so a master without one

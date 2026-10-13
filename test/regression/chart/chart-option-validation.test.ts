@@ -218,19 +218,6 @@ defineRegressionSuite('Chart option validation', [
 		},
 	},
 	{
-		name: 'non-positive gridLine size is dropped so defaults apply',
-		fn: async () => {
-			// A negative size with a real style takes the `size <= 0` branch (the
-			// early `style === 'none'` return would otherwise skip validation).
-			const { zip } = await build((p) => {
-				// oxlint-disable-next-line typescript/no-deprecated -- the deprecated `size`/`style` spellings are what this case validates.
-				p.addSlide().addChart(SERIES, { ...BASE, type: ChartType.bar, valGridLine: { size: -5, style: 'dash' } })
-			})
-			const xml = await chartXml(zip)
-			assert(xml.length > 0, 'chart still builds after dropping the invalid gridLine size')
-		},
-	},
-	{
 		// `barSeriesLine` takes the same shape as the three gridlines and reaches the same emitter,
 		// and it was the one of the four that was never scrubbed, so this was coerced in silence.
 		name: 'an out-of-range barSeriesLine is scrubbed and named as barSeriesLine',

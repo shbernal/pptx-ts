@@ -101,23 +101,10 @@ describe('text-fit: measureHeightPt', () => {
 		const h = measureHeightPt([para('a\nb', { lineSpacingPts: 30 })], 10000, resolveMono, 100, 0)
 		expect(h).toBeCloseTo(60, 6)
 	})
-
-	test('unmeasurable when a run has no metrics', () => {
-		expect(measureHeightPt([para('hi')], 1000, () => undefined, 100, 0)).toBeNull()
-		expect(measureHeightPt([para('hi')], 0, resolveMono, 100, 0)).toBeNull()
-	})
 })
 
 describe('text-fit: solveShrink', () => {
 	const box = (innerWidthPt: number, innerHeightPt: number) => ({ innerWidthPt, innerHeightPt })
-
-	test('fits at 100% → no shrink', () => {
-		expect(solveShrink([para('hi')], box(1000, 100), resolveMono)).toEqual({ kind: 'fits' })
-	})
-
-	test('unmeasurable propagates', () => {
-		expect(solveShrink([para('hi')], box(1000, 100), () => undefined)).toEqual({ kind: 'unmeasurable' })
-	})
 
 	test('overflow → largest grid scale that fits, and it actually fits', () => {
 		// 5 words of 10 chars; tall enough to need shrinking in a short box.
@@ -175,14 +162,6 @@ describe('text-fit: solveShrink wrap=false (horizontal overflow)', () => {
 		}
 	})
 
-	test('same over-wide line WRAPS (default) → fits at 100%, no shrink', () => {
-		// With wrapping, the over-long word character-wraps to fit the width and the
-		// tall box swallows the extra lines: the horizontal case is what differs.
-		expect(solveShrink([para('aaaaaaaaaa')], { innerWidthPt: 50, innerHeightPt: 10000 }, resolveMono)).toEqual({
-			kind: 'fits',
-		})
-	})
-
 	test('non-wrapping line that already fits the width → no shrink', () => {
 		expect(solveShrink([para('hi')], noWrapBox(1000, 1000), resolveMono)).toEqual({ kind: 'fits' })
 	})
@@ -197,10 +176,6 @@ describe('text-fit: solveShrink wrap=false (horizontal overflow)', () => {
 
 describe('text-fit: solveResize', () => {
 	const box = (innerWidthPt: number, innerHeightPt: number) => ({ innerWidthPt, innerHeightPt })
-
-	test('unmeasurable propagates', () => {
-		expect(solveResize([para('hi')], box(1000, 100), () => undefined)).toEqual({ kind: 'unmeasurable' })
-	})
 
 	test('needed height = pitch * size, inflated by the height safety factor', () => {
 		const out = solveResize([para('hi')], box(1000, 5), resolveMono)

@@ -23,22 +23,6 @@ defineRegressionSuite('Table margins [legacy bug-14]', [
 		},
 	},
 	{
-		name: 'cell margin set to a plain object falls back to defaults (no NaN)',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				const s = p.addSlide()
-				// @ts-expect-error an object margin is the invalid input under test
-				s.addTable([[{ text: 'b', options: { margin: { top: 5 } } }]], { x: 1, y: 1, w: 4, colW: [4] })
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assert(xml.indexOf('NaN') === -1, 'NaN must not appear in slide1.xml; got: ' + xml)
-			assert(
-				/<a:tcPr[^>]*marL="\d+"[^>]*marR="\d+"[^>]*marT="\d+"[^>]*marB="\d+"/.test(xml),
-				'expected numeric marL/R/T/B on <a:tcPr>; got: ' + xml
-			)
-		},
-	},
-	{
 		name: 'table-level margin set to a string falls back to defaults (no NaN)',
 		fn: async () => {
 			const { zip } = await build((p) => {

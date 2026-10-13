@@ -153,7 +153,7 @@ export function renderModel3dObject(ctx: RenderContext): string {
 	} = ctx
 	const model = slideItemObj.model3d
 	if (!model) return ''
-	const opts = slideItemObj.options || {}
+	const opts = ctx.itemOpts
 	const altText = opts.altText || ''
 
 	// `am3d:spPr`'s xfrm is FRAME-LOCAL: origin 0,0 with the graphic frame's own extent. The

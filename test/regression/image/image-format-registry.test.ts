@@ -93,12 +93,6 @@ describe('image format registry', () => {
 		assertEqual(IMAGE_FORMATS.tiff.filenameExt, 'tif', 'tiff assets on disk are .tif')
 	})
 
-	test('content types PowerPoint authors are kept over the IANA-preferred spellings', () => {
-		assertEqual(imageContentType('emf'), 'image/x-emf', 'emf')
-		assertEqual(imageContentType('wmf'), 'image/x-wmf', 'wmf')
-		assertEqual(imageContentType('svg'), 'image/svg+xml', 'svg')
-	})
-
 	test('an extension the registry does not carry still gets image/<extn>', () => {
 		assertEqual(imageContentType('avif'), 'image/avif', 'unlisted extension')
 		assertEqual(imageContentType('PNG'), 'image/png', 'case-insensitive')

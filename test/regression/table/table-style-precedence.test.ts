@@ -176,16 +176,6 @@ defineRegressionSuite('Table styling: built-in styles and the direct-formatting 
 		},
 	},
 	{
-		name: 'headerRow supplies the header text colour, beating the black default',
-		fn: async () => {
-			// Tier 2, and the documented way to colour a header now that no region can.
-			const { slide } = await tableParts({ headerRow: { color: 'FFFFFF', fill: '1A2B3C', bold: true } })
-			const rPr = firstRPr(slide)
-			assert(rPr.includes('<a:srgbClr val="FFFFFF"/>'), 'headerRow beats the default; got: ' + rPr)
-			assert(firstTcPr(slide).includes('1A2B3C'), 'and its fill lands on the cell; got: ' + firstTcPr(slide))
-		},
-	},
-	{
 		name: 'columns[i] fills its own column and leaves the others alone',
 		fn: async () => {
 			// @ts-expect-error `columns` has no slot type for "no definition"; the hole is the input under test
@@ -231,28 +221,12 @@ defineRegressionSuite('Table styling: built-in styles and the direct-formatting 
 		},
 	},
 	{
-		name: 'a hyperlinked cell stands the black default down',
-		fn: async () => {
-			// Long-standing carve-out, unrelated to table styles: the default paints the whole run,
-			// so the words *after* a link would come out black instead of following the link colour.
-			// It is the linked cell's alone: it used to strip the default from every cell (#101).
-			const { slide } = await tableParts({}, [
-				[{ text: 'H1' }, { text: 'docs', options: { hyperlink: { url: 'https://example.com' } } }],
-			])
-			const [plain, linked] = slide.match(/<a:tc[ >][\s\S]*?<\/a:tc>/g) || []
-			expectDefined(plain, 'the first cell')
-			expectDefined(linked, 'the second cell')
-			assert(linked.includes('<a:hlinkClick'), 'the hyperlink is emitted; got: ' + linked)
-			assert(!linked.includes('<a:srgbClr val="000000"/>'), 'and the linked cell is not painted black; got: ' + linked)
-			assert(plain.includes('<a:srgbClr val="000000"/>'), 'while the cell beside it keeps the default; got: ' + plain)
-		},
-	},
-	{
 		name: 'the word "hyperlink" in a cell is text, not a hyperlink',
 		fn: async () => {
-			// The carve-out above used to be spelled `JSON.stringify({ arrRows }).includes('hyperlink')`,
-			// so a cell that merely *mentions* the word stood the black default down for the whole
-			// table and its text fell through to the theme's tx1.
+			// A hyperlinked cell stands the black default down (cell-hyperlink-runs.test.ts). That
+			// carve-out used to be spelled `JSON.stringify({ arrRows }).includes('hyperlink')`, so a
+			// cell that merely *mentions* the word stood the default down for the whole table and its
+			// text fell through to the theme's tx1.
 			const { slide } = await tableParts({}, [[{ text: 'H1' }, { text: 'see the hyperlink docs' }]])
 			assert(!slide.includes('<a:hlinkClick'), 'no hyperlink is emitted; got: ' + slide)
 			assert(slide.includes('<a:srgbClr val="000000"/>'), 'the black default still lands; got: ' + slide)
@@ -276,21 +250,6 @@ defineRegressionSuite('Table styling: built-in styles and the direct-formatting 
 			assert(linked.includes('<a:hlinkClick'), 'the hyperlink is emitted; got: ' + linked)
 			assert(!linked.includes('<a:srgbClr val="000000"/>'), 'and no run of that cell is painted black; got: ' + linked)
 			assert(plain.includes('<a:srgbClr val="000000"/>'), 'while the cell beside it keeps the default; got: ' + plain)
-		},
-	},
-	{
-		name: 'outerBorder draws the perimeter over the suppressed defaults',
-		fn: async () => {
-			const { slide } = await tableParts(
-				{ hasHeader: false, outerBorder: { type: 'solid', color: '1A2B3C', width: 1 } },
-				[
-					[{ text: 'A' }, { text: 'B' }],
-					[{ text: 'C' }, { text: 'D' }],
-				]
-			)
-			const topLeft = at(allTcPr(slide), 0)
-			assertEqual((topLeft.match(/1A2B3C/g) || []).length, 2, 'the two perimeter sides are the outer colour')
-			assert(/<a:lnR w="0"/.test(topLeft) && /<a:lnB w="0"/.test(topLeft), 'interior sides stay suppressed')
 		},
 	},
 	{

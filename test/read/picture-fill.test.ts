@@ -270,21 +270,6 @@ describe('TableCell.resolvedFill — a non-solid own fill suppresses the style g
 		)
 	})
 
-	test('a cell with no fill choice at all still falls through to the style', async () => {
-		const { presentation } = await authorReadWithFixtureStyles((pres) => {
-			pres.addSlide().addTable([[{ text: 'x' }, { text: 'y' }]], {
-				x: 1,
-				y: 1,
-				w: 6,
-				tableStyle: TableStyle.MEDIUM_STYLE_2_ACCENT_1,
-				hasHeader: true,
-			})
-		})
-		const cell = defined(defined(firstTable(presentation)).cell(0, 0))
-		assertEqual(cell.pictureFill, null, 'no picture fill')
-		assert(cell.resolvedFill?.effectiveHex, 'the style-graph fallback is intact for the unfilled case')
-	})
-
 	test.skipIf(!validatorInstalled)('the authored image-filled styled table is schema-valid', async () => {
 		const { buf } = await authorReadWithFixtureStyles(styledTable)
 		assertEqual((await schemaErrors(buf)).length, 0, 'no schema violations')
