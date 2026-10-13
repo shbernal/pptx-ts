@@ -572,11 +572,12 @@ describe('deck IR — losses the read model cannot see', () => {
 		assert(allCalls(ir).length > 0, 'the poster frame should still be emitted')
 	})
 
-	test('an OMML equation is reported rather than emitted as an empty box', async () => {
+	// It used to be noted `unread`; `Paragraph.equations` now reads it and it replays as `math` (#259).
+	test('an OMML equation is carried rather than emitted as an empty box', async () => {
 		const ir = await irFor('math-omml.pptx')
-		const noted = ir.fidelity.find((note) => note.construct === 'text.equation')
-		assert(noted, 'math-omml.pptx holds an equation no accessor exposes')
-		assertEqual(noted.cause, 'unread', 'the write API can author equations; the read side cannot see them')
+		const call = allCalls(ir).find((item) => item.sourceName === 'equation-box')
+		assert(call, 'the equation box emits a call')
+		assert(typeof opt(at(irArgs(call)[0], 0), 'math') === 'string', 'whose text is the equation')
 	})
 })
 

@@ -123,6 +123,7 @@ export {
 	Paragraph,
 	Run,
 	Field,
+	type Equation,
 	type BodyProperties,
 	type AutofitMode,
 	type ListStyleDefaults,

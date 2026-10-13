@@ -15,7 +15,9 @@ import {
 	firstChildElement,
 	getElements,
 	numberValue,
+	OOXML_NS,
 	pctPointsAttr,
+	serializeXml,
 } from '../../oxml/dom.js'
 import { type ThemeContext } from '../../oxml/theme.js'
 import {
@@ -41,6 +43,22 @@ import {
 } from './run.js'
 import { setParagraphText } from './edit.js'
 import { lstStyleLevel, placeholderInheritedLevels } from '../../oxml/placeholder-inherit.js'
+/**
+ * One OMML equation in a paragraph (an `a14:m` element), in the form `TextProps.math` and `inline`
+ * take back.
+ */
+export interface Equation {
+	/**
+	 * The equation's OMML as written: an `m:oMathPara` for a display equation, an `m:oMath` for an
+	 * inline one. It declares every namespace it uses, PowerPoint's `a:` run properties included.
+	 */
+	omml: string
+	/** Whether the equation flows between the paragraph's runs (a bare `m:oMath`) rather than standing as a display block (`m:oMathPara`). */
+	inline: boolean
+	/** How many of the paragraph's {@link Paragraph.runs} come before it, which places it among them. */
+	runIndex: number
+}
+
 /** One paragraph (`a:p`) of a text frame. */
 export class Paragraph {
 	constructor(
@@ -58,6 +76,25 @@ export class Paragraph {
 	get runs(): Run[] {
 		const inherited = this.#inheritedRunProps()
 		return getElements(this.element, 'a:r').map((element) => new Run(element, this.context, inherited))
+	}
+
+	/**
+	 * The OMML equations (`a14:m`) in document order. An equation is neither a run nor part of
+	 * {@link text}; each says how many runs precede it, so an inline one keeps its place.
+	 */
+	get equations(): Equation[] {
+		const equations: Equation[] = []
+		let runIndex = 0
+		for (let node = this.element.firstChild; node; node = node.nextSibling) {
+			if (node.nodeType !== ELEMENT_NODE) continue
+			const element = node as Element
+			if (element.namespaceURI === OOXML_NS.a && element.localName === 'r') runIndex++
+			if (element.namespaceURI !== OOXML_NS.a14 || element.localName !== 'm') continue
+			const omml = firstChildElement(element)
+			if (omml?.namespaceURI !== OOXML_NS.m) continue
+			equations.push({ omml: serializeXml(omml), inline: omml.localName === 'oMath', runIndex })
+		}
+		return equations
 	}
 
 	/** The fields (`a:fld`) in document order, each read like a run; see {@link Field}. */
