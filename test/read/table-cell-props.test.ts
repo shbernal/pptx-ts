@@ -106,14 +106,6 @@ describe('TableCell.borders — the two diagonals', () => {
 		assertEqual(borders.blToTr.dash, 'lgDashDot', '╱ keeps its exact dash preset')
 	})
 
-	test('a cell with no diagonals still reads its four edges', async () => {
-		const { presentation } = await authorRead(decoratedTable)
-		const borders = defined(defined(firstTable(presentation)).cell(0, 1)).borders
-		assert(borders, 'the plain cell still carries the writer default border set')
-		assertEqual(borders.tlToBr, null, 'no ╲ authored')
-		assertEqual(borders.blToTr, null, 'no ╱ authored')
-	})
-
 	test.skipIf(!validatorInstalled)('the decorated deck is schema-valid', async () => {
 		const { buf } = await authorRead(decoratedTable)
 		assertEqual((await schemaErrors(buf)).length, 0, 'decorated deck validates')

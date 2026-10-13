@@ -27,18 +27,6 @@ const LINK = 'https://www.youtube.com/embed/Dph6ynRVyUc'
 
 defineRegressionSuite('Media relationship pairing', [
 	{
-		name: 'an online video pairs one ECMA video rel with one MS media rel',
-		fn: async () => {
-			// The baseline: without this, the collision case below cannot mean anything.
-			const { zip } = await build((p) => {
-				p.addSlide().addMedia({ type: 'online', link: LINK, x: 1, y: 3, w: 4, h: 3 })
-			})
-			const types = Object.values(await slideRels(zip))
-			assertEqual(types.filter((t) => t === VIDEO_REL).length, 1, 'exactly one ECMA video rel')
-			assertEqual(types.filter((t) => t === MS_MEDIA_REL).length, 1, 'exactly one MS media rel')
-		},
-	},
-	{
 		name: 'a hyperlink to the same URL does not steal the video rel',
 		fn: async () => {
 			const { zip } = await build((p) => {

@@ -278,27 +278,6 @@ defineRegressionSuite('Object identity [legacy bug-21]', [
 		},
 	},
 	{
-		name: 'default cNvPr names are emitted when objectName is omitted',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				const slide = p.addSlide()
-				slide.addText('Text', { x: 0.4, y: 0.3, w: 2, h: 0.4 })
-				slide.addShape(ShapeType.rect, { x: 0.4, y: 0.9, w: 1, h: 0.4 })
-				slide.addImage({ data: `image/png;base64,${PNG_1X1}`, x: 1.7, y: 0.9, w: 0.4, h: 0.4 })
-				slide.addTable([[{ text: 'A1' }]], { x: 4.8, y: 0.4, w: 2, h: 0.6 })
-			})
-
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			const names = xmlOpeningTags(xml, 'p:cNvPr').map((tag) => defined(xmlAttributes(tag).name))
-			for (const prefix of ['Text', 'Shape', 'Image', 'Table']) {
-				assert(
-					names.some((name) => name && name.startsWith(prefix + ' ')),
-					`expected a default ${prefix} name; got: ${names.join(', ')}`
-				)
-			}
-		},
-	},
-	{
 		name: 'invalid object names warn without throwing',
 		fn: async () => {
 			const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})

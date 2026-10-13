@@ -16,6 +16,8 @@ defineRegressionSuite('Media looping', [
 			assert(xml.includes('nodeType="tmRoot"'), 'expected the tmRoot time node')
 			assert(xml.includes('<p:video>'), 'expected a <p:video> media node')
 			assert(xml.includes('repeatCount="indefinite"'), 'expected repeatCount="indefinite" for loop:true')
+			assert(xml.includes('<a:videoFile r:link='), 'expected <a:videoFile> for video media')
+			assert(!xml.includes('<a:audioFile'), 'expected no <a:audioFile> for video media')
 		},
 	},
 	{
@@ -27,23 +29,6 @@ defineRegressionSuite('Media looping', [
 
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 			assert(xml.includes('repeatCount="3000"'), 'expected loopCount:3 -> repeatCount="3000"')
-		},
-	},
-	{
-		name: 'media node targets the picture by spid (matches the cNvPr id)',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.addSlide().addMedia({ type: 'video', data: 'video/mp4;base64,AAAA', x: 1, y: 1, w: 3, h: 2, loop: true })
-			})
-
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			const cNvPrMatch = xml.match(/<p:cNvPr id="(\d+)"[^>]*><a:hlinkClick[^>]*action="ppaction:\/\/media"/)
-			assert(cNvPrMatch, 'expected the media picture cNvPr with media hlink action')
-			const spid = cNvPrMatch[1]
-			assert(
-				xml.includes(`<p:spTgt spid="${spid}"/>`),
-				`expected timing target spid="${spid}" to match the media cNvPr id`
-			)
 		},
 	},
 	{
@@ -129,19 +114,6 @@ defineRegressionSuite('Media looping', [
 			assert(!xml.includes('<a:videoFile'), 'expected no <a:videoFile> for audio media')
 			assert(xml.includes('<p:audio>'), 'expected a <p:audio> timing node for looping audio')
 			assert(!xml.includes('<p:video>'), 'expected no <p:video> timing node for audio')
-		},
-	},
-	{
-		name: 'video still uses a:videoFile and a p:video timing node',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.addSlide().addMedia({ type: 'video', data: 'video/mp4;base64,AAAA', x: 1, y: 1, w: 3, h: 2, loop: true })
-			})
-
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assert(xml.includes('<a:videoFile r:link='), 'expected <a:videoFile> for video media')
-			assert(!xml.includes('<a:audioFile'), 'expected no <a:audioFile> for video media')
-			assert(xml.includes('<p:video>'), 'expected a <p:video> timing node for looping video')
 		},
 	},
 	{

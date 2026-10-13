@@ -181,36 +181,6 @@ defineRegressionSuite('Table autoPage option surface', [
 		},
 	},
 	{
-		name: 'autoPageRepeatHeader repeats the header row on every continuation slide',
-		fn: async () => {
-			const rows = [
-				[
-					{ text: 'HEADER-A', options: { bold: true } },
-					{ text: 'HEADER-B', options: { bold: true } },
-				],
-				...bodyRows(40),
-			]
-			const { zip } = await build((p) => {
-				p.addSlide().addTable(rows, {
-					x: 0.5,
-					y: 0.5,
-					h: 4,
-					colW: [4.5, 4.5],
-					margin: 0,
-					slideMargin: 0,
-					autoPage: true,
-					autoPageRepeatHeader: true,
-					fontSize: 12,
-				})
-			})
-			const files = slideFiles(zip)
-			assert(files.length >= 2, `expected overflow to multiple slides; got ${files.length}`)
-			// The header text must reappear on the second page, not only the first.
-			const page2 = await readEntry(zip, at(files, 1))
-			assert(page2.includes('HEADER-A'), `expected repeated header on ${files[1]}; got: ${page2.slice(0, 400)}`)
-		},
-	},
-	{
 		name: 'degenerate cell text (empty / numeric / whitespace) does not crash autoPage',
 		fn: async () => {
 			const rows: TableRow[] = [

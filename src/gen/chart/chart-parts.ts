@@ -1354,14 +1354,14 @@ export function catRefBlock(kind: 'num' | 'str', ref: string, labels: string[], 
  * @param ref - the `<c:f>` formula, from {@link sheetRangeRef} or written inline
  * @param formatCode - the cached `<c:formatCode>`
  * @param values - the points to cache, in order; `null`/`undefined` entries are gaps
- * @param ptCount - cells spanned by `ref`; defaults to `values.length`
+ * @param ptCount - cells spanned by `ref`
  */
 export function numRefBlock(
 	tag: 'c:val' | 'c:xVal' | 'c:yVal' | 'c:bubbleSize',
 	ref: string,
 	formatCode: string,
 	values: Array<number | null | undefined>,
-	ptCount: number = values.length
+	ptCount: number
 ): string {
 	const numCache = el('c:numCache', null, [
 		raw(el('c:formatCode', null, formatCode)),

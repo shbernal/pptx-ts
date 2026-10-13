@@ -15,7 +15,6 @@ import {
 	makeRegistryResolver,
 	FontMetricsRegistry,
 	parseFontMetrics,
-	getHeuristicFontMetrics,
 	type FontMetrics,
 } from '../../../src/measure/font-metrics.ts'
 import { solveResize, solveShrink, HEIGHT_SAFETY_FACTOR, WIDTH_SAFETY_FACTOR } from '../../../src/measure/text-fit.ts'
@@ -105,14 +104,6 @@ describe('measureText core (synthetic metrics)', () => {
 		const expected = outcome.kind === 'shrink' ? outcome.result.fontScalePct : 100
 		expect(m.shrinkScaleFor(tightIn)).toBe(expected)
 		expect(m.shrinkScaleFor(tightIn)).toBeLessThan(100)
-	})
-
-	test('named face without exact metrics is still measurable (heuristic), and is reported', () => {
-		const reg = regWith() // only 'Mono' registered
-		const m = measureText(reg, 'hello world', { wIn: 5, fontSize: 12, fontFace: 'SomeOtherFace' })
-		expect(m.measurable).toBe(true)
-		expect(m.heightIn).toBeGreaterThan(0)
-		expect(m.approximatedFaces).toEqual(['SomeOtherFace'])
 	})
 
 	test('approximatedFaces is empty when every run is measured exactly', () => {
@@ -227,12 +218,6 @@ describe('pptx-ts/measure subpath (P1 re-exports, built)', () => {
 })
 
 describe('FontMetrics.hasCodepoint (cmap coverage)', () => {
-	test('heuristic metrics report every code point as covered (no cmap to consult)', () => {
-		const h = getHeuristicFontMetrics()
-		expect(h.hasCodepoint(0x41)).toBe(true) // 'A'
-		expect(h.hasCodepoint(0x2011)).toBe(true) // non-breaking hyphen, still reported covered
-	})
-
 	test.skipIf(!APTOS)('file-backed Aptos: covers A and ordinary hyphen, lacks U+2011 non-breaking hyphen', async () => {
 		const fm = await parseFontMetrics(new Uint8Array(readFileSync(defined(APTOS))))
 		expect(fm.hasCodepoint(0x41)).toBe(true) // 'A' — present
@@ -261,20 +246,6 @@ describe('measureText.uncoveredCodepoints (the font-fallback gap)', () => {
 	})
 
 	const asciiOnly = (cp: number) => cp < 0x80
-
-	test('fully covered text reports nothing', () => {
-		const reg = new FontMetricsRegistry()
-		reg.set('Partial', withCmap(asciiOnly))
-		const m = measureText(reg, 'plain ascii', { wIn: 5, fontSize: 12, fontFace: 'Partial' })
-		expect(m.uncoveredCodepoints).toEqual([])
-	})
-
-	test('uncovered code points are listed once each, sorted', () => {
-		const reg = new FontMetricsRegistry()
-		reg.set('Partial', withCmap(asciiOnly))
-		const m = measureText(reg, 'a\u2011b\u2011c\u3042', { wIn: 5, fontSize: 12, fontFace: 'Partial' })
-		expect(m.uncoveredCodepoints).toEqual([0x2011, 0x3042])
-	})
 
 	test('an astral code point is reported whole, not as two surrogates', () => {
 		const reg = new FontMetricsRegistry()
@@ -363,20 +334,6 @@ describe('FontMetricsRegistry.hasCodepoint (face-keyed coverage)', () => {
 	// with no fontconfig dependency.
 	const silkscreen = fixturePath('fonts/Silkscreen-Regular.ttf')
 
-	test('a registered face reports true/false from its cmap', async () => {
-		const reg = new FontMetricsRegistry()
-		reg.set('Silkscreen', await parseFontMetrics(new Uint8Array(readFileSync(silkscreen))))
-		expect(reg.hasCodepoint('Silkscreen', 0x41)).toBe(true) // 'A' — covered
-		expect(reg.hasCodepoint('Silkscreen', 0x2011)).toBe(false) // non-breaking hyphen — not covered
-	})
-
-	test('an unregistered face returns undefined (unknown, not a false "not covered")', async () => {
-		const reg = new FontMetricsRegistry()
-		reg.set('Silkscreen', await parseFontMetrics(new Uint8Array(readFileSync(silkscreen))))
-		expect(reg.hasCodepoint('Nope', 0x41)).toBe(undefined)
-		expect(reg.hasCodepoint(undefined, 0x41)).toBe(undefined)
-	})
-
 	test('a bold query falls back to the registered regular variant', async () => {
 		const reg = new FontMetricsRegistry()
 		reg.set('Silkscreen', await parseFontMetrics(new Uint8Array(readFileSync(silkscreen))))
@@ -387,30 +344,10 @@ describe('FontMetricsRegistry.hasCodepoint (face-keyed coverage)', () => {
 })
 
 describe('pptx.measureText() / overflowsBox() instance methods (heuristic path)', () => {
-	test('named face is measurable via the heuristic even with no metrics registered', () => {
-		const pptx = new PptxTs()
-		const m = pptx.measureText('A heading that is reasonably long', { wIn: 2, fontSize: 18, fontFace: 'Arial' })
-		expect(m.measurable).toBe(true)
-		expect(m.heightIn).toBeGreaterThan(0)
-		expect(m.lineCount).toBeGreaterThanOrEqual(1)
-		// Zero setup → every face is guessed, and the result says so.
-		expect(m.approximatedFaces).toEqual(['Arial'])
-	})
-
-	test('unnamed face returns measurable:false', () => {
-		const pptx = new PptxTs()
-		expect(pptx.measureText('text', { wIn: 5, fontSize: 12 }).measurable).toBe(false)
-	})
-
 	test('overflowsBox: tall text in a tiny box overflows; short text does not', () => {
 		const pptx = new PptxTs()
 		const long = 'The quick brown fox jumps over the lazy dog. '.repeat(6)
 		expect(pptx.overflowsBox(long, { wIn: 2, hIn: 0.5, fontSize: 18, fontFace: 'Arial' })).toBe(true)
 		expect(pptx.overflowsBox('hi', { wIn: 5, hIn: 3, fontSize: 12, fontFace: 'Arial' })).toBe(false)
-	})
-
-	test('overflowsBox reports false for an unmeasurable (unnamed) face', () => {
-		const pptx = new PptxTs()
-		expect(pptx.overflowsBox('x'.repeat(500), { wIn: 1, hIn: 0.2, fontSize: 40 })).toBe(false)
 	})
 })

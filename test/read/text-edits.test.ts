@@ -2,7 +2,7 @@
 // getter edges in src/read/api/text.ts that the fixture + edit suites don't hit:
 // the underline / fontName / colour clear paths, the bullet buChar / buAutoNum
 // branches, paragraph text with a:br / a:fld, TextFrame.text collapse / carry /
-// whitespace, resolvedAnchor, and the element_ escape hatches.
+// whitespace, and resolvedAnchor.
 //
 // A synthetic TextFrame over hand-authored p:txBody XML drives all of these off
 // -fixture; a stub part with a no-op markDirty lets the setters run without a
@@ -165,10 +165,6 @@ describe('Run getter edges on text that inherits through nothing', () => {
 		const r = run(`<a:r><a:rPr><a:latin typeface="Georgia"/></a:rPr><a:t>x</a:t></a:r>`)
 		assertEqual(r.resolvedFontFace, 'Georgia', 'own literal face resolves without a fontScheme')
 	})
-
-	test('element_ exposes the a:r element', () => {
-		assertEqual(run(`<a:r><a:t>x</a:t></a:r>`).element_.localName, 'r', 'element_ is the a:r')
-	})
 })
 
 describe('Paragraph getter edges', () => {
@@ -264,17 +260,9 @@ describe('Paragraph getter edges', () => {
 		const p = at(frame(`<a:p><a:r><a:t>A</a:t></a:r><a:br/><a:fld><a:t>B</a:t></a:fld></a:p>`).paragraphs, 0)
 		assertEqual(p.text, 'A\nB', 'run + break + field text in order')
 	})
-
-	test('element_ exposes the a:p element', () => {
-		assertEqual(
-			at(frame(`<a:p><a:r><a:t>x</a:t></a:r></a:p>`).paragraphs, 0).element_.localName,
-			'p',
-			'element_ is the a:p'
-		)
-	})
 })
 
-describe('TextFrame.text setter + resolvedAnchor + element_', () => {
+describe('TextFrame.text setter + resolvedAnchor', () => {
 	test('setting text collapses multiple paragraphs and carries the first run rPr', () => {
 		const f = frame(`<a:p><a:r><a:rPr b="1"/><a:t>first</a:t></a:r></a:p><a:p><a:r><a:t>second</a:t></a:r></a:p>`)
 		f.text = 'merged'
@@ -303,9 +291,5 @@ describe('TextFrame.text setter + resolvedAnchor + element_', () => {
 		const f = new TextFrame(withAnchor, bareText())
 		assertEqual(f.resolvedAnchor, 'ctr', 'own bodyPr @anchor wins')
 		assertEqual(frame(`<a:p/>`).resolvedAnchor, null, 'no own anchor and no placeholder → null')
-	})
-
-	test('element_ exposes the p:txBody element', () => {
-		assertEqual(frame(`<a:p/>`).element_.localName, 'txBody', 'element_ is the p:txBody')
 	})
 })

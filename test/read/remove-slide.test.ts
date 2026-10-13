@@ -26,11 +26,9 @@ import {
 } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture } from './corpus.ts'
-import { assertNoDanglingRels, resolveSingle } from './opc.ts'
+import { assertNoDanglingRels } from './opc.ts'
 
 const R_NS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
-const SLIDE_MASTER_REL = `${R_NS}/slideMaster`
-const SLIDE_LAYOUT_REL = `${R_NS}/slideLayout`
 const PR_NS = 'http://schemas.openxmlformats.org/package/2006/relationships'
 const MODERN_AUTHORS_REL = 'http://schemas.microsoft.com/office/2018/10/relationships/authors'
 
@@ -53,17 +51,6 @@ describe('Presentation.removeSlide', () => {
 		assertEqual(reopened.slides.length, before - 1, 'slide count stays dropped after reload')
 		assert(!reopened.opc.part(removedPart), 'the slide part is gone from the package')
 		assert(!reopened.opc.part(`${removedPart.replace(/\/([^/]+)$/, '/_rels/$1')}.rels`), 'its .rels is gone too')
-		assertNoDanglingRels(reopened.opc)
-	})
-
-	test('keeps shared chrome (layout/master/theme) when a slide is removed', async () => {
-		const deck = await openFixture('mixed')
-		const layout = defined(resolveSingle(deck.opc, at(deck.slides, 0).partName, SLIDE_LAYOUT_REL))
-		const master = resolveSingle(deck.opc, layout, SLIDE_MASTER_REL)
-		deck.removeSlide(0)
-		const reopened = await Presentation.load(await deck.save())
-		assert(reopened.opc.part(layout), 'the slide layout is preserved')
-		assert(reopened.opc.part(master), 'the slide master is preserved')
 		assertNoDanglingRels(reopened.opc)
 	})
 

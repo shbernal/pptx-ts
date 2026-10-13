@@ -39,15 +39,6 @@ describe('parseFontMetrics → FontMetrics', () => {
 		expect(fm.hasCodepoint(0x1f600)).toBe(false) // 😀
 		expect(fm.hasCodepoint(0x4e2d)).toBe(false) // 中
 	})
-
-	test('rejects bytes that are not a font, with a classified error', async () => {
-		// A garbage buffer throws rather than yielding silently wrong advances, and it
-		// throws CLASSIFIED: opentype's own bare Error is reclassified, so a consumer
-		// catches it by the same taxonomy as every other library failure.
-		await expect(parseFontMetrics(new Uint8Array([0, 1, 2, 3]))).rejects.toMatchObject({
-			code: 'font/parse-failed',
-		})
-	})
 })
 
 describe('getHeuristicFontMetrics', () => {

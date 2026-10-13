@@ -53,7 +53,7 @@ export function renderTextObject(ctx: RenderContext): string {
 	{
 		const spLockXml = genXmlObjectLock('a:spLocks', SHAPE_LOCK_ATTRS, txtOpts.objectLock, txtOpts.objectName)
 		// Paired only when there are locks to carry; otherwise self-closing.
-		const cNvSpPrAttrs: XmlAttrs = { txBox: xsdBoolIfTrue(txtOpts?.isTextBox) }
+		const cNvSpPrAttrs: XmlAttrs = { txBox: xsdBoolIfTrue(txtOpts.isTextBox) }
 		strSlideXml += elOrVoid('p:cNvSpPr', cNvSpPrAttrs, spLockXml)
 	}
 	// Prefer the resolved slide-layout placeholder; otherwise fall back to the shape's own
@@ -64,7 +64,7 @@ export function renderTextObject(ctx: RenderContext): string {
 		null,
 		raw(
 			genXmlPlaceholder(
-				isPlaceholderDef || (placeholderObj == null && itemOpts?._placeholderType) ? slideItemObj : placeholderObj,
+				isPlaceholderDef || (placeholderObj == null && itemOpts._placeholderType) ? slideItemObj : placeholderObj,
 				statedPlaceholderBinding(itemOpts.placeholder),
 				isPlaceholderDef
 			)

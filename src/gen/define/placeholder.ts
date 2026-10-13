@@ -17,7 +17,7 @@ import { withLineDefaults } from '../drawingml/line.js'
  */
 export function addPlaceholdersToSlideLayouts(slide: PresSlideInternal): void {
 	if (!slide._slideLayout) return // Add all placeholders on this Slide that dont already exist
-	;(slide._slideLayout._slideObjects || []).forEach((slideLayoutObj) => {
+	slide._slideLayout._slideObjects.forEach((slideLayoutObj) => {
 		if (slideLayoutObj._type === SlideObjectType.placeholder) {
 			const slideLayoutOptions = slideLayoutObj.options || {}
 			// A: Search for this placeholder on Slide before we add

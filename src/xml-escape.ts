@@ -58,7 +58,7 @@ export function hasIllegalXmlChars(value: string): boolean {
  */
 export function encodeXmlEntities(xml: string | number): string {
 	// NOTE: Dont use short-circuit eval here as value c/b "0" (zero) etc.!
-	if (typeof xml === 'undefined' || xml == null) return ''
+	if (xml == null) return ''
 	// Strip XML 1.0 illegal control chars (e.g. \v) before escaping to prevent PowerPoint repair dialogs.
 	return xml
 		.toString()

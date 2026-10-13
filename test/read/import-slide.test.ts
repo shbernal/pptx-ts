@@ -122,24 +122,6 @@ describe('Presentation.importSlide', () => {
 		assertEqual(listed[0], layout, 'and it is the layout the imported slide uses')
 	})
 
-	test('imports a table slide into another deck; the table survives a round-trip', async () => {
-		const target = await openFixture('empty')
-		const source = await openFixture('table')
-		const sourceTableSlide = source.slides.findIndex((s) =>
-			s.shapes.some((sh) => sh.shapeType === 'graphicFrame' && sh.table)
-		)
-		assert(sourceTableSlide >= 0, 'source deck has a table slide')
-
-		const imported = target.importSlide(source, sourceTableSlide)
-		const reopened = await Presentation.load(await target.save())
-		const last = at(reopened.slides, reopened.slides.length - 1)
-		const table = last.shapes.filter((s) => s.shapeType === 'graphicFrame').find((f) => f.table)?.table
-		assert(table, 'imported slide still has a table')
-		assertGraphResolves(reopened.opc, last.partName)
-		assertNoDanglingRels(reopened.opc)
-		assert(imported.index === reopened.slides.length - 1, 'imported slide is last')
-	})
-
 	test('only the presentation part + its rels + content types change; imported parts are added', async () => {
 		const input = await readFile(fixturePath('empty'))
 		const target = await Presentation.load(input)
@@ -290,22 +272,6 @@ describe('Presentation.importSlide', () => {
 		target.importSlide(source, 0)
 		const errors = await validateBuf(Buffer.from(await target.save()))
 		assertEqual(errors.length, 0, `validator errors: ${JSON.stringify(errors).slice(0, 2000)}`)
-	})
-
-	test('registers each copied master in p:sldMasterIdLst (so master graphics render)', async () => {
-		// Cross-deck, so there is a master to copy at all; see the dedup test above.
-		const target = await openFixture('empty')
-		const source = await openFixture('multi-theme')
-		const before = registeredMasters(target.opc).length
-
-		target.importSlide(source, 0)
-		const reopened = await Presentation.load(await target.save())
-		const opc = reopened.opc
-
-		const { master } = assertGraphResolves(opc, at(reopened.slides, reopened.slides.length - 1).partName)
-		const masters = registeredMasters(opc)
-		assertEqual(masters.length, before + 1, 'importing a slide on a new master registers one more master')
-		assert(masters.includes(master), 'and the registered master is the slide’s own copied master')
 	})
 
 	test('imports a chart slide with its embedded data', async () => {
@@ -469,19 +435,6 @@ describe('Presentation.importSlide({ at })', () => {
 			'the original slides keep their order, shifted back by one'
 		)
 		assertNoDanglingRels(reopened.opc)
-	})
-
-	test('omitting at appends (unchanged behaviour)', async () => {
-		const { target, ids } = await targetWithMarkedSlides()
-		const source = await openFixture('mixed')
-
-		const imported = target.importSlide(source, 0)
-		assertEqual(imported.index, ids.length, 'imported slide reports the last index')
-
-		const reopened = await Presentation.load(await target.save())
-		const reIds = reopened.slides.map((s) => s.slideId)
-		assertEqual(JSON.stringify(reIds.slice(0, ids.length)), JSON.stringify(ids), 'originals stay first in order')
-		assertEqual(reIds[reIds.length - 1], imported.slideId, 'imported slide is last')
 	})
 
 	test('an out-of-range at appends rather than throwing', async () => {

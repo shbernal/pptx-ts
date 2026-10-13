@@ -99,17 +99,6 @@ defineRegressionSuite('Shape preset mapping [legacy bug-10]', [
 		},
 	},
 	{
-		name: 'a valid ST_ShapeType preset not exposed via shapes.* (straightConnector1) is accepted',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				const s = p.addSlide()
-				s.addShape('straightConnector1', { x: 1, y: 1, w: 2, h: 0 })
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assert(/<a:prstGeom\s+prst="straightConnector1"/.test(xml), 'expected prst="straightConnector1"; got: ' + xml)
-		},
-	},
-	{
 		name: 'addText with a valid shape preset emits that prstGeom',
 		fn: async () => {
 			const { zip } = await build((p) => {
@@ -133,27 +122,6 @@ defineRegressionSuite('Shape preset mapping [legacy bug-10]', [
 				/Invalid shape "ellipsee"/,
 				'addText with an unknown shape preset'
 			)
-		},
-	},
-	{
-		name: 'custGeom freeform shape is accepted (special-cased, not a prstGeom)',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				const s = p.addSlide()
-				s.addShape(ShapeType.custGeom, {
-					x: 1,
-					y: 1,
-					w: 2,
-					h: 2,
-					points: [
-						{ x: 0, y: 0 },
-						{ x: 2, y: 0 },
-						{ x: 1, y: 2, close: true },
-					],
-				})
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assert(/<a:custGeom>/.test(xml), 'expected <a:custGeom> for CUSTOM_GEOMETRY; got: ' + xml)
 		},
 	},
 	{

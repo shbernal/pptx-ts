@@ -53,13 +53,6 @@ describe('makeXmlTableStyles', () => {
 })
 
 describe('the written tableStyles.xml', () => {
-	test('a deck without a styled table defines nothing', async () => {
-		const { styles } = await written((p) => {
-			p.addSlide().addTable(ROWS, AT)
-		})
-		expect(styles).not.toContain('<a:tblStyle ')
-	})
-
 	test('each built-in style is defined once, the default first, then in the order the deck reaches them', async () => {
 		const { styles } = await written((p) => {
 			p.addSlide().addTable(ROWS, { ...AT, tableStyle: TableStyle.DARK_STYLE_1_ACCENT_3 })

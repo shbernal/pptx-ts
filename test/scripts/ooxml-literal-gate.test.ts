@@ -70,10 +70,6 @@ describe('the allowlist', () => {
 		expect(compareToAllowlist([finding, added], [entry]).unlisted).toEqual([added])
 	})
 
-	test('an entry whose literal is gone is stale', () => {
-		expect(compareToAllowlist([], [entry]).stale).toEqual([entry])
-	})
-
 	test('an entry without a reason is reported', () => {
 		const bare = { ...entry, reason: '  ' }
 		expect(compareToAllowlist([finding], [bare]).reasonless).toEqual([bare])

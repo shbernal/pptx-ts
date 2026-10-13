@@ -60,7 +60,7 @@ export function createColorElement(colorStr: string | SCHEME_COLORS, innerElemen
 		)
 		colorStr = DEF_FONT_COLOR
 	}
-	let colorVal = stripHash(colorStr || '')
+	let colorVal = stripHash(colorStr)
 
 	// 8-char hex (RGBA): strip the alpha byte to a sibling <a:alpha val="N"/>,
 	// continue with the leading 6-char RGB through the existing validation. This keeps

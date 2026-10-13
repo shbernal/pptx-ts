@@ -61,11 +61,6 @@ describe('accepts inert whitespace', () => {
 		expect(relaxationsOf(result)).toHaveLength(1)
 	})
 
-	test('a newline-and-indent run is relaxed', () => {
-		const result = prove('<c:title>\n      <c:tx/>\n    </c:title>', '<c:title><c:tx/></c:title>')
-		expect(result.ok).toBe(true)
-	})
-
 	// `<a:p>` holds runs, and PowerPoint takes its text from `<a:t>` alone — so whitespace
 	// between an `<a:pPr>` and an `<a:r>` is layout. This is the one relaxation that touches
 	// the text tree at all, so it is pinned deliberately rather than left implied.

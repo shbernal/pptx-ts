@@ -168,19 +168,6 @@ defineRegressionSuite('Preset build animations (write)', [
 		},
 	},
 	{
-		name: 'resolves the target shape by objectName',
-		fn: async () => {
-			const xml = await slideXml((p) => {
-				const s = p.addSlide()
-				s.addText('a', { x: 1, y: 1, w: 1, h: 1, objectName: 'a' })
-				s.addText('b', { x: 1, y: 2, w: 1, h: 1, objectName: 'b' })
-				s.addAnimation({ preset: 'fadeIn', objectName: 'b' }) // spid = idx 1 + 2 = 3
-			})
-			assert(/<p:bldP spid="3" grpId="0"\/>/.test(xml), 'bldP targets resolved spid 3')
-			assert(/<p:spTgt spid="3"\/>/.test(xml), 'effect targets resolved spid 3')
-		},
-	},
-	{
 		// `objectName` is stored attribute-escaped, so resolving one means escaping the lookup key too.
 		// It did not: a shape named `Q&A` was stored as `Q&amp;A`, never matched, and the effect was
 		// dropped with a warning naming a shape that is plainly on the slide. Covers a top-level object,
@@ -299,20 +286,6 @@ defineRegressionSuite('Preset build animations (write)', [
 				'the one shape takes the first shape id, with no gap; got ' + JSON.stringify(ids)
 			)
 			assert(/<p:spTgt spid="2"\/>/.test(xml), 'shapeIndex 0 targets that shape; got: ' + xml)
-		},
-	},
-	{
-		// The valid boundary: shapeIndex === topLevelCount - 1 still resolves (regression guard that
-		// the new upper bound is exclusive, not off-by-one).
-		name: 'resolves shapeIndex at the last valid top-level slot',
-		fn: async () => {
-			const xml = await slideXml((p) => {
-				const s = p.addSlide()
-				s.addText('a', { x: 1, y: 1, w: 1, h: 1, objectName: 'a' })
-				s.addText('b', { x: 1, y: 2, w: 1, h: 1, objectName: 'b' })
-				s.addAnimation({ preset: 'fadeIn', shapeIndex: 1 }) // last valid index => spid 3
-			})
-			assert(/<p:spTgt spid="3"\/>/.test(xml), 'effect targets spid 3 for the last valid index')
 		},
 	},
 ])

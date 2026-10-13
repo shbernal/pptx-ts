@@ -47,7 +47,7 @@ export function renderImageObject(ctx: RenderContext): string {
 	// The media bytes this picture points at. Not available synchronously in `addImage()`, but
 	// populated by now, which is why every question that needs the image itself (its natural
 	// size, whether it is a vector) is answered here rather than at definition time.
-	const mediaRel = (slide._relsMedia || []).find((rel) => rel.rId === slideItemObj.imageRid)
+	const mediaRel = slide._relsMedia.find((rel) => rel.rId === slideItemObj.imageRid)
 	const naturalSize = (): { w: number; h: number } | null => imageNaturalSize(slideItemObj, slide)
 	const imgOpts = itemOpts
 	const imgLink = slideItemObj.hyperlink

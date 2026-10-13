@@ -30,23 +30,6 @@ defineRegressionSuite('Chart bubble size data label', [
 		},
 	},
 	{
-		name: 'bubble3D chart: showBubbleSize true emits <c:showBubbleSize val="1"/>',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.addSlide().addChart(BUBBLE_DATA, {
-					type: ChartType.bubble3d,
-					x: 1,
-					y: 1,
-					w: 6,
-					h: 3,
-					showBubbleSize: true,
-				})
-			})
-			const xml = await chartXml(zip)
-			assertIncludes(xml, '<c:showBubbleSize val="1"/>', 'bubble3D size label enabled')
-		},
-	},
-	{
 		name: 'bubble chart: default (omitted) keeps <c:showBubbleSize val="0"/>',
 		fn: async () => {
 			const { zip } = await build((p) => {

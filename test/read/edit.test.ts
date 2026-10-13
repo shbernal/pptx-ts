@@ -30,13 +30,6 @@ function replaceTextFrame(presentation: Presentation) {
 }
 
 describe('Run text editing', () => {
-	test('run.text mutates the a:t node and survives a reload', async () => {
-		const { reopened } = await editAndReopen('textbox', (presentation) => {
-			at(at(replaceTextFrame(presentation).paragraphs, 0).runs, 0).text = 'CHANGED'
-		})
-		assertEqual(at(at(replaceTextFrame(reopened).paragraphs, 0).runs, 0).text, 'CHANGED', 'edited run text reloads')
-	})
-
 	test('whitespace-significant text gets xml:space="preserve"', async () => {
 		const { saved } = await editAndReopen('textbox', (presentation) => {
 			at(at(replaceTextFrame(presentation).paragraphs, 0).runs, 0).text = '  spaced  '

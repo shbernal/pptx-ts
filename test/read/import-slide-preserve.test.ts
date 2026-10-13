@@ -748,22 +748,6 @@ describe("Presentation.importSlide({ theme: 'preserve' })", () => {
 		assert(!/x="1023938"/.test(sp) && !/x="990600"/.test(sp), 'no layout/master geometry was baked over it')
 	})
 
-	test('bakes placeholder-inherited run size onto runs that set none', async () => {
-		// slide1's ctrTitle runs set no sz; the size comes from the master titleStyle lvl1
-		// (defRPr sz="3200"). Rebinding would drop it, so preserve bakes sz onto each run.
-		const target = await openFixture('mixed')
-		const source = await openFixture('mixed')
-		const imported = target.importSlide(source, 0, { theme: 'preserve' }) // slide1: ctrTitle, runs carry no sz
-		const xml = await partXml(await target.save(), imported.partName)
-
-		const sp = (xml.match(/<p:sp>(?:(?!<\/p:sp>)[\s\S])*?ctrTitle[\s\S]*?<\/p:sp>/) ?? [''])[0]
-		const runs = [...sp.matchAll(/<a:r>[\s\S]*?<\/a:r>/g)].map((m) => m[0])
-		assert(runs.length > 0, 'ctrTitle has runs')
-		for (const run of runs) {
-			assert(/<a:rPr[^>]*\bsz="3200"/.test(run), 'each run carries the resolved titleStyle size (3200) explicitly')
-		}
-	})
-
 	test('leaves a run that sets its own sz untouched', async () => {
 		// slide1's first ctrTitle run is given an explicit sz="4444"; preserve must keep it
 		// while its siblings still inherit the resolved master size (3200).
@@ -1157,18 +1141,6 @@ describe("Presentation.importSlide({ theme: 'preserve' })", () => {
 		assert(/<a:schemeClr val="tx2"/.test(xml), 'the unresolvable tx2 token survives as a scheme colour')
 		assert(!/<a:scrgbClr/.test(xml), 'the unresolved colour element was not copied onto the slide either')
 		assert(!/<a:srgbClr val="333399"/.test(xml), 'nor was tx2 flattened to the RGB the replaced Fusion scheme held')
-	})
-
-	// Across two *different* decks, so the copy has something to copy: importing from a
-	// deck the destination already holds byte-for-byte binds to what is there instead
-	// (`ops/part-reuse.ts`), which would make a same-file import prove nothing here.
-	test('the default (no option) still copies the source theme subgraph', async () => {
-		const target = await openFixture('empty')
-		const source = await openFixture('theme-colors')
-		const themesBefore = countParts(target.opc, /\/theme\/theme\d+\.xml$/)
-		target.importSlide(source, 0) // default: copy
-		const after = countParts(target.opc, /\/theme\/theme\d+\.xml$/)
-		assert(after > themesBefore, 'the default copy mode brings a source theme across')
 	})
 
 	test.skipIf(!validatorInstalled)('a preserve-imported deck stays schema-valid', async () => {

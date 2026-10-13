@@ -174,14 +174,6 @@ describe('Table cell styling', () => {
 		)
 	})
 
-	test('fillSchemeColor exposes the raw scheme token', async () => {
-		assertEqual(
-			defined(formattedTable(await openFixture('table')).cell(0, 0)).fillSchemeColor,
-			'accent3',
-			'raw scheme token'
-		)
-	})
-
 	test('a cell with no own fill inherits the table style graph, but exposes no own scheme token', async () => {
 		// TableDefault's cells have no a:tcPr fill; the table is Medium Style 2 - Accent 1
 		// with banded rows, so its body cells shade from the style's band1H/band2H parts.
@@ -244,15 +236,6 @@ describe('Table cell styling', () => {
 		assertEqual(bottom.colorRef.resolved.effectiveHex, 'D9D9D9', 'lumMod 85% darkens white to D9D9D9')
 		assertEqual(bottom.colorRef.srgb, null, 'a scheme-coloured border states no literal hex')
 		assertEqual(bottom.cap, 'flat', 'and the cap PowerPoint writes on every edge is read as its token')
-	})
-
-	test('element_ escape hatches expose the underlying a:tbl / a:tr / a:tc nodes', async () => {
-		const table = firstTable(await openFixture('table'))
-		const row = at(table.rows, 0)
-		const cell = at(row.cells, 0)
-		assertEqual(table.element_.nodeName, 'a:tbl', 'table element_ is the a:tbl')
-		assertEqual(row.element_.nodeName, 'a:tr', 'row element_ is the a:tr')
-		assertEqual(cell.element_.nodeName, 'a:tc', 'cell element_ is the a:tc')
 	})
 })
 

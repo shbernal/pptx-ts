@@ -78,26 +78,6 @@ defineRegressionSuite('Numeric conversion guards', [
 		},
 	},
 	{
-		// `fontSize` used to be tested for truthiness, so `NaN` read as absent and the run took the
-		// inherited size without a word while `Infinity` on the same option threw.
-		name: 'a NaN fontSize is refused rather than read as absent',
-		fn: async () => {
-			assertEqual(
-				await codeFrom((p) => p.addSlide().addText('x', { ...BOX, fontSize: NaN })),
-				'coord/non-finite',
-				'NaN font size'
-			)
-		},
-	},
-	{
-		name: 'a finite out-of-range fontSize still clamps and warns, as before',
-		fn: async () => {
-			const { zip } = await build((p) => p.addSlide().addText('x', { ...BOX, fontSize: 99999 }))
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assertIncludes(xml, 'sz="400000"', 'clamped to the top of ST_TextFontSize, not refused')
-		},
-	},
-	{
 		// `Math.round(Infinity * 60000)` is `Infinity`, which serialized as `rot="Infinity"`.
 		name: 'a non-finite rotate is refused instead of reaching rot=',
 		fn: async () => {

@@ -40,10 +40,7 @@ function genXmlBodyProperties(slideObject: SlideObject | TableCellInternal): str
 	// authored with insets or a vertical anchor silently degrades to the default.
 	// `_bodyProp`/`options` are optional on the type but present on text/placeholder objects that reach
 	// this branch; bind them once so the body reads a narrowed, non-undefined value.
-	if (
-		!slideObject ||
-		(slideObject._type !== SlideObjectType.text && slideObject._type !== SlideObjectType.placeholder)
-	) {
+	if (slideObject._type !== SlideObjectType.text && slideObject._type !== SlideObjectType.placeholder) {
 		// DEFAULT: paired, not self-closing: `<a:bodyPr .../>` would be a byte change.
 		return el('a:bodyPr', { wrap: 'square', rtlCol: '0' })
 	}
@@ -206,7 +203,7 @@ export function genXmlTextBody(slideObj: SlideObject | TableCellInternal, slideC
 	*/
 	if (typeof slideObj.text === 'string' || typeof slideObj.text === 'number') {
 		// Handle cases 1,2
-		tmpTextObjects.push({ text: slideObj.text.toString(), options: opts || {} })
+		tmpTextObjects.push({ text: slideObj.text.toString(), options: opts })
 	} else if (Array.isArray(slideObj.text)) {
 		// Handle cases 3,4,5
 		// NOTE: use cast as text is TextProps[]|TableCellInternal[] and their `options` dont overlap (they share the same TextBaseProps though)
@@ -229,8 +226,8 @@ export function genXmlTextBody(slideObj: SlideObject | TableCellInternal, slideC
 		if (!itext.text) itext.text = ''
 
 		// A: Set options
-		itext.options = itext.options || opts || {}
-		if (idx === 0 && itext.options && !itext.options.bullet && opts.bullet) itext.options.bullet = opts.bullet
+		itext.options = itext.options || opts
+		if (idx === 0 && !itext.options.bullet && opts.bullet) itext.options.bullet = opts.bullet
 
 		// B: Cast to text-object and fix line-breaks (if needed)
 		if (typeof itext.text === 'string' || typeof itext.text === 'number') {
@@ -253,7 +250,7 @@ export function genXmlTextBody(slideObj: SlideObject | TableCellInternal, slideC
 				arrTextObjects.push({ text: line, options: lineOptions })
 			})
 		} else {
-			arrTextObjects.push({ ...itext, options: itext.options ?? {} })
+			arrTextObjects.push({ ...itext, options: itext.options })
 		}
 	})
 

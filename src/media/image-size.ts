@@ -44,21 +44,21 @@ export function getImageSizeFromBytes(b: Uint8Array): { w: number; h: number } |
 	const u = (n: number): number => b[n] ?? 0
 
 	// PNG: 8-byte signature, then IHDR with width@16 / height@20 (big-endian uint32)
-	if (IMAGE_FORMATS.png.magic?.(b)) {
+	if (IMAGE_FORMATS.png.magic(b)) {
 		const w = (u(16) << 24) | (u(17) << 16) | (u(18) << 8) | u(19)
 		const h = (u(20) << 24) | (u(21) << 16) | (u(22) << 8) | u(23)
 		return w > 0 && h > 0 ? { w, h } : null
 	}
 
 	// GIF: "GIF87a"/"GIF89a", width@6 / height@8 (little-endian uint16)
-	if (IMAGE_FORMATS.gif.magic?.(b)) {
+	if (IMAGE_FORMATS.gif.magic(b)) {
 		const w = u(6) | (u(7) << 8)
 		const h = u(8) | (u(9) << 8)
 		return w > 0 && h > 0 ? { w, h } : null
 	}
 
 	// BMP: "BM", then a DIB header whose size at offset 14 says which layout the dimensions use.
-	if (IMAGE_FORMATS.bmp.magic?.(b)) {
+	if (IMAGE_FORMATS.bmp.magic(b)) {
 		const dibHeaderSize = u(14) | (u(15) << 8) | (u(16) << 16) | (u(17) << 24)
 		// An OS/2 BITMAPCOREHEADER (12 bytes) stores width@18 / height@20 as unsigned 16-bit values.
 		// Read as 32-bit, the width swallowed the height's bytes and the height ran into the planes and
@@ -79,7 +79,7 @@ export function getImageSizeFromBytes(b: Uint8Array): { w: number; h: number } |
 	}
 
 	// WebP: "RIFF"...."WEBP" then a VP8 / VP8L / VP8X chunk
-	if (IMAGE_FORMATS.webp.magic?.(b)) {
+	if (IMAGE_FORMATS.webp.magic(b)) {
 		const fourCC = String.fromCharCode(u(12), u(13), u(14), u(15))
 		if (fourCC === 'VP8 ' && b.length >= 30) {
 			// Lossy: 14-bit width/height at offset 26/28 (little-endian, mask off scale bits)
@@ -104,7 +104,7 @@ export function getImageSizeFromBytes(b: Uint8Array): { w: number; h: number } |
 	}
 
 	// JPEG: "FFD8FF", scan segment markers for a Start-Of-Frame (SOFn) and read height@5 / width@7
-	if (IMAGE_FORMATS.jpeg.magic?.(b)) {
+	if (IMAGE_FORMATS.jpeg.magic(b)) {
 		let i = 2
 		while (i + 9 < b.length) {
 			if (b[i] !== 0xff) {

@@ -202,7 +202,7 @@ function parseTextToLines(
 			lineWords.forEach((word, idx) => {
 				const cellProps = { ...cell.options }
 				// IMPORTANT: Handle `breakLine` prop - we cannot apply to each word - only apply to very last word!
-				if (cellProps?.breakLine) cellProps.breakLine = idx + 1 === lineWords.length
+				if (cellProps.breakLine) cellProps.breakLine = idx + 1 === lineWords.length
 				lineTokens.push({
 					_type: SlideObjectType.tablecell,
 					text: word + (idx + 1 < lineWords.length ? ' ' : ''),

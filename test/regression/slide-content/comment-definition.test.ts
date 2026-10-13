@@ -35,11 +35,6 @@ import type PptxTs from '../../../dist/node.js'
 //   - `if (!target._comments) target._comments = []`. `SlideBuilder` declares `_comments` as
 //     `SlideComment[] = []`, and it is the definer's only caller, so the array is never missing.
 //     Live if this is ever pointed at a bare internal slide; dead through the public door.
-//
-// A related note for whoever measures next: `gen/slide/comments.ts` shows five red branches too,
-// and they are the same kind of defensive fallback (`slides || []`, `_comments || []`, `?? 0`, and
-// the `!m` skip). `comments-xml.test.ts` does exercise them, but it imports from `src/`, so it
-// contributes nothing to the reported numbers — see the header there.
 
 /** Build, capturing library warnings (`log.ts` routes every one through `console.warn`). */
 async function buildCapturingWarnings(buildFn: (pres: PptxTs) => unknown) {

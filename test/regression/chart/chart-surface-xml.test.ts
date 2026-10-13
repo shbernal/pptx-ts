@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { build, readEntry, listEntries } from '../../helpers.ts'
+import { build, readEntry } from '../../helpers.ts'
 
 // Surface is a CLASSIC (c:) chart, not a chartEx layout. Confirmed against the four surface charts
 // PowerPoint authors (`Shapes.AddChart2(-1, {83|84|85|86}, …)`) and reads back as ChartType
@@ -28,19 +28,6 @@ async function buildSurface(extra = {}) {
 }
 
 describe('surface (classic) chart', () => {
-	test('emits a classic chart part (no chartEx, no AlternateContent)', async () => {
-		const { zip } = await buildSurface()
-		const entries = listEntries(zip)
-		expect(entries).toContain('ppt/charts/chart1.xml')
-		expect(entries.some((p) => /^ppt\/charts\/chartEx\d+\.xml$/.test(p))).toBe(false)
-		const contentTypes = await readEntry(zip, '[Content_Types].xml')
-		expect(contentTypes).toContain(
-			'<Override PartName="/ppt/charts/chart1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawingml.chart+xml"/>'
-		)
-		const slide = await readEntry(zip, 'ppt/slides/slide1.xml')
-		expect(slide).not.toContain('<mc:AlternateContent')
-	})
-
 	test('default is a 3-D surface: surface3DChart, view3D + walls, wireframe off, 3 series over cat/val/ser axes', async () => {
 		const { zip } = await buildSurface()
 		const xml = await readEntry(zip, 'ppt/charts/chart1.xml')

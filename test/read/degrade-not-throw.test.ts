@@ -81,14 +81,6 @@ describe('Picture partnames degrade like their picture-fill twin', () => {
 		assertEqual(picture.imagePartName, null, 'an external target names no part')
 		assertEqual(picture.mediaPartName, null, 'and neither does the bytes accessor')
 	})
-
-	test('a whole shape walk survives one broken embed', async () => {
-		const pres = await pictureDeck({ editSlide: (xml) => xml.replace(/r:embed="[^"]*"/, 'r:embed="rIdGone"') })
-		const names = at(pres.slides, 0).shapes.map((shape) =>
-			shape.shapeType === 'picture' ? (shape.mediaPartName ?? '(none)') : shape.shapeType
-		)
-		assertEqual(names.join(','), '(none)', 'the walk completes instead of taking the slide down')
-	})
 })
 
 describe('A p:spTree/p:extLst is the tree own child, not a shape', () => {

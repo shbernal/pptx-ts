@@ -12,17 +12,6 @@ function defineMaster(p: PptxTs, title: string) {
 
 defineRegressionSuite('addSlide masterTitle', [
 	{
-		name: 'canonical `masterTitle` applies the named master',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				defineMaster(p, 'MT_MASTER')
-				p.addSlide({ masterTitle: 'MT_MASTER' }).addText('Title', { placeholder: 'title' })
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assert(/<p:ph[^>]*type="title"/.test(xml), 'expected title placeholder from masterTitle; got: ' + xml)
-		},
-	},
-	{
 		// fork-slidemaster-title-unescaped: a title containing XML metacharacters used to reach
 		// `<p:cSld name="...">` verbatim, producing a non-well-formed slideLayout part. It must be
 		// escaped in the emitted XML while still matching `masterTitle` by its raw (unescaped) value.

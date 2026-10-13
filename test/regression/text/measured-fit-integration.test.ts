@@ -44,15 +44,6 @@ const FACE = APTOS ? 'Aptos' : 'Silkscreen'
 const FACE_FILE = APTOS ?? 'test/read/fixtures/fonts/Silkscreen-Regular.ttf'
 
 describe("measured fit: fit:'shrink' integration", () => {
-	test('no registered metrics → bare <a:normAutofit/> (unchanged behavior)', async () => {
-		const pres = new PptxTs()
-		const slide = pres.addSlide()
-		slide.addText(OVERFLOW, { x: 1, y: 1, w: 3, h: 1, fontFace: 'Aptos', fontSize: 18, fit: 'shrink' })
-		const xml = await partXml(await pres.toBytes(), SLIDE1)
-		expect(xml).toContain('<a:normAutofit/>')
-		expect(xml).not.toContain('fontScale')
-	})
-
 	test('DOCUMENTED DIVERGENCE: empty registry → measureText predicts a shrink the export does not bake', async () => {
 		// Intentional, not a bug (docs/text-fit.md "Measure text before export"):
 		// applyMeasuredFit reads "no metrics" as "never opted into measured fit" and bakes

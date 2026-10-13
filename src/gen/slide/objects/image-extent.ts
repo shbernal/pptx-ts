@@ -30,7 +30,7 @@ export function imageNaturalSize(
 	obj: SlideObject,
 	slide: PresSlideInternal | SlideLayoutInternal | SlideMasterInternal
 ): { w: number; h: number } | null {
-	const relData = (slide._relsMedia || []).find((rel) => rel.rId === obj.imageRid)?.data
+	const relData = slide._relsMedia.find((rel) => rel.rId === obj.imageRid)?.data
 	return typeof relData === 'string' ? getImageSizeFromBase64(relData) : null
 }
 

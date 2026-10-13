@@ -60,9 +60,7 @@ export function normalizeRuns(obj: RunSource): TextProps[] {
 /** Build a measurable `FitParagraph[]` from a text object, or null if not measurable. */
 export function extractParagraphs(obj: RunSource): FitParagraph[] | null {
 	const opts = obj.options ?? {}
-	const runs = normalizeRuns(obj)
-	if (runs.length === 0) return null
-	return buildFitParagraphs(runs, opts)
+	return buildFitParagraphs(normalizeRuns(obj), opts)
 }
 
 /**

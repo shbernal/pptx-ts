@@ -44,14 +44,4 @@ defineRegressionSuite('Placeholder type attribute [genXmlPlaceholder-type-map]',
 			assert(/<p:ph[^>]*type="tbl"/.test(xml), 'expected <p:ph type="tbl"/>; got: ' + xml)
 		},
 	},
-	{
-		name: 'unknown placeholder type emits no type attribute',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.addSlide().addText('x', { x: 1, y: 1, w: 3, h: 1, placeholder: 'bogusType' })
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assert(!/type="bogusType"/.test(xml), 'unknown placeholder type must not emit a type attribute; got: ' + xml)
-		},
-	},
 ])

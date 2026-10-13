@@ -50,7 +50,7 @@ export function getSmartParseNumber(size: Coord | null | undefined, xyDir: 'X' |
 	if (typeof size === 'number' && !Number.isFinite(size)) {
 		throw new InvalidOptionError(
 			'coord/non-finite',
-			`Invalid ${xyDir || 'coordinate'} value: expected a finite number but received ${String(size)}. ` +
+			`Invalid ${xyDir} value: expected a finite number but received ${String(size)}. ` +
 				'This usually means a layout dimension was read from a missing property (e.g. `layout.width` returning `undefined`). ' +
 				'Use `slide.width`/`slide.height` or `STANDARD_LAYOUTS.<NAME>.width`/`.height` (inches).'
 		)

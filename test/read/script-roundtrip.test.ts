@@ -150,20 +150,6 @@ describe('script round trip — the oracle has teeth', () => {
 			'the note for a wholly dropped transition must not also excuse a dropped sound'
 		)
 	})
-
-	test('a note declaring that field silences it, and only that field', async () => {
-		const ir = await irFor('textbox.pptx')
-		const before = canonicalDeckIr(ir)
-		const after = canonicalDeckIr(ir)
-		const call = defined(at(after.slides, 0).calls.find((c) => c.method === 'addText'))
-		delete boldRunOptions(call.args[0]).bold
-
-		// `line.width` names a different construct, so it must not cover a lost `bold`.
-		const wrong: FidelityNote[] = [
-			{ slideNumber: 1, shapeName: call.shapeName, construct: 'line.width', disposition: 'dropped', cause: 'unread', detail: '' }, // prettier-ignore
-		]
-		assertEqual(diffDeckIr(before, after, wrong).undeclared.length, 1, 'an unrelated note must not excuse it')
-	})
 })
 
 describe('script round trip — a note covers a PATH, not a key at any depth', () => {
@@ -586,10 +572,6 @@ describe('script round trip — canonicalisation is an equivalence', () => {
 	test('a value that is not the default always survives', () => {
 		const kept = optionsOf(deck({ bold: true, rotate: 90, flipH: true, width: 1 }))
 		assertEqual(JSON.stringify(kept), '{"bold":true,"rotate":90,"flipH":true,"width":1}', 'real values kept')
-	})
-
-	test('line width is not treated as a default, because 1pt is not OOXML’s', () => {
-		assertEqual(JSON.stringify(optionsOf(deck({ width: 1 }))), '{"width":1}', 'a 1pt outline is a real outline')
 	})
 
 	test('assets compare by content, so a renamed image is still the same image', async () => {

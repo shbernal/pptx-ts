@@ -32,17 +32,7 @@ defineRegressionSuite('Image base64 data de-duplication', [
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 			assert(countPics(xml) === 2, `expected 2 pictures; got ${countPics(xml)}`)
 			assert(countMedia(zip) === 1, `expected 1 media part for the duplicate image; got ${countMedia(zip)}`)
-		},
-	},
-	{
-		// Both pictures reference the same media Target via the slide rels.
-		name: 'duplicate image relationships share one Target',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				const s = p.addSlide()
-				s.addImage({ data: PNG_A, x: 1, y: 1, w: 1, h: 1 })
-				s.addImage({ data: PNG_A, x: 3, y: 1, w: 1, h: 1 })
-			})
+			// Both pictures reference the same media Target via the slide rels.
 			const rels = await readEntry(zip, 'ppt/slides/_rels/slide1.xml.rels')
 			const targets = [...rels.matchAll(/Target="(\.\.\/media\/[^"]+)"/g)].map((m) => m[1])
 			assert(targets.length === 2, `expected 2 image relationships; got ${targets.length}`)

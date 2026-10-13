@@ -738,8 +738,8 @@ export function slideObjectToXml(
 export function defaultRelIdStart(slide: PresSlideInternal | SlideLayoutInternal | SlideMasterInternal): number {
 	let lastRid = 0
 	for (const rel of slide._rels) lastRid = Math.max(lastRid, rel.rId)
-	for (const rel of slide._relsChart || []) lastRid = Math.max(lastRid, rel.rId)
-	for (const rel of slide._relsMedia || []) lastRid = Math.max(lastRid, rel.rId)
+	for (const rel of slide._relsChart) lastRid = Math.max(lastRid, rel.rId)
+	for (const rel of slide._relsMedia) lastRid = Math.max(lastRid, rel.rId)
 	return lastRid + 1
 }
 
@@ -796,11 +796,11 @@ export function slideObjectRelationsToXml(
 		// (`define/hyperlinks.ts` ×2, `define/image.ts`) all push `SlideObjectType.hyperlink`.
 		// The notesSlide rel every slide needs comes from `defaultRels` in `makeXmlSlideRel`.
 	})
-	;(slide._relsChart || []).forEach((rel: SlideRelChart) => {
+	slide._relsChart.forEach((rel: SlideRelChart) => {
 		// chartEx parts use the MS chartEx rel type; classic charts use the ECMA `chart` rel.
 		rels.push(relationshipEl(rel.rId, rel.isChartEx ? CHARTEX_REL : CHART_REL, rel.Target))
 	})
-	;(slide._relsMedia || []).forEach((rel: SlideRelMedia) => {
+	slide._relsMedia.forEach((rel: SlideRelMedia) => {
 		// A chart area's picture: the chart part declares it, and nothing on the slide references it.
 		if (rel.chartOwned) return
 		const relType = rel.type.toLowerCase()

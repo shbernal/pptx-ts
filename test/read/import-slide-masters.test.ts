@@ -7,8 +7,8 @@
 // p:sldLayoutIdLst to exactly the copied layouts, brings the theme/media across
 // under fresh partnames, survives a save → reopen with no dangling rels, leaves
 // untouched parts byte-identical, and stays schema-valid. The masters/layouts
-// filters narrow what is grafted; re-calls are idempotent; a slide-size mismatch
-// is rejected unless explicitly overridden.
+// filters narrow what is grafted; re-calls are idempotent. The slide-size checks
+// are pinned in import-slide-size-preconditions.test.ts.
 
 import { readFile } from 'node:fs/promises'
 import JSZip from 'jszip'
@@ -16,7 +16,6 @@ import { describe, test } from 'vitest'
 import PptxTs from '../../dist/node.js'
 import { Presentation, type ImportSlideMastersOptions, type OpcPackage } from '../../dist/read.js'
 import {
-	throws,
 	bytesEqual,
 	assert,
 	assertEqual,
@@ -250,18 +249,6 @@ describe('Presentation.importSlideMasters', () => {
 		assert(bytesEqual(before, await target.save()), 'and the deck is byte-identical')
 	})
 
-	test('rejects a slide-size mismatch unless overridden', async () => {
-		const target = await openFixture('empty') // 16:9
-		const source = await openFixture('mixed') // 4:3
-		assert(
-			throws(() => target.importSlideMasters(source)),
-			'mismatched sizes throw by default'
-		)
-		const result = target.importSlideMasters(source, { requireEqualSize: false })
-		assert(result.length >= 1, 'override grafts despite the size mismatch')
-		assertNoDanglingRels(target.opc)
-	})
-
 	test.skipIf(!validatorInstalled)('a deck with a grafted master stays schema-valid', async () => {
 		const target = await openFixture('empty')
 		const source = await openFixture('image')
@@ -349,17 +336,6 @@ describe('Presentation.importSlideMasters({ embedFonts })', () => {
 		)
 		assertEqual((pres.match(/<p:regular /g) || []).length, 1, 'regular face not duplicated')
 		assertEqual((pres.match(/<p:bold /g) || []).length, 1, 'bold face not duplicated')
-	})
-
-	test('the carry adds no slide — the master stays gallery-only', async () => {
-		const target = await openFixture('empty')
-		const source = await openFixture('embedded-fonts')
-		const slidesBefore = target.slides.length
-		target.importSlideMasters(source, { embedFonts: true })
-
-		const reopened = await Presentation.load(await target.save())
-		assertEqual(reopened.slides.length, slidesBefore, 'no slide was added alongside the fonts')
-		assertNoDanglingRels(reopened.opc)
 	})
 
 	test.skipIf(!validatorInstalled)('a graft with carried embedded fonts stays schema-valid', async () => {
@@ -463,17 +439,6 @@ describe('Presentation.importSlideMasters({ tableStyles })', () => {
 		)
 	})
 
-	test('the carry adds no slide — the master stays gallery-only', async () => {
-		const target = await openFixture('empty')
-		const source = await openFixture('table-styles')
-		const slidesBefore = target.slides.length
-		target.importSlideMasters(source, { tableStyles: true })
-
-		const reopened = await Presentation.load(await target.save())
-		assertEqual(reopened.slides.length, slidesBefore, 'no slide was added alongside the table styles')
-		assertNoDanglingRels(reopened.opc)
-	})
-
 	test.skipIf(!validatorInstalled)('a graft with carried table styles stays schema-valid', async () => {
 		const target = await openFixture('empty')
 		const source = await openFixture('table-styles')
@@ -545,17 +510,6 @@ describe('Presentation.importSlideMasters({ primary })', () => {
 		target.importSlideMasters(source, { primary: true })
 		const twice = registeredMasters((await Presentation.load(await target.save())).opc)
 		assertEqual(twice.join('|'), once.join('|'), 'the master list is unchanged by a repeat primary graft')
-	})
-
-	test('the promotion adds no slide and leaves no dangling rels', async () => {
-		const target = await openFixture('empty')
-		const source = await openFixture('image')
-		const slidesBefore = target.slides.length
-		target.importSlideMasters(source, { primary: true })
-
-		const reopened = await Presentation.load(await target.save())
-		assertEqual(reopened.slides.length, slidesBefore, 'no slide was added by promoting the master')
-		assertNoDanglingRels(reopened.opc)
 	})
 
 	test.skipIf(!validatorInstalled)('a primary graft stays schema-valid', async () => {

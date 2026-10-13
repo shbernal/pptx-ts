@@ -102,7 +102,7 @@ function applyTableHeaderColumnSugar(tableRows: TableRow[], opt: TablePropsInter
 	const hdr = opt.headerRow && typeof opt.headerRow === 'object' ? opt.headerRow : undefined
 	const cols = Array.isArray(opt.columns) && opt.columns.length ? opt.columns : undefined
 	let srcRows: TableRow[] = tableRows
-	if ((hdr || cols) && Array.isArray(tableRows[0])) {
+	if (hdr || cols) {
 		if (hdr && opt.hasHeader === undefined) opt.hasHeader = true
 		// The grid column each cell starts in, from the walk the emitter, the auto-pager and the
 		// measured fit read. This kept a cursor of its own, `colCursor += colspan || 1`, which ignored
@@ -117,7 +117,6 @@ function applyTableHeaderColumnSugar(tableRows: TableRow[], opt: TablePropsInter
 			}
 		}
 		srcRows = tableRows.map((row, rowIdx) => {
-			if (!Array.isArray(row)) return row
 			// Column-scoped defaults only apply when we actually have `columns`; the header row
 			// alone is a cheaper positional map. Skip untouched body rows to avoid needless copies.
 			if (!cols && rowIdx !== 0) return row
@@ -191,99 +190,97 @@ function normalizeTableRows(srcRows: TableRow[], opt: TablePropsInternal): Table
 	srcRows.forEach((row) => {
 		const newRow: TableCellInternal[] = []
 
-		if (Array.isArray(row)) {
-			row.forEach((cell: number | string | TableCellInternal) => {
-				// A: the cell's options, COPIED. `addTableDefinition` takes ownership of the table
-				// options for exactly this reason and left the per-cell ones aliased, so everything
-				// below (the border completion here, the hyperlink `_rId` the definer stamps later,
-				// and the table-level inheritance the emitter resolves) wrote into the caller's own
-				// object. A `rows` literal reused across two tables therefore came out styled by the
-				// first table both times, and came back holding keys the caller never wrote.
-				const newCellOptions: TableCellProps = withRunShadow(
-					typeof cell === 'object' && cell.options ? { ...cell.options } : {}
-				)
-				const newCell: TableCellInternal = {
-					_type: SlideObjectType.tablecell,
-					text: '',
-					options: newCellOptions,
-				}
+		row.forEach((cell: number | string | TableCellInternal) => {
+			// A: the cell's options, COPIED. `addTableDefinition` takes ownership of the table
+			// options for exactly this reason and left the per-cell ones aliased, so everything
+			// below (the border completion here, the hyperlink `_rId` the definer stamps later,
+			// and the table-level inheritance the emitter resolves) wrote into the caller's own
+			// object. A `rows` literal reused across two tables therefore came out styled by the
+			// first table both times, and came back holding keys the caller never wrote.
+			const newCellOptions: TableCellProps = withRunShadow(
+				typeof cell === 'object' && cell.options ? { ...cell.options } : {}
+			)
+			const newCell: TableCellInternal = {
+				_type: SlideObjectType.tablecell,
+				text: '',
+				options: newCellOptions,
+			}
 
-				// B:
-				if (typeof cell === 'string' || typeof cell === 'number') newCell.text = cell.toString()
-				else if (cell.text) {
-					// Cell can contain complex text type, or string, or number
-					if (typeof cell.text === 'string' || typeof cell.text === 'number') newCell.text = cell.text.toString()
-					// Runs COPIED as well, each with an options bag of its own, for the reason A gives: the run
-					// emitter writes into a run's options (`_lineIdx`, the run options it inherits from the
-					// cell), and those were the caller's run objects. A nested object the caller supplied, a
-					// hyperlink included, stays shared, because the id registered for it is read back through
-					// that reference.
-					else if (Array.isArray(cell.text))
-						newCell.text = cell.text.map((run) =>
-							run.options ? { ...run, options: withRunShadow({ ...run.options }) } : { ...run }
-						)
-					else if (cell.text) newCell.text = cell.text
-					// Capture options (the copy made above; `newCell.options` already is it)
-				}
+			// B:
+			if (typeof cell === 'string' || typeof cell === 'number') newCell.text = cell.toString()
+			else if (cell.text) {
+				// Cell can contain complex text type, or string, or number
+				if (typeof cell.text === 'string' || typeof cell.text === 'number') newCell.text = cell.text.toString()
+				// Runs COPIED as well, each with an options bag of its own, for the reason A gives: the run
+				// emitter writes into a run's options (`_lineIdx`, the run options it inherits from the
+				// cell), and those were the caller's run objects. A nested object the caller supplied, a
+				// hyperlink included, stays shared, because the id registered for it is read back through
+				// that reference.
+				else if (Array.isArray(cell.text))
+					newCell.text = cell.text.map((run) =>
+						run.options ? { ...run, options: withRunShadow({ ...run.options }) } : { ...run }
+					)
+				else if (cell.text) newCell.text = cell.text
+				// Capture options (the copy made above; `newCell.options` already is it)
+			}
 
-				// C: Set cell borders
-				// A side nobody asked for is written as an explicit `{type:'none'}`. That is direct
-				// formatting, so it beats any border a built-in table style would draw, which is
-				// what keeps an unstyled table free of grid lines, PowerPoint's own no-style look
-				// being a black hairline grid. Whatever the caller *did* author, on the cell or on
-				// the table, is untouched.
-				//
-				// A table that names a `tableStyle` asked for that style's grid, so the default is
-				// skipped there and the edges stay absent: direct formatting beats the style, and
-				// filling in four no-fills erased the very thing the caller selected the style for
-				// (#23). Author `border: { type: 'none' }` to erase a styled table's grid anyway.
-				// A cell `border` that is neither a `BorderProps` nor a tuple is dropped, as the table's is.
-				if (newCellOptions.border != null && typeof newCellOptions.border !== 'object') {
-					warn('table/invalid-border', "addTable cell `border` option must be an object. Ex: `{border: {type:'none'}}`")
-					delete newCellOptions.border
-				}
-				const authoredBorder = newCellOptions.border || opt.border
-				if (authoredBorder) newCellOptions.border = authoredBorder
-				else if (opt.tableStyle) delete newCellOptions.border
-				else newCellOptions.border = [{ type: 'none' }, { type: 'none' }, { type: 'none' }, { type: 'none' }]
-				let cellBorder = newCellOptions.border
+			// C: Set cell borders
+			// A side nobody asked for is written as an explicit `{type:'none'}`. That is direct
+			// formatting, so it beats any border a built-in table style would draw, which is
+			// what keeps an unstyled table free of grid lines, PowerPoint's own no-style look
+			// being a black hairline grid. Whatever the caller *did* author, on the cell or on
+			// the table, is untouched.
+			//
+			// A table that names a `tableStyle` asked for that style's grid, so the default is
+			// skipped there and the edges stay absent: direct formatting beats the style, and
+			// filling in four no-fills erased the very thing the caller selected the style for
+			// (#23). Author `border: { type: 'none' }` to erase a styled table's grid anyway.
+			// A cell `border` that is neither a `BorderProps` nor a tuple is dropped, as the table's is.
+			if (newCellOptions.border != null && typeof newCellOptions.border !== 'object') {
+				warn('table/invalid-border', "addTable cell `border` option must be an object. Ex: `{border: {type:'none'}}`")
+				delete newCellOptions.border
+			}
+			const authoredBorder = newCellOptions.border || opt.border
+			if (authoredBorder) newCellOptions.border = authoredBorder
+			else if (opt.tableStyle) delete newCellOptions.border
+			else newCellOptions.border = [{ type: 'none' }, { type: 'none' }, { type: 'none' }, { type: 'none' }]
+			let cellBorder = newCellOptions.border
 
-				// CASE 1: border interface is: BorderOptions | [BorderOptions, BorderOptions, BorderOptions, BorderOptions]
-				if (cellBorder && typeof cellBorder === 'object') {
-					cellBorder = normalizeBorderTuple(cellBorder)
-					newCellOptions.border = cellBorder
-				}
-				// Handle: [null, null, {type:'solid'}, null]. A null side is *omitted*, not erased:
-				// it keeps inheriting from the built-in style/theme, exactly the distinction
-				// `normalizeOuterBorder` documents for the perimeter ("a sparse side is NOT
-				// `{ type: 'none' }`"). Converting a hole into an explicit `<a:noFill/>` overrides
-				// that inheritance and there was no spelling left for "draw this edge, leave that one".
-				// The whole tuple is absent when a styled table authored no border at all, which is
-				// the same distinction one level up: nothing to complete, nothing to emit.
-				const cellBorderTuple = newCellOptions.border as BorderTuple | undefined
+			// CASE 1: border interface is: BorderOptions | [BorderOptions, BorderOptions, BorderOptions, BorderOptions]
+			if (cellBorder && typeof cellBorder === 'object') {
+				cellBorder = normalizeBorderTuple(cellBorder)
+				newCellOptions.border = cellBorder
+			}
+			// Handle: [null, null, {type:'solid'}, null]. A null side is *omitted*, not erased:
+			// it keeps inheriting from the built-in style/theme, exactly the distinction
+			// `normalizeOuterBorder` documents for the perimeter ("a sparse side is NOT
+			// `{ type: 'none' }`"). Converting a hole into an explicit `<a:noFill/>` overrides
+			// that inheritance and there was no spelling left for "draw this edge, leave that one".
+			// The whole tuple is absent when a styled table authored no border at all, which is
+			// the same distinction one level up: nothing to complete, nothing to emit.
+			const cellBorderTuple = newCellOptions.border as BorderTuple | undefined
 
-				// set complete BorderOptions for the sides that were authored
-				if (cellBorderTuple) {
-					const arrSides = [0, 1, 2, 3] as const
-					arrSides.forEach((idx) => {
-						const side = cellBorderTuple[idx]
-						if (!side) return
-						// `withBorderDefaults` spreads first and overrides only the defaulted keys.
-						// Rebuilding the side from a fixed key list dropped `cap`, public on
-						// `BorderProps` and already read by `genTableCellBorderXml`, so every table
-						// border emitted cap="flat" whatever the caller asked for (and `dashType`
-						// would go the same way). The spread also gives each side its own object,
-						// which the single-BorderProps form (one object shared across all four)
-						// relies on.
-						cellBorderTuple[idx] = withBorderDefaults(side)
-					})
-					newCellOptions.border = cellBorderTuple
-				}
+			// set complete BorderOptions for the sides that were authored
+			if (cellBorderTuple) {
+				const arrSides = [0, 1, 2, 3] as const
+				arrSides.forEach((idx) => {
+					const side = cellBorderTuple[idx]
+					if (!side) return
+					// `withBorderDefaults` spreads first and overrides only the defaulted keys.
+					// Rebuilding the side from a fixed key list dropped `cap`, public on
+					// `BorderProps` and already read by `genTableCellBorderXml`, so every table
+					// border emitted cap="flat" whatever the caller asked for (and `dashType`
+					// would go the same way). The spread also gives each side its own object,
+					// which the single-BorderProps form (one object shared across all four)
+					// relies on.
+					cellBorderTuple[idx] = withBorderDefaults(side)
+				})
+				newCellOptions.border = cellBorderTuple
+			}
 
-				// LAST:
-				newRow.push(newCell)
-			})
-		}
+			// LAST:
+			newRow.push(newCell)
+		})
 
 		arrRows.push(newRow)
 	})
@@ -672,7 +669,7 @@ export function addTableDefinition(
 
 	// STEP 6: Auto-Paging: (via {options} and used internally)
 	// (used internally by `tableToSlides()` to not engage recursion - we've already paged the table data, just add this one)
-	if (opt && !opt.autoPage) {
+	if (!opt.autoPage) {
 		// Create hyperlink rels (IMPORTANT: Wait until table has been shredded across Slides or all rels will end-up on Slide 1!)
 		createHyperlinkRels(target, arrRows, 'addTable')
 
@@ -711,10 +708,9 @@ export function addTableDefinition(
 		// `addText(text, { placeholder })`) so they can be re-rendered on each overflow slide.
 		// Overflow slides otherwise inherit only the layout's empty placeholders. Captured before
 		// the loop so the table object added per-slide below is never included.
-		const sourcePlaceholders =
-			opt.autoPagePlaceholder && Array.isArray(target._slideObjects)
-				? target._slideObjects.filter((obj) => obj._type !== SlideObjectType.table && obj.options?.placeholder)
-				: []
+		const sourcePlaceholders = opt.autoPagePlaceholder
+			? target._slideObjects.filter((obj) => obj._type !== SlideObjectType.table && obj.options?.placeholder)
+			: []
 
 		// Loop over rows and create 1-N tables as needed
 		getSlidesForTableRows(arrRows, opt, presLayout, slideLayout).forEach((slide, idx) => {

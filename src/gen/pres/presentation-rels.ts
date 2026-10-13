@@ -51,8 +51,8 @@ export function presentationFixedRelIds(slides: PresSlideInternal[]): {
 	commentAuthors: number | null
 	fontStart: number
 } {
-	const first = (slides?.length ?? 0) + 2
-	const hasComments = (slides || []).some((slide) => (slide._comments || []).length > 0)
+	const first = slides.length + 2
+	const hasComments = slides.some((slide) => (slide._comments || []).length > 0)
 	return {
 		notesMaster: first,
 		presProps: first + 1,
@@ -72,7 +72,7 @@ export function presentationFontRelStart(slides: PresSlideInternal[]): number {
 	return presentationFixedRelIds(slides).fontStart
 }
 
-export function makeXmlPresentationRels(slides: PresSlideInternal[], embeddedFonts?: EmbeddedFont[]): string {
+export function makeXmlPresentationRels(slides: PresSlideInternal[], embeddedFonts: EmbeddedFont[]): string {
 	const fixed = presentationFixedRelIds(slides)
 	const rels: string[] = [relationshipEl(1, SLIDE_MASTER_REL, targetFromPresentation(SLIDE_MASTER_PATH))]
 	for (let idx = 1; idx <= slides.length; idx++) {
@@ -91,7 +91,7 @@ export function makeXmlPresentationRels(slides: PresSlideInternal[], embeddedFon
 		rels.push(relationshipEl(fixed.commentAuthors, COMMENT_AUTHORS_REL, 'commentAuthors.xml'))
 	}
 	// Embedded fonts: one `font` rel per face, ids continuing past the fixed rels above.
-	for (const face of flattenEmbeddedFaces(embeddedFonts || [], presentationFontRelStart(slides))) {
+	for (const face of flattenEmbeddedFaces(embeddedFonts, presentationFontRelStart(slides))) {
 		rels.push(relationshipEl(face.rId, FONT_REL_TYPE, targetFromPresentation(fontPath(face.partIndex))))
 	}
 

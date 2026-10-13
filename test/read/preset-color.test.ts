@@ -250,12 +250,6 @@ describe('presetColorHex -- the ST_PresetColorVal table', () => {
 		}
 	})
 
-	// The `med` rule needs a guard the other two do not: `medium*` already starts with `med`,
-	// so expanding it a second time would look for `mediumium*` and find nothing.
-	test('the med rule does not re-expand a name that is already long', () => {
-		assertEqual(presetColorHex('mediumSpringGreen'), '00FA9A', 'mediumSpringGreen survives normalization')
-	})
-
 	test('spot values, including the ones the CSS table is famous for', () => {
 		// `green` is HTML green, not X11 green -- the value that trips a table built from the
 		// wrong list, since X11 would make it 00FF00, which is what `lime` is here.

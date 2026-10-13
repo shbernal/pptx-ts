@@ -134,17 +134,13 @@ export function pushMediaRel(target: PresSlideInternal, source: MediaRelSource):
  * @param source - the resolved image source: a `path`, a base64 `data` payload, or both
  * @param relId - the relationship id already allocated for this use
  */
-export function registerImageMediaRel(
-	target: PresSlideInternal,
-	source: { path?: string; data?: string; extn: string },
-	relId: number
-): void {
+export function registerImageMediaRel(target: PresSlideInternal, source: ImageSource, relId: number): void {
 	pushMediaRel(target, {
 		kind: 'image',
 		extn: source.extn,
 		type: imageContentType(source.extn),
-		path: source.path || '',
-		data: source.data || '',
+		path: source.path,
+		data: source.data,
 		rId: relId,
 		dedupe: true,
 	})

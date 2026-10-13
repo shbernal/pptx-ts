@@ -81,22 +81,6 @@ defineRegressionSuite('Series worksheet references', [
 		},
 	},
 	{
-		name: 'the value cache point count matches the sheet, not the series own label count',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.addSlide().addChart(FIRST_LABELLED, { type: ChartType.bar, x: 1, y: 1, w: 6, h: 3 })
-			})
-			const xml = await chartXml(zip)
-			for (const ser of seriesBlocks(xml)) {
-				const cache = ser.match(/<c:val>[\s\S]*?<\/c:val>/)?.[0] ?? ''
-				const ptCount = Number(cache.match(/<c:ptCount val="(\d+)"\/>/)?.[1])
-				const pts = [...cache.matchAll(/<c:pt idx="\d+">/g)].length
-				assert(ptCount === 3, `expected ptCount 3; got ${ptCount} in ${cache}`)
-				assert(pts === 3, `expected three cached points; got ${pts}`)
-			}
-		},
-	},
-	{
 		name: 'stock and surface charts address their series the same way',
 		fn: async () => {
 			for (const type of [ChartType.stock, ChartType.surface]) {

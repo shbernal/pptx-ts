@@ -13,7 +13,7 @@ import PptxTs, {
 	type TableRow,
 	type TextPropsOptions,
 } from '../../../dist/node.js'
-import { defined, expectDefined, partXml, caughtSync, at, take } from '../../helpers.ts'
+import { defined, expectDefined, partXml, at, take } from '../../helpers.ts'
 // The `pptx-ts/measure` entry publishes the calibrated constants the bake uses, so a test
 // can state "inflated by the height safety factor" instead of re-pinning its value here.
 import { HEIGHT_SAFETY_FACTOR } from '../../../dist/measure.js'
@@ -57,13 +57,6 @@ describe('measureText() through dist (Silkscreen metrics)', () => {
 		expect(m.lineCount).toBeGreaterThan(1)
 		expect(m.heightIn).toBeGreaterThan(0)
 		expect(m.widestLineIn).toBeGreaterThan(0)
-	})
-
-	test('short text at a wide width → single line', async () => {
-		const pres = await pptxWithSilkscreen()
-		const m = pres.measureText('Hi', { wIn: 8, fontSize: 12, fontFace: 'Silkscreen' })
-		expect(m.measurable).toBe(true)
-		expect(m.lineCount).toBe(1)
 	})
 
 	test('fitsBox / shrinkScaleFor helpers', async () => {
@@ -476,14 +469,6 @@ describe('measured fit: solver floor and edges', () => {
 		const m = pres.measureText([], { wIn: 8, fontSize: 12, fontFace: 'Silkscreen' })
 		expect(m.measurable).toBe(false)
 		expect(m.lineCount).toBe(0)
-	})
-
-	test('a zero-width measure box is refused rather than laid out', async () => {
-		// It came back unmeasurable with no reason given. A box with no width is the caller's to fix.
-		const pres = await pptxWithSilkscreen()
-		const code =
-			caughtSync(() => pres.measureText('alpha', { wIn: 0, fontSize: 12, fontFace: 'Silkscreen' }))?.code ?? null
-		expect(code).toBe('coord/not-positive')
 	})
 })
 

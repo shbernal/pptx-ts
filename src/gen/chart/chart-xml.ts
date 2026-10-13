@@ -524,7 +524,7 @@ function makeLegendXml(rel: SlideRelChart): string {
 		for (const type of legendOrder(rel.opts, rel.opts._type)) {
 			const seriesCount = isXyChart(asChartType(type.type)) ? Math.max(0, type.data.length - 1) : type.data.length
 			for (let i = 0; i < seriesCount; i++, position++) {
-				if (type.options?.showLegend !== false) continue
+				if (type.options.showLegend !== false) continue
 				entries += el('c:legendEntry', null, [
 					raw(voidEl('c:idx', { val: position })),
 					raw(voidEl('c:delete', { val: 1 })),
@@ -610,7 +610,7 @@ export function makeXmlCharts(rel: SlideRelChart): string {
 			const plotOptions = withAxisValueFormat(
 				options,
 				rel.opts.valAxes?.[secondary ? 1 : 0],
-				type.options?.valLabelFormatCode
+				type.options.valLabelFormatCode
 			)
 			plots += makeChartType(asChartType(type.type), type.data, plotOptions, valAxisId, catAxisId, sheet)
 		}

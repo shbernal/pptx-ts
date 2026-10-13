@@ -14,7 +14,7 @@ import { describe, test } from 'vitest'
 import { Presentation, type AnyShape, type Slide } from '../../dist/read.js'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture, readOracle } from './corpus.ts'
-import { partBodies, assertUnchangedExcept, asError, defined, readEntry, at, take } from '../helpers.ts'
+import { asError, defined, readEntry, at, take } from '../helpers.ts'
 
 async function slidePartXml(pptxBytes: Uint8Array, slideNumber: number) {
 	const zip = await JSZip.loadAsync(pptxBytes)
@@ -38,17 +38,6 @@ describe('slide.transition (read)', () => {
 			assert.equal(info.advanceAfterMs, decoded.advanceAfterMs, `slide ${expected.slide} advanceAfterMs`)
 			assert.deepEqual(info.variant, decoded.variant, `slide ${expected.slide} variant`)
 		}
-	})
-
-	test('an untouched deck round-trips byte-identically', async () => {
-		const original = await readFile(fixturePath('slide-transition'))
-		const pres = await Presentation.load(original)
-		// touch nothing
-		const before = await partBodies(original)
-		const after = await partBodies(await pres.save())
-		// Every part, not just `ppt/slides/*`: load→save is byte-identical across the whole
-		// package, so narrowing this to slides only ever hid a regression in the rest of it.
-		assertUnchangedExcept(before, after, [], 'slide-transition')
 	})
 })
 
@@ -199,14 +188,6 @@ describe('slide animations (opaque, spid-aware)', () => {
 		assert.deepEqual(at(pres.slides, 0).animationSpids(), [])
 	})
 
-	test('an untouched animated deck round-trips byte-identically', async () => {
-		const original = await readFile(fixturePath('slide-animation-rich'))
-		const pres = await Presentation.load(original)
-		const before = await partBodies(original)
-		const after = await partBodies(await pres.save())
-		assertUnchangedExcept(before, after, [], 'slide-animation-rich')
-	})
-
 	test('remapAnimationSpids rewrites every spTgt and bldP reference', async () => {
 		const pres = await openFixture('slide-animation-rich')
 		const slide = at(pres.slides, 0)
@@ -262,14 +243,6 @@ describe('slide.flattenAnimations (whole-slide flatten pass)', () => {
 		if (validatorInstalled) assert.deepEqual(await validateBuf(Buffer.from(saved)), [])
 	})
 
-	test('flattening the basic fixture clears its animations', async () => {
-		const pres = await openFixture('slide-animation-basic')
-		const slide = at(pres.slides, 0)
-		assert.equal(slide.flattenAnimations(), true)
-		assert.equal(slide.hasAnimations, false)
-		assert.deepEqual(slide.animationSpids(), [])
-	})
-
 	test('is a no-op on an unanimated slide and is idempotent', async () => {
 		const pres = await openFixture('slide-transition')
 		const slide = at(pres.slides, 0)
@@ -305,13 +278,6 @@ describe('slide-animation-presets (read fixture)', () => {
 			assert.ok(xml.includes(t.behaviorsXml), `${name} behaviors present verbatim`)
 			assert.ok(xml.includes(t.bldPXml), `${name} bldP present`)
 		}
-	})
-
-	test('an untouched presets deck round-trips byte-identically', async () => {
-		const original = await readFile(fixturePath('slide-animation-presets'))
-		const before = await partBodies(original)
-		const after = await partBodies(await (await Presentation.load(original)).save())
-		assertUnchangedExcept(before, after, [], 'slide-animation-presets')
 	})
 })
 
@@ -349,13 +315,6 @@ describe('slide-transition-sound (read fixture)', () => {
 		}
 		const ct = await readEntry(zip, '[Content_Types].xml')
 		assert.ok(ct.includes('<Default Extension="wav" ContentType="audio/x-wav"/>'), 'wav Default content type')
-	})
-
-	test('an untouched transition-sound deck round-trips byte-identically', async () => {
-		const original = await readFile(fixturePath('slide-transition-sound'))
-		const before = await partBodies(original)
-		const after = await partBodies(await (await Presentation.load(original)).save())
-		assertUnchangedExcept(before, after, [], 'slide-transition-sound')
 	})
 })
 

@@ -219,7 +219,7 @@ export async function buildPackageParts(
 		// also covers background images.
 		const canonicalMediaTargets = new Map<string, string>()
 		for (const target of mediaTargets) {
-			for (const rel of target._relsMedia || []) {
+			for (const rel of target._relsMedia) {
 				if (rel.type === 'online' || rel.type === 'hyperlink' || typeof rel.data !== 'string' || !rel.data) continue
 				// OLE payloads are exempt: PowerPoint gives every embedded object its own part, and
 				// collapsing two identical ones would make editing either rewrite the other's source.
@@ -244,7 +244,7 @@ export async function buildPackageParts(
 		// the id assigned here, so both depend on this pass staying authoritative.
 		let chartPartIdx = 0
 		for (const target of mediaTargets) {
-			for (const rel of target._relsChart || []) {
+			for (const rel of target._relsChart) {
 				const chartId = ++chartPartIdx
 				rel.globalId = chartId
 				// chartEx charts share the `ppt/charts/` namespace but use the `chartEx{N}.xml` name.

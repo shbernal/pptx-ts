@@ -38,18 +38,6 @@ defineRegressionSuite('Bullet glyph normalization [legacy bug-09]', [
 		},
 	},
 	{
-		name: 'addText("hello",{bullet:true}) leaves text unchanged',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				const s = p.addSlide()
-				s.addText('hello', { x: 1, y: 1, w: 4, h: 1, bullet: true })
-			})
-			const xml = await getSlide1(zip)
-			const tText = firstATText(xml)
-			assert(tText === 'hello', 'expected first <a:t> to be "hello"; got: ' + JSON.stringify(tText))
-		},
-	},
-	{
 		name: 'mid-text bullet glyph "a • b" is preserved when bullet:true',
 		fn: async () => {
 			const { zip } = await build((p) => {

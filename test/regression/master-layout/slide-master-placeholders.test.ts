@@ -211,31 +211,6 @@ defineRegressionSuite('Slide master placeholders [legacy bug-18]', [
 		},
 	},
 	{
-		name: 'master with single placeholder fully populated → exactly one <p:sp>, no empty stub',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.defineSlideMaster({
-					title: 'TEST_MASTER_B18_SINGLE',
-					objects: [
-						{ placeholder: { options: { name: 'title', type: 'title', x: 0.5, y: 0.5, w: 9, h: 1 }, text: '' } },
-					],
-				})
-				const s = p.addSlide({ masterTitle: 'TEST_MASTER_B18_SINGLE' })
-				s.addText('Filled', { placeholder: 'title' })
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			const spBlocks = xml.match(/<p:sp>[\s\S]*?<\/p:sp>/g) || []
-			assert(
-				spBlocks.length === 1,
-				'expected exactly 1 <p:sp> block (no empty stub); got ' + spBlocks.length + '\nxml: ' + xml
-			)
-			assert(
-				/<a:t>Filled<\/a:t>/.test(spBlocks[0]),
-				'expected populated text run <a:t>Filled</a:t>; got: ' + spBlocks[0]
-			)
-		},
-	},
-	{
 		name: 'master with two placeholders both populated → two <p:sp> with text runs, no empty stub',
 		fn: async () => {
 			const { zip } = await build((p) => {

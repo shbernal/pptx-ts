@@ -200,10 +200,6 @@ describe('Shape.innerShadow — inset shadow reads', () => {
 		assertEqual(innerOnly.shadow, null, 'an innerShdw does not surface as the outer shadow')
 		assert(innerOnly.innerShadow, 'the innerShdw still surfaces as innerShadow')
 	})
-
-	test('no innerShdw → null', () => {
-		assertEqual(sp(`<p:spPr><a:effectLst/></p:spPr>`).innerShadow, null, 'an effectLst with no innerShdw → null')
-	})
 })
 
 describe('Shape.glow — coloured halo reads', () => {

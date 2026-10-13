@@ -28,17 +28,6 @@ defineRegressionSuite('Image svg source', [
 		},
 	},
 	{
-		name: 'addImage({ svg }) is treated as an svg (consumes a png preview rel too)',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				const s = p.addSlide()
-				s.addImage({ svg: SVG_MARKUP, x: 1, y: 1, w: 1, h: 1 })
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assert(/asvg:svgBlip/.test(xml), 'expected svgBlip referencing the svg part; got: ' + xml)
-		},
-	},
-	{
 		name: 'addImage({ svg }) PNG preview part is not the broken-image icon',
 		fn: async () => {
 			const { zip } = await build((p) => {

@@ -362,7 +362,7 @@ export function applyMeasuredFit(slides: PresSlideInternal[], registry: FontMetr
 	}
 
 	for (const slide of slides) {
-		for (const obj of slide._slideObjects ?? []) measureObject(obj, slide._presLayout)
+		for (const obj of slide._slideObjects) measureObject(obj, slide._presLayout)
 	}
 
 	if (unmeasuredShrink.size > 0) {

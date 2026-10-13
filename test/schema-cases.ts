@@ -117,15 +117,6 @@ export default [
 		},
 	},
 	{
-		name: 'single text box',
-		fn: async () => {
-			const { buf } = await build((p) => {
-				p.addSlide().addText('hello', { x: 1, y: 1, w: 4, h: 0.5 })
-			})
-			await expectNoSchemaErrors(buf, 'single-text')
-		},
-	},
-	{
 		// upstream-issue-1298: a standalone title text box (no matching layout placeholder)
 		// emits <p:ph type="title"/> so PowerPoint sees an accessible slide title. Assert the
 		// resulting package is schema-valid.

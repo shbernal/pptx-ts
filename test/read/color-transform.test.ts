@@ -80,11 +80,6 @@ describe('applyColorTransforms — PowerPoint fixture oracle', () => {
 		assert(applyColorTransforms('451DC7', tf(['lumMod', 75000])).alpha === undefined, 'alpha absent unless set')
 	})
 
-	test('null/empty transform values are skipped', () => {
-		const { hex } = applyColorTransforms('451DC7', [{ name: 'lumMod', value: null }])
-		assert(hex === '451DC7', 'a valueless modifier is a no-op')
-	})
-
 	test('lumOff clamps luminance at 1 (white)', () => {
 		const { hex } = applyColorTransforms('451DC7', tf(['lumOff', 100000]))
 		assertHexClose(hex, 'FFFFFF', 1, 'lumOff 100% saturates to white')
@@ -125,7 +120,7 @@ describe('applyColorTransforms — saturation/hue/alpha modifiers', () => {
 	})
 
 	test('null values skip each modifier (identity)', () => {
-		for (const name of ['satMod', 'satOff', 'hueMod', 'hueOff', 'alphaOff']) {
+		for (const name of ['lumMod', 'satMod', 'satOff', 'hueMod', 'hueOff', 'alphaOff']) {
 			const { hex } = applyColorTransforms('451DC7', [{ name, value: null }])
 			assert(hex === '451DC7', `${name} with null value is a no-op, got ${hex}`)
 		}

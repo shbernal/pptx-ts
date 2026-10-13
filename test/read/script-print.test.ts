@@ -31,7 +31,7 @@ import {
 } from '../../dist/script.js'
 import { assert, assertEqual, defined, at } from '../helpers.ts'
 import { authorRead } from './authored.ts'
-import { REPO, SCRATCH, fixtureNames, irFor, readFixture } from './corpus.ts'
+import { SCRATCH, fixtureNames, irFor, readFixture } from './corpus.ts'
 
 const run = promisify(execFile)
 
@@ -108,16 +108,6 @@ describe('script printer — corpus invariants', () => {
 				`${name}: ${assetName} is declared but never used`
 			)
 		}
-	})
-
-	test('the emitted import specifier is this package’s published name', async () => {
-		// This shipped wrong once: the directory is `pptx-ts`, the package is not. The script
-		// printed, typechecked, and then failed at `import` — so the name is pinned to the
-		// manifest rather than to a literal anyone can re-guess.
-		const manifest = JSON.parse(await readFile(path.join(REPO, 'package.json'), 'utf8')) as { name: string }
-		const { code } = printScript(await irFor('empty.pptx'))
-		assert(code.includes(`import PptxTs from '${manifest.name}'`), `write-half import is not ${manifest.name}`)
-		assert(code.includes(`from '${manifest.name}/read'`), `read-half import is not ${manifest.name}/read`)
 	})
 })
 

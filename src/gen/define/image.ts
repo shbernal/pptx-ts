@@ -147,8 +147,7 @@ export function addImageDefinition(target: PresSlideInternal, opt: ImageProps): 
 	// STEP 1: Set extension (the `data:` mime wins over the path when both are supplied)
 	const strImgExtn = source.extn
 
-	// STEP 2: Set type/path
-	newObject._type = SlideObjectType.image
+	// STEP 2: Set path
 	newObject.image = strImagePath || preencodedPath('png')
 
 	// STEP 3: Default any missing dimension from the image's intrinsic (natural) size.

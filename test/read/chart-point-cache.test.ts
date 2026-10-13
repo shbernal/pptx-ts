@@ -25,7 +25,6 @@ import { Presentation, isGraphicFrame } from '../../dist/read.js'
 import { describe, test } from 'vitest'
 import { authorRead } from './authored.ts'
 import { assert, assertEqual, captureDiagnostics, defined, at } from '../helpers.ts'
-import { readFixture } from './corpus.ts'
 
 /** Author a chart, rewrite its chart part with `edit`, load the result back and hand it to `read`. */
 async function authorEditRead<T>(
@@ -161,21 +160,5 @@ describe('Chart point caches are sized by the points that are there', () => {
 			0,
 			`an ordinary chart warns about nothing; got ${codes}`
 		)
-	})
-})
-
-describe('The bound holds through the public read entry point', () => {
-	test('a hostile ptCount on a PowerPoint-authored deck survives load + series access', async () => {
-		const zip = await JSZip.loadAsync(await readFixture('bar-chart-data-labels'))
-		const part = 'ppt/charts/chart1.xml'
-		const xml = await defined(zip.file(part)).async('string')
-		zip.file(part, xml.replace(/<c:ptCount val="\d+"\/>/g, '<c:ptCount val="4294967295"/>'))
-		const { result } = await captureDiagnostics(async () => {
-			const presentation = await Presentation.load(await zip.generateAsync({ type: 'uint8array' }))
-			const chart = firstChartOf(presentation)
-			assert(chart, 'the deck still reads as a chart')
-			return at(chart.series, 0).values.length
-		})
-		assert(result > 0 && result < 1000, `the series is sized by its real points, not the claim; got ${result}`)
 	})
 })

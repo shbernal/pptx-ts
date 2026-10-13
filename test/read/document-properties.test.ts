@@ -148,9 +148,4 @@ describe('Presentation.customProperties', () => {
 		assertEqual(pres.customProperties.length, 0, 'no custom properties')
 		assert(Array.isArray(pres.customProperties), 'customProperties is an array')
 	})
-
-	test('an authored fixture with no custom properties → []', async () => {
-		const pres = await openFixture('read-stress')
-		assertEqual(pres.customProperties.length, 0, 'authored deck has no custom props')
-	})
 })

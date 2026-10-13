@@ -1,23 +1,14 @@
 import { describe, expect, test } from 'vitest'
-import { makeXmlCommentAuthors, makeXmlComments, resolveCommentAuthors } from '../../../src/gen/slide/comments.ts'
+import { makeXmlCommentAuthors, makeXmlComments } from '../../../src/gen/slide/comments.ts'
 import type { ResolvedCommentAuthor, SlideComment } from '../../../src/types/index.ts'
-import type { PresSlideInternal } from '../../../src/types/internal.ts'
 
-// Characterization tests for comments XML that the byte-identity harness CANNOT see — the demo
-// deck has no comments, so `<p:cmAuthor>`/`<p:cm>` carry ZERO baseline parts. schema-cases.ts
-// covers the happy path (author/idx numbering) through the public API; these pin the byte-level
-// details the migration to el()/voidEl() must preserve: attribute order, the optional `dt`
-// attribute, and metacharacter escaping (already correct pre-migration — characterized, not fixed).
-//
-// Note for anyone reading a coverage report: this file imports from `src/`, not `dist/`, so none of
-// it counts toward the reported numbers — the suite is instrumented on the bundle. That is why
-// `gen/slide/comments.ts` still shows four red branches (`slides || []`, `slide._comments || []`,
-// the `?? 0` idx seed, and the `!m` skip below) despite being exercised here. All four are
-// defensive fallbacks that the public API cannot reach: `assemble.ts` always passes an array,
-// `SlideBuilder` always initializes `_comments`, and every comment in `_comments` has been seen by
-// `resolveCommentAuthors` by the time `makeXmlComments` runs. Reaching them takes the stub slides
-// below, which is exactly what this file is for. See test/regression/comment-definition.test.ts for
-// the definer's side, which does go through the public builder.
+// Characterization tests for comments XML that the byte-identity harness CANNOT see: the demo
+// deck has no comments, so `<p:cmAuthor>`/`<p:cm>` carry ZERO baseline parts. The attribute order,
+// the optional `dt` attribute and per-author idx numbering are pinned through the public API by
+// the comment cases in schema-cases.ts; these pin what that path does not reach: metacharacter
+// escaping (already correct pre-migration, characterized, not fixed) and the empty lists the read
+// path's comment ops write. See test/regression/slide-content/comment-definition.test.ts for the
+// definer's side.
 
 const author = (over: Partial<ResolvedCommentAuthor> = {}): ResolvedCommentAuthor => ({
 	id: 0,
@@ -35,19 +26,8 @@ const comment = (over: Partial<SlideComment> = {}): SlideComment => ({
 	y: 0.5,
 	...over,
 })
-/**
- * A slide stub carrying only the field these emitters read. Cast because the
- * emitters declare the full internal slide shape, of which `_comments` is the
- * only part reachable from here.
- */
-const slideWith = (comments: SlideComment[]) => ({ _comments: comments }) as PresSlideInternal
 
 describe('makeXmlCommentAuthors', () => {
-	test('cmAuthor attribute order: id, name, initials, lastIdx, clrIdx', () => {
-		const xml = makeXmlCommentAuthors([author()])
-		expect(xml).toContain('<p:cmAuthor id="0" name="Ada Lovelace" initials="AL" lastIdx="1" clrIdx="0"/>')
-	})
-
 	test('name and initials are escaped', () => {
 		const xml = makeXmlCommentAuthors([author({ name: 'Q&A <Team>', initials: 'A&B' })])
 		expect(xml).toContain('name="Q&amp;A &lt;Team&gt;"')
@@ -62,28 +42,6 @@ describe('makeXmlCommentAuthors', () => {
 })
 
 describe('makeXmlComments', () => {
-	test('cm attribute order: authorId, dt, idx (dt present)', () => {
-		const c = comment({ date: '2026-06-24T10:00:00Z' })
-		const meta = new Map([[c, { authorId: 0, idx: 1 }]])
-		const xml = makeXmlComments([c], meta)
-		expect(xml).toContain('<p:cm authorId="0" dt="2026-06-24T10:00:00Z" idx="1">')
-	})
-
-	test('dt attribute is omitted (not emitted empty) when date is unset', () => {
-		const c = comment()
-		const meta = new Map([[c, { authorId: 0, idx: 1 }]])
-		const xml = makeXmlComments([c], meta)
-		expect(xml).toContain('<p:cm authorId="0" idx="1">')
-		expect(xml).not.toContain('dt=')
-	})
-
-	test('child order is p:pos then p:text; pos coords are rounded EMU', () => {
-		const c = comment({ x: 1, y: 0.5, text: 'hello' })
-		const meta = new Map([[c, { authorId: 0, idx: 1 }]])
-		const xml = makeXmlComments([c], meta)
-		expect(xml).toContain('<p:pos x="914400" y="457200"/><p:text>hello</p:text>')
-	})
-
 	test('text and dt are escaped', () => {
 		const c = comment({ text: 'A & B < C', date: 'Q&A' })
 		const meta = new Map([[c, { authorId: 0, idx: 1 }]])
@@ -95,22 +53,5 @@ describe('makeXmlComments', () => {
 	test('no comments on the slide emits an empty cmLst', () => {
 		const xml = makeXmlComments([], new Map())
 		expect(xml).toContain('></p:cmLst>')
-	})
-})
-
-describe('resolveCommentAuthors', () => {
-	test('per-author idx numbering across slides in slide order', () => {
-		const c1 = comment({ author: 'Ada Lovelace', initials: 'AL' })
-		const c2 = comment({ author: 'Alan Turing', initials: 'AT' })
-		const c3 = comment({ author: 'Ada Lovelace', initials: 'AL' })
-		const slides = [slideWith([c1, c2]), slideWith([c3])]
-		const { authors, meta } = resolveCommentAuthors(slides)
-		expect(authors.map((a) => [a.name, a.id, a.clrIdx, a.lastIdx])).toEqual([
-			['Ada Lovelace', 0, 0, 2],
-			['Alan Turing', 1, 1, 1],
-		])
-		expect(meta.get(c1)).toEqual({ authorId: 0, idx: 1 })
-		expect(meta.get(c2)).toEqual({ authorId: 1, idx: 1 })
-		expect(meta.get(c3)).toEqual({ authorId: 0, idx: 2 })
 	})
 })

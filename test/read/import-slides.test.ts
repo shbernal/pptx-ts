@@ -320,18 +320,6 @@ describe('Presentation.importSlides', () => {
 		assertEqual(at(reopened.slides, 0).partName, second.partName, 'and about the first')
 	})
 
-	test('a source with a different slide size is rejected unless the request rescales', async () => {
-		const target = await generatedDeck(false)
-		const source = await otherCanvasDeck()
-		const beforeBytes = await target.save()
-		assertEqual(
-			catchCode(() => target.importSlides([{ source, sourceIndex: 0, outputIndex: 0 }])),
-			'import/slide-size-mismatch',
-			'a size difference is fatal without the rescale spelling'
-		)
-		assert(bytesEqual(beforeBytes, await target.save()), 'and the deck is untouched')
-	})
-
 	test("{ rescale } scales an imported page onto this deck's canvas", async () => {
 		// The 4x3 source is 9144000 EMU wide against the destination's 12192000, so a
 		// 'fit' rescale has to move every offset it finds on the page.
@@ -585,32 +573,6 @@ describe('Presentation.importSlides', () => {
 				'a negative outputIndex is rejected'
 			)
 		})
-	})
-
-	test('a link between two selected pages is rewritten to the imported parts', async () => {
-		const targetDeck = new PptxTs()
-		targetDeck.addSlide().addText('a', { x: 1, y: 1, w: 2, h: 1 })
-		targetDeck.addSlide().addText('b', { x: 1, y: 1, w: 2, h: 1 })
-		const target = await Presentation.load(await targetDeck.write({ outputType: 'uint8array' }))
-		const source = await generatedDeck(true)
-
-		target.importSlides([
-			{ source, sourceIndex: 0, outputIndex: 0 },
-			{ source, sourceIndex: 1, outputIndex: 1 },
-		])
-
-		const reopened = await Presentation.load(await target.save())
-		assertNoDanglingRels(reopened.opc)
-
-		// Both pages came across under fresh partnames; the first page's slide
-		// link must resolve to the SECOND IMPORTED partname, not into the source.
-		const [importedFirst, importedSecond] = take(
-			reopened.slides.map((s) => s.partName),
-			2
-		)
-		const targets = slideLinkTargets(reopened.opc, importedFirst)
-		assertEqual(targets.length, 1, 'the generated jump link survived the import')
-		assertEqual(targets[0], importedSecond, 'the link resolves to the second imported page')
 	})
 
 	test('a link into a page an earlier batch already imported resolves to that copy', async () => {

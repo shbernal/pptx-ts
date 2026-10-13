@@ -212,7 +212,7 @@ function makeChartExSeries(rel: SlideRelChart, sheet: WorksheetLayout): string {
 
 	// Layout-specific series props.
 	let layoutPr = ''
-	if (type === ChartType.waterfall && Array.isArray(opts.subtotals) && opts.subtotals.length > 0) {
+	if (type === ChartType.waterfall && opts.subtotals) {
 		// waterfall: subtotal/total column indices.
 		const idxs = opts.subtotals.map((idx) => voidEl('cx:idx', { val: idx })).join('')
 		layoutPr = el('cx:layoutPr', null, raw(el('cx:subtotals', null, raw(idxs))))

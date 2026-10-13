@@ -18,7 +18,6 @@ import {
 	AXIS_ID_CATEGORY_PRIMARY,
 	AXIS_ID_CATEGORY_SECONDARY,
 	AXIS_ID_VALUE_PRIMARY,
-	AXIS_ID_VALUE_SECONDARY,
 	DEF_FONT_COLOR,
 	DEF_FONT_SIZE,
 } from '../../constants-internal.js'
@@ -301,9 +300,8 @@ function logAxisBound(opts: ChartOptsInternal, key: 'valAxisMaxVal' | 'valAxisMi
  * @return {string} XML
  */
 export function makeValAxis(opts: ChartOptsInternal, valAxisId: string): string {
-	let axisPos =
-		valAxisId === AXIS_ID_VALUE_PRIMARY ? (opts.barDir === 'col' ? 'l' : 'b') : opts.barDir !== 'col' ? 'r' : 't'
-	if (valAxisId === AXIS_ID_VALUE_SECONDARY) axisPos = 'r' // default behavior for PPT is showing 2nd val axis on right (primary axis on left)
+	// The secondary value axis sits on the right, as PowerPoint shows it (primary axis on left).
+	const axisPos = valAxisId === AXIS_ID_VALUE_PRIMARY ? (opts.barDir === 'col' ? 'l' : 'b') : 'r'
 	const crossAxId = valAxisId === AXIS_ID_VALUE_PRIMARY ? AXIS_ID_CATEGORY_PRIMARY : AXIS_ID_CATEGORY_SECONDARY
 
 	const scaling = el('c:scaling', null, [
@@ -336,12 +334,8 @@ export function makeValAxis(opts: ChartOptsInternal, valAxisId: string): string 
 	)
 
 	// Where this axis meets its category axis: an explicit position, an explicit rule, or the
-	// default: a right/top axis crosses at the maximum, everything else at zero.
-	const crosses = axisCrossing(
-		opts.catAxisCrossesAt,
-		axisPos === 'r' || axisPos === 't' ? 'max' : 'autoZero',
-		'catAxisCrossesAt'
-	)
+	// default: a right axis crosses at the maximum, everything else at zero.
+	const crosses = axisCrossing(opts.catAxisCrossesAt, axisPos === 'r' ? 'max' : 'autoZero', 'catAxisCrossesAt')
 	const crossBetween =
 		opts.valAxisCrossBetween ||
 		(isScatterChart(opts._type) ||
