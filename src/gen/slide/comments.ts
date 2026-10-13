@@ -7,6 +7,7 @@
  */
 
 import { CRLF, XML_DECL } from '../../constants-internal.js'
+import { InternalError } from '../../errors.js'
 import type { ResolvedCommentAuthor, SlideComment } from '../../types/index.js'
 import type { PresSlideInternal } from '../../types/internal.js'
 import { inch2Emu } from '../../units-internal.js'
@@ -106,7 +107,7 @@ export function makeXmlComments(
 	const cms = comments
 		.map((comment) => {
 			const m = meta.get(comment)
-			if (!m) return '' // defensive: comment must have been seen by resolveCommentAuthors
+			if (!m) throw new InternalError('comment/not-resolved', 'makeXmlComments: a comment has no author metadata')
 			// Child order is fixed by CT_Comment: <p:pos> then <p:text>. pos x/y are ST_Coordinate (EMU).
 			return el('p:cm', { authorId: m.authorId, dt: comment.date || null, idx: m.idx }, [
 				raw(voidEl('p:pos', { x: Math.round(inch2Emu(comment.x)), y: Math.round(inch2Emu(comment.y)) })),

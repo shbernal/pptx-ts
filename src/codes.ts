@@ -467,6 +467,10 @@ export type MediaErrorCode =
 export type InternalErrorCode =
 	| 'layout/default-not-registered'
 	| 'slide/rel-index-out-of-range'
+	// A slide comment reached its part with no author id or index. Both callers build that
+	// metadata from the same comment list they hand the emitter, so a missing entry means the
+	// two disagree, and skipping it would drop the comment from the part without a word.
+	| 'comment/not-resolved'
 	// A slide part was about to be wired into `p:sldIdLst` a second time. The list is
 	// the deck's slide order, so a part named twice is a package PowerPoint will not
 	// open — and one the read model reports as two slides. Caught at the insert.

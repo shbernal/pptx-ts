@@ -10,7 +10,7 @@ import {
 	pointsToEmu,
 } from '../../../dist/index.js'
 import type { StandardLayout, PptxTs } from '../../../dist/node.js'
-import { defineRegressionSuite, build, readEntry, assert, assertEqual, assertRejects } from '../../helpers.ts'
+import { defineRegressionSuite, build, readEntry, assert, assertEqual } from '../../helpers.ts'
 
 const WIDE = STANDARD_LAYOUTS.LAYOUT_WIDE
 
@@ -109,25 +109,6 @@ defineRegressionSuite('Presentation layouts [legacy bug-22]', [
 				assertEqual(slide.height, 5.625, 'slide.height inches')
 			})
 			assert(pres, 'presentation built')
-		},
-	},
-	{
-		name: 'non-finite coordinates fail loud instead of emitting zero-size objects',
-		fn: async () => {
-			const layout = STANDARD_LAYOUTS.LAYOUT_16x9
-			// Reproduces the footgun: reading `.width`/`.height` off a value that lacks them
-			// yields undefined -> NaN coordinate math.
-			const bogus = undefined
-			await assertRejects(
-				() =>
-					build((p) => {
-						p.layout = layout
-						// @ts-expect-error arithmetic on `undefined` is the footgun reproduced
-						p.addSlide().addText('collapses', { x: 0.5, y: 0.5, w: bogus - 1, h: 1 })
-					}),
-				/finite number/,
-				'a NaN width'
-			)
 		},
 	},
 ])

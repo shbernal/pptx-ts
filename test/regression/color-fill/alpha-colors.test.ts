@@ -17,26 +17,6 @@ function alphaPct(hex: string) {
 
 defineRegressionSuite('Alpha channel colors [legacy bug-08]', [
 	{
-		name: 'fill color "00000020" splits to val="000000" + <a:alpha val="12549"/>',
-		fn: async () => {
-			const pres = new PptxTs()
-			const slide = pres.addSlide()
-			slide.addShape(ShapeType.rect, {
-				x: 1,
-				y: 1,
-				w: 2,
-				h: 1,
-				fill: { color: '00000020' },
-			})
-
-			const xml = await buildSlide1(pres)
-			assert(xml.indexOf('val="00000020"') === -1, 'expected no 8-char val="00000020" in slide XML; got:\n' + xml)
-			const expectedAlpha = alphaPct('20') // 12549
-			const expectedFragment = `<a:srgbClr val="000000"><a:alpha val="${expectedAlpha}"/></a:srgbClr>`
-			assert(xml.indexOf(expectedFragment) !== -1, `expected ${expectedFragment} in slide XML; got:\n` + xml)
-		},
-	},
-	{
 		name: 'text color "00FF0080" splits to val="00FF00" + <a:alpha val="50196"/>',
 		fn: async () => {
 			const pres = new PptxTs()

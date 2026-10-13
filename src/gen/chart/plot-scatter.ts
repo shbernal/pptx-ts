@@ -8,7 +8,6 @@
  * dispatch.
  */
 
-import { BARCHART_COLORS } from '../../constants-internal.js'
 import type { ChartSeriesOpts } from '../../types/index.js'
 import type { ChartOptsInternal, OptsChartDataInternal } from '../../types/internal.js'
 import { getUuid } from '../utils.js'
@@ -190,16 +189,6 @@ export const makeScatterPlot: PlotBuilder = (chartType, data, opts, valAxisId, c
 	// X values come from the first row; each later row is one Y series. Every column comes from the
 	// worksheet layout: a standalone scatter's sheet puts X in column A, and a combo's sheet puts it
 	// in the X row's own column after the label columns.
-	// Legacy single-series colour-vary, and it can never fire: a scatter `data` array is one row of
-	// X values plus one row per Y series, the loop below runs over `data.slice(1)`, so by the time
-	// `data.length === 1` there are no series left to colour. The intent was presumably "one Y
-	// series" (`=== 2`). Fixing it would start emitting `<c:dPt>` colour-vary for single-series
-	// scatter charts, which is an output change and a question about what such a chart should look
-	// like — so the condition is left exactly as it has always been, said out loud rather than
-	// quietly corrected.
-	const scatterVaryColors =
-		data.length === 1 && opts.chartColors !== BARCHART_COLORS ? opts.chartColors || BARCHART_COLORS : null
-
 	const sers = data
 		.slice(1)
 		.map((obj) => {
@@ -237,7 +226,8 @@ export const makeScatterPlot: PlotBuilder = (chartType, data, opts, valAxisId, c
 				raw(scatterSerShapeProps(opts, serColor, idx, over?.lineSize)),
 				raw(serMarker(opts, serColor, serColor)),
 				// Per-point data points (`c:dPt`) MUST precede `c:dLbls` (CT_ScatterSer schema order).
-				raw(makeSeriesDataPointsXml(chartType, obj, opts, scatterVaryColors)),
+				// A scatter series never varies colours by point; only `pointStyles` add `c:dPt`.
+				raw(makeSeriesDataPointsXml(chartType, obj, opts, null)),
 				raw(labels),
 				// Error bars come after dLbls and before xVal/yVal in schema order.
 				raw(makeChartErrorBarsXml(chartType, obj.errorBars, obj)),

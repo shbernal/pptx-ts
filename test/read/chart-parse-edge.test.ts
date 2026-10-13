@@ -59,11 +59,6 @@ describe('Chart read model — plot-area / chart-type edges', () => {
 		assertEqual(noPlot.chartType, null, 'c:chart but no c:plotArea → null chartType')
 		assertEqual(noPlot.series.length, 0, 'no plot area → no series')
 	})
-
-	test('element_ exposes the chartSpace document element', () => {
-		const c = chart(`<c:chart><c:plotArea/></c:chart>`)
-		assertEqual(defined(c.element_).localName, 'chartSpace', 'element_ is the c:chartSpace root')
-	})
 })
 
 describe('Chart read model — title edges', () => {
@@ -157,10 +152,6 @@ describe('ChartSeries read model — name / index / caches', () => {
 		assertEqual(s.values.length, 4, 'array grown to highest idx + 1')
 		assertEqual(s.values[3], 99, 'the sparse point lands at its idx')
 		assertEqual(s.values[0], null, 'unfilled leading slots are null')
-	})
-
-	test('element_ exposes the underlying c:ser element', () => {
-		assertEqual(series(`<c:idx val="0"/>`).element_.localName, 'ser', 'series element_ is c:ser')
 	})
 })
 

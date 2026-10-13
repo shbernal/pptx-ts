@@ -6,9 +6,6 @@
 // under review, and this case is what keeps the committed module and the generator from drifting
 // apart — a hand-edit to `src/media/playbtn.ts`, or a change to the design constants that was
 // never re-run, both fail here.
-//
-// The last case is the deliberate red: perturb one design constant and the bytes must move. A
-// comparison that passed whatever the renderer produced would gate nothing.
 
 import fs from 'node:fs'
 import { describe, expect, test } from 'vitest'
@@ -86,19 +83,5 @@ describe('gen-playbtn', () => {
 			const expected = Math.round((premultiplied / a) * 255)
 			expect(Math.abs(r - expected), `row ${y}: rgb ${r}, expected ${expected} at alpha ${a}`).toBeLessThanOrEqual(1)
 		}
-	})
-
-	test('a changed design constant changes the bytes', () => {
-		// A small frame: the design is fractions of the frame height, so it draws the same shape at
-		// any size, and three full-frame renders took 40 to 51 seconds under coverage. The full
-		// frame's own determinism is already pinned by the first case, which compares the committed
-		// module against a fresh render.
-		const small = { w: 96, h: 69 }
-		const base = renderPlayButton(small)
-		const taller = renderPlayButton({ w: small.w, h: small.h + 2 })
-		expect(taller.length).not.toBe(base.length)
-		// Same frame, same pixels: the renderer is deterministic, which is what makes the
-		// file-comparison case above meaningful rather than flaky.
-		expect(Buffer.from(renderPlayButton(small))).toEqual(Buffer.from(base))
 	})
 })

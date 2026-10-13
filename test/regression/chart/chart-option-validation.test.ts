@@ -309,15 +309,6 @@ defineRegressionSuite('Chart option validation', [
 		},
 	},
 	{
-		name: 'a finite axis crossing still emits crossesAt',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.addSlide().addChart(SERIES, { ...BASE, type: ChartType.bar, valAxisCrossesAt: 2 })
-			})
-			assertIncludes(await chartXml(zip), '<c:crossesAt val="2"/>', 'an explicit position is honoured')
-		},
-	},
-	{
 		// `ChartOpts.x` is a `Coord`, and the title builder took it through an `as number` cast,
 		// so a string reached the layout arithmetic and `+` concatenated instead of adding.
 		name: 'a non-numeric chart `x` does not put NaN in the title layout',

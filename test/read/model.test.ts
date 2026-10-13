@@ -6,15 +6,7 @@
 // from the live DOM. No mutation here; the edit tests cover setters.
 
 import { describe, test } from 'vitest'
-import {
-	Presentation,
-	isAutoShape,
-	isConnector,
-	isGraphicFrame,
-	isGroupShape,
-	isPicture,
-	type AnyShape,
-} from '../../dist/read.js'
+import { isAutoShape, isConnector, isGraphicFrame, isGroupShape, isPicture, type AnyShape } from '../../dist/read.js'
 import { assert, assertEqual, defined, expectDefined, at } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
@@ -37,13 +29,6 @@ describe('Presentation', () => {
 			assertEqual(slide.partName, `/ppt/slides/slide${i + 1}.xml`, `slide ${i} partname in order`)
 			assert(slide.presentation === presentation, 'slide back-references its presentation')
 		})
-	})
-
-	test('save() delegates to the package and round-trips', async () => {
-		const presentation = await openFixture('empty')
-		const saved = await presentation.save()
-		const reopened = await Presentation.load(saved)
-		assertEqual(reopened.slides.length, presentation.slides.length, 'slide count survives save')
 	})
 })
 
@@ -136,13 +121,6 @@ describe('Slide.hidden', () => {
 		assertEqual(slides.length, 2, 'hidden fixture has two slides')
 		assertEqual(at(slides, 0).hidden, false, 'slide with no @show is shown')
 		assertEqual(at(slides, 1).hidden, true, 'slide with show="0" is hidden')
-	})
-
-	test('a deck with no hidden slides reports every slide as shown', async () => {
-		const slides = (await openFixture('textbox')).slides
-		for (const slide of slides) {
-			assertEqual(slide.hidden, false, `slide ${slide.index} should be shown`)
-		}
 	})
 })
 

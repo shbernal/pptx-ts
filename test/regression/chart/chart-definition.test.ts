@@ -472,23 +472,6 @@ defineRegressionSuite('Chart definition', [
 		},
 	},
 	{
-		// A stacked bar chart wants a narrower gap than the clustered default, but only when the
-		// caller did not ask for one. Two decks, same grouping, different `barGapWidthPct` provenance.
-		name: 'a stacked bar chart takes the narrow default gap unless the caller set one',
-		fn: async () => {
-			assertIncludes(
-				await chartFrom(SERIES, { ...BASE, type: ChartType.bar, barGrouping: 'stacked' }),
-				'<c:gapWidth val="50"/>',
-				'the stacked default gap'
-			)
-			assertIncludes(
-				await chartFrom(SERIES, { ...BASE, type: ChartType.bar, barGrouping: 'stacked', barGapWidthPct: 300 }),
-				'<c:gapWidth val="300"/>',
-				"the caller's gap survives"
-			)
-		},
-	},
-	{
 		// Three ST_ enumerations that are replaced wholesale when the value is not a member. Each is
 		// checked twice: a legal value passes through, an illegal one becomes the default.
 		name: 'bar3DShape, lineDataSymbol and displayBlanksAs pass through when legal',

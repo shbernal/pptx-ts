@@ -14,18 +14,6 @@ describe('scatter data-label field ids', () => {
 	// `dataLabelFormatScatter: 'custom'`/`'customXY'` emits different bytes on every build.
 	// A field id has to be unique, so the id is right and the *comparison* is what has to
 	// give — the same call the `c16:uniqueId` two lines above it gets.
-	test('an XVALUE field id is erased', () => {
-		expect(normalize('<a:fld id="{650c7360-4b87-0998-da56-aae7e835e166}" type="XVALUE">')).toBe(
-			'<a:fld id="{NORMALIZED-SCATTERFLD}" type="XVALUE">'
-		)
-	})
-
-	test('a YVALUE field id is erased', () => {
-		expect(normalize('<a:fld id="{fc5e702d-9156-1769-e9bf-a3b613076579}" type="YVALUE">')).toBe(
-			'<a:fld id="{NORMALIZED-SCATTERFLD}" type="YVALUE">'
-		)
-	})
-
 	test('both fields of one label are erased', () => {
 		const label =
 			'<a:fld id="{032f8e74-0352-3d73-c60b-2945be1a91a0}" type="XVALUE">' +

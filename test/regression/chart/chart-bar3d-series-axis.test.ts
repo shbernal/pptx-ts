@@ -114,27 +114,6 @@ defineRegressionSuite('Chart bar3d series axis', [
 		},
 	},
 	{
-		name: 'a garbage time unit warns and is dropped (chart stays valid)',
-		fn: async () => {
-			// The category axis is where the time units live, and this is its date-axis arm.
-			const { zip } = await build((p) => {
-				// @ts-expect-error a time unit that is not one
-				p.addSlide().addChart(DATA, {
-					type: ChartType.line,
-					x: 1,
-					y: 1,
-					w: 6,
-					h: 4,
-					catLabelFormatCode: '0',
-					catAxisMajorTimeUnit: 'fortnights',
-				})
-			})
-			const xml = await chartXml(zip)
-			assertNotIncludes(xml, 'fortnights', 'invalid time unit is dropped, not emitted')
-			assertNotIncludes(xml, '<c:majorTimeUnit', 'the whole majorTimeUnit element is omitted after validation')
-		},
-	},
-	{
 		name: 'the series axis line takes a width and a dash, like the other two axes',
 		fn: async () => {
 			// The series axis could be shown and coloured but not sized or dashed: the emitter

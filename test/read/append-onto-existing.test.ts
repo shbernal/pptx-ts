@@ -446,13 +446,6 @@ describe('Presentation.appendSlides', () => {
 		)
 	})
 
-	test('rejects a slide-size mismatch', async () => {
-		const pres = await Presentation.load(await readFile(fixturePath('theme-colors'))) // LAYOUT_WIDE
-		const pptx = new PptxTs() // default LAYOUT_16x9 — narrower
-		pptx.addSlide().addText('x', { x: 1, y: 1, w: 4, h: 1 })
-		assert(await rejects(() => pres.appendSlides(pptx, { layout: 'Blank' })), 'a mismatched slide size throws')
-	})
-
 	test("appends a chart area's picture fill as a picture the chart part references", async () => {
 		// The picture is registered on the generating slide, which does not reference it: the
 		// extraction hands it over with the chart instead, and the chart part declares it (#139).

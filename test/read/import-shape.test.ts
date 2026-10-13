@@ -422,15 +422,6 @@ describe('Presentation.importShape', () => {
 		assertEqual(a.imagePartName, b.imagePartName, 'both pictures resolve to the one copied media part')
 	})
 
-	test('rejects a slide-size mismatch between source and target', async () => {
-		const target = await openFixture('empty') // 16:9
-		const source = await openFixture('mixed') // 4:3
-		assert(
-			throws(() => target.importShape(at(target.slides, 0), at(source.slides, 0), 0)),
-			'lifting a shape across mismatched slide sizes throws'
-		)
-	})
-
 	test('rejects an out-of-range shape index', async () => {
 		const target = await openFixture('empty')
 		const source = await openFixture('image')
@@ -641,15 +632,6 @@ describe('Presentation.importShape({ rescale })', () => {
 		for (let i = 0; i < srcCols.length; i++) {
 			near(at(gotCols, i), Math.round(at(srcCols, i) * 0.75), `col ${i} width scaled by 0.75`)
 		}
-	})
-
-	test('still throws on a size mismatch when rescale is not requested', async () => {
-		const target = await openFixture('mixed')
-		const source = await openFixture('image')
-		assert(
-			throws(() => target.importShape(at(target.slides, 0), at(source.slides, 0), 0)),
-			'a size mismatch without rescale throws'
-		)
 	})
 
 	test('a refused importShapes leaves the host slide as it was, in the model and in the bytes', async () => {

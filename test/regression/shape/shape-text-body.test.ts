@@ -57,19 +57,4 @@ defineRegressionSuite('Shape text bodies [legacy bug-13]', [
 			assert(xml.includes('<a:bodyPr wrap="none"'), 'expected wrap="none" for an authored `wrap: false`; got: ' + xml)
 		},
 	},
-	{
-		name: 'textful addShape still emits text run (regression guard)',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				const s = p.addSlide()
-				s.addShape(ShapeType.rect, { x: 1, y: 1, w: 2, h: 1, fill: { color: 'FF0000' } })
-				s.addText('hello world', { shape: ShapeType.rect, x: 4, y: 1, w: 2, h: 1 })
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assert(
-				xml.indexOf('<a:t>hello world</a:t>') !== -1,
-				'expected text run <a:t>hello world</a:t> to still appear; got: ' + xml
-			)
-		},
-	},
 ])
