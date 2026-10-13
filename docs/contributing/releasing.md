@@ -183,15 +183,15 @@ the entry you just wrote.
 ### The site's deck preview
 
 The demos page draws its preview with [`pptx-html`](https://www.npmjs.com/package/pptx-html), which
-depends on `@shbernal/ts-pptx` at a caret range and so installs its own published copy. After a
+depends on `pptx-ts` at a caret range and so installs its own published copy. After a
 major release the preview keeps rendering, but with the previous major's copy, so the page stops
 showing the version it sits beside until `pptx-html` ships a matching release. No gate here detects that. Release anyway, then open an
 issue on `pptx-html`. Do not pin the site to the workspace copy: the first breaking change would
 then break the docs deploy of the release that introduced it.
 
-That dependency is why `@shbernal/ts-pptx`, not `pptx-ts`, is in `minimumReleaseAgeExclude` in
-`pnpm-workspace.yaml`. If `pptx-html` moves its dependency to `pptx-ts`, move the exclusion with it,
-or the docs build cannot resolve for the 24 hours after each release.
+That dependency is why `pptx-ts` is in `minimumReleaseAgeExclude` in `pnpm-workspace.yaml`. Without
+it the docs build cannot resolve for the 24 hours after each release or prerelease, since `pptx-html`
+itself depends on a `pptx-ts` prerelease from the `next` channel.
 
 ## What the package ships
 
