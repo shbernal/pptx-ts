@@ -90,22 +90,65 @@ export function declaresSlide(code: string): boolean {
 }
 
 /**
+ * One `import` statement at the start of a fence body, with its line break, or a blank line
+ * between two of them. The specifier is group 2. A statement may span lines, as a long named
+ * import list does, but nothing else may share its last line.
+ */
+const LEADING_IMPORT =
+	/^(?:[ \t]*\r?\n|[ \t]*import\s+(?:type\s+)?(?:[\w$*{},\s]+?\s+from\s*)?(['"])([^'"\n]+)\1[ \t]*;?[ \t]*\r?\n)/
+
+/** Whether a module may be imported by a fence body: the library itself, or one of its entries. */
+function isLibrary(specifier: string): boolean {
+	return specifier === 'pptx-ts' || specifier.startsWith('pptx-ts/')
+}
+
+/**
+ * A fence body split into the `import` lines it opens with and the code after them.
+ *
+ * Only `pptx-ts` and its subpath entries may be imported: the body runs in Node under the
+ * test and in a browser on the page, and both resolve the library to the build for that
+ * runtime. Anything else, `node:fs` first among them, would run in one and not the other,
+ * so it throws here, where both the site and the test call it.
+ */
+export function splitImports(code: string): { imports: string; body: string } {
+	let rest = code
+	let imports = ''
+	let found = false
+	for (let match = LEADING_IMPORT.exec(rest); match; match = LEADING_IMPORT.exec(rest)) {
+		const specifier = match[2]
+		if (specifier !== undefined) {
+			if (!isLibrary(specifier)) {
+				throw new Error(`a \`ts live\` fence may import only pptx-ts and its entries, not '${specifier}'`)
+			}
+			found = true
+		}
+		imports += match[0]
+		rest = rest.slice(match[0].length)
+	}
+	// Blank lines alone are body: a fence with no import is left exactly as written.
+	return found ? { imports, body: rest } : { imports: '', body: code }
+}
+
+/**
  * The module a fence body becomes.
  *
  * The body runs inside an async function given `pptx`, a fresh presentation, and `slide`,
  * its first slide, unless the body declares its own `slide` (see {@link declaresSlide}).
- * That is the whole contract: no imports, and nothing else in scope. A snippet may `await`
+ * It may open with `import` lines from `pptx-ts` and its entries, which move to the top of
+ * the module (see {@link splitImports}); nothing else is in scope. A snippet may `await`
  * and may add slides of its own. The caller owns the presentation, so the site builds it from
  * the browser runtime and the test from the Node one, and the module itself depends on
  * neither. `ownsSlide` tells the caller whether to make the first slide.
  *
  * The parameters are `any` on purpose: the snippet is shown to readers as it runs, and
- * typing it would mean importing the library into a module that must not import it.
+ * typing them would mean importing the library into every fence module, whether its body
+ * uses the library or not.
  */
 export function wrapSnippet(code: string): string {
-	const ownsSlide = declaresSlide(code)
+	const { imports, body } = splitImports(code)
+	const ownsSlide = declaresSlide(body)
 	const params = ownsSlide ? 'pptx: any' : 'pptx: any, slide: any'
-	// The body goes in verbatim, on its own lines, so a stack trace's line number minus one is
-	// the line in the fence.
-	return `export const ownsSlide = ${ownsSlide}\nexport default async function (${params}): Promise<void> {\n${code}}\n`
+	// The imports and the body go in verbatim, each on its own lines and in fence order, so a
+	// stack trace's line number is the fence line, plus two inside the body.
+	return `${imports}export const ownsSlide = ${ownsSlide}\nexport default async function (${params}): Promise<void> {\n${body}}\n`
 }

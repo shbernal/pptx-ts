@@ -3,7 +3,14 @@ import { createMarkdownRenderer, type MarkdownRenderer } from 'vitepress'
 import { beforeAll, describe, expect, it } from 'vitest'
 import siteConfig from '../../../docs/.vitepress/config.mts'
 import { snippetHash } from '../../../www/live/fence.ts'
-import { declaresSlide, LIVE_COMPONENT, liveFenceInfo, liveFences, wrapSnippet } from '../../../www/live/snippet.ts'
+import {
+	declaresSlide,
+	LIVE_COMPONENT,
+	liveFenceInfo,
+	liveFences,
+	splitImports,
+	wrapSnippet,
+} from '../../../www/live/snippet.ts'
 
 /**
  * `ts live` fences, through the site's own markdown configuration.
@@ -122,6 +129,27 @@ describe('wrapSnippet', () => {
 		expect(wrapSnippet(body)).toBe(
 			`export const ownsSlide = true\nexport default async function (pptx: any): Promise<void> {\n${body}}\n`
 		)
+	})
+
+	it('moves the import lines a body opens with to the top of the module, in fence order', () => {
+		const imports = 'import PptxTs, { textRuns } from "pptx-ts"\n\nimport {\n  latexToOmml,\n} from \'pptx-ts/math\';\n'
+
+		expect(wrapSnippet(`${imports}${BODY}`)).toBe(
+			`${imports}export const ownsSlide = false\nexport default async function (pptx: any, slide: any): Promise<void> {\n${BODY}}\n`
+		)
+		expect(splitImports(`import type { TableRow } from 'pptx-ts'\n${BODY}`).body).toBe(BODY)
+	})
+
+	it('leaves an import after the first statement, and leading blank lines, in the body', () => {
+		const late = `${BODY}import { textRuns } from 'pptx-ts'\n`
+
+		expect(splitImports(late)).toEqual({ imports: '', body: late })
+		expect(splitImports(`\n${BODY}`)).toEqual({ imports: '', body: `\n${BODY}` })
+	})
+
+	it('refuses an import of anything but the library', () => {
+		expect(() => wrapSnippet(`import { readFile } from 'node:fs/promises'\n${BODY}`)).toThrow(/node:fs\/promises/)
+		expect(() => wrapSnippet(`import 'pptx-ts-extra'\n${BODY}`)).toThrow(/pptx-ts-extra/)
 	})
 
 	it('does not mistake a use of slide, or another name, for a declaration', () => {
