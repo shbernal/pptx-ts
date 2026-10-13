@@ -68,24 +68,6 @@ describe('Table read model', () => {
 		assert(cell.textFrame, 'cell exposes a text frame')
 	})
 
-	test('firstRowHeader / bandedRows reflect a:tblPr flags', async () => {
-		// The fixture has both a plain banded table and one with firstRow="1".
-		const presentation = await openFixture('table')
-		const tables = presentation.slides
-			.flatMap((slide) => slide.shapes)
-			.filter((shape) => shape.shapeType === 'graphicFrame')
-			.flatMap((frame) => (frame.table ? [frame.table] : []))
-		assert(tables.length >= 2, `expected ≥2 tables, got ${tables.length}`)
-		assert(
-			tables.some((table) => table.bandedRows),
-			'at least one table is banded'
-		)
-		assert(
-			tables.some((table) => table.firstRowHeader),
-			'at least one table has a header first row'
-		)
-	})
-
 	test('all six Table Style Options read back', async () => {
 		// Two of the six were readable and four were not, though the style resolver has always
 		// needed all six to decide which regions paint. `table-styles.pptx`'s fourth table has

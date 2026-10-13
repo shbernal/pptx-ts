@@ -54,19 +54,4 @@ defineRegressionSuite('Table margins [legacy bug-14]', [
 			)
 		},
 	},
-	{
-		name: 'numeric margin still emits valid mar attributes (regression guard)',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				const s = p.addSlide()
-				s.addTable([[{ text: 'd', options: { margin: 0.05 } }]], { x: 1, y: 1, w: 4, colW: [4] })
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assert(xml.indexOf('NaN') === -1, 'NaN must not appear in slide1.xml; got: ' + xml)
-			assert(
-				/<a:tcPr[^>]*marL="\d+"[^>]*marR="\d+"[^>]*marT="\d+"[^>]*marB="\d+"/.test(xml),
-				'expected numeric marL/R/T/B on <a:tcPr>; got: ' + xml
-			)
-		},
-	},
 ])

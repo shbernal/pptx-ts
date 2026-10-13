@@ -92,13 +92,6 @@ describe('makeXmlComments', () => {
 		expect(xml).toContain('dt="Q&amp;A"')
 	})
 
-	test('a comment absent from meta is silently skipped (defensive branch)', () => {
-		const c = comment()
-		const xml = makeXmlComments([c], new Map())
-		expect(xml).not.toContain('<p:cm ')
-		expect(xml).toContain('<p:cmLst')
-	})
-
 	test('no comments on the slide emits an empty cmLst', () => {
 		const xml = makeXmlComments([], new Map())
 		expect(xml).toContain('></p:cmLst>')

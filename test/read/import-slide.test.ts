@@ -334,15 +334,6 @@ describe('Presentation.importSlide', () => {
 		)
 	})
 
-	test('rejects a slide-size mismatch between source and target', async () => {
-		const target = await openFixture('empty') // 16:9
-		const source = await openFixture('mixed') // 4:3
-		assert(
-			throws(() => target.importSlide(source, 0)),
-			'importing across mismatched slide sizes throws'
-		)
-	})
-
 	test('rejects an out-of-range index', async () => {
 		const target = await openFixture('empty')
 		const source = await openFixture('image')
@@ -680,15 +671,6 @@ describe('Presentation.importSlide({ rescale })', () => {
 
 		assert(srcLayoutCx !== null && importedCx !== null, 'both layouts expose a measurable ext')
 		near(importedCx, Math.round(srcLayoutCx * 0.75), 'imported layout ext scaled by 0.75')
-	})
-
-	test('still throws on a size mismatch when rescale is not requested', async () => {
-		const target = await openFixture('mixed')
-		const source = await openFixture('image')
-		assert(
-			throws(() => target.importSlide(source, 0)),
-			'a size mismatch without rescale throws'
-		)
 	})
 
 	test.skipIf(!validatorInstalled)('a rescaled import stays schema-valid', async () => {

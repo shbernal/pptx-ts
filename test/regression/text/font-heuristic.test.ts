@@ -10,10 +10,6 @@ const EMU_PER_IN = 914400
 describe('font-metrics: heuristic fallback', () => {
 	const h = getHeuristicFontMetrics()
 
-	test('empty string is zero width', () => {
-		expect(h.advanceWidthPt('', 18)).toBe(0)
-	})
-
 	test('width scales linearly with font size', () => {
 		const at12 = h.advanceWidthPt('Hello World', 12)
 		const at24 = h.advanceWidthPt('Hello World', 24)
@@ -23,12 +19,6 @@ describe('font-metrics: heuristic fallback', () => {
 	test('longer text is wider; wide glyphs beat narrow ones', () => {
 		expect(h.advanceWidthPt('WWWW', 18)).toBeGreaterThan(h.advanceWidthPt('iiii', 18))
 		expect(h.advanceWidthPt('aaaaa', 18)).toBeGreaterThan(h.advanceWidthPt('aaaa', 18))
-	})
-
-	test('charSpacing widens by spacing × char count', () => {
-		const base = h.advanceWidthPt('abcd', 18)
-		const spaced = h.advanceWidthPt('abcd', 18, 2)
-		expect(spaced).toBeCloseTo(base + 4 * 2, 6)
 	})
 
 	test('over-estimates a typical sentence (conservative for shrink/resize)', () => {

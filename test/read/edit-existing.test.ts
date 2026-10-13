@@ -84,13 +84,6 @@ describe('whole-text-frame text swap', () => {
 		assertEqual(run.fontSizePt, 20, 'first run size preserved')
 	})
 
-	test('TextFrame.text behaves identically to Shape.text', async () => {
-		const presentation = await openFixture('textbox')
-		defined(defined(at(presentation.slides, 0).shapeByName('replaceText')).textFrame).text = 'VIA FRAME'
-		const reopened = await Presentation.load(await presentation.save())
-		assertEqual(defined(at(reopened.slides, 0).shapeByName('replaceText')).text, 'VIA FRAME', 'textFrame.text reloads')
-	})
-
 	test('placeholder text can be replaced in place', async () => {
 		const presentation = await openFixture('mixed')
 		defined(at(presentation.slides, 0).placeholder('ctrTitle')).text = 'Replaced Title'

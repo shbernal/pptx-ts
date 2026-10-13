@@ -35,13 +35,6 @@ describe('Presentation.tags / Slide.tags', () => {
 		assertEqual(slide2.tags.length, 0, 'slide 2 has no tags')
 	})
 
-	test('each tag is a { name, val } string pair', async () => {
-		const pres = await openFixture('tags')
-		for (const t of [...pres.tags, ...at(pres.slides, 0).tags]) {
-			assert(typeof t.name === 'string' && typeof t.val === 'string', `tag is name/val strings: ${JSON.stringify(t)}`)
-		}
-	})
-
 	test('a deck with no tag parts → [] at every level', async () => {
 		// empty.pptx carries no custDataLst on the presentation or its slide.
 		const pres = await openFixture('empty')

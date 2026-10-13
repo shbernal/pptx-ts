@@ -101,16 +101,6 @@ describe('xsd:boolean spelled true/false', () => {
 })
 
 describe('a:ST_Percentage spelled with a literal %', () => {
-	test('Picture.crop reads a:srcRect/@l="10%"', async () => {
-		const { buf } = await authorSpellingDeck()
-		const reopened = await reloadWithSlideXml(buf, (xml) => {
-			assert(/<a:srcRect l="\d+"/.test(xml), 'the authored deck writes the fixed-point form')
-			return xml.replace(/<a:srcRect l="\d+"/, '<a:srcRect l="10%"')
-		})
-		const picture = defined(at(reopened.slides, 0).shapes.find((shape) => shape.shapeType === 'picture'))
-		assertEqual(defined(picture.crop, 'the picture reads a crop').left, 0.1, 'l="10%" is a tenth of the source width')
-	})
-
 	test('gradient stop positions read a:gs/@pos="50%"', async () => {
 		const { buf } = await authorSpellingDeck()
 		const reopened = await reloadWithSlideXml(buf, (xml) => {

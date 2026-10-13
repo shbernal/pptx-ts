@@ -56,7 +56,7 @@ the **primary** module each group exercises.
 
 | Source module                                             | Representative tests                                                                                                                                       |
 | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `presentation.ts` (top-level API)                         | `object-identity`, `repeated-writes`, `presentation-child-order`, `presentation-layouts`, `entry-export-surface`                                           |
+| `presentation.ts` (top-level API)                         | `object-identity`, `repeated-writes`, `presentation-layouts`, `entry-export-surface`                                                                       |
 | `slide.ts`                                                | `slide-backgrounds`, `slide-hyperlinks`, `slide-title-placeholder`, `add-section-duplicate`, `object-locks`                                                |
 | `gen/define/*.ts` (add*Definition)                        | `addchart-signature`, `shape-presets`, `shape-text-body`, `text-formatting`, `image-shape`, `connector-shape`, `group-shapes`                              |
 | `gen/slide/*.ts`, `gen/opc/*.ts` (spTree / part emission) | `master-*`, `notes-master-placeholders`, `notes-hyperlinks`, `slide-master-*`, `placeholder-type-attr`, `content-type-defaults`, `border-shadow-ppt-props` |

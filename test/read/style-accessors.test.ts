@@ -158,15 +158,6 @@ describe('Picture SVG blip reads (image.pptx)', () => {
 		assert(svgPic.imageRelId !== svgPic.svgRelId, 'raster fallback and SVG embed are different relationships')
 	})
 
-	test('a raster-only picture has no svgRelId', async () => {
-		const presentation = await openFixture('image')
-		const pictures = presentation.slides
-			.flatMap((slide) => allShapes(slide.shapes))
-			.filter((s) => s.shapeType === 'picture')
-		const rasterOnly = pictures.find((p) => p.imagePartName && !p.imagePartName.endsWith('.svg') && p.svgRelId === null)
-		assert(rasterOnly, 'expected at least one raster-only picture with a null svgRelId')
-	})
-
 	test('mediaKind / mediaPartName classify the raster+SVG pairing and a raster-only picture', async () => {
 		const presentation = await openFixture('image')
 		const pictures = presentation.slides

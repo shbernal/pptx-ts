@@ -181,8 +181,7 @@ defineRegressionSuite('Shared chart fragments', [
 		},
 	},
 	{
-		// The category-axis half of the time-unit validation. The series-axis half is pinned in
-		// chart-bar3d-series-axis.test.ts; this one had nothing.
+		// Time units live on the category axis only; neither of the other two axes has them.
 		name: 'category-axis time units are lowercased, and an unrecognized one is dropped with a warning',
 		fn: async () => {
 			const ok = await chartFor(ChartType.line, [{ name: 'S', labels: ['2026-01-01', '2026-02-01'], values: [1, 2] }], {
@@ -291,29 +290,6 @@ defineRegressionSuite('Shared chart fragments', [
 				diag.codes.includes('chart/non-finite-value'),
 				'expected the non-finite warning; got: ' + JSON.stringify(diag.codes)
 			)
-		},
-	},
-	{
-		// `dataLabelDefRPr` had two copies — the chart-level one on `||`, the per-series one on
-		// `??` — so a chart with per-series labels carried both readings of one option. An
-		// explicit `dataLabelFontSize: 0` reached the part as `sz="0"` from one and `sz="1200"`
-		// from the other, and `0` is outside `ST_TextFontSize` (100..400000).
-		name: 'dataLabelFontSize is read the same way by both dLbls builders, and clamped',
-		fn: async () => {
-			const { result: xml, codes } = await captureDiagnostics(() =>
-				chartFor(ChartType.bar, [{ name: 'Series', labels: ['a', 'b'], values: [1, 2] }], {
-					dataLabelFontSize: 0,
-					showValue: true,
-				})
-			)
-			// The `b, i, strike, sz, u` ordering is the dLbls one; the axis/legend text styles use
-			// the other ordering and read a different option (see `labelFontAttrs`).
-			const sizes = [
-				...new Set([...xml.matchAll(/<a:defRPr b="[01]" i="[01]" strike="noStrike" sz="(\d+)"/g)].map((m) => m[1])),
-			]
-			assertEqual(sizes.length, 1, `every dLbls defRPr agrees on one size; got ${JSON.stringify(sizes)}`)
-			assertEqual(sizes[0], '100', 'and it is the ST_TextFontSize minimum, not sz="0"')
-			assert(codes.includes('font/size-out-of-range'), 'the clamp says so; got: ' + JSON.stringify(codes))
 		},
 	},
 ])

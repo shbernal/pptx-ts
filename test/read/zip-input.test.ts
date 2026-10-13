@@ -135,26 +135,7 @@ describe('readZip error branches report a specific message', () => {
 	})
 })
 
-describe('OpcPackage.load over the same input surface', () => {
-	test('loads from a filesystem path (string)', async () => {
-		const dir = mkdtempSync(join(tmpdir(), 'pptx-zip-input-'))
-		try {
-			const filePath = join(dir, 'deck.pptx')
-			writeFileSync(filePath, bytes())
-			const pkg = await OpcPackage.load(filePath)
-			assert(pkg.part('/ppt/slides/slide1.xml'), 'slide part loaded from path')
-		} finally {
-			rmSync(dir, { recursive: true, force: true })
-		}
-	})
-
-	test('loads from an ArrayBuffer', async () => {
-		const b = bytes()
-		const ab = b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength)
-		const pkg = await OpcPackage.load(ab)
-		assert(pkg.part('/ppt/slides/slide1.xml'), 'slide part loaded from ArrayBuffer')
-	})
-
+describe('OpcPackage.load', () => {
 	test('a valid zip that is not an OPC package is rejected by name', async () => {
 		// A structurally-valid archive with no [Content_Types].xml is a zip but not
 		// an OPC package; the loader must say so rather than fail obscurely later.

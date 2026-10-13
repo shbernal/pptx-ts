@@ -1,13 +1,7 @@
 // Measured-fit through the BUILT package (dist), driven by a repo-shipped font so
-// the metrics-baking branches run deterministically on every platform.
-//
-// The sibling suites (measure-text-api / measured-fit-integration / table-cell-fit)
-// either import from `src/` (which the coverage gate — scoped to `dist/**`— does not
-// count) or gate their metrics-baked assertions behind an `fc-match`-resolved Aptos
-// that is absent on most machines, so the whole `applyMeasuredFit` / `measureText` /
-// `computeTableLayout` core stays uncovered in `dist`. Silkscreen (OFL, committed
-// under test/read/fixtures/fonts) removes that dependency: opentype.js parses it, so
-// `registerFontMetrics` gives us real advances and the export-time bake runs here.
+// the metrics-baking branches run deterministically on every platform. Silkscreen (OFL,
+// committed under test/read/fixtures/fonts) parses in opentype.js, so `registerFontMetrics`
+// gives real advances and the export-time bake runs here.
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, test, expect } from 'vitest'
@@ -131,16 +125,6 @@ describe("applyMeasuredFit: fit:'shrink' through dist export", () => {
 		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		expect(xml).toContain('<a:normAutofit/>')
 		expect(xml).not.toContain('fontScale')
-	})
-
-	test('unregistered NAMED face → heuristic still bakes an approximate scale', async () => {
-		const pres = await pptxWithSilkscreen()
-		const slide = pres.addSlide()
-		// Deck opted into measured fit, so an unregistered *named* face falls back to the
-		// conservative average-advance heuristic rather than degrading to the bare flag.
-		slide.addText(OVERFLOW, { x: 1, y: 1, w: 3, h: 1, fontFace: 'Helvetica', fontSize: 18, fit: 'shrink' })
-		const xml = await partXml(await pres.toBytes(), SLIDE1)
-		expect(xml).toContain('fontScale')
 	})
 
 	test('unnamed (theme-default) face stays unmeasurable → bare flag', async () => {

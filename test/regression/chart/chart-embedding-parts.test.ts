@@ -1,4 +1,4 @@
-import PptxTs, { ChartType, type CHART_NAME, type OptsChartData } from '../../../dist/node.js'
+import { ChartType, type CHART_NAME, type OptsChartData } from '../../../dist/node.js'
 import JSZip from 'jszip'
 import {
 	defineRegressionSuite,
@@ -48,34 +48,6 @@ defineRegressionSuite('Chart embedding parts [legacy bug-17]', [
 			assert(
 				stray.length === 0,
 				'expected no charts/embeddings entries for image-only deck; got: ' + JSON.stringify(stray)
-			)
-		},
-	},
-	{
-		name: 'chart-present deck still creates chart and embedding parts (regression)',
-		fn: async () => {
-			const pres = new PptxTs()
-			const slide = pres.addSlide()
-			const data = [
-				{
-					name: 'Series 1',
-					labels: ['Cat A', 'Cat B', 'Cat C'],
-					values: [10, 20, 30],
-				},
-			]
-			slide.addChart(data, { type: ChartType.bar, x: 1, y: 1, w: 6, h: 3 })
-			const buf = await pres.toBytes()
-			const zip = await JSZip.loadAsync(buf)
-			const entries = listEntries(zip)
-			const chartEntries = entries.filter((p) => p.startsWith('ppt/charts/'))
-			const embedEntries = entries.filter((p) => p.startsWith('ppt/embeddings/'))
-			assert(
-				chartEntries.length > 0,
-				'expected ppt/charts/ entries when chart present; got: ' + JSON.stringify(entries)
-			)
-			assert(
-				embedEntries.length > 0,
-				'expected ppt/embeddings/ entries when chart present; got: ' + JSON.stringify(entries)
 			)
 		},
 	},

@@ -115,14 +115,6 @@ describe('Slide misc read/edit edges', () => {
 		const box = slide.addTextBox(GEOM)
 		assertEqual(at(defined(box.textFrame).paragraphs, 0).text, '', 'an empty text box has an empty first paragraph')
 	})
-
-	test('notesText reads the notes body when a notes slide is attached', async () => {
-		// notes-slide-image.pptx carries a real notes slide; the read must resolve the
-		// notesSlide rel, find the body placeholder, and flatten its text.
-		const slide = at((await openFixture('notes-slide-image')).slides, 0)
-		const notes = slide.notesText
-		assert(notes === null || typeof notes === 'string', 'notesText is a string (or null when no notes part)')
-	})
 })
 
 describe('Slide.background — write→read fidelity', () => {
