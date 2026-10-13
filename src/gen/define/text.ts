@@ -275,9 +275,6 @@ export function addTextDefinition(
 					itemOpts._bodyProp.spcCol = ptsToEmuLenient(itemOpts.columnSpacing)
 				}
 			}
-
-			// E: Normalize shorthand `underline: true` to the object form
-			if (typeof itemOpts.underline === 'boolean' && itemOpts.underline === true) itemOpts.underline = { style: 'sng' }
 		}
 
 		// STEP 2: Transform `align`/`valign` to XML values, store in _bodyProp for XML gen

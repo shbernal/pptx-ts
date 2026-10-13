@@ -280,18 +280,17 @@ defineRegressionSuite('Text definition', [
 		},
 	},
 	{
-		// `underline: true` is shorthand for the object form. It is normalized here rather than in the
-		// emitter so that `u="sng"` is the only thing the emitter has to know about; `underline: false`
-		// is left alone (falsy, so no attribute) and the object form passes through untouched.
+		// `underline: true` is shorthand for the object form, resolved where every `a:rPr` is written, so
+		// a table cell takes it as a text run does (a cell used to drop it). `underline: false` states
+		// nothing, so no attribute, and the object form passes through untouched.
 		name: 'underline: true is normalized to the single-line object form',
 		fn: async () => {
 			const { zip } = await build((p) => {
 				const s = p.addSlide()
-				// @ts-expect-error the underline type has no boolean shorthand
 				s.addText('shorthand', { x: 1, y: 1, w: 4, h: 1, underline: true })
 				s.addText('explicit', { x: 1, y: 2, w: 4, h: 1, underline: { style: 'dbl' } })
-				// @ts-expect-error the underline type has no boolean shorthand
 				s.addText('off', { x: 1, y: 3, w: 4, h: 1, underline: false })
+				s.addTable([[{ text: 'cell', options: { underline: true } }]], { x: 1, y: 4, w: 4 })
 			})
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 			const shapes = xml.match(/<p:sp>[\s\S]*?<\/p:sp>/g) || []
@@ -299,6 +298,7 @@ defineRegressionSuite('Text definition', [
 			assertIncludes(defined(shapes[0]), 'u="sng"', 'the shorthand form')
 			assertIncludes(at(shapes, 1), 'u="dbl"', 'the explicit form')
 			assertNotIncludes(at(shapes, 2), ' u="', 'underline: false')
+			assertIncludes(defined(/<a:tc>[\s\S]*?<\/a:tc>/.exec(xml)?.[0]), 'u="sng"', 'the shorthand on a table cell')
 		},
 	},
 	{

@@ -1176,7 +1176,7 @@ export function addChartDefinition(
 				normalizeChartSeries(item, seriesIndex++)
 			)
 			tmpData = tmpData.concat(seriesData)
-			return { ...obj, data: seriesData }
+			return { ...obj, data: seriesData, options: obj.options ?? {} }
 		})
 		tmpOpt = !Array.isArray(data) && data && typeof data === 'object' ? data : opt
 	} else {

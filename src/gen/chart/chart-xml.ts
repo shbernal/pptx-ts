@@ -132,8 +132,8 @@ function makeChartHeaderXml(rel: SlideRelChart): string {
 					titlePos: rel.opts.titlePos,
 					titleRotate: rel.opts.titleRotate,
 				},
-				rel.opts.x,
-				rel.opts.y
+				rel.opts.x ?? undefined,
+				rel.opts.y ?? undefined
 			) + voidEl('c:autoTitleDeleted', { val: 0 })
 		: voidEl('c:autoTitleDeleted', { val: 1 })
 	// 3-D view: https://c-rex.net/projects/samples/ooxml/e1/Part4/OOXML_P4_DOCX_perspective_topic_ID0E6BUQB.html

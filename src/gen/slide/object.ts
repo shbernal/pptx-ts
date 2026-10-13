@@ -37,6 +37,7 @@ import {
 import { warn } from '../../diagnostics.js'
 import { clampFontSizeSz, clampParaIndentEmu, clampParaMarginEmu } from '../drawingml/clamp.js'
 import { resolveTextAnchor } from '../drawingml/text-body.js'
+import { underlineProps } from '../drawingml/text-run.js'
 import { genXmlObjectLock, GROUP_SHAPE_LOCK_ATTRS } from '../drawingml/locks.js'
 import { el, elOrVoid, raw, voidEl, type XmlAttrs } from '../oxml/el.js'
 import { cNvPrEl, grpXfrmEl, spTreeEl, type RenderContext, type RendererTable } from './objects/shared.js'
@@ -166,8 +167,9 @@ function resolveObjectFrame(
 	const placeholder = findLayoutPlaceholder((slide as PresSlideInternal)._slideLayout, itemOpts.placeholder)
 
 	const phOpts = placeholder?.options ?? {}
-	const inherited = <T>(own: T | undefined, ph: T | undefined): T | undefined =>
-		own !== undefined ? own : (ph ?? undefined)
+	// A `null` axis is unstated, as `resolveAuthoredFrame` treats it: it used to be kept here, so text
+	// with `placeholder` and `x: null` sat at 0 rather than at the placeholder's left edge.
+	const inherited = <T>(own: T | null | undefined, ph: T | null | undefined): T | undefined => own ?? ph ?? undefined
 	const ownX = inherited(itemOpts.x, phOpts.x)
 	const ownY = inherited(itemOpts.y, phOpts.y)
 	const ownW = inherited(itemOpts.w, phOpts.w)
@@ -436,7 +438,7 @@ function slideNumberPlaceholderXml(
  * @param snProps - the part's slide-number properties
  */
 function slideNumberRunProperties(snProps: SlideNumberProps): string {
-	const underline = snProps.underline
+	const underline = underlineProps(snProps.underline)
 	rejectEmptyColor(snProps.highlight, 'slideNumber highlight')
 	rejectEmptyColor(underline?.color, 'slideNumber underline.color')
 	// NOTE: children follow CT_TextCharacterProperties order: highlight, uFill, ea.

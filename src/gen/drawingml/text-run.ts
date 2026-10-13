@@ -375,6 +375,20 @@ export function genXmlParagraphProperties(textObj: SlideObject | TextProps, isDe
 }
 
 /**
+ * `underline` in its object form. `true` is shorthand for a single line; `false` states nothing, as
+ * omitting the option does. Every `a:rPr` writer reads it through here, so the shorthand holds for a
+ * table cell and a slide number as it does for a text run.
+ * @param underline - the option as the caller wrote it
+ * @returns the object form, or `undefined` when it states nothing
+ */
+export function underlineProps(
+	underline: TextPropsOptions['underline']
+): Exclude<TextPropsOptions['underline'], boolean> | undefined {
+	if (underline === true) return { style: 'sng' }
+	return typeof underline === 'object' && underline !== null ? underline : undefined
+}
+
+/**
  * Generate XML Text Run Properties (`a:rPr`)
  * @param {ObjectOptions|TextPropsOptions} opts - text options
  * @param {boolean} isDefault - whether these are the default text run properties
@@ -387,12 +401,12 @@ export function genXmlTextRunProperties(opts: ObjectOptions | TextPropsOptions, 
 	// BEGIN runProperties (ex: `<a:rPr lang="en-US" sz="1600" b="1" dirty="0">`)
 	// `strike`, `cap` and `u` are enumerated tokens: one outside its `ST_` type warns and is left out
 	// rather than written into the attribute.
-	const underline =
-		typeof opts.underline === 'object' && opts.underline?.style
-			? checkEnumOrWarn(opts.underline.style, TEXT_UNDERLINE_TYPES, 'text/invalid-underline', 'text `underline.style`')
-			: opts.hyperlink
-				? 'sng'
-				: null
+	const underlineOpts = underlineProps(opts.underline)
+	const underline = underlineOpts?.style
+		? checkEnumOrWarn(underlineOpts.style, TEXT_UNDERLINE_TYPES, 'text/invalid-underline', 'text `underline.style`')
+		: opts.hyperlink
+			? 'sng'
+			: null
 	const baseline = opts.baseline
 		? Math.round(opts.baseline * 1000)
 		: opts.subscript
@@ -436,7 +450,7 @@ export function genXmlTextRunProperties(opts: ObjectOptions | TextPropsOptions, 
 		opts.outline ||
 		opts.glow ||
 		hasShadow ||
-		(typeof opts.underline === 'object' && opts.underline.color)
+		underlineOpts?.color
 	) {
 		// NOTE: children must follow CT_TextCharacterProperties order: ln, fill, effectLst, highlight, uFill, latin/ea/cs
 		if (opts.outline && typeof opts.outline === 'object') {
@@ -457,9 +471,8 @@ export function genXmlTextRunProperties(opts: ObjectOptions | TextPropsOptions, 
 		}
 		rejectEmptyColor(opts.highlight, 'highlight')
 		if (opts.highlight) runProps += el('a:highlight', null, raw(createColorElement(opts.highlight)))
-		if (typeof opts.underline === 'object') rejectEmptyColor(opts.underline.color, 'underline.color')
-		if (typeof opts.underline === 'object' && opts.underline.color)
-			runProps += el('a:uFill', null, raw(genXmlColorSelection(opts.underline.color)))
+		rejectEmptyColor(underlineOpts?.color, 'underline.color')
+		if (underlineOpts?.color) runProps += el('a:uFill', null, raw(genXmlColorSelection(underlineOpts.color)))
 		if (opts.fontFace) {
 			// Match how PowerPoint writes a font picked from the UI: the chosen typeface goes in the
 			// Latin (`<a:latin>`) and complex-script (`<a:cs>`) slots. The East Asian slot (`<a:ea>`) is
