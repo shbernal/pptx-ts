@@ -1264,7 +1264,7 @@ check.
 One gate touches showcase code without asserting on the decks. The site's `/demos` page
 (`www/demos/`) is the `demo` Playwright fixture, and the tests check that the deck the page builds
 has the right bytes. Nothing checks how the page looks or that its preview is a good likeness. The
-preview is drawn by `pptx-html` against the published `@shbernal/ts-pptx`, and this repository's
+preview is drawn by `pptx-html` against the published `pptx-ts`, and this repository's
 gates make no claim about it.
 
 The decks in `www/demos/decks/` are for the demos only. The byte-identity harness does not build
