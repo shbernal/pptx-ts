@@ -4,10 +4,10 @@
  * The consulting flagship: a steering-committee recommendation for an operating-cost
  * programme at a mid-sized bank. It leans on the parts of pptx-ts a strategy deck needs:
  * a themed colour scheme, four masters with a real title placeholder, action titles, a
- * section tracker that links to its sections, a waterfall built as a stacked column with an
- * invisible base, a doughnut and a benchmark line chart, a drawn issue tree with connectors
- * bound to its boxes, a 2x2, Harvey balls, a business-case table with merged header cells,
- * and speaker notes throughout.
+ * section tracker that links to its sections, a waterfall, a doughnut and a benchmark line
+ * chart drawn from shapes (see `lib/plot.mjs` for why they are not chart objects), a drawn
+ * issue tree with connectors bound to its boxes, a 2x2, Harvey balls, a business-case table
+ * with merged header cells, and speaker notes throughout.
  *
  * Build it with `pnpm showcases:build cost-transformation`.
  *
@@ -16,8 +16,9 @@
  * (`www/demos/`) import it and build the same deck in a browser: the deck is the deck, only the
  * runner differs.
  */
-import PptxTs, { ChartType, ShapeType } from 'pptx-ts'
+import PptxTs, { ShapeType } from 'pptx-ts'
 import { columns, signedPct } from '../lib/layout.mjs'
+import { bar, freeform, ringSegment, rule, scale } from '../lib/plot.mjs'
 import {
 	BRANCHES,
 	CATEGORY_GAP,
@@ -200,43 +201,44 @@ function addCostBase(slide) {
 		'Cost has grown almost twice as fast as income since FY23; technology and third-party spend drive more than half the increase'
 	)
 
-	// The chart's plot is pinned square, so the hole's centre is known and the label can sit in it.
+	// The doughnut, drawn: one ring segment per category, clockwise from twelve o'clock in the
+	// legend's order, with a white seam between slices the way PowerPoint's own doughnut has.
 	const chart = { x: PAGE.margin, y: PAGE.top, w: 5.6, h: 4.55 }
-	const side = 4.2
-	slide.addChart(
-		// Built fresh from `COST_BASE`: `addChart` rewrites the arrays it is handed.
-		[
-			{
-				name: 'FY26 operating cost',
-				labels: COST_BASE.map((c) => c.label),
-				values: COST_BASE.map((c) => c.value),
-				// A space, not an empty string (which falls back to the default label): white on the
-				// pale "Other" slice would not read, and the legend beside it carries the number.
-				customLabels: COST_BASE.map((c) => (c.label === 'Other' ? ' ' : '')),
-			},
-		],
-		{
-			...chart,
-			type: ChartType.doughnut,
-			holeSize: 62,
-			layout: {
-				x: (chart.w - side) / 2 / chart.w,
-				y: (chart.h - side) / 2 / chart.h,
-				w: side / chart.w,
-				h: side / chart.h,
-			},
-			chartColors: [BRAND.navy, BRAND.blue, BRAND.sky, BRAND.deep, BRAND.mist],
-			showLegend: false,
-			showValue: false,
-			showPercent: true,
-			dataLabelColor: BRAND.white,
-			dataLabelFontSize: 11,
-			dataLabelFontBold: true,
-			dataLabelPosition: 'ctr',
-		}
+	const colors = [BRAND.navy, BRAND.blue, BRAND.sky, BRAND.deep, BRAND.mist]
+	const ring = { cx: chart.x + chart.w / 2, cy: chart.y + chart.h / 2, r: 2.1, inner: 2.1 * 0.62 }
+	let start = 270
+	slide.addGroup(
+		COST_BASE.flatMap((c, i) => {
+			const sweep = (c.value / COST_FY26) * 360
+			const mid = ((start + sweep / 2) * Math.PI) / 180
+			const middle = (ring.r + ring.inner) / 2
+			const slice = ringSegment({
+				...ring,
+				start,
+				sweep,
+				fill: { color: colors[i] },
+				line: { color: BRAND.white, width: 1.5 },
+			})
+			start += sweep
+			// White on the pale "Other" slice would not read, and the legend beside it carries the number.
+			if (c.label === 'Other') return [slice]
+			return [
+				slice,
+				child(`${Math.round((c.value / COST_FY26) * 100)}%`, {
+					x: ring.cx + middle * Math.cos(mid) - 0.4,
+					y: ring.cy + middle * Math.sin(mid) - 0.15,
+					w: 0.8,
+					h: 0.3,
+					align: 'center',
+					valign: 'middle',
+					fontSize: 11,
+					bold: true,
+					color: BRAND.white,
+				}),
+			]
+		})
 	)
-	const cx = chart.x + chart.w / 2
-	const cy = chart.y + chart.h / 2
+	const { cx, cy } = ring
 	text(
 		slide,
 		[
@@ -252,7 +254,6 @@ function addCostBase(slide) {
 
 	// The legend, drawn: one grouped row per category, in the slice colours.
 	const left = 6.75
-	const colors = [BRAND.navy, BRAND.blue, BRAND.sky, BRAND.deep, BRAND.mist]
 	label(slide, 'Category', { x: left + 0.25, y: 1.95, w: 2.4 })
 	label(slide, 'FY26 $M  ·  share', { x: 9.35, y: 1.95, w: 1.9 })
 	label(slide, 'Growth FY23–26', { x: 10.9, y: 1.95, w: PAGE.right - 10.9, align: 'right' })
@@ -335,56 +336,60 @@ function addBenchmark(slide) {
 		`Lodestar's cost-to-income ratio has drifted ${gap.toFixed(1)} points above the peer median, a gap worth about $${Math.round(gapValue / 10) * 10}M a year`
 	)
 
-	// The plot area is pinned (fractions of the chart frame), so a value's height on the slide is
+	// The plot area is fractions of the chart frame, so a value's height on the slide is
 	// arithmetic, and the brace can be placed against it.
 	const chart = { x: PAGE.margin, y: PAGE.top, w: 8.4, h: 4.55 }
 	const plot = { x: 0.07, y: 0.04, w: 0.62, h: 0.82 }
-	const axis = { min: 50, max: 68 }
+	const axis = { min: 50, max: 68, step: 2 }
 	const yOf = (v) => chart.y + chart.h * (plot.y + (plot.h * (axis.max - v)) / (axis.max - axis.min))
+	const left = chart.x + chart.w * plot.x
+	const right = left + chart.w * plot.w
+	const band = (right - left) / CIR_YEARS.length
+	// A line chart puts each category in the middle of its band.
+	const xOf = (i) => left + band * (i + 0.5)
 	const last = CIR_YEARS.length - 1
+	const axisText = { valign: 'middle', fontSize: TYPE.small, color: BRAND.slate }
 
-	slide.addChart(
-		CIR.map((s) => ({
-			name: s.name,
-			labels: [...CIR_YEARS],
-			values: [...s.values],
-			// End labels in place of a legend: the last point only.
-			customLabels: s.values.map((v, i) => (i === last ? `${s.name} ${v.toFixed(1)}%` : '')),
-		})),
-		{
-			...chart,
-			type: ChartType.line,
-			layout: plot,
-			chartColors: [BRAND.blue, BRAND.navy, BRAND.steel],
-			lineDashValues: ['solid', 'dash', 'sysDot'],
-			seriesOptions: [
-				{ lineSize: 3, dataLabelColor: BRAND.blue },
-				{ lineSize: 2, dataLabelColor: BRAND.navy },
-				{ lineSize: 2, dataLabelColor: BRAND.slate },
-			],
-			lineDataSymbol: 'circle',
-			lineDataSymbolSize: 7,
-			showLegend: false,
-			// Every point carries a label block, so the custom end labels show; the format hides
-			// the plain values on the other points.
-			showValue: true,
-			dataLabelFormatCode: ';;;',
-			dataLabelPosition: 'r',
-			dataLabelFontSize: 10,
-			dataLabelFontBold: true,
-			catAxisLabelColor: BRAND.slate,
-			catAxisLabelFontSize: TYPE.small,
-			catAxisLineShow: false,
-			valAxisLabelColor: BRAND.slate,
-			valAxisLabelFontSize: TYPE.small,
-			valAxisMinVal: axis.min,
-			valAxisMaxVal: axis.max,
-			valAxisMajorUnit: 2,
-			valAxisLabelFormatCode: '0"%"',
-			valAxisLineShow: false,
-			valGridLine: { color: BRAND.fog, size: 1, style: 'solid' },
-		}
-	)
+	const ticks = Array.from({ length: (axis.max - axis.min) / axis.step + 1 }, (_, i) => axis.min + i * axis.step)
+	const series = [
+		{ color: BRAND.blue, width: 3, dash: 'solid', labelColor: BRAND.blue },
+		{ color: BRAND.navy, width: 2, dash: 'dash', labelColor: BRAND.navy },
+		{ color: BRAND.steel, width: 2, dash: 'sysDot', labelColor: BRAND.slate },
+	]
+	const dot = 0.1
+	slide.addGroup([
+		...ticks.flatMap((v) => [
+			rule(left, right, yOf(v), { color: BRAND.fog, width: 1 }),
+			child(`${v}%`, { ...axisText, x: chart.x, y: yOf(v) - 0.12, w: left - chart.x - 0.08, h: 0.24, align: 'right' }),
+		]),
+		...CIR_YEARS.map((year, i) =>
+			child(year, { ...axisText, x: xOf(i) - band / 2, y: yOf(axis.min) + 0.08, w: band, h: 0.26, align: 'center' })
+		),
+		...CIR.flatMap((s, k) => {
+			const { color, width, dash, labelColor } = series[k]
+			const points = s.values.map((v, i) => ({ x: xOf(i), y: yOf(v) }))
+			return [
+				freeform(points, { line: { color, width, dashType: dash } }),
+				...points.map((p) => ({
+					shape: {
+						type: ShapeType.ellipse,
+						options: { x: p.x - dot / 2, y: p.y - dot / 2, w: dot, h: dot, fill: { color } },
+					},
+				})),
+				// End labels in place of a legend, beside the last point.
+				child(`${s.name} ${s.values[last].toFixed(1)}%`, {
+					x: points[last].x + 0.12,
+					y: points[last].y - 0.15,
+					w: 1.45,
+					h: 0.3,
+					valign: 'middle',
+					fontSize: 10,
+					bold: true,
+					color: labelColor,
+				}),
+			]
+		}),
+	])
 
 	// The gap, bracketed: from Lodestar's FY26 point down to the peer median's.
 	const top = yOf(lodestar.values.at(-1))
@@ -464,23 +469,14 @@ function addValueAtStake(slide) {
 		`Five levers can remove $${GROSS_SAVING}M of run-rate cost; after $${REINVESTMENT.runRate}M reinvested in digital, the cost base falls to $${(COST_FY28 / 1000).toFixed(2)}B by FY28`
 	)
 
-	// A waterfall as a stacked column: an invisible base lifts each step to where the last one
-	// ended. The native waterfall (chartEx) renders only in PowerPoint 2016 and later; this
-	// renders everywhere and is the build consultants use anyway.
+	// A waterfall, drawn: each step is a bar that starts where the last one ended, with a thin
+	// rule carrying that level across to the next bar.
 	const steps = [
 		{ label: 'FY26 baseline', total: COST_FY26 },
 		...LEVERS.map((l) => ({ label: l.id === 'O' ? 'Ops & shared services' : l.label, saving: leverValue(l.id) })),
 		{ label: REINVESTMENT.label, reinvest: REINVESTMENT.runRate },
 		{ label: 'FY28 target', total: COST_FY28 },
 	]
-	let level = COST_FY26
-	const base = steps.map((s) => {
-		if (s.saving) return (level -= s.saving)
-		if (s.reinvest) return (level += s.reinvest) - s.reinvest
-		return null
-	})
-	const labels = steps.map((s) => s.label)
-	const series = (name, pick) => ({ name, labels: [...labels], values: steps.map((s) => pick(s) ?? null) })
 
 	text(slide, [{ text: 'Run-rate operating cost, $M' }, footnoteMark(1)], {
 		x: PAGE.margin,
@@ -492,45 +488,58 @@ function addValueAtStake(slide) {
 		bold: true,
 		color: BRAND.slate,
 	})
-	slide.addChart(
-		[
-			{ name: 'Base', labels: [...labels], values: base },
-			series('Total', (s) => s.total),
-			series('Saving', (s) => s.saving),
-			series('Reinvestment', (s) => s.reinvest),
-		],
-		{
-			x: PAGE.margin,
-			y: 2.15,
-			w: 8.95,
-			h: 4.3,
-			type: ChartType.bar,
-			barDir: 'col',
-			barGrouping: 'stacked',
-			barGapWidthPct: 40,
-			// `'transparent'` is `<a:noFill/>`: the base series is there, and invisible.
-			chartColors: ['transparent', BRAND.navy, BRAND.blue, BRAND.steel],
-			showLegend: false,
-			showValue: true,
-			dataLabelColor: BRAND.white,
-			dataLabelFontSize: TYPE.small,
-			dataLabelFontBold: true,
-			dataLabelFormatCode: '#,##0',
-			seriesOptions: [
-				{ dataLabelFormatCode: ';;;' },
-				{},
-				{ dataLabelFormatCode: '"−"#,##0' },
-				{ dataLabelFormatCode: '"+"#,##0', dataLabelColor: BRAND.ink },
-			],
-			catAxisLabelColor: BRAND.slate,
-			catAxisLabelFontSize: 10,
-			catAxisLineShow: true,
-			valAxisHidden: true,
-			valAxisMinVal: 2600,
-			valAxisMaxVal: 3450,
-			valGridLine: { style: 'none' },
+
+	const plot = { x: PAGE.margin, y: 2.3, w: 8.95, h: 3.45 }
+	const yOf = scale([2600, 3450], [plot.y + plot.h, plot.y])
+	const band = plot.w / steps.length
+	const barW = band / 1.4
+	let level = COST_FY26
+	const marks = steps.flatMap((s, i) => {
+		const x0 = plot.x + i * band + (band - barW) / 2
+		const x1 = x0 + barW
+		let from, to, fill, figure, color
+		if (s.total !== undefined) {
+			;[from, to, fill, figure, color] = [2600, s.total, BRAND.navy, s.total.toLocaleString('en-US'), BRAND.white]
+			level = s.total
+		} else if (s.saving) {
+			;[from, to, fill, figure, color] = [level, level - s.saving, BRAND.blue, `−${s.saving}`, BRAND.white]
+			level = to
+		} else {
+			;[from, to, fill, figure, color] = [level, level + s.reinvest, BRAND.steel, `+${s.reinvest}`, BRAND.ink]
+			level = to
 		}
-	)
+		const top = Math.min(yOf(from), yOf(to))
+		const height = Math.abs(yOf(from) - yOf(to))
+		return [
+			bar({ x0, x1, y0: yOf(from), y1: yOf(to), fill: { color: fill } }),
+			child(figure, {
+				x: x0 - 0.1,
+				y: top + height / 2 - 0.14,
+				w: barW + 0.2,
+				h: 0.28,
+				align: 'center',
+				valign: 'middle',
+				fontSize: TYPE.small,
+				bold: true,
+				color,
+			}),
+			child(s.label, {
+				x: plot.x + i * band,
+				y: plot.y + plot.h + 0.1,
+				w: band,
+				h: 0.5,
+				align: 'center',
+				valign: 'top',
+				fontSize: 10,
+				color: BRAND.slate,
+			}),
+			// The level this step ends on, carried to the next bar.
+			...(i < steps.length - 1
+				? [rule(x1, x1 + band - barW, yOf(level), { color: BRAND.steel, width: 0.75, dashType: 'sysDash' })]
+				: []),
+		]
+	})
+	slide.addGroup([...marks, rule(plot.x, plot.x + plot.w, plot.y + plot.h, { color: BRAND.mist, width: 1 })])
 
 	// The sidebar: what the programme does to the ratio the board watches.
 	const side = { x: 9.85, y: PAGE.top, w: PAGE.right - 9.85, h: PAGE.bottom - PAGE.top }

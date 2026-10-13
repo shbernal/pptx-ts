@@ -5,8 +5,8 @@
  * up front. pptx-ts writes no `clrMap` override, so `tx1` is `dk1`, and `dk1` has to stay the
  * dark colour or notes pages and printouts turn light-on-white. Anything left at its default
  * text colour therefore renders dark on dark: a text box with no `color`, a table cell, a
- * chart's axis labels and legend. Every one of those is set explicitly, through `ROLE`,
- * `CHART_TEXT` and `cell()` below, and no slide names a raw hex value.
+ * drawn chart's labels. Every one of those is set explicitly, through `ROLE`, `PLOT` and
+ * `cell()` below, and no slide names a raw hex value.
  */
 import { ShapeType } from 'pptx-ts'
 import { MARGIN, WIDE } from '../lib/layout.mjs'
@@ -548,28 +548,12 @@ export function terminalFrame({ x, y, w, h, label }) {
 	]
 }
 
-/**
- * Chart text, axes and gridlines, all set explicitly. A dark deck cannot leave any of these
- * to the chart's defaults, which resolve to `tx1` (dark) — see the note at the top.
- */
-export const CHART_TEXT = {
-	legendColor: BRAND.fgDark,
-	legendFontFace: FONT.body,
-	legendFontSize: 11,
-	catAxisLabelColor: BRAND.fgDark,
-	catAxisLabelFontFace: FONT.body,
-	catAxisLabelFontSize: 11,
-	catAxisLineShow: true,
-	catAxisLineColor: BRAND.gutter,
-	valAxisLabelColor: BRAND.dark5,
-	valAxisLabelFontFace: FONT.mono,
-	valAxisLabelFontSize: 10,
-	valAxisLineShow: false,
-	valGridLine: { color: BRAND.gutter, width: 0.75 },
-	dataLabelColor: BRAND.fg,
-	dataLabelFontFace: FONT.mono,
-	dataLabelFontSize: 11,
-	titleColor: BRAND.fg,
+/** The colours of a drawn chart's furniture: gridlines, axis figures, labels and values. */
+export const PLOT = {
+	grid: BRAND.gutter,
+	axis: BRAND.dark5,
+	label: BRAND.fgDark,
+	value: BRAND.fg,
 }
 
 /** Table cell options with every colour stated: fill, text and the four borders. */

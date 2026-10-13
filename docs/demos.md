@@ -24,8 +24,8 @@ preview can only appear if the bytes are a deck a reader can open.
 ## A strategy consulting deck
 
 Twelve slides for a steering committee: four slide masters, action titles, a section tracker
-whose tabs link to each section, a cost waterfall, a doughnut and a line chart with real embedded
-workbooks, an issue tree, a 2x2 prioritisation matrix, a business-case table with Harvey balls,
+whose tabs link to each section, a cost waterfall, a doughnut and a line chart drawn from shapes,
+an issue tree, a 2x2 prioritisation matrix, a business-case table with Harvey balls,
 a wave plan and speaker notes. Every mark is drawn; nothing is loaded. Actionable Insights
 Partners and its client are fictional.
 
@@ -35,7 +35,7 @@ Partners and its client are fictional.
 
 Eleven slides on the Tokyo Night palette: a logo drawn from shapes, photographs under gradient
 scrims, a pattern-filled ground, connectors bound to the shapes they join, an area chart and a
-bar chart, an embedded demo video with a poster frame and live hyperlinks. The page
+bar chart drawn from shapes, an embedded demo video with a poster frame and live hyperlinks. The page
 fetches the images and the video when the deck comes into view. Nightjar is
 fictional.
 
