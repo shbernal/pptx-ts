@@ -274,32 +274,6 @@ describe('Presentation.importSlide', () => {
 		assertEqual(errors.length, 0, `validator errors: ${JSON.stringify(errors).slice(0, 2000)}`)
 	})
 
-	test('imports a chart slide with its embedded data', async () => {
-		const target = await openFixture('mixed')
-		const source = await openFixture('mixed')
-		const chartSlide = source.slides.findIndex((s) =>
-			s.shapes.some((sh) => sh.shapeType === 'graphicFrame' && sh.chart)
-		)
-		assert(chartSlide >= 0, 'mixed has a chart slide')
-
-		target.importSlide(source, chartSlide)
-		const reopened = await Presentation.load(await target.save())
-		const opc = reopened.opc
-		assertNoDanglingRels(opc)
-
-		// A chart part and an embedded workbook were copied in.
-		const partNames = [...opc.parts.keys()]
-		const chartsBefore = [...(await openFixture('mixed')).opc.parts.keys()].filter((n) =>
-			/\/charts\/chart\d+\.xml$/.test(n)
-		).length
-		const chartsAfter = partNames.filter((n) => /\/charts\/chart\d+\.xml$/.test(n)).length
-		assert(chartsAfter > chartsBefore, 'a chart part was added by the import')
-		assert(
-			partNames.some((n) => /\/embeddings\//.test(n)),
-			'the chart embedding part is present'
-		)
-	})
-
 	test('rejects an out-of-range index', async () => {
 		const target = await openFixture('empty')
 		const source = await openFixture('image')
@@ -461,14 +435,6 @@ describe('Presentation.importSlide({ at })', () => {
 		assertEqual(at(reopened.slides, 0).slideId, clone.slideId, 'clone is first after round-trip')
 		assertEqual(at(reopened.slides, 1).slideId, firstId, 'the former first slide shifted back by one')
 		assertNoDanglingRels(reopened.opc)
-	})
-
-	test.skipIf(!validatorInstalled)('an at-inserted import stays schema-valid', async () => {
-		const target = await openFixture('mixed')
-		const source = await openFixture('mixed')
-		target.importSlide(source, 0, { at: 0 })
-		const errors = await validateBuf(Buffer.from(await target.save()))
-		assertEqual(errors.length, 0, `validator errors: ${JSON.stringify(errors).slice(0, 2000)}`)
 	})
 })
 

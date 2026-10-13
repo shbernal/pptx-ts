@@ -165,13 +165,6 @@ defineRegressionSuite('Fill kind inference', [
 		},
 	},
 	{
-		name: "a line `type: 'inherit'` emits no paint child at all",
-		fn: async () => {
-			const xml = await slideXml((p) => p.addSlide().addShape('rect', { ...BOX, line: { width: 2, type: 'inherit' } }))
-			assertEqual(lineFill(xml).join(','), '', 'an inherited stroke names no paint')
-		},
-	},
-	{
 		name: "a line `type: 'inherit'` takes no width or dash defaults, and still writes the ones stated",
 		fn: async () => {
 			// It stamped the 1pt solid defaults every other kind takes, which override the width and

@@ -10,11 +10,7 @@ import { resolveHtmlColWidth } from '../../../src/gen/table/html-dom.ts'
 // width never applied and hidden tables emitted NaN widths.
 
 describe('HTML table column width resolution', () => {
-	test('explicit data-pptx-width wins over the proportional calc', () => {
-		assert(resolveHtmlColWidth(3, 5, 0) === 5, 'set width must override calc width')
-	})
-
-	test('data-pptx-width wins even over a larger min-width', () => {
+	test('data-pptx-width wins over the proportional calc and a larger min-width', () => {
 		assert(resolveHtmlColWidth(3, 5, 9) === 5, 'set width is exact and beats min-width')
 	})
 

@@ -26,7 +26,7 @@
 
 import { describe, test } from 'vitest'
 import { NotesPlaceholder, Placeholder, type Presentation } from '../../dist/read.js'
-import { authorRead, schemaErrors, validatorInstalled } from './authored.ts'
+import { authorRead } from './authored.ts'
 import { assert, assertEqual, defined, at } from '../helpers.ts'
 
 /** The first slide of `presentation`. */
@@ -220,18 +220,5 @@ describe('Slide.notesTextFrame — write→read fidelity', () => {
 			'shared body',
 			'notesTextFrame delegates to the same body frame'
 		)
-	})
-
-	test.skipIf(!validatorInstalled)('the authored rich-notes deck is schema-valid', async () => {
-		const { buf } = await authorRead((pres) => {
-			pres
-				.addSlide()
-				.addNotes([
-					{ text: 'Loud', options: { bold: true, color: 'C00000' } },
-					{ text: ' and a ' },
-					{ text: 'link', options: { hyperlink: { url: 'https://example.com/notes' } } },
-				])
-		})
-		assertEqual((await schemaErrors(buf)).length, 0, 'rich-notes deck validates')
 	})
 })

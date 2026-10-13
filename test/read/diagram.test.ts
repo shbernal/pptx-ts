@@ -173,8 +173,6 @@ describe('Diagram — the data model', () => {
 	})
 
 	test('the doc root is an unfilled placeholder with no text', async () => {
-		// The exact Diagram.text above already shows the doc root, the pres points and the empty
-		// transitions stay out of the joined text.
 		const { diagram } = await smartArtFrame()
 		const doc = defined(
 			diagram.points.find((point) => point.type === 'doc'),

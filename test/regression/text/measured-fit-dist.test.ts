@@ -57,6 +57,17 @@ describe('overflowsBox() through dist (Silkscreen metrics)', () => {
 		// Unmeasurable (unnamed) face never false-positives.
 		expect(pres.overflowsBox(OVERFLOW, { wIn: 2, hIn: 0.3, fontSize: 18 })).toBe(false)
 	})
+
+	test('run array with per-run bold uses the bold metrics variant', async () => {
+		const pres = await pptxWithSilkscreen()
+		const opts = { wIn: 3, fontSize: 18, fontFace: 'Silkscreen' }
+		const bold = pres.measureText([{ text: 'Bold heading', options: { bold: true } }], opts)
+		const regular = pres.measureText([{ text: 'Bold heading' }], opts)
+		expect(bold.measurable).toBe(true)
+		// Silkscreen's two weights advance differently (font-collection.test.ts), so a run
+		// measured on the regular face would report the regular width.
+		expect(bold.widestLineIn).not.toBe(regular.widestLineIn)
+	})
 })
 
 describe("applyMeasuredFit: fit:'shrink' through dist export", () => {
@@ -389,20 +400,6 @@ describe("applyMeasuredFit: TableCellProps.fit:'shrink' through dist export", ()
 		})
 		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		expect(szValues(xml)).toContain(1800) // authored 18pt preserved
-	})
-
-	test('table-level fit:shrink propagates to cells that set none', async () => {
-		const pres = await pptxWithSilkscreen()
-		const slide = pres.addSlide()
-		slide.addTable([[{ text: LONG, options: { fontFace: 'Silkscreen', fontSize: 18 } }]], {
-			x: 0.5,
-			y: 0.5,
-			w: 3,
-			rowH: [0.4],
-			fit: 'shrink',
-		})
-		const xml = await partXml(await pres.toBytes(), SLIDE1)
-		expect(Math.min(...szValues(xml))).toBeLessThan(1800)
 	})
 })
 

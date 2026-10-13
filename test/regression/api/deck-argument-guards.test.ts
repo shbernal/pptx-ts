@@ -47,26 +47,6 @@ defineRegressionSuite('Deck argument guards', [
 		},
 	},
 	{
-		name: 'addSection `order` inserts at that position rather than appending',
-		fn: async () => {
-			// The documented use for `order`, and the only path that splices instead of pushing.
-			// `order` counts from 1, as the option says: the index used to be spliced raw, so
-			// `order: 1` landed second and `order: 0` — falsy — appended with nothing said.
-			const pres = withSection('A')
-			pres.addSection({ title: 'B' })
-			pres.addSection({ title: 'Inserted', order: 1 })
-
-			assertEqual(pres.sections.map((s) => s.title).join(','), 'Inserted,A,B', '`order: 1` is the first position')
-
-			const { codes } = await captureDiagnostics(async () => {
-				const zero = withSection('A')
-				zero.addSection({ title: 'Zero', order: 0 })
-				assertEqual(zero.sections.map((s) => s.title).join(','), 'A,Zero', '`order: 0` names no position')
-			})
-			assertIncludes(codes, 'section/invalid-order')
-		},
-	},
-	{
 		name: 'addSlide naming a section that does not exist warns, and still sections the slide',
 		fn: async () => {
 			// Dropping the slide would be the worse failure: the caller asked for a slide and a

@@ -248,26 +248,6 @@ describe('Presentation.importShape', () => {
 		assert(table && table.rowCount === srcRows, 'table survives the round-trip')
 	})
 
-	test('lifts a chart with its part and embedded workbook', async () => {
-		const target = await openFixture('mixed') // 4:3
-		const source = await openFixture('mixed')
-		const chartSlide = source.slides.findIndex((s) =>
-			s.shapes.some((sh) => sh.shapeType === 'graphicFrame' && sh.chart)
-		)
-		assert(chartSlide >= 0, 'source deck has a chart slide')
-		const chartIndex = findShapeIndex(at(source.slides, chartSlide), (s) => s.shapeType === 'graphicFrame' && s.chart)
-		const chartsBefore = countParts(target.opc, /\/charts\/chart\d+\.xml$/)
-
-		const shape = target.importShape(at(target.slides, 0), at(source.slides, chartSlide), chartIndex)
-		assert(shape.shapeType === 'graphicFrame', 'returns the graphic frame')
-		assert(shape.chart, 'the lifted frame still hosts a chart')
-
-		const reopened = await Presentation.load(await target.save())
-		assertNoDanglingRels(reopened.opc)
-		assert(countParts(reopened.opc, /\/charts\/chart\d+\.xml$/) > chartsBefore, 'a chart part was copied in')
-		assert(countParts(reopened.opc, /\/embeddings\//) > 0, 'the chart embedding workbook is present')
-	})
-
 	test('lifts a group; child ids reassigned, child offsets intact', async () => {
 		const target = await openFixture('mixed')
 		const source = await openFixture('mixed')

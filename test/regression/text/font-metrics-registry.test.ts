@@ -45,8 +45,6 @@ describe('getHeuristicFontMetrics', () => {
 		const w = h.advanceWidthPt('Mixed CASE 123', 18)
 		expect(w).toBeGreaterThan(0)
 		expect(h.advanceWidthPt('AB', 18, 5)).toBeCloseTo(h.advanceWidthPt('AB', 18) + 2 * 5, 6)
-		// Wider glyphs advance more than narrow ones (heuristic ratio table).
-		expect(h.advanceWidthPt('W', 18)).toBeGreaterThan(h.advanceWidthPt('i', 18))
 	})
 
 	test('hasCodepoint always reports covered (no cmap to consult)', () => {

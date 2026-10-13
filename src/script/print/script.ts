@@ -187,7 +187,6 @@ function printSlides(ir: DeckIr, collector: NoteCollector, printAsset: AssetPrin
 	const declaredLayouts = new Set<number>()
 
 	const flush = (): void => {
-		if (batch.length === 0) return
 		const first = batch[0]
 		if (!first) return
 		const name = `gen${++generatorIndex}`

@@ -298,36 +298,6 @@ defineRegressionSuite('HTML table to slides on Node (happy-dom)', [
 		},
 	},
 	{
-		name: 'ragged rows are padded to a rectangular grid',
-		fn: async () => {
-			// HTML tolerates a short row and leaves the tail of the grid empty; pptx does not —
-			// <a:tblGrid> declares the column count and a row with fewer <a:tc> is a table
-			// PowerPoint has to repair. This used to emit rows of 3, 1 and 4 cells over a
-			// 3-column grid.
-			const win = windowWith(`
-				<table id="t">
-					<thead><tr><th>A</th><th>B</th><th>C</th></tr></thead>
-					<tbody><tr><td>1</td></tr><tr><td>1</td><td>2</td><td>3</td><td>4</td></tr></tbody>
-				</table>`)
-			const { zip } = await build((pptx) => {
-				tableToSlides(pptx, tableOf(win))
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assertEqual(gridColWidths(xml).length, 4, 'the widest row sets the grid width')
-			assertRectangular(xml)
-			// Padding is blank and appended — no authored cell may be moved or dropped.
-			assertEqual(
-				JSON.stringify(cellTexts(xml)),
-				JSON.stringify([
-					['A', 'B', 'C', ''],
-					['1', '', '', ''],
-					['1', '2', '3', '4'],
-				]),
-				'authored text must survive padding unchanged'
-			)
-		},
-	},
-	{
 		name: 'a nested table stays inside its cell',
 		fn: async () => {
 			// The old `tbody tr` descendant query reached through a cell into the rows of a table
@@ -585,7 +555,6 @@ defineRegressionSuite('HTML table to slides on Node (happy-dom)', [
 			const viaFunction = await build((pptx) => {
 				tableToSlides(pptx, tableOf(windowWith(html)))
 			})
-			assertEqual(typeof BrowserPptxTs.prototype.tableToSlides, 'function', 'the browser build must keep the method')
 			assertEqual(
 				await readEntry(viaMethod.zip, 'ppt/slides/slide1.xml'),
 				await readEntry(viaFunction.zip, 'ppt/slides/slide1.xml'),

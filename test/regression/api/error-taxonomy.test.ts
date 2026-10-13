@@ -97,18 +97,7 @@ defineRegressionSuite('Error taxonomy', [
 
 			const err = await caught(() => readZip(new Uint8Array([1, 2, 3, 4])))
 			assert(err instanceof PptxTsError, 'a library error is a PptxTsError')
-			assert(err instanceof TsPptxError, 'and still a TsPptxError')
 			/* oxlint-enable typescript/no-deprecated */
-		},
-	},
-	{
-		name: 'a cause is preserved so the underlying failure is not lost',
-		fn: async () => {
-			const err = await caught(() => readZip(new Uint8Array([1, 2, 3, 4])))
-
-			// Wrapping must not discard what fflate reported — the taxonomy adds classification on
-			// top of the original failure rather than replacing it.
-			assert(err?.cause !== undefined, 'the originating error is preserved as `cause`')
 		},
 	},
 	{

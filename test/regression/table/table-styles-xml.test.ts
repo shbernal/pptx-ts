@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'vitest'
 import { makeXmlTableStyles } from '../../../src/gen/pres/table-styles.ts'
-import { builtinTableStyleXml } from '../../../src/gen/pres/builtin-table-styles.ts'
 import { TableStyle } from '../../../src/enums.ts'
 import { Presentation, isGraphicFrame } from '../../../dist/read.js'
 import { build, readEntry } from '../../helpers.ts'
@@ -39,12 +38,6 @@ describe('makeXmlTableStyles', () => {
 		expect(makeXmlTableStyles()).toContain(
 			`<a:tblStyleLst xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" def="${TableStyle.MEDIUM_STYLE_2_ACCENT_1}"/>`
 		)
-	})
-
-	test('wraps the definitions it is given, in order', () => {
-		const a = builtinTableStyleXml(TableStyle.LIGHT_STYLE_1) ?? ''
-		const b = builtinTableStyleXml(TableStyle.DARK_STYLE_2) ?? ''
-		expect(makeXmlTableStyles([a, b])).toContain(`def="${TableStyle.MEDIUM_STYLE_2_ACCENT_1}">${a}${b}</a:tblStyleLst>`)
 	})
 
 	test('is a complete XML document', () => {

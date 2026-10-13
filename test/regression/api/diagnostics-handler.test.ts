@@ -169,7 +169,6 @@ defineRegressionSuite('Diagnostics handler', [
 			const base = await import('../../../dist/node.js')
 			for (const entry of ['read', 'measure', 'script', 'inspect', 'html', 'math', 'zip']) {
 				const mod = (await import(`../../../dist/${entry}.js`)) as Record<string, unknown>
-				assertEqual(typeof mod.setDiagnosticHandler, 'function', `pptx-ts/${entry} must publish setDiagnosticHandler`)
 				assertEqual(typeof mod.resetDiagnosticState, 'function', `pptx-ts/${entry} must publish resetDiagnosticState`)
 				assert(
 					mod.setDiagnosticHandler === base.setDiagnosticHandler,

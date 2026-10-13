@@ -195,4 +195,15 @@ defineRegressionSuite('Chart stroke vocabulary', [
 			assertNotIncludes(bars, '<a:solidFill>', 'and no colour is invented for it')
 		},
 	},
+	{
+		name: 'a chart no longer accepts the four gridline keys at its top level',
+		fn: async () => {
+			// `ChartOpts` used to extend `OptsChartGridLine`, so `color`, `size`, `style` and `cap`
+			// typechecked on the chart bag itself and were read by nothing. The directive pins the
+			// type-level half; a JS caller can still pass them, and they reach no attribute.
+			// @ts-expect-error the gridline keys are not chart options
+			const xml = await chartFor({ type: ChartType.bar, color: 'FF0000', size: 9, style: 'dash' })
+			assertNotIncludes(xml, 'FF0000', 'the stray colour reaches no attribute')
+		},
+	},
 ])

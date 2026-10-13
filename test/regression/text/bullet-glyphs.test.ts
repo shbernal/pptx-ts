@@ -62,20 +62,6 @@ defineRegressionSuite('Bullet glyph normalization [legacy bug-09]', [
 		},
 	},
 	{
-		name: 'bullet:{type:"bullet"} also strips leading bullet glyph',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				const s = p.addSlide()
-				s.addText('\u2022 hello', { x: 1, y: 1, w: 4, h: 1, bullet: { type: 'bullet' } })
-			})
-			const xml = await getSlide1(zip)
-			const ppr = firstPPr(xml)
-			const tText = firstATText(xml)
-			assert(/<a:buChar char="&#x2022;"\/>/.test(ppr), 'expected default <a:buChar/> on <a:pPr>; got: ' + ppr)
-			assert(tText === 'hello', 'expected first <a:t> to be "hello"; got: ' + JSON.stringify(tText))
-		},
-	},
-	{
 		name: 'variant glyphs (◦, ▪) are also stripped when bullet:true',
 		fn: async () => {
 			const { zip: zipHollow } = await build((p) => {

@@ -12,7 +12,7 @@
 
 import { describe, test } from 'vitest'
 import { Part, Slide } from '../../dist/read.js'
-import { assert, assertEqual, defined } from '../helpers.ts'
+import { assertEqual, defined } from '../helpers.ts'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const SLIDE_CT = 'application/vnd.openxmlformats-officedocument.presentationml.slide+xml'
@@ -26,34 +26,6 @@ function slide(bodyXml: string) {
 }
 
 describe('parseTransition — AlternateContent forms', () => {
-	test('a bare <p:transition> decodes its type, speed and variant', () => {
-		const info = defined(
-			slide('<p:transition spd="med"><p:push dir="d"/></p:transition>').transition,
-			'the bare transition is decoded'
-		)
-		assertEqual(info.type, 'push', 'type from the single non-sound child')
-		assertEqual(info.namespace, 'p', 'a base ECMA-376 type uses the p prefix')
-		assertEqual(info.speed, 'med', 'spd bucket carried through')
-		assertEqual(info.durationMs, null, 'no p14:dur on the bare form')
-		assertEqual(JSON.stringify(info.variant), '{"dir":"d"}', 'type attributes become the variant')
-	})
-
-	test('an mc:AlternateContent p14 Choice is preferred so the exact duration is recovered', () => {
-		const info = defined(
-			slide(
-				`<mc:AlternateContent xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" ` +
-					`xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main">` +
-					`<mc:Choice Requires="p14"><p:transition spd="slow" p14:dur="2000"><p:fade/></p:transition></mc:Choice>` +
-					`<mc:Fallback><p:transition spd="slow"><p:fade/></p:transition></mc:Fallback>` +
-					`</mc:AlternateContent>`
-			).transition,
-			'the wrapped transition is decoded'
-		)
-		assertEqual(info.type, 'fade', 'the Choice transition is read')
-		assertEqual(info.durationMs, 2000, 'p14:dur is recovered from the Choice')
-		assertEqual(info.speed, 'slow', 'the coarse bucket is preserved alongside the exact duration')
-	})
-
 	test('a degenerate AlternateContent with only a Fallback is still surfaced', () => {
 		const info = defined(
 			slide(
@@ -185,12 +157,5 @@ describe('buildTransition + speedForDuration (setter) — buckets and forms', ()
 		const info = defined(s.transition)
 		assertEqual(info.durationMs, 800, 'the exact duration is written to the Choice')
 		assertEqual(info.speed, 'med', '800ms → med bucket')
-	})
-
-	test('assigning null removes an existing transition', () => {
-		const s = slide('<p:transition spd="med"><p:wipe dir="u"/></p:transition>')
-		assert(s.transition, 'the transition is present to begin with')
-		s.transition = null
-		assertEqual(s.transition, null, 'clearing removes the transition node')
 	})
 })

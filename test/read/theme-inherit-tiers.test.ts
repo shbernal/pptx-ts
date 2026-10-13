@@ -124,12 +124,6 @@ describe('resolveInheritedRunColor — the two upper tiers', () => {
 		assertEqual(defined(run.resolvedColor).hex, '12AB34', 'the paragraph defRPr (tier 1) governs over the lstStyle')
 	})
 
-	test('nothing in the chain defines a colour → resolvedColor is null', () => {
-		// A run with no rPr, no paragraph/lstStyle fill, and a ctx with no layout/master.
-		const run = firstRun(placeholderFrame(`<a:p><a:r><a:t>x</a:t></a:r></a:p>`))
-		assertEqual(run.resolvedColor, null, 'no fill in any tier degrades to null, not a throw')
-	})
-
 	test('an explicit run solidFill with no colour child resolves to null', () => {
 		// resolveSolidFillColor finds the a:solidFill but firstChildElement finds no
 		// colour element inside it → the colour is not made literal, so null.
@@ -214,8 +208,10 @@ describe('inherited run size / face / bold / italic — the two upper tiers', ()
 		assertEqual(run.resolvedItalic, false, "the run's own value is not overridden by the chain")
 	})
 
-	test('nothing in the chain defines size/face/bold/italic → each resolves null', () => {
+	test('nothing in the chain defines colour/size/face/bold/italic → each resolves null', () => {
+		// A run with no rPr, no paragraph/lstStyle defRPr, and a ctx with no layout/master.
 		const run = firstRun(placeholderFrame(`<a:p><a:r><a:t>x</a:t></a:r></a:p>`))
+		assertEqual(run.resolvedColor, null, 'no fill in any tier degrades to null, not a throw')
 		assertEqual(run.resolvedSizePt, null, 'no @sz anywhere → null')
 		assertEqual(run.resolvedFontFace, null, 'no a:latin anywhere → null')
 		assertEqual(run.resolvedBold, null, 'no @b anywhere → null')

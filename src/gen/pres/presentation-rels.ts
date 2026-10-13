@@ -52,7 +52,7 @@ export function presentationFixedRelIds(slides: PresSlideInternal[]): {
 	fontStart: number
 } {
 	const first = slides.length + 2
-	const hasComments = slides.some((slide) => (slide._comments || []).length > 0)
+	const hasComments = slides.some((slide) => slide._comments.length > 0)
 	return {
 		notesMaster: first,
 		presProps: first + 1,

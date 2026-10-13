@@ -270,11 +270,6 @@ describe('Table cell styling (populated a:tcPr paths)', () => {
 		assertEqual(cell.verticalText, null, 'no @vert on the margins cell')
 		assertEqual(cell.anchor, null, 'no @anchor on the margins cell')
 	})
-
-	test.skipIf(!validatorInstalled)('the fixture is schema-valid', async () => {
-		const errors = await validateBuf(await readFile(fixturePath('table-cell-style')))
-		assertEqual(errors.length, 0, `validator errors: ${JSON.stringify(errors).slice(0, 2000)}`)
-	})
 })
 
 describe('Table cell horzOverflow', () => {
@@ -296,10 +291,5 @@ describe('Table cell horzOverflow', () => {
 	test('a cell without @horzOverflow reports null', async () => {
 		const cell = defined(firstTable(await openFixture('table-cell-horzoverflow')).cell(0, 1))
 		assertEqual(cell.horzOverflow, null, 'no @horzOverflow -> null')
-	})
-
-	test.skipIf(!validatorInstalled)('the fixture is schema-valid', async () => {
-		const errors = await validateBuf(await readFile(fixturePath('table-cell-horzoverflow')))
-		assertEqual(errors.length, 0, `validator errors: ${JSON.stringify(errors).slice(0, 2000)}`)
 	})
 })

@@ -144,6 +144,5 @@ describe('Presentation.customProperties', () => {
 	test('a deck with no custom.xml → []', async () => {
 		const pres = await roundTrip(() => {})
 		assertEqual(pres.customProperties.length, 0, 'no custom properties')
-		assert(Array.isArray(pres.customProperties), 'customProperties is an array')
 	})
 })

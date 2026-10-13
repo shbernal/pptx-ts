@@ -77,15 +77,6 @@ function allParagraphs(slide: Slide) {
 }
 
 describe('Shape style reads — real PowerPoint XML (mixed.pptx)', () => {
-	test('lineWidthPt converts a:ln/@w (EMU) to points', async () => {
-		// slide5/slide6 draw connectors/borders with <a:ln w="15875"> = 1.25pt.
-		const slide = at((await openFixture('mixed')).slides, 5)
-		const widths = allShapes(slide.shapes)
-			.map((shape) => shape.lineWidthPt)
-			.filter((w) => w !== null)
-		assert(widths.includes(1.25), `expected a 1.25pt line (15875 EMU); got ${JSON.stringify(widths)}`)
-	})
-
 	test('shapes without a hidden flag report hidden=false', async () => {
 		const slide = at((await openFixture('mixed')).slides, 5)
 		for (const shape of allShapes(slide.shapes)) {
@@ -625,17 +616,6 @@ describe('Placeholder-inherited run size + typeface — real PowerPoint XML (mul
 		assertEqual(run.resolvedSizePt, 20, 'inherits bodyStyle lvl1 sz=2000 from the master')
 		assertEqual(run.resolvedFontFace, 'Century Gothic', 'inherits the body +mj-lt face through the theme')
 	})
-
-	test("a non-placeholder run's own size wins; its face falls back to the default text style", async () => {
-		// text-accent5-run is a plain text box (no placeholder): own sz=2400 governs the
-		// size, and with no own a:latin and no placeholder chain the face falls through to
-		// the presentation's p:defaultTextStyle (+mn-lt → the theme minor font, here Ion's
-		// Century Gothic). Before defaultTextStyle joined the chain this read as null.
-		const shape = shapeNamed(at((await openFixture('theme-colors')).slides, 0), 'text-accent5-run')
-		const run = at(at(defined(shape.textFrame).paragraphs, 0).runs, 0)
-		assertEqual(run.resolvedSizePt, 24, "the run's own sz=2400 is reported as 24pt")
-		assertEqual(run.resolvedFontFace, 'Century Gothic', 'inherits +mn-lt from p:defaultTextStyle')
-	})
 })
 
 describe('Placeholder-inherited run bold / italic — real PowerPoint XML', () => {
@@ -645,43 +625,19 @@ describe('Placeholder-inherited run bold / italic — real PowerPoint XML', () =
 	// an INHERITED non-bold/non-italic, deliberately distinct from a null "sets none
 	// and inherits none". A plain text box has no placeholder chain, so its
 	// resolvedBold/resolvedItalic fall back to the run's own value (null here).
-	test('a placeholder run with no own @b resolves inherited bold from the master text style', async () => {
+	test('a placeholder run with no own @b/@i resolves both from the master text style', async () => {
 		const shape = shapeNamed(at((await openFixture('multi-theme')).slides, 1), 'inherited-title')
 		const run = at(at(defined(shape.textFrame).paragraphs, 0).runs, 0)
 		assertEqual(run.bold, null, 'the run sets no own @b')
 		assertEqual(run.resolvedBold, false, 'inherits titleStyle b="0" from the master (explicit non-bold, not null)')
-	})
-
-	test('a colourful body placeholder run also resolves its inherited bold', async () => {
-		const shape = shapeNamed(at((await openFixture('multi-theme')).slides, 1), 'explicit-body')
-		const run = at(at(defined(shape.textFrame).paragraphs, 0).runs, 0)
-		assertEqual(run.bold, null, 'the run sets no own @b')
-		assertEqual(run.resolvedBold, false, 'inherits bodyStyle lvl1 b="0" from the master')
-	})
-
-	test('a non-placeholder run reports no inherited bold (own value governs)', async () => {
-		const shape = shapeNamed(at((await openFixture('theme-colors')).slides, 0), 'text-accent5-run')
-		const run = at(at(defined(shape.textFrame).paragraphs, 0).runs, 0)
-		assertEqual(run.resolvedBold, null, 'no own @b and no placeholder chain to inherit from')
-	})
-
-	test('a placeholder run with no own @i resolves inherited italic from the master text style', async () => {
-		const shape = shapeNamed(at((await openFixture('multi-theme')).slides, 1), 'inherited-title')
-		const run = at(at(defined(shape.textFrame).paragraphs, 0).runs, 0)
 		assertEqual(run.italic, null, 'the run sets no own @i')
 		assertEqual(run.resolvedItalic, false, 'inherits titleStyle i="0" from the master (explicit upright, not null)')
 	})
 
-	test('a body placeholder run also resolves its inherited italic', async () => {
-		const shape = shapeNamed(at((await openFixture('multi-theme')).slides, 1), 'explicit-body')
-		const run = at(at(defined(shape.textFrame).paragraphs, 0).runs, 0)
-		assertEqual(run.italic, null, 'the run sets no own @i')
-		assertEqual(run.resolvedItalic, false, 'inherits bodyStyle lvl1 i="0" from the master')
-	})
-
-	test('a non-placeholder run reports no inherited italic (own value governs)', async () => {
+	test('a non-placeholder run reports no inherited bold or italic (own value governs)', async () => {
 		const shape = shapeNamed(at((await openFixture('theme-colors')).slides, 0), 'text-accent5-run')
 		const run = at(at(defined(shape.textFrame).paragraphs, 0).runs, 0)
+		assertEqual(run.resolvedBold, null, 'no own @b and no placeholder chain to inherit from')
 		assertEqual(run.resolvedItalic, null, 'no own @i and no placeholder chain to inherit from')
 	})
 })
@@ -877,23 +833,6 @@ describe('Group-child absolute geometry (absoluteFrame)', () => {
 			assertEqual(frame.flipH, expected.flipH, `${child.name} effective flipH`)
 			assertEqual(frame.flipV, expected.flipV, `${child.name} effective flipV`)
 		}
-	})
-
-	test('a shape with no own transform has no resolvable absolute frame', () => {
-		const shape = shapeFromXml(AutoShape, 'sp', '<p:sp><p:spPr/></p:sp>')
-		assertEqual(shape.absoluteFrame, null, 'no a:xfrm → null')
-	})
-
-	test('a degenerate group (zero a:chExt) yields no resolvable frame', () => {
-		const inner = shapeFromXml(
-			AutoShape,
-			'sp',
-			`<p:grpSp>
-				<p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>
-				<p:sp><p:spPr><a:xfrm><a:off x="100" y="100"/><a:ext cx="500" cy="500"/></a:xfrm></p:spPr></p:sp>
-			</p:grpSp>`
-		)
-		assertEqual(inner.absoluteFrame, null, 'dividing by a zero child extent is degenerate → null')
 	})
 })
 

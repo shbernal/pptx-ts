@@ -1,13 +1,9 @@
 // Contract for the part-contributor seam (src/package/parts/shared.ts): which construct
 // families put parts in a package is a list handed to `buildPackageParts`, not a set of imports
-// it makes itself. Two properties have to hold for that list to be safe to vary, and both are
-// byte-level, so neither shows up in a schema check:
-//
-//   1. The order a caller lists contributors in must not reach the output. Zip part order and
-//      `[Content_Types].xml` are both byte-significant, so the same deck written by two programs
-//      that list the same families differently has to come out identical.
-//   2. Dropping a family a deck does not use must change nothing, and dropping one it does use
-//      must remove exactly that family's parts.
+// it makes itself. Dropping a contributor a deck uses must remove exactly that family's parts,
+// which is byte-level and so does not show up in a schema check. That contributor order never
+// reaches the package, and that dropping an unused family changes nothing, are pinned through the
+// family list that builds this one, in test/regression/api/construct-families.test.ts.
 //
 // The order case and the unused-family case are pinned one level up, through the family list that
 // supplies these contributors (test/regression/api/construct-families.test.ts). What only this
@@ -69,8 +65,7 @@ afterAll(() => {
 	vi.useRealTimers()
 })
 
-// latin1, so every byte round-trips to one code point and the comparison is byte-exact even
-// through the compressed embedded workbooks.
+// latin1, so every byte round-trips to one code point and the comparison is byte-exact.
 const decoder = new TextDecoder('latin1')
 function decode(bytes: Uint8Array) {
 	return decoder.decode(bytes)

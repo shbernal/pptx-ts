@@ -133,34 +133,6 @@ async function generatedDeck(firstLinksToSecond = false) {
 }
 
 describe('Presentation.importSlides', () => {
-	test('places each selected page at its requested final position', async () => {
-		const target = await openFixture('mixed') // 11 slides
-		const before = target.slides.length
-		const originalIds = new Set(target.slides.map((s) => s.slideId))
-		const sourceA = await openFixture('mixed')
-		const sourceB = await openFixture('mixed')
-
-		target.importSlides([
-			{ source: sourceA, sourceIndex: 0, outputIndex: 0 },
-			{ source: sourceB, sourceIndex: 0, outputIndex: before + 1 },
-			{ source: sourceB, sourceIndex: 1, outputIndex: before },
-		])
-
-		const reopened = await Presentation.load(await target.save())
-		assertEqual(reopened.slides.length, before + 3, 'slide count grew by exactly the batch size')
-		assertNoDanglingRels(reopened.opc)
-
-		// The three imported pages mint fresh (highest) slide ids; they sit at
-		// exactly the requested positions, originals keeping their relative order.
-		const reopenedIds = reopened.slides.map((s) => s.slideId)
-		const insertedAt = reopenedIds.flatMap((id, index) => (originalIds.has(id) ? [] : [index]))
-		assertEqual(
-			JSON.stringify(insertedAt),
-			JSON.stringify([0, before, before + 1]),
-			'imports land at their outputIndexes in ascending order'
-		)
-	})
-
 	test('a rejected batch leaves the deck byte-identical — including a refused link', async () => {
 		// Generated decks share one layout, so sizes match by construction and a
 		// rejection below can only come from the rule under test.

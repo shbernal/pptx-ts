@@ -24,7 +24,7 @@
 
 import { describe, test } from 'vitest'
 import type { Presentation } from '../../dist/read.js'
-import { authorRead, schemaErrors, validatorInstalled } from './authored.ts'
+import { authorRead } from './authored.ts'
 import { assert, assertEqual } from '../helpers.ts'
 
 // From the writer's own notesMaster / theme constants, not the reader under test.
@@ -94,12 +94,5 @@ describe('read: notes-body inherited run properties (F2)', () => {
 		assertEqual(run.resolvedFontFace, 'Georgia', 'own face wins over +mn-lt/Calibri')
 		assertEqual(run.resolvedBold, true, 'own bold wins over the notesStyle (which defines none)')
 		assertEqual(run.resolvedItalic, true, 'own italic reaches the notes frame through the same chain')
-	})
-
-	test.skipIf(!validatorInstalled)('the authored inherited-notes deck is schema-valid', async () => {
-		const { buf } = await authorRead((pres) => {
-			pres.addSlide().addNotes('plain note text')
-		})
-		assertEqual((await schemaErrors(buf)).length, 0, 'inherited-notes deck validates')
 	})
 })

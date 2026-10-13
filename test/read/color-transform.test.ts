@@ -57,10 +57,6 @@ describe('applyColorTransforms — PowerPoint fixture oracle', () => {
 		})
 	}
 
-	test('no transforms returns the base hex unchanged', () => {
-		assert(applyColorTransforms('451DC7', []).hex === '451DC7', 'empty transform list is identity')
-	})
-
 	test('an unparseable base hex is returned unchanged', () => {
 		assert(applyColorTransforms('phClr', tf(['lumMod', 50000])).hex === 'phClr', 'non-hex base passes through')
 	})

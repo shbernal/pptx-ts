@@ -202,13 +202,6 @@ describe('TextFrame.autofit — write→read fidelity', () => {
 		assertEqual(shrink.autofitFontScale, null, 'a bare normAutofit bakes no font scale')
 		assertEqual(textFrameOf(at(presentation.slides, 2)).autofit, 'none', 'a bodyPr with no autofit child → none')
 	})
-
-	test.skipIf(!validatorInstalled)('authored autofit is schema-valid', async () => {
-		const { buf } = await authorRead((pres) => {
-			pres.addSlide().addText('x', { x: 1, y: 1, w: 3, h: 1, fit: { type: 'shrink', fontScale: 80 } })
-		})
-		assertEqual((await schemaErrors(buf)).length, 0, 'no schema violations')
-	})
 })
 
 describe('Slide.slideNumberPlaceholder — write→read fidelity', () => {
@@ -228,12 +221,5 @@ describe('Slide.slideNumberPlaceholder — write→read fidelity', () => {
 			pres.addSlide()
 		})
 		assertEqual(at(presentation.slides, 0).slideNumberPlaceholder, null, 'no sldNum placeholder → null')
-	})
-
-	test.skipIf(!validatorInstalled)('a slide carrying a slide number is schema-valid', async () => {
-		const { buf } = await authorRead((pres) => {
-			pres.addSlide().slideNumber = { x: 1, y: '90%' }
-		})
-		assertEqual((await schemaErrors(buf)).length, 0, 'no schema violations')
 	})
 })

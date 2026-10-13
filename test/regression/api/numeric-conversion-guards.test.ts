@@ -59,8 +59,8 @@ defineRegressionSuite('Numeric conversion guards', [
 		// `Infinity` reached it through every truthiness-guarded caller, came back as `Infinity`,
 		// and was then reported as out of range and emitted as `sz="Infinity"`. A measure with a
 		// schema range now clamps `Infinity` to its bound with a warning, the way every ranged
-		// option does (pinned in non-finite-numbers.test.ts), so the measures still refused here
-		// are the ones with no range to clamp into.
+		// option does (the clamp and its bytes are pinned in non-finite-numbers.test.ts), so the measures still
+		// refused here are the ones with no range to clamp into.
 		name: 'a non-finite point measure never reaches the attribute',
 		fn: async () => {
 			assertEqual(

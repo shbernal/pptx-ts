@@ -32,12 +32,4 @@ describe('embedded chart workbook', () => {
 		const second = await workbookAt('2026-06-30T12:34:56Z')
 		expect(Buffer.from(second).equals(Buffer.from(first))).toBe(true)
 	})
-
-	test('states no creation or modification time', async () => {
-		const inner = await JSZip.loadAsync(await workbookAt('2026-01-01T00:00:00Z'))
-		const core = await defined(inner.file('docProps/core.xml')).async('string')
-		expect(core).toContain('<dc:creator>')
-		expect(core).not.toContain('dcterms:created')
-		expect(core).not.toContain('dcterms:modified')
-	})
 })

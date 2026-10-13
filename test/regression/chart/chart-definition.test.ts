@@ -32,19 +32,12 @@ import { chartExXml, chartXml } from './chart-parts.ts'
 // in the same block shows the same attribute present, so the absence is a real signal.
 //
 // Left deliberately red, all "unreachable by construction" in the sense of docs/contributing/testing.md. They
-// fall into three groups:
+// fall into two groups:
 //
-//   1. THIRTEEN self-cancelling ternaries, of the form
-//        `options.showLegend = options.showLegend || !options.showLegend ? options.showLegend : false`
-//      The condition `a || !a` is true for every value of `a`, so the alternative is dead and the
-//      whole statement is an identity assignment. Eleven of them are the `show*` block in
-//      `normalizeChartPlotAreaOptions` (L174-187), plus `v3DRAngAx` (L200) and `dataLabelBkgrdColors`
-//      (L516). No input reaches the `: false` / `: true` arms because none exists. Worth collapsing
-//      one day, but that is a `src` edit and so gated on a byte-identity baseline.
-//   2. Plot fallbacks whose input an earlier step has already filled in. The `?? 150` behind a
+//   1. Plot fallbacks whose input an earlier step has already filled in. The `?? 150` behind a
 //      stated `barGapWidthPct` in `normalizePlotOptions` has no reachable input: a stated width is
 //      "stated" because it is not absent, and the clamp returns a number or throws.
-//   3. Options-bag guards the builder makes unreachable. `SlideBuilder.addChart` resolves its
+//   2. Options-bag guards the builder makes unreachable. `SlideBuilder.addChart` resolves its
 //      options to `arg2 ?? {}`, so the object it hands down is never missing -- which leaves
 //      `tmpOpt = ... : opt` (L481) and `copyChartOptions(tmpOpt && ... ? tmpOpt : {})` (L487)
 //      without an input. The sibling guards on `data` (L483) and on a combo entry's own
@@ -456,7 +449,11 @@ defineRegressionSuite('Chart definition', [
 				3,
 				`expected one warning per skipped index; got ${JSON.stringify(partial.warnings)}`
 			)
-			assertIncludes(await chartExXml(partial.zip), '<cx:subtotals>', 'a list with one survivor')
+			assertIncludes(
+				await chartExXml(partial.zip),
+				'<cx:subtotals><cx:idx val="1"/></cx:subtotals>',
+				'a list with one survivor'
+			)
 
 			const none = await buildCapturingWarnings((p) => {
 				p.addSlide().addChart(SERIES, { ...BASE, type: ChartType.waterfall, subtotals: [-1] })

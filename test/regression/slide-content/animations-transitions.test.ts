@@ -360,15 +360,12 @@ defineRegressionSuite('Transition sounds (write)', [
 		},
 	},
 	{
-		// `audio/x-wav` is the spelling PowerPoint itself authors for a transition sound, so it
-		// is what arrives on any deck read back in, including from `pptx-ts/script`, which
-		// hands the source package's own content type straight back as a data URI. The media
-		// filename is derived from the mime subtype, and taking it verbatim produced
-		// `audio-1-1.x-wav`: a Default-declared file type that exists nowhere else. The same
-		// holds for every mime spelling that is not itself a file extension. Each row is
-		// [data-URI mime, media part extension, the Default content type that extension must then
-		// declare]. The round trip has to close, or the package declares a type for a part it
-		// does not contain.
+		// The media filename is derived from the mime subtype, and taking it verbatim produced
+		// `audio-1-1.x-wav`, a Default-declared file type that exists nowhere else. `audio/x-wav`
+		// is the spelling PowerPoint itself authors for a transition sound, so it is what arrives
+		// on any deck read back in. Each row is [data-URI mime, media part extension, the Default
+		// content type that extension must then declare]: the round trip has to close, or the
+		// package declares a type for a part it does not contain.
 		name: 'maps every non-extension audio mime to a real file extension, and back to a content type',
 		fn: async () => {
 			const rows = [

@@ -78,9 +78,12 @@ describe('measureText core (synthetic metrics)', () => {
 
 	test('insetIn shrinks the usable width on both sides', () => {
 		const reg = regWith()
-		const noInset = measureText(reg, SENTENCE, { wIn: 4, fontSize: 18, fontFace: 'Mono' })
-		const inset = measureText(reg, SENTENCE, { wIn: 4, fontSize: 18, fontFace: 'Mono', insetIn: 0.5 })
-		expect(inset.lineCount).toBeGreaterThanOrEqual(noInset.lineCount)
+		// Words lay out at 92.7pt and spaces at 9.27pt. 3in (216pt) holds two words a line, so
+		// five words take 3 lines; 0.5in off each side leaves 144pt, one word a line, 5 lines.
+		const noInset = measureText(reg, SENTENCE, { wIn: 3, fontSize: 18, fontFace: 'Mono' })
+		const inset = measureText(reg, SENTENCE, { wIn: 3, fontSize: 18, fontFace: 'Mono', insetIn: 0.5 })
+		expect(noInset.lineCount).toBe(3)
+		expect(inset.lineCount).toBe(5)
 	})
 
 	test('fitsBox mirrors the conservative height', () => {

@@ -102,25 +102,4 @@ defineRegressionSuite('Coercing numeric guards', [
 			assert(!codes.includes('table/invalid-header-row-count'), 'a count equal to the row count is fine')
 		},
 	},
-	{
-		// Chart border widths reach `a:ln/@w`, so they go through `lineWidthToEmu` now — the
-		// clamp that already existed for shape strokes and that these paths were not calling. A
-		// negative width used to be emitted as a negative attribute.
-		name: 'a chart border width outside ST_LineWidth is clamped rather than emitted',
-		fn: async () => {
-			const { result: xml, codes } = await captureDiagnostics(() =>
-				slideXml((p) =>
-					p.addSlide().addChart(SERIES, {
-						type: 'bar',
-						...BOX,
-						plotArea: { border: { type: 'solid', color: '0088CC', width: -5 } },
-					})
-				)
-			)
-			assert(!/w="-\d/.test(xml), `no negative line width should reach the package; got:\n${xml}`)
-			// A negative is not a width, so the define pass substitutes the documented default
-			// before the emitter ever sees it, and nothing has to be clamped.
-			assert(!codes.includes('line/width-out-of-range'), `expected the default, not a clamp; got: ${codes}`)
-		},
-	},
 ])

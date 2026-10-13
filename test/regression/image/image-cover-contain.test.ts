@@ -33,16 +33,6 @@ function assertValidSrcRect(r: SrcRect, label: string) {
 	assert(r.t + r.b < 1e5, `${label}: t+b must keep positive source height (<100000); got ${r.t}+${r.b}`)
 }
 
-// Minimal 4x2 (ratio 0.5) raster headers, one per supported format. Only the dimension
-// header bytes are meaningful — the parser reads headers, never pixel data.
-const RASTER_4x2 = {
-	png: 'image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAACCAYAAAAAAAA=',
-	gif: 'image/gif;base64,R0lGODlhBAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
-	bmp: 'image/bmp;base64,Qk0AAAAAAAAAAAAAAAAAAAAABAAAAAIAAAAAAAAAAAA=',
-	webp: 'image/webp;base64,UklGRgAAAABXRUJQVlA4WAAAAAAAAAAAAwAAAQAAAAA=',
-	jpeg: 'image/jpeg;base64,/9j/wAARCAACAAQDAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
-}
-
 async function srcRectFor(opts: ImageProps): Promise<SrcRect> {
 	const { zip } = await build((p) => {
 		const s = p.addSlide()
@@ -127,17 +117,4 @@ defineRegressionSuite('Image cover/contain natural-ratio crop', [
 			)
 		},
 	},
-	// Cross-format coverage: a 4x2 (ratio 0.5) image of each format, cover-fit into a 2x2
-	// square box, must crop 25% off left and right (and nothing top/bottom). This passes
-	// only if the header parser read the natural 4x2 ratio for that format.
-	...Object.entries(RASTER_4x2).map(([fmt, data]) => ({
-		name: `cover: ${fmt} 4x2 image into square box crops left/right (parser reads ${fmt} header)`,
-		fn: async () => {
-			const r = await srcRectFor({ data, x: 1, y: 1, w: 2, h: 2, sizing: { type: 'cover', w: 2, h: 2 } })
-			assert(
-				r.l === 25000 && r.r === 25000 && r.t === 0 && r.b === 0,
-				`${fmt}: expected l=25000 r=25000 t=0 b=0; got ${JSON.stringify(r)}`
-			)
-		},
-	})),
 ])

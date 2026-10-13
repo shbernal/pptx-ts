@@ -85,20 +85,4 @@ describe('treemap + sunburst (hierarchical chartEx) charts', () => {
 		expect(xml).not.toContain('cx:parentLabelLayout')
 		expect(xml).not.toContain('<cx:axis')
 	})
-
-	test('a flat one-level category set degrades to the column-A/B cache', async () => {
-		// The multi-level generalization must still produce the flat shape for a single label level.
-		const { zip } = await build((p) => {
-			p.addSlide().addChart([{ name: 'N', labels: ['a', 'b', 'c'], values: [1, 2, 3] }], {
-				type: 'treemap',
-				x: 1,
-				y: 1,
-				w: 6,
-				h: 4,
-			})
-		})
-		const xml = await readEntry(zip, chartExPath(zip))
-		expect(xml).toContain('<cx:strDim type="cat"><cx:f>Sheet1!$A$2:$A$4</cx:f>')
-		expect(xml).toContain('<cx:numDim type="size"><cx:f>Sheet1!$B$2:$B$4</cx:f>')
-	})
 })

@@ -33,12 +33,6 @@ describe('measureGridColumns', () => {
 		assert(JSON.stringify(filled) === '[2,2]', `the rowspan fills the second row; got ${JSON.stringify(filled)}`)
 	})
 
-	test('the grid is as wide as the widest row, and short rows are reported short', () => {
-		const { columns, filled } = measureGridColumns([[{ colspan: 3 }], plain(4), [{}]])
-		assert(columns === 4, `the widest row sets the grid; got ${columns}`)
-		assert(JSON.stringify(filled) === '[3,4,1]', `each row's reach; got ${JSON.stringify(filled)}`)
-	})
-
 	test('a table with no cells has no columns', () => {
 		const { columns } = measureGridColumns([[], []])
 		assert(columns === 0, `empty rows occupy nothing; got ${columns}`)

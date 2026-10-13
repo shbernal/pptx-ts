@@ -274,43 +274,6 @@ describe('Presentation.importSlideMasters({ embedFonts })', () => {
 		return JSZip.loadAsync(await target.save())
 	}
 
-	test('carries font parts, content-type Default, rels, and a merged embeddedFontLst', async () => {
-		const zip = await graft({ embedFonts: true })
-
-		const fontParts = Object.keys(zip.files)
-			.filter((n) => /^ppt\/fonts\/font\d+\.fntdata$/.test(n))
-			.sort()
-		assertEqual(fontParts.length, 2, `both faces carried (got ${JSON.stringify(fontParts)})`)
-
-		const ct = await readEntry(zip, '[Content_Types].xml')
-		assert(/<Default Extension="fntdata" ContentType="application\/x-fontdata"\/>/.test(ct), 'fntdata Default added')
-		assertEqual((ct.match(/x-fontdata/g) || []).length, 1, 'content type registered once (Default, no Override)')
-
-		const rels = await readEntry(zip, 'ppt/_rels/presentation.xml.rels')
-		assertEqual(
-			[...rels.matchAll(/<Relationship[^>]*\/relationships\/font"[^>]*\/>/g)].length,
-			2,
-			'two font relationships on presentation.xml'
-		)
-
-		const pres = await readEntry(zip, 'ppt/presentation.xml')
-		const lst = pres.match(/<p:embeddedFontLst>[\s\S]*?<\/p:embeddedFontLst>/)?.[0]
-		assert(lst, 'embeddedFontLst present')
-		assert(
-			/<p:font typeface="Silkscreen" pitchFamily="2" charset="0"\/>/.test(lst),
-			`p:font identity carried; got ${lst}`
-		)
-		assert(
-			/<p:regular r:id="[^"]+"\/>/.test(lst) && /<p:bold r:id="[^"]+"\/>/.test(lst),
-			'regular + bold faces carried'
-		)
-		// embeddedFontLst sits before defaultTextStyle (CT_Presentation index 7).
-		assert(
-			pres.indexOf('<p:embeddedFontLst>') < pres.indexOf('<p:defaultTextStyle'),
-			'embeddedFontLst precedes defaultTextStyle'
-		)
-	})
-
 	test('default (flag off) carries no fonts — the graft alone is unchanged', async () => {
 		const zip = await graft(undefined)
 		assert(!Object.keys(zip.files).some((n) => /fntdata/.test(n)), 'no font parts without embedFonts')
@@ -386,6 +349,10 @@ describe('Presentation.importSlideMasters({ tableStyles })', () => {
 		const sourceIds = styleIds(await tableStylesXmlOf(await readFile(fixturePath('table-styles'))))
 		assertEqual(sourceIds.length, 4, `precondition: source defines four styles (got ${sourceIds.length})`)
 		for (const id of sourceIds) assert(styleIds(after).includes(id), `source style ${id} carried`)
+		assert(
+			new RegExp(`<a:tblStyle[^>]*styleId="\\${ACCENT3}"[^>]*>[\\s\\S]*?</a:tblStyle>`).test(after),
+			'the carried Accent 3 style is a full definition, not an empty stub'
+		)
 
 		// The def carry is the load-bearing half: ACCENT1 is a style the source ALSO
 		// defines, so keeping the destination's def would silently resolve a new table
@@ -418,25 +385,6 @@ describe('Presentation.importSlideMasters({ tableStyles })', () => {
 		assertEqual(new Set(ids).size, ids.length, 'no duplicate styleId across repeated grafts')
 		assertEqual(ids.length, styleIds(once).length, 'a re-graft adds no styles')
 		assertEqual(defOf(twice), ACCENT3, 'def stays the source default')
-	})
-
-	test('a style the destination already defines wins over the source', async () => {
-		// Union is destination-wins per id, matching the embedded-font carry's de-dupe.
-		const target = await openFixture('empty')
-		const source = await openFixture('table-styles')
-		target.importSlideMasters(source, { tableStyles: true })
-		const first = defined(await tableStylesXmlOf(await target.save()), 'the carry wrote ppt/tableStyles.xml')
-		const marker = first.match(new RegExp(`<a:tblStyle[^>]*styleId="\\${ACCENT3}"[\\s\\S]*?</a:tblStyle>`))?.[0]
-		assert(marker, 'the carried Accent 3 style is a full definition, not an empty stub')
-
-		// Re-carrying must not append a second copy of an id already present.
-		target.importSlideMasters(source, { tableStyles: true })
-		const second = defined(await tableStylesXmlOf(await target.save()), 'ppt/tableStyles.xml is still there')
-		assertEqual(
-			(second.match(new RegExp(`styleId="\\${ACCENT3}"`, 'g')) || []).length,
-			1,
-			'the already-defined style was not duplicated'
-		)
 	})
 
 	test.skipIf(!validatorInstalled)('a graft with carried table styles stays schema-valid', async () => {

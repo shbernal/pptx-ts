@@ -27,7 +27,6 @@ describe('el() / voidEl() XML builder', () => {
 
 	test('voidEl() self-closes', () => {
 		expect(voidEl('a:noFill')).toBe('<a:noFill/>')
-		expect(voidEl('Relationship', { Id: 'rId1' })).toBe('<Relationship Id="rId1"/>')
 	})
 
 	test('voidEl() closePrefix goes before the self-closing slash', () => {

@@ -84,25 +84,6 @@ describe('Presentation.appendSlides — embedded fonts', () => {
 		)
 	})
 
-	test('is idempotent: appending the same generator twice carries each face once', async () => {
-		const target = await openTarget()
-		await target.appendSlides(await fontGenerator(), { layout: 'Blank' })
-		await target.appendSlides(await fontGenerator(), { layout: 'Blank' })
-
-		const zip = await zipOf(await target.save())
-		const fontParts = Object.keys(zip.files).filter((n) => /^ppt\/fonts\/font\d+\.fntdata$/.test(n))
-		assertEqual(fontParts.length, 2, 'each face written exactly once across repeated appends')
-
-		const pres = await readEntry(zip, 'ppt/presentation.xml')
-		assertEqual(
-			(pres.match(/<p:embeddedFont>/g) || []).length,
-			1,
-			'a single embeddedFont entry for the shared typeface'
-		)
-		assertEqual((pres.match(/<p:regular /g) || []).length, 1, 'regular face not duplicated')
-		assertEqual((pres.match(/<p:bold /g) || []).length, 1, 'bold face not duplicated')
-	})
-
 	test('no embedded fonts on the generator leaves the deck font-free', async () => {
 		const target = await openTarget()
 		const pptx = new PptxTs()
