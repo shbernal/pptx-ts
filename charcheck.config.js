@@ -88,12 +88,14 @@ export default {
 		{
 			// Site config and theme code: string literals only. That is where the nav labels,
 			// the tagline and the meta description live, and it is the only text in these
-			// files a visitor can read. Comments keep their dashes, as they do repo-wide.
+			// files a visitor can read. The `.mjs` files are the showcase decks, whose strings
+			// are the slide text the demos page previews. Comments keep their dashes, as they
+			// do repo-wide.
 			id: 'no-em-dash-in-site-text',
 			chars: DASHES,
 			scope: 'strings',
 			message: MESSAGE,
-			include: ['docs/.vitepress/config.mts', 'docs/.vitepress/theme/**/*.ts', 'www/**/*.ts'],
+			include: ['docs/.vitepress/config.mts', 'docs/.vitepress/theme/**/*.ts', 'www/**/*.ts', 'www/**/*.mjs'],
 		},
 	],
 	ignore: GENERATED,

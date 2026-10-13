@@ -1,11 +1,12 @@
 /**
- * Showcase deck: "Nightjar — Series A".
+ * Showcase deck: "Nightjar: Series A".
  *
  * A dark investor pitch for a fictional developer-infrastructure startup, on the Tokyo Night
  * palette. Where the other showcase is a light corporate report, this one leans on what a
  * product pitch needs: a logo drawn from shapes, photographs under gradient scrims, pattern and
  * radial grounds, gradient strokes, connectors bound to shapes with build animations and
- * transitions, area and horizontal bar charts, a dark table, an embedded demo video, text glow, and external and internal hyperlinks.
+ * transitions, an area and a bar chart drawn from shapes, a dark table, an embedded demo
+ * video, text glow, and external and internal hyperlinks.
  *
  * Build it with `pnpm showcases:build series-a`.
  *
@@ -13,32 +14,33 @@
  * hands them over as paths under Node and as URLs on the site, so the same module builds the
  * deck in both.
  */
-import PptxTs, { ChartType, ShapeType } from 'pptx-ts'
+import PptxTs, { ShapeType } from 'pptx-ts'
 import { image, imageDataUri, media } from '../lib/assets.mjs'
 import { CONTENT_W, MARGIN, WIDE, columns } from '../lib/layout.mjs'
+import { bar, freeform, rule, scale } from '../lib/plot.mjs'
 import {
 	ARR,
 	ARTIFACT_ADDRESS,
 	ARTIFACT_INPUTS,
+	BENCHMARKS,
 	CACHE,
 	FEATURES,
 	KPIS,
 	MATRIX,
+	MONTHS,
 	PIPELINE,
 	PROBLEM_STATS,
 	ROUND,
 	TEAM,
 	TERMINAL,
-	arrSeries,
-	benchmarkSeries,
 } from './data.mjs'
 import {
 	AURORA,
 	BRAND,
 	CHART_COLORS,
-	CHART_TEXT,
 	FONT,
 	MASTER,
+	PLOT,
 	ROLE,
 	TERMINAL_BAR,
 	TYPE,
@@ -453,7 +455,7 @@ function addProduct(pptx) {
 		}))
 	)
 	slide.addGroup([
-		...terminalFrame({ ...frame, label: '~/monorepo — zsh' }),
+		...terminalFrame({ ...frame, label: '~/monorepo: zsh' }),
 		{
 			text: {
 				text: lines.flat(),
@@ -905,26 +907,71 @@ function kpiTile({ x, y, w, h, value, label, delta }) {
 	]
 }
 
+/** Text on a drawn chart: vertically centred, in the label colour unless told otherwise. */
+function plotText(content, options) {
+	return {
+		text: {
+			text: content,
+			options: { margin: 0, valign: 'middle', fontFace: FONT.body, fontSize: 11, color: PLOT.label, ...options },
+		},
+	}
+}
+
+/** A drawn chart's legend: a swatch and a name per series, in a row from (x, y). */
+function plotLegend(series, { x, y }) {
+	let left = x
+	return series.flatMap(({ name, color }) => {
+		const entry = [
+			{ rect: { x: left, y: y + 0.09, w: 0.16, h: 0.16, fill: { color } } },
+			plotText(name, { x: left + 0.24, y, w: 1.3, h: 0.34 }),
+		]
+		left += 1.6
+		return entry
+	})
+}
+
 function addTraction(pptx) {
 	const slide = pptx.addSlide({ masterTitle: MASTER.content, sectionTitle: 'Proof' })
 	slideTitle(slide, '$1.4M ARR, 12 months from launch.', 'Traction')
 
-	slide.addChart(arrSeries(), {
-		type: ChartType.area,
-		x: MARGIN - 0.1,
-		y: 1.75,
-		w: 8.4,
-		h: 4.95,
-		barGrouping: 'stacked',
-		chartColors: CHART_COLORS.slice(0, 2),
-		chartColorsOpacity: 70,
-		showLegend: true,
-		legendPos: 't',
-		...CHART_TEXT,
-		valAxisLabelFormatCode: '"$"#,##0"K"',
-		valAxisMaxVal: 1500,
-		valAxisMajorUnit: 500,
-	})
+	// A stacked area, drawn: enterprise sits on self-serve, so the top edge is total ARR.
+	const plot = { x: 1.55, y: 2.35, w: 7.35, h: 3.75 }
+	const ticks = [0, 500, 1000, 1500]
+	const yOf = scale([0, 1500], [plot.y + plot.h, plot.y])
+	const xOf = (i) => plot.x + (i / (MONTHS.length - 1)) * plot.w
+	const stack = ARR.selfServe.map((v, i) => v + ARR.enterprise[i])
+	const edge = (values) => values.map((v, i) => ({ x: xOf(i), y: yOf(v) }))
+	const floor = [
+		{ x: xOf(MONTHS.length - 1), y: yOf(0) },
+		{ x: xOf(0), y: yOf(0) },
+	]
+	const layers = [
+		{ name: 'Self-serve', color: CHART_COLORS[0], top: edge(ARR.selfServe), base: floor },
+		{ name: 'Enterprise', color: CHART_COLORS[1], top: edge(stack), base: edge(ARR.selfServe).reverse() },
+	]
+	slide.addGroup([
+		...ticks.map((v) => rule(plot.x, plot.x + plot.w, yOf(v), { color: PLOT.grid, width: 0.75 })),
+		...layers.flatMap(({ color, top, base }) => [
+			freeform([...top, ...base], { closed: true, fill: { color, transparency: 30 } }),
+			freeform(top, { line: { color, width: 1.5 } }),
+		]),
+		...ticks.map((v) =>
+			plotText(`$${v.toLocaleString('en-US')}K`, {
+				x: plot.x - 1,
+				y: yOf(v) - 0.14,
+				w: 0.9,
+				h: 0.28,
+				align: 'right',
+				fontFace: FONT.mono,
+				fontSize: 10,
+				color: PLOT.axis,
+			})
+		),
+		...MONTHS.map((month, i) =>
+			plotText(month, { x: xOf(i) - 0.35, y: plot.y + plot.h + 0.1, w: 0.7, h: 0.28, align: 'center' })
+		),
+		...plotLegend(layers, { x: plot.x, y: 1.85 }),
+	])
 
 	const tileX = 9.35
 	const tileW = WIDE.w - tileX - MARGIN
@@ -944,28 +991,58 @@ function addBenchmarks(pptx) {
 	const slide = pptx.addSlide({ masterTitle: MASTER.content, sectionTitle: 'Proof' })
 	slideTitle(slide, 'Same monorepo, three ways to build it.', 'Benchmarks')
 
-	slide.addChart(benchmarkSeries(), {
-		type: ChartType.bar,
-		x: MARGIN - 0.1,
-		y: 1.75,
-		w: 9.0,
-		h: 4.95,
-		barDir: 'bar',
-		barGrouping: 'clustered',
-		barGapWidthPct: 55,
-		// Cold first, in purple: the slower bar of each pair takes the secondary colour.
-		chartColors: [CHART_COLORS[1], CHART_COLORS[0]],
-		showLegend: true,
-		legendPos: 't',
-		...CHART_TEXT,
-		catAxisLabelFontSize: 12,
-		showValue: true,
-		dataLabelPosition: 'outEnd',
-		dataLabelFormatCode: '0.0" min"',
-		valAxisLabelFormatCode: '0" min"',
-		valAxisMaxVal: 45,
-		valAxisMajorUnit: 15,
-	})
+	// Clustered bars, drawn: slowest setup first, each with its cold run over its warm one.
+	// Cold takes the secondary colour, so the slower bar of each pair is the purple one.
+	const plot = { x: 3.15, y: 2.35, w: 5.9, h: 3.75 }
+	const xOf = scale([0, 45], [plot.x, plot.x + plot.w])
+	const band = plot.h / BENCHMARKS.length
+	const barH = band / 1.55 / 2
+	const runs = [
+		{ name: 'Cold cache', color: CHART_COLORS[1], pick: (r) => r.cold },
+		{ name: 'Warm cache', color: CHART_COLORS[0], pick: (r) => r.warm },
+	]
+	slide.addGroup([
+		...[0, 15, 30, 45].flatMap((v) => [
+			{ line: { x: xOf(v), y: plot.y, w: 0, h: plot.h, line: { color: PLOT.grid, width: 0.75 } } },
+			plotText(`${v} min`, {
+				x: xOf(v) - 0.5,
+				y: plot.y + plot.h + 0.1,
+				w: 1,
+				h: 0.28,
+				align: 'center',
+				fontFace: FONT.mono,
+				fontSize: 10,
+				color: PLOT.axis,
+			}),
+		]),
+		...BENCHMARKS.flatMap((row, i) => {
+			const y = plot.y + i * band + (band - 2 * barH) / 2
+			return [
+				plotText(row.setup, {
+					x: MARGIN - 0.1,
+					y: plot.y + i * band,
+					w: plot.x - MARGIN - 0.1,
+					h: band,
+					align: 'right',
+					fontSize: 12,
+				}),
+				...runs.flatMap(({ color, pick }, k) => [
+					bar({ x0: xOf(0), x1: xOf(pick(row)), y0: y + k * barH, y1: y + (k + 1) * barH, fill: { color } }),
+					plotText(`${pick(row).toFixed(1)} min`, {
+						x: xOf(pick(row)) + 0.08,
+						y: y + k * barH,
+						w: 1,
+						h: barH,
+						fontFace: FONT.mono,
+						fontSize: 11,
+						color: PLOT.value,
+					}),
+				]),
+			]
+		}),
+		{ line: { x: plot.x, y: plot.y, w: 0, h: plot.h, line: { color: PLOT.grid, width: 1 } } },
+		...plotLegend(runs, { x: plot.x, y: 1.85 }),
+	])
 
 	const noteX = 10.2
 	const noteW = WIDE.w - noteX - MARGIN
@@ -1010,7 +1087,7 @@ function addBenchmarks(pptx) {
 const MARK = {
 	yes: { glyph: '✓', color: ROLE.ok },
 	part: { glyph: '◐', color: ROLE.caution },
-	no: { glyph: '—', color: ROLE.decor },
+	no: { glyph: '✕', color: ROLE.decor },
 }
 
 function addLandscape(pptx) {
@@ -1083,7 +1160,7 @@ function addLandscape(pptx) {
 			{ text: ' yes     ', options: { color: ROLE.textMuted } },
 			{ text: '◐', options: { color: ROLE.caution, fontFace: FONT.symbol } },
 			{ text: ' partial     ', options: { color: ROLE.textMuted } },
-			{ text: '—', options: { color: ROLE.textMuted } },
+			{ text: '✕', options: { color: ROLE.textMuted, fontFace: FONT.symbol } },
 			{ text: ' no', options: { color: ROLE.textMuted } },
 		],
 		{ x: MARGIN, y: 6.1, w: 6, h: 0.32, margin: 0, fontFace: FONT.body, fontSize: TYPE.caption }
@@ -1332,7 +1409,7 @@ function addClose(pptx) {
 export async function compose() {
 	const pptx = new PptxTs()
 
-	pptx.title = 'Nightjar — Series A'
+	pptx.title = 'Nightjar: Series A'
 	pptx.subject = 'Investor pitch'
 	pptx.author = 'Nightjar'
 	pptx.company = 'Nightjar'
@@ -1363,9 +1440,9 @@ export async function build(outFile) {
 
 export const showcase = {
 	slug: 'series-a',
-	title: 'Nightjar — Series A',
+	title: 'Nightjar: Series A',
 	description:
-		'Dark pitch deck on the Tokyo Night palette: a logo drawn from shapes, photographs under gradient scrims, pattern and gradient grounds, connectors with build animations, area and bar charts, an embedded demo video, and live hyperlinks.',
+		'Dark pitch deck on the Tokyo Night palette: a logo drawn from shapes, photographs under gradient scrims, pattern and gradient grounds, connectors with build animations, area and bar charts drawn from shapes, an embedded demo video, and live hyperlinks.',
 	fileName: 'Nightjar_Series_A.pptx',
 	compose,
 	build,

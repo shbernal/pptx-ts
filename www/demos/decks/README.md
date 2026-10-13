@@ -20,11 +20,10 @@ Output goes to `.tmp/showcases/` at the repository root (git-ignored).
 
 Twelve slides. The corporate flagship, a strategy consulting deck in navy: a themed
 `<a:clrScheme>`, four slide masters with a title placeholder and master text styles, action
-titles, a section tracker whose tabs are internal slide links, a cost waterfall built as a stacked
-column over an invisible base, a doughnut with a text well in its hole, a line chart with a drawn
-gap bracket, an issue tree and a governance chart on shape-bound connectors, a 2x2 matrix, a
-business-case table with a colspan header and drawn Harvey balls, a chevron and Gantt wave plan,
-and speaker notes throughout.
+titles, a section tracker whose tabs are internal slide links, a cost waterfall, a doughnut with a
+text well in its hole, a line chart with a drawn gap bracket, an issue tree and a governance chart
+on shape-bound connectors, a 2x2 matrix, a business-case table with a colspan header and drawn
+Harvey balls, a chevron and Gantt wave plan, and speaker notes throughout.
 
 It imports nothing from `node:`. Every mark on every slide is drawn rather than loaded.
 That is what lets the site's demos page (`www/demos/`) import this same module and build the
@@ -42,8 +41,17 @@ hyperlinks.
 
 It loads two photographs and a screen recording from `media/`, as paths under Node and as URLs on the
 site, where the demos page builds it in the browser like the consulting deck. On a dark ground
-every text, chart and table colour is set explicitly: the theme's `dk1` stays dark, so anything
-left to the default would draw dark on dark.
+every text, drawn chart and table colour is set explicitly: the theme's `dk1` stays dark, so
+anything left to the default would draw dark on dark.
+
+### Charts
+
+Neither deck uses `addChart`. The demos page previews each deck through `pptx-html`, which
+draws a chart part as a labelled placeholder box rather than the chart. So the five plots (the
+waterfall, doughnut and line chart in Lodestar, the area and bar chart in Nightjar) are built
+from freeforms, rectangles, lines and text boxes, with the geometry in `lib/plot.mjs`. They look
+the same in PowerPoint, but they are shapes: there is no workbook behind them to edit. Charts as
+chart objects are covered by the library's own tests and docs, not by these decks.
 
 ### Media
 
@@ -61,8 +69,9 @@ Where each file in `media/` comes from:
 ```
 lib/assets.mjs      media as a path (Node) or URL (site), and the one base64 helper addMedia needs
 lib/layout.mjs      slide geometry: the 16:9 box, margins, column arithmetic
-lib/showcases.mjs   the SHOWCASES registry — every deck, in build order
-<deck>/design.mjs   palette, type scale, theme, masters — no slide names a raw hex
+lib/plot.mjs        chart geometry: scales, freeform areas and lines, ring segments, bars
+lib/showcases.mjs   the SHOWCASES registry: every deck, in build order
+<deck>/design.mjs   palette, type scale, theme, masters; no slide names a raw hex
 <deck>/data.mjs     content, kept apart from layout
 <deck>/index.mjs    the slides, plus an exported `showcase` descriptor
 build.mjs           the runner; the only place that touches the filesystem

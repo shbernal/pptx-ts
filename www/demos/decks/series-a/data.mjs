@@ -5,10 +5,6 @@
  * the two revenue lines sum to the ARR on the KPI tile, enterprise overtakes self-serve in the
  * month the speaker notes say it does, and the benchmark's 0.7 minutes is the 41 seconds the
  * terminal prints. A pitch whose own numbers contradict each other reads as filler.
- *
- * Chart-shaped arrays are derived from plain sources rather than written out twice:
- * `addChart` normalizes `labels` in place, so an array handed to a chart is not safe to read
- * back afterwards (see the decks README).
  */
 
 /** The three numbers on the problem slide. `tone` names a ROLE colour in design.mjs. */
@@ -88,38 +84,21 @@ export const ARR = {
 	enterprise: [30, 45, 70, 110, 160, 220, 290, 370, 470, 580, 680, 780],
 }
 
-/** Chart-shaped view of `ARR`. */
-export function arrSeries() {
-	return [
-		{ name: 'Self-serve', labels: [...MONTHS], values: [...ARR.selfServe] },
-		{ name: 'Enterprise', labels: [...MONTHS], values: [...ARR.enterprise] },
-	]
-}
-
 export const KPIS = [
 	{ value: '$1.4M', label: 'ARR', delta: '▲ 6.7× in 12 months' },
 	{ value: '143%', label: 'Net revenue retention', delta: '▲ expansion-led' },
 	{ value: '62', label: 'Paying teams', delta: '▲ 41 added this year' },
 ]
 
-/** Median build minutes for one monorepo of 1,284 targets. No real competitor is named. */
+/**
+ * Median build minutes for one monorepo of 1,284 targets, slowest first, the order the slide
+ * reads in. No real competitor is named.
+ */
 export const BENCHMARKS = [
 	{ setup: 'Hosted runners', cold: 38.0, warm: 31.0 },
 	{ setup: 'Self-hosted + local cache', cold: 29.0, warm: 14.0 },
 	{ setup: 'Nightjar', cold: 11.0, warm: 0.7 },
 ]
-
-/**
- * Chart-shaped view of `BENCHMARKS`. A horizontal bar chart plots its first category at the
- * bottom, so the categories go in reversed: the slide then reads top to bottom, slowest first.
- */
-export function benchmarkSeries() {
-	const rows = [...BENCHMARKS].reverse()
-	return [
-		{ name: 'Cold cache', labels: rows.map((r) => r.setup), values: rows.map((r) => r.cold) },
-		{ name: 'Warm cache', labels: rows.map((r) => r.setup), values: rows.map((r) => r.warm) },
-	]
-}
 
 /** The landscape matrix. The slide maps `yes`, `part` and `no` to glyphs and colours. */
 export const MATRIX = {
