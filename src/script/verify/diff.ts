@@ -228,8 +228,8 @@ export function diffDeckIr(expected: CanonicalDeck, actual: CanonicalDeck, notes
 				path: `slides[${index}]`,
 				field: '*',
 				kind: before ? 'lost' : 'added',
-				expected: before ? 'slide' : '—',
-				actual: after ? 'slide' : '—',
+				expected: before ? 'slide' : '(none)',
+				actual: after ? 'slide' : '(none)',
 				declaredBy: null,
 			})
 			continue
@@ -377,8 +377,8 @@ function diffSlide(expected: CanonicalSlide, actual: CanonicalSlide, out: IrDiff
 				path,
 				field: '*',
 				kind: before ? 'lost' : 'added',
-				expected: before ? before.method : '—',
-				actual: after ? after.method : '—',
+				expected: before ? before.method : '(none)',
+				actual: after ? after.method : '(none)',
 				declaredBy: null,
 			})
 			continue
@@ -596,7 +596,7 @@ export function isKnownNoteConstruct(construct: string): boolean {
 }
 
 function brief(value: IrValue | undefined): string {
-	if (value === undefined) return '—'
+	if (value === undefined) return '(none)'
 	const text = JSON.stringify(value)
 	return text.length > 80 ? `${text.slice(0, 80)}…` : text
 }

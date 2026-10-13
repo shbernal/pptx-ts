@@ -103,7 +103,7 @@ function recordMasterLosses(masters: SlideMaster[], theme: Theme | null, notes: 
 			'theme.fmtScheme',
 			'approximated',
 			'unread',
-			"the theme's format scheme (a:fmtScheme — the three fill, line and effect style lists a shape's p:style indexes into) has no read accessor and no write-API option, so the output carries Office's default; a shape whose fill or outline came from the theme rather than from its own a:ln keeps its colour but not its width, dash or effect"
+			"the theme's format scheme (a:fmtScheme: the three fill, line and effect style lists a shape's p:style indexes into) has no read accessor and no write-API option, so the output carries Office's default; a shape whose fill or outline came from the theme rather than from its own a:ln keeps its colour but not its width, dash or effect"
 		)
 	}
 
@@ -114,7 +114,7 @@ function recordMasterLosses(masters: SlideMaster[], theme: Theme | null, notes: 
 				'master.txStyles',
 				'dropped',
 				'unread',
-				"the master's per-level text styles (p:txStyles — the default size, face, colour, indent and bullet of each of the nine list levels) have no read accessor, so placeholder text falls back to PowerPoint's built-in defaults; SlideMasterProps.textStyles could author them if they could be seen"
+				"the master's per-level text styles (p:txStyles: the default size, face, colour, indent and bullet of each of the nine list levels) have no read accessor, so placeholder text falls back to PowerPoint's built-in defaults; SlideMasterProps.textStyles could author them if they could be seen"
 			)
 		}
 		if (hasDecorativeShapes(root)) {
@@ -122,7 +122,7 @@ function recordMasterLosses(masters: SlideMaster[], theme: Theme | null, notes: 
 				'master.decoration',
 				'dropped',
 				'unwritable',
-				"this slide master carries shapes that are not placeholders (a logo, a rule, a background graphic); the read model decodes them (SlideMaster.shapes) and a layout's are re-authored, but a master's cannot be — defineSlideMaster creates a layout under the one shared master, so the master's own shape tree has no write-side counterpart to receive them"
+				"this slide master carries shapes that are not placeholders (a logo, a rule, a background graphic); the read model decodes them (SlideMaster.shapes) and a layout's are re-authored, but a master's cannot be: defineSlideMaster creates a layout under the one shared master, so the master's own shape tree has no write-side counterpart to receive them"
 			)
 		}
 
@@ -191,7 +191,7 @@ function layoutsToIr(masters: SlideMaster[], ctx: MapContext): MasterIr[] {
 			'master.nameCollision',
 			'approximated',
 			'unsupported',
-			`${collided.length} layout name(s) are not unique in the source — normally because the deck has several masters, each with its own "Title and Content" — and a layout title here is also the key addSlide({ masterTitle }) binds on, so duplicates cannot both exist. The later ones are suffixed and the slides bound to them follow: ${collided.join('; ')}`
+			`${collided.length} layout name(s) are not unique in the source (normally because the deck has several masters, each with its own "Title and Content"), and a layout title here is also the key addSlide({ masterTitle }) binds on, so duplicates cannot both exist. The later ones are suffixed and the slides bound to them follow: ${collided.join('; ')}`
 		)
 	}
 	if (renamed.length > 0) {
@@ -199,7 +199,7 @@ function layoutsToIr(masters: SlideMaster[], ctx: MapContext): MasterIr[] {
 			'master.name',
 			'flattened',
 			'unwritable',
-			`${renamed.length} layout name(s) contain a line break or tab, which cannot survive as a layout title: the write path emits the name as a literal XML attribute value rather than a character reference, and XML normalises whitespace in an attribute to spaces. Collapsed here so the emitted script says what the output will contain — ${renamed.join('; ')}`
+			`${renamed.length} layout name(s) contain a line break or tab, which cannot survive as a layout title: the write path emits the name as a literal XML attribute value rather than a character reference, and XML normalises whitespace in an attribute to spaces. Collapsed here so the emitted script says what the output will contain: ${renamed.join('; ')}`
 		)
 	}
 	return out
@@ -369,7 +369,7 @@ function collectObjects(shapes: AnyShape[], out: IrValue[], ctx: MapContext): vo
 				'group',
 				'flattened',
 				'unwritable',
-				"defineSlideMaster({ objects }) has no group variant, so this group's children are emitted as loose objects; they land in the same places — the group's offset, rotation, flips and child-space scaling are composed into each child's coordinates — but the layout no longer offers them as one selectable object"
+				"defineSlideMaster({ objects }) has no group variant, so this group's children are emitted as loose objects; they land in the same places (the group's offset, rotation, flips and child-space scaling are composed into each child's coordinates), but the layout no longer offers them as one selectable object"
 			)
 			collectObjects(shape.shapes, out, ctx)
 			continue

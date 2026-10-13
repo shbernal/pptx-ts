@@ -127,7 +127,7 @@ export function rejectEmptyColor(value: unknown, option: string): boolean {
 	if (value !== '') return false
 	warnOnce(
 		'color/empty-string',
-		`\`${option}\` is an empty string, which is not a color — the option was ignored, exactly as omitting it would be. Pass 6-digit hex RGB (e.g. "FF3399") or a SchemeColor value.`
+		`\`${option}\` is an empty string, which is not a color, so the option was ignored, exactly as omitting it would be. Pass 6-digit hex RGB (e.g. "FF3399") or a SchemeColor value.`
 	)
 	return true
 }

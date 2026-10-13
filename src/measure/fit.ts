@@ -368,7 +368,7 @@ export function applyMeasuredFit(slides: PresSlideInternal[], registry: FontMetr
 	if (unmeasuredShrink.size > 0) {
 		warn(
 			'measure/shrink-unmeasured',
-			`fit:'shrink' could not be measured for font(s) [${[...unmeasuredShrink].join(', ')}] — ` +
+			`fit:'shrink' could not be measured for font(s) [${[...unmeasuredShrink].join(', ')}]: ` +
 				'no registered metrics. Emitting bare <a:normAutofit/> (text will not pre-shrink in headless renders). ' +
 				'Call pptx.registerFontMetrics(face, fontFilePathOrBytes) to enable measured fit.'
 		)
@@ -376,7 +376,7 @@ export function applyMeasuredFit(slides: PresSlideInternal[], registry: FontMetr
 	if (unmeasuredResize.size > 0) {
 		warn(
 			'measure/resize-unmeasured',
-			`fit:'resize' could not be measured for font(s) [${[...unmeasuredResize].join(', ')}] — ` +
+			`fit:'resize' could not be measured for font(s) [${[...unmeasuredResize].join(', ')}]: ` +
 				'no registered metrics. Emitting bare <a:spAutoFit/> with the authored height (box will not auto-grow in headless renders). ' +
 				'Call pptx.registerFontMetrics(face, fontFilePathOrBytes) to enable measured fit.'
 		)
@@ -385,7 +385,7 @@ export function applyMeasuredFit(slides: PresSlideInternal[], registry: FontMetr
 		const perFace = [...uncoveredByFace].map(([face, cps]) => `${face} → ${formatCodepoints(cps)}`).join('; ')
 		warn(
 			'measure/uncovered-codepoints',
-			`Measured fit charged the .notdef advance for code point(s) the registered face does not cover (${perFace}) — ` +
+			`Measured fit charged the .notdef advance for code point(s) the registered face does not cover (${perFace}). ` +
 				'PowerPoint renders those from a substituted font, so the measured width can be wrong in EITHER direction. ' +
 				'Too narrow drops a line and the text overflows the baked size, the one case measured fit does not err safe. ' +
 				'Register a face that covers them, or set an explicit fontFace on those runs.'
@@ -394,7 +394,7 @@ export function applyMeasuredFit(slides: PresSlideInternal[], registry: FontMetr
 	if (heuristicFaces.size > 0) {
 		warn(
 			'measure/heuristic-metrics',
-			`Note: measured fit used a conservative average-advance estimate for font(s) [${[...heuristicFaces].join(', ')}] — ` +
+			`Note: measured fit used a conservative average-advance estimate for font(s) [${[...heuristicFaces].join(', ')}]: ` +
 				'no exact metrics registered. Fit is approximate (may shrink/grow more than necessary). ' +
 				'Call pptx.registerFontMetrics(face, fontFilePathOrBytes) for an exact fit.'
 		)

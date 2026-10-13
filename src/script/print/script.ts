@@ -98,7 +98,7 @@ export function printScript(ir: DeckIr, options: PrintScriptOptions = {}): Print
 						? `, plus ${assets.printed.size} media file(s) in ${assetDir}`
 						: ''
 				}.`,
-				`Writes ${outputPath}. Needs an ESM context — it uses top-level await.`,
+				`Writes ${outputPath}. Needs an ESM context because it uses top-level await.`,
 			],
 			notes
 		),
@@ -202,7 +202,7 @@ function printSlides(ir: DeckIr, collector: NoteCollector, printAsset: AssetPrin
 			flush()
 			lines.push(
 				'',
-				`// Slide ${slide.number} — copied from the source deck rather than rebuilt; see the fidelity notes.`,
+				`// Slide ${slide.number}: copied from the source deck rather than rebuilt; see the fidelity notes.`,
 				`deck.importSlide(source, ${slide.number - 1})`
 			)
 			continue
@@ -282,7 +282,7 @@ function printAuthoredSlide(
 	const layout = slide.layout === null ? 'no layout' : `layout ${JSON.stringify(slide.layout.name)}`
 	return printSlide(
 		slide,
-		{ comment: `Slide ${slide.number} — ${layout}`, construction: `${generatorName}.addSlide()` },
+		{ comment: `Slide ${slide.number}: ${layout}`, construction: `${generatorName}.addSlide()` },
 		collector,
 		printAsset
 	)

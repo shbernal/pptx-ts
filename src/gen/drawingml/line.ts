@@ -140,7 +140,7 @@ function warnUnknownBorderKeys(border: BorderProps): void {
 		if (!Object.hasOwn(border, key) || BORDER_KEYS.includes(key)) continue
 		warnOnce(
 			'border/unknown-key',
-			`border: unknown option \`${key}\` is ignored — valid keys are ${BORDER_KEYS.join(', ')}. ` +
+			`border: unknown option \`${key}\` is ignored. Valid keys are ${BORDER_KEYS.join(', ')}. ` +
 				'Line thickness is `width`, in points.',
 			{ received: key, valid: BORDER_KEYS }
 		)

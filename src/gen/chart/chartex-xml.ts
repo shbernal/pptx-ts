@@ -60,7 +60,7 @@ function chartExLayoutId(type: ChartType): string {
 			// routing; `''` here used to emit `<cx:series layoutId="">`, which PowerPoint cannot render.
 			throw new InternalError(
 				'chart/type-not-routed',
-				`chartExLayoutId: "${String(type)}" has no <cx:series> layoutId — classic chart types belong to makeXmlCharts, pareto is built by makeParetoSeries, and a newly added chartEx type needs an arm here`,
+				`chartExLayoutId: "${String(type)}" has no <cx:series> layoutId: classic chart types belong to makeXmlCharts, pareto is built by makeParetoSeries, and a newly added chartEx type needs an arm here`,
 				{ detail: { chartType: type } }
 			)
 	}

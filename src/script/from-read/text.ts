@@ -205,7 +205,7 @@ function bulletStyle(bullet: BulletStyle, notes: NoteScope): Record<string, IrVa
 			'text.bullet.sizePct',
 			'approximated',
 			'unwritable',
-			`bullet glyph size ${sizePct}% is outside the 25–400% range the write API accepts, so it is printed as ${clampedPct}% — the bound the write path clamps it to`
+			`bullet glyph size ${sizePct}% is outside the 25–400% range the write API accepts, so it is printed as ${clampedPct}%, the bound the write path clamps it to`
 		)
 	}
 
@@ -424,7 +424,7 @@ function runColor(run: Run, leftUncoloured: boolean, notes: NoteScope): string |
 			'text.color.default',
 			'approximated',
 			'unread',
-			'this run inherits its colour and nothing resolves what it inherits (a list style the read model does not walk), so the write path paints it black — the one case where the output colour is not merely frozen but possibly wrong'
+			'this run inherits its colour and nothing resolves what it inherits (a list style the read model does not walk), so the write path paints it black, the one case where the output colour is not merely frozen but possibly wrong'
 		)
 		return undefined
 	}
