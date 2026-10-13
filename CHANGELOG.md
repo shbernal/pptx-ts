@@ -186,6 +186,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A styled table's text takes the style's colour.** `addTable` wrote black on every cell run with
+  no colour, and a run's own colour beats the style's text colour, so Medium Style 2's header drew
+  black text on its accent fill where the style says white. A table with `tableStyle` now leaves
+  those runs uncoloured, unless the slide has a `color`, and `readModelToIr` replays such a cell
+  without a colour instead of baking one in. A table without `tableStyle` keeps the black
+  ([#243](https://github.com/shbernal/pptx-ts/issues/243)).
+
 - **A deck defines the built-in table styles its tables use.** `ppt/tableStyles.xml` named the
   default style and defined none, so a table written with `tableStyle` read back with a `null`
   `Table.resolvedStyle` and no style fill on any cell, and a renderer working from the file drew

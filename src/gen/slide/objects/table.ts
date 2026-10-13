@@ -430,8 +430,13 @@ export function renderTableObject(ctx: RenderContext): string {
 			// the reference handed to `genXmlTextBody` below carried keys the cell never stated.
 			// The invariant at the head of this file has said "never mutates" throughout.
 			const cellOpts = inheritTableOptions(cell.options, objTabOpts)
-			if (cellOpts.color === undefined && itemOpts._slideColor && !cellHasHyperlink(cell))
-				cellOpts.color = slideTextColor(slide)
+			// A table that names a `tableStyle` takes the style's text colour (`a:tcTxStyle`), which a
+			// run's own fill would beat, so the black default is skipped there as the default borders
+			// are (#243). The slide's `color` is still stated, and still applies.
+			if (cellOpts.color === undefined && itemOpts._slideColor && !cellHasHyperlink(cell)) {
+				const color = objTabOpts.tableStyle ? ('color' in slide && slide.color) || undefined : slideTextColor(slide)
+				if (color) cellOpts.color = color
+			}
 
 			const cellValign = resolveTextAnchor(cellOpts.valign)
 			const cellTextDir = cellOpts.textDirection && cellOpts.textDirection !== 'horz' ? cellOpts.textDirection : null

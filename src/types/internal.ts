@@ -206,7 +206,7 @@ export interface TableCellInternal extends TableCell {
  */
 export interface TablePropsInternal extends TableProps {
 	_arrObjTabHeadRows?: TableRow[]
-	/** A cell that states no colour takes the slide's, else black; see {@link TextPropsOptionsInternal._slideColor}. */
+	/** A cell that states no colour takes the slide's, else black, or nothing in a table with a `tableStyle`; see {@link TextPropsOptionsInternal._slideColor}. */
 	_slideColor?: true
 }
 

@@ -408,7 +408,8 @@ function runColor(run: Run, leftUncoloured: boolean, notes: NoteScope): string |
 	// only when the link itself carries; a dropped link leaves plain text, which the write path does
 	// paint black. A shape's own link counts for its runs, which `addText` leaves uncoloured too:
 	// a show jump stated on the shape is written on its `p:cNvPr` alone, so its runs state no link
-	// of their own (#128).
+	// of their own (#128). A cell of a table that names a `tableStyle` is the third: its colour comes
+	// from the style's `a:tcTxStyle` (#243).
 	if (leftUncoloured) return undefined
 
 	// A run with no colour of its own inherits one, and leaving the option out does *not* pass
@@ -673,7 +674,8 @@ function noteUnwritableBreaks(paragraph: Paragraph, notes: NoteScope): void {
  * there deliberately.
  * @param leftUncoloured - the write path leaves the shape's uncoloured runs uncoloured: the shape is
  *   written back as a `placeholder`, whose runs inherit from the layout, or it carries a hyperlink,
- *   whose runs PowerPoint paints in the theme's hlink colour. None of them takes its inherited
+ *   whose runs PowerPoint paints in the theme's hlink colour, or it is a cell of a table that names
+ *   a `tableStyle`, whose runs take the style's text colour. None of them takes its inherited
  *   colour baked in
  * @param textLang - the `lang` the text's options carry (`frameLanguage`), so each run states its own
  *   only where it differs. A table cell's text has none.
