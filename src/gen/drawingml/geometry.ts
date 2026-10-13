@@ -221,8 +221,9 @@ function isArcPoint(point: GeometryPoint): point is Extract<GeometryPoint, { cur
  * `<a:ahLst>`) and guide formulas (`guides` → `<a:gdLst>`) that make the shape connectable and
  * editable. Shared by the shape and image code paths so that path emission stays in one place.
  * Points and connection-site/handle positions are authored in the object's own inch/EMU space
- * (0..cx, 0..cy), not slide-relative and not normalized; a bare non-`Coord` string is passed
- * through verbatim as a guide-name reference (matching `ST_AdjCoordinate`'s number-or-name union).
+ * (0..cx, 0..cy), not slide-relative and not normalized; a bare non-`Coord` string, in a path
+ * point as in a site or handle, is passed through verbatim as a guide-name reference (matching
+ * `ST_AdjCoordinate`'s number-or-name union).
  * @param {ObjectOptions} options - object options carrying `points`/`guides`/`connectionSites`/`adjustHandles`
  * @param {number} cx - object width (EMU), used as the path viewport width
  * @param {number} cy - object height (EMU), used as the path viewport height
@@ -243,13 +244,16 @@ export function genXmlCustGeom(options: ObjectOptions, cx: number, cy: number, l
 		return String(getSmartParseNumber(v as Coord, axis, layout))
 	}
 
+	/** A path coordinate: required, so an absent one writes `0` as it always has; a guide name passes through. */
+	const pathCoord = (v: Coord | string | undefined, axis: 'X' | 'Y'): string => adjCoord(v, axis) ?? '0'
+
+	/** An `ST_AdjAngle` in degrees, or a guide name (any string) emitted verbatim. */
+	const pathAngle = (v: number | string, name: 'stAng' | 'swAng'): number | string =>
+		typeof v === 'string' ? v : convertArcAngle(v, name)
+
 	/** `<a:pt>` in the object's own EMU space. */
-	const pt = (x: Coord | undefined, y: Coord | undefined): string =>
-		voidEl(
-			'a:pt',
-			{ x: getSmartParseNumber(x, 'X', layout), y: getSmartParseNumber(y, 'Y', layout) },
-			SPACE_BEFORE_SLASH
-		)
+	const pt = (x: Coord | string | undefined, y: Coord | string | undefined): string =>
+		voidEl('a:pt', { x: pathCoord(x, 'X'), y: pathCoord(y, 'Y') }, SPACE_BEFORE_SLASH)
 
 	const nodes: string[] = []
 	points?.forEach((point, i) => {
@@ -266,10 +270,10 @@ export function genXmlCustGeom(options: ObjectOptions, cx: number, cy: number, l
 				voidEl(
 					'a:arcTo',
 					{
-						hR: getSmartParseNumber(point.curve.hR, 'Y', layout),
-						wR: getSmartParseNumber(point.curve.wR, 'X', layout),
-						stAng: convertArcAngle(point.curve.stAng, 'stAng'),
-						swAng: convertArcAngle(point.curve.swAng, 'swAng'),
+						hR: pathCoord(point.curve.hR, 'Y'),
+						wR: pathCoord(point.curve.wR, 'X'),
+						stAng: pathAngle(point.curve.stAng, 'stAng'),
+						swAng: pathAngle(point.curve.swAng, 'swAng'),
 					},
 					SPACE_BEFORE_SLASH
 				)

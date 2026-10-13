@@ -15,16 +15,23 @@ import {
 	numberValue,
 	type Element,
 } from '../../oxml/dom.js'
-import type { CustomGeometryPath, GeometryCommand } from './types.js'
+import type { CustomGeometryPath, GeometryCommand, GeometryCoordinate } from './types.js'
 import { ANGLE_UNITS_PER_DEGREE } from '../../../units.js'
 
 /**
- * One `a:pt` coordinate as a raw path-unit integer. A guide-name reference
- * (the `ST_AdjCoordinate` string form) is not produced by authored freeforms;
- * a non-numeric value degrades to `0` rather than crashing (documented edge).
+ * An `ST_AdjCoordinate` attribute of a path segment: a raw path-unit integer, or the guide name it
+ * references (the string form). Absent reads `0`.
  */
-function ptAxis(pt: Element | undefined, axis: 'x' | 'y'): number {
-	return (pt ? numberValue(attr(pt, axis)) : null) ?? 0
+function adjValue(element: Element | undefined, name: string): GeometryCoordinate {
+	const value = element ? attr(element, name) : null
+	if (value === null || value === '') return 0
+	return numberValue(value) ?? value
+}
+
+/** An `ST_AdjAngle` attribute of an `arcTo` in degrees, or the guide name it references. Absent reads `0`. */
+function adjAngle(seg: Element, name: string): GeometryCoordinate {
+	const value = adjValue(seg, name)
+	return typeof value === 'number' ? value / ANGLE_UNITS_PER_DEGREE : value
 }
 
 /** Parse one `<a:path>` into its viewport attrs (with schema defaults) and ordered segments. */
@@ -37,38 +44,38 @@ export function readGeometryPath(path: Element): CustomGeometryPath {
 		const pts = getElements(seg, 'a:pt')
 		switch (seg.localName) {
 			case 'moveTo':
-				commands.push({ cmd: 'moveTo', x: ptAxis(pts[0], 'x'), y: ptAxis(pts[0], 'y') })
+				commands.push({ cmd: 'moveTo', x: adjValue(pts[0], 'x'), y: adjValue(pts[0], 'y') })
 				break
 			case 'lnTo':
-				commands.push({ cmd: 'lnTo', x: ptAxis(pts[0], 'x'), y: ptAxis(pts[0], 'y') })
+				commands.push({ cmd: 'lnTo', x: adjValue(pts[0], 'x'), y: adjValue(pts[0], 'y') })
 				break
 			case 'cubicBezTo':
 				commands.push({
 					cmd: 'cubicBezTo',
-					x1: ptAxis(pts[0], 'x'),
-					y1: ptAxis(pts[0], 'y'),
-					x2: ptAxis(pts[1], 'x'),
-					y2: ptAxis(pts[1], 'y'),
-					x: ptAxis(pts[2], 'x'),
-					y: ptAxis(pts[2], 'y'),
+					x1: adjValue(pts[0], 'x'),
+					y1: adjValue(pts[0], 'y'),
+					x2: adjValue(pts[1], 'x'),
+					y2: adjValue(pts[1], 'y'),
+					x: adjValue(pts[2], 'x'),
+					y: adjValue(pts[2], 'y'),
 				})
 				break
 			case 'quadBezTo':
 				commands.push({
 					cmd: 'quadBezTo',
-					x1: ptAxis(pts[0], 'x'),
-					y1: ptAxis(pts[0], 'y'),
-					x: ptAxis(pts[1], 'x'),
-					y: ptAxis(pts[1], 'y'),
+					x1: adjValue(pts[0], 'x'),
+					y1: adjValue(pts[0], 'y'),
+					x: adjValue(pts[1], 'x'),
+					y: adjValue(pts[1], 'y'),
 				})
 				break
 			case 'arcTo':
 				commands.push({
 					cmd: 'arcTo',
-					wR: numberValue(attr(seg, 'wR')) ?? 0,
-					hR: numberValue(attr(seg, 'hR')) ?? 0,
-					stAng: (numberValue(attr(seg, 'stAng')) ?? 0) / ANGLE_UNITS_PER_DEGREE,
-					swAng: (numberValue(attr(seg, 'swAng')) ?? 0) / ANGLE_UNITS_PER_DEGREE,
+					wR: adjValue(seg, 'wR'),
+					hR: adjValue(seg, 'hR'),
+					stAng: adjAngle(seg, 'stAng'),
+					swAng: adjAngle(seg, 'swAng'),
 				})
 				break
 			case 'close':

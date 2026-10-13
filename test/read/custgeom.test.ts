@@ -17,7 +17,7 @@ import PptxTs from '../../dist/node.js'
 import { Presentation, type CustomGeometryPath, type Slide } from '../../dist/read.js'
 import { readModelToIr } from '../../dist/script.js'
 
-import { assert, assertEqual, at, defined } from '../helpers.ts'
+import { PNG_1X1_DATA_URI, assert, assertEqual, at, defined } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 async function openCustgeom() {
@@ -168,5 +168,87 @@ describe('Shape.customGeometry guides, adjust handles and connection sites', () 
 		const ir = readModelToIr(await openFixture('picture-custgeom'))
 		const note = ir.fidelity.find((one) => one.construct === 'shape.custGeom.guides')
 		assertEqual(note?.cause, 'unwritable', 'noted as unwritable, no longer unread')
+	})
+})
+
+describe('a custGeom path coordinate that names a guide', () => {
+	// `a:pt/@x`/`@y` and `arcTo`'s radii and angles are `ST_AdjCoordinate`/`ST_AdjAngle`: a literal
+	// or a guide name. A named one read back as `0`, and the write API refused one, so a guide could
+	// never shape the drawn outline (#255).
+	const box = { x: 1, y: 1, w: 5, h: 1.5, guides: [{ name: 'g0', formula: '*/ w 1 2' }] }
+
+	test('reads the guide name rather than 0', async () => {
+		const pptx = new PptxTs()
+		pptx.addSlide().addShape('custGeom', {
+			...box,
+			points: [{ x: 0, y: 1.5 }, { x: 2.5, y: 0 }, { x: 5, y: 1.5 }, { close: true }],
+		})
+		const shape = at(at((await Presentation.load(await pptx.toBytes())).slides, 0).shapes, 0)
+		const apex = at(shape.element_.getElementsByTagName('a:pt'), 1)
+		apex.setAttribute('x', 'g0')
+		const path = at(defined(shape.customGeometry).paths, 0)
+		assertEqual(JSON.stringify(at(path.commands, 1)), JSON.stringify({ cmd: 'lnTo', x: 'g0', y: 0 }))
+	})
+
+	test('a point and an arc can name a guide, and readModelToIr carries the names back', async () => {
+		const pptx = new PptxTs()
+		pptx.addSlide().addShape('custGeom', {
+			...box,
+			points: [
+				{ x: 0, y: 1.5 },
+				{ x: 'g0', y: 0 },
+				{ curve: { type: 'arc', wR: 'wd4', hR: 'hd4', stAng: 'cd2', swAng: 90 } },
+				{ x: 5, y: 1.5 },
+				{ close: true },
+			],
+		})
+		const deck = await Presentation.load(await pptx.toBytes())
+		const commands = at(defined(at(at(deck.slides, 0).shapes, 0).customGeometry).paths, 0).commands
+		assertEqual(JSON.stringify(at(commands, 1)), JSON.stringify({ cmd: 'lnTo', x: 'g0', y: 0 }))
+		assertEqual(
+			JSON.stringify(at(commands, 2)),
+			JSON.stringify({ cmd: 'arcTo', wR: 'wd4', hR: 'hd4', stAng: 'cd2', swAng: 90 })
+		)
+		const points = (at(at(readModelToIr(deck).slides, 0).calls, 0).args[1] as Record<string, unknown>)['points']
+		assertEqual(
+			JSON.stringify((points as unknown[]).slice(1, 3)),
+			JSON.stringify([
+				{ x: 'g0', y: '0emu' },
+				{ curve: { type: 'arc', wR: 'wd4', hR: 'hd4', stAng: 'cd2', swAng: 90 } },
+			])
+		)
+	})
+	test('a name in a path scaled onto its box is noted as approximated', async () => {
+		const pptx = new PptxTs()
+		pptx.addSlide().addShape('custGeom', { ...box, points: [{ x: 0, y: 1.5 }, { x: 'g0', y: 0 }, { close: true }] })
+		const deck = await Presentation.load(await pptx.toBytes())
+		const shape = at(at(deck.slides, 0).shapes, 0)
+		const path = at(shape.element_.getElementsByTagName('a:path'), 0)
+		path.setAttribute('w', String(Number(path.getAttribute('w')) * 2))
+		const note = readModelToIr(deck).fidelity.find((one) => one.construct === 'shape.custGeom.guides')
+		assertEqual(note?.disposition, 'approximated', 'the guide is read at a different scale')
+	})
+
+	test("a picture's point naming its own guide writes 0, since addImage cannot declare one", async () => {
+		const pptx = new PptxTs()
+		pptx.addSlide().addImage({
+			data: PNG_1X1_DATA_URI,
+			x: 1,
+			y: 1,
+			w: 5,
+			h: 1.5,
+			points: [{ x: 0, y: 1.5 }, { x: 'g0', y: 0 }, { close: true }],
+		})
+		const deck = await Presentation.load(await pptx.toBytes())
+		const shape = at(at(deck.slides, 0).shapes, 0)
+		const gdLst = at(shape.element_.getElementsByTagName('a:gdLst'), 0)
+		const gd = defined(gdLst.ownerDocument).createElementNS(gdLst.namespaceURI, 'a:gd')
+		gd.setAttribute('name', 'g0')
+		gd.setAttribute('fmla', '*/ w 1 2')
+		gdLst.appendChild(gd)
+		const ir = readModelToIr(deck)
+		const points = (at(at(ir.slides, 0).calls, 0).args[0] as Record<string, unknown>)['points'] as unknown[]
+		assertEqual(JSON.stringify(at(points, 1)), JSON.stringify({ x: '0emu', y: '0emu' }))
+		assert(ir.fidelity.some((note) => note.construct === 'shape.custGeom.guides' && note.disposition === 'dropped'))
 	})
 })

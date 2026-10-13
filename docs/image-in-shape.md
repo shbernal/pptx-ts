@@ -85,7 +85,8 @@ slide.addImage({
 - Write `points` in inches. A percentage string resolves against the slide, not against the box.
 - A path takes the same nodes as a freeform shape: plain points (the first moves the pen,
   `moveTo: true` starts a new subpath, the rest draw lines), a `curve` of type `cubic`,
-  `quadratic` or `arc`, and `{ close: true }`.
+  `quadratic` or `arc`, and `{ close: true }`. A coordinate, radius or angle can instead name a
+  built-in guide such as `'w'`, `'hc'` or `'cd4'`, which is written as given.
 - A clip changes only the outline. How the source fills the box is set by `sizing`.
 
 ## Fill the shape without distortion

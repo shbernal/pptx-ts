@@ -4286,6 +4286,30 @@ export default [
 		},
 	},
 	{
+		// A path point, arc radius or arc angle may name a guide (`ST_AdjCoordinate` /
+		// `ST_AdjAngle`), declared in `guides` or built in, so a guide can shape the outline (#255).
+		name: 'custGeom path points and an arc naming guides',
+		fn: async () => {
+			const { buf } = await build((p) => {
+				p.addSlide().addShape(ShapeType.custGeom, {
+					x: 1,
+					y: 1,
+					w: 4,
+					h: 2,
+					guides: [{ name: 'g0', formula: '*/ w 1 2' }],
+					points: [
+						{ x: 0, y: 'b' },
+						{ x: 'g0', y: 0 },
+						{ curve: { type: 'arc', wR: 'wd4', hR: 'hd4', stAng: 'cd2', swAng: 90 } },
+						{ x: 'r', y: 'b' },
+						{ close: true },
+					],
+				})
+			})
+			await expectNoSchemaErrors(buf, 'custGeom-path-guide-names')
+		},
+	},
+	{
 		// `guides` is an uninterpreted passthrough, so its leading operation is the one
 		// thing checked against the closed ECMA-376 §20.1.9.11 set: an unknown op emits
 		// schema-shaped but semantically dead geometry that PowerPoint answers with a
