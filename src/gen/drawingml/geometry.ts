@@ -260,7 +260,7 @@ export function genXmlCustGeom(options: ObjectOptions, cx: number, cy: number, l
 			if ('x' in point || 'y' in point)
 				warn(
 					'geometry/arc-node-point-ignored',
-					'freeform arc node: x/y are ignored — an arcTo end point is computed from stAng/swAng and the radii.'
+					'freeform arc node: x/y are ignored because an arcTo end point is computed from stAng/swAng and the radii.'
 				)
 			nodes.push(
 				voidEl(

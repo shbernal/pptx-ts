@@ -6,13 +6,13 @@
  * slide content below was rebuilt through the public write API.
  *
  * Expects ./template.pptx (the source deck, unmodified) beside this file.
- * Writes ./output.pptx. Needs an ESM context — it uses top-level await.
+ * Writes ./output.pptx. Needs an ESM context because it uses top-level await.
  *
  * FIDELITY: 1 declared loss(es). Everything not listed here is expected to
  * survive unchanged; a difference that is not in this list is a defect, not a caveat.
  *
  * Slide 1:
- * - text.color.inherited (Textfeld 3) [flattened, unsupported] — this run inherits its colour from the
+ * - text.color.inherited (Textfeld 3) [flattened, unsupported]: this run inherits its colour from the
  *   placeholder, master or theme; the write path paints an uncoloured run black instead of leaving it to
  *   inherit, so the inherited colour is resolved and baked in and no longer tracks a theme change
  */
@@ -42,7 +42,7 @@ function generator(): PptxTs {
 
 const gen1 = generator()
 
-// Slide 1 — layout "Titelfolie"
+// Slide 1: layout "Titelfolie"
 const slide1 = gen1.addSlide()
 // Textfeld 3
 slide1.addText(

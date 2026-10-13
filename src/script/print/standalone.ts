@@ -76,12 +76,12 @@ export function printStandaloneScript(ir: DeckIr, options: PrintStandaloneScript
 					needsReadFile ? ` and ${assets.printed.size} media file(s) in ${assetDir}` : ''
 				}.`,
 				"The deck's theme, layouts and slide content are all re-authored through the public write",
-				'API, so every one of them is editable here — and the parts of the original design the read',
+				'API, so every one of them is editable here, and the parts of the original design the read',
 				'model cannot see are gone. They are listed below. For a byte-identical design at the cost',
 				'of shipping the source deck alongside the script, print the template-anchored variant',
 				'instead.',
 				'',
-				`Writes ${outputPath}. Needs an ESM context — it uses top-level await.`,
+				`Writes ${outputPath}. Needs an ESM context because it uses top-level await.`,
 			],
 			notes
 		),
@@ -94,8 +94,8 @@ export function printStandaloneScript(ir: DeckIr, options: PrintStandaloneScript
 	if (theme !== null) {
 		lines.push(
 			'',
-			"// The theme's colour scheme and font faces. Its format scheme — the fill, line and effect",
-			'// style lists a shape references through p:style — has no counterpart on either side of the',
+			"// The theme's colour scheme and font faces. Its format scheme (the fill, line and effect",
+			'// style lists a shape references through p:style) has no counterpart on either side of the',
 			"// library, so the output carries Office's.",
 			`pptx.theme = ${theme}`
 		)
@@ -238,7 +238,7 @@ function printSlides(ir: DeckIr, collector: NoteCollector, printAsset: AssetPrin
 			...printSlide(
 				slide,
 				{
-					comment: `Slide ${slide.number} — ${title === null ? 'no master' : `master ${JSON.stringify(title)}`}`,
+					comment: `Slide ${slide.number}: ${title === null ? 'no master' : `master ${JSON.stringify(title)}`}`,
 					construction: title === null ? 'pptx.addSlide()' : `pptx.addSlide({ masterTitle: ${printString(title)} })`,
 				},
 				collector,

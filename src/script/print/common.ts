@@ -269,7 +269,7 @@ export function header(prose: string[], notes: FidelityNote[]): string {
 				const where = note.shapeName ? ` (${note.shapeName})` : ''
 				lines.push(
 					...wrap(
-						`- ${note.construct}${where} [${note.disposition}, ${note.cause}] — ${note.detail}`,
+						`- ${note.construct}${where} [${note.disposition}, ${note.cause}]: ${note.detail}`,
 						COMMENT_WIDTH,
 						'  '
 					)

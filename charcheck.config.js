@@ -98,13 +98,23 @@ export default {
 			include: ['docs/.vitepress/config.mts', 'docs/.vitepress/theme/**/*.ts', 'www/**/*.ts', 'www/**/*.mjs'],
 		},
 		{
-			// Library source: comments only. The TSDoc comments in `src/` become the API
-			// reference pages, which `GENERATED` skips because TypeDoc writes them, so this is
-			// where those pages are checked. Ordinary comments are held to the same rule: a
-			// reader of the source sees them, and splitting the two would mean a rule per tag.
+			// Library source: comments. The TSDoc comments in `src/` become the API reference
+			// pages, which `GENERATED` skips because TypeDoc writes them, so this is where those
+			// pages are checked. Ordinary comments are held to the same rule: a reader of the
+			// source sees them, and splitting the two would mean a rule per tag.
 			id: 'no-em-dash-in-source-comments',
 			chars: DASHES,
 			scope: 'comments',
+			message: MESSAGE,
+			include: ['src/**/*.ts'],
+		},
+		{
+			// Library source: string literals. These are the error and warning messages a
+			// caller reads, and the comments and notes the script printer writes into the
+			// scripts it generates, so they are held to the same rule as the docs.
+			id: 'no-em-dash-in-source-strings',
+			chars: DASHES,
+			scope: 'strings',
 			message: MESSAGE,
 			include: ['src/**/*.ts'],
 		},

@@ -95,7 +95,7 @@ export function marginToEmu(inches: number): Emu {
 		warnOnce(
 			'margin/legacy-points',
 			'margins (table cell and text-box) are interpreted as inches (matching the rest of the API and the ' +
-				'PowerPoint dialog); a value >= 1 is likely a legacy points value — divide by 72 to convert (e.g. 10pt => 0.139in).'
+				'PowerPoint dialog); a value >= 1 is likely a legacy points value; divide by 72 to convert (e.g. 10pt => 0.139in).'
 		)
 	return inch2Emu(inches)
 }

@@ -51,7 +51,7 @@ export function checkEnumOrWarn<T extends string>(
 ): T | null {
 	if (value === undefined || value === null) return null
 	if ((valid as readonly string[]).includes(value)) return value as T
-	warnOnce(code, `${label} value \`${String(value)}\` is not valid and is ignored — use one of ${valid.join(', ')}.`, {
+	warnOnce(code, `${label} value \`${String(value)}\` is not valid and is ignored. Use one of ${valid.join(', ')}.`, {
 		received: value,
 		valid,
 		...detail,

@@ -72,7 +72,7 @@ export function transitionToIr(slide: Slide, ctx: MapContext): TransitionIr | un
 			'dropped',
 			'unwritable',
 			`this slide's ${info.namespace === 'p' ? '' : `${info.namespace} `}${info.type} transition is not one of the 21 base ECMA-376 transitions the write API can author${
-				info.namespace === 'p' ? '' : " — it is one of PowerPoint's modern effects, which have no write-API vocabulary"
+				info.namespace === 'p' ? '' : "; it is one of PowerPoint's modern effects, which have no write-API vocabulary"
 			}, so the regenerated slide advances with no effect`
 		)
 		return undefined

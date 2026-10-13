@@ -69,7 +69,7 @@ function pictureAsset(
 			subject.construct,
 			'dropped',
 			'unsupported',
-			`${subject.subject} is filled with an image (${subject.element}) that embeds no image part — an external or linked blip — so there are no bytes to carry and it comes out unfilled`
+			`${subject.subject} is filled with an image (${subject.element}) that embeds no image part (an external or linked blip), so there are no bytes to carry and it comes out unfilled`
 		)
 		return null
 	}

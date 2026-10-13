@@ -6,25 +6,25 @@
  * slide content below was rebuilt through the public write API.
  *
  * Expects ./template.pptx (the source deck, unmodified) beside this file.
- * Writes ./output.pptx. Needs an ESM context — it uses top-level await.
+ * Writes ./output.pptx. Needs an ESM context because it uses top-level await.
  *
  * FIDELITY: 5 declared loss(es). Everything not listed here is expected to
  * survive unchanged; a difference that is not in this list is a defect, not a caveat.
  *
  * Slide 1:
- * - text.endParagraph.lang (replaceText) [approximated, unwritable] — this text's paragraphs end in different
+ * - text.endParagraph.lang (replaceText) [approximated, unwritable]: this text's paragraphs end in different
  *   languages (de-DE, en-US), and lang states one for the whole text, so each paragraph end comes back in en-US
- * - text.color.inherited (replaceText) [flattened, unsupported] — this run inherits its colour from the
+ * - text.color.inherited (replaceText) [flattened, unsupported]: this run inherits its colour from the
  *   placeholder, master or theme; the write path paints an uncoloured run black instead of leaving it to
  *   inherit, so the inherited colour is resolved and baked in and no longer tracks a theme change
- * - text.color.inherited (setText) [flattened, unsupported] — this run inherits its colour from the placeholder,
+ * - text.color.inherited (setText) [flattened, unsupported]: this run inherits its colour from the placeholder,
  *   master or theme; the write path paints an uncoloured run black instead of leaving it to inherit, so the
  *   inherited colour is resolved and baked in and no longer tracks a theme change
  * Slide 2:
- * - text.endParagraph.lang (replaceTextBullet1) [approximated, unwritable] — this text's paragraphs end in
+ * - text.endParagraph.lang (replaceTextBullet1) [approximated, unwritable]: this text's paragraphs end in
  *   different languages (de-DE, en-US), and lang states one for the whole text, so each paragraph end comes back
  *   in en-US
- * - text.color.inherited (replaceTextBullet1) [flattened, unsupported] — this run inherits its colour from the
+ * - text.color.inherited (replaceTextBullet1) [flattened, unsupported]: this run inherits its colour from the
  *   placeholder, master or theme; the write path paints an uncoloured run black instead of leaving it to
  *   inherit, so the inherited colour is resolved and baked in and no longer tracks a theme change
  */
@@ -54,7 +54,7 @@ function generator(): PptxTs {
 
 const gen1 = generator()
 
-// Slide 1 — layout "Titelfolie"
+// Slide 1: layout "Titelfolie"
 const slide1 = gen1.addSlide()
 // replaceText
 slide1.addText(
@@ -125,7 +125,7 @@ slide1.addText(
 	}
 )
 
-// Slide 2 — layout "Titelfolie"
+// Slide 2: layout "Titelfolie"
 const slide2 = gen1.addSlide()
 slide2.hidden = true
 // replaceTextBullet1

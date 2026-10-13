@@ -55,7 +55,7 @@ export const ImageSizingXml = {
 				.join(', ')
 			throw new InvalidOptionError(
 				'image/crop-window-overflows',
-				`addImage sizing.type 'crop': crop window overflows image bounds — ${over}. Ensure x≥0, y≥0, x+w≤w, y+h≤h.`
+				`addImage sizing.type 'crop': crop window overflows image bounds: ${over}. Ensure x≥0, y≥0, x+w≤w, y+h≤h.`
 			)
 		}
 		const lPerc = Math.round(PERCENT_SCALE * (l / imgSize.w))

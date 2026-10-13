@@ -294,19 +294,19 @@ export function groupObjectsDefinition(target: PresSlideInternal, objectNames: s
 			const hint = findNameInGroups(target._slideObjects, name)
 				? 'it is already inside a group (an object can only belong to one group)'
 				: 'no top-level object on this slide has that objectName'
-			throw new InvalidOptionError('group/unresolved-object-name', `groupObjects(): cannot group "${name}" — ${hint}.`)
+			throw new InvalidOptionError('group/unresolved-object-name', `groupObjects(): cannot group "${name}": ${hint}.`)
 		}
 		if (ambiguous) {
 			throw new InvalidOptionError(
 				'group/ambiguous-object-name',
-				`groupObjects(): objectName "${name}" is ambiguous — ${matches.length} objects on this slide share it. Give them unique objectNames.`
+				`groupObjects(): objectName "${name}" is ambiguous: ${matches.length} objects on this slide share it. Give them unique objectNames.`
 			)
 		}
 		if (!isGroupableObject(obj)) {
 			const kind = obj.options?.placeholder ? 'placeholder' : obj._type
 			throw new UnsupportedFeatureError(
 				'group/kind-not-groupable',
-				`groupObjects(): cannot group "${name}" — grouping a ${String(kind)} is not supported yet.`
+				`groupObjects(): cannot group "${name}": grouping a ${String(kind)} is not supported yet.`
 			)
 		}
 		members.push(obj)

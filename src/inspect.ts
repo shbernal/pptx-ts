@@ -549,13 +549,13 @@ function reportUnresolvable(shape: AnyShape, zIndex: number, slidePath: string):
 	if (failure === 'group-transform-missing') {
 		warn(
 			'inspect/group-transform-missing',
-			`inspect: skipped ${who} on ${slidePath} — an enclosing group has no usable a:xfrm, so its slide position cannot be resolved.`
+			`inspect: skipped ${who} on ${slidePath}: an enclosing group has no usable a:xfrm, so its slide position cannot be resolved.`
 		)
 		return
 	}
 	warn(
 		'inspect/group-transform-degenerate',
-		`inspect: skipped ${who} on ${slidePath} — an enclosing group has a degenerate transform (zero a:chExt), so its slide position cannot be resolved.`
+		`inspect: skipped ${who} on ${slidePath}: an enclosing group has a degenerate transform (zero a:chExt), so its slide position cannot be resolved.`
 	)
 }
 

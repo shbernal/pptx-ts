@@ -35,7 +35,7 @@ function transitionVariantAttrs(type: TransitionType, variant: Record<string, st
 		}
 		warnOnce(
 			'transition/unknown-variant',
-			`slide transition \`${type}\` variant \`${name}\` is not an attribute of <p:${type}> and is ignored — ${allowed.length > 0 ? `use ${allowed.join(', ')}` : 'it takes none'}.`,
+			`slide transition \`${type}\` variant \`${name}\` is not an attribute of <p:${type}> and is ignored; ${allowed.length > 0 ? `use ${allowed.join(', ')}` : 'it takes none'}.`,
 			{ received: name, valid: allowed }
 		)
 	}

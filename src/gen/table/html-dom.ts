@@ -136,7 +136,7 @@ function resolveDomContext(target: TableToSlidesElement | string, options: Table
 			'html/no-document',
 			'tableToSlides: no DOM available to resolve the table id "' +
 				target +
-				'" — pass the <table> element itself, or supply a document via `options.document`.'
+				'"; pass the <table> element itself, or supply a document via `options.document`.'
 		)
 	}
 	const found = doc.getElementById(target)

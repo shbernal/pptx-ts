@@ -1146,7 +1146,7 @@ export function masterObject(shape: AnyShape, ctx: MapContext): IrValue | null {
 				'decoration',
 				'dropped',
 				'unwritable',
-				`a ${kindLabel(call.method)} on a slide layout has no defineSlideMaster({ objects }) variant — the union covers a chart, an image, a shape and a text box — so it is dropped from the layout the output rebuilds`
+				`a ${kindLabel(call.method)} on a slide layout has no defineSlideMaster({ objects }) variant (the union covers a chart, an image, a shape and a text box), so it is dropped from the layout the output rebuilds`
 			)
 			return null
 	}

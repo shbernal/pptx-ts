@@ -98,7 +98,7 @@ describe('a printed script parses whatever the deck names hold', () => {
 		// simply never printed them.
 		assert(code.includes('slide.name'), 'the banner quotes the slide name')
 		assert(/deck\.layouts\(\)\[\d+\] \/\/ /.test(code), 'the ambiguous layout is bound by position, with its name')
-		assert(code.includes('// Slide 1 — layout '), 'the slide comment names its layout')
+		assert(code.includes('// Slide 1: layout '), 'the slide comment names its layout')
 		assertEqual(parseErrors(code).join('; '), '', 'the module parses')
 		assert(!LONE_SURROGATE.test(code), 'no lone surrogate is written raw')
 		assert(code.includes('\\ud800'), 'it is escaped instead')
@@ -107,7 +107,7 @@ describe('a printed script parses whatever the deck names hold', () => {
 	test('the standalone tier', async () => {
 		const { code } = printStandaloneScript(await hostileIr())
 		assert(code.includes('slide.name'), 'the banner quotes the slide name')
-		assert(code.includes('// Slide 1 — master '), 'the slide comment names its master')
+		assert(code.includes('// Slide 1: master '), 'the slide comment names its master')
 		assertEqual(parseErrors(code).join('; '), '', 'the module parses')
 		assert(!LONE_SURROGATE.test(code), 'no lone surrogate is written raw')
 		assert(code.includes('\\ud800'), 'it is escaped instead')

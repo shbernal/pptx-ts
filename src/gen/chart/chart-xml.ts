@@ -788,7 +788,7 @@ function makeChartType(
 			// at all, i.e. a chart-shaped hole PowerPoint opens and shows empty.
 			throw new InternalError(
 				'chart/type-not-routed',
-				`makeChartType: "${String(chartType)}" has no <c:...Chart> plot — the chartEx catalog is built by makeXmlChartEx, and a newly added classic type needs an arm here`,
+				`makeChartType: "${String(chartType)}" has no <c:...Chart> plot: the chartEx catalog is built by makeXmlChartEx, and a newly added classic type needs an arm here`,
 				{ detail: { chartType } }
 			)
 	}
