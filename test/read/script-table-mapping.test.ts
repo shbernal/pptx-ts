@@ -23,14 +23,11 @@ async function irWithSlideXml(buf: Uint8Array, rewrite: (xml: string) => string)
 	return readModelToIr(reopened)
 }
 
-/**
- * The first `addTable` call on slide 1, its arguments read as the write API's: the IR is
- * `IrValue`-typed by design, so nothing narrows them for us.
- */
+/** The first `addTable` call on slide 1, its arguments typed by narrowing on `method`. */
 function tableCall(ir: DeckIr) {
 	const call = at(ir.slides, 0).calls.find((c) => c.method === 'addTable')
 	assert(call, 'the IR carries an addTable call')
-	return { rows: call.args[0] as TableRow[], options: call.args[1] as TableProps }
+	return { rows: call.args[0], options: defined(call.args[1], 'the call carries table options') }
 }
 
 describe('table mapper: cell margins', () => {
@@ -82,7 +79,8 @@ describe('table mapper: row heights', () => {
 
 		const { result: bytes, codes } = await captureDiagnostics(() => {
 			const pres = new PptxTs()
-			pres.addSlide().addTable(call.rows, call.options)
+			// The table carries no image, so no `data` holds an `AssetRef` the write API would refuse.
+			pres.addSlide().addTable(call.rows as TableRow[], call.options as TableProps)
 			return pres.toBytes()
 		})
 		assert(!codes.includes('table/invalid-row-height'), `the replay accepts the row; got ${JSON.stringify(codes)}`)

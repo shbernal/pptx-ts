@@ -89,20 +89,33 @@ export type HyperlinkActionJump =
 	| 'lastslide'
 	| 'lastslideviewed'
 	| 'endshow'
-// used by: image, object, text,
-export interface HyperlinkProps {
-	/**
-	 * The 1-based number of the slide to link to. The deck has to have that slide when it is written.
-	 */
-	slide?: number
-	/**
-	 * Url to link to
-	 */
-	url?: string
+/** What every {@link HyperlinkProps} takes beside its one destination. */
+export interface HyperlinkBaseProps {
 	/**
 	 * Hyperlink Tooltip
 	 */
 	tooltip?: string
+}
+/** A hyperlink to a URL. */
+export interface UrlHyperlinkProps extends HyperlinkBaseProps {
+	/**
+	 * Url to link to
+	 */
+	url: string
+	slide?: never
+	action?: never
+}
+/** A hyperlink to another slide of the deck. */
+export interface SlideHyperlinkProps extends HyperlinkBaseProps {
+	/**
+	 * The 1-based number of the slide to link to. The deck has to have that slide when it is written.
+	 */
+	slide: number
+	url?: never
+	action?: never
+}
+/** A slide-show navigation action, such as "next slide". */
+export interface ActionHyperlinkProps extends HyperlinkBaseProps {
 	/**
 	 * Slide-show navigation action. Emits a relationship-less
 	 * `<a:hlinkClick action="ppaction://hlinkshowjump?jump=…"/>` on the shape when the shape states
@@ -110,8 +123,17 @@ export interface HyperlinkProps {
 	 * set on selected text. A shape's action is not repeated on its runs.
 	 * @example hyperlink: { action: 'nextslide' }
 	 */
-	action?: HyperlinkActionJump
+	action: HyperlinkActionJump
+	url?: never
+	slide?: never
 }
+/**
+ * A click hyperlink, which names exactly one destination: a `url`, a `slide` or an `action`.
+ * @example hyperlink: { url: 'https://github.com', tooltip: 'GitHub' }
+ * @example hyperlink: { slide: 3 }
+ */
+// used by: image, object, text,
+export type HyperlinkProps = UrlHyperlinkProps | SlideHyperlinkProps | ActionHyperlinkProps
 // used by: chart, text, image
 export interface ShadowProps {
 	/**

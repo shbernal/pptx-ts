@@ -12,7 +12,7 @@
 import { describe, expect, test } from 'vitest'
 import JSZip from 'jszip'
 import { Presentation } from '../../dist/read.js'
-import { readModelToIr, type CallIr, type DeckIr } from '../../dist/script.js'
+import { readModelToIr, type CallIr, type DeckIr, type IrArg } from '../../dist/script.js'
 import { ChartType, type CHART_NAME, type ChartMulti, type ChartOpts, type OptsChartData } from '../../dist/node.js'
 import { assert, assertEqual, defined, readEntry, at } from '../helpers.ts'
 import { authorRead } from './authored.ts'
@@ -27,24 +27,30 @@ const XY = [
 	{ name: 'Y2', values: [7, 8, 9] },
 ]
 
-/** A chart call's series argument, typed as the `addChart` parameter it is printed into. */
-const seriesOf = (call: CallIr) => call.args[0] as OptsChartData[]
+/** An `addChart` call, its `args` typed from the write API's two signatures. */
+type ChartCall = Extract<CallIr, { method: 'addChart' }>
 
-/** A chart call's options argument, typed as the `addChart` parameter it is printed into. */
-const optionsOf = (call: CallIr) => call.args[1] as ChartOpts
+/** A chart call's series argument, from a single-type chart. */
+const seriesOf = (call: ChartCall) => call.args[0] as IrArg<OptsChartData[]>
+
+/** A combo chart call's subcharts. */
+const subchartsOf = (call: ChartCall) => call.args[0] as IrArg<ChartMulti[]>
+
+/** A chart call's options argument. */
+const optionsOf = (call: ChartCall) => defined(call.args[1], 'the call carries chart options')
 
 /** The first chart call in the IR. */
-function chartCall(ir: DeckIr): CallIr {
+function chartCall(ir: DeckIr): ChartCall {
 	const call = ir.slides.flatMap((slide) => slide.calls).find((one) => one.method === 'addChart')
 	assert(call, 'the IR has a chart call')
 	return call
 }
 
 /** The chart call for the graphic frame named `objectName`. */
-function chartNamed(ir: DeckIr, objectName: string): CallIr {
+function chartNamed(ir: DeckIr, objectName: string): ChartCall {
 	const call = ir.slides
 		.flatMap((slide) => slide.calls)
-		.find((one) => one.method === 'addChart' && optionsOf(one).objectName === objectName)
+		.find((one): one is ChartCall => one.method === 'addChart' && optionsOf(one).objectName === objectName)
 	assert(call, `the IR has a chart call for ${objectName}`)
 	return call
 }
@@ -379,7 +385,7 @@ describe('chart settings the read model reads come back as their options', () =>
 	}
 
 	/** Assert each key of `expected` came back with its value. */
-	function expectKept(options: ChartOpts, expected: ChartOpts) {
+	function expectKept(options: IrArg<ChartOpts>, expected: ChartOpts) {
 		for (const [key, value] of Object.entries(expected))
 			expect((options as Record<string, unknown>)[key], key).toEqual(value)
 	}
@@ -585,7 +591,7 @@ describe('combo replay', () => {
 				)
 			})
 			expect(constructs(ir)).not.toContain('chart.combo')
-			const subcharts = call.args[0] as unknown as ChartMulti[]
+			const subcharts = subchartsOf(call)
 			expect(subcharts.map((one) => one.type)).toEqual(['bar', 'line'])
 			expect(subcharts[1]?.options).toEqual(secondary)
 			expect(copy).toEqual(source)
@@ -602,7 +608,7 @@ describe('combo replay', () => {
 				{ x: 1, y: 1, w: 6, h: 4 }
 			)
 		})
-		const subcharts = call.args[0] as unknown as ChartMulti[]
+		const subcharts = subchartsOf(call)
 		expect(subcharts[0]?.options?.barGrouping).toBe('stacked')
 		expect(optionsOf(call).barGrouping, 'not stated for the chart, where the line would take it').toBeUndefined()
 		expect(copy).toEqual(source)
@@ -696,7 +702,7 @@ describe('declared losses in what the chart mapper carries', () => {
 		})
 		const ir = await irWithChartXml(buf, (xml) => xml.replaceAll('<c:delete val="0"/>', '<c:delete val="1"/>'))
 		expect(causes(ir, 'chart.axis')).toContain('unwritable')
-		const subcharts = chartCall(ir).args[0] as unknown as ChartMulti[]
+		const subcharts = subchartsOf(chartCall(ir))
 		expect(subcharts[1]?.options).toMatchObject({ secondaryValAxis: true })
 	})
 })

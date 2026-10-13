@@ -23,6 +23,7 @@ import { NoteCollector, andList, scopeNotes, type NoteScope } from '../fidelity.
 import {
 	DECK_PROPS,
 	DECK_PROP_KEYS,
+	irCall,
 	type AssetIr,
 	type AssetRef,
 	type BackgroundIr,
@@ -434,7 +435,7 @@ function commentCalls(slide: Slide, notes: NoteScope): CallIr[] {
 			y: comment.y === null ? undefined : inches(comment.y),
 			date: orUndefined(comment.date),
 		})
-		if (options) calls.push({ method: 'addComment', args: [options] })
+		if (options) calls.push(irCall('addComment', [options]))
 	}
 	const modern = slide.modernComments.length
 	if (modern > 0) {

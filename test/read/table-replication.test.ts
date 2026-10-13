@@ -16,35 +16,38 @@ import PptxTs, {
 	type TableRow,
 } from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
-import { readModelToIr, type CallIr, type DeckIr } from '../../dist/script.js'
+import { readModelToIr, type CallIr, type DeckIr, type IrArg } from '../../dist/script.js'
 import JSZip from 'jszip'
 import { authorRead, authorReadWithFixtureStyles, firstTable } from './authored.ts'
 import { assert, assertEqual, defined, at, take } from '../helpers.ts'
 
+/** An `addTable` call, its `args` typed from the write API's parameters. */
+type TableCall = Extract<CallIr, { method: 'addTable' }>
+
 /** The IR's single `addTable` call, or a failing assertion. */
-function tableCall(ir: DeckIr) {
+function tableCall(ir: DeckIr): TableCall {
 	const call = ir.slides.flatMap((slide) => slide.calls).find((c) => c.method === 'addTable')
 	assert(call, 'the IR carries an addTable call')
 	return call
 }
 
-/** An `addTable` call's rows, as the write API takes them. */
-function rowsOf(call: CallIr) {
-	return call.args[0] as TableRow[]
+/** An `addTable` call's rows. */
+function rowsOf(call: TableCall) {
+	return call.args[0]
 }
 
-/** An `addTable` call's table options, as the write API takes them. */
-function optionsOf(call: CallIr) {
-	return call.args[1] as TableProps
+/** An `addTable` call's table options. */
+function optionsOf(call: TableCall) {
+	return defined(call.args[1], 'the call carries table options')
 }
 
 /** The options of the cell at (`row`, `col`) of an `addTable` call, which must carry some. */
-function cellOptionsOf(call: CallIr, row: number, col: number) {
+function cellOptionsOf(call: TableCall, row: number, col: number) {
 	return defined(at(at(rowsOf(call), row), col).options, `cell (${row},${col}) carries options`)
 }
 
 /** A fill given as its object form, the only one the mapper emits. */
-function fillProps(fill: FillOption | undefined): ShapeFillProps {
+function fillProps(fill: IrArg<FillOption> | undefined): IrArg<ShapeFillProps> {
 	assert(typeof fill === 'object', 'the fill is carried as an object; got: ' + JSON.stringify(fill))
 	return fill
 }
@@ -55,9 +58,10 @@ function constructs(ir: DeckIr) {
 }
 
 /** Replay an IR `addTable` call through the write API and return the slide part. */
-async function replay(call: CallIr) {
+async function replay(call: TableCall) {
 	const pres = new PptxTs()
-	pres.addSlide().addTable(rowsOf(call), optionsOf(call))
+	// No table here carries an image, so no `data` holds an `AssetRef` the write API would refuse.
+	pres.addSlide().addTable(rowsOf(call) as TableRow[], optionsOf(call) as TableProps)
 	const buf = await pres.toBytes()
 	const zip = await JSZip.loadAsync(buf)
 	return defined(zip.file('ppt/slides/slide1.xml')).async('string')

@@ -20,7 +20,7 @@ import type { GraphicFrame } from '../../read/api/shapes.js'
 import type { Run } from '../../read/api/text.js'
 import type { TextBaseProps } from '../../types/text.js'
 import type { NoteScope } from '../fidelity.js'
-import type { CallIr, IrValue } from '../ir.js'
+import { irCall, type CallIr, type IrValue } from '../ir.js'
 import type { MapContext } from './context.js'
 import { TABLE_CELL_MARGIN_DEFAULTS_EMU } from '../../ooxml/body-insets.js'
 import { GRAPHIC_FRAME_LOCK_ATTRS } from '../../ooxml/lock-attrs.js'
@@ -128,7 +128,7 @@ export function tableCall(frame: GraphicFrame, table: Table, ctx: MapContext): C
 		rowH: rowHeights.every((h) => h === 0) ? undefined : rowHeights.map((h) => (h === 0 ? null : inches(h))),
 	})
 
-	return { method: 'addTable', args: [rows, options ?? {}], ...nameOf(frame) }
+	return irCall('addTable', [rows, options ?? {}], nameOf(frame))
 }
 
 /**

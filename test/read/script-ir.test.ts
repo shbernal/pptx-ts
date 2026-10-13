@@ -19,6 +19,7 @@ import type { BackgroundProps, SlideNumberProps } from '../../dist/index.js'
 import { Presentation, isAutoShape, type TransitionInput } from '../../dist/read.js'
 import {
 	canonicalDeckIr,
+	irArgs,
 	printScript,
 	readModelToIr,
 	type CallIr,
@@ -160,7 +161,7 @@ describe('deck IR — geometry', () => {
 	test('position is raw EMU, so it survives the round-trip exactly', async () => {
 		const ir = await irFor('mixed.pptx')
 		const positioned = allCalls(ir)
-			.map((call) => call.args.find((arg) => arg !== null && typeof arg === 'object' && 'x' in arg))
+			.map((call) => irArgs(call).find((arg) => arg !== null && typeof arg === 'object' && 'x' in arg))
 			.filter((arg) => arg !== undefined)
 			.map((arg) => objectOf(arg))
 		assert(positioned.length > 0, 'mixed.pptx should produce positioned calls')
@@ -193,7 +194,7 @@ describe('deck IR — geometry', () => {
 			const expected = firstPath.commands
 				.filter((command) => 'x' in command)
 				.map((command) => Math.round((command.x * frame.width) / firstPath.w))
-			const actual = arrayOf(at(shape.args[1], 'points'))
+			const actual = arrayOf(at(irArgs(shape)[1], 'points'))
 				.filter((point) => at(point, 'x') !== undefined)
 				.slice(0, expected.length)
 				.map((point) => Number(String(at(point, 'x')).replace('emu', '')))
@@ -224,7 +225,7 @@ describe('deck IR — geometry', () => {
 		const baseline = allCalls(await irFor('custgeom.pptx')).find((candidate) => candidate.sourceName === shape.name)
 
 		const spanOf = (one: CallIr | undefined) => {
-			const xs = arrayOf(at(defined(one).args[1], 'points'))
+			const xs = arrayOf(at(irArgs(defined(one))[1], 'points'))
 				.filter((point) => at(point, 'x') !== undefined)
 				.map((p) => Number(String(at(p, 'x')).replace('emu', '')))
 			return Math.max(...xs) - Math.min(...xs)
@@ -1231,7 +1232,7 @@ describe('deck IR — shape locks', () => {
 		const ir = readModelToIr(presentation)
 		const lockOf = (method: string) => {
 			const call = defined(allCalls(ir).find((c) => c.method === method))
-			return JSON.stringify(at(call.args[method === 'addImage' ? 0 : 1], 'objectLock'))
+			return JSON.stringify(at(irArgs(call)[method === 'addImage' ? 0 : 1], 'objectLock'))
 		}
 		assertEqual(lockOf('addImage'), '{"noCrop":true,"noMove":true}', 'the writer-implied noChangeAspect is left out')
 		assertEqual(lockOf('addTable'), '{"noDrilldown":true,"noResize":true}', 'the writer-implied noGrp is left out')
@@ -1254,7 +1255,7 @@ describe('deck IR — shape locks', () => {
 		})
 		const ir = readModelToIr(presentation)
 		const lockOf = (method: string) =>
-			JSON.stringify(at(defined(allCalls(ir).find((c) => c.method === method)).args[1], 'objectLock'))
+			JSON.stringify(at(irArgs(defined(allCalls(ir).find((c) => c.method === method)))[1], 'objectLock'))
 		assertEqual(lockOf('addChart'), '{"noDrilldown":true,"noMove":true}', 'the chart locks')
 		assertEqual(lockOf('addGroup'), '{"noUngrp":true}', 'the group noUngrp')
 	})
@@ -1678,7 +1679,7 @@ describe('deck IR — picture fills', () => {
 		const call = allCalls(ir).find((item) => item.sourceName === 'equation-box')
 		assert(call, 'the image-filled shape emits a call')
 		assertEqual(
-			opt(at(call.args[0], 'fill'), 'type') ?? opt(call.args[1], 'fill', 'type'),
+			opt(at(irArgs(call)[0], 'fill'), 'type') ?? opt(irArgs(call)[1], 'fill', 'type'),
 			'image',
 			'and it is filled with an image'
 		)
@@ -1989,7 +1990,7 @@ describe('deck IR — text links, freeform text and fields', () => {
 		})
 		// addText's first argument is its run array.
 		const firstRun = (runs: IrValue) => objectOf(arrayOf(runs)[0])
-		const run = firstRun(atIndex(atIndex(atIndex(readModelToIr(presentation).slides, 0).calls, 0).args, 0))
+		const run = firstRun(atIndex(irArgs(atIndex(atIndex(readModelToIr(presentation).slides, 0).calls, 0)), 0))
 		assertEqual(
 			JSON.stringify(at(run.options, 'hyperlink')),
 			'{"slide":2,"tooltip":"Two"}',
@@ -2000,7 +2001,7 @@ describe('deck IR — text links, freeform text and fields', () => {
 		const shown = await irWithPart(buf, 'ppt/slides/slide1.xml', (xml) =>
 			xml.replace('ppaction://hlinksldjump', 'ppaction://hlinkshowjump?jump=nextslide')
 		)
-		const next = firstRun(atIndex(atIndex(atIndex(shown.slides, 0).calls, 0).args, 0))
+		const next = firstRun(atIndex(irArgs(atIndex(atIndex(shown.slides, 0).calls, 0)), 0))
 		assertEqual(
 			JSON.stringify(at(next.options, 'hyperlink')),
 			'{"action":"nextslide","tooltip":"Two"}',
@@ -2011,7 +2012,7 @@ describe('deck IR — text links, freeform text and fields', () => {
 		const ir = await irWithPart(buf, 'ppt/slides/slide1.xml', (xml) =>
 			xml.replace('ppaction://hlinksldjump', 'ppaction://customshow?id=0')
 		)
-		const jumped = firstRun(atIndex(atIndex(atIndex(ir.slides, 0).calls, 0).args, 0))
+		const jumped = firstRun(atIndex(irArgs(atIndex(atIndex(ir.slides, 0).calls, 0)), 0))
 		assertEqual('hyperlink' in objectOf(jumped.options), false, 'the custom show is not written as a run link')
 		assertEqual(ir.fidelity.filter((note) => note.construct === 'text.hyperlink').length, 1, 'and its loss is declared')
 	})
@@ -2037,8 +2038,8 @@ describe('deck IR — text links, freeform text and fields', () => {
 			'Hello freeform',
 			'all of it'
 		)
-		assertEqual(at(call.args[1], 'shape'), 'custGeom', 'on its custom geometry')
-		const points = at(call.args[1], 'points')
+		assertEqual(at(irArgs(call)[1], 'shape'), 'custGeom', 'on its custom geometry')
+		const points = at(irArgs(call)[1], 'points')
 		assert(Array.isArray(points) && points.length > 0, 'with its points')
 	})
 
@@ -2168,7 +2169,7 @@ describe('deck IR — connector strokes and grouped connectors', () => {
 		const lines = calls.filter((call) => call.method === 'addShape' && call.args[0] === 'line')
 		assert(lines.length > 0, 'the connectors are emitted as line shapes')
 		for (const call of lines) {
-			assertEqual(opt(at(call.args[1], 'line'), 'type'), 'none', `${call.sourceName} states no outline`)
+			assertEqual(opt(at(irArgs(call)[1], 'line'), 'type'), 'none', `${call.sourceName} states no outline`)
 		}
 	})
 

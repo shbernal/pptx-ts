@@ -18,7 +18,7 @@
  * the output. A rule that only made sense in one direction would be an exclusion dressed up
  * as a normalisation.
  */
-import { asIrValue, isAssetRef, type AssetIr, type DeckIr, type IrValue, type SlideIr } from '../ir.js'
+import { asIrValue, irArgs, isAssetRef, type AssetIr, type DeckIr, type IrValue, type SlideIr } from '../ir.js'
 import { BODY_INSET_DEFAULTS_IN } from '../../ooxml/body-insets.js'
 import { InvalidOptionError } from '../../errors.js'
 
@@ -163,7 +163,7 @@ function canonicalSlide(slide: SlideIr, digests: Map<string, string>): Canonical
 		transition: slide.transition === undefined ? null : canonicalValue(asIrValue(slide.transition), digests),
 		slideNumber: slide.slideNumber === undefined ? null : canonicalValue(slide.slideNumber, digests),
 		calls: slide.calls.map((call) => {
-			const args = call.args.map((arg) => canonicalValue(arg, digests))
+			const args = irArgs(call).map((arg) => canonicalValue(arg, digests))
 			return {
 				method: call.method,
 				shapeName: call.sourceName ?? null,

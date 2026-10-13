@@ -336,6 +336,7 @@ defineRegressionSuite('Hyperlink relationship registration', [
 		fn: async () => {
 			// An empty (or misspelled-key) hyperlink object has nothing to point a rel at.
 			const error = await failedBuild((p) => {
+				// @ts-expect-error a hyperlink names a destination
 				p.addSlide().addText('link', { x: 1, y: 1, w: 4, h: 0.5, hyperlink: {} })
 			})
 
@@ -349,7 +350,8 @@ defineRegressionSuite('Hyperlink relationship registration', [
 		// one `<p:cNvPr>`, which allows one, over a slide-typed rel whose target was built from the URL.
 		name: 'a hyperlink stating both url and slide is refused on a shape, an image, a run and a table cell',
 		fn: async () => {
-			const both = { url: 'https://both.example.com', slide: 1 }
+			// The type refuses two destinations as well; the cast reaches the runtime check.
+			const both = { url: 'https://both.example.com', slide: 1 } as unknown as HyperlinkProps
 			const authors: Record<string, BuildFn> = {
 				shape: (p) => p.addSlide().addShape('rect', { x: 1, y: 1, w: 2, h: 1, hyperlink: both }),
 				image: (p) => p.addSlide().addImage({ data: PNG, x: 1, y: 1, w: 1, h: 1, hyperlink: both }),
@@ -361,6 +363,23 @@ defineRegressionSuite('Hyperlink relationship registration', [
 			for (const [label, buildFn] of Object.entries(authors)) {
 				const error = await failedBuild(buildFn)
 				assertEqual(error?.code, 'hyperlink/conflicting-targets', label)
+			}
+		},
+	},
+	{
+		// An `action` beside a `url` or a `slide` used to be dropped, the link going to the other.
+		name: 'a hyperlink stating an action beside a url or a slide is refused',
+		fn: async () => {
+			const links = [
+				{ url: 'https://both.example.com', action: 'nextslide' },
+				{ slide: 1, action: 'endshow' },
+			] as unknown as HyperlinkProps[]
+			for (const link of links) {
+				const error = await failedBuild((p) =>
+					p.addSlide().addShape('rect', { x: 1, y: 1, w: 2, h: 1, hyperlink: link })
+				)
+				assertEqual(error?.code, 'hyperlink/conflicting-targets', JSON.stringify(link))
+				assertIncludes(error?.message ?? '', '`action`', 'the message names the action')
 			}
 		},
 	},
@@ -486,6 +505,7 @@ defineRegressionSuite('Hyperlink relationship registration', [
 				{
 					label: 'shape, no target',
 					code: 'hyperlink/missing-target',
+					// @ts-expect-error a hyperlink names a destination
 					buildFn: (p) => p.addSlide().addShape('rect', { x: 1, y: 1, w: 2, h: 1, hyperlink: {} }),
 				},
 				{

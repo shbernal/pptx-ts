@@ -41,7 +41,7 @@ import {
 import type { ColorRef } from '../../read/api/theme-context.js'
 import type { GroupTransform } from '../../read/api/shapes/group-transform.js'
 import { UNWRITABLE_FRAME_CONSTRUCTS, type NoteScope, type UnwritableFramePayload } from '../fidelity.js'
-import { isAssetRef, type CallIr, type IrValue } from '../ir.js'
+import { irArgs, irCall, isAssetRef, type CallIr, type IrValue } from '../ir.js'
 import type { ConnectorProps, ShapeLineProps } from '../../types/style.js'
 import {
 	alphaToTransparency,
@@ -127,7 +127,8 @@ function withPlaceholder(shape: Picture | GraphicFrame, call: CallIr | null, not
 	const binding = placeholderBinding(ph, false)
 	// The options bag: `addImage(options)`, `addTable(rows, options)`, `addChart(data, options)`.
 	const at = call.method === 'addImage' ? 0 : call.method === 'addTable' || call.method === 'addChart' ? 1 : -1
-	const options = at >= 0 ? call.args[at] : undefined
+	const args = irArgs(call)
+	const options = at >= 0 ? args[at] : undefined
 	if (
 		binding !== undefined &&
 		options !== null &&
@@ -135,9 +136,9 @@ function withPlaceholder(shape: Picture | GraphicFrame, call: CallIr | null, not
 		!Array.isArray(options) &&
 		!isAssetRef(options)
 	) {
-		const args = [...call.args]
-		args[at] = { ...options, placeholder: binding }
-		return { ...call, args }
+		const bound = [...args]
+		bound[at] = { ...options, placeholder: binding }
+		return irCall(call.method, bound, call.sourceName === undefined ? {} : { sourceName: call.sourceName })
 	}
 	notes.note(
 		'shape.placeholder',
@@ -236,17 +237,17 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 				shape: 'custGeom',
 				points,
 			})
-			return {
-				method: 'addText',
-				args: [
+			return irCall(
+				'addText',
+				[
 					textRuns(frame, ctx, placeholder !== undefined || common.hyperlink !== undefined, textLang(options)),
 					options ?? {},
 				],
-				...nameOf(shape),
-			}
+				nameOf(shape)
+			)
 		}
 		const options = compact({ ...common, ...addShapeLine(style['line']), points, ...custGeomListOptions(custom) })
-		return { method: 'addShape', args: ['custGeom', options ?? {}], ...nameOf(shape) }
+		return irCall('addShape', ['custGeom', options ?? {}], nameOf(shape))
 	}
 
 	if (frame !== null) {
@@ -260,14 +261,14 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 			...(isTextBox(shape.element_) ? { isTextBox: true } : {}),
 			...(preset === null ? {} : { shape: preset, ...adjustOptions(shape) }),
 		})
-		return {
-			method: 'addText',
-			args: [
+		return irCall(
+			'addText',
+			[
 				textRuns(frame, ctx, placeholder !== undefined || common.hyperlink !== undefined, textLang(options)),
 				options ?? {},
 			],
-			...nameOf(shape),
-		}
+			nameOf(shape)
+		)
 	}
 
 	// No text and no geometry of its own: an empty placeholder, whose shape comes from the
@@ -285,7 +286,7 @@ function autoShapeCall(shape: AutoShape, ctx: MapContext): CallIr | null {
 		return null
 	}
 	const options = compact({ ...common, ...addShapeLine(style['line']), ...adjustOptions(shape) })
-	return { method: 'addShape', args: [preset, options ?? {}], ...nameOf(shape) }
+	return irCall('addShape', [preset, options ?? {}], nameOf(shape))
 }
 
 /**
@@ -566,7 +567,7 @@ function pictureCall(shape: Picture, ctx: MapContext): CallIr | null {
 		// inches, which shrank every cropped picture to a fraction of its box.
 		crop,
 	})
-	return { method: 'addImage', args: [{ ...options, data: asset }], ...nameOf(shape) }
+	return irCall('addImage', [{ ...options, data: asset }], nameOf(shape))
 }
 
 /**
@@ -612,7 +613,7 @@ function mediaCall(shape: Picture, media: PictureMedia, box: ShapeBox, ctx: MapC
 		loop: repeat === 'indefinite' ? true : undefined,
 		loopCount: typeof repeat === 'number' && repeat !== 1 ? repeat : undefined,
 	})
-	return { method: 'addMedia', args: [options ?? source], ...nameOf(shape) }
+	return irCall('addMedia', [options ?? source], nameOf(shape))
 }
 
 /**
@@ -742,7 +743,7 @@ function connectorCall(shape: Connector, ctx: MapContext): CallIr | null {
 	// An outline left to inherit has no flat spelling either, and the `line` shape writes it as the
 	// empty `<a:ln/>` the source has.
 	if (drawn.line?.['type'] === 'none' || drawn.line?.['type'] === 'inherit') {
-		return { method: 'addShape', args: ['line', drawn.options], ...nameOf(shape) }
+		return irCall('addShape', ['line', drawn.options], nameOf(shape))
 	}
 	const frame = drawn.box
 
@@ -772,9 +773,9 @@ function connectorCall(shape: Connector, ctx: MapContext): CallIr | null {
 
 	const right = frame.left + frame.width
 	const bottom = frame.top + frame.height
-	return {
-		method: 'addConnector',
-		args: [
+	return irCall(
+		'addConnector',
+		[
 			compact({
 				...connectorRoute(shape, notes),
 				x1: emu(shape.flipH ? right : frame.left),
@@ -786,8 +787,8 @@ function connectorCall(shape: Connector, ctx: MapContext): CallIr | null {
 				...connectorBindings(shape, ctx),
 			}) ?? {},
 		],
-		...nameOf(shape),
-	}
+		nameOf(shape)
+	)
 }
 
 /** The connector presets `addConnector` writes, by `type`; `bends` is the suffix less two. */
@@ -1014,9 +1015,9 @@ function groupCall(shape: GroupShape, ctx: MapContext): CallIr | null {
 		)
 	}
 
-	return {
-		method: 'addGroup',
-		args: [
+	return irCall(
+		'addGroup',
+		[
 			children,
 			compact({
 				...positionOptions(box),
@@ -1028,8 +1029,8 @@ function groupCall(shape: GroupShape, ctx: MapContext): CallIr | null {
 				objectLock: lockOption(shape, GROUP_SHAPE_LOCK_ATTRS),
 			}) ?? {},
 		],
-		...nameOf(shape),
-	}
+		nameOf(shape)
+	)
 }
 
 /** A call's object kind as a note's prose names it: `addImage` is `image`. */
@@ -1044,7 +1045,7 @@ function kindLabel(method: string): string {
 function asGroupChild(call: CallIr): IrValue | null {
 	const shared = commonShapeVariant(call)
 	if (shared) return shared
-	const [first, second] = call.args
+	const [first, second] = irArgs(call)
 	switch (call.method) {
 		case 'addGroup':
 			return { group: compact({ children: first, options: second }) ?? {} }
@@ -1066,7 +1067,7 @@ function asGroupChild(call: CallIr): IrValue | null {
  * as a fidelity loss, and that difference is the point of having two functions.
  */
 function commonShapeVariant(call: CallIr): IrValue | null {
-	const [first, second] = call.args
+	const [first, second] = irArgs(call)
 	switch (call.method) {
 		case 'addText':
 			return { text: compact({ text: first, options: second }) ?? {} }
@@ -1116,7 +1117,7 @@ export function masterObject(shape: AnyShape, ctx: MapContext): IrValue | null {
 	const shared = commonShapeVariant(call)
 	if (shared) return shared
 
-	const [first, second] = call.args
+	const [first, second] = irArgs(call)
 	switch (call.method) {
 		case 'addChart': {
 			// `addChart(data, options)` carries the chart type inside its options, while a master

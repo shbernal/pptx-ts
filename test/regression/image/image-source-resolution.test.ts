@@ -12,6 +12,7 @@ import type JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { decodeBase64ToBytes, hasBase64Header } from '../../../src/media/base64.ts'
 import { dataUriMediaType, imageExtensionForSource } from '../../../src/media/content-type.ts'
+import type { HyperlinkProps } from '../../../dist/index.js'
 import {
 	PNG_1X1,
 	assert,
@@ -178,7 +179,8 @@ describe('image sources through the definers', () => {
 	test('a refused addImage or addText leaves no relationship, media part, name or object behind', async () => {
 		// Both used to register first and validate last: the image's media part and relationship, and
 		// the first run's link, stayed on the slide with nothing to use them.
-		const conflicting = { url: 'https://refused.example', slide: 1 }
+		// The type refuses two destinations as well; the cast reaches the runtime check.
+		const conflicting = { url: 'https://refused.example', slide: 1 } as unknown as HyperlinkProps
 		const refusals: string[] = []
 		const { zip } = await build((p) => {
 			const slide = p.addSlide()

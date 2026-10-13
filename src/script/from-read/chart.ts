@@ -32,7 +32,7 @@ import type { MapContext } from './context.js'
 import { surfaceFill } from './surface-fill.js'
 import type { GraphicFrame } from '../../read/api/shapes.js'
 import type { NoteScope } from '../fidelity.js'
-import type { CallIr, IrValue } from '../ir.js'
+import { irCall, type CallIr, type IrValue } from '../ir.js'
 import {
 	alphaToTransparency,
 	colorOption,
@@ -193,11 +193,7 @@ export function chartCall(frame: GraphicFrame, chart: Chart, ctx: MapContext): C
 				...entry.flags,
 			}) ?? {},
 	}))
-	return {
-		method: 'addChart',
-		args: [subcharts ?? data, options ?? (combo ? {} : { type })],
-		...nameOf(frame),
-	}
+	return irCall('addChart', [subcharts ?? data, options ?? (combo ? {} : { type })], nameOf(frame))
 }
 
 /** A note scope that records nothing, for options worked out again only to compare against. */

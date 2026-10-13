@@ -38,6 +38,7 @@ import {
 	printScript,
 	printStandaloneScript,
 	readModelToIr,
+	type CallIr,
 	type CanonicalDeck,
 	type DeckIr,
 	type FidelityNote,
@@ -566,13 +567,15 @@ describe('script round trip — the note coverage table', () => {
 describe('script round trip — canonicalisation is an equivalence', () => {
 	// The canonicaliser is the one place a wrong rule hides a defect permanently, so its rules
 	// are tested in both directions: the default is dropped, and a real value never is.
+	// The canonicaliser walks arguments as plain IR values, so the options here are any value
+	// rather than a typed `TextPropsOptions`, and the call is built from them with a cast.
 	const deck = (options: IrValue): DeckIr => ({
 		slideSize: { widthEmu: 1, heightEmu: 1 },
 		props: {},
 		chrome: { theme: {}, masters: [] },
 		assets: [],
 		fidelity: [],
-		slides: [{ number: 1, source: 'authored', layout: null, hidden: false, calls: [{ method: 'addText', args: [[], options] }] }], // prettier-ignore
+		slides: [{ number: 1, source: 'authored', layout: null, hidden: false, calls: [{ method: 'addText', args: [[], options] } as unknown as CallIr] }], // prettier-ignore
 	})
 	const optionsOf = (ir: DeckIr) => at(at(canonicalDeckIr(ir).slides, 0).calls, 0).args[1]
 
