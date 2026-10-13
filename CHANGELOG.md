@@ -186,6 +186,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **An equation reads back, and `readModelToIr` replays it.** Nothing on the read side reached an
+  OMML equation (`a14:m`): `Paragraph.runs` skipped it and `readModelToIr` dropped it as
+  `text.equation`, so every equation `TextProps.math` writes was lost on its own round trip.
+  `Paragraph.equations` reads each as an `Equation` (`omml`, `inline`, and `runIndex`, its place
+  among the runs), and a shape's replays as `{ math, inline }` in that place. A table cell's is
+  still noted, now as `table.cell.equation` / `unwritable`
+  ([#259](https://github.com/shbernal/pptx-ts/issues/259)).
 - **`fromTemplate` restarts each comment author's numbering.** It strips the template's slides and
   their comments, but each author in `commentAuthors.xml` kept its `lastIdx`, so a comment replayed
   onto the shell was numbered after one the deck no longer has: a deck with one comment replayed as

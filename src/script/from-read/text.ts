@@ -24,7 +24,15 @@
  * now emit the *resolved* value with a note, which freezes it against a later theme edit and
  * renders correctly, in preference to staying faithful in the IR and wrong on the slide.
  */
-import type { BodyProperties, BulletDetail, BulletStyle, Paragraph, Run, TextFrame } from '../../read/api/text.js'
+import type {
+	BodyProperties,
+	BulletDetail,
+	BulletStyle,
+	Equation,
+	Paragraph,
+	Run,
+	TextFrame,
+} from '../../read/api/text.js'
 import { SHOW_JUMPS } from '../../ooxml/show-jumps.js'
 import type { Hyperlink } from '../../read/api/hyperlink.js'
 import type { AnyShape } from '../../read/api/shapes.js'
@@ -34,7 +42,6 @@ import { HALIGN_BY_TEXT_ALIGN } from '../../ooxml/text-align.js'
 import type { NoteScope } from '../fidelity.js'
 import type { IrValue } from '../ir.js'
 import type { MapContext } from './context.js'
-import { hasEquation } from './detect.js'
 import { shadowValue } from './shape-paint.js'
 import {
 	alphaToTransparency,
@@ -524,41 +531,26 @@ function linkOption(link: Hyperlink | null, ctx: MapContext, site: LinkSite): Ir
 
 /** The constructs and wording {@link noteUnreadText} records a shape's or a table cell's losses in. */
 const UNREAD_TEXT = {
-	shape: {
-		field: 'text.field',
-		equation: 'text.equation',
-		subject: 'this shape',
-		call: 'addText',
-		equationLoss:
-			'the shape is emitted without it - even though TextProps.math (and the pptx-ts/math subpath) could author one',
-	},
-	cell: {
-		field: 'table.cell.field',
-		equation: 'table.cell.equation',
-		subject: 'this table cell',
-		call: 'addTable',
-		equationLoss: 'the cell is emitted without it',
-	},
+	shape: { field: 'text.field', subject: 'this shape', call: 'addText' },
+	cell: { field: 'table.cell.field', subject: 'this table cell', call: 'addTable' },
 } as const
 
 /**
  * Note the text a frame holds that no run carries, and return the text its runs do.
  *
  * Authorable text is *runs*. `TextFrame.text` also counts `a:fld` field text (a slide number, date
- * or footer placeholder), which has no run behind it, and an OMML equation contributes to neither.
- * Both were checked for an auto shape only, so the same field in a table cell was lost with no note.
+ * or footer placeholder), which has no run behind it. It was checked for an auto shape only, so the
+ * same field in a table cell was lost with no note.
+ *
+ * An OMML equation is in neither. A shape's replays through {@link textRuns}. A cell's is noted:
+ * `addTable` writes a cell's equation with no `mc:AlternateContent` envelope around it, and nothing
+ * yet shows PowerPoint keeps one written that way.
  * @param frame - the text frame
- * @param element - the element holding it, searched for an equation
  * @param notes - the scope the losses are recorded on
  * @param holder - whether the frame belongs to a shape or a table cell
  * @returns the frame's run text
  */
-export function noteUnreadText(
-	frame: TextFrame,
-	element: unknown,
-	notes: NoteScope,
-	holder: keyof typeof UNREAD_TEXT
-): string {
+export function noteUnreadText(frame: TextFrame, notes: NoteScope, holder: keyof typeof UNREAD_TEXT): string {
 	const wording = UNREAD_TEXT[holder]
 	const runText = frame.paragraphs.flatMap((p) => p.runs.map((run) => run.text)).join('')
 
@@ -572,14 +564,12 @@ export function noteUnreadText(
 		)
 	}
 
-	// An OMML equation contributes nothing to `TextFrame.text`, so an equation-only shape looks like
-	// an empty box and would otherwise emit as bare geometry.
-	if (hasEquation(element)) {
+	if (holder === 'cell' && frame.paragraphs.some((paragraph) => paragraph.equations.length > 0)) {
 		notes.note(
-			wording.equation,
+			'table.cell.equation',
 			'dropped',
-			'unread',
-			`${wording.subject} holds an OMML equation, which no accessor exposes, so ${wording.equationLoss}`
+			'unwritable',
+			'this table cell holds an OMML equation, which addTable would write without the mc:AlternateContent envelope PowerPoint puts around one, so the cell is emitted without it'
 		)
 	}
 	return runText
@@ -688,17 +678,26 @@ export function textRuns(frame: TextFrame, ctx: MapContext, leftUncoloured = fal
 		const paraOpts = paragraphOptions(paragraph, ctx)
 		noteUnwritableBreaks(paragraph, ctx.notes)
 		const runs = paragraph.runs
+		// Each equation goes in among the runs at its place: `TextProps.math` is an item of the
+		// same list, and `inline` keeps it in the paragraph rather than standing as its own.
+		const equations = paragraph.equations
+		const entries: (Run | Equation)[] = []
+		runs.forEach((run, runIndex) => {
+			for (const equation of equations) if (equation.runIndex === runIndex) entries.push(equation)
+			entries.push(run)
+		})
+		for (const equation of equations) if (equation.runIndex === runs.length) entries.push(equation)
 		// The paragraph break rides on the last run of every paragraph but the final one;
 		// a trailing break would add an empty line the frame never had.
 		const breaks = paragraphIndex < paragraphs.length - 1
 
-		if (runs.length === 0) {
+		if (entries.length === 0) {
 			items.push({ text: '', options: compact({ ...paraOpts, breakLine: breaks }) ?? {} })
 			return
 		}
 
-		runs.forEach((run, runIndex) => {
-			const isLastRun = runIndex === runs.length - 1
+		entries.forEach((entry, index) => {
+			const isLast = index === entries.length - 1
 			// `bullet` goes on the first run only, unlike the other paragraph properties. The
 			// write path treats a bullet on a run that is *not* starting a line as a request for
 			// a new paragraph (and clears that run's `breakLine` while it is at it), so
@@ -706,13 +705,20 @@ export function textRuns(frame: TextFrame, ctx: MapContext, leftUncoloured = fal
 			// It reads paragraph properties off whichever run opens the line, so once is enough.
 			const continuation = { ...paraOpts }
 			delete continuation['bullet']
+			const paragraphPart = index === 0 ? paraOpts : continuation
+			const breakLine = isLast && breaks ? { breakLine: true } : {}
+			if ('omml' in entry) {
+				const options = compact({ ...paragraphPart, ...breakLine })
+				items.push(compact({ math: entry.omml, inline: entry.inline || undefined, options }) ?? {})
+				return
+			}
 			const options = compact({
-				...(runIndex === 0 ? paraOpts : continuation),
-				...runOptions(run, ctx, leftUncoloured, textLang),
-				...(runIndex > 0 && run.breaksBefore > 0 ? { softBreakBefore: true } : {}),
-				...(isLastRun && breaks ? { breakLine: true } : {}),
+				...paragraphPart,
+				...runOptions(entry, ctx, leftUncoloured, textLang),
+				...(index > 0 && entry.breaksBefore > 0 ? { softBreakBefore: true } : {}),
+				...breakLine,
 			})
-			items.push(compact({ text: run.text, options }) ?? { text: run.text })
+			items.push(compact({ text: entry.text, options }) ?? { text: entry.text })
 		})
 	})
 

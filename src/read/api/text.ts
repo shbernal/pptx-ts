@@ -22,6 +22,6 @@ export {
 	type TextContext,
 	type TextInheritance,
 } from './text/run.js'
-export { Paragraph } from './text/paragraph.js'
+export { Paragraph, type Equation } from './text/paragraph.js'
 export { TextFrame, type AutofitMode, type BodyProperties, type ListStyleDefaults } from './text/frame.js'
 export { setParagraphText, setTextBodyText } from './text/edit.js'

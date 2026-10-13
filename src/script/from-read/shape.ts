@@ -106,12 +106,13 @@ export function shapeCall(shape: AnyShape, ctx: MapContext): CallIr | null {
  *
  * Extracted from `autoShapeCall`, which inlined this alongside the placeholder note, the
  * common-option assembly and three mutually exclusive emission arms.
- * @returns the frame when it holds authorable runs, else `null`
+ * @returns the frame when it holds authorable runs or an equation, else `null`
  */
 function autoShapeText(shape: AutoShape, notes: NoteScope): TextFrame | null {
 	const frame = shape.hasTextFrame ? shape.textFrame : null
 	if (frame === null) return null
-	return noteUnreadText(frame, shape.element_, notes, 'shape').length > 0 ? frame : null
+	const runText = noteUnreadText(frame, notes, 'shape')
+	return runText.length > 0 || frame.paragraphs.some((paragraph) => paragraph.equations.length > 0) ? frame : null
 }
 
 /**

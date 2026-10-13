@@ -172,7 +172,7 @@ function cellIr(cell: TableCell, hasStyle: boolean, styled: boolean, ctx: MapCon
 			'this cell carries a screen-reader header association (a:tc/@id / a:tcPr/a:headers); PowerPoint strips both on save, so there is no write option and the association is lost; hasHeader (a:tblPr/@firstRow) is the marker that survives'
 		)
 	}
-	if (frame) noteUnreadText(frame, cell.element_, notes, 'cell')
+	if (frame) noteUnreadText(frame, notes, 'cell')
 
 	const options = compact({
 		fill: cellFill(cell, hasStyle, ctx),

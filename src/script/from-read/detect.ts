@@ -76,19 +76,6 @@ function children(element: ElementLike | null): ElementLike[] {
 }
 
 /**
- * `true` when this shape's text body contains an OMML equation.
- *
- * An equation lives in `m:oMath` inside an `a14:m` run, which contributes nothing to
- * `TextFrame.text`, so an equation-only shape reads as an empty text frame. The write API
- * *can* author one (`TextProps.math`, plus the `pptx-ts/math` subpath for LaTeX/MathML
- * input), which makes this a read-side gap rather than a hard limit.
- */
-export function hasEquation(element: unknown): boolean {
-	// The OMML body itself, wrapped by `a14:m` in a text run.
-	return has(element, OOXML_NS.m, 'oMath')
-}
-
-/**
  * `true` when this `p:sp` is a text box rather than an auto shape.
  *
  * The discriminator is one attribute, `p:cNvSpPr/@txBox`, and nothing reads it. The
