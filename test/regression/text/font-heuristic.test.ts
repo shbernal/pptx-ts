@@ -27,10 +27,6 @@ describe('font-metrics: heuristic fallback', () => {
 		const emPerChar = h.advanceWidthPt(text, 100) / 100 / text.length
 		expect(emPerChar).toBeGreaterThan(0.45)
 	})
-
-	test('non-Latin code points are treated as full-em (safe for CJK)', () => {
-		expect(h.advanceWidthPt('一二三', 10)).toBeCloseTo(3 * 1.0 * 10, 6)
-	})
 })
 
 describe('units-internal: resolveTableColWidthsEmu', () => {

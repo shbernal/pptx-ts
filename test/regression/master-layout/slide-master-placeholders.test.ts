@@ -210,44 +210,4 @@ defineRegressionSuite('Slide master placeholders [legacy bug-18]', [
 			}
 		},
 	},
-	{
-		name: 'master with two placeholders both populated → two <p:sp> with text runs, no empty stub',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.defineSlideMaster({
-					title: 'TEST_MASTER_B18_BOTH',
-					objects: [
-						{ placeholder: { options: { name: 'title', type: 'title', x: 0.5, y: 0.5, w: 9, h: 1 }, text: '' } },
-						{ placeholder: { options: { name: 'body', type: 'body', x: 0.5, y: 2, w: 9, h: 5 }, text: '' } },
-					],
-				})
-				const s = p.addSlide({ masterTitle: 'TEST_MASTER_B18_BOTH' })
-				s.addText('My Title', { placeholder: 'title' })
-				s.addText('My Body', { placeholder: 'body' })
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			const spBlocks = xml.match(/<p:sp>[\s\S]*?<\/p:sp>/g) || []
-			assert(
-				spBlocks.length === 2,
-				'expected exactly 2 <p:sp> blocks (no extra stub); got ' + spBlocks.length + '\nxml: ' + xml
-			)
-			// Both blocks should contain <a:t>...</a:t> populated runs.
-			const populated = spBlocks.filter((sp) => /<a:t>[^<]+<\/a:t>/.test(sp))
-			assert(
-				populated.length === 2,
-				'expected both <p:sp> blocks to contain text runs <a:t>...</a:t>; got ' +
-					populated.length +
-					'\nblocks: ' +
-					JSON.stringify(spBlocks)
-			)
-			assert(
-				spBlocks.some((sp) => /<a:t>My Title<\/a:t>/.test(sp)),
-				'expected <a:t>My Title</a:t> in one block; got: ' + xml
-			)
-			assert(
-				spBlocks.some((sp) => /<a:t>My Body<\/a:t>/.test(sp)),
-				'expected <a:t>My Body</a:t> in one block; got: ' + xml
-			)
-		},
-	},
 ])

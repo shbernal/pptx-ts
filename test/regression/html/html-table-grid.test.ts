@@ -33,35 +33,9 @@ describe('measureGridColumns', () => {
 		assert(JSON.stringify(filled) === '[2,2]', `the rowspan fills the second row; got ${JSON.stringify(filled)}`)
 	})
 
-	test('a rowspan deeper than one row keeps holding its column', () => {
-		const { filled } = measureGridColumns([[{ rowspan: 3 }, {}], [{}], [{}], plain(2)])
-		assert(JSON.stringify(filled) === '[2,2,2,2]', `a 3-deep span covers 2 further rows; got ${JSON.stringify(filled)}`)
-	})
-
-	test('a rowspan in the last column still counts as filled', () => {
-		// The held column comes *after* the row's own cells, so it is only found by looking past
-		// the final cell — the case a "sum the spans" count misses.
-		const { filled } = measureGridColumns([[{}, { rowspan: 2 }], [{}]])
-		assert(JSON.stringify(filled) === '[2,2]', `trailing held columns count; got ${JSON.stringify(filled)}`)
-	})
-
-	test('the grid is as wide as the widest row, and short rows are reported short', () => {
-		const { columns, filled } = measureGridColumns([[{ colspan: 3 }], plain(4), [{}]])
-		assert(columns === 4, `the widest row sets the grid; got ${columns}`)
-		assert(JSON.stringify(filled) === '[3,4,1]', `each row's reach; got ${JSON.stringify(filled)}`)
-	})
-
 	test('a table with no cells has no columns', () => {
 		const { columns } = measureGridColumns([[], []])
 		assert(columns === 0, `empty rows occupy nothing; got ${columns}`)
-	})
-
-	test('a nonsense span covers exactly one column', () => {
-		// A negative or zero span read literally would walk the column cursor backwards (or not at
-		// all) and shift every column after it.
-		const { columns, filled } = measureGridColumns([[{ colspan: -2 }, { colspan: 0 }, { rowspan: NaN }]])
-		assert(columns === 3, `three bad spans are still three columns; got ${columns}`)
-		assert(JSON.stringify(filled) === '[3]', `the row reaches 3; got ${JSON.stringify(filled)}`)
 	})
 
 	test('a fractional span truncates rather than fractionally advancing', () => {

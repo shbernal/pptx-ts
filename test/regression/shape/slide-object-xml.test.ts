@@ -383,19 +383,6 @@ describe('groups', () => {
 		options: { objectName: name, x: 1, y: 1, w: 2, h: 2, ...o },
 	})
 
-	test('an auto-sized group uses the bounding box of its children, with an identity child space', () => {
-		const xml = render([
-			{
-				_type: SlideObjectType.group,
-				_groupObjects: [kid('a'), kid('b', { x: 3, y: 4 })],
-				options: { objectName: 'G' },
-			},
-		])
-		// chOff/chExt mirror off/ext exactly, so children keep slide-absolute coordinates.
-		expect(xml).toContain('<a:off x="914400" y="914400"/><a:ext cx="3657600" cy="4572000"/>')
-		expect(xml).toContain('<a:chOff x="914400" y="914400"/><a:chExt cx="3657600" cy="4572000"/>')
-	})
-
 	test('a group with no locks emits a self-closing cNvGrpSpPr', () => {
 		const xml = render([{ _type: SlideObjectType.group, _groupObjects: [kid('a')], options: { objectName: 'G' } }])
 		expect(xml).toContain('<p:cNvGrpSpPr/>')

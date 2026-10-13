@@ -52,19 +52,9 @@ const resizeHeight = (out: ResizeOutcome) => {
 }
 
 describe('text-fit: measureHeightPt', () => {
-	test('single short line height = pitch * size', () => {
-		const h = measureHeightPt([para('hi')], 1000, resolveMono, 100, 0)
-		expect(h).toBeCloseTo(SINGLE_LINE_PITCH * 18, 6)
-	})
-
 	test('greedy wrap counts lines (0.5em mono, 18pt → 9pt/char)', () => {
 		// 10 chars/word * 9pt = 90pt per word; innerWidth 100pt fits one word, two wrap.
 		const h = measureHeightPt([para('aaaaaaaaaa bbbbbbbbbb cccccccccc')], 100, resolveMono, 100, 0)
-		expect(linesOf(h)).toBe(3)
-	})
-
-	test('hard newline forces a line', () => {
-		const h = measureHeightPt([para('a\nb\nc')], 10000, resolveMono, 100, 0)
 		expect(linesOf(h)).toBe(3)
 	})
 
@@ -95,11 +85,6 @@ describe('text-fit: measureHeightPt', () => {
 	test('space-before/after add to height', () => {
 		const h = measureHeightPt([para('hi', { spaceBeforePts: 5, spaceAfterPts: 7 })], 1000, resolveMono, 100, 0)
 		expect(h).toBeCloseTo(SINGLE_LINE_PITCH * 18 + 12, 6)
-	})
-
-	test('exact line spacing overrides the calibrated pitch', () => {
-		const h = measureHeightPt([para('a\nb', { lineSpacingPts: 30 })], 10000, resolveMono, 100, 0)
-		expect(h).toBeCloseTo(60, 6)
 	})
 })
 

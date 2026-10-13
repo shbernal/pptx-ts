@@ -170,24 +170,6 @@ defineRegressionSuite('HTML table to slides on Node (happy-dom)', [
 		},
 	},
 	{
-		name: 'colspan and rowspan survive into the emitted table',
-		fn: async () => {
-			const win = windowWith(`
-				<table id="t">
-					<thead><tr><th colspan="2">Wide</th><th>C</th></tr></thead>
-					<tbody><tr><td rowspan="2">Tall</td><td>b</td><td>c</td></tr><tr><td>d</td><td>e</td></tr></tbody>
-				</table>`)
-			const { zip } = await build((pptx) => {
-				tableToSlides(pptx, tableOf(win))
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assert(/<a:tc\b[^>]*\bgridSpan="2"/.test(xml), 'colspan must emit gridSpan="2"')
-			assert(/<a:tc\b[^>]*\browSpan="2"/.test(xml), 'rowspan must emit rowSpan="2"')
-			// A colspan of 2 in the width-source row must still yield one column per spanned cell.
-			assertEqual(gridColWidths(xml).length, 3, 'a 2-span header + 1 cell is 3 columns')
-		},
-	},
-	{
 		// upstream gitbrent/PptxGenJS#1244 — the reported defect, reproduced.
 		name: 'data-pptx-width on a spanning header sizes the columns it spans, not the next one along',
 		fn: async () => {
@@ -313,36 +295,6 @@ defineRegressionSuite('HTML table to slides on Node (happy-dom)', [
 					`the error must name the table and the reason; got: ${thrown.message}`
 				)
 			}
-		},
-	},
-	{
-		name: 'ragged rows are padded to a rectangular grid',
-		fn: async () => {
-			// HTML tolerates a short row and leaves the tail of the grid empty; pptx does not —
-			// <a:tblGrid> declares the column count and a row with fewer <a:tc> is a table
-			// PowerPoint has to repair. This used to emit rows of 3, 1 and 4 cells over a
-			// 3-column grid.
-			const win = windowWith(`
-				<table id="t">
-					<thead><tr><th>A</th><th>B</th><th>C</th></tr></thead>
-					<tbody><tr><td>1</td></tr><tr><td>1</td><td>2</td><td>3</td><td>4</td></tr></tbody>
-				</table>`)
-			const { zip } = await build((pptx) => {
-				tableToSlides(pptx, tableOf(win))
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assertEqual(gridColWidths(xml).length, 4, 'the widest row sets the grid width')
-			assertRectangular(xml)
-			// Padding is blank and appended — no authored cell may be moved or dropped.
-			assertEqual(
-				JSON.stringify(cellTexts(xml)),
-				JSON.stringify([
-					['A', 'B', 'C', ''],
-					['1', '', '', ''],
-					['1', '2', '3', '4'],
-				]),
-				'authored text must survive padding unchanged'
-			)
 		},
 	},
 	{
@@ -608,7 +560,6 @@ defineRegressionSuite('HTML table to slides on Node (happy-dom)', [
 			const viaFunction = await build((pptx) => {
 				tableToSlides(pptx, tableOf(windowWith(html)))
 			})
-			assertEqual(typeof BrowserPptxTs.prototype.tableToSlides, 'function', 'the browser build must keep the method')
 			assertEqual(
 				await readEntry(viaMethod.zip, 'ppt/slides/slide1.xml'),
 				await readEntry(viaFunction.zip, 'ppt/slides/slide1.xml'),

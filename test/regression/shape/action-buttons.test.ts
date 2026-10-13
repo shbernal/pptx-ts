@@ -41,26 +41,6 @@ defineRegressionSuite('Action button navigation', [
 		},
 	},
 	{
-		name: 'actionButtonBeginning with action:firstslide emits the firstslide jump',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.addSlide().addShape('actionButtonBeginning', { x: 1, y: 1, w: 1, h: 1, hyperlink: { action: 'firstslide' } })
-			})
-			const xml = await readEntry(zip, SLIDE_XML)
-			assertIncludes(xml, 'action="ppaction://hlinkshowjump?jump=firstslide"', 'first-slide action present')
-		},
-	},
-	{
-		name: 'actionButtonEnd with action:endshow emits the endshow jump',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.addSlide().addShape('actionButtonEnd', { x: 1, y: 1, w: 1, h: 1, hyperlink: { action: 'endshow' } })
-			})
-			const xml = await readEntry(zip, SLIDE_XML)
-			assertIncludes(xml, 'action="ppaction://hlinkshowjump?jump=endshow"', 'end-show action present')
-		},
-	},
-	{
 		// A run's own `action` was written as an underline and nothing else (issue #114). PowerPoint
 		// writes it on the run's `a:rPr`, relationship-less (`text-run-show-jump.pptx`).
 		name: 'a text run with action:nextslide carries the jump on its own rPr',

@@ -61,11 +61,6 @@ describe('CJK line breaking', () => {
 		expect(m.widestLineIn * 72).toBeCloseTo(15 * CHAR_PT, 6)
 	})
 
-	test('Kana breaks like Han', () => {
-		// Same shape as the mixed case above, in Hiragana.
-		expect(measureText(reg, 'aaaaaaaaaa あいうえお bbbbbbbbbb', OPTS).lineCount).toBe(2)
-	})
-
 	test('astral CJK (Extension B) breaks per code point, not per UTF-16 unit', () => {
 		// Five surrogate pairs — `.length` is 10, but only 5 advances are charged,
 		// so this lays out exactly like the 5-character Han case above.

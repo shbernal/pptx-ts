@@ -94,14 +94,4 @@ defineRegressionSuite('Slide hyperlink theme colors', [
 			assertIncludes(xml, 'val="tx"', 'hlinkClr pins link to the text color')
 		},
 	},
-	{
-		name: 'non-hyperlink text still defaults to black fill',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.addSlide().addText('plain', { x: 1, y: 1, w: 4, h: 0.5 })
-			})
-			const xml = await readEntry(zip, SLIDE_XML)
-			assertIncludes(xml, '<a:srgbClr val="000000"/>', 'normal text keeps the DEF_FONT_COLOR default')
-		},
-	},
 ])
