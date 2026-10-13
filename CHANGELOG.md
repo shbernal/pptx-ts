@@ -186,6 +186,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`fromTemplate` restarts each comment author's numbering.** It strips the template's slides and
+  their comments, but each author in `commentAuthors.xml` kept its `lastIdx`, so a comment replayed
+  onto the shell was numbered after one the deck no longer has: a deck with one comment replayed as
+  `idx="2"`. Every `lastIdx` is now 0 after the strip, and the authors keep their ids
+  ([#244](https://github.com/shbernal/pptx-ts/issues/244)).
 - **A styled table's text takes the style's colour.** `addTable` wrote black on every cell run with
   no colour, and a run's own colour beats the style's text colour, so Medium Style 2's header drew
   black text on its accent fill where the style says white. A table with `tableStyle` now leaves

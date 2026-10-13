@@ -37,6 +37,7 @@ The saved deck keeps the template's masters, layouts and theme as the file store
 - `fromTemplate` accepts the same input as [`Presentation.load`](read-and-edit.md#load-and-save), from a `.pptx` or a `.potx` file.
 - It removes every slide, as `removeSlide` does. The parts only those slides used go with them, such as their notes, media and charts. Masters, layouts and theme stay byte-identical.
 - On a template with no slides, the removal step does nothing.
+- The comments on those slides go too. Their authors stay in `commentAuthors.xml`, with each author's comment count (`lastIdx`) reset to 0, so a comment you add numbers from 1.
 - A `.potx` declares its main part with the template content type. `fromTemplate` changes it to the presentation content type, so the saved file opens as an editable deck and not as a new copy of a template.
 - `{ keepTemplateContentType: true }` keeps the template content type. A `.pptx` has the presentation type already, so the option changes nothing there.
 

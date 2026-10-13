@@ -66,6 +66,7 @@ import { rebuildClonedPageRels, type ImportContext } from './ops/part-copy.js'
 import { appendSlides as appendSlidesInto } from './ops/append-slides.js'
 import { layoutPartNamesOf, slideMasterPartNames } from './ops/part-index.js'
 import { readEmbeddedFontEntries } from './ops/embedded-fonts.js'
+import { resetCommentAuthorIndexes } from './ops/comments.js'
 import { dropFromShowsAndSections, pruneIfOrphan, unlinkInbound } from './ops/prune.js'
 import { ImportMemo } from './ops/import-memo.js'
 import type { RescaleMode } from './ops/rescale.js'
@@ -148,6 +149,8 @@ export class Presentation {
 		// Strip any sample slides to a master/layout-only shell. removeSlide never
 		// prunes shared chrome, so masters/layouts/theme stay byte-identical.
 		while (pres.slides.length > 0) pres.removeSlide(0)
+		// The stripped slides took their comments along, so no author has used an index yet.
+		resetCommentAuthorIndexes(pres)
 
 		return pres
 	}
