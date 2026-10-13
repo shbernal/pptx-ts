@@ -6,7 +6,7 @@
 //   pnpm ppt:vm:sync --no-restart    # copy only; the worker loads them at its next start
 //
 // The guest sees `tools/powerpoint-vm/shared/` as `\\host.lan\Data`. Its logon launcher mirrors
-// `ts-pptx-worker/` from there to `C:\ts-pptx-worker\` every time it starts the worker, so the
+// `pptx-ts-worker/` from there to `C:\pptx-ts-worker\` every time it starts the worker, so the
 // files here are the only copy anyone edits.
 //
 // Generates `PPTXTS_POWERPOINT_TOKEN` into `tools/powerpoint-vm/.env` when it is not set there.
@@ -28,7 +28,7 @@ export const WORKER_FILES = [
 
 const COMPOSE_FILE = path.join(VM_DIR, 'compose.yml')
 const STORAGE_DIR = path.join(VM_DIR, 'storage')
-const STAGE_DIR = path.join(VM_DIR, 'shared', 'ts-pptx-worker')
+const STAGE_DIR = path.join(VM_DIR, 'shared', 'pptx-ts-worker')
 
 const USAGE = `Copy the PowerPoint worker into the VM's shared folder.
 
