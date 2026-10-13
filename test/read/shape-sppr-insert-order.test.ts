@@ -65,19 +65,13 @@ describe('a created p:spPr lands in schema order', () => {
 		assert(order.indexOf('p:spPr') < order.indexOf('p:extLst'), 'p:spPr must precede p:extLst; got ' + order.join(', '))
 	})
 
-	test('before p:style and p:txBody, which it already did', () => {
+	test('before p:style and p:txBody, which it already did, and after p:nvSpPr, a predecessor', () => {
+		// The list names successors only. `p:nvSpPr` is absent from it not by omission but
+		// because naming it would insert the new `p:spPr` *before* the shape's identity.
 		const { shape, xml } = sp(`${NV}<p:style/><p:txBody><a:bodyPr/><a:p/></p:txBody>`)
 		shape.noFill()
 		const order = childOrder(xml())
 		assert(order.indexOf('p:spPr') < order.indexOf('p:style'), 'p:spPr must precede p:style; got ' + order.join(', '))
-	})
-
-	test('and after p:nvSpPr, which is a predecessor rather than a successor', () => {
-		// The list names successors only. `p:nvSpPr` is absent from it not by omission but
-		// because naming it would insert the new `p:spPr` *before* the shape's identity.
-		const { shape, xml } = sp(`${NV}<p:txBody><a:bodyPr/><a:p/></p:txBody>`)
-		shape.noFill()
-		const order = childOrder(xml())
 		assert(order.indexOf('p:nvSpPr') < order.indexOf('p:spPr'), 'p:nvSpPr must stay first; got ' + order.join(', '))
 	})
 })

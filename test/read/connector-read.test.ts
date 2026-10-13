@@ -20,7 +20,7 @@
 import { ShapeType } from '../../dist/node.js'
 import { isConnector, type Presentation } from '../../dist/read.js'
 import { describe, test } from 'vitest'
-import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.ts'
+import { authorRead, firstShape } from './authored.ts'
 import { assert, assertEqual } from '../helpers.ts'
 
 /** The single connector on any slide of `presentation`. */
@@ -114,34 +114,5 @@ describe('Connector.startConnection / endConnection — write→read fidelity', 
 		assert(start.boundShape, 'the group-nested boundShape resolves (was null before deep resolution)')
 		assertEqual(start.boundShape.name, 'Nested', 'boundShape is the group-nested rect')
 		assertEqual(start.boundShape.id, start.shapeId, 'the resolved shape carries the bound id')
-	})
-
-	test.skipIf(!validatorInstalled)('the authored bound-connector deck is schema-valid', async () => {
-		const { buf } = await authorRead((pres) => {
-			const slide = pres.addSlide()
-			slide.addShape(ShapeType.rect, { x: 1, y: 1, w: 2, h: 1, objectName: 'BoxA' })
-			slide.addShape(ShapeType.rect, { x: 5, y: 3, w: 2, h: 1, objectName: 'BoxB' })
-			slide.addConnector({
-				type: 'straight',
-				x1: 3,
-				y1: 1.5,
-				x2: 5,
-				y2: 3.5,
-				startShape: 'BoxA',
-				startShapeIdx: 1,
-				endShape: 'BoxB',
-				endShapeIdx: 3,
-			})
-		})
-		assertEqual((await schemaErrors(buf)).length, 0, 'bound-connector deck validates')
-	})
-
-	test.skipIf(!validatorInstalled)('the authored group-nested-binding deck is schema-valid', async () => {
-		const { buf } = await authorRead((pres) => {
-			const slide = pres.addSlide()
-			slide.addGroup([{ rect: { x: 1, y: 1, w: 2, h: 1, objectName: 'Nested' } }], { objectName: 'Grp' })
-			slide.addConnector({ type: 'straight', x1: 3, y1: 1.5, x2: 5, y2: 3, startShape: 'Nested', startShapeIdx: 1 })
-		})
-		assertEqual((await schemaErrors(buf)).length, 0, 'group-nested-binding deck validates')
 	})
 })

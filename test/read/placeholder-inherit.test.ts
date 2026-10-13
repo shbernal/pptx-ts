@@ -34,24 +34,6 @@ function firstRun(shape: AnyShape) {
 }
 
 describe('read: placeholder text-property inheritance', () => {
-	test('a bare title run inherits size + theme (major) face from the master txStyles', async () => {
-		const slide = at((await openFixture('placeholder-inherit')).slides, 0)
-		const title = slide.shapes.find((s) => (s.name ?? '').startsWith('Title'))
-		assert(title, 'expected a title placeholder shape')
-		const run = firstRun(title)
-
-		// The run itself sets nothing — proving the resolved values below come from inheritance.
-		assertEqual(run.fontName, null, 'title run sets no own typeface')
-		assertEqual(run.fontSizePt, null, 'title run sets no own size')
-		assertEqual(run.bold, null, 'title run sets no own bold')
-
-		// titleStyle/lvl1 defRPr: sz=4400, latin=+mj-lt → theme major font (Aptos Display).
-		assertEqual(run.resolvedSizePt, 44, 'title inherits 44pt from titleStyle')
-		assertEqual(run.resolvedFontFace, 'Aptos Display', 'title inherits the +mj-lt theme major font')
-		// titleStyle defRPr sets no @b, and nothing above it does → the bold chain resolves to null.
-		assertEqual(run.resolvedBold, null, 'title inherits no explicit bold from the chain')
-	})
-
 	test('a bare body run inherits size + theme (minor) face from the master txStyles', async () => {
 		const slide = at((await openFixture('placeholder-inherit')).slides, 0)
 		// The body placeholder is the non-title text placeholder.

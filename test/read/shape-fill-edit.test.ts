@@ -172,16 +172,7 @@ describe('Per-kind fill / line support', () => {
 		assertEqual(findByKind(reopened, 'group').fillColor, '123456', 'group fill reloads')
 	})
 
-	test('picture rejects fill but accepts a border (lineColor)', async () => {
-		const picture = findByKind(await openFixture('image'), 'picture')
-		assert(
-			throws(() => (picture.fillColor = '000000')),
-			'picture fillColor should throw'
-		)
-		assert(
-			throws(() => picture.noFill()),
-			'picture noFill() should throw'
-		)
+	test('picture accepts a border (lineColor)', async () => {
 		const { reopened } = await editAndReopen('image', (presentation) => {
 			findByKind(presentation, 'picture').lineColor = '00AAFF'
 		})

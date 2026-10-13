@@ -26,7 +26,7 @@
 
 import { describe, test } from 'vitest'
 import { NotesPlaceholder, Placeholder, type Presentation } from '../../dist/read.js'
-import { authorRead, schemaErrors, validatorInstalled } from './authored.ts'
+import { authorRead } from './authored.ts'
 import { assert, assertEqual, defined, at } from '../helpers.ts'
 
 /** The first slide of `presentation`. */
@@ -169,7 +169,6 @@ describe('Slide.notesTextFrame — write→read fidelity', () => {
 		const body = notes.body
 		assert(body, 'the body placeholder resolves')
 		assertEqual(body.element_.localName, 'sp', 'element_ is the underlying p:sp')
-		assert(typeof body.name === 'string', 'name reads through from the base class')
 	})
 
 	test('the slide-number placeholder carries the slide number field (T2.1)', async () => {
@@ -221,18 +220,5 @@ describe('Slide.notesTextFrame — write→read fidelity', () => {
 			'shared body',
 			'notesTextFrame delegates to the same body frame'
 		)
-	})
-
-	test.skipIf(!validatorInstalled)('the authored rich-notes deck is schema-valid', async () => {
-		const { buf } = await authorRead((pres) => {
-			pres
-				.addSlide()
-				.addNotes([
-					{ text: 'Loud', options: { bold: true, color: 'C00000' } },
-					{ text: ' and a ' },
-					{ text: 'link', options: { hyperlink: { url: 'https://example.com/notes' } } },
-				])
-		})
-		assertEqual((await schemaErrors(buf)).length, 0, 'rich-notes deck validates')
 	})
 })

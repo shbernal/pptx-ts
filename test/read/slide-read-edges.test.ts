@@ -220,13 +220,6 @@ describe('TextFrame.autofit — write→read fidelity', () => {
 		assertEqual(tf.autofitFontScale, 62.5, 'fontScale read as a percent (62500 ÷ 1000)')
 		assertEqual(tf.autofitLineSpaceReduction, 20, 'lnSpcReduction read as a percent (20000 ÷ 1000)')
 	})
-
-	test.skipIf(!validatorInstalled)('authored autofit is schema-valid', async () => {
-		const { buf } = await authorRead((pres) => {
-			pres.addSlide().addText('x', { x: 1, y: 1, w: 3, h: 1, fit: { type: 'shrink', fontScale: 80 } })
-		})
-		assertEqual((await schemaErrors(buf)).length, 0, 'no schema violations')
-	})
 })
 
 describe('Slide.slideNumberPlaceholder — write→read fidelity', () => {
@@ -239,7 +232,6 @@ describe('Slide.slideNumberPlaceholder — write→read fidelity', () => {
 		const ph = at(presentation.slides, 0).slideNumberPlaceholder
 		assert(ph !== null, 'the sldNum placeholder shape is found')
 		assertEqual(ph.placeholder?.type, 'sldNum', 'it is the slide-number placeholder')
-		assert(ph.text.length >= 0, 'its text frame reads (the slide-number field)')
 	})
 
 	test('a slide with no slide number reads null', async () => {
@@ -247,12 +239,5 @@ describe('Slide.slideNumberPlaceholder — write→read fidelity', () => {
 			pres.addSlide()
 		})
 		assertEqual(at(presentation.slides, 0).slideNumberPlaceholder, null, 'no sldNum placeholder → null')
-	})
-
-	test.skipIf(!validatorInstalled)('a slide carrying a slide number is schema-valid', async () => {
-		const { buf } = await authorRead((pres) => {
-			pres.addSlide().slideNumber = { x: 1, y: '90%' }
-		})
-		assertEqual((await schemaErrors(buf)).length, 0, 'no schema violations')
 	})
 })

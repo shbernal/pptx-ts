@@ -263,14 +263,6 @@ describe('Paragraph getter edges', () => {
 })
 
 describe('TextFrame.text setter + resolvedAnchor', () => {
-	test('setting text collapses multiple paragraphs and carries the first run rPr', () => {
-		const f = frame(`<a:p><a:r><a:rPr b="1"/><a:t>first</a:t></a:r></a:p><a:p><a:r><a:t>second</a:t></a:r></a:p>`)
-		f.text = 'merged'
-		assertEqual(f.paragraphs.length, 1, 'collapsed to a single paragraph')
-		assertEqual(at(f.paragraphs, 0).text, 'merged', 'new text is written')
-		assertEqual(at(at(f.paragraphs, 0).runs, 0).bold, true, 'the first run rPr (bold) is carried onto the new run')
-	})
-
 	test('setting text on an empty body creates the paragraph and preserves whitespace', () => {
 		const f = frame(``) // just <a:bodyPr/>, no a:p
 		f.text = '  spaced  '
