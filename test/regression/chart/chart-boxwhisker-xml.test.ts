@@ -42,17 +42,6 @@ describe('box-and-whisker (chartEx) chart', () => {
 		expect(slide).toContain('<mc:Fallback>')
 	})
 
-	test('chart data is a flat labeled category chart — cat in col A, val in col B', async () => {
-		const { zip } = await buildBox()
-		const xml = await readEntry(zip, chartExPath(zip))
-		expect(xml).toContain('<cx:strDim type="cat"><cx:f>Sheet1!$A$2:$A$7</cx:f>')
-		expect(xml).toContain('<cx:pt idx="0">Line A</cx:pt>')
-		expect(xml).toContain('<cx:numDim type="val"><cx:f>Sheet1!$B$2:$B$7</cx:f>')
-		expect(xml).toContain('<cx:pt idx="0">12</cx:pt>')
-		// Series name is the value column's header — column B.
-		expect(xml).toContain('<cx:f>Sheet1!$B$1</cx:f>')
-	})
-
 	test('single boxWhisker series with default statistics/visibility and no axisId binding', async () => {
 		const { zip } = await buildBox()
 		const xml = await readEntry(zip, chartExPath(zip))

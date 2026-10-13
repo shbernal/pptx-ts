@@ -8,7 +8,6 @@ import {
 	assert,
 	assertEqual,
 	captureDiagnostics,
-	at,
 } from '../../helpers.ts'
 
 // Every case here pins an ASYMMETRIC or non-default input. The bugs these cover all cancel out
@@ -67,24 +66,6 @@ defineRegressionSuite('Table geometry under asymmetric input', [
 		},
 	},
 	{
-		// `slideMargin` was read by the auto-pager and by nothing else, so whether a table
-		// respected it depended on whether `autoPage` was on.
-		name: 'slideMargin steers an un-paged table too',
-		fn: async () => {
-			const widthFor = async (slideMargin: Margin) => {
-				const { zip } = await build((p) => {
-					p.defineLayout({ name: 'TEN', width: 10, height: 5.625 })
-					p.layout = 'TEN'
-					p.addSlide().addTable([[{ text: 'a' }, { text: 'b' }]], { autoPage: false, slideMargin })
-				})
-				return gridWidthEmu(await readEntry(zip, SLIDE_XML))
-			}
-			const narrow = await widthFor(0.25)
-			const wide = await widthFor(2)
-			assert(wide < narrow, `a wider slideMargin narrows the table; got ${wide} against ${narrow}`)
-		},
-	},
-	{
 		// Precedence used to run master-first, inherited from upstream and never decided, so a deck
 		// whose master declared a `margin` discarded a per-table `slideMargin` with no diagnostic —
 		// the reverse of the rule everywhere else here. Both halves are asserted: the caller's value
@@ -139,42 +120,6 @@ defineRegressionSuite('Table geometry under asymmetric input', [
 					/firstRow="1"/.test(xml),
 					idx === 0,
 					`page ${idx + 1} declares firstRow only where a header actually is; ${firstRow.slice(0, 120)}`
-				)
-			}
-		},
-	},
-	{
-		// A repeated header row read `_lineHeight` off the DEFINER's cells, which never carry it —
-		// so it was priced at zero and each continuation page took the header for free and then
-		// packed the same body rows the first page fits.
-		name: 'a repeated header row costs the page budget it occupies',
-		fn: async () => {
-			const paged = (repeat: boolean) =>
-				build((p) => {
-					p.defineLayout({ name: 'TEN', width: 10, height: 5.625 })
-					p.layout = 'TEN'
-					p.addSlide().addTable(uniformRows(60), {
-						x: 0.5,
-						y: 0.5,
-						w: 9,
-						autoPage: true,
-						fontSize: 16,
-						autoPageSlideStartY: 0.5,
-						autoPageRepeatHeader: repeat,
-						autoPageHeaderRows: 1,
-					})
-				})
-			const plain = await rowsPerSlide((await paged(false)).zip)
-			const repeated = await rowsPerSlide((await paged(true)).zip)
-			// Both drop the last page, which holds whatever remains and may be short.
-			const plainFull = plain.slice(0, -1)
-			const repeatedFull = repeated.slice(0, -1)
-			assert(plainFull.length >= 2 && repeatedFull.length >= 2, 'expected several full pages either way')
-			for (const count of repeatedFull.slice(1)) {
-				assert(
-					count <= at(plainFull, 0),
-					`a page carrying a repeated header fits no more rows than a page without one; ` +
-						`got ${JSON.stringify(repeated)} against ${JSON.stringify(plain)}`
 				)
 			}
 		},

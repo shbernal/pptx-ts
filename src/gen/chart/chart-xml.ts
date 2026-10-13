@@ -679,7 +679,7 @@ function genXmlChartMetadata(metadata?: Record<string, string>): string {
 
 	let items = ''
 	for (const [key, value] of Object.entries(metadata)) {
-		if (typeof key !== 'string' || key.length === 0) {
+		if (key.length === 0) {
 			warn(
 				'chart/invalid-metadata-key',
 				`chart metadata key "${String(key)}" is not a non-empty string; entry skipped.`

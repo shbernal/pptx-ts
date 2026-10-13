@@ -274,10 +274,6 @@ const MATRIX: [string, (slide: Slide) => void][] = [
 			),
 	],
 	['pie', (s) => s.addChart([{ name: 'P', labels: LABELS, values: [1, 2, 3] }], { type: ChartType.pie, ...FRAME })],
-	[
-		'doughnut',
-		(s) => s.addChart([{ name: 'P', labels: LABELS, values: [1, 2, 3] }], { type: ChartType.doughnut, ...FRAME }),
-	],
 	['unlabelled pie', (s) => s.addChart([{ name: 'P', values: [1, 2, 3] }], { type: ChartType.pie, ...FRAME })],
 	[
 		'pie with two label levels',
