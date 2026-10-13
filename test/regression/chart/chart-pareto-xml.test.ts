@@ -45,17 +45,6 @@ describe('pareto (multi-series chartEx) chart', () => {
 		expect(slide).toContain('<mc:Fallback>')
 	})
 
-	test('chart data is a flat labeled category chart — cat in col A, val in col B', async () => {
-		const { zip } = await buildPareto()
-		const xml = await readEntry(zip, chartExPath(zip))
-		expect(xml).toContain('<cx:strDim type="cat"><cx:f>Sheet1!$A$2:$A$6</cx:f>')
-		expect(xml).toContain('<cx:pt idx="0">Scratch</cx:pt>')
-		expect(xml).toContain('<cx:numDim type="val"><cx:f>Sheet1!$B$2:$B$6</cx:f>')
-		expect(xml).toContain('<cx:pt idx="0">45</cx:pt>')
-		// Series name is the value column's header — column B.
-		expect(xml).toContain('<cx:f>Sheet1!$B$1</cx:f>')
-	})
-
 	test('emits two series: a clusteredColumn (aggregation, axis 1) and a paretoLine (ownerIdx 0, axis 2)', async () => {
 		const { zip } = await buildPareto()
 		const xml = await readEntry(zip, chartExPath(zip))
@@ -64,6 +53,8 @@ describe('pareto (multi-series chartEx) chart', () => {
 		// Series 0: the bars. clusteredColumn + <cx:aggregation/> + binds axis 1.
 		expect(xml).toContain('layoutId="clusteredColumn"')
 		expect(xml).toContain('<cx:layoutPr><cx:aggregation/></cx:layoutPr>')
+		// Its series name is the value column's header, column B.
+		expect(xml).toContain('<cx:f>Sheet1!$B$1</cx:f>')
 		// Series 1: the cumulative line. It derives from series 0 (ownerIdx 0), so it has no tx/dataId.
 		expect(xml).toContain('<cx:series layoutId="paretoLine" ownerIdx="0"')
 		const lineSeries = xml.slice(xml.indexOf('<cx:series layoutId="paretoLine"'))

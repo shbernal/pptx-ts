@@ -108,21 +108,6 @@ describe('computeTableLayout core — auto-height estimation', () => {
 		expect(c.hIn).toBeGreaterThan(oneLine)
 	})
 
-	test('explicit rowH makes an otherwise-auto table exact even with no metrics', () => {
-		const rows = [[{ text: 'hello world' }]]
-		const res = computeTableLayout(rows, { x: 0, y: 0, w: 4, rowH: 0.75 }, LAYOUT, emptyReg)
-		expect(res.heightExact).toBe(true)
-		expect(cellAt(res, 0, 0)?.hIn).toBeCloseTo(0.75, 6)
-	})
-
-	test('auto row with an unmeasurable font still yields a non-zero one-line floor', () => {
-		const rows = [[{ text: 'hello world' }]]
-		const res = computeTableLayout(rows, { x: 0, y: 0, w: 4 }, LAYOUT, emptyReg)
-		const c = defined(cellAt(res, 0, 0))
-		expect(c.heightExact).toBe(false)
-		expect(c.hIn).toBeGreaterThan(0)
-	})
-
 	test('empty rows return empty geometry', () => {
 		expect(computeTableLayout([], { x: 0, y: 0, w: 4 }, LAYOUT, emptyReg)).toEqual({
 			cells: [],

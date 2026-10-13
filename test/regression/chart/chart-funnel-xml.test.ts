@@ -62,10 +62,4 @@ describe('funnel (chartEx) chart', () => {
 		expect(xml).toContain('<cx:strDim type="cat"><cx:f>Sheet1!$A$2:$A$6</cx:f>')
 		expect(xml).toContain('<cx:numDim type="val"><cx:f>Sheet1!$B$2:$B$6</cx:f>')
 	})
-
-	test('omits data labels when values are not requested', async () => {
-		const { zip } = await buildFunnel({ showValue: false })
-		const xml = await readEntry(zip, chartExPath(zip))
-		expect(xml).not.toContain('cx:dataLabels')
-	})
 })

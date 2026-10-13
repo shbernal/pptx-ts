@@ -41,21 +41,6 @@ const baseOpts = {
 
 defineRegressionSuite('Table autoPage mid-slide first-page row count', [
 	{
-		name: 'a table starting mid-slide fills its first page (not just a few rows)',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.addSlide().addTable(rows(40), { ...baseOpts, y: 3 })
-			})
-			const counts = await rowsPerSlide(zip)
-			// The first slide must hold a full page worth of rows for the explicit h, not a sliver.
-			assert(counts.length >= 2, `expected overflow to multiple slides; got ${JSON.stringify(counts)}`)
-			assert(
-				at(counts, 0) >= 15,
-				`first slide should fill the explicit h (~19 rows), not a few; got ${JSON.stringify(counts)}`
-			)
-		},
-	},
-	{
 		name: 'first-page row count is independent of where the table starts (y)',
 		fn: async () => {
 			const { zip: zipTop } = await build((p) => {
@@ -72,6 +57,9 @@ defineRegressionSuite('Table autoPage mid-slide first-page row count', [
 				top[0] === mid[0],
 				`first-page row count must not depend on y when h is explicit; top=${JSON.stringify(top)} mid=${JSON.stringify(mid)}`
 			)
+			// And that shared count is a full page for the explicit h, not a sliver on both.
+			assert(mid.length >= 2, `expected overflow to multiple slides; got ${JSON.stringify(mid)}`)
+			assert(at(mid, 0) >= 15, `first slide should fill the explicit h (~19 rows); got ${JSON.stringify(mid)}`)
 		},
 	},
 ])

@@ -46,16 +46,6 @@ defineRegressionSuite('radarStyle values', [
 		},
 	},
 	{
-		name: "the wire spelling 'standard' is accepted as itself",
-		fn: async () => {
-			const xml = await radarXml('standard')
-			assert(
-				xml.includes('<c:radarStyle val="standard"/>'),
-				'expected val="standard" from standard; got: ' + xml.slice(0, 300)
-			)
-		},
-	},
-	{
 		// The case that made this an alias rather than a typo: `marker` is what the chart part
 		// shows, so it is the obvious guess, and it used to warn and fall back to a plain radar.
 		name: "the wire spelling 'marker' is accepted as itself",

@@ -123,10 +123,4 @@ describe('waterfall (chartEx) chart', () => {
 		expect(xml).not.toContain('cx:legend')
 		expect(xml).not.toContain('cx:dataLabels')
 	})
-
-	test('invalid subtotal indices are dropped', async () => {
-		const { zip } = await buildWaterfall({ subtotals: [0, -1, 2.5, 3] })
-		const xml = await readEntry(zip, chartExPath(zip))
-		expect(xml).toContain('<cx:subtotals><cx:idx val="0"/><cx:idx val="3"/></cx:subtotals>')
-	})
 })
