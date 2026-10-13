@@ -52,7 +52,7 @@ The four endpoint coordinates are required and everything else is optional. The 
 | `"elbow"` | `bentConnector3` | `bentConnector4` | `bentConnector5` |
 | `"curved"` | `curvedConnector3` | `curvedConnector4` | `curvedConnector5` |
 
-```ts
+```ts live
 slide
   .addConnector({ type: "elbow", x1: 1, y1: 1, x2: 5, y2: 3 })
   .addConnector({ type: "curved", x1: 1, y1: 4, x2: 5, y2: 6, bends: 2 })
@@ -64,7 +64,7 @@ A straight connector has no bends. Passing `bends` or `adj` with one warns and c
 
 `adj` takes one percent per bend, measured across the connector's box. A single number sets the only bend of a one-bend connector. An array sets each bend in order.
 
-```ts
+```ts live
 slide.addConnector({ type: "elbow", x1: 1, y1: 1, x2: 5, y2: 3, adj: 25 })
 slide.addConnector({ type: "elbow", x1: 1, y1: 1, x2: 5, y2: 3, bends: 2, adj: [30, 70] })
 slide.addConnector({ type: "curved", x1: 1, y1: 4, x2: 5, y2: 6, adj: [10, 50, 90] }) // three bends
@@ -120,7 +120,7 @@ You give the two endpoints and pptx-ts derives the box PowerPoint stores. The bo
   </g>
 </svg>
 
-```ts
+```ts live
 // The end is left of and above the start, so the connector is flipped both ways
 slide.addConnector({ type: "elbow", x1: 5, y1: 3, x2: 2, y2: 1 })
 
@@ -136,7 +136,7 @@ slide.addConnector({ x1: "10%", y1: "50%", x2: "90%", y2: "50%" })
 
 Name a shape on the same slide in `startShape` or `endShape`. PowerPoint then treats that end as attached to the shape, and reroutes the connector when the shape moves.
 
-```ts
+```ts live
 slide.addShape("rect", { x: 1, y: 1, w: 2, h: 1, objectName: "boxA" })
 slide.addShape("rect", { x: 6, y: 4, w: 2, h: 1, objectName: "boxB" })
 slide.addConnector({
@@ -190,7 +190,7 @@ The connector presets are also shape names, so `addShape()` accepts them too. It
 | Rerouted by PowerPoint when a shape moves | yes, when attached | no |
 | Presets | `straightConnector1`, `bentConnector3` to `bentConnector5`, `curvedConnector3` to `curvedConnector5` | the same, plus `bentConnector2` and `curvedConnector2` |
 
-```ts
+```ts live
 slide.addShape("bentConnector2", { x: 1, y: 1, w: 3, h: 2, line: { color: "000000" } })
 ```
 
