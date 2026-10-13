@@ -261,7 +261,7 @@ describe('Picture.setImage', () => {
 		// On fixture slide 2, two pictures embed the same rel (image2.png).
 		const slide = at(presentation.slides, 1)
 		const pictures = slide.shapes.filter((shape) => shape.shapeType === 'picture')
-		const counts = new Map()
+		const counts = new Map<(typeof pictures)[number]['imageRelId'], number>()
 		for (const pic of pictures) counts.set(pic.imageRelId, (counts.get(pic.imageRelId) ?? 0) + 1)
 		const sharedRelId = [...counts].find(([, n]) => n >= 2)?.[0]
 		assert(sharedRelId, 'fixture slide 2 has two pictures sharing one image rel')

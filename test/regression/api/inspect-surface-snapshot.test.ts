@@ -64,7 +64,7 @@ defineRegressionSuite('Inspect surface snapshot', [
 	{
 		name: 'inspectPptx reports the recorded result for every fixture deck',
 		fn: async () => {
-			const expected = JSON.parse(readFileSync(SNAPSHOT_PATH, 'utf8'))
+			const expected = JSON.parse(readFileSync(SNAPSHOT_PATH, 'utf8')) as Record<string, unknown>
 			const actual = await buildSnapshot()
 
 			// Deck-by-deck first: one deck's diff is legible, a 43-deck diff is not.

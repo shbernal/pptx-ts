@@ -124,7 +124,7 @@ describe('standalone printer — corpus invariants', () => {
 	test('the emitted import specifier is this package’s published name', async () => {
 		// The directory is `pptx-ts`, the package is not; that shipped wrong once in the other
 		// tier. Pinned to the manifest rather than to a literal anyone can re-guess.
-		const manifest = JSON.parse(await readFile(path.join(REPO, 'package.json'), 'utf8'))
+		const manifest = JSON.parse(await readFile(path.join(REPO, 'package.json'), 'utf8')) as { name: string }
 		const { code } = printStandaloneScript(await irFor('empty.pptx'))
 		assert(code.includes(`import PptxTs from '${manifest.name}'`), `import is not ${manifest.name}`)
 		assert(!code.includes(`${manifest.name}/read`), 'a standalone script must not import the read half')

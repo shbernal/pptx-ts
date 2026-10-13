@@ -63,8 +63,8 @@ describe('PptxTs.embedFont', () => {
 		p.addSlide()
 		const zip = await zipOf(p)
 
-		assert(await zip.file('ppt/fonts/font1.fntdata'), 'first face part')
-		assert(await zip.file('ppt/fonts/font2.fntdata'), 'second face part')
+		assert(zip.file('ppt/fonts/font1.fntdata'), 'first face part')
+		assert(zip.file('ppt/fonts/font2.fntdata'), 'second face part')
 
 		const pres = await readEntry(zip, 'ppt/presentation.xml')
 		assertEqual((pres.match(/<p:embeddedFont>/g) || []).length, 1, 'one embeddedFont entry for the family')

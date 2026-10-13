@@ -2340,9 +2340,11 @@ describe('deck IR — slide background', () => {
 
 		const source = /<p:bg>.*?<\/p:bg>/.exec(await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml'))
 		// The IR carries the bytes as an asset reference; the printed script inlines them.
-		const replayable = JSON.parse(JSON.stringify(background).replace(/\{"\$asset":"[^"]+"\}/, JSON.stringify(PNG_1X1)))
+		const replayable = JSON.parse(
+			JSON.stringify(background).replace(/\{"\$asset":"[^"]+"\}/, JSON.stringify(PNG_1X1))
+		) as BackgroundProps
 		const { buf: replayed } = await authorRead((pres) => {
-			pres.addSlide().background = replayable as BackgroundProps
+			pres.addSlide().background = replayable
 		})
 		const xml = await readEntry(await JSZip.loadAsync(replayed), 'ppt/slides/slide1.xml')
 		assertEqual(/<p:bg>.*?<\/p:bg>/.exec(xml)?.[0], source?.[0], 'and the replay writes the same p:bg')

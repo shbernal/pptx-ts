@@ -85,7 +85,7 @@ describe('Presentation.cloneSlide', () => {
 
 		const reopened = await Presentation.load(await target.save())
 		const rels = reopened.opc.relationshipsFor(clone.partName)
-		const types = [...rels].map((rel) => rel.type.split('/').pop()).sort()
+		const types = [...rels].map((rel) => rel.type.slice(rel.type.lastIndexOf('/') + 1)).sort()
 		assertEqual(JSON.stringify(types), JSON.stringify(['chart', 'slideLayout']), 'the clone kept both relationships')
 		const chartRel = defined([...rels].find((rel) => rel.type.endsWith('/chart')))
 		assert(

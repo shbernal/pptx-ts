@@ -57,11 +57,21 @@ export function normalize(text) {
 }
 
 /**
+ * The part of a showcase entry (`www/demos/decks/<slug>/index.mjs`) the tooling reads. Declared
+ * here because the registry itself is loaded untyped, below.
+ * @typedef {object} Showcase
+ * @property {string} slug
+ * @property {string} fileName
+ * @property {(outFile: string) => Promise<unknown>} build
+ */
+
+/**
  * The showcase registry, loaded by URL rather than by bare specifier.
  *
  * Loaded by file URL so it stays out of the typechecked module graph: the decks are plain
  * untyped ESM that no tsconfig includes, and they import `dist/`, which the caller may
  * have only just built.
+ * @returns {Promise<Showcase[]>}
  */
 export async function loadShowcases() {
 	const { SHOWCASES } = await import(pathToFileURL(SHOWCASES_ENTRY).href)

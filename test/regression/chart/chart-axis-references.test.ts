@@ -71,7 +71,7 @@ function chartCall(type: CHART_NAME): SingleCall
 function chartCall(type: CHART_NAME | 'combo', lineOptions: ChartOpts = {}): SingleCall | ComboCall {
 	if (type !== 'combo') {
 		const data =
-			type === ChartType.scatter
+			type === 'scatter'
 				? [
 						{ name: 'X', values: [1, 2, 3] },
 						{ name: 'Y', values: [4, 5, 6] },

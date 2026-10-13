@@ -168,7 +168,10 @@ interface RegressionCase {
  * process-wide, and their safety rests on cases within a file running serially.
  */
 function defineRegressionSuite(suiteName: string, cases: readonly RegressionCase[]): void {
-	if (!Array.isArray(cases)) {
+	// Tested through an `unknown` copy: `Array.isArray` narrows its argument to `any[]`, which
+	// would make every `fixture` below `any` and hide the type this signature declares.
+	const given: unknown = cases
+	if (!Array.isArray(given)) {
 		throw new Error(
 			`defineRegressionSuite(${JSON.stringify(suiteName)}, …) takes an array of test cases as its ` +
 				'second argument. The three-argument form carrying a provenance tag is gone — fold the tag ' +
@@ -182,9 +185,8 @@ function defineRegressionSuite(suiteName: string, cases: readonly RegressionCase
 				test.todo(fixture.name)
 				continue
 			}
-			// `any`, because this *is* dynamic dispatch: each step narrows vitest's chainable to a
-			// different member of the family, and the whole point is that a case picks its own.
-			let define: any = fixture.concurrent ? test.concurrent : test
+			// Each modifier narrows vitest's chainable to another member of the same family.
+			let define: ReturnType<typeof test.skipIf> = fixture.concurrent ? test.concurrent : test
 			if (fixture.fails) define = define.fails
 			// `vitest/no-focused-tests` guards the literal `it.only`, and cannot see this one:
 			// a case committed with `only: true` narrows the suite exactly the way a literal
@@ -197,10 +199,13 @@ function defineRegressionSuite(suiteName: string, cases: readonly RegressionCase
 						'is marked `only: true`, which would narrow this suite to one case and still pass. ' +
 						'Drop the marker before committing — it is a local-only tool.'
 				)
+			// `skipIf`/`runIf` are spelled out as what vitest implements them as (`cond ? this.skip :
+			// this` and the reverse), because they are typed on the root `test` only and would
+			// otherwise force this chain to `any`.
 			if (fixture.only) define = define.only
 			else if (fixture.skip) define = define.skip
-			else if (fixture.skipIf !== undefined) define = define.skipIf(fixture.skipIf)
-			else if (fixture.runIf !== undefined) define = define.runIf(fixture.runIf)
+			else if (fixture.skipIf !== undefined) define = fixture.skipIf ? define.skip : define
+			else if (fixture.runIf !== undefined) define = fixture.runIf ? define : define.skip
 			define(fixture.name, fixture.fn, fixture.timeout)
 		}
 	})

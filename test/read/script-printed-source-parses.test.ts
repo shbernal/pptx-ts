@@ -129,7 +129,11 @@ async function evaluateBindings(code: string) {
 	const lines = code.split('\n').filter((line) => line.includes('readFile(here('))
 	assert(lines.length > 0, 'the script binds media from files')
 	const names = lines.map((line) => defined(/^const (\w+) = /.exec(line))[1])
-	const AsyncFunction = (Object.getPrototypeOf(async () => {}) as { constructor: FunctionConstructor }).constructor
+	const AsyncFunction = (
+		Object.getPrototypeOf(async () => {}) as {
+			constructor: new (...params: string[]) => (...args: unknown[]) => Promise<unknown>
+		}
+	).constructor
 	const run = new AsyncFunction('readFile', 'here', `${lines.join('\n')}\nreturn [${names.join(', ')}]`)
 	return run(
 		async () => ({ toString: () => 'BYTES' }),

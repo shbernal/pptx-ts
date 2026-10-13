@@ -65,10 +65,12 @@ describe('resolveTransport', () => {
 	test('Windows without PowerPoint, and any other OS, have no transport and say why', () => {
 		expect(resolveTransport({ env: {}, fileEnv: {}, platform: 'win32', comRegistered: () => false })).toEqual({
 			kind: 'none',
+			// oxlint-disable-next-line typescript/no-unsafe-assignment -- vitest types its asymmetric matchers as `any`
 			reason: expect.stringContaining('not COM-registered'),
 		})
 		expect(resolveTransport({ env: {}, fileEnv: {}, ...linux })).toEqual({
 			kind: 'none',
+			// oxlint-disable-next-line typescript/no-unsafe-assignment -- vitest types its asymmetric matchers as `any`
 			reason: expect.stringContaining('PPTXTS_POWERPOINT_URL'),
 		})
 	})
@@ -128,6 +130,7 @@ describe('runJob against a worker', () => {
 		const port = (probe.address() as AddressInfo).port
 		await new Promise((resolve) => probe.close(() => resolve(undefined)))
 		await expect(runJob({ kind: 'remote', url: `http://127.0.0.1:${port}`, token: TOKEN }, job())).rejects.toThrow(
+			// oxlint-disable-next-line typescript/no-unsafe-assignment -- vitest types its asymmetric matchers as `any`
 			expect.objectContaining({ name: 'TransportError', message: expect.stringMatching(/unreachable/) })
 		)
 	})

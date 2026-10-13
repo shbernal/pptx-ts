@@ -185,7 +185,10 @@ defineRegressionSuite('Group shapes', [
 				'expected no duplicate-objectName warning; got: ' + JSON.stringify(warnings)
 			)
 			// grouped child takes `Shape 1`, so the later top-level shape must take `Shape 2`
-			assert(names.includes('Shape 1') && names.includes('Shape 2'), 'expected Shape 1 + Shape 2; got: ' + names)
+			assert(
+				names.includes('Shape 1') && names.includes('Shape 2'),
+				'expected Shape 1 + Shape 2; got: ' + names.join(',')
+			)
 		},
 	},
 	{

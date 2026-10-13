@@ -96,7 +96,7 @@ defineRegressionSuite('Diagnostics handler', [
 			} finally {
 				setDiagnosticHandler(null)
 			}
-			assert(thrown instanceof Escalated, 'expected the handler’s throw to reach the caller; got: ' + thrown)
+			assert(thrown instanceof Escalated, 'expected the handler’s throw to reach the caller; got: ' + String(thrown))
 			assertEqual(thrown.message, 'text/invalid-columns', 'the handler saw the code it branched on')
 		},
 	},
@@ -170,7 +170,7 @@ defineRegressionSuite('Diagnostics handler', [
 			// is only true while they all resolve to the one module.
 			const base = await import('../../../dist/node.js')
 			for (const entry of ['read', 'measure', 'script', 'inspect', 'html', 'math', 'zip']) {
-				const mod = await import(`../../../dist/${entry}.js`)
+				const mod = (await import(`../../../dist/${entry}.js`)) as Record<string, unknown>
 				assertEqual(typeof mod.setDiagnosticHandler, 'function', `pptx-ts/${entry} must publish setDiagnosticHandler`)
 				assertEqual(typeof mod.resetDiagnosticState, 'function', `pptx-ts/${entry} must publish resetDiagnosticState`)
 				assert(

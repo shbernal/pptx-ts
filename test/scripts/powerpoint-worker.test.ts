@@ -266,7 +266,7 @@ describe('worker HTTP', () => {
 			body: JSON.stringify(wireJob({ entry: '../x' })),
 		})
 		expect(bad.status).toBe(400)
-		expect((await bad.json()).error).toContain("'..'")
+		expect(((await bad.json()) as { error: string }).error).toContain("'..'")
 		expect((await fetch(`${base}/jobs`, { method: 'POST', headers: auth, body: '{' })).status).toBe(400)
 	})
 
@@ -318,7 +318,8 @@ describe('worker HTTP', () => {
 			build: '16.0.1.2',
 		}))
 		await start({ runner, powerpointInfo })
-		const health = async () => (await (await fetch(`${base}/health`, { headers: auth })).json()).powerpoint
+		const health = async () =>
+			((await (await fetch(`${base}/health`, { headers: auth })).json()) as { powerpoint: unknown }).powerpoint
 		expect(await health()).toEqual({ version: '16.0', build: '16.0.1.2' })
 		expect(powerpointInfo).toHaveBeenCalledOnce()
 

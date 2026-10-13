@@ -57,8 +57,10 @@ describe('createPresentation', () => {
 		// ...and the one that was not names itself, with a code rather than a TypeError. The type
 		// error is half the point: the type has already refused this call, and a consumer who ignores
 		// it (or reaches the slide from JavaScript) is who the runtime message is for.
+		// The call is untyped by design (that is the refusal above), so the lint rule that
+		// rejects calling an unresolved member is suppressed for this one line.
 		// @ts-expect-error a slide composed without charts has no addChart
-		const thrown = caughtSync(() => slide.addChart(SERIES, { type: 'bar', x: 1, y: 2, w: 4, h: 3 }))
+		const thrown = caughtSync(() => slide.addChart(SERIES, { type: 'bar', x: 1, y: 2, w: 4, h: 3 })) // oxlint-disable-line typescript/no-unsafe-call
 		assert(thrown, 'addChart must throw on a deck composed without charts')
 		assertEqual(thrown.code, 'family/not-composed', 'error code')
 		assert(/"chart"/.test(thrown.message), `the message must name the family; got: ${thrown.message}`)

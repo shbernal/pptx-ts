@@ -617,8 +617,9 @@ describe('DiagramPoint.text — re-texting a node, cache and all', () => {
 				},
 			},
 		]
-		for (const { label, resolve } of cases) {
-			const point = await resolve()
+		for (const testCase of cases) {
+			const { label } = testCase
+			const point = await testCase.resolve()
 			const { diagnostics } = await captureDiagnostics(async () => {
 				point.text = 'Mirrored nowhere'
 			})

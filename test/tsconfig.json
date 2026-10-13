@@ -1,0 +1,9 @@
+{
+	// `tsconfig.test.json` under the name a tool finds on its own. oxlint's type-aware rules
+	// (tsgolint) take the nearest `tsconfig.json` above a file, which for `test/**` used to be
+	// the root one; that project does not include these files, so they were linted against an
+	// inferred program without this project's settings (`noUncheckedIndexedAccess`,
+	// `allowImportingTsExtensions`). Editors resolve the same way. Settings belong in
+	// `tsconfig.test.json`, not here.
+	"extends": "../tsconfig.test.json"
+}

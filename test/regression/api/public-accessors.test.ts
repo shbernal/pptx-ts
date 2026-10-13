@@ -31,7 +31,7 @@ defineRegressionSuite('Public accessors', [
 			// made some other way still ships a library that misreports itself, and this is
 			// the only thing on the release path that would say so.
 			const { pres } = await build(() => {})
-			const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'))
+			const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')) as { version: string }
 			assertEqual(pres.version, manifest.version, 'pres.version should track package.json')
 		},
 	},

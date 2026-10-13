@@ -70,7 +70,7 @@ describe('coverage gate', () => {
 	})
 
 	test('the committed gates file is well formed', () => {
-		const gates = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts', 'coverage-gates.json'), 'utf8'))
+		const gates: unknown = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts', 'coverage-gates.json'), 'utf8'))
 		expect(evaluate(summary(100), gates).failures).toEqual([])
 	})
 })

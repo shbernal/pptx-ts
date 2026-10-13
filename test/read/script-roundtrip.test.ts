@@ -597,7 +597,10 @@ describe('script round trip — canonicalisation is an equivalence', () => {
 		// and `structuredClone` preserves that sharing — renaming per visit renames it twice.
 		const seen = new WeakSet<object>()
 		const rename = (value: unknown): void => {
-			if (Array.isArray(value)) return void value.forEach(rename)
+			if (Array.isArray(value)) {
+				value.forEach(rename)
+				return
+			}
 			if (value === null || typeof value !== 'object' || seen.has(value)) return
 			seen.add(value)
 			const node = value as Record<string, unknown>

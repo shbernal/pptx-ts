@@ -76,7 +76,7 @@ defineRegressionSuite('Image (blip) fills', [
 			const rels = await readEntry(zip, 'ppt/slides/_rels/slide1.xml.rels')
 			assertIncludes(rels, `Id="${m[1]}"`, 'media relationship id present')
 			assertIncludes(rels, '/relationships/image', 'media relationship is an image type')
-			const media = (await listEntries(zip)).filter((e) => e.startsWith('ppt/media/') && !e.endsWith('/'))
+			const media = listEntries(zip).filter((e) => e.startsWith('ppt/media/') && !e.endsWith('/'))
 			assert(media.length === 1, `expected exactly one embedded media file; got ${JSON.stringify(media)}`)
 		},
 	},
@@ -219,7 +219,7 @@ defineRegressionSuite('Image (blip) fills', [
 				s.addShape(ShapeType.rect, { x: 1, y: 1, w: 2, h: 1, fill: { image: { data: PNG_1X1 } } })
 				s.addShape(ShapeType.rect, { x: 4, y: 1, w: 2, h: 1, fill: { image: { data: PNG_1X1 } } })
 			})
-			const media = (await listEntries(zip)).filter((e) => e.startsWith('ppt/media/') && !e.endsWith('/'))
+			const media = listEntries(zip).filter((e) => e.startsWith('ppt/media/') && !e.endsWith('/'))
 			assert(media.length === 1, `expected a single shared media file; got ${JSON.stringify(media)}`)
 		},
 	},
@@ -375,7 +375,7 @@ defineRegressionSuite('Table cell image (blip) fills', [
 			const embeds = [...xml.matchAll(/<a:blip r:embed="(rId\d+)"/g)].map((m) => m[1])
 			assert(embeds.length === 4, `expected all 4 cells filled; got ${embeds.length}`)
 			assert(new Set(embeds).size === 1, `expected one shared rel; got ${JSON.stringify(embeds)}`)
-			const media = (await listEntries(zip)).filter((e) => e.startsWith('ppt/media/') && !e.endsWith('/'))
+			const media = listEntries(zip).filter((e) => e.startsWith('ppt/media/') && !e.endsWith('/'))
 			assert(media.length === 1, `expected one embedded media file; got ${JSON.stringify(media)}`)
 		},
 	},
@@ -405,7 +405,7 @@ defineRegressionSuite('Table cell image (blip) fills', [
 			const rels = await readEntry(zip, 'ppt/slides/_rels/slide1.xml.rels')
 			const imageRels = [...rels.matchAll(/<Relationship [^>]*\/relationships\/image[^>]*>/g)]
 			assert(imageRels.length === 2, `expected one rel per distinct fill object; got ${imageRels.length}`)
-			const media = (await listEntries(zip)).filter((e) => e.startsWith('ppt/media/') && !e.endsWith('/'))
+			const media = listEntries(zip).filter((e) => e.startsWith('ppt/media/') && !e.endsWith('/'))
 			assert(media.length === 2, `expected two distinct media files; got ${JSON.stringify(media)}`)
 		},
 	},
@@ -451,7 +451,7 @@ defineRegressionSuite('Table cell image (blip) fills', [
 			const { zip } = await build((p) => {
 				p.addSlide().addTable(rows, { x: 0.5, y: 0.5, w: 6, h: 1, autoPage: true })
 			})
-			const slides = (await listEntries(zip)).filter((e) => /^ppt\/slides\/slide\d+\.xml$/.test(e))
+			const slides = listEntries(zip).filter((e) => /^ppt\/slides\/slide\d+\.xml$/.test(e))
 			assert(slides.length > 1, `expected the table to auto-page; got ${slides.length} slide(s)`)
 			for (const slidePath of slides) {
 				const n = defined(/slide(\d+)\.xml$/.exec(slidePath))[1]

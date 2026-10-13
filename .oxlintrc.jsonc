@@ -385,8 +385,8 @@
 			// the rules stay off, for a different reason than before: what they now report
 			// is the `any` at an I/O boundary, which an annotation cannot remove and
 			// `tsc -p tsconfig.scripts.json` already understands. That is the type gate for
-			// this tree. `test/**` is unannotated and unmeasured since; it is the larger
-			// share of the 13798 and would have to be paid separately.
+			// this tree. `test/**/*.ts` has since been paid separately: see the next block,
+			// which turns the family back on there.
 			// The list below is every type-aware rule this config leaves enabled, minus
 			// `no-floating-promises` and `no-misused-promises`. Those two are the pair the
 			// old measurement called out as the ones actually worth having, they report
@@ -480,6 +480,60 @@
 				"vitest/valid-title": "off",
 				"vitest/no-conditional-tests": "off",
 				"vitest/warn-todo": "off",
+			},
+		},
+		{
+			// TypeScript tests get the type-aware rules back. They match the block above for its
+			// environment, `no-console` and vitest options, and this block undoes its list of
+			// `off`s for them. `test/**` is all TypeScript now, checked under the same strictness
+			// as `src/` (`tsconfig.test.json`), so the measurement that block records — taken on
+			// unannotated JavaScript — no longer describes it.
+			//
+			// Measured 2026-10-13 with the whole list below set to `error`: 205 findings, 133 of
+			// them `no-unsafe-*`, almost all `JSON.parse` results and dynamic `import()`s read
+			// untyped. Those were fixed by declaring the shape read, not suppressed; the three
+			// suppressions left are each an `any` the test cannot avoid (vitest's asymmetric
+			// matchers are typed `any`, and `compose.test.ts` calls a member the type refuses on
+			// purpose). The other zero-or-small rules were fixed the same way and stay on:
+			// `await-thenable` (8, awaits of sync calls), `unbound-method` (4),
+			// `restrict-plus-operands` (2), `require-array-sort-compare` (2),
+			// `no-meaningless-void-operator` (1).
+			//
+			// The measurement only means anything with `test/tsconfig.json` in place. tsgolint
+			// takes the nearest `tsconfig.json`, and before it existed `test/**` was checked as an
+			// inferred program without `noUncheckedIndexedAccess`, which is what made
+			// `at()`'s `list[i] as T` look like an unnecessary assertion.
+			//
+			// Three stay off, as noise rather than debt:
+			// - `restrict-template-expressions` (37): every one is an array or an `unknown` caught
+			//   value printed into an assertion message, where the default rendering is the point.
+			// - `no-misused-spread` (9): every one is `[...text]` in a fake font-metrics stub or a
+			//   code-point walk, which wants code points, not graphemes.
+			// - `no-unnecessary-type-assertion` (5): a test asserts a type to set up the case, as
+			//   in `write-output-type.test.ts`, where widening a literal to the union is the test.
+			"files": ["test/**/*.ts"],
+			"rules": {
+				"typescript/no-explicit-any": "error",
+				"typescript/no-unsafe-argument": "error",
+				"typescript/no-unsafe-assignment": "error",
+				"typescript/no-unsafe-call": "error",
+				"typescript/no-unsafe-enum-comparison": "error",
+				"typescript/no-unsafe-member-access": "error",
+				"typescript/no-unsafe-return": "error",
+				"typescript/no-unsafe-unary-minus": "error",
+				"typescript/await-thenable": "error",
+				"typescript/no-array-delete": "error",
+				"typescript/no-duplicate-type-constituents": "error",
+				"typescript/no-for-in-array": "error",
+				"typescript/no-implied-eval": "error",
+				"typescript/no-meaningless-void-operator": "error",
+				"typescript/no-useless-default-assignment": "error",
+				"typescript/only-throw-error": "error",
+				"typescript/prefer-promise-reject-errors": "error",
+				"typescript/prefer-string-starts-ends-with": "error",
+				"typescript/require-array-sort-compare": "error",
+				"typescript/restrict-plus-operands": "error",
+				"typescript/unbound-method": "error",
 			},
 		},
 		{

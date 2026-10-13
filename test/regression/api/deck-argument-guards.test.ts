@@ -84,8 +84,9 @@ defineRegressionSuite('Deck argument guards', [
 			assertIncludes(codes, 'slide/section-not-found')
 			assert(result.slide, 'the slide is returned regardless')
 			assertEqual(result.pres.slides.length, 1, 'and it is on the deck')
-			// @ts-expect-error reads the internal slide list a section keeps
-			const sectioned = result.pres.sections.flatMap((s) => s._slides ?? [])
+			// Reads the internal slide list a section keeps.
+			const sections = result.pres.sections as unknown as { _slides?: unknown[] }[]
+			const sectioned = sections.flatMap((s) => s._slides ?? [])
 			assertEqual(
 				sectioned.length,
 				1,
@@ -131,8 +132,10 @@ defineRegressionSuite('Deck argument guards', [
 			assertEqual(JSON.stringify(codes), '[]', 'no diagnostics')
 			assert(result.plain.slides.length > 1 && result.mastered.slides.length > 1, 'both tables paged')
 			assert(
-				// @ts-expect-error reads the internal layout a slide was added with
-				result.mastered.slides.every((s) => s._slideLayout?._name === 'MASTER'),
+				// Reads the internal layout a slide was added with.
+				result.mastered.slides.every(
+					(s) => (s as unknown as { _slideLayout?: { _name?: string } })._slideLayout?._name === 'MASTER'
+				),
 				'every continuation keeps the master'
 			)
 		},
@@ -186,8 +189,9 @@ defineRegressionSuite('Deck argument guards', [
 				})
 				assertEqual(codes.length, 1, `one diagnostic for ${JSON.stringify(layout)}`)
 				assertEqual(codes[0], 'layout/invalid-definition')
-				// @ts-expect-error reads the private layout registry
-				assert(result.LAYOUTS[String(layout.name)], `${JSON.stringify(layout)} is still defined`)
+				// Reads the private layout registry.
+				const layouts = (result as unknown as { LAYOUTS: Record<string, unknown> }).LAYOUTS
+				assert(layouts[String(layout.name)], `${JSON.stringify(layout)} is still defined`)
 			}
 		},
 	},

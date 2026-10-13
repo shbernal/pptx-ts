@@ -114,7 +114,7 @@ describe('script printer — corpus invariants', () => {
 		// This shipped wrong once: the directory is `pptx-ts`, the package is not. The script
 		// printed, typechecked, and then failed at `import` — so the name is pinned to the
 		// manifest rather than to a literal anyone can re-guess.
-		const manifest = JSON.parse(await readFile(path.join(REPO, 'package.json'), 'utf8'))
+		const manifest = JSON.parse(await readFile(path.join(REPO, 'package.json'), 'utf8')) as { name: string }
 		const { code } = printScript(await irFor('empty.pptx'))
 		assert(code.includes(`import PptxTs from '${manifest.name}'`), `write-half import is not ${manifest.name}`)
 		assert(code.includes(`from '${manifest.name}/read'`), `read-half import is not ${manifest.name}/read`)
