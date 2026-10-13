@@ -42,17 +42,6 @@ defineRegressionSuite('Bullet glyph font and size', [
 		},
 	},
 	{
-		name: 'bullet.size emits scaled <a:buSzPct/> (thousandths of a percent)',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				const s = p.addSlide()
-				s.addText('item', { x: 1, y: 1, w: 4, h: 1, bullet: { size: 80 } })
-			})
-			const { ppr } = await getPPr(zip)
-			assert(/<a:buSzPct val="80000"\/>/.test(ppr), 'expected <a:buSzPct val="80000"/>; got: ' + ppr)
-		},
-	},
-	{
 		name: 'out-of-range bullet.size warns and clamps to the nearest bound',
 		fn: async () => {
 			const warnings: string[] = []

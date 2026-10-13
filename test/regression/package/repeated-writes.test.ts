@@ -32,28 +32,7 @@ defineRegressionSuite('Repeated presentation writes [legacy bug-04]', [
 				xml1 === xml2,
 				'expected slide1.xml byte-equal across two writes; differ.\nfirst:\n' + xml1 + '\nsecond:\n' + xml2
 			)
-		},
-	},
-	{
-		// The normalizer is pure, so the caller's object comes back exactly as written — the derived
-		// `_alpha` lives on the definer's copy, which is what the emitter reads.
-		name: 'user shadow object is not mutated across two writes',
-		fn: async () => {
-			const pres = new PptxTs()
-			const slide = pres.addSlide()
-			// The caller's own `ShadowProps`; the writer normalizes a COPY and leaves this one alone.
-			const shadow: ShadowProps & { _alpha?: number } = {
-				type: 'outer',
-				blur: 6,
-				offset: 2,
-				color: '000000',
-				transparency: 85,
-			}
-			slide.addShape(ShapeType.rect, { x: 1, y: 1, w: 4, h: 2, shadow })
-
-			await buildOnce(pres)
-			await buildOnce(pres)
-
+			// The normalizer is pure: the derived `_alpha` lives on the definer's copy.
 			assert(
 				JSON.stringify(shadow) ===
 					JSON.stringify({ type: 'outer', blur: 6, offset: 2, color: '000000', transparency: 85 }),
@@ -113,8 +92,6 @@ defineRegressionSuite('Repeated presentation writes [legacy bug-04]', [
 			assert(xml.indexOf('dist="25400"') !== -1, 'expected dist="25400"; got: ' + xml)
 			assert(xml.indexOf('dir="16200000"') !== -1, 'expected dir="16200000"; got: ' + xml)
 			assert(xml.indexOf('<a:alpha val="15000"/>') !== -1, 'expected <a:alpha val="15000"/>; got: ' + xml)
-			// Belt-and-braces: no absurdly large EMU values that signal double-conversion
-			assert(xml.indexOf('blurRad="967740000"') === -1, 'unexpected double-converted blurRad in output: ' + xml)
 		},
 	},
 ])

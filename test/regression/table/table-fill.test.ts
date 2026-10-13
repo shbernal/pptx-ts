@@ -39,31 +39,9 @@ function cells(xml: string) {
 
 defineRegressionSuite('Table fill', [
 	{
-		name: 'tableFill lands on a:tblPr and leaves every cell unfilled',
-		fn: async () => {
-			const { result } = await captureDiagnostics(() =>
-				build((p) => {
-					p.addSlide().addTable(
-						[
-							[{ text: 'A' }, { text: 'B' }],
-							[{ text: 'C' }, { text: 'D' }],
-						],
-						{ ...AT, tableFill: { color: 'F2F2F2' } }
-					)
-				})
-			)
-
-			const xml = await readEntry(result.zip, 'ppt/slides/slide1.xml')
-			assert(tblPr(xml).includes('<a:srgbClr val="F2F2F2"/>'), 'the background is on a:tblPr; got: ' + tblPr(xml))
-			for (const [idx, tc] of cells(xml).entries()) {
-				assert(!tc.includes('<a:solidFill>'), `cell ${idx} is left unfilled so the background shows through`)
-			}
-		},
-	},
-	{
 		name: 'fill is stamped onto every cell and never reaches a:tblPr',
 		fn: async () => {
-			// The contrast case for the above. Same visual result, different package — and the
+			// The contrast case for `tableFill` below. Same visual result, different package, and the
 			// difference is what makes a cell able (or unable) to fall back to a background.
 			const { result } = await captureDiagnostics(() =>
 				build((p) => {

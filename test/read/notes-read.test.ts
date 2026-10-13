@@ -165,11 +165,10 @@ describe('Slide.notesTextFrame — write→read fidelity', () => {
 			assert(ph instanceof NotesPlaceholder, `${ph.type} is still a NotesPlaceholder`)
 		}
 		// And the inherited members answer for the notes part, not the master/layout one they
-		// were written for: `element_` is the notes `p:sp`, `name` its `p:cNvPr/@name`.
+		// were written for: `element_` is the notes `p:sp`.
 		const body = notes.body
 		assert(body, 'the body placeholder resolves')
 		assertEqual(body.element_.localName, 'sp', 'element_ is the underlying p:sp')
-		assert(typeof body.name === 'string', 'name reads through from the base class')
 	})
 
 	test('the slide-number placeholder carries the slide number field (T2.1)', async () => {

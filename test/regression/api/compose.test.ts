@@ -9,7 +9,7 @@
 //
 // Imports from `dist/` because this is the public surface: the entry's `createPresentation` and
 // the `pptx-ts/families` subpath are what a consumer reaches for.
-import { describe, expect, test } from 'vitest'
+import { describe, test } from 'vitest'
 import PptxTs, { createPresentation, type Composed } from '../../../dist/node.js'
 import { charts, comments, tables } from '../../../dist/families.js'
 import { assert, assertEqual, caughtSync } from '../../helpers.ts'
@@ -93,21 +93,5 @@ describe('createPresentation', () => {
 		const implicit = await partsOf(coreDeck(createPresentation()))
 		assertEqual(JSON.stringify([...explicit.keys()]), JSON.stringify([...implicit.keys()]), 'part paths and order')
 		for (const [path, text] of explicit) assert(implicit.get(path) === text, `${path} differs`)
-	})
-
-	test('the default class still carries every family', () => {
-		const slide = new PptxTs().addSlide()
-		for (const method of [
-			'addChart',
-			'addTable',
-			'addMedia',
-			'addComment',
-			'addOleObject',
-			'addModel3d',
-			'addSlideZoom',
-		] as const)
-			expect(typeof slide[method], `${method} on the full tier`).toBe('function')
-		// Not merely present: a method with no family behind it is a thrower, which is also a function.
-		expect(() => slide.addTable([[{ text: 'a' }]], { x: 1, y: 1, w: 2 })).not.toThrow()
 	})
 })

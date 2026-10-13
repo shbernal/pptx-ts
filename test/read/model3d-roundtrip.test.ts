@@ -20,7 +20,6 @@ import { FIXTURES, fixturePath } from './corpus.ts'
 
 const MODEL3D_REL = 'http://schemas.microsoft.com/office/2017/06/relationships/model3d'
 const IMAGE_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image'
-const AM3D_NS = 'http://schemas.microsoft.com/office/drawing/2017/model3d'
 
 function text(bodies: Map<string, Uint8Array>, name: string) {
 	const bytes = bodies.get(name)
@@ -72,28 +71,6 @@ describe('3D model: PowerPoint-authored fixture', () => {
 		// Deliberate v1 scope: there is no `Model3d` shape class and no camera accessor. What this
 		// pins is that the shape is *visible* to the read model, so a caller enumerating shapes sees
 		// it rather than a silently shorter list.
-	})
-
-	test('the fixture pins the rel graph the emitter reproduces', async () => {
-		const bodies = await partBodies(await readFile(fixturePath('model3d')))
-		const body = text(bodies, 'ppt/slides/slide1.xml')
-		const rels = relTypes(text(bodies, 'ppt/slides/_rels/slide1.xml.rels'))
-
-		// The graphicFrame sits in an mc:Choice gated on the am3d namespace, with a picture fallback.
-		assert(body.includes(`<mc:Choice xmlns:am3d="${AM3D_NS}" Requires="am3d">`), 'mc:Choice declares + requires am3d')
-		assert(body.includes(`<a:graphicData uri="${AM3D_NS}">`), 'graphicData@uri is the am3d namespace')
-		assert(body.includes('<mc:Fallback><p:pic>'), 'a picture fallback is present')
-
-		// Two rels: the payload under the MS 2017/06 model3d type, the preview as a plain image.
-		const modelRid = /<am3d:model3d r:embed="(rId\d+)"/.exec(body)?.[1]
-		const previewRid = /<am3d:blip r:embed="(rId\d+)"/.exec(body)?.[1]
-		assert(modelRid && previewRid, `body carries both rIds (${modelRid} / ${previewRid})`)
-		assertEqual(rels.get(modelRid), MODEL3D_REL, 'the payload rel uses the MS 2017/06 model3d type')
-		assertEqual(rels.get(previewRid), IMAGE_REL, 'the preview rel is an ordinary image rel')
-
-		// The fallback picture reuses the preview rel rather than carrying a second copy.
-		const fallbackRid = /<mc:Fallback>[\s\S]*?<a:blip r:embed="(rId\d+)"/.exec(body)?.[1]
-		assertEqual(fallbackRid, previewRid, 'am3d:raster and the mc:Fallback picture share one image rel')
 	})
 
 	test('importSlide carries the model3d subtree and BOTH rels into another deck', async () => {

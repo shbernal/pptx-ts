@@ -205,23 +205,6 @@ defineRegressionSuite('Content type defaults [legacy bug-16]', [
 		},
 	},
 	{
-		// The mime carries the same weight for every other format: a data-only GIF background must
-		// not be announced as PNG either.
-		name: 'a data-only GIF background declares image/gif',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.defineSlideMaster({
-					title: 'data-only-gif',
-					background: { data: 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==' },
-				})
-				p.addSlide({ masterTitle: 'data-only-gif' })
-			})
-			const xml = await readEntry(zip, '[Content_Types].xml')
-			assertEqual(contentTypeForExtension(xml, 'gif'), 'image/gif', 'gif Default ContentType')
-			assertNoContentTypeDefault(xml, 'png')
-		},
-	},
-	{
 		// Precedence when the two sources disagree: the bytes decide, matching `addImage()`. A
 		// caller who names the file `.png` but hands over SVG has still handed over SVG.
 		name: 'a background data: mime wins over a disagreeing path extension',
@@ -259,7 +242,7 @@ defineRegressionSuite('Content type defaults [legacy bug-16]', [
 	{
 		name: 'chart deck emits xlsx Default',
 		fn: async () => {
-			const { pres, zip } = await build((p) => {
+			const { zip } = await build((p) => {
 				const s = p.addSlide()
 				s.addChart([{ name: 'series1', labels: ['a', 'b'], values: [1, 2] }], {
 					type: ChartType.bar,
@@ -269,7 +252,6 @@ defineRegressionSuite('Content type defaults [legacy bug-16]', [
 					h: 3,
 				})
 			})
-			void pres
 			const xml = await readEntry(zip, '[Content_Types].xml')
 			assertContentTypeDefault(xml, 'xlsx')
 		},

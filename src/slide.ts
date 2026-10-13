@@ -152,7 +152,7 @@ export default class SlideBuilder {
 		 * `defineSlideMaster` and `addNewSlide.slideNumber` will add {slideNumber} to `this.masterSlide` and `this.slideLayouts`
 		 * so, lastly, add to the Slide now.
 		 */
-		this._slideNumberProps = this._slideLayout?._slideNumberProps ? this._slideLayout._slideNumberProps : null
+		this._slideNumberProps = this._slideLayout._slideNumberProps ? this._slideLayout._slideNumberProps : null
 	}
 
 	/**

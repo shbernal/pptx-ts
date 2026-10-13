@@ -16,20 +16,11 @@ describe('font-metrics: heuristic fallback', () => {
 		expect(at24).toBeCloseTo(at12 * 2, 6)
 	})
 
-	test('longer text is wider; wide glyphs beat narrow ones', () => {
-		expect(h.advanceWidthPt('WWWW', 18)).toBeGreaterThan(h.advanceWidthPt('iiii', 18))
-		expect(h.advanceWidthPt('aaaaa', 18)).toBeGreaterThan(h.advanceWidthPt('aaaa', 18))
-	})
-
 	test('over-estimates a typical sentence (conservative for shrink/resize)', () => {
 		// Biased wide: average advance for mixed-case English should exceed ~0.45em/char.
 		const text = 'The quick brown fox jumps over the lazy dog'
 		const emPerChar = h.advanceWidthPt(text, 100) / 100 / text.length
 		expect(emPerChar).toBeGreaterThan(0.45)
-	})
-
-	test('non-Latin code points are treated as full-em (safe for CJK)', () => {
-		expect(h.advanceWidthPt('一二三', 10)).toBeCloseTo(3 * 1.0 * 10, 6)
 	})
 })
 

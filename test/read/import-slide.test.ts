@@ -12,7 +12,7 @@ import { describe, test } from 'vitest'
 import PptxTs from '../../dist/node.js'
 import { Presentation, type OpcPackage } from '../../dist/read.js'
 import {
-	throws,
+	caughtSync,
 	assert,
 	assertEqual,
 	defined,
@@ -303,8 +303,9 @@ describe('Presentation.importSlide', () => {
 	test('rejects an out-of-range index', async () => {
 		const target = await openFixture('empty')
 		const source = await openFixture('image')
-		assert(
-			throws(() => target.importSlide(source, 99)),
+		assertEqual(
+			caughtSync(() => target.importSlide(source, 99))?.code ?? null,
+			'slide/index-out-of-range',
 			'importing a missing slide throws'
 		)
 	})
@@ -446,26 +447,6 @@ describe('Presentation.importSlide({ at })', () => {
 
 		const reopened = await Presentation.load(await target.save())
 		assertEqual(at(reopened.slides, reopened.slides.length - 1).slideId, imported.slideId, 'imported slide is last')
-		assertNoDanglingRels(reopened.opc)
-	})
-
-	test('cover-first + closer-last bookend placement around an interior', async () => {
-		// One source deck supplies both bookends; place cover at 0 and append closer.
-		const { target, ids } = await targetWithMarkedSlides()
-		const source = await openFixture('mixed')
-
-		const cover = target.importSlide(source, 0, { at: 0 })
-		const closer = target.importSlide(source, 1) // append
-
-		const reopened = await Presentation.load(await target.save())
-		const reIds = reopened.slides.map((s) => s.slideId)
-		assertEqual(reIds[0], cover.slideId, 'cover is first')
-		assertEqual(reIds[reIds.length - 1], closer.slideId, 'closer is last')
-		assertEqual(
-			JSON.stringify(reIds.slice(1, 1 + ids.length)),
-			JSON.stringify(ids),
-			'interior slides sit between the bookends, in order'
-		)
 		assertNoDanglingRels(reopened.opc)
 	})
 

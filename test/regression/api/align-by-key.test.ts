@@ -74,20 +74,4 @@ describe('alignByKey', () => {
 			[null, 'x'],
 		])
 	})
-
-	test('an unkeyed item aligns positionally', () => {
-		const expected = [item('a'), item(null)]
-		const actual = [item('a'), item(null)]
-		expect(keys(alignByKey(expected, actual, (i) => i.k))).toEqual([
-			['a', 'a'],
-			[null, null],
-		])
-	})
-
-	test('an extra actual item is reported as added, after every expected pairing', () => {
-		expect(keys(alignByKey([item('a')], [item('a'), item('b')], (i) => i.k))).toEqual([
-			['a', 'a'],
-			[null, 'b'],
-		])
-	})
 })

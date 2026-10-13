@@ -16,18 +16,7 @@ import type { Element } from '@xmldom/xmldom'
 import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import { Presentation, type AnyShape, type OpcPackage, type Slide } from '../../dist/read.js'
-import {
-	PptxTs,
-	PNG_1X1,
-	bytesEqual,
-	throws,
-	assert,
-	assertEqual,
-	defined,
-	readEntry,
-	caughtSync,
-	at,
-} from '../helpers.ts'
+import { PptxTs, PNG_1X1, bytesEqual, assert, assertEqual, defined, readEntry, caughtSync, at } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture } from './corpus.ts'
 import { assertNoDanglingRels } from './opc.ts'
@@ -413,8 +402,9 @@ describe('Presentation.importShape', () => {
 	test('rejects an out-of-range shape index', async () => {
 		const target = await openFixture('empty')
 		const source = await openFixture('image')
-		assert(
-			throws(() => target.importShape(at(target.slides, 0), at(source.slides, 0), 99)),
+		assertEqual(
+			codeOf(() => target.importShape(at(target.slides, 0), at(source.slides, 0), 99)),
+			'shape/index-out-of-range',
 			'lifting a missing shape throws'
 		)
 	})
@@ -423,8 +413,9 @@ describe('Presentation.importShape', () => {
 		const target = await openFixture('empty')
 		const other = await openFixture('empty')
 		const source = await openFixture('image')
-		assert(
-			throws(() => target.importShape(at(other.slides, 0), at(source.slides, 0), 0)),
+		assertEqual(
+			codeOf(() => target.importShape(at(other.slides, 0), at(source.slides, 0), 0)),
+			'slide/foreign-target',
 			'a target slide not owned by this presentation throws'
 		)
 	})

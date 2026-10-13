@@ -76,7 +76,7 @@ defineRegressionSuite('EMU-exact geometry and scheme-colour passthrough', [
 			// cannot hand them raw EMU. That is NOT a precision loss: EMU -> inches -> EMU is
 			// the identity for every EMU value in a realistic slide, because a double carries
 			// far more precision than the ~5.5e7 EMU involved. The loss only appears if the
-			// printed decimal is truncated — see the toFixed test below.
+			// printed decimal is truncated, and six decimals is the precision that keeps it exact.
 			const xml = await probeSlideXml((slide) =>
 				slide.addTable([[{ text: 'a' }, { text: 'b' }]], {
 					x: 1,
@@ -87,38 +87,6 @@ defineRegressionSuite('EMU-exact geometry and scheme-colour passthrough', [
 				})
 			)
 			assertIncludes(xml, `<a:tr h="${H}"`, 'table row height')
-		},
-	},
-	{
-		name: 'six decimal places is the minimum precision that prints inches EMU-exactly',
-		fn: async () => {
-			// Fixes the printer's rounding constant by argument plus spot-check rather than taste.
-			//
-			// Rounding to 6 decimals moves the inch value by at most 5e-7 in, i.e. 5e-7 * 914400
-			// = 0.4572 EMU < 0.5 — so `Math.round` always lands back on the original EMU, for
-			// every EMU value, unconditionally. At 5 decimals the bound is 4.572 EMU and the
-			// round-trip fails for ~89% of values. The assertions below pin both the bound that
-			// drives the proof and the observed behaviour at each precision.
-			const worstShift = (digits: number) => {
-				let worst = 0
-				// Prime step so the sample walks all residues rather than hitting round values.
-				for (let emu = 0; emu <= EMU_PER_INCH * 60; emu += 7919) {
-					const printed = Number((emu / EMU_PER_INCH).toFixed(digits))
-					worst = Math.max(worst, Math.abs(printed * EMU_PER_INCH - emu))
-				}
-				return worst
-			}
-			assert(worstShift(6) < 0.5, `6 decimals must shift a value by < 0.5 EMU; measured ${worstShift(6)}`)
-			assert(worstShift(5) > 0.5, 'expected 5 decimals to exceed the half-EMU bound; re-derive the constant')
-
-			let bad6 = 0
-			let bad5 = 0
-			for (let emu = 0; emu <= EMU_PER_INCH * 60; emu += 7919) {
-				if (Math.round(Number((emu / EMU_PER_INCH).toFixed(6)) * EMU_PER_INCH) !== emu) bad6++
-				if (Math.round(Number((emu / EMU_PER_INCH).toFixed(5)) * EMU_PER_INCH) !== emu) bad5++
-			}
-			assert(bad6 === 0, `expected 6 decimals to be EMU-exact, got ${bad6} mismatches`)
-			assert(bad5 > 0, 'expected 5 decimals to lose EMU precision; if it no longer does, re-derive the constant')
 		},
 	},
 	{

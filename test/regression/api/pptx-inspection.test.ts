@@ -667,11 +667,9 @@ defineRegressionSuite('PPTX inspection primitives', [
 			const pngPath = listPptxParts(pptxPackage).find((part) => part.startsWith('ppt/media/') && part.endsWith('.png'))
 			assert(pngPath, 'expected an embedded png media part')
 
-			const bytes = await readPptxBinaryPart(pptxPackage, pngPath)
-			assert(bytes instanceof Uint8Array, 'binary part is a Uint8Array')
+			// Byte-exact, so a UTF-8 decode on the way out (which corrupts the \x89 PNG magic) fails here.
+			const bytes = defined(await readPptxBinaryPart(pptxPackage, pngPath))
 			assertEqual(Buffer.from(bytes).toString('base64'), PNG_1X1, 'png bytes round-trip')
-			// PNG magic number (\x89 P N G) survives undecoded — UTF-8 decoding would corrupt it.
-			assertEqual(Buffer.from(bytes.subarray(1, 4)).toString('latin1'), 'PNG', 'png signature intact')
 
 			const xml = await readPptxTextPart(pptxPackage, 'ppt/slides/slide1.xml')
 			const xmlBytes = defined(await readPptxBinaryPart(pptxPackage, 'ppt/slides/slide1.xml'))

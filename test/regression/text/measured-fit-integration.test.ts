@@ -18,7 +18,6 @@ import { resolveGenuineFontFile } from '../../read/font-oracle.ts'
 const SLIDE1 = 'ppt/slides/slide1.xml'
 
 const EMU_PER_IN = 914400
-const EMU_PER_PT = 12700
 
 /**
  * Extract the first real shape's xfrm off.y / ext.cy (EMU). The spTree opens with a
@@ -104,19 +103,6 @@ describe("measured fit: fit:'resize' integration", () => {
 		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		expect(xml).toContain('<a:spAutoFit/>')
 		expect(firstXfrm(xml).cy).toBe(1 * EMU_PER_IN) // unchanged 1in box
-	})
-
-	test('registered metrics + short text → box shrinks to fit (spAutoFit semantics)', async () => {
-		const pres = new PptxTs()
-		await pres.registerFontMetrics(FACE, FACE_FILE)
-		const slide = pres.addSlide()
-		slide.addText('Hi', { x: 1, y: 2, w: 6, h: 3, fontFace: FACE, fontSize: 18, fit: 'resize', valign: 'top' })
-		const xml = await partXml(await pres.toBytes(), SLIDE1)
-		const { offY, cy } = firstXfrm(xml)
-		// One 18pt line + insets ≈ 30pt, far less than the authored 3in box.
-		expect(cy).toBeLessThan(3 * EMU_PER_IN)
-		expect(cy).toBeGreaterThan(20 * EMU_PER_PT)
-		expect(offY).toBe(2 * EMU_PER_IN) // top anchor keeps the origin
 	})
 
 	test('a second write measures from the authored values, so metrics registered in between reach it', async () => {

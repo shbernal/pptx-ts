@@ -361,31 +361,14 @@ defineRegressionSuite('Transition sounds (write)', [
 	},
 	{
 		// `audio/x-wav` is the spelling PowerPoint itself authors for a transition sound, so it
-		// is what arrives on any deck read back in — including from `pptx-ts/script`, which
+		// is what arrives on any deck read back in, including from `pptx-ts/script`, which
 		// hands the source package's own content type straight back as a data URI. The media
 		// filename is derived from the mime subtype, and taking it verbatim produced
-		// `audio-1-1.x-wav`: a Default-declared file type that exists nowhere else.
-		name: 'derives a real file extension from the mime, so audio/x-wav lands on a .wav part',
-		fn: async () => {
-			const xWav = SOUND_WAV.replace('data:audio/wav;', 'data:audio/x-wav;')
-			const { zip } = await build((p) => {
-				p.addSlide().transition = { type: 'fade', sound: { data: xWav, name: 'ding.wav' } }
-			})
-			const media = Object.keys(zip.files).filter((key) => key.startsWith('ppt/media/'))
-			assert(media.length === 1 && at(media, 0).endsWith('.wav'), `sound part is a .wav, got ${media.join(', ')}`)
-			const ct = await readEntry(zip, '[Content_Types].xml')
-			assert(!/Extension="x-wav"/.test(ct), 'no Default is declared for a non-existent x-wav file type')
-			assert(
-				/<Default Extension="wav" ContentType="audio\/x-wav"\/>/.test(ct),
-				'the content type is still the x- form PowerPoint authors'
-			)
-		},
-	},
-	{
-		// The same reasoning as the x-wav case above, applied to the rest of the mime spellings
-		// that are not themselves file extensions. Each row is [data-URI mime, media part
-		// extension, the Default content type that extension must then declare] — the round trip
-		// has to close, or the package declares a type for a part it does not contain.
+		// `audio-1-1.x-wav`: a Default-declared file type that exists nowhere else. The same
+		// holds for every mime spelling that is not itself a file extension. Each row is
+		// [data-URI mime, media part extension, the Default content type that extension must then
+		// declare]. The round trip has to close, or the package declares a type for a part it
+		// does not contain.
 		name: 'maps every non-extension audio mime to a real file extension, and back to a content type',
 		fn: async () => {
 			const rows = [

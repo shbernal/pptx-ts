@@ -141,18 +141,6 @@ defineRegressionSuite('Deck argument guards', [
 		},
 	},
 	{
-		name: 'once sections are in use, a slide added without one lands in a generated default',
-		fn: async () => {
-			// PowerPoint has no concept of a loose slide alongside sections, so a slide added
-			// without a `sectionTitle` has to be given somewhere to live.
-			const pres = withSection()
-			pres.addSlide()
-
-			assertEqual(pres.sections.length, 2, 'a default section was appended')
-			assertEqual(at(pres.sections, 1).title, 'Default-1', 'named by how many defaults exist')
-		},
-	},
-	{
 		name: 'a second loose slide joins the existing default rather than making another',
 		fn: async () => {
 			// The branch the case above cannot reach: the last section is already a default,

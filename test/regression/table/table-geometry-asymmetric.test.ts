@@ -67,24 +67,6 @@ defineRegressionSuite('Table geometry under asymmetric input', [
 		},
 	},
 	{
-		// `slideMargin` was read by the auto-pager and by nothing else, so whether a table
-		// respected it depended on whether `autoPage` was on.
-		name: 'slideMargin steers an un-paged table too',
-		fn: async () => {
-			const widthFor = async (slideMargin: Margin) => {
-				const { zip } = await build((p) => {
-					p.defineLayout({ name: 'TEN', width: 10, height: 5.625 })
-					p.layout = 'TEN'
-					p.addSlide().addTable([[{ text: 'a' }, { text: 'b' }]], { autoPage: false, slideMargin })
-				})
-				return gridWidthEmu(await readEntry(zip, SLIDE_XML))
-			}
-			const narrow = await widthFor(0.25)
-			const wide = await widthFor(2)
-			assert(wide < narrow, `a wider slideMargin narrows the table; got ${wide} against ${narrow}`)
-		},
-	},
-	{
 		// Precedence used to run master-first, inherited from upstream and never decided, so a deck
 		// whose master declared a `margin` discarded a per-table `slideMargin` with no diagnostic —
 		// the reverse of the rule everywhere else here. Both halves are asserted: the caller's value

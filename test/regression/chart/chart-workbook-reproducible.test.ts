@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import JSZip from 'jszip'
 import PptxTs, { ChartType } from '../../../dist/node.js'
-import { listEntries } from '../../helpers.ts'
+import { defined, listEntries } from '../../helpers.ts'
 
 // Every embedded chart workbook stamped the wall clock into its own `docProps/core.xml`, so two
 // writes of one deck a second apart differed inside a part a consumer comparing packages cannot
@@ -20,9 +20,8 @@ async function workbookAt(when: string): Promise<Uint8Array> {
 		h: 4,
 	})
 	const zip = await JSZip.loadAsync(await pptx.toBytes())
-	const name = listEntries(zip).find((entry) => entry.endsWith('.xlsx'))
-	expect(name).toBeDefined()
-	return zip.file(name ?? '')?.async('uint8array') ?? new Uint8Array()
+	const name = defined(listEntries(zip).find((entry) => entry.endsWith('.xlsx')))
+	return defined(zip.file(name)).async('uint8array')
 }
 
 describe('embedded chart workbook', () => {
@@ -36,7 +35,7 @@ describe('embedded chart workbook', () => {
 
 	test('states no creation or modification time', async () => {
 		const inner = await JSZip.loadAsync(await workbookAt('2026-01-01T00:00:00Z'))
-		const core = (await inner.file('docProps/core.xml')?.async('string')) ?? ''
+		const core = await defined(inner.file('docProps/core.xml')).async('string')
 		expect(core).toContain('<dc:creator>')
 		expect(core).not.toContain('dcterms:created')
 		expect(core).not.toContain('dcterms:modified')

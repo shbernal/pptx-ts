@@ -24,9 +24,6 @@ describe('Entry export surface', () => {
 				'textRun' | 'textRuns'
 			>
 
-			assertEqual(typeof mod.textRun, 'function', `${entry} must export textRun as a function`)
-			assertEqual(typeof mod.textRuns, 'function', `${entry} must export textRuns as a function`)
-
 			// Behavior, not just presence: the helpers must produce the documented shape.
 			const run = mod.textRun('hi', { bold: true })
 			assertEqual(run.text, 'hi', `${entry} textRun should carry text`)

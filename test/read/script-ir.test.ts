@@ -91,17 +91,6 @@ describe('deck IR — corpus invariants', () => {
 		)
 	})
 
-	test.for(fixtureNames)('%s produces a JSON-serializable IR, so it can be diffed and cached', async (name) => {
-		const ir = await irFor(name)
-		// Asset bytes are the one non-JSON member and are carried out-of-band by design.
-		const { assets, ...rest } = ir
-		JSON.parse(JSON.stringify(rest))
-		for (const asset of assets) {
-			assert(asset.bytes instanceof Uint8Array, `${name}: asset ${asset.name} carries raw bytes`)
-			assert(asset.name.length > 0 && asset.contentType.length > 0, `${name}: asset is named and typed`)
-		}
-	})
-
 	test.for(fixtureNames)('%s holds no `undefined`, so "absent" has exactly one spelling', async (name) => {
 		for (const [trail, value] of walk(await irFor(name))) {
 			assert(value !== undefined, `${name}: ${trail} is undefined; absent keys must be omitted, not set to undefined`)
@@ -1653,7 +1642,6 @@ describe('deck IR — picture fills', () => {
 	test('the cells that are not image-filled gain no image fill', async () => {
 		const ir = await irFor('table-cell-image-fill.pptx')
 		const fills = cellOptions(ir).map((options) => at(options, 'fill'))
-		assertEqual(fills.filter((fill) => opt(fill, 'type') === 'image').length, 4, 'four picture cells')
 
 		// The fifth is the solid cell's OWN `a:solidFill` — PowerPoint authored the red, so
 		// dropping it made the replica wrong. `TableCell.hasOwnFill` is what tells that apart

@@ -72,7 +72,7 @@ import { Presentation, type OpcPackage } from '../../dist/read.js'
 import { assert, assertEqual, partXml, readEntry, at } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture } from './corpus.ts'
-import { resolveSingle } from './opc.ts'
+import { assertNoDanglingRels, resolveSingle } from './opc.ts'
 
 const SLIDE_LAYOUT_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout'
 
@@ -586,15 +586,7 @@ describe("Presentation.importSlide({ theme: 'preserve' })", () => {
 			'imported slide binds to the first layout of the first master'
 		)
 
-		// No dangling internal relationships anywhere in the package.
-		for (const partName of opc.parts.keys()) {
-			if (partName.endsWith('.rels')) continue
-			for (const rel of opc.relationshipsFor(partName)) {
-				if (rel.targetMode === 'External') continue
-				const t = opc.relationshipsFor(partName).resolveTarget(rel.id)
-				assert(opc.part(t), `${partName} → ${rel.id} resolves to an existing part (${t})`)
-			}
-		}
+		assertNoDanglingRels(opc)
 		assertEqual(imported.index, reopened.slides.length - 1, 'imported slide is last')
 	})
 
@@ -669,15 +661,7 @@ describe("Presentation.importSlide({ theme: 'preserve' })", () => {
 		assertEqual(countParts(opc, /\/theme\/theme\d+\.xml$/), themesBefore, 'carry adds no new theme part')
 		assertEqual(countParts(opc, /\/slideMasters\/slideMaster\d+\.xml$/), mastersBefore, 'carry adds no new master part')
 
-		// No dangling internal relationships anywhere in the package.
-		for (const partName of opc.parts.keys()) {
-			if (partName.endsWith('.rels')) continue
-			for (const rel of opc.relationshipsFor(partName)) {
-				if (rel.targetMode === 'External') continue
-				const t = opc.relationshipsFor(partName).resolveTarget(rel.id)
-				assert(opc.part(t), `${partName} → ${rel.id} resolves to an existing part (${t})`)
-			}
-		}
+		assertNoDanglingRels(opc)
 	})
 
 	test('carryMasterGraphics copies a decoration picture media and rewrites its relationship', async () => {

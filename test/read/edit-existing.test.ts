@@ -13,7 +13,7 @@
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { throws, bytesEqual, assert, assertEqual, defined, expectDefined, partBodies, at } from '../helpers.ts'
+import { caughtSync, bytesEqual, assert, assertEqual, defined, expectDefined, partBodies, at } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture } from './corpus.ts'
 
@@ -116,10 +116,11 @@ describe('whole-text-frame text swap', () => {
 	test('Shape.text throws on a shape with no text frame', async () => {
 		const picture = at((await openFixture('image')).slides, 0).shapeByName('Grafik 5')
 		expectDefined(picture, 'fixture has the picture')
-		assert(
-			throws(() => {
+		assertEqual(
+			caughtSync(() => {
 				picture.text = 'nope'
-			}),
+			})?.code ?? null,
+			'shape/no-text-frame',
 			'setting text on a picture throws'
 		)
 	})

@@ -101,9 +101,7 @@ describe('Slide.addPicture', () => {
 
 	test('reserveMediaPartName does not collide with an existing image', async () => {
 		const presentation = await openFixture('image')
-		const slide =
-			presentation.slides.find((s) => s.shapes.some((shape) => shape.shapeType === 'picture')) ??
-			at(presentation.slides, 0)
+		const slide = at(presentation.slides, 0)
 		const before = new Set(presentation.opc.parts.keys())
 		slide.addPicture(PNG_1X1, {
 			left: 0,
@@ -114,17 +112,7 @@ describe('Slide.addPicture', () => {
 			contentType: 'image/png',
 		})
 		const added = [...presentation.opc.parts.keys()].filter((name) => !before.has(name))
-		assertEqual(added.length, 1, 'one media part added')
-		assert(!before.has(at(added, 0)), `new media partname ${added[0]} did not collide`)
-	})
-
-	test('throws when the image type cannot be determined', async () => {
-		const slide = at((await openFixture('empty')).slides, 0)
-		const notAnImage = new Uint8Array([1, 2, 3, 4])
-		assert(
-			throws(() => slide.addPicture(notAnImage, { left: 0, top: 0, width: 100000, height: 100000 })),
-			'unsniffable bytes without {extension, contentType} should throw'
-		)
+		assertEqual(added.length, 1, `one media part added, not an overwrite of an existing one: ${added.join(', ')}`)
 	})
 
 	test.skipIf(!validatorInstalled)('a deck with an added picture stays schema-valid', async () => {

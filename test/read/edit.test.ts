@@ -8,7 +8,16 @@
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { throws, bytesEqual, assert, assertEqual, defined, partBodies, assertUnchangedExcept, at } from '../helpers.ts'
+import {
+	caughtSync,
+	bytesEqual,
+	assert,
+	assertEqual,
+	defined,
+	partBodies,
+	assertUnchangedExcept,
+	at,
+} from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture } from './corpus.ts'
 
@@ -18,6 +27,11 @@ async function editAndReopen(name: string, edit: (presentation: Presentation) =>
 	await edit(presentation)
 	const saved = await presentation.save()
 	return { presentation, saved, reopened: await Presentation.load(saved) }
+}
+
+/** The `code` of what `fn` throws, or `null` when it does not throw. */
+function codeOf(fn: () => unknown) {
+	return caughtSync(fn)?.code ?? null
 }
 
 function replaceTextShape(presentation: Presentation) {
@@ -104,16 +118,19 @@ describe('Run font properties', () => {
 
 	test('rejects a non-positive font size and a malformed colour', async () => {
 		const run = at(at(replaceTextFrame(await openFixture('textbox')).paragraphs, 0).runs, 0)
-		assert(
-			throws(() => (run.fontSizePt = 0)),
+		assertEqual(
+			codeOf(() => (run.fontSizePt = 0)),
+			'font/size-not-positive',
 			'fontSizePt = 0 should throw'
 		)
-		assert(
-			throws(() => (run.fontSizePt = Number.NaN)),
+		assertEqual(
+			codeOf(() => (run.fontSizePt = Number.NaN)),
+			'font/size-not-positive',
 			'fontSizePt = NaN should throw'
 		)
-		assert(
-			throws(() => (run.color = 'nothex')),
+		assertEqual(
+			codeOf(() => (run.color = 'nothex')),
+			'color/invalid-hex',
 			'malformed colour should throw'
 		)
 	})
@@ -139,19 +156,22 @@ describe('Shape geometry editing', () => {
 		const shape = replaceTextShape(await openFixture('textbox'))
 		shape.left = 100.6
 		assertEqual(shape.left, 101, 'fractional EMU is rounded')
-		assert(
-			throws(() => (shape.width = Number.NaN)),
+		assertEqual(
+			codeOf(() => (shape.width = Number.NaN)),
+			'coord/non-finite',
 			'NaN width should throw'
 		)
-		assert(
-			throws(() => (shape.width = -10)),
+		assertEqual(
+			codeOf(() => (shape.width = -10)),
+			'coord/not-positive',
 			'negative width should throw'
 		)
 		// `ST_PositiveCoordinate` has no room for zero either, and a zero-size shape is a
 		// degenerate result rather than a small one — the rule every other read-side extent
 		// setter already applied. The private guard these two used accepted it.
-		assert(
-			throws(() => (shape.width = 0)),
+		assertEqual(
+			codeOf(() => (shape.width = 0)),
+			'coord/not-positive',
 			'zero width should throw'
 		)
 		// An OFFSET may be negative: a shape can sit off the left or top edge.

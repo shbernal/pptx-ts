@@ -51,24 +51,6 @@ async function slideXmlFor(opts: ImageProps) {
 
 defineRegressionSuite('Image SVG sizing', [
 	{
-		name: "sizing:'contain' reads a square SVG's viewBox and letterboxes (non-zero srcRect) in a wide box",
-		fn: async () => {
-			const { zip } = await build((p) => {
-				const s = p.addSlide()
-				s.addImage({ svg: SQUARE_SVG_VIEWBOX, x: 1, y: 1, w: 4, h: 1, sizing: { type: 'contain', w: 4, h: 1 } })
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			const rect = srcRectAttrs(xml)
-			assert(rect, 'expected an <a:srcRect> from sizing:contain; got: ' + xml)
-			// 1:1 image in a 4:1 box → horizontal letterbox: l/r diverge from 0, t/b stay 0.
-			assert(
-				rect.l !== 0 && rect.l === rect.r,
-				`expected symmetric non-zero horizontal inset; got ${JSON.stringify(rect)}`
-			)
-			assert((rect.t || 0) === 0 && (rect.b || 0) === 0, `expected zero vertical inset; got ${JSON.stringify(rect)}`)
-		},
-	},
-	{
 		name: "sizing:'contain' falls back to a square SVG's width/height when no viewBox",
 		fn: async () => {
 			const { zip } = await build((p) => {

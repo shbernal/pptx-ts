@@ -1,7 +1,7 @@
 // `write()` resolves to the type its `outputType` names, so a caller asking for bytes gets
 // `Uint8Array` and not the union of every output shape. The `expectTypeOf` lines are checked by
-// `typecheck:test`; the runtime assertions check that `WriteOutputMap` states what the zip layer
-// actually returns, since the method's return is a cast over it.
+// `typecheck:test`. That `WriteOutputMap` states what the zip layer actually returns for each
+// explicit `outputType` is pinned at run time by zip-output-types.test.ts; the default is pinned here.
 import { describe, expect, expectTypeOf, test } from 'vitest'
 import PptxTs, { type WRITE_OUTPUT_TYPE } from '../../../dist/node.js'
 
@@ -21,20 +21,16 @@ describe('write() output typing', () => {
 
 		const bytes = await pres.write({ outputType: 'uint8array' })
 		expectTypeOf(bytes).toEqualTypeOf<Uint8Array>()
-		expect(bytes).toBeInstanceOf(Uint8Array)
 
 		const nodeBuffer = await pres.write({ outputType: 'nodebuffer' })
 		expectTypeOf(nodeBuffer).toEqualTypeOf<Uint8Array>()
-		expect(Buffer.isBuffer(nodeBuffer)).toBe(true)
 
 		const arrayBuffer = await pres.write({ outputType: 'arraybuffer' })
 		expectTypeOf(arrayBuffer).toEqualTypeOf<ArrayBuffer>()
-		expect(arrayBuffer).toBeInstanceOf(ArrayBuffer)
 
 		for (const outputType of ['base64', 'binarystring'] as const) {
 			const text = await pres.write({ outputType })
 			expectTypeOf(text).toEqualTypeOf<string>()
-			expect(typeof text).toBe('string')
 		}
 
 		// Compression alone leaves the default in place.

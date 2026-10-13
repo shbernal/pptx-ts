@@ -1,10 +1,4 @@
-import PptxTs, {
-	ChartType,
-	SchemeColor,
-	type CHART_NAME,
-	type ChartOpts,
-	type OptsChartData,
-} from '../../../dist/node.js'
+import { ChartType, SchemeColor, type CHART_NAME, type ChartOpts, type OptsChartData } from '../../../dist/node.js'
 import { defineRegressionSuite, build, assertEqual, assertIncludes, assertNotIncludes, defined } from '../../helpers.ts'
 import { chartXml } from './chart-parts.ts'
 
@@ -199,22 +193,6 @@ defineRegressionSuite('Chart stroke vocabulary', [
 			const bars = defined(xml.match(/<c:errBars>[^]*?<\/c:errBars>/))[0]
 			assertIncludes(bars, '<a:prstDash val="dot"/>', 'the dash is emitted')
 			assertNotIncludes(bars, '<a:solidFill>', 'and no colour is invented for it')
-		},
-	},
-	{
-		name: 'a chart no longer accepts the four gridline keys at its top level',
-		fn: () => {
-			// `ChartOpts` used to extend `OptsChartGridLine`, so `color`, `size`, `style` and `cap`
-			// typechecked on the chart bag itself and were read by nothing. A JS caller can still
-			// pass them; what this pins is that they reach no attribute.
-			const pres = new PptxTs()
-			// The directive is the assertion: this line no longer compiles, which is the half of the
-			// change TypeScript enforces. A JavaScript caller can still pass them.
-			// @ts-expect-error the gridline keys are not chart options
-			pres.addSlide().addChart(SERIES, { ...BASE, type: ChartType.bar, color: 'FF0000', size: 9, style: 'dash' })
-			// Nothing to assert beyond "this still builds" — the type-level half is the change, and
-			// a silent no-op is what it removes from the surface.
-			assertEqual(typeof pres.toBytes, 'function', 'the deck still builds with the stray keys present')
 		},
 	},
 ])

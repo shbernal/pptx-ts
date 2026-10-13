@@ -50,7 +50,6 @@ export const ALLOWED = new Set([
 	'test/regression/shape/zoom-links.test',
 	'test/regression/slide-content/comments-xml.test',
 	'test/regression/slide-content/master-layout-rel-ids.test',
-	'test/regression/table/table-autopage-width.test',
 	'test/regression/table/table-layout-api.test',
 	'test/regression/table/table-row-height-agreement.test',
 	'test/regression/table/table-styles-xml.test',

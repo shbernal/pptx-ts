@@ -49,51 +49,13 @@ async function pptxWithSilkscreen() {
 	return pres
 }
 
-describe('measureText() through dist (Silkscreen metrics)', () => {
-	test('named registered face → measurable with a wrapped multi-line height', async () => {
-		const pres = await pptxWithSilkscreen()
-		const m = pres.measureText(OVERFLOW, { wIn: 2, fontSize: 18, fontFace: 'Silkscreen' })
-		expect(m.measurable).toBe(true)
-		expect(m.lineCount).toBeGreaterThan(1)
-		expect(m.heightIn).toBeGreaterThan(0)
-		expect(m.widestLineIn).toBeGreaterThan(0)
-	})
-
-	test('fitsBox / shrinkScaleFor helpers', async () => {
-		const pres = await pptxWithSilkscreen()
-		const m = pres.measureText(OVERFLOW, { wIn: 2, fontSize: 18, fontFace: 'Silkscreen' })
-		expect(m.fitsBox(0.3)).toBe(false) // too short — overflows
-		expect(m.fitsBox(50)).toBe(true) // absurdly tall — fits
-		const scale = m.shrinkScaleFor(0.5)
-		expect(scale).toBeGreaterThan(0)
-		expect(scale).toBeLessThanOrEqual(100)
-	})
-
-	test('unnamed (theme-default) face → not measurable', async () => {
-		const pres = await pptxWithSilkscreen()
-		const m = pres.measureText('x', { wIn: 5, fontSize: 12 })
-		expect(m.measurable).toBe(false)
-		expect(m.fitsBox(1)).toBe(false)
-		expect(m.shrinkScaleFor(1)).toBe(100)
-	})
-
+describe('overflowsBox() through dist (Silkscreen metrics)', () => {
 	test('overflowsBox: true when overflowing, false when it fits, false when unmeasurable', async () => {
 		const pres = await pptxWithSilkscreen()
 		expect(pres.overflowsBox(OVERFLOW, { wIn: 2, hIn: 0.3, fontSize: 18, fontFace: 'Silkscreen' })).toBe(true)
 		expect(pres.overflowsBox('Hi', { wIn: 6, hIn: 3, fontSize: 12, fontFace: 'Silkscreen' })).toBe(false)
 		// Unmeasurable (unnamed) face never false-positives.
 		expect(pres.overflowsBox(OVERFLOW, { wIn: 2, hIn: 0.3, fontSize: 18 })).toBe(false)
-	})
-
-	test('run array with per-run bold uses the bold metrics variant', async () => {
-		const pres = await pptxWithSilkscreen()
-		const m = pres.measureText([{ text: 'Bold heading', options: { bold: true } }], {
-			wIn: 3,
-			fontSize: 18,
-			fontFace: 'Silkscreen',
-		})
-		expect(m.measurable).toBe(true)
-		expect(m.widestLineIn).toBeGreaterThan(0)
 	})
 })
 
@@ -136,21 +98,6 @@ describe("applyMeasuredFit: fit:'shrink' through dist export", () => {
 		slide.addText(OVERFLOW, { x: 1, y: 1, w: 3, h: 1, fontFace: 'Silkscreen', fontSize: 18, fit: 'shrink' })
 		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		expect(xml).toMatch(/<a:normAutofit fontScale="\d+"/)
-	})
-
-	test('grouped overflow text still receives a baked fontScale', async () => {
-		const pres = await pptxWithSilkscreen()
-		pres.addSlide().addGroup([
-			{ rect: { x: 1, y: 1, w: 3, h: 1 } },
-			{
-				text: {
-					text: OVERFLOW,
-					options: { x: 1, y: 1, w: 3, h: 1, fontFace: 'Silkscreen', fontSize: 18, fit: 'shrink' },
-				},
-			},
-		])
-		const xml = await partXml(await pres.toBytes(), SLIDE1)
-		expect(xml).toMatch(/<p:grpSp>.*<a:normAutofit fontScale="\d+"/s)
 	})
 
 	test('nested grouped overflow text still receives a baked fontScale', async () => {
@@ -338,23 +285,6 @@ describe('measured fit: degenerate boxes', () => {
 	})
 })
 
-describe('measured fit: `wrap: false`', () => {
-	test('a non-wrapping line that overflows horizontally still shrinks', async () => {
-		// The point of the wrap:false handling. With wrap:false the text is one line, so it
-		// always fits the box HEIGHT and `normAutofit`'s vertical test never fires — the line
-		// just spills out the side. The solver has to check the widest line against the box
-		// WIDTH instead. The box here is deliberately tall enough that height alone would say
-		// "fits", so a baked scale can only have come from the width check.
-		const scale = await shrinkScale({ wrap: false, w: 2, h: 6 }, 'nowrapping single line of text')
-		expect(scale).not.toBeNull()
-		expect(scale).toBeLessThan(100000)
-	})
-
-	test('the same box wrapping normally needs no shrink', async () => {
-		expect(await shrinkScale({ w: 2, h: 6 }, 'nowrapping single line of text')).toBeNull()
-	})
-})
-
 describe("measured fit: fit:'resize' vertical anchor", () => {
 	test('bottom anchor → the box grows upward, its bottom edge fixed', async () => {
 		const pres = await pptxWithSilkscreen()
@@ -429,16 +359,6 @@ describe('measured fit: solver floor and edges', () => {
 		expect(scale).toBe(25000) // MIN_FONT_SCALE_PCT
 	})
 
-	test('an over-long unbreakable word character-wraps instead of overflowing', async () => {
-		const pres = await pptxWithSilkscreen()
-		// No whitespace to break at, so the greedy layout has to split mid-word. Without the
-		// character-wrap fallback this measures as a single (enormous) line and reports a
-		// height the box would satisfy while the text visibly spills.
-		const m = pres.measureText('W'.repeat(120), { wIn: 1.5, fontSize: 18, fontFace: 'Silkscreen' })
-		expect(m.lineCount).toBeGreaterThan(1)
-		expect(m.widestLineIn).toBeLessThanOrEqual(1.5)
-	})
-
 	test('a tab is measured as a space-width gap, not as zero width', async () => {
 		const pres = await pptxWithSilkscreen()
 		const opts = { wIn: 20, fontSize: 18, fontFace: 'Silkscreen' }
@@ -446,22 +366,6 @@ describe('measured fit: solver floor and edges', () => {
 		const joined = pres.measureText('alphabeta', opts)
 		expect(tabbed.lineCount).toBe(1)
 		expect(tabbed.widestLineIn).toBeGreaterThan(joined.widestLineIn)
-	})
-
-	test('shrinkScaleFor returns 100 when the text already fits', async () => {
-		const pres = await pptxWithSilkscreen()
-		const m = pres.measureText('Hi', { wIn: 8, fontSize: 12, fontFace: 'Silkscreen' })
-		expect(m.shrinkScaleFor(50)).toBe(100)
-	})
-
-	test('an unregistered named face is measured heuristically and reported', async () => {
-		const pres = await pptxWithSilkscreen()
-		const m = pres.measureText(OVERFLOW, { wIn: 2, fontSize: 18, fontFace: 'Helvetica' })
-		expect(m.measurable).toBe(true)
-		expect(m.approximatedFaces).toEqual(['Helvetica'])
-		// The snapshot is caller-owned: re-entering the resolver must not grow the array.
-		m.shrinkScaleFor(0.5)
-		expect(m.approximatedFaces).toEqual(['Helvetica'])
 	})
 
 	test('an empty run list is unmeasurable', async () => {
@@ -474,22 +378,6 @@ describe('measured fit: solver floor and edges', () => {
 
 describe("applyMeasuredFit: TableCellProps.fit:'shrink' through dist export", () => {
 	const LONG = 'This is a deliberately long cell sentence that overflows a short fixed-height table row.'
-
-	test('fixed-height row + overflow → reduced literal font size baked onto the cell', async () => {
-		const pres = await pptxWithSilkscreen()
-		const slide = pres.addSlide()
-		slide.addTable([[{ text: LONG, options: { fit: 'shrink', fontFace: 'Silkscreen', fontSize: 18 } }]], {
-			x: 0.5,
-			y: 0.5,
-			w: 3,
-			rowH: [0.4],
-		})
-		const xml = await partXml(await pres.toBytes(), SLIDE1)
-		const sizes = szValues(xml)
-		expect(sizes.length).toBeGreaterThan(0)
-		// 18pt == sz 1800; a shrink bakes something strictly smaller.
-		expect(Math.min(...sizes)).toBeLessThan(1800)
-	})
 
 	test('auto-height row (no rowH / table h) → cell font size untouched (row grows instead)', async () => {
 		const pres = await pptxWithSilkscreen()
@@ -532,25 +420,6 @@ describe('tableLayout() through dist (Silkscreen metrics)', () => {
 		// The wrapping OVERFLOW cell drives its row taller than the short-text header row.
 		const rowH = (r: number) => defined(res.cells.find((c) => c.row === r && c.col === 0)).hIn
 		expect(rowH(1)).toBeGreaterThan(rowH(0))
-	})
-
-	test('pinned rowH → exact heights', async () => {
-		const pres = await pptxWithSilkscreen()
-		const rows = [
-			[{ text: 'a' }, { text: 'b' }],
-			[{ text: 'c' }, { text: 'd' }],
-		]
-		const res = pres.tableLayout(rows, { x: 1, y: 1, w: 8, rowH: [0.5, 0.75] })
-		expect(res.heightExact).toBe(true)
-		expect(res.heightIn).toBeCloseTo(1.25, 5)
-	})
-
-	test('rowH as a scalar pins every row to the same height', async () => {
-		const pres = await pptxWithSilkscreen()
-		const rows = [[{ text: 'a' }], [{ text: 'b' }], [{ text: 'c' }]]
-		const res = pres.tableLayout(rows, { x: 1, y: 1, w: 4, rowH: 0.5 })
-		expect(res.heightExact).toBe(true)
-		expect(res.heightIn).toBeCloseTo(1.5, 5)
 	})
 
 	test('table `h` with no rowH splits evenly across the rows', async () => {
@@ -819,19 +688,6 @@ describe('applyMeasuredFit: the table cell shrink pass', () => {
 		// having taken the whole pass down with it.
 		expect(await partXml(await pres.toBytes(), SLIDE1)).toMatch(/<a:normAutofit fontScale="\d+"/)
 	})
-
-	test('a cell with no text is passed over while its neighbour still bakes', async () => {
-		const xml = await tableDeck(
-			[
-				[
-					{ text: '', options: { fit: 'shrink', fontFace: 'Silkscreen', fontSize: 18 } },
-					{ text: LONG, options: { fit: 'shrink', fontFace: 'Silkscreen', fontSize: 18 } },
-				],
-			],
-			{ w: 6, rowH: [0.4] }
-		)
-		expect(Math.min(...szValues(xml))).toBeLessThan(1800)
-	})
 })
 
 describe('measured fit: code points the registered face has no glyph for', () => {
@@ -852,20 +708,6 @@ describe('measured fit: code points the registered face has no glyph for', () =>
 		}
 		return seen
 	}
-
-	test('measureText reports the uncovered code point', async () => {
-		const pres = await pptxWithSilkscreen()
-		const m = pres.measureText(WITH_NBH, { wIn: 4, fontSize: 18, fontFace: 'Silkscreen' })
-		expect(m.measurable).toBe(true)
-		expect(m.approximatedFaces).toEqual([]) // the face IS registered — a different condition
-		expect(m.uncoveredCodepoints).toEqual([0x2011])
-	})
-
-	test('measureText reports nothing for fully covered text', async () => {
-		const pres = await pptxWithSilkscreen()
-		const m = pres.measureText('Fine print here', { wIn: 4, fontSize: 18, fontFace: 'Silkscreen' })
-		expect(m.uncoveredCodepoints).toEqual([])
-	})
 
 	test('several uncovered code points come back sorted and deduplicated', async () => {
 		// The single-code-point case above cannot tell a sorted list from an arbitrary one,

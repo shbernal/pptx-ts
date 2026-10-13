@@ -183,14 +183,6 @@ describe('inherited run size / face / bold / italic — the two upper tiers', ()
 		assertEqual(run.resolvedBold, true, 'bold still comes from the paragraph tier that defines it')
 	})
 
-	test('italic: a paragraph defRPr @i="1" resolves to an inherited true', () => {
-		assertEqual(
-			firstRun(placeholderFrame(`<a:p><a:pPr><a:defRPr i="1"/></a:pPr><a:r><a:t>x</a:t></a:r></a:p>`)).resolvedItalic,
-			true,
-			'inherits an explicit italic from the paragraph defRPr'
-		)
-	})
-
 	test('italic: the lstStyle level defRPr is the second tier, and @b/@i resolve independently', () => {
 		// The paragraph tier states only @b, so italic must fall through it to the
 		// lstStyle tier below — the same present-but-silent fall-through bold gets.

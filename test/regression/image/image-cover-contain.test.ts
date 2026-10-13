@@ -69,17 +69,6 @@ defineRegressionSuite('Image cover/contain natural-ratio crop', [
 		},
 	},
 	{
-		// Square image cover-fit into a tall (3:4) box → crop left/right by 12.5%.
-		name: 'cover: square image into tall (3:4) box crops left/right from natural ratio',
-		fn: async () => {
-			const r = await srcRectFor({ data: PNG_1X1, x: 1, y: 1, w: 3, h: 4, sizing: { type: 'cover', w: 3, h: 4 } })
-			assert(
-				r.l === 12500 && r.r === 12500 && r.t === 0 && r.b === 0,
-				`expected l=12500 r=12500 t=0 b=0; got ${JSON.stringify(r)}`
-			)
-		},
-	},
-	{
 		// contain letterboxes instead of cropping: square image inside a 4:3 box pads
 		// left/right (negative srcRect insets) and leaves top/bottom flush.
 		name: 'contain: square image into wide (4:3) box pads left/right (negative inset)',

@@ -76,12 +76,9 @@ defineRegressionSuite('Presentation layouts [legacy bug-22]', [
 		},
 	},
 	{
-		name: 'standard layout presets expose inch accessors (.widthIn/.heightIn)',
+		name: 'LAYOUT_16x9 exposes its inch size (.widthIn/.heightIn)',
 		fn: () => {
-			const wide = STANDARD_LAYOUTS.LAYOUT_WIDE
 			const std = STANDARD_LAYOUTS.LAYOUT_16x9
-			assertEqual(inchesToEmu(wide.widthIn), wide.widthEmu, 'LAYOUT_WIDE .widthIn converts to .widthEmu')
-			assertEqual(inchesToEmu(wide.heightIn), wide.heightEmu, 'LAYOUT_WIDE .heightIn converts to .heightEmu')
 			assertEqual(std.widthIn, 10, 'LAYOUT_16x9 .widthIn is 10in')
 			assertEqual(std.heightIn, 5.625, 'LAYOUT_16x9 .heightIn is 5.625in')
 		},
@@ -102,13 +99,12 @@ defineRegressionSuite('Presentation layouts [legacy bug-22]', [
 	{
 		name: 'slide.width/slide.height return the active layout size in inches',
 		fn: async () => {
-			const { pres } = await build((p) => {
+			await build((p) => {
 				p.layout = STANDARD_LAYOUTS.LAYOUT_16x9
 				const slide = p.addSlide()
 				assertEqual(slide.width, 10, 'slide.width inches')
 				assertEqual(slide.height, 5.625, 'slide.height inches')
 			})
-			assert(pres, 'presentation built')
 		},
 	},
 ])

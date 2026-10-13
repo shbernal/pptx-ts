@@ -88,9 +88,6 @@ describe('Shape.customGeometry — real PowerPoint XML (custgeom.pptx)', () => {
 		const { commands } = path
 		assertEqual(path.w, 2540000, 'path w')
 		assertEqual(path.h, 1524000, 'path h')
-		// Two moveTo / two close: the inner ellipse contour then the outer rectangle.
-		assertEqual(commands.filter((c) => c.cmd === 'moveTo').length, 2, 'two contours start with moveTo')
-		assertEqual(commands.filter((c) => c.cmd === 'close').length, 2, 'each contour closes')
 		assertEqual(
 			JSON.stringify(commands),
 			JSON.stringify([

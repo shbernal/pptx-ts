@@ -9,6 +9,10 @@
 //   2. Dropping a family a deck does not use must change nothing, and dropping one it does use
 //      must remove exactly that family's parts.
 //
+// The order case and the unused-family case are pinned one level up, through the family list that
+// supplies these contributors (test/regression/api/construct-families.test.ts). What only this
+// seam can show is the last one: exactly the dropped family's parts go.
+//
 // These import from `src/` rather than `dist/` because the seam is internal: `PackageSource` and
 // the contributor list are not on the public surface.
 import { afterAll, beforeAll, describe, test, vi } from 'vitest'
@@ -35,13 +39,6 @@ function richDeck() {
 	return pres
 }
 
-/** A deck that reaches none of the optional families -- text boxes and the notes slides only. */
-function textDeck() {
-	const pres = new PptxTs()
-	pres.addSlide().addText('text only', { x: 1, y: 1, w: 4, h: 1 })
-	return pres
-}
-
 /**
  * The slice of deck state the packager reads. `Presentation` assembles this privately with the
  * full contributor list; here the list is the variable under test.
@@ -61,9 +58,9 @@ function sourceWith(pres: PptxTs, partContributors: PackageSource['partContribut
 // Freeze the clock for the whole file. Two parts read it, and only one is text: `docProps/core.xml`
 // carries `new Date()` dcterms stamps, and so does the `docProps/core.xml` *inside* the
 // `ppt/embeddings/Microsoft_Excel_WorksheetN.xlsx` the chart contributor writes. A regex could only
-// ever blank the first — the embedded workbook is a deflated zip by the time this sees it — which
-// left the reversed-list case failing whenever its two builds straddled a one-second tick. Same
-// fix, same reasoning, as test/regression/api/construct-families.test.ts.
+// ever blank the first (the embedded workbook is a deflated zip by the time this sees it), which
+// left byte comparisons failing whenever two builds straddled a one-second tick. Same fix, same
+// reasoning, as test/regression/api/construct-families.test.ts.
 beforeAll(() => {
 	vi.useFakeTimers({ toFake: ['Date'] })
 	vi.setSystemTime(new Date('2026-01-01T00:00:00Z'))
@@ -85,34 +82,7 @@ async function partsOf(makePres: () => PptxTs, partContributors: PackageSource['
 	return new Map(parts.map((part) => [part.path, decode(part.data)]))
 }
 
-function assertSameParts(a: Map<string, string>, b: Map<string, string>, label: string) {
-	assertEqual(JSON.stringify([...a.keys()]), JSON.stringify([...b.keys()]), `${label}: part paths or their order`)
-	for (const [path, text] of a) {
-		assert(b.get(path) === text, `${label}: ${path} differs`)
-	}
-}
-
 describe('part contributors', () => {
-	test('the order the caller lists them in does not reach the package', async () => {
-		const canonical = await partsOf(richDeck, ALL_PART_CONTRIBUTORS)
-		const reversed = await partsOf(richDeck, [...ALL_PART_CONTRIBUTORS].reverse())
-		// Every contributor's `order` decides where its parts and content-type entries land, so
-		// reversing the list has to be invisible -- otherwise a tier shipping a subset in a
-		// different order would emit a different deck for the same input.
-		assertSameParts(canonical, reversed, 'reversed contributor list')
-	})
-
-	test('dropping a family the deck never uses changes nothing', async () => {
-		const full = await partsOf(textDeck, ALL_PART_CONTRIBUTORS)
-		const withoutCharts = await partsOf(
-			textDeck,
-			ALL_PART_CONTRIBUTORS.filter((contributor) => contributor !== chartContributor)
-		)
-		// This is what a tier buys: a text-only program that never links the chart part builders
-		// writes the same bytes as one that does.
-		assertSameParts(full, withoutCharts, 'text deck without the chart contributor')
-	})
-
 	test('dropping the chart contributor removes the chart parts and nothing else', async () => {
 		const full = await partsOf(richDeck, ALL_PART_CONTRIBUTORS)
 		const without = await partsOf(

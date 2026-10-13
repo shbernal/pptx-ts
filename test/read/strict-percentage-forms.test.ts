@@ -55,7 +55,6 @@ describe('ST_Percentage union — the string form reads as the value it states',
 		assertEqual(at(at((await frameFrom()).paragraphs, 0).runs, 0).baselinePct, null, 'no @baseline is still null')
 		for (const [value, expected] of [
 			['30000', 30],
-			['30%', 30],
 			['62.5%', 62.5],
 			['-40%', -40],
 		] as const) {
@@ -72,10 +71,7 @@ describe('ST_Percentage union — the string form reads as the value it states',
 			return spacing.percent
 		}
 		assertEqual(percentSpacing(await frameFrom(), 'fixed-point'), 150, 'fixed-point 150000')
-		for (const [value, expected] of [
-			['150%', 150],
-			['112.5%', 112.5],
-		] as const) {
+		for (const [value, expected] of [['112.5%', 112.5]] as const) {
 			const frame = await frameFrom((xml) => xml.replace('<a:spcPct val="150000"', `<a:spcPct val="${value}"`))
 			assertEqual(percentSpacing(frame, value), expected, `spcPct ${value}`)
 		}

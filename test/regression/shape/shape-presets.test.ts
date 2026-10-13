@@ -12,63 +12,20 @@ import {
 
 defineRegressionSuite('Shape preset mapping [legacy bug-10]', [
 	{
-		name: 'addShape("oval", ...) emits prst="ellipse" (not invalid "oval")',
+		name: 'addShape aliases "oval", "roundedRectangle" and "rectangle" emit their valid prst spellings',
 		fn: async () => {
 			const { zip } = await build((p) => {
 				const s = p.addSlide()
 				// @ts-expect-error accepted leniency, not API: SHAPE_NAME omits the aliases addShape resolves
 				s.addShape('oval', { x: 1, y: 1, w: 0.4, h: 0.4, fill: { color: '00B0B9' } })
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assert(/<a:prstGeom\s+prst="ellipse"/.test(xml), 'expected prstGeom prst="ellipse" in slide1.xml; got: ' + xml)
-			assert(!/<a:prstGeom\s+prst="oval"/.test(xml), 'invalid prst="oval" still present in slide1.xml')
-		},
-	},
-	{
-		name: 'addShape("roundedRectangle", ...) emits prst="roundRect" (not invalid "roundedRectangle")',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				const s = p.addSlide()
 				// @ts-expect-error accepted leniency, not API: SHAPE_NAME omits the aliases addShape resolves
-				s.addShape('roundedRectangle', { x: 1, y: 1, w: 2, h: 1 })
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assert(
-				/<a:prstGeom\s+prst="roundRect"/.test(xml),
-				'expected prstGeom prst="roundRect" in slide1.xml; got: ' + xml
-			)
-			assert(
-				!/<a:prstGeom\s+prst="roundedRectangle"/.test(xml),
-				'invalid prst="roundedRectangle" still present in slide1.xml'
-			)
-		},
-	},
-	{
-		name: 'addShape("rectangle", ...) emits prst="rect" (not invalid "rectangle")',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				const s = p.addSlide()
+				s.addShape('roundedRectangle', { x: 1, y: 2, w: 2, h: 1 })
 				// @ts-expect-error accepted leniency, not API: SHAPE_NAME omits the aliases addShape resolves
-				s.addShape('rectangle', { x: 1, y: 1, w: 2, h: 1 })
+				s.addShape('rectangle', { x: 1, y: 3, w: 2, h: 1 })
 			})
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assert(/<a:prstGeom\s+prst="rect"/.test(xml), 'expected prstGeom prst="rect" in slide1.xml; got: ' + xml)
-			assert(!/<a:prstGeom\s+prst="rectangle"/.test(xml), 'invalid prst="rectangle" still present in slide1.xml')
-		},
-	},
-	{
-		name: 'enum-constant API still works (ShapeType.ellipse -> ellipse)',
-		fn: async () => {
-			const { zip, pres } = await build((p) => {
-				const s = p.addSlide()
-				s.addShape(ShapeType.ellipse, { x: 1, y: 1, w: 0.4, h: 0.4 })
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assert(
-				/<a:prstGeom\s+prst="ellipse"/.test(xml),
-				'expected prstGeom prst="ellipse" via ShapeType.ellipse; got: ' + xml
-			)
-			void pres
+			const prsts = [...xml.matchAll(/<a:prstGeom\s+prst="([^"]+)"/g)].map((m) => m[1])
+			assertEqual(prsts.join(','), 'ellipse,roundRect,rect', 'alias resolution')
 		},
 	},
 	{

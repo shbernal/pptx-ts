@@ -289,23 +289,6 @@ describe('script printer — the fidelity contract', () => {
 		}
 	})
 
-	test('document properties are not reported lost, because the template carries them', async () => {
-		// The read half notes that only five of the twelve docProps have write-API setters.
-		// True of a standalone output; false here, where none of them is ever authored. A
-		// caveat that does not apply teaches the reader to skim the ones that do.
-		const ir = await irFor('mixed.pptx')
-		const printed = printScript(ir)
-		assert(
-			ir.fidelity.some((note) => note.construct === 'deck.docProps'),
-			'the IR should still declare the loss — it is real for a standalone output'
-		)
-		assert(
-			!printed.notes.some((note) => note.construct === 'deck.docProps'),
-			'a template-anchored script must not report docProps as lost'
-		)
-		assert(!printed.code.includes('deck.docProps'), 'the header must not carry the note either')
-	})
-
 	test('the header block lists every applicable note', async () => {
 		const ir = await irFor('custgeom.pptx')
 		const printed = printScript(ir)

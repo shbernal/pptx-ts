@@ -158,7 +158,7 @@ describe('pruneSpids — effect removal, wrapper collapse, bldLst drop', () => {
 		s.pruneAnimationSpids([7])
 		assertEqual(JSON.stringify(s.animationSpids()), '[]', 'the targeted effect is gone')
 		// The outer presetID par is preserved (not collapsed as a wrapper).
-		assert(!s.hasAnimations || s.animationSpids().length === 0, 'no dangling spid remains')
+		assert(s.hasAnimations, 'the outer effect par survives')
 	})
 })
 

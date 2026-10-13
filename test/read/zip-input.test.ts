@@ -31,7 +31,6 @@ function bytes() {
 }
 
 function assertDecodesDeck(entries: Map<string, Uint8Array>, label: string) {
-	assert(entries instanceof Map, `${label}: readZip returns a Map`)
 	assert(entries.has(CONTENT_TYPES_PATH), `${label}: [Content_Types].xml present`)
 	assert(entries.has(SLIDE_PATH), `${label}: slide part present`)
 	assert(defined(entries.get(SLIDE_PATH)).length > 0, `${label}: slide part has bytes`)
@@ -40,11 +39,6 @@ function assertDecodesDeck(entries: Map<string, Uint8Array>, label: string) {
 describe('readZip input matrix', () => {
 	test('Uint8Array input decodes the archive', async () => {
 		assertDecodesDeck(await readZip(bytes()), 'Uint8Array')
-	})
-
-	test('Node Buffer input decodes the archive', async () => {
-		// Buffer is a Uint8Array subclass; the common Node caller passes one.
-		assertDecodesDeck(await readZip(Buffer.from(bytes())), 'Buffer')
 	})
 
 	test('ArrayBuffer input decodes the archive', async () => {

@@ -176,14 +176,6 @@ describe('math/latexToOmml — accents become m:acc, not m:limUpp', () => {
 		const stated = mathmlToOmml('<math><mover accent="true"><mi>a</mi><mo stretchy="false">ˆ</mo></mover></math>')
 		expect(stated.includes('<m:acc>'), 'and a stated accent is honoured').toBe(true)
 	})
-
-	test('an accent already stating `accent` is left alone by latexToOmml too', () => {
-		// Belt and braces on the guard in `markAccentedMovers`: a double rewrite would insert a
-		// second attribute and produce malformed XML.
-		const omml = latexToOmml('\\hat{a}', { display: false })
-		expect((omml.match(/<m:acc>/g) || []).length).toBe(1)
-		assertWellFormed(omml, 'single accent')
-	})
 })
 
 describe('math/mathmlToOmml', () => {

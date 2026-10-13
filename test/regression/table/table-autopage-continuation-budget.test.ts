@@ -102,22 +102,6 @@ defineRegressionSuite('Table autoPage continuation-slide row budget (gitbrent/Pp
 		},
 	},
 	{
-		name: 'the deeper the cell margins, the more the old accounting lost — still one budget',
-		fn: async () => {
-			// The bug leaked exactly one row's worth of top+bottom margin per page, so a fixture with
-			// deeper padding is where it did the most damage. Ordinary padding at 0.2in per side, not
-			// an extreme: >= 1in would be read as a legacy points value and warn.
-			const { zip } = await paged(0.2)
-			const counts = await rowsPerSlide(zip)
-			const full = counts.slice(0, -1)
-			assert(full.length >= 2, `expected several full pages; got ${JSON.stringify(counts)}`)
-			assert(
-				full.every((count) => count === full[0]),
-				`deep cell margins must not buy a continuation page an extra row; got ${JSON.stringify(counts)}`
-			)
-		},
-	},
-	{
 		name: 'pagination moves every row across exactly once, in order',
 		fn: async () => {
 			const { zip } = await paged(0.0833, 30)

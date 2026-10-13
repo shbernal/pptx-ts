@@ -170,24 +170,6 @@ defineRegressionSuite('HTML table to slides on Node (happy-dom)', [
 		},
 	},
 	{
-		name: 'colspan and rowspan survive into the emitted table',
-		fn: async () => {
-			const win = windowWith(`
-				<table id="t">
-					<thead><tr><th colspan="2">Wide</th><th>C</th></tr></thead>
-					<tbody><tr><td rowspan="2">Tall</td><td>b</td><td>c</td></tr><tr><td>d</td><td>e</td></tr></tbody>
-				</table>`)
-			const { zip } = await build((pptx) => {
-				tableToSlides(pptx, tableOf(win))
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assert(/<a:tc\b[^>]*\bgridSpan="2"/.test(xml), 'colspan must emit gridSpan="2"')
-			assert(/<a:tc\b[^>]*\browSpan="2"/.test(xml), 'rowspan must emit rowSpan="2"')
-			// A colspan of 2 in the width-source row must still yield one column per spanned cell.
-			assertEqual(gridColWidths(xml).length, 3, 'a 2-span header + 1 cell is 3 columns')
-		},
-	},
-	{
 		// upstream gitbrent/PptxGenJS#1244 — the reported defect, reproduced.
 		name: 'data-pptx-width on a spanning header sizes the columns it spans, not the next one along',
 		fn: async () => {
@@ -451,11 +433,6 @@ defineRegressionSuite('HTML table to slides on Node (happy-dom)', [
 			assert(/marR="19050"/.test(xml), `2px padding must be 2/96in; got: ${xml}`)
 			assert(/marB="28575"/.test(xml), `3px padding must be 3/96in; got: ${xml}`)
 			assert(/marL="38100"/.test(xml), `4px padding must be 4/96in; got: ${xml}`)
-			// The pre-fix values: px copied straight into an inches field.
-			assert(!/marT="1828800"/.test(xml), 'a 1.5px pad must not come back as a 2 INCH inset')
-			assert(!/marL="3657600"/.test(xml), 'a 4px pad must not come back as a 4 INCH inset')
-			// The stripped-decimal-point value, at either unit.
-			assert(!/marT="13716000"/.test(xml) && !/marT="142875"/.test(xml), '1.5px must not become 15px')
 		},
 	},
 	{

@@ -172,22 +172,16 @@ describe('Diagram — the data model', () => {
 		assertEqual(diagram.text, NODE_TEXT.join('\n'), 'Diagram.text is those blocks joined by newlines')
 	})
 
-	test('text skips the generated pres points, the doc root, and empty transitions', async () => {
+	test('the doc root is an unfilled placeholder with no text', async () => {
+		// The exact Diagram.text above already shows the doc root, the pres points and the empty
+		// transitions stay out of the joined text.
 		const { diagram } = await smartArtFrame()
-		// Every excluded class is present in this fixture, so the filter is actually exercised:
-		// were any of them folded in, `text` would gain blank lines or duplicate content.
-		assert(
-			diagram.points.some((point) => point.type === 'pres'),
-			'the fixture has pres points to exclude'
-		)
 		const doc = defined(
 			diagram.points.find((point) => point.type === 'doc'),
 			'the model has a doc root'
 		)
 		assertEqual(doc.isPlaceholder, true, 'the doc root is flagged as an unfilled placeholder')
 		assertEqual(doc.text, '', 'and carries no text')
-		assert(!diagram.text.includes('\n\n'), 'no empty block reaches the joined text')
-		assertEqual(diagram.text.split('\n').length, NODE_TEXT.length, 'exactly the node blocks are joined')
 	})
 
 	test('a point reads through the ordinary TextFrame run model', async () => {
@@ -671,11 +665,8 @@ describe('DiagramPoint.text — re-texting a node, cache and all', () => {
 describe('Slide.text — diagram contribution', () => {
 	test('a SmartArt slide no longer flattens to its title alone', async () => {
 		const { slide } = await smartArtFrame()
-		const text = slide.text
-		assert(text.startsWith('Course objectives\n'), 'the title placeholder still leads')
-		for (const node of NODE_TEXT) assert(text.includes(node), `slide text includes the node "${node}"`)
 		assertEqual(
-			text,
+			slide.text,
 			['Course objectives', ...NODE_TEXT].join('\n'),
 			'the diagram contributes one block per node, in shape-tree order'
 		)

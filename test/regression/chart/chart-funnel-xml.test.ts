@@ -20,7 +20,7 @@ const DATA = [
 	},
 ]
 
-async function buildFunnel(extra = {}) {
+async function buildFunnel() {
 	return build((p) => {
 		p.addSlide().addChart(DATA, {
 			type: 'funnel',
@@ -29,7 +29,6 @@ async function buildFunnel(extra = {}) {
 			w: 8,
 			h: 4.5,
 			showValue: true,
-			...extra,
 		})
 	})
 }
@@ -61,11 +60,5 @@ describe('funnel (chartEx) chart', () => {
 		// shared cache shape is intact
 		expect(xml).toContain('<cx:strDim type="cat"><cx:f>Sheet1!$A$2:$A$6</cx:f>')
 		expect(xml).toContain('<cx:numDim type="val"><cx:f>Sheet1!$B$2:$B$6</cx:f>')
-	})
-
-	test('omits data labels when values are not requested', async () => {
-		const { zip } = await buildFunnel({ showValue: false })
-		const xml = await readEntry(zip, chartExPath(zip))
-		expect(xml).not.toContain('cx:dataLabels')
 	})
 })

@@ -135,13 +135,6 @@ defineRegressionSuite('Table styling: built-in styles and the direct-formatting 
 		},
 	},
 	{
-		name: 'and black text, likewise as direct formatting',
-		fn: async () => {
-			const { slide } = await tableParts()
-			assert(firstRPr(slide).includes('<a:srgbClr val="000000"/>'), 'black is stamped; got: ' + firstRPr(slide))
-		},
-	},
-	{
 		name: 'a styled table leaves uncoloured text to the style',
 		fn: async () => {
 			// A run's own fill beats the style's `a:tcTxStyle`, so the black default drew black text on

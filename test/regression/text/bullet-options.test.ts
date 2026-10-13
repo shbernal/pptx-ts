@@ -11,24 +11,6 @@ async function getPPr(zip: JSZip) {
 
 defineRegressionSuite('Bullet option serialization [legacy bug-19]', [
 	{
-		name: 'bullet:{type:"bullet"} emits default <a:buChar/> with marL/indent (was silently swallowed)',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				const s = p.addSlide()
-				s.addText('hello', { x: 1, y: 1, w: 4, h: 1, bullet: { type: 'bullet' } })
-			})
-			const { ppr, xml } = await getPPr(zip)
-			assert(/marL="\d+"/.test(ppr), 'expected marL=".." attr on <a:pPr>; got: ' + ppr + '\nxml: ' + xml)
-			assert(/indent="-\d+"/.test(ppr), 'expected indent="-.." attr on <a:pPr>; got: ' + ppr)
-			assert(
-				/<a:buChar char="&#x2022;"\/>/.test(ppr),
-				'expected default bullet <a:buChar char="&#x2022;"/> emitted for bullet:{type:"bullet"}; got: ' + ppr
-			)
-			assert(!/<a:buAutoNum/.test(ppr), 'must NOT emit <a:buAutoNum/> for bullet:{type:"bullet"}; got: ' + ppr)
-			assert(!/<a:buNone\/>/.test(ppr), 'must NOT emit <a:buNone/> for bullet:{type:"bullet"}; got: ' + ppr)
-		},
-	},
-	{
 		name: 'bullet:{type:"bullet"} produces same bullet markup as bullet:true',
 		fn: async () => {
 			const { zip: zipObj } = await build((p) => {

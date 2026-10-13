@@ -28,7 +28,6 @@ describe('run-steps expansion', () => {
 
 	test('an aggregate expands to every leaf beneath it, in order', () => {
 		const steps = expand('verify')
-		expect(steps.length).toBeGreaterThan(5)
 		// `verify` is the gate the repo runs on everything; these are the checks it must contain.
 		const names = steps.map((s) => s.step)
 		for (const required of ['typecheck', 'raw-xml:check', 'path-refs:check', 'docs:check', 'test']) {

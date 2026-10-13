@@ -71,7 +71,6 @@ describe('read-stress.pptx — combined read-model integration', () => {
 				assert(/\/ppt\/fonts\/.+\.fntdata$/.test(face.partName), `${tf} face should point at a .fntdata part`)
 			}
 		}
-		assert(p.embeddedFonts.length >= 3, 'at least three embedded typefaces')
 	})
 
 	test('blip recolor: grayscale and biLevel both resolve', async () => {

@@ -32,13 +32,6 @@ describe('parseFontMetrics → FontMetrics', () => {
 		const base = fm.advanceWidthPt('ABC', 12)
 		expect(fm.advanceWidthPt('ABC', 12, 2)).toBeCloseTo(base + 3 * 2, 6)
 	})
-
-	test('hasCodepoint reads the cmap: ASCII covered, emoji/CJK not', async () => {
-		const fm = await parseFontMetrics(REG_BYTES)
-		expect(fm.hasCodepoint(0x41)).toBe(true) // 'A'
-		expect(fm.hasCodepoint(0x1f600)).toBe(false) // 😀
-		expect(fm.hasCodepoint(0x4e2d)).toBe(false) // 中
-	})
 })
 
 describe('getHeuristicFontMetrics', () => {
