@@ -77,7 +77,7 @@ a local PowerPoint. The environment variable of the same name overrides it.
 
 After changing anything under `scripts/powerpoint/`, run `pnpm ppt:vm:sync`. Windows sees
 `shared/` as `\\host.lan\Data`. Each time `oem/start-worker.cmd` starts the worker, it mirrors
-`\\host.lan\Data\ts-pptx-worker` to `C:\ts-pptx-worker`. The restart is how the new files get
+`\\host.lan\Data\pptx-ts-worker` to `C:\pptx-ts-worker`. The restart is how the new files get
 loaded. Add `--no-restart` to stage the files without restarting.
 
 ### Connecting to the desktop

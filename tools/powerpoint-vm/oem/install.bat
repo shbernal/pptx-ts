@@ -19,7 +19,7 @@ set "PWSH_MSI=PowerShell-%PWSH_VERSION%-win-x64.msi"
 set "PWSH_URL=https://github.com/PowerShell/PowerShell/releases/download/v%PWSH_VERSION%/%PWSH_MSI%"
 set "PWSH_SHA256=958838ff55091e1c8705d89efed0cc7e8245a3a6ef6c0ccfae20015227108ad8"
 
-set "TASK=ts-pptx PowerPoint worker"
+set "TASK=pptx-ts PowerPoint worker"
 set "PORT=8765"
 
 echo === Node.js %NODE_VERSION%

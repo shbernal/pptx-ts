@@ -6,10 +6,10 @@ rem host's copy is the only one anyone edits. When the share is not up yet, the 
 rem runs. The worker restarts if it exits.
 
 setlocal EnableExtensions
-title ts-pptx PowerPoint worker
+title pptx-ts PowerPoint worker
 
-set "SRC=\\host.lan\Data\ts-pptx-worker"
-set "DEST=C:\ts-pptx-worker"
+set "SRC=\\host.lan\Data\pptx-ts-worker"
+set "DEST=C:\pptx-ts-worker"
 set "NODE=%ProgramFiles%\nodejs\node.exe"
 
 :start
