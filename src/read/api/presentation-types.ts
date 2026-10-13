@@ -426,6 +426,14 @@ export interface ExtractedSlide {
 	 * uses. {@link Presentation.appendSlides} adds the part and the rel.
 	 */
 	transitionSound?: { rId: number; bytes: Uint8Array; extn: string; contentType: string }
+	/**
+	 * The slide's legacy review comments, as `addComment` stored them (`x`/`y` in inches), or
+	 * `undefined` when it has none. Nothing in {@link xml} names them: they live in a comments part
+	 * of their own, under authors in the deck-wide `commentAuthors.xml`.
+	 * {@link Presentation.appendSlides} creates the part and merges the authors into the
+	 * destination's registry.
+	 */
+	comments?: Array<{ author: string; initials: string; text: string; x: number; y: number; date?: string }>
 }
 
 /** One slide's speaker notes, extracted for {@link Presentation.appendSlides}. */

@@ -27,7 +27,7 @@ export const commentsContributor: PartContributor = {
 			zip.add(COMMENT_AUTHORS_PATH, makeXmlCommentAuthors(resolved.authors))
 			pres.slides.forEach((slide, idx) => {
 				if ((slide._comments || []).length > 0) {
-					zip.add(commentPath(idx + 1), makeXmlComments(slide, resolved.meta))
+					zip.add(commentPath(idx + 1), makeXmlComments(slide._comments || [], resolved.meta))
 				}
 			})
 		},

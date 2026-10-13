@@ -94,15 +94,16 @@ export function makeXmlCommentAuthors(authors: ResolvedCommentAuthor[]): string 
 
 /**
  * Creates a per-slide comments part `ppt/comments/comment{N}.xml` (`<p:cmLst>`).
- * @param {PresSlideInternal} slide - the slide whose comments are serialized
- * @param {Map} meta - per-comment `authorId`/`idx` from {@link resolveCommentAuthors}
+ * @param {SlideComment[]} comments - the slide's comments, in order
+ * @param {Map} meta - per-comment `authorId`/`idx`, from {@link resolveCommentAuthors} on a write
+ * and from the destination's registry on an append
  * @return {string} XML
  */
 export function makeXmlComments(
-	slide: PresSlideInternal,
-	meta: Map<SlideComment, { authorId: number; idx: number }>
+	comments: readonly SlideComment[],
+	meta: ReadonlyMap<SlideComment, { authorId: number; idx: number }>
 ): string {
-	const cms = (slide._comments || [])
+	const cms = comments
 		.map((comment) => {
 			const m = meta.get(comment)
 			if (!m) return '' // defensive: comment must have been seen by resolveCommentAuthors

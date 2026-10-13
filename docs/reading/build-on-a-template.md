@@ -72,10 +72,11 @@ if (layout) await deck.appendSlides(pptx, { layout, at: 0 })
 | `onMediaError` | `'throw'` | `'placeholder'` puts a placeholder in place of an `addImage` source that cannot be read. `'throw'` throws `MediaError` `media/load-failed`. |
 
 - Each new slide's layout relationship points at the existing layout part. The call creates no master, layout or theme.
-- Text, tables, images, charts with their workbooks, chartEx charts with their style and colour parts, embedded and linked audio and video, and speaker notes come across.
+- Text, tables, images, charts with their workbooks, chartEx charts with their style and colour parts, embedded and linked audio and video, speaker notes and review comments come across.
 - A hyperlink to another slide of the same `PptxTs` points at the matching new slide. A link to a slide the call does not add throws `import/unresolved-slide-link`, before the deck changes.
 - Fonts embedded with `pptx.embedFont` merge into the deck. [Carry fonts when importing slides](../embedded-fonts.md#carry-fonts-when-importing-slides) has the merge rules.
 - Speaker notes bind to the deck's notes master. The generator's notes master is added only when the deck has none, as [One notes master per deck](read-and-edit.md#one-notes-master-per-deck) sets out.
+- Review comment authors merge into the deck's author list by name and initials. An author the deck already has keeps its number and continues its comment numbering.
 
 The layout decides which theme and colour map a slide resolves against, and which layout PowerPoint shows the slide as based on. It does not place content. Generated slides keep the positions you gave them and take no geometry from the layout's placeholders. A scheme colour on a generated slide resolves against the template's theme.
 
