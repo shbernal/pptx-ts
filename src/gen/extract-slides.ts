@@ -255,7 +255,7 @@ export async function extractSlides(
 				onlineMedia: onlineMediaOf(slide, relByRid),
 				...(notes ? { notes } : {}),
 				...(transitionSound ? { transitionSound } : {}),
-				...(slide._comments?.length ? { comments: slide._comments } : {}),
+				...(slide._comments.length ? { comments: slide._comments } : {}),
 			}
 		})
 	} finally {
