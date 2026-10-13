@@ -151,6 +151,7 @@
 		"path-refs:check": "node scripts/path-refs.mjs",
 		"path-refs:list": "node scripts/path-refs.mjs --list",
 		"media:playbtn": "node scripts/gen-playbtn.mjs",
+		"table-styles:gen": "node scripts/gen-builtin-table-styles.mjs",
 		"byte-identity:baseline": "node scripts/byte-identity.mjs baseline",
 		"byte-identity:check": "node scripts/byte-identity.mjs check",
 		"prepack": "pnpm run build",

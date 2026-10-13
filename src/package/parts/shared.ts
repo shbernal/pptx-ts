@@ -63,6 +63,11 @@ export interface ContributedParts {
 	 * awaits, so a family with async part work does not serialize the write.
 	 */
 	readonly fromTargetRels?: (target: PartTarget, zip: ZipWriter) => Promise<unknown>[] | void
+	/**
+	 * `a:tblStyle` elements for `ppt/tableStyles.xml`. The core writes that part, because every
+	 * deck has one; a family only says what goes in it.
+	 */
+	readonly tableStyles?: (pres: PresentationPropsInternal) => string[]
 }
 
 /**

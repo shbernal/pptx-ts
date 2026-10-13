@@ -78,8 +78,8 @@ defineRegressionSuite('Table styling: built-in styles and the direct-formatting 
 	{
 		name: 'a built-in TableStyle emits its GUID as the table-s tableStyleId',
 		fn: async () => {
-			// The one mechanism PowerPoint honours. The GUID is all that goes on the wire -- the
-			// definition lives in PowerPoint's gallery, not in the deck.
+			// The one mechanism PowerPoint honours. PowerPoint paints from the GUID alone, out of its
+			// own gallery; the definition `tableStyles.xml` also carries is there for other readers.
 			const { slide } = await tableParts({ tableStyle: TableStyle.MEDIUM_STYLE_2_ACCENT_1 })
 			assert(
 				slide.includes(`<a:tableStyleId>${TableStyle.MEDIUM_STYLE_2_ACCENT_1}</a:tableStyleId>`),
@@ -104,15 +104,23 @@ defineRegressionSuite('Table styling: built-in styles and the direct-formatting 
 		},
 	},
 	{
-		name: 'tableStyles.xml is always the bare default-id stub, whatever the deck builds',
+		name: 'tableStyles.xml defines the built-in styles the tables use, and nothing for an unstyled table',
 		fn: async () => {
-			// The part ships because PowerPoint expects the relationship and the content-type
-			// override, but it defines nothing: a definition here is markup PowerPoint never reads.
-			// If a future change starts writing `<a:tblStyle>` again, this is what says so.
-			const { styles } = await tableParts({ tableStyle: TableStyle.MEDIUM_STYLE_2_ACCENT_1 })
-			assert(!styles.includes('<a:tblStyle '), 'no style definition is emitted; got: ' + styles)
-			assert(styles.includes('<a:tblStyleLst'), 'the list element is still there; got: ' + styles)
-			assert(styles.includes(`def="${TableStyle.MEDIUM_STYLE_2_ACCENT_1}"`), 'and names a default; got: ' + styles)
+			// PowerPoint reads none of these definitions, but writes one for every style a deck uses,
+			// and a reader that renders from the file has nowhere else to find it (#241). A table with
+			// no `tableStyle` uses no style, so its deck carries the bare list, as PowerPoint's does.
+			const styled = (await tableParts({ tableStyle: TableStyle.MEDIUM_STYLE_2_ACCENT_1 })).styles
+			assert(
+				styled.includes(
+					`<a:tblStyle styleId="${TableStyle.MEDIUM_STYLE_2_ACCENT_1}" styleName="Medium Style 2 - Accent 1">`
+				),
+				'the referenced built-in style is defined; got: ' + styled
+			)
+			assertEqual(styled.match(/<a:tblStyle /g)?.length, 1, 'only the referenced style is defined')
+			assert(styled.includes(`def="${TableStyle.MEDIUM_STYLE_2_ACCENT_1}"`), 'and names a default; got: ' + styled)
+			const plain = (await tableParts()).styles
+			assert(!plain.includes('<a:tblStyle '), 'an unstyled table defines nothing; got: ' + plain)
+			assert(plain.includes('<a:tblStyleLst'), 'the list element is still there; got: ' + plain)
 		},
 	},
 	{
