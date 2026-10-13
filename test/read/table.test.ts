@@ -44,7 +44,6 @@ function formattedTable(presentation: Presentation) {
 describe('Table read model', () => {
 	test('reads rows, columns, cells, and grid geometry', async () => {
 		const table = firstTable(await openFixture('table'))
-		assert(table, 'table fixture has a table')
 		// The first table in the fixture is 3 rows × 4 columns of "cell".
 		assertEqual(table.rowCount, 3, 'row count')
 		assertEqual(table.columnCount, 4, 'column count')
@@ -60,7 +59,6 @@ describe('Table read model', () => {
 	test('reads cell text and merge metadata', async () => {
 		const table = firstTable(await openFixture('table'))
 		const cell = defined(table.cell(0, 0))
-		assert(cell, 'cell (0,0) exists')
 		assertEqual(cell.text, 'cell', 'cell text')
 		assertEqual(cell.gridSpan, 1, 'default gridSpan is 1')
 		assertEqual(cell.rowSpan, 1, 'default rowSpan is 1')
@@ -245,7 +243,6 @@ describe('Table cell styling (populated a:tcPr paths)', () => {
 	//   (0,0) <a:tcPr vert="vert270"/>                              -> verticalText
 	//   (0,1) <a:tcPr anchor="b"/>                                  -> anchor
 	//   (1,0) <a:tcPr marL/marR/marT/marB=228600/342900/114300/457200/> -> marginsEmu
-	//   (1,1) <a:tcPr/>                                             -> bare
 	// The isolation lets each test assert the populated value AND that the other
 	// two accessors stay null on the same cell.
 	test('verticalText reports the a:tcPr @vert token (and leaves anchor/margins null)', async () => {

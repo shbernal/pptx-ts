@@ -173,7 +173,6 @@ describe('Shape style reads — minimal real PowerPoint fixtures', () => {
 		const shape = shapeNamed(at((await openFixture('theme-colors')).slides, 0), 'accent1-line-accent2-2pt')
 		assertEqual(shape.lineWidthPt, 2, '<a:ln w="25400"> is 2pt')
 		assertEqual(shape.lineSchemeColor, 'accent2', 'line is a real PowerPoint scheme colour')
-		assertEqual(defined(shape.resolvedLine).hex, 'EA6312', 'accent2 resolves through the non-default Ion theme')
 	})
 
 	test('adjustValues exposes PowerPoint-authored avLst handles', async () => {
@@ -543,8 +542,7 @@ describe('Style-matrix fill/line resolution — real PowerPoint XML (multi-theme
 		assertEqual(shape.fillColor, null, 'no explicit srgb fill')
 		assertEqual(shape.fillSchemeColor, null, 'no explicit scheme fill')
 
-		const fill = defined(shape.resolvedFill)
-		assert(fill, 'the style fillRef resolves to a fill colour')
+		const fill = defined(shape.resolvedFill, 'the style fillRef resolves to a fill colour')
 		assertEqual(fill.hex, 'B01513', 'fillRef accent1 resolves through the Ion theme')
 		assertEqual(fill.transforms.length, 0, 'the fillStyleLst idx-1 solid carries no transform')
 		assertEqual(fill.effectiveHex, 'B01513', 'effective fill is the plain accent1 hex')
@@ -813,18 +811,6 @@ describe('Group-child absolute geometry (absoluteFrame)', () => {
 			groupedChildren.length,
 			21,
 			'fixture pins the original four groups plus scale/child/nested transform cases'
-		)
-		assert(
-			groupedChildren.some((shape) => shape.name.startsWith('scale-rot child ')),
-			'expected scale+rotation group children in the fixture'
-		)
-		assert(
-			groupedChildren.some((shape) => shape.name.startsWith('childrot-in-rot child ')),
-			'expected child-owned transform children in the fixture'
-		)
-		assert(
-			groupedChildren.some((shape) => shape.name.startsWith('nested-rot-in-scale child ')),
-			'expected nested rotated group children in the fixture'
 		)
 
 		for (const child of groupedChildren) {

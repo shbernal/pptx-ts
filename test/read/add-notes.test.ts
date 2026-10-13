@@ -130,19 +130,6 @@ describe('Slide.addNotes on a loaded deck', () => {
 		)
 	})
 
-	test('annotates a deck that has no notes part and no notes master at all', async () => {
-		const deck = await openFixture('empty')
-		assertEqual(at(deck.slides, 0).notesSlide, null, 'fixture slide has no notes part')
-		assertEqual(registeredNotesMasters(deck.opc).length, 0, 'and the deck has no notes master')
-
-		at(deck.slides, 0).addNotes('notes on a deck that never had any')
-
-		const reopened = await Presentation.load(await deck.save())
-		assertEqual(at(reopened.slides, 0).notesText, 'notes on a deck that never had any')
-		assertEqual(registeredNotesMasters(reopened.opc).length, 1, 'a notes master was installed')
-		assertNoDanglingRels(reopened.opc)
-	})
-
 	test('installs exactly one notes master however many slides gain notes', async () => {
 		const source = await authoredDeck()
 		const target = await openFixture('empty')

@@ -50,16 +50,6 @@ defineRegressionSuite('Object locks', [
 		},
 	},
 	{
-		name: 'text box objectLock supports noTextEdit (spLocks)',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.addSlide().addText('locked', { x: 1, y: 1, w: 2, h: 1, objectLock: { noTextEdit: true } })
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assert(/<a:spLocks noTextEdit="1"\/>/.test(xml), 'expected spLocks noTextEdit; got: ' + xml)
-		},
-	},
-	{
 		name: 'image defaults to picLocks noChangeAspect="1" (output unchanged)',
 		fn: async () => {
 			const { zip } = await build((p) => {

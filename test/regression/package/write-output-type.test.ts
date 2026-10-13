@@ -1,7 +1,7 @@
 // `write()` resolves to the type its `outputType` names, so a caller asking for bytes gets
 // `Uint8Array` and not the union of every output shape. The `expectTypeOf` lines are checked by
-// `typecheck:test`. What the zip layer returns at run time for each explicit `outputType` is
-// pinned in zip-output-types.test.ts.
+// `typecheck:test`. That `WriteOutputMap` states what the zip layer actually returns for each
+// explicit `outputType` is pinned at run time by zip-output-types.test.ts; the default is pinned here.
 import { describe, expect, expectTypeOf, test } from 'vitest'
 import PptxTs, { type WRITE_OUTPUT_TYPE } from '../../../dist/node.js'
 

@@ -20,7 +20,7 @@ const DATA = [
 	},
 ]
 
-async function buildFunnel(extra = {}) {
+async function buildFunnel() {
 	return build((p) => {
 		p.addSlide().addChart(DATA, {
 			type: 'funnel',
@@ -29,7 +29,6 @@ async function buildFunnel(extra = {}) {
 			w: 8,
 			h: 4.5,
 			showValue: true,
-			...extra,
 		})
 	})
 }

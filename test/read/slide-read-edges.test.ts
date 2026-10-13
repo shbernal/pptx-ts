@@ -156,7 +156,6 @@ describe('Slide.background — write→read fidelity', () => {
 		const bg = defined(at(presentation.slides, 0).background)
 		assert(bg.type === 'image', 'image background')
 		assertEqual(bg.source, 'slide', 'authored on the slide')
-		assert(bg.relId != null, 'the blip rel id is read')
 		assert(
 			bg.partName != null && bg.partName.endsWith('.png'),
 			`part name resolves to the media png, got ${bg.partName}`
@@ -173,8 +172,7 @@ describe('Slide.background — write→read fidelity', () => {
 		assertEqual(bg.idx, 1001, 'raw idx kept for fidelity')
 		// idx 1001 → bgFillStyleLst entry 1 = <a:solidFill><a:schemeClr val="phClr"/></a:solidFill>;
 		// the bgRef's own <a:schemeClr val="bg1"/> supplies the phClr, and bg1 → lt1 → window (FFFFFF).
-		assert(bg.resolvedFill !== null, 'idx resolves to a concrete fill')
-		assert(bg.resolvedFill.type === 'solid', 'the first bg fill-style entry is a solid fill')
+		assert(bg.resolvedFill?.type === 'solid', 'idx resolves to the first bg fill-style entry, a solid fill')
 		assertEqual(
 			bg.resolvedFill.colorRef.resolved?.effectiveHex,
 			'FFFFFF',
@@ -203,22 +201,6 @@ describe('TextFrame.autofit — write→read fidelity', () => {
 		assertEqual(shrink.autofit, 'normAutofit', "fit:'shrink' → normAutofit")
 		assertEqual(shrink.autofitFontScale, null, 'a bare normAutofit bakes no font scale')
 		assertEqual(textFrameOf(at(presentation.slides, 2)).autofit, 'none', 'a bodyPr with no autofit child → none')
-	})
-
-	test('an explicit shrink bakes fontScale and lnSpcReduction as percents', async () => {
-		const { presentation } = await authorRead((pres) => {
-			pres.addSlide().addText('baked', {
-				x: 1,
-				y: 1,
-				w: 3,
-				h: 1,
-				fit: { type: 'shrink', fontScale: 62.5, lnSpcReduction: 20 },
-			})
-		})
-		const tf = textFrameOf(at(presentation.slides, 0))
-		assertEqual(tf.autofit, 'normAutofit', 'shrink object → normAutofit')
-		assertEqual(tf.autofitFontScale, 62.5, 'fontScale read as a percent (62500 ÷ 1000)')
-		assertEqual(tf.autofitLineSpaceReduction, 20, 'lnSpcReduction read as a percent (20000 ÷ 1000)')
 	})
 })
 

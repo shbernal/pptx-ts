@@ -44,7 +44,6 @@ defineRegressionSuite('Diagnostics handler', [
 			assertEqual(seen.length, 0, 'an installed handler must suppress the console fallback entirely')
 
 			const diagnostic = defined(captured.diagnostics.find((d) => d.code === 'text/invalid-columns'))
-			assert(diagnostic.message.length > 0, 'the message is non-empty')
 			// The prefix belongs to the default console handler, not to the message. A message that
 			// carried its own would double up the moment the default handler printed it.
 			assert(

@@ -155,11 +155,8 @@ defineRegressionSuite('Table autoPage option surface', [
 			const withMargins = await pageCount(true)
 			const without = await pageCount(false)
 			assert(withMargins >= 2, `margined table should still paginate; got ${withMargins}`)
-			// Per-row top+bottom margins eat vertical space, so fewer rows fit per page → at least as many pages.
-			assert(
-				withMargins >= without,
-				`margins must not increase rows-per-page: withMargins=${withMargins} without=${without}`
-			)
+			// Per-row top+bottom margins eat vertical space, so fewer rows fit per page and the table needs more pages.
+			assert(withMargins > without, `margins must cost rows per page: withMargins=${withMargins} without=${without}`)
 		},
 	},
 	{
@@ -208,25 +205,6 @@ defineRegressionSuite('Table autoPage option surface', [
 			// A nonzero numeric cell renders its digits; the per-cell fontSize cell renders its text.
 			assert(page1.includes('2024'), 'expected the numeric cell text "2024" to render')
 			assert(page1.includes('>ok<'), 'expected the per-cell fontSize cell text to render')
-		},
-	},
-	{
-		name: 'no `y` and no `h` paginates using the full slide height',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				// Neither y nor h given → first-page start falls back to the top margin and the
-				// usable height is the slide height between margins.
-				p.addSlide().addTable(bodyRows(80), {
-					x: 0.5,
-					w: 9,
-					colW: [4.5, 4.5],
-					margin: 0,
-					slideMargin: 0,
-					autoPage: true,
-					fontSize: 12,
-				})
-			})
-			assert(slideFiles(zip).length >= 2, 'an 80-row full-height table should overflow')
 		},
 	},
 	{

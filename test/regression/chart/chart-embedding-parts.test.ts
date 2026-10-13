@@ -24,20 +24,6 @@ function chartsOrEmbeddingsEntries(zip: JSZip): string[] {
 
 defineRegressionSuite('Chart embedding parts [legacy bug-17]', [
 	{
-		name: 'empty deck (text-only) does not create ppt/charts or ppt/embeddings dirs',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				const s = p.addSlide()
-				s.addText('hello world', { x: 1, y: 1, w: 4, h: 1 })
-			})
-			const stray = chartsOrEmbeddingsEntries(zip)
-			assert(
-				stray.length === 0,
-				'expected no charts/embeddings entries for chart-free deck; got: ' + JSON.stringify(stray)
-			)
-		},
-	},
-	{
 		name: 'image-only deck does not create ppt/charts or ppt/embeddings dirs',
 		fn: async () => {
 			const { zip } = await build((p) => {

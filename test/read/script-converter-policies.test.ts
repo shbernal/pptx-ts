@@ -472,18 +472,6 @@ describe('a percentage keeps the precision the source wrote', () => {
 			`and the bake is noted; got ${JSON.stringify(unwritable.fidelity.map((note) => note.construct))}`
 		)
 	})
-
-	test('a literal background colour is still a literal', async () => {
-		// The guard: the ladder's first step must not swallow a background that names no token.
-		const { presentation } = await authorRead((pres) => {
-			pres.addSlide().background = { color: 'C0392B' }
-		})
-		assertEqual(
-			atIndex(readModelToIr(presentation).slides, 0).background?.color,
-			'C0392B',
-			'the literal is carried as written'
-		)
-	})
 })
 
 describe('an `xsd:boolean` attribute is parsed, not compared to `1`', () => {

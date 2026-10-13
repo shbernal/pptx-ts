@@ -5,6 +5,10 @@
 // reaches the package, and that dropping an unused family changes nothing, are pinned through the
 // family list that builds this one, in test/regression/api/construct-families.test.ts.
 //
+// The order case and the unused-family case are pinned one level up, through the family list that
+// supplies these contributors (test/regression/api/construct-families.test.ts). What only this
+// seam can show is the last one: exactly the dropped family's parts go.
+//
 // These import from `src/` rather than `dist/` because the seam is internal: `PackageSource` and
 // the contributor list are not on the public surface.
 import { afterAll, beforeAll, describe, test, vi } from 'vitest'
@@ -47,9 +51,12 @@ function sourceWith(pres: PptxTs, partContributors: PackageSource['partContribut
 	}
 }
 
-// Freeze the clock for the whole file: `docProps/core.xml` carries `new Date()` dcterms stamps,
-// and the two builds compared below must not straddle a one-second tick. Same fix as
-// test/regression/api/construct-families.test.ts.
+// Freeze the clock for the whole file. Two parts read it, and only one is text: `docProps/core.xml`
+// carries `new Date()` dcterms stamps, and so does the `docProps/core.xml` *inside* the
+// `ppt/embeddings/Microsoft_Excel_WorksheetN.xlsx` the chart contributor writes. A regex could only
+// ever blank the first (the embedded workbook is a deflated zip by the time this sees it), which
+// left byte comparisons failing whenever two builds straddled a one-second tick. Same fix, same
+// reasoning, as test/regression/api/construct-families.test.ts.
 beforeAll(() => {
 	vi.useFakeTimers({ toFake: ['Date'] })
 	vi.setSystemTime(new Date('2026-01-01T00:00:00Z'))

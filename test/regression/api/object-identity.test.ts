@@ -18,64 +18,6 @@ const PNG_1X1 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9
 
 defineRegressionSuite('Object identity [legacy bug-21]', [
 	{
-		name: 'explicit objectName values are emitted as cNvPr names for slide objects',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				const slide = p.addSlide()
-				slide.addText('Named text', { x: 0.4, y: 0.3, w: 2, h: 0.4, objectName: 'identity:text' })
-				slide.addShape(ShapeType.rect, { x: 0.4, y: 0.9, w: 1, h: 0.4, objectName: 'identity:shape' })
-				slide.addImage({
-					data: `image/png;base64,${PNG_1X1}`,
-					x: 1.7,
-					y: 0.9,
-					w: 0.4,
-					h: 0.4,
-					objectName: 'identity:image',
-					altText: 'Identity image',
-				})
-				slide.addChart([{ name: 'Series 1', labels: ['A', 'B'], values: [1, 2] }], {
-					type: ChartType.bar,
-					x: 2.4,
-					y: 0.4,
-					w: 2,
-					h: 1.2,
-					objectName: 'identity:chart',
-					altText: 'Identity chart',
-				})
-				slide.addTable([[{ text: 'A1' }, { text: 'B1' }]], {
-					x: 4.8,
-					y: 0.4,
-					w: 2,
-					h: 0.6,
-					objectName: 'identity:table',
-				})
-				slide.addMedia({
-					type: 'video',
-					data: 'video/mp4;base64,AAAA',
-					x: 7.2,
-					y: 0.4,
-					w: 1,
-					h: 0.8,
-					objectName: 'identity:media',
-				})
-			})
-
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			for (const name of [
-				'identity:text',
-				'identity:shape',
-				'identity:image',
-				'identity:chart',
-				'identity:table',
-				'identity:media',
-			]) {
-				assertNonVisualDrawingProperty(xml, { name }, name)
-			}
-			assertNonVisualDrawingProperty(xml, { name: 'identity:image', descr: 'Identity image' }, 'image altText')
-			assertNonVisualDrawingProperty(xml, { name: 'identity:chart', descr: 'Identity chart' }, 'chart altText')
-		},
-	},
-	{
 		// fork-table-cnvpr-id-collision: a table's cNvPr id must come from the same
 		// per-slide `idx + 2` space as every other shape. The legacy table formula
 		// (`tableCounter * slideNumber + 1`) could equal another shape's `idx + 2` on the
@@ -166,7 +108,7 @@ defineRegressionSuite('Object identity [legacy bug-21]', [
 		},
 	},
 	{
-		name: 'altText is emitted as cNvPr descr for text, shapes, tables, and media',
+		name: 'objectName and altText are emitted as cNvPr name and descr for every slide object kind',
 		fn: async () => {
 			const { zip } = await build((p) => {
 				const slide = p.addSlide()
@@ -178,6 +120,24 @@ defineRegressionSuite('Object identity [legacy bug-21]', [
 					h: 0.4,
 					objectName: 'alt:shape',
 					altText: 'Shape alt',
+				})
+				slide.addImage({
+					data: `image/png;base64,${PNG_1X1}`,
+					x: 1.7,
+					y: 0.9,
+					w: 0.4,
+					h: 0.4,
+					objectName: 'alt:image',
+					altText: 'Image alt',
+				})
+				slide.addChart([{ name: 'Series 1', labels: ['A', 'B'], values: [1, 2] }], {
+					type: ChartType.bar,
+					x: 2.4,
+					y: 0.4,
+					w: 2,
+					h: 1.2,
+					objectName: 'alt:chart',
+					altText: 'Chart alt',
 				})
 				slide.addTable([[{ text: 'A1' }]], {
 					x: 4.8,
@@ -202,6 +162,8 @@ defineRegressionSuite('Object identity [legacy bug-21]', [
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 			assertNonVisualDrawingProperty(xml, { name: 'alt:text', descr: 'Text alt' }, 'text altText')
 			assertNonVisualDrawingProperty(xml, { name: 'alt:shape', descr: 'Shape alt' }, 'shape altText')
+			assertNonVisualDrawingProperty(xml, { name: 'alt:image', descr: 'Image alt' }, 'image altText')
+			assertNonVisualDrawingProperty(xml, { name: 'alt:chart', descr: 'Chart alt' }, 'chart altText')
 			assertNonVisualDrawingProperty(xml, { name: 'alt:table', descr: 'Table alt' }, 'table altText')
 			assertNonVisualDrawingProperty(xml, { name: 'alt:media', descr: 'Media alt' }, 'media altText')
 		},

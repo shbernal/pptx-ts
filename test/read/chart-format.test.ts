@@ -80,15 +80,10 @@ describe('Chart axes — c:catAx / c:valAx', () => {
 		assert(valAxis.position, `value axis has a position (${valAxis.position})`)
 	})
 
-	test('the value axis exposes its id and leaves unset scale accessors empty', async () => {
+	test('the value axis reads no log base, minor gridlines or minor unit when none is authored', async () => {
 		const chart = defined(firstChart((await authorRead(formattedBar)).presentation))
 		const valAxis = chart.valueAxis
 		assert(valAxis, 'chart exposes a value axis')
-
-		// `c:axId` is always emitted, so the id resolves to a concrete number.
-		assertEqual(typeof valAxis.id, 'number', 'value axis carries a numeric c:axId')
-		// Deterministic-null accessors for this deck: a linear, auto-unit axis with
-		// no minor gridlines authored.
 		assertEqual(valAxis.logBase, null, 'linear scale → no logBase')
 		assertEqual(valAxis.minorGridlines, false, 'no minor gridlines authored')
 		assertEqual(valAxis.minorUnit, null, 'auto minor unit → null')

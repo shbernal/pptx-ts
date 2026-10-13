@@ -8,7 +8,7 @@
 import { readFile } from 'node:fs/promises'
 import { describe, test } from 'vitest'
 import { Presentation, type Slide } from '../../dist/read.js'
-import { throws, assert, assertEqual, partBodies, assertUnchangedExcept, defined, at } from '../helpers.ts'
+import { caughtSync, assert, assertEqual, partBodies, assertUnchangedExcept, defined, at } from '../helpers.ts'
 import { validateBuf, validatorInstalled } from '../validator.ts'
 import { fixturePath, openFixture } from './corpus.ts'
 
@@ -96,8 +96,9 @@ describe('Presentation.cloneSlide', () => {
 
 	test('rejects an out-of-range index', async () => {
 		const presentation = await openFixture('textbox')
-		assert(
-			throws(() => presentation.cloneSlide(99)),
+		assertEqual(
+			caughtSync(() => presentation.cloneSlide(99))?.code ?? null,
+			'slide/index-out-of-range',
 			'cloning a missing slide throws'
 		)
 	})

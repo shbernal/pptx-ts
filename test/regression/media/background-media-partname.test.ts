@@ -73,56 +73,27 @@ const HOSTILE_TITLES: [label: string, title: string][] = [
 	['non-ASCII', '設計マスター'],
 ]
 
-defineRegressionSuite(
-	'background media part name is derived safely from a caller-supplied master title',
-	HOSTILE_TITLES.map(([label, title]) => ({
-		name: `${label}: rel target resolves to a real package part`,
-		fn: async () => {
-			const { entries, relsPartName, target } = await buildWithMasterTitle(title)
-			const resolved = resolveTarget(relsPartName, target)
-			assert(
-				entries.includes(resolved),
-				`rel Target ${JSON.stringify(target)} resolved to ${JSON.stringify(resolved)}, ` +
-					`which is not in the package. media entries: ${entries.filter((e) => e.includes('media/')).join(', ')}`
-			)
-		},
-	}))
-)
-
-defineRegressionSuite('background media part name character set', [
+defineRegressionSuite('background media part name', [
 	{
-		name: 'part name is restricted to URI-unreserved characters',
+		// The title used to be sanitized into the name, so "My Master Slide" read
+		// `My-Master-Slide-image-1.png`, and "A B" and "A-B" both read `A-B-image-1.png`: one part
+		// for two layouts. Naming it the way every other media part is named leaves nothing of the
+		// title to collide on, and nothing hostile to reach the part name: the pattern below admits
+		// only the layout's number.
+		name: 'is keyed by the layout, carries none of its title, and its rel target resolves',
 		fn: async () => {
-			for (const [, title] of HOSTILE_TITLES) {
-				const { entries } = await buildWithMasterTitle(title)
+			for (const [label, title] of HOSTILE_TITLES) {
+				const { entries, relsPartName, target } = await buildWithMasterTitle(title)
 				const media = entries.filter((name) => name.includes('media/'))
-				assertEqual(media.length, 1, `expected exactly one media part for title ${JSON.stringify(title)}`)
-				const leaf = at(media, 0).slice('ppt/media/'.length)
+				assertEqual(media.length, 1, `${label}: expected exactly one media part`)
+				const part = at(media, 0)
+				assert(/^ppt\/media\/image-sl-\d+-1\.png$/.test(part), `${label}: layout-keyed part name; got ${part}`)
+				const resolved = resolveTarget(relsPartName, target)
 				assert(
-					/^[A-Za-z0-9._-]+$/.test(leaf),
-					`media part name ${JSON.stringify(leaf)} (from title ${JSON.stringify(title)}) ` +
-						'contains characters outside [A-Za-z0-9._-]'
+					entries.includes(resolved),
+					`${label}: rel Target ${JSON.stringify(target)} resolved to ${JSON.stringify(resolved)}, ` +
+						`which is not in the package. media entries: ${media.join(', ')}`
 				)
-			}
-		},
-	},
-	{
-		name: 'the part name is keyed by the layout and carries none of its title',
-		fn: async () => {
-			// The title used to be sanitized into the name, so "My Master Slide" read
-			// `My-Master-Slide-image-1.png`, and "A B" and "A-B" both read `A-B-image-1.png`: one part
-			// for two layouts. Naming it the way every other media part is named leaves nothing of the
-			// title to collide on.
-			for (const title of ['My Master Slide', '   ', 'what?now']) {
-				const { entries } = await buildWithMasterTitle(title)
-				const media = entries.find((name) => name.includes('media/'))
-				assert(/^ppt\/media\/image-sl-\d+-1\.png$/.test(media ?? ''), `layout-keyed part name; got ${media}`)
-				for (const word of title.split(/[^A-Za-z0-9]+/).filter(Boolean)) {
-					assert(
-						!(media ?? '').includes(word),
-						`the part name ${media} carries none of the title ${JSON.stringify(title)}`
-					)
-				}
 			}
 		},
 	},

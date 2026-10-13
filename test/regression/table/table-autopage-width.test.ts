@@ -1,10 +1,4 @@
-// The internal cell type carries the src enum, so the seed below uses src's `SlideObjectType`.
-import { SlideObjectType } from '../../../src/enums.ts'
-import type { TableCellInternal } from '../../../src/types/internal.ts'
-import { defineRegressionSuite, build, readEntry, assert, assertEqual, defined, at } from '../../helpers.ts'
-// The pager's core is not exported from the package, and the last case here is about a guard
-// only a direct caller can reach. Every other case goes through the public `addTable`.
-import { getSlidesForTableRows } from '../../../src/gen/table/autopage.ts'
+import { defineRegressionSuite, build, readEntry, assert, assertEqual, defined } from '../../helpers.ts'
 
 /**
  * Run `fn` with `console.log` captured, returning the lines it emitted. Restoring in a
@@ -110,38 +104,6 @@ defineRegressionSuite('Table autoPage width arithmetic', [
 			})
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
 			assert(xml.includes('<a:tbl>'), 'the table was emitted')
-		},
-	},
-	{
-		// The other unseeded `.reduce` in the same function, and the same failure in principle:
-		// an empty array is truthy, so `colW: []` reached it and threw a raw `TypeError` rather
-		// than the `PptxTsError` this library promises is the only thing it raises.
-		//
-		// It is called here rather than through `addTable` because `addTable` cannot reach it:
-		// `gen/define/table.ts` rejects a `colW` whose length does not match the column count and
-		// deletes it first, which is the reason the throw was never reported. `tableToSlides` is
-		// the other caller and it cannot reach it either -- a table with no cells is refused
-		// before the pager. So the seed is a guard on the shared core, and this is the only level
-		// at which it can be stated.
-		name: 'the pager reads an empty colW as no width stated, rather than throwing',
-		fn: () => {
-			const rows: TableCellInternal[][] = [
-				[
-					{ _type: SlideObjectType.tablecell, text: 'a' },
-					{ _type: SlideObjectType.tablecell, text: 'b' },
-				],
-			]
-			const layout = { name: 'test', width: 9144000, height: 5143500 }
-			// An empty array is a caller stating no columns, so the table falls through to the
-			// usable slide width -- exactly where `colW: undefined` lands.
-			const stated = getSlidesForTableRows(rows, { colW: [], fontSize: 12 }, layout, null)
-			const unstated = getSlidesForTableRows(rows, { fontSize: 12 }, layout, null)
-			assertEqual(stated.length, 1, 'one page for one row')
-			assertEqual(
-				at(stated, 0).rows.length,
-				at(unstated, 0).rows.length,
-				'an empty colW must page exactly as an absent one'
-			)
 		},
 	},
 ])

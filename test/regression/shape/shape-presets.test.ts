@@ -12,21 +12,20 @@ import {
 
 defineRegressionSuite('Shape preset mapping [legacy bug-10]', [
 	{
-		name: 'addShape aliases ("oval", "roundedRectangle", "rectangle") emit their valid prst',
+		name: 'addShape aliases "oval", "roundedRectangle" and "rectangle" emit their valid prst spellings',
 		fn: async () => {
-			for (const [alias, prst] of [
-				['oval', 'ellipse'],
-				['roundedRectangle', 'roundRect'],
-				['rectangle', 'rect'],
-			]) {
-				const { zip } = await build((p) => {
-					// @ts-expect-error accepted leniency, not API: SHAPE_NAME omits the aliases addShape resolves
-					p.addSlide().addShape(alias, { x: 1, y: 1, w: 2, h: 1 })
-				})
-				const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-				assert(new RegExp(`<a:prstGeom\\s+prst="${prst}"`).test(xml), `${alias}: expected prst="${prst}"; got: ${xml}`)
-				assert(!xml.includes(`prst="${alias}"`), `${alias}: invalid prst="${alias}" still present`)
-			}
+			const { zip } = await build((p) => {
+				const s = p.addSlide()
+				// @ts-expect-error accepted leniency, not API: SHAPE_NAME omits the aliases addShape resolves
+				s.addShape('oval', { x: 1, y: 1, w: 0.4, h: 0.4, fill: { color: '00B0B9' } })
+				// @ts-expect-error accepted leniency, not API: SHAPE_NAME omits the aliases addShape resolves
+				s.addShape('roundedRectangle', { x: 1, y: 2, w: 2, h: 1 })
+				// @ts-expect-error accepted leniency, not API: SHAPE_NAME omits the aliases addShape resolves
+				s.addShape('rectangle', { x: 1, y: 3, w: 2, h: 1 })
+			})
+			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
+			const prsts = [...xml.matchAll(/<a:prstGeom\s+prst="([^"]+)"/g)].map((m) => m[1])
+			assertEqual(prsts.join(','), 'ellipse,roundRect,rect', 'alias resolution')
 		},
 	},
 	{

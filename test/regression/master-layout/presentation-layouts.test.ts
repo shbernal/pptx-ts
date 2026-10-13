@@ -76,7 +76,7 @@ defineRegressionSuite('Presentation layouts [legacy bug-22]', [
 		},
 	},
 	{
-		name: 'standard layout presets expose inch accessors (.widthIn/.heightIn)',
+		name: 'LAYOUT_16x9 exposes its inch size (.widthIn/.heightIn)',
 		fn: () => {
 			const std = STANDARD_LAYOUTS.LAYOUT_16x9
 			assertEqual(std.widthIn, 10, 'LAYOUT_16x9 .widthIn is 10in')

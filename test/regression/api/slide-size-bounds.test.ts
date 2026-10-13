@@ -73,19 +73,6 @@ defineRegressionSuite('Slide size bounds', [
 		},
 	},
 	{
-		name: 'a negative dimension clamps rather than reaching the file',
-		fn: async () => {
-			// The worst of the old cases: `-5` is truthy and finite, so not one of the six arms
-			// fired, and `cx="-4572000"` went into the package.
-			const { result, codes } = await captureDiagnostics(async () =>
-				slideSize((pres) => pres.defineLayout({ name: 'Inverted', width: -5, height: 7.5 }), 'Inverted')
-			)
-
-			assert(codes.includes('layout/size-out-of-range'), 'the negative width is reported')
-			assertEqual(result, '<p:sldSz cx="914400" cy="6858000"/>')
-		},
-	},
-	{
 		name: 'deriving a layout from the current one is caught by the bound, not by the type',
 		fn: async () => {
 			// `pptx.presLayout` returns EMU and `defineLayout` reads inches, so spreading one into

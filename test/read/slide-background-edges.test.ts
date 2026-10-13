@@ -79,7 +79,6 @@ describe('slide background — imported-only p:bg variants', () => {
 		const bg = await backgroundFrom('<p:bg><p:bgPr><a:noFill/><a:effectLst/></p:bgPr></p:bg>')
 		// The distinction that matters: `type: 'none'` (the slide states it has no fill,
 		// stopping inheritance) versus `background === null` (nothing in the chain says).
-		assert(bg !== null, 'an explicit noFill is a background, so the chain stops at the slide')
 		assertEqual(bg.type, 'none', 'a:noFill decodes to none')
 		assertEqual(bg.source, 'slide', 'sourced from the slide')
 	})

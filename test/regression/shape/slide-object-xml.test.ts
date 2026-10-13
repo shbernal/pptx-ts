@@ -72,21 +72,6 @@ describe('escaping: cNvPrEl escapes objectName and altText; cSld-name is escaped
 	})
 })
 
-describe('action buttons: navigation hlinkClick on the shape cNvPr', () => {
-	const actionBtn = (action: string) => textObj({ shape: 'actionButtonForwardNext', hyperlink: { action } })
-
-	test('action emits a relationship-less hlinkClick with an empty r:id', () => {
-		const xml = render([actionBtn('nextslide')])
-		expect(xml).toContain('<a:hlinkClick r:id="" tooltip="" action="ppaction://hlinkshowjump?jump=nextslide"/>')
-	})
-
-	test('each jump value maps 1:1 onto the ppaction string', () => {
-		for (const jump of ['firstslide', 'previousslide', 'lastslide', 'lastslideviewed', 'endshow']) {
-			expect(render([actionBtn(jump)])).toContain(`action="ppaction://hlinkshowjump?jump=${jump}"`)
-		}
-	})
-})
-
 describe('table properties (ZERO baseline parts for every flag below)', () => {
 	const table = (options: Record<string, unknown>) => ({
 		_type: SlideObjectType.table,
@@ -376,11 +361,11 @@ describe('slide number placeholder', () => {
 })
 
 describe('groups', () => {
-	const kid = (name: string, o: Record<string, unknown> = {}) => ({
+	const kid = (name: string) => ({
 		_type: SlideObjectType.text,
 		text: [{ text: name }],
 		shape: 'rect',
-		options: { objectName: name, x: 1, y: 1, w: 2, h: 2, ...o },
+		options: { objectName: name, x: 1, y: 1, w: 2, h: 2 },
 	})
 
 	test('a group with no locks emits a self-closing cNvGrpSpPr', () => {

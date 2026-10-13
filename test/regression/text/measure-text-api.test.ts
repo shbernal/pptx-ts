@@ -1,9 +1,8 @@
-// Layout-time public measurement API (docs/text-fit.md). Three layers:
+// Layout-time public measurement API (docs/text-fit.md). Two layers:
 //  A) the core measureText(registry, …) + shared buildFitParagraphs against src,
 //     with SYNTHETIC metrics so the suite is reproducible and needs no font files;
-//  B) the same through the built `pptx-ts/measure` subpath (P1 re-exports);
-//  C) the pptx.measureText()/overflowsBox() instance methods through dist (the
-//     heuristic path, so no real font is required).
+//  B) the same through the built `pptx-ts/measure` subpath (P1 re-exports).
+// The instance methods through dist are covered in measured-fit-dist.test.ts.
 // The KEY correctness assertion is the no-drift test: measureText's height equals
 // the height the export-time resize bake (solveResize) uses for the same input.
 import { readFileSync } from 'node:fs'
@@ -18,7 +17,6 @@ import {
 	type FontMetrics,
 } from '../../../src/measure/font-metrics.ts'
 import { solveResize, solveShrink, HEIGHT_SAFETY_FACTOR, WIDTH_SAFETY_FACTOR } from '../../../src/measure/text-fit.ts'
-import PptxTs from '../../../dist/node.js'
 import { resolveGenuineFontFile } from '../../read/font-oracle.ts'
 import { fixturePath } from '../../read/corpus.ts'
 
@@ -343,14 +341,5 @@ describe('FontMetricsRegistry.hasCodepoint (face-keyed coverage)', () => {
 		// Only the regular variant is registered; a bold lookup resolves through it.
 		expect(reg.hasCodepoint('Silkscreen', 0x41, { bold: true })).toBe(true)
 		expect(reg.hasCodepoint('Silkscreen', 0x2011, { bold: true })).toBe(false)
-	})
-})
-
-describe('pptx.measureText() / overflowsBox() instance methods (heuristic path)', () => {
-	test('overflowsBox: tall text in a tiny box overflows; short text does not', () => {
-		const pptx = new PptxTs()
-		const long = 'The quick brown fox jumps over the lazy dog. '.repeat(6)
-		expect(pptx.overflowsBox(long, { wIn: 2, hIn: 0.5, fontSize: 18, fontFace: 'Arial' })).toBe(true)
-		expect(pptx.overflowsBox('hi', { wIn: 5, hIn: 3, fontSize: 12, fontFace: 'Arial' })).toBe(false)
 	})
 })

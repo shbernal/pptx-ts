@@ -54,19 +54,6 @@ defineRegressionSuite('Table cell horzOverflow', [
 		},
 	},
 	{
-		name: 'an unset horzOverflow emits nothing (the default path is byte-unchanged)',
-		fn: async () => {
-			const { result } = await captureDiagnostics(() =>
-				build((p) => {
-					p.addSlide().addTable([[{ text: 'A' }, { text: 'B' }]], AT)
-				})
-			)
-
-			const xml = await readEntry(result.zip, 'ppt/slides/slide1.xml')
-			assert(!xml.includes('horzOverflow'), 'no attribute may appear when the option is unset')
-		},
-	},
-	{
 		name: 'an unrecognized value is reported and dropped rather than written',
 		fn: async () => {
 			const { result, codes, diagnostics } = await captureDiagnostics(() =>

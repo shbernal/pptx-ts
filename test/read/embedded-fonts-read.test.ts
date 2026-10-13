@@ -6,7 +6,7 @@
 
 import { describe, test } from 'vitest'
 import { Presentation } from '../../dist/read.js'
-import { assert, assertEqual, at } from '../helpers.ts'
+import { assert, assertEqual, at, take } from '../helpers.ts'
 import { openFixture } from './corpus.ts'
 
 describe('Presentation.embeddedFonts', () => {
@@ -20,10 +20,6 @@ describe('Presentation.embeddedFonts', () => {
 		assertEqual(font.panose, null, 'no @panose on this entry → null (fixture has none)')
 
 		assertEqual(font.faces.length, 2, 'two faces embedded')
-		const bySlot = Object.fromEntries(font.faces.map((f) => [f.slot, f.partName]))
-		assert('regular' in bySlot, 'regular face present')
-		assert('bold' in bySlot, 'bold face present')
-		assert(!('italic' in bySlot) && !('boldItalic' in bySlot), 'only the two authored faces')
 
 		// Faces are ordered by the schema slot order (regular before bold).
 		assertEqual(at(font.faces, 0).slot, 'regular', 'regular first')
@@ -35,8 +31,9 @@ describe('Presentation.embeddedFonts', () => {
 			assert(pres.opc.part(face.partName), `partName resolves to a real part (${face.partName})`)
 		}
 		// regular → font1, bold → font2 (oracle rId3 → font1.fntdata, rId4 → font2.fntdata).
-		assert(bySlot.regular.endsWith('/font1.fntdata'), `regular → font1 (${bySlot.regular})`)
-		assert(bySlot.bold.endsWith('/font2.fntdata'), `bold → font2 (${bySlot.bold})`)
+		const [regular, bold] = take(font.faces, 2)
+		assert(regular.partName.endsWith('/font1.fntdata'), `regular → font1 (${regular.partName})`)
+		assert(bold.partName.endsWith('/font2.fntdata'), `bold → font2 (${bold.partName})`)
 	})
 
 	test('is [] for a deck that embeds no fonts', async () => {

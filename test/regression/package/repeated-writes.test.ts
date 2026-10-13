@@ -32,6 +32,12 @@ defineRegressionSuite('Repeated presentation writes [legacy bug-04]', [
 				xml1 === xml2,
 				'expected slide1.xml byte-equal across two writes; differ.\nfirst:\n' + xml1 + '\nsecond:\n' + xml2
 			)
+			// The normalizer is pure: the derived `_alpha` lives on the definer's copy.
+			assert(
+				JSON.stringify(shadow) ===
+					JSON.stringify({ type: 'outer', blur: 6, offset: 2, color: '000000', transparency: 85 }),
+				'expected the caller shadow object untouched; got ' + JSON.stringify(shadow)
+			)
 		},
 	},
 	{
@@ -86,8 +92,6 @@ defineRegressionSuite('Repeated presentation writes [legacy bug-04]', [
 			assert(xml.indexOf('dist="25400"') !== -1, 'expected dist="25400"; got: ' + xml)
 			assert(xml.indexOf('dir="16200000"') !== -1, 'expected dir="16200000"; got: ' + xml)
 			assert(xml.indexOf('<a:alpha val="15000"/>') !== -1, 'expected <a:alpha val="15000"/>; got: ' + xml)
-			// Belt-and-braces: no absurdly large EMU values that signal double-conversion
-			assert(xml.indexOf('blurRad="967740000"') === -1, 'unexpected double-converted blurRad in output: ' + xml)
 		},
 	},
 ])

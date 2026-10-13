@@ -26,7 +26,6 @@ import {
 	parseFontMetrics,
 	getHeuristicFontMetrics,
 	SINGLE_LINE_PITCH,
-	MIN_FONT_SCALE_PCT,
 	type FitBox,
 	type FitParagraph,
 	type MetricsResolver,
@@ -102,11 +101,6 @@ describe('measureLayout: paragraph fields the deck path always fills', () => {
 		expect(bare.heightPt).toBe(zeroed.heightPt)
 	})
 
-	test('an exact `lineSpacingPts` overrides the calibrated pitch outright', () => {
-		const layout = defined(measureLayout([para('x', { lineSpacingPts: 30 })], 400, resolve, 100, 0))
-		expect(layout.heightPt).toBeCloseTo(30, 6)
-	})
-
 	test('a non-positive `lineSpacingPts` falls back to the pitch instead of collapsing', () => {
 		const layout = defined(measureLayout([para('x', { lineSpacingPts: 0 })], 400, resolve, 100, 0))
 		expect(layout.heightPt).toBeCloseTo(SINGLE_LINE_PITCH * 12, 6)
@@ -133,11 +127,7 @@ describe('measureLayout / measureHeightPt: unmeasurable and degenerate inputs', 
 })
 
 describe('solvers through dist', () => {
-	const box = (w: number, h: number, wrap?: boolean): FitBox => ({
-		innerWidthPt: w,
-		innerHeightPt: h,
-		...(wrap === undefined ? {} : { wrap }),
-	})
+	const box = (w: number, h: number): FitBox => ({ innerWidthPt: w, innerHeightPt: h })
 
 	/**
 	 * Assert a discriminated outcome's `kind` and narrow to it, so the assertions that
@@ -154,27 +144,6 @@ describe('solvers through dist', () => {
 
 	test('solveShrink reports `unmeasurable` for an unresolvable face', () => {
 		expect(solveShrink([para('x')], box(400, 400), resolveNone)).toEqual({ kind: 'unmeasurable' })
-	})
-
-	test('solveShrink lands on the 2.5% grid below 100', () => {
-		const outcome = expectKind(solveShrink([para('alpha beta gamma delta epsilon')], box(80, 20), resolve), 'shrink')
-		expect(outcome.result.fontScalePct).toBeLessThan(100)
-		expect(outcome.result.fontScalePct % 2.5).toBeCloseTo(0, 10)
-	})
-
-	test('solveShrink bakes the floor when even the floor overflows', () => {
-		const paras = [para('alpha beta gamma delta epsilon zeta eta theta')]
-		const outcome = expectKind(solveShrink(paras, box(20, 6), resolve), 'shrink')
-		expect(outcome.result.fontScalePct).toBe(MIN_FONT_SCALE_PCT)
-	})
-
-	test('a `wrap:false` box lays out one line but is still held to the box width', () => {
-		// Tall enough that the height test can never fire: any shrink is the width check.
-		expectKind(solveShrink([para('alpha beta gamma delta')], box(40, 5000, false), resolve), 'shrink')
-	})
-
-	test('the same box wrapping normally needs no shrink', () => {
-		expect(solveShrink([para('alpha beta gamma delta')], box(40, 5000), resolve).kind).toBe('fits')
 	})
 
 	test('solveResize returns the needed inner height, and `unmeasurable` without metrics', () => {

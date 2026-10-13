@@ -31,7 +31,6 @@ function bytes() {
 }
 
 function assertDecodesDeck(entries: Map<string, Uint8Array>, label: string) {
-	assert(entries instanceof Map, `${label}: readZip returns a Map`)
 	assert(entries.has(CONTENT_TYPES_PATH), `${label}: [Content_Types].xml present`)
 	assert(entries.has(SLIDE_PATH), `${label}: slide part present`)
 	assert(defined(entries.get(SLIDE_PATH)).length > 0, `${label}: slide part has bytes`)

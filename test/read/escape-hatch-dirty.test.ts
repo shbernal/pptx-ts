@@ -314,7 +314,6 @@ describe('chartEx element_ / markDirty()', () => {
 			// getters read null rather than throwing — pin that alongside the hatch.
 			assertEqual(axis.min, null, 'a cat axis has no value-scale minimum')
 			assertEqual(axis.max, null, 'a cat axis has no value-scale maximum')
-			assertEqual(typeof axis.tickLabels, 'boolean', 'tickLabels is a presence flag')
 			axis.element_.setAttribute('id', '42')
 			axis.markDirty()
 		})

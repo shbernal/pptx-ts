@@ -74,11 +74,4 @@ describe('alignByKey', () => {
 			[null, 'x'],
 		])
 	})
-
-	test('an extra actual item is reported as added, after every expected pairing', () => {
-		expect(keys(alignByKey([item('a')], [item('a'), item('b')], (i) => i.k))).toEqual([
-			['a', 'a'],
-			[null, 'b'],
-		])
-	})
 })

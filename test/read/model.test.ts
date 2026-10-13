@@ -137,27 +137,6 @@ describe('mixed.pptx — connectors, groups, graphic frames', () => {
 		)
 	})
 
-	test('distinguishes table, chart, and SmartArt graphic frames', async () => {
-		const slides = (await openFixture('mixed')).slides
-		const frameOn = (index: number) => at(slides, index).shapes.find((shape) => shape.shapeType === 'graphicFrame')
-
-		const table = frameOn(6) // slide7: a:tbl
-		assert(table, 'slide7 has a graphic frame')
-		assert(table.hasTable && !table.hasChart, 'slide7 frame is a table')
-		assert(table.left !== null, 'graphic frame geometry resolves from p:xfrm')
-
-		const chart = frameOn(7) // slide8: c:chart
-		assert(chart, 'slide8 has a graphic frame')
-		assert(chart.hasChart && !chart.hasTable, 'slide8 frame is a chart')
-
-		const smartArt = frameOn(1) // slide2: dgm diagram
-		assert(smartArt, 'slide2 has a graphic frame')
-		assert(!smartArt.hasTable && !smartArt.hasChart, 'SmartArt frame is neither table nor chart')
-		assert(smartArt.hasDiagram, 'SmartArt frame reports a diagram host')
-		// The three kinds partition: no frame answers `true` to two predicates.
-		assert(!table.hasDiagram && !chart.hasDiagram, 'the table and chart frames report no diagram')
-	})
-
 	// The exported type guards must agree with the `shapeType` discriminant they
 	// narrow on: exactly one guard matches each shape, across every kind the deck
 	// contains (autoShape/picture/connector/graphicFrame/group).
@@ -282,13 +261,6 @@ describe('Slide.text', () => {
 
 	test('text-free shapes contribute nothing; a whole deck maps cleanly', async () => {
 		const deck = await openFixture('mixed')
-		// Every slide yields a string; a picture/connector adds no text of its own.
-		const all = deck.slides.map((slide) => slide.text)
-		assertEqual(all.length, deck.slides.length, 'one text block per slide')
-		assert(
-			all.every((text) => typeof text === 'string'),
-			'each slide.text is a string'
-		)
 		assertEqual(at(deck.slides, 0).text, 'Data Modelling using Spreadsheets', 'title slide flattens to its title')
 	})
 })

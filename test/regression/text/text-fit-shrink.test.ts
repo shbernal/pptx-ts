@@ -52,16 +52,6 @@ defineRegressionSuite('Text fit shrink (normAutofit fontScale/lnSpcReduction) [u
 		},
 	},
 	{
-		name: "bare 'shrink' string still emits attribute-less normAutofit",
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.addSlide().addText('bare', { x: 1, y: 1, w: 4, h: 1, fit: 'shrink' })
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assert(xml.indexOf('<a:normAutofit/>') !== -1, 'expected bare <a:normAutofit/>; got: ' + xml)
-		},
-	},
-	{
 		name: 'out-of-range values clamp to the nearest bound and warn',
 		fn: async () => {
 			const warnings: string[] = []

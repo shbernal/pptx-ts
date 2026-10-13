@@ -186,7 +186,8 @@ defineRegressionSuite('Numeric conversion guards', [
 	{
 		// The same truthiness guard stood in front of these: a NaN line transparency painted opaque,
 		// a NaN text outline took the 0.75pt default, a NaN image rotation or transparency was dropped
-		// and a NaN tab stop landed at one inch.
+		// and a NaN tab stop landed at one inch. The outline size and the shape line width are pinned,
+		// code and message both, by the line-width naming case below.
 		name: 'a NaN line transparency, image rotation or transparency, or tab stop is refused',
 		fn: async () => {
 			const png =

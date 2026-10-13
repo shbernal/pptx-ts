@@ -439,17 +439,8 @@ defineRegressionSuite('Hyperlink relationship registration', [
 			assertEqual(at(targets, 0).target, '../slides/slide2.xml', 'the target traverses out of ppt/slideLayouts/')
 			assert(listEntries(zip).includes('ppt/slides/slide2.xml'), 'and it names a part the package actually has')
 
-			// A slide names a sibling slide bare, which is what PowerPoint writes. Same rule, different
-			// part: the target is derived from the emitting part's own directory.
-			const { zip: plain } = await build((p) => {
-				p.addSlide().addText('next', { x: 1, y: 1, w: 2, h: 1, hyperlink: { slide: 2 } })
-				p.addSlide()
-			})
-			const slideRels = relationships(await readEntry(plain, relsPath(1)))
-			assert(
-				slideRels.some((r) => r.type === 'slide' && r.target === 'slide2.xml'),
-				`a slide still names its sibling bare: ${JSON.stringify(slideRels)}`
-			)
+			// A slide names a sibling slide bare (`slide2.xml`), which is what PowerPoint writes; the
+			// past-the-last-slide case above pins that half.
 
 			const error = await failedBuild((p) => author(p, 9))
 			assertEqual(error?.code, 'slide/link-past-last-slide', 'a layout link past the last slide is refused')

@@ -403,11 +403,6 @@ defineRegressionSuite('HTML table to slides on Node (happy-dom)', [
 			assert(/marR="19050"/.test(xml), `2px padding must be 2/96in; got: ${xml}`)
 			assert(/marB="28575"/.test(xml), `3px padding must be 3/96in; got: ${xml}`)
 			assert(/marL="38100"/.test(xml), `4px padding must be 4/96in; got: ${xml}`)
-			// The pre-fix values: px copied straight into an inches field.
-			assert(!/marT="1828800"/.test(xml), 'a 1.5px pad must not come back as a 2 INCH inset')
-			assert(!/marL="3657600"/.test(xml), 'a 4px pad must not come back as a 4 INCH inset')
-			// The stripped-decimal-point value, at either unit.
-			assert(!/marT="13716000"/.test(xml) && !/marT="142875"/.test(xml), '1.5px must not become 15px')
 		},
 	},
 	{

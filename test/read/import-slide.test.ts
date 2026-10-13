@@ -12,7 +12,7 @@ import { describe, test } from 'vitest'
 import PptxTs from '../../dist/node.js'
 import { Presentation, type OpcPackage } from '../../dist/read.js'
 import {
-	throws,
+	caughtSync,
 	assert,
 	assertEqual,
 	defined,
@@ -277,8 +277,9 @@ describe('Presentation.importSlide', () => {
 	test('rejects an out-of-range index', async () => {
 		const target = await openFixture('empty')
 		const source = await openFixture('image')
-		assert(
-			throws(() => target.importSlide(source, 99)),
+		assertEqual(
+			caughtSync(() => target.importSlide(source, 99))?.code ?? null,
+			'slide/index-out-of-range',
 			'importing a missing slide throws'
 		)
 	})

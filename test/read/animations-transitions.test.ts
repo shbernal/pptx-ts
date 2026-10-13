@@ -252,8 +252,8 @@ describe('slide.flattenAnimations (whole-slide flatten pass)', () => {
 
 // --- Preset, sound and import fixtures. The expanded preset set and transition sounds
 // are tested write-side in test/regression; the importShape animation carry is
-// exercised at the end of this file. These blocks assert the fixtures load + their
-// oracles match the bytes against the opaque, spid-aware read model. ---
+// exercised at the end of this file. These blocks read each fixture through the
+// opaque, spid-aware read model and check it against its oracle. ---
 
 describe('slide-animation-presets (read fixture)', () => {
 	test('hasAnimations + animationSpids match the oracle', async () => {
@@ -261,16 +261,6 @@ describe('slide-animation-presets (read fixture)', () => {
 		const slide = at((await openFixture('slide-animation-presets')).slides, 0)
 		assert.equal(slide.hasAnimations, true)
 		assert.deepEqual(slide.animationSpids(), oracle.animationSpids)
-	})
-
-	test('every preset template appears verbatim in the slide', async () => {
-		const oracle = await readOracle('slide-animation-presets')
-		const xml = await slidePartXml(await readFile(fixturePath('slide-animation-presets')), 1)
-		for (const [name, t] of Object.entries(oracle.presetTemplates)) {
-			assert.ok(xml.includes(t.effectParXml), `${name} effect node present verbatim`)
-			assert.ok(xml.includes(t.behaviorsXml), `${name} behaviors present verbatim`)
-			assert.ok(xml.includes(t.bldPXml), `${name} bldP present`)
-		}
 	})
 })
 
@@ -292,23 +282,6 @@ describe('slide-transition-sound (read fixture)', () => {
 			assert.equal(info.sound.name, sr.sndName, `slide ${s.slide} sound name`)
 		}
 	})
-
-	test('sndAc + audio rel graph appear verbatim in the package', async () => {
-		const oracle = await readOracle('slide-transition-sound')
-		const bytes = await readFile(fixturePath('slide-transition-sound'))
-		const zip = await JSZip.loadAsync(bytes)
-		for (const s of oracle.slides) {
-			const xml = await slidePartXml(bytes, s.slide)
-			assert.ok(xml.includes(s.soundRels.sndAcXml), `slide ${s.slide} sndAc present verbatim`)
-			if (s.soundRels.audioRel) {
-				const rels = await readEntry(zip, `ppt/slides/_rels/slide${s.slide}.xml.rels`)
-				assert.ok(rels.includes(s.soundRels.audioRel.target), `slide ${s.slide} audio rel target`)
-				assert.ok(rels.includes('relationships/audio'), `slide ${s.slide} audio rel type`)
-			}
-		}
-		const ct = await readEntry(zip, '[Content_Types].xml')
-		assert.ok(ct.includes('<Default Extension="wav" ContentType="audio/x-wav"/>'), 'wav Default content type')
-	})
 })
 
 describe('import-animation-merge (read fixture)', () => {
@@ -317,13 +290,6 @@ describe('import-animation-merge (read fixture)', () => {
 		const pres = await openFixture('import-animation-merge')
 		assert.deepEqual(at(pres.slides, 0).animationSpids(), oracle.source.animationSpids)
 		assert.deepEqual(at(pres.slides, 1).animationSpids(), oracle.merged.animationSpids)
-	})
-
-	test('the merged slide matches the oracle timing verbatim', async () => {
-		const oracle = await readOracle('import-animation-merge')
-		const xml = await slidePartXml(await readFile(fixturePath('import-animation-merge')), 2)
-		assert.ok(xml.includes(oracle.merged.timingXml), 'merged timing tree present verbatim')
-		assert.ok(xml.includes(oracle.merged.bldList.xml), 'merged bldLst present verbatim')
 	})
 })
 

@@ -44,15 +44,6 @@ const VIDEO_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relatio
 const MS_MEDIA_REL = 'http://schemas.microsoft.com/office/2007/relationships/media'
 const HYPERLINK_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink'
 
-async function rejects(fn: () => unknown) {
-	try {
-		await fn()
-		return false
-	} catch {
-		return true
-	}
-}
-
 /** Resolve the absolute target a single `rId` points at, or `null`. */
 function resolveRid(opc: OpcPackage, partName: string, rId: string) {
 	const rels = opc.relationshipsFor(partName)
@@ -439,10 +430,8 @@ describe('Presentation.appendSlides', () => {
 		const pres = await Presentation.load(await readFile(fixturePath('theme-colors')))
 		const pptx = wideGenerator()
 		pptx.addSlide().addText('x', { x: 1, y: 1, w: 4, h: 1 })
-		assert(
-			await rejects(() => pres.appendSlides(pptx, { layout: 'Nonexistent Layout' })),
-			'an unknown layout name throws'
-		)
+		const code = (await caught(() => pres.appendSlides(pptx, { layout: 'Nonexistent Layout' })))?.code ?? null
+		assertEqual(code, 'layout/not-found', 'an unknown layout name throws')
 	})
 
 	test("appends a chart area's picture fill as a picture the chart part references", async () => {
