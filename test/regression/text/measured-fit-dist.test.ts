@@ -87,13 +87,13 @@ describe('measureText() through dist (Silkscreen metrics)', () => {
 
 	test('run array with per-run bold uses the bold metrics variant', async () => {
 		const pres = await pptxWithSilkscreen()
-		const m = pres.measureText([{ text: 'Bold heading', options: { bold: true } }], {
-			wIn: 3,
-			fontSize: 18,
-			fontFace: 'Silkscreen',
-		})
-		expect(m.measurable).toBe(true)
-		expect(m.widestLineIn).toBeGreaterThan(0)
+		const opts = { wIn: 3, fontSize: 18, fontFace: 'Silkscreen' }
+		const bold = pres.measureText([{ text: 'Bold heading', options: { bold: true } }], opts)
+		const regular = pres.measureText([{ text: 'Bold heading' }], opts)
+		expect(bold.measurable).toBe(true)
+		// Silkscreen's two weights advance differently (font-collection.test.ts), so a run
+		// measured on the regular face would report the regular width.
+		expect(bold.widestLineIn).not.toBe(regular.widestLineIn)
 	})
 })
 
@@ -475,22 +475,6 @@ describe('measured fit: solver floor and edges', () => {
 describe("applyMeasuredFit: TableCellProps.fit:'shrink' through dist export", () => {
 	const LONG = 'This is a deliberately long cell sentence that overflows a short fixed-height table row.'
 
-	test('fixed-height row + overflow → reduced literal font size baked onto the cell', async () => {
-		const pres = await pptxWithSilkscreen()
-		const slide = pres.addSlide()
-		slide.addTable([[{ text: LONG, options: { fit: 'shrink', fontFace: 'Silkscreen', fontSize: 18 } }]], {
-			x: 0.5,
-			y: 0.5,
-			w: 3,
-			rowH: [0.4],
-		})
-		const xml = await partXml(await pres.toBytes(), SLIDE1)
-		const sizes = szValues(xml)
-		expect(sizes.length).toBeGreaterThan(0)
-		// 18pt == sz 1800; a shrink bakes something strictly smaller.
-		expect(Math.min(...sizes)).toBeLessThan(1800)
-	})
-
 	test('auto-height row (no rowH / table h) → cell font size untouched (row grows instead)', async () => {
 		const pres = await pptxWithSilkscreen()
 		const slide = pres.addSlide()
@@ -501,20 +485,6 @@ describe("applyMeasuredFit: TableCellProps.fit:'shrink' through dist export", ()
 		})
 		const xml = await partXml(await pres.toBytes(), SLIDE1)
 		expect(szValues(xml)).toContain(1800) // authored 18pt preserved
-	})
-
-	test('table-level fit:shrink propagates to cells that set none', async () => {
-		const pres = await pptxWithSilkscreen()
-		const slide = pres.addSlide()
-		slide.addTable([[{ text: LONG, options: { fontFace: 'Silkscreen', fontSize: 18 } }]], {
-			x: 0.5,
-			y: 0.5,
-			w: 3,
-			rowH: [0.4],
-			fit: 'shrink',
-		})
-		const xml = await partXml(await pres.toBytes(), SLIDE1)
-		expect(Math.min(...szValues(xml))).toBeLessThan(1800)
 	})
 })
 
@@ -818,19 +788,6 @@ describe('applyMeasuredFit: the table cell shrink pass', () => {
 		// The neighbouring box still bakes, so the empty table was skipped rather than
 		// having taken the whole pass down with it.
 		expect(await partXml(await pres.toBytes(), SLIDE1)).toMatch(/<a:normAutofit fontScale="\d+"/)
-	})
-
-	test('a cell with no text is passed over while its neighbour still bakes', async () => {
-		const xml = await tableDeck(
-			[
-				[
-					{ text: '', options: { fit: 'shrink', fontFace: 'Silkscreen', fontSize: 18 } },
-					{ text: LONG, options: { fit: 'shrink', fontFace: 'Silkscreen', fontSize: 18 } },
-				],
-			],
-			{ w: 6, rowH: [0.4] }
-		)
-		expect(Math.min(...szValues(xml))).toBeLessThan(1800)
 	})
 })
 

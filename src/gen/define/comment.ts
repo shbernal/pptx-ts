@@ -48,7 +48,6 @@ export function addCommentDefinition(target: PresSlideInternal, opts: CommentPro
 	if (opts.date instanceof Date) date = opts.date.toISOString()
 	else if (typeof opts.date === 'string' && opts.date) date = opts.date
 
-	if (!target._comments) target._comments = []
 	// `date` is omitted rather than written as `undefined` when the caller stated none: the
 	// comments emitter falls back to its own timestamp on an absent one, and the two spellings
 	// would otherwise be two ways of asking for that.

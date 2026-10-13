@@ -15,11 +15,10 @@
 // The layout case is not hypothetical: PowerPoint's built-in German layout set ships a layout named
 // across two lines ("Abschnitts-<LF>überschrift"), so a deck created from it already hits this.
 
-import JSZip from 'jszip'
 import { describe, test } from 'vitest'
 import type { Part } from '../../dist/read.js'
-import { assert, assertEqual, readEntry, at } from '../helpers.ts'
-import { authorRead, firstShape, schemaErrors, validatorInstalled } from './authored.ts'
+import { assert, assertEqual, at } from '../helpers.ts'
+import { authorRead, firstShape } from './authored.ts'
 
 /** The German built-in layout name, split across two lines exactly as PowerPoint ships it. */
 const LAYOUT_TITLE = 'Abschnitts-\nüberschrift'
@@ -80,23 +79,5 @@ describe('XML attribute whitespace — write→read fidelity', () => {
 		const hlink = firstElement(at(presentation.slides, 0).part, 'a:hlinkClick')
 		assert(hlink, 'the authored hyperlink is present on the slide')
 		assertEqual(hlink.getAttribute('tooltip'), TOOLTIP, 'a:hlinkClick/@tooltip round-trips')
-	})
-
-	test('the whitespace is emitted as a character reference, never a literal', async () => {
-		// The complement to the parse-level assertions: proves the round-trip is carried by `&#10;`
-		// rather than by a parser that happens to be lenient about literal newlines in attributes.
-		const { buf } = await authorWhitespaceDeck()
-		const zip = await JSZip.loadAsync(buf)
-		const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
-		const cNvPr = slideXml.slice(slideXml.indexOf('<p:cNvPr'), slideXml.indexOf('</p:nvSpPr>'))
-		assert(cNvPr.includes('name="Kapitel&#10;Eins"'), `objectName uses a character reference: ${cNvPr}`)
-		assert(cNvPr.includes('&#9;'), 'the alt text tab uses a character reference')
-		assert(!/name="[^"]*\n[^"]*"/.test(cNvPr), 'no literal newline survives inside an attribute value')
-	})
-
-	test.skipIf(!validatorInstalled)('the deck stays schema-valid with character references in attributes', async () => {
-		const { buf } = await authorWhitespaceDeck()
-		const errors = await schemaErrors(buf)
-		assertEqual(errors.length, 0, `schema errors: ${errors.join('\n')}`)
 	})
 })

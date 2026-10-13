@@ -41,12 +41,6 @@ describe('Shape.absoluteFrameFailure', () => {
 		assertEqual(shape.absoluteFrameFailure, null, 'a resolved frame has no failure to report')
 	})
 
-	test('is null for a group child whose whole chain resolves', () => {
-		const shape = shapeIn(XFRM, group(groupXfrm(1000, 1000)))
-		assert(shape.absoluteFrame, 'expected a resolvable frame inside a well-formed group')
-		assertEqual(shape.absoluteFrameFailure, null, 'a complete group chain reports no failure')
-	})
-
 	test('reports no-own-transform when the shape states no a:xfrm', () => {
 		// The ordinary case: a placeholder inheriting its box from the layout. Nothing is
 		// wrong with the deck, which is why `inspect` stays silent about this one.

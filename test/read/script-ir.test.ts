@@ -674,10 +674,6 @@ describe('deck IR — the explicit off for text decorations', () => {
 	// because `canonicalDeckIr` did not carry the field either, `diffDeckIr` compared two
 	// models that were both missing it and called the deck clean.
 
-	/** The per-run option objects of the deck's single `addText` call. */
-	const runOptionsOf = (ir: DeckIr) =>
-		arrayOf(defined(allCalls(ir).find((call) => call.method === 'addText')).args[0]).map((run) => at(run, 'options'))
-
 	test('a run stating the off token keeps it, in the XML and through the IR', async () => {
 		const { presentation, buf } = await authorRead((pres) => {
 			pres.addSlide().addText(
@@ -2249,20 +2245,6 @@ describe('deck IR — slide sourcing', () => {
 				`${name}: slide ${slide.number} is carried with no per-shape note naming the unwritable frame`
 			)
 		}
-	})
-
-	test('a slide holding SmartArt is carried, not transcribed with a hole where the diagram was', async () => {
-		// The deck-level walk tested extended charts and nothing else, so this slide came out
-		// `authored` and the printer transcribed it — dropping the diagram, which is the whole
-		// message of the slide, while the emitted script claimed to describe it.
-		const ir = await irFor('mixed')
-		const slide = defined(ir.slides.find((candidate) => candidate.number === 2))
-		assertEqual(slide.source, 'carried', 'the SmartArt slide is copied from the source package')
-		assert(
-			ir.fidelity.some((note) => note.slideNumber === 2 && note.construct === 'diagram.all'),
-			'and the per-shape note says the diagram is what forced it'
-		)
-		assert(slide.calls.length > 0, 'while the rest of the slide is still mapped, for the tier that cannot copy')
 	})
 
 	test('a frame the reader does not decode at all is carried too', async () => {

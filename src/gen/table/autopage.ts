@@ -131,8 +131,8 @@ function parseTextToLines(
 	if (cell.text && cell.text.toString().trim().length === 0) {
 		// Allow a single space/whitespace as cell text (user-requested feature)
 		inputCells.push({ _type: SlideObjectType.tablecell, text: ' ' })
-	} else if (typeof cell.text === 'number' || typeof cell.text === 'string') {
-		inputCells.push({ _type: SlideObjectType.tablecell, text: (cell.text || '').toString().trim() })
+	} else if (typeof cell.text === 'string') {
+		inputCells.push({ _type: SlideObjectType.tablecell, text: cell.text.trim() })
 	} else if (Array.isArray(cell.text)) {
 		inputCells = cell.text
 	}

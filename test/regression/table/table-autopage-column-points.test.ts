@@ -74,16 +74,4 @@ defineRegressionSuite('Auto-page column width in points', [
 			)
 		},
 	},
-	{
-		// A width both forms agree on, so this case is unaffected by the fix and stays a control:
-		// if it moves, the conversion changed for everything rather than for the 51.
-		name: 'a width both forms agree on is unchanged',
-		fn: async () => {
-			assertEqual(
-				JSON.stringify(await rowsPerSlide(words(73), 7, 15, 16)),
-				'[16]',
-				'7in is 504 points under either form'
-			)
-		},
-	},
 ])

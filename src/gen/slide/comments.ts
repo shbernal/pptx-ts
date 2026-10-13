@@ -38,7 +38,7 @@ export function resolveCommentAuthors(slides: PresSlideInternal[]): ResolvedComm
 	const meta = new Map<SlideComment, { authorId: number; idx: number }>()
 
 	slides.forEach((slide) => {
-		;(slide._comments || []).forEach((comment) => {
+		slide._comments.forEach((comment) => {
 			const key = comment.author + '\0' + comment.initials
 			let author = byKey.get(key)
 			if (!author) {

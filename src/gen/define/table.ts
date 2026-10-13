@@ -220,7 +220,7 @@ function normalizeTableRows(srcRows: TableRow[], opt: TablePropsInternal): Table
 					newCell.text = cell.text.map((run) =>
 						run.options ? { ...run, options: withRunShadow({ ...run.options }) } : { ...run }
 					)
-				else if (cell.text) newCell.text = cell.text
+				else newCell.text = cell.text
 				// Capture options (the copy made above; `newCell.options` already is it)
 			}
 
@@ -554,7 +554,8 @@ export function addTableDefinition(
 	// table has. The NaN test this replaces was none of those: `''` read as `0` header rows and
 	// `Infinity` was accepted as a count, which is the same shape of hole `autoPageLineWeight`
 	// has been guarded against two lines down since it was written.
-	opt.autoPageHeaderRows = resolveHeaderRowCount(opt.autoPageHeaderRows, tableRows.length)
+	const headerRowCount = resolveHeaderRowCount(opt.autoPageHeaderRows, tableRows.length)
+	opt.autoPageHeaderRows = headerRowCount
 	const lineWeight = Number(opt.autoPageLineWeight)
 	opt.autoPageLineWeight = typeof opt.autoPageLineWeight !== 'undefined' && Number.isFinite(lineWeight) ? lineWeight : 0
 	if (opt.autoPageLineWeight) {
@@ -622,10 +623,10 @@ export function addTableDefinition(
 		if (typeof opt.colW === 'string' || typeof opt.colW === 'number') {
 			// Ex: `colW = 3` or `colW = '3'`
 			spreadUniformColW(opt.colW)
-		} else if (opt.colW && Array.isArray(opt.colW) && opt.colW.length === 1 && firstRowColCnt > 1) {
+		} else if (Array.isArray(opt.colW) && opt.colW.length === 1 && firstRowColCnt > 1) {
 			// Ex: `colW=[3]` but with >1 cols (same as above, user is saying "use this width for all")
 			spreadUniformColW(opt.colW[0])
-		} else if (opt.colW && Array.isArray(opt.colW) && opt.colW.length !== firstRowColCnt) {
+		} else if (Array.isArray(opt.colW) && opt.colW.length !== firstRowColCnt) {
 			// Err: Mismatched colW and cols count
 			warn(
 				'table/col-width-count-mismatch',
@@ -701,8 +702,7 @@ export function addTableDefinition(
 			options: tableObjectOptions,
 		})
 	} else {
-		if (opt.autoPageRepeatHeader)
-			opt._arrObjTabHeadRows = arrRows.filter((_row, idx) => idx < (opt.autoPageHeaderRows || 1))
+		if (opt.autoPageRepeatHeader) opt._arrObjTabHeadRows = arrRows.filter((_row, idx) => idx < headerRowCount)
 
 		// snapshot populated placeholders on the source slide (e.g. a title added via
 		// `addText(text, { placeholder })`) so they can be re-rendered on each overflow slide.

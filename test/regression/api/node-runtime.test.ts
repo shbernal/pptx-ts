@@ -27,9 +27,7 @@ describe('node runtime: writeFile', () => {
 		const target = tmpName('out.pptx')
 		const returned = await pptx.writeFile({ fileName: target })
 		expect(returned).toBe(target)
-		expect(existsSync(target)).toBe(true)
 		const bytes = readFileSync(target)
-		expect(bytes.length).toBeGreaterThan(0)
 		// PPTX is a ZIP → starts with the local-file-header magic "PK\x03\x04".
 		expect(bytes[0]).toBe(0x50)
 		expect(bytes[1]).toBe(0x4b)

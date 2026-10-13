@@ -124,11 +124,9 @@ describe('Presentation.customProperties', () => {
 
 		assertEqual(byName.get('Department'), 'Finance', 'string stays string')
 		assertEqual(byName.get('FiscalYear'), 2025, 'integer stays number')
-		assert(byName.get('FiscalYear') === 2025 && typeof byName.get('FiscalYear') === 'number', 'integer is a number')
 		assertEqual(byName.get('Margin'), 0.375, 'float stays number')
 		assertEqual(byName.get('Approved'), true, 'true stays boolean true')
 		assertEqual(byName.get('Rejected'), false, 'false stays boolean false')
-		assert(typeof byName.get('Approved') === 'boolean', 'boolean is a boolean')
 		// Date is written as vt:filetime and decoded as the raw W3CDTF string (no Date parse).
 		assertEqual(byName.get('ReviewedOn'), '2020-01-15T10:30:00Z', 'Date → raw filetime string')
 	})
@@ -146,6 +144,5 @@ describe('Presentation.customProperties', () => {
 	test('a deck with no custom.xml → []', async () => {
 		const pres = await roundTrip(() => {})
 		assertEqual(pres.customProperties.length, 0, 'no custom properties')
-		assert(Array.isArray(pres.customProperties), 'customProperties is an array')
 	})
 })

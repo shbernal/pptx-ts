@@ -149,7 +149,6 @@ describe('resolveLocalBin', () => {
 		['typedoc', 'typedoc', path.join(ROOT, 'tools', 'api-docs')],
 	])('%s resolves its %s bin to a real JS entry, not a .cmd shim', (pkg, bin, from) => {
 		const entry = resolveLocalBin(pkg, bin, from ? { from } : {})
-		expect(entry).toBeTruthy()
 		expect(fs.existsSync(entry as string)).toBe(true)
 		expect(entry).not.toMatch(/\.cmd$/i)
 	})

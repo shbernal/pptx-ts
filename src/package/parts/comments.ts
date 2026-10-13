@@ -26,8 +26,8 @@ export const commentsContributor: PartContributor = {
 			if (resolved.authors.length === 0) return
 			zip.add(COMMENT_AUTHORS_PATH, makeXmlCommentAuthors(resolved.authors))
 			pres.slides.forEach((slide, idx) => {
-				if ((slide._comments || []).length > 0) {
-					zip.add(commentPath(idx + 1), makeXmlComments(slide._comments || [], resolved.meta))
+				if (slide._comments.length > 0) {
+					zip.add(commentPath(idx + 1), makeXmlComments(slide._comments, resolved.meta))
 				}
 			})
 		},
@@ -36,7 +36,7 @@ export const commentsContributor: PartContributor = {
 		trailing(pres: PresentationPropsInternal): ContentTypeOverride[] {
 			const entries: ContentTypeOverride[] = []
 			pres.slides.forEach((slide, idx) => {
-				if ((slide._comments || []).length > 0) {
+				if (slide._comments.length > 0) {
 					entries.push({ partName: overrideName(commentPath(idx + 1)), contentType: COMMENTS_CONTENT_TYPE })
 				}
 			})

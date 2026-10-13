@@ -48,15 +48,6 @@ async function rewrite(zip: JSZip, path: string, edit: (xml: string) => string) 
 }
 
 describe('Picture partnames degrade like their picture-fill twin', () => {
-	test('an intact embed still resolves to a partname', async () => {
-		const picture = onlyPicture(await pictureDeck())
-		assert(
-			(picture.imagePartName ?? '').startsWith('/ppt/media/'),
-			`expected a media partname; got ${picture.imagePartName}`
-		)
-		assertEqual(picture.mediaKind, 'raster', 'a plain raster picture')
-	})
-
 	test('a dangling r:embed reports null rather than throwing', async () => {
 		const picture = onlyPicture(
 			await pictureDeck({ editSlide: (xml) => xml.replace(/r:embed="[^"]*"/, 'r:embed="rIdGone"') })

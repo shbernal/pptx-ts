@@ -22,7 +22,6 @@ function deck<P extends Pick<NeutralPptxTs, 'addSlide'>>(Ctor: new () => P): P {
 describe('neutral entry: producing a deck', () => {
 	test('write() returns package bytes', async () => {
 		const bytes = await deck(NeutralPptxTs).write({ outputType: 'nodebuffer' })
-		expect(bytes.length).toBeGreaterThan(0)
 		// PPTX is a ZIP → starts with the local-file-header magic "PK\x03\x04".
 		expect(bytes[0]).toBe(0x50)
 		expect(bytes[1]).toBe(0x4b)
@@ -30,7 +29,6 @@ describe('neutral entry: producing a deck', () => {
 
 	test('toParts() assembles the package parts', async () => {
 		const parts = await deck(NeutralPptxTs).toParts()
-		expect(parts.length).toBeGreaterThan(0)
 		expect(parts.map((p) => p.path)).toContain('[Content_Types].xml')
 	})
 })

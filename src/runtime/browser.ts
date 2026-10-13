@@ -78,7 +78,7 @@ async function createSvgPngPreview(rel: SlideRelMedia): Promise<MediaError | nul
 			}
 		}
 		image.onerror = () => fail()
-		image.src = typeof rel.data === 'string' ? rel.data : IMG_SVG_PLACEHOLDER
+		image.src = rel.data
 	})
 }
 

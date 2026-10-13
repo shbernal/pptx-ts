@@ -33,7 +33,7 @@ export function makeXmlSlide(slide: PresSlideInternal, renderers: RendererTable,
 			'p:sld',
 			{
 				...PML_ROOT_NS,
-				show: slide?.hidden ? '0' : null,
+				show: slide.hidden ? '0' : null,
 			},
 			[
 				raw(slideObjectToXml(slide, renderers)),
@@ -97,7 +97,7 @@ export function makeXmlSlideRel(
 	]
 	// Only emit the comments rel for slides that actually carry comments (the comment part
 	// is likewise only written for those slides); the rId is assigned after slideLayout/notesSlide.
-	if ((slide._comments || []).length > 0) {
+	if (slide._comments.length > 0) {
 		defaultRels.push({
 			target: targetFromPptSubpart(commentPath(slideNumber)),
 			type: COMMENTS_REL,

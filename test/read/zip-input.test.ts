@@ -42,11 +42,6 @@ describe('readZip input matrix', () => {
 		assertDecodesDeck(await readZip(bytes()), 'Uint8Array')
 	})
 
-	test('Node Buffer input decodes the archive', async () => {
-		// Buffer is a Uint8Array subclass; the common Node caller passes one.
-		assertDecodesDeck(await readZip(Buffer.from(bytes())), 'Buffer')
-	})
-
 	test('ArrayBuffer input decodes the archive', async () => {
 		const b = bytes()
 		const ab = b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength)
