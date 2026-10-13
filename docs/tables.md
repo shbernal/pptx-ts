@@ -118,7 +118,7 @@ Formatting resolves per property. The highest source that sets a property wins:
 
 - The merge happens per property, not per object. A header cell can take `bold` from `headerRow` and `fill` from its column.
 - A cell's own `false` or `0` counts as set, so `bold: false` on a cell beats `bold: true` on the table.
-- Fifteen table options reach the cells: `align`, `bold`, `border`, `charSpacing`, `color`, `fill`, `fontFace`, `fontSize`, `italic`, `lineSpacing`, `lineSpacingMultiple`, `margin`, `textDirection`, `underline` and `valign`. No other table option styles a cell.
+- Twenty-six table options reach the cells: `align`, `bold`, `border`, `breakLine`, `bullet`, `caps`, `charSpacing`, `color`, `fill`, `fontFace`, `fontFaceEA`, `fontSize`, `highlight`, `italic`, `lang`, `lineSpacing`, `lineSpacingMultiple`, `margin`, `paraIndent`, `paraMarginLeft`, `softBreakBefore`, `tabStops`, `textDirection`, `transparency`, `underline` and `valign`. Each writes what it writes when set on every cell. No other table option styles a cell, and `textWarp` warns `table/option-not-supported`.
 - `columns[i]` goes to the cell that starts in grid column `i`, counting the `colspan`s earlier in its row and any `rowspan` from a row above.
 - `headerRow` sets `hasHeader: true` unless you set `hasHeader` yourself.
 

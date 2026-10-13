@@ -679,14 +679,15 @@ export function addTableDefinition(
 		// on the slide this table actually landed on.
 		registerTableImageFills(target, arrRows, opt)
 
-		// And the picture bullets, on a cell or on one of its runs, the way `addText` registers them.
-		// Left out, a cell's `bullet.image` fell back to a glyph (#82).
-		createBulletImageRels(
-			target,
-			arrRows.flatMap((row) =>
+		// And the picture bullets, on the table, on a cell or on one of its runs, the way `addText`
+		// registers them. Left out, a cell's `bullet.image` fell back to a glyph (#82), and the
+		// table's, which its cells inherit, wrote nothing (#227).
+		createBulletImageRels(target, [
+			opt,
+			...arrRows.flatMap((row) =>
 				row.flatMap((cell) => [cell.options, ...(Array.isArray(cell.text) ? cell.text.map((run) => run.options) : [])])
-			)
-		)
+			),
+		])
 
 		// Add slideObjects (NOTE: Use `extend` to avoid mutation)
 		// `columns` (per-column TableCellProps[]) is consumed in STEP 1.5 and baked into cells;

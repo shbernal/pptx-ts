@@ -418,11 +418,11 @@ export function placeholderOptionsForSlide<T extends object>(options: T): T {
  * declared (#83). One copy per bullet object, so a bullet shared between the shape and its runs
  * stays one object and registers once.
  * @param {PresSlideInternal} target - slide receiving the rels
- * @param bags - the shape-level, per-paragraph or per-cell options a bullet may live on
+ * @param bags - the shape-level, table-level, per-paragraph or per-cell options a bullet may live on
  */
 export function createBulletImageRels(
 	target: PresSlideInternal,
-	bags: ReadonlyArray<TextPropsOptions | undefined>
+	bags: ReadonlyArray<Pick<TextPropsOptions, 'bullet'> | undefined>
 ): void {
 	const copies = new Map<TextBulletPropsInternal, TextBulletPropsInternal>()
 	for (const opts of bags) {
