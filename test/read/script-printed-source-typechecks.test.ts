@@ -39,15 +39,17 @@ const OPTIONS = {
  */
 function typeErrors(files: Map<string, string>): string[] {
 	const host = ts.createCompilerHost(OPTIONS)
-	const { getSourceFile, fileExists, readFile } = host
+	const getSourceFile = host.getSourceFile.bind(host)
+	const fileExists = host.fileExists.bind(host)
+	const readFile = host.readFile.bind(host)
 	host.getSourceFile = (fileName, languageVersion, onError, shouldCreate) => {
 		const code = files.get(fileName)
 		return code === undefined
-			? getSourceFile.call(host, fileName, languageVersion, onError, shouldCreate)
+			? getSourceFile(fileName, languageVersion, onError, shouldCreate)
 			: ts.createSourceFile(fileName, code, languageVersion, true)
 	}
-	host.fileExists = (fileName) => files.has(fileName) || fileExists.call(host, fileName)
-	host.readFile = (fileName) => files.get(fileName) ?? readFile.call(host, fileName)
+	host.fileExists = (fileName) => files.has(fileName) || fileExists(fileName)
+	host.readFile = (fileName) => files.get(fileName) ?? readFile(fileName)
 	const program = ts.createProgram([...files.keys()], OPTIONS, host)
 	return ts
 		.getPreEmitDiagnostics(program)
@@ -60,7 +62,7 @@ function typeErrors(files: Map<string, string>): string[] {
 
 describe('a printed script type-checks', () => {
 	test('every corpus deck, printed by both tiers', { timeout: 120_000 }, async () => {
-		const files = new Map()
+		const files = new Map<string, string>()
 		for (const name of fixtureNames) {
 			const ir = await irFor(name)
 			const stem = name.replace(/[^\w.-]/g, '_')

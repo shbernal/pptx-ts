@@ -31,7 +31,7 @@ import {
 	MediaError,
 	type FontMetrics,
 } from '../../../dist/measure.js'
-import { at } from '../../helpers.ts'
+import { at, caught, defined } from '../../helpers.ts'
 
 const fixture = (name: string) => fileURLToPath(new URL(`../../read/fixtures/fonts/${name}`, import.meta.url))
 const REG_BYTES = new Uint8Array(readFileSync(fixture('Silkscreen-Regular.ttf')))
@@ -215,7 +215,7 @@ describe('a wrong selector is refused rather than quietly falling back', () => {
 	})
 
 	test('a name that matches no member throws, and the message lists what is there', async () => {
-		const err = await parseFontMetrics(TTC, { font: 'MS PGothic' }).catch((e) => e)
+		const err = defined(await caught(() => parseFontMetrics(TTC, { font: 'MS PGothic' })))
 		expect(err).toBeInstanceOf(InvalidOptionError)
 		expect(err.code).toBe('font/collection-face-not-found')
 		expect(err.message).toContain('Silkscreen')
@@ -234,7 +234,7 @@ describe('a wrong selector is refused rather than quietly falling back', () => {
 	})
 
 	test('bytes that are not a font throw a MediaError, not a bare Error', async () => {
-		const err = await parseFontMetrics(new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7])).catch((e) => e)
+		const err = defined(await caught(() => parseFontMetrics(new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7]))))
 		expect(err).toBeInstanceOf(MediaError)
 		expect(err.code).toBe('font/parse-failed')
 	})
@@ -307,7 +307,7 @@ describe('a malformed collection is refused, not read into garbage', () => {
 			}
 		})
 		expect(listFontFaces(bytes)[0]).toEqual({ index: 0 })
-		const err = await parseFontMetrics(bytes, { font: 'Nothing Here' }).catch((e) => e)
+		const err = defined(await caught(() => parseFontMetrics(bytes, { font: 'Nothing Here' })))
 		expect(err.code).toBe('font/collection-face-not-found')
 		expect(err.message).toContain('(unnamed)')
 	})
@@ -401,7 +401,7 @@ describe('pptx.registerFontMetrics accepts a collection', () => {
 
 	test('a face naming no member throws instead of silently measuring the first', async () => {
 		const pptx = new PptxTs()
-		const err = await pptx.registerFontMetrics('MS PGothic', TTC).catch((e) => e)
+		const err = defined(await caught(() => pptx.registerFontMetrics('MS PGothic', TTC)))
 		expect(err).toBeInstanceOf(InvalidOptionError)
 		expect(err.code).toBe('font/collection-face-not-found')
 	})
@@ -455,7 +455,7 @@ interface OracleFace {
 }
 
 const oracle: { faces?: OracleFace[] } | null = existsSync(ORACLE_PATH)
-	? JSON.parse(readFileSync(ORACLE_PATH, 'utf8'))
+	? (JSON.parse(readFileSync(ORACLE_PATH, 'utf8')) as { faces?: OracleFace[] })
 	: null
 const oracleFaces = (oracle?.faces ?? []).filter((f) => existsSync(`${FONT_DIR}\\${f.file}`))
 

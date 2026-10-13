@@ -33,6 +33,11 @@ interface OracleRun {
 
 /** One case of `autofit-shrink.cases.json` or `autofit-resize.cases.json`. */
 interface OracleCase {
+	id: string
+	wPt: number
+	hPt: number
+	wrap?: boolean
+	insetsPt?: { l?: number; r?: number; t?: number; b?: number }
 	paragraphs: Array<{
 		runs: OracleRun[]
 		lineSpacingPct?: number
@@ -55,11 +60,24 @@ async function registerCaseFaces(registry: FontMetricsRegistry, c: OracleCase) {
 	return true
 }
 
-const calibration = JSON.parse(readFileSync(resolve(FIXTURES, 'autofit-calibration.json'), 'utf8'))
-const shrinkSpec = JSON.parse(readFileSync(resolve(FIXTURES, 'autofit-shrink.cases.json'), 'utf8'))
-const resizeSpec = JSON.parse(readFileSync(resolve(FIXTURES, 'autofit-resize.cases.json'), 'utf8'))
-const ppById = new Map()
-const loById = new Map()
+/** One case of `autofit-calibration.json`: what each renderer baked for the box of the same id. */
+interface CalibrationCase {
+	id: string
+	powerpoint: { fontScale?: number | null; extCyEmu?: number | null }
+	libreoffice?: { hEmu?: number | null } | null
+}
+
+const calibration = JSON.parse(readFileSync(resolve(FIXTURES, 'autofit-calibration.json'), 'utf8')) as {
+	decks: { cases: CalibrationCase[] }[]
+}
+const shrinkSpec = JSON.parse(readFileSync(resolve(FIXTURES, 'autofit-shrink.cases.json'), 'utf8')) as {
+	cases: OracleCase[]
+}
+const resizeSpec = JSON.parse(readFileSync(resolve(FIXTURES, 'autofit-resize.cases.json'), 'utf8')) as {
+	cases: OracleCase[]
+}
+const ppById = new Map<string, CalibrationCase['powerpoint']>()
+const loById = new Map<string, NonNullable<CalibrationCase['libreoffice']>>()
 for (const deck of calibration.decks) {
 	for (const c of deck.cases) {
 		ppById.set(c.id, c.powerpoint)
@@ -95,6 +113,7 @@ describe('autofit calibration oracle: shrink solver is conservative vs PowerPoin
 		const pp = ppById.get(c.id)
 		// Only cases where PowerPoint actually baked a fontScale are conservativeness targets.
 		if (!pp || pp.fontScale == null) continue
+		const ppFontScale = pp.fontScale
 
 		test(c.id, async (ctx) => {
 			const registry = new FontMetricsRegistry()
@@ -114,7 +133,7 @@ describe('autofit calibration oracle: shrink solver is conservative vs PowerPoin
 
 			const out = solveShrink(paragraphs, box, resolve)
 			const computedPct = out.kind === 'shrink' ? out.result.fontScalePct : 100
-			const ppPct = pp.fontScale / 1000
+			const ppPct = ppFontScale / 1000
 
 			// CONSERVATIVE: computed scale must be ≤ PowerPoint's (shrink at least as much).
 			expect(computedPct).toBeLessThanOrEqual(ppPct)
@@ -127,6 +146,7 @@ describe('autofit calibration oracle: resize solver is conservative vs PowerPoin
 		const pp = ppById.get(c.id)
 		const lo = loById.get(c.id)
 		if (!pp || pp.extCyEmu == null) continue
+		const ppExtCyEmu = pp.extCyEmu
 
 		test(c.id, async (ctx) => {
 			const registry = new FontMetricsRegistry()
@@ -152,7 +172,7 @@ describe('autofit calibration oracle: resize solver is conservative vs PowerPoin
 
 			// CONSERVATIVE (resize has no safety net): computed cy must be ≥ PowerPoint's
 			// baked height AND ≥ the LibreOffice-rendered height, so text never overflows.
-			expect(computedCyEmu).toBeGreaterThanOrEqual(pp.extCyEmu)
+			expect(computedCyEmu).toBeGreaterThanOrEqual(ppExtCyEmu)
 			if (lo?.hEmu != null) expect(computedCyEmu).toBeGreaterThanOrEqual(lo.hEmu)
 		})
 	}

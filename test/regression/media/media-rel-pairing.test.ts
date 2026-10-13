@@ -20,7 +20,7 @@ const MS_MEDIA_REL = 'http://schemas.microsoft.com/office/2007/relationships/med
 /** `{ rId: Type }` for every relationship on slide 1. */
 async function slideRels(zip: JSZip) {
 	const xml = await readEntry(zip, 'ppt/slides/_rels/slide1.xml.rels')
-	return Object.fromEntries([...xml.matchAll(/Id="(rId\d+)" Type="([^"]+)"/g)].map((m) => [m[1], m[2]]))
+	return Object.fromEntries([...xml.matchAll(/Id="(rId\d+)" Type="([^"]+)"/g)].map((m) => [at(m, 1), at(m, 2)]))
 }
 
 const LINK = 'https://www.youtube.com/embed/Dph6ynRVyUc'

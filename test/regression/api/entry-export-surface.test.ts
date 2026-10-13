@@ -19,7 +19,10 @@ describe('Entry export surface', () => {
 	for (const entry of ENTRIES) {
 		test(`${entry}.js exports working textRun/textRuns value helpers`, async () => {
 			// `.js` stays in the static part so vite's dynamic-import-vars is satisfied.
-			const mod = await import(`../../../dist/${entry}.js`)
+			const mod = (await import(`../../../dist/${entry}.js`)) as Pick<
+				typeof import('../../../dist/index.js'),
+				'textRun' | 'textRuns'
+			>
 
 			assertEqual(typeof mod.textRun, 'function', `${entry} must export textRun as a function`)
 			assertEqual(typeof mod.textRuns, 'function', `${entry} must export textRuns as a function`)

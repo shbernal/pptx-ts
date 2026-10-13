@@ -637,11 +637,11 @@ defineRegressionSuite('Chart option validation', [
 					build((p) => p.addSlide().addChart(data, { ...BASE, type }))
 				)
 				assert(codes.includes('chart/point-count-mismatch'), `${what}: warns; got ${JSON.stringify(codes)}`)
-				if (type === ChartType.bar) {
+				if (type === 'bar') {
 					const xml = await chartXml(result.zip)
 					assertNotIncludes(xml, '<c:pt idx="2">', `${what}: no point is cached past the two categories`)
 				}
-				if (type === ChartType.bubble) {
+				if (type === 'bubble') {
 					const xml = await chartXml(result.zip)
 					assertIncludes(xml, '<c:bubbleSize><c:numRef><c:f>Sheet1!$C$2:$C$3</c:f>', `${what}: a forward size range`)
 				}

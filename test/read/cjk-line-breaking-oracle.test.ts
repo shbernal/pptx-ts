@@ -56,7 +56,9 @@ describe('CJK oracle: the sidecar still describes the committed deck', () => {
 	)
 
 	test('every case has a named box in the deck', () => {
-		expect([...shapes.keys()].filter(Boolean).sort()).toEqual(oracle.cases.map((c) => c.id).sort())
+		expect([...shapes.keys()].filter((name): name is string => Boolean(name)).sort()).toEqual(
+			oracle.cases.map((c) => c.id).sort()
+		)
 	})
 
 	for (const c of oracle.cases) {
@@ -92,7 +94,7 @@ describe(`CJK oracle: the wrap model reproduces PowerPoint's line breaking`, () 
 				// The widths are unreproducible, but the model still has to SAY so: this is
 				// the one gap that can measure short rather than tall, so it is reported
 				// rather than absorbed (docs/contributing/design/text-fit.md, "Font fallback").
-				const byFace = new Map()
+				const byFace = new Map<string, Set<number>>()
 				collectUncoveredCodepoints(paragraphs, registry, byFace)
 				expect(byFace.get(c.fontFace)?.size ?? 0).toBeGreaterThan(0)
 				ctx.skip(`${c.fontFace} does not cover every code point in this case; PowerPoint fell back, the model cannot`)

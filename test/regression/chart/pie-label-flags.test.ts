@@ -1,5 +1,5 @@
 import { ChartType } from '../../../dist/node.js'
-import { defineRegressionSuite, build, assert, assertEqual, captureDiagnostics } from '../../helpers.ts'
+import { defineRegressionSuite, build, assert, assertEqual, at, captureDiagnostics } from '../../helpers.ts'
 import { chartXml } from './chart-parts.ts'
 
 // A pie labels its *points*, not its series, so it emits two kinds of `<c:dLbls>`: one per point
@@ -18,7 +18,7 @@ const BASE = { x: 1, y: 1, w: 6, h: 4 }
 function plotLevelFlags(xml: string): Record<string, number> {
 	const withoutPerPoint = xml.replace(/<c:dLbl>[\s\S]*?<\/c:dLbl>/g, '')
 	return Object.fromEntries(
-		[...withoutPerPoint.matchAll(/<c:show(\w+) val="([01])"\/>/g)].map((m) => [m[1], Number(m[2])])
+		[...withoutPerPoint.matchAll(/<c:show(\w+) val="([01])"\/>/g)].map((m) => [at(m, 1), Number(m[2])])
 	)
 }
 

@@ -101,7 +101,7 @@ describe('3D model: PowerPoint-authored fixture', () => {
 		const targetBytes = await readFile(fixturePath('theme-colors'))
 		const target = await Presentation.load(targetBytes)
 
-		const imported = await target.importSlide(source, 0)
+		const imported = target.importSlide(source, 0)
 		assert(imported, 'the slide was imported')
 
 		const out = await target.save()
