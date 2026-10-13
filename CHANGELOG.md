@@ -186,6 +186,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`readModelToIr` no longer notes `table.style` on a table that names no style.** It filed
+  `table.style` / `dropped` for every table without an `a:tableStyleId`, `addTable`'s own default
+  among them, though the replay names no style either and writes the same `<a:tblPr/>`
+  ([#258](https://github.com/shbernal/pptx-ts/issues/258)).
 - **An equation reads back, and `readModelToIr` replays it.** Nothing on the read side reached an
   OMML equation (`a14:m`): `Paragraph.runs` skipped it and `readModelToIr` dropped it as
   `text.equation`, so every equation `TextProps.math` writes was lost on its own round trip.

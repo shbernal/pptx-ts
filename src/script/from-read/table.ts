@@ -91,15 +91,6 @@ export function tableCall(frame: GraphicFrame, table: Table, ctx: MapContext): C
 		)
 	}
 
-	if (styleId === null) {
-		notes.note(
-			'table.style',
-			'dropped',
-			'unsupported',
-			"this table names no a:tableStyleId, so it takes the generated deck's default table style"
-		)
-	}
-
 	const columnWidths = table.columnWidths
 	const options = compact({
 		...positionOptions(box),
@@ -107,7 +98,8 @@ export function tableCall(frame: GraphicFrame, table: Table, ctx: MapContext): C
 		// `addTable` writes `noGrp` unless `objectLock` turns it off.
 		objectLock: lockOption(frame, GRAPHIC_FRAME_LOCK_ATTRS, ['noGrp']),
 		// The source GUID resolves against the destination's own tableStyles.xml, which a
-		// template-anchored output carries over intact.
+		// template-anchored output carries over intact. A table that names no style replays
+		// naming none, so it writes the same bare `a:tblPr` and nothing is lost (#258).
 		tableStyle: orUndefined(styleId),
 		// `tableFill`, not `fill`: the source has one fill on `a:tblPr`, and `fill` would
 		// flatten it into a copy on every cell, which is a different package for the same

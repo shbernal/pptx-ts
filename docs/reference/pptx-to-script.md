@@ -160,7 +160,7 @@ The counts come from `pnpm run script:census`, run in a clone of the repository 
 
 A count is the number of fixtures that raise the note at least once. Each fixture targets a few constructs, so a count shows what the corpus exercises, not how often a construct occurs in real decks. The table lists only constructs some fixture raises. [`knownNoteConstructs()`](api/script/functions/knownNoteConstructs.md) returns the full catalogue.
 
-The Output column says where the note fires. A construct that fires in both outputs has the same count in each. A construct under the `layout.` prefix is the slide construct of the same name, raised while re-authoring a layout's shapes. Across the corpus the standalone output raises 879 notes and the template-anchored output 430, which is 3 to 12 more per deck.
+The Output column says where the note fires. A construct that fires in both outputs has the same count in each. A construct under the `layout.` prefix is the slide construct of the same name, raised while re-authoring a layout's shapes. Across the corpus the standalone output raises 878 notes and the template-anchored output 429, which is 3 to 12 more per deck.
 
 | Construct | Output | Cause | What happens | Fixtures |
 | --- | --- | --- | --- | --- |
@@ -196,7 +196,6 @@ The Output column says where the note fires. A construct that fires in both outp
 | `slide.background` | Both | unwritable | A slide background taken from the theme (`p:bgRef`) is baked to the fill it resolves to | 1/61 |
 | `table.cell.fill.picture.geometry` | Both | unwritable | A cell's picture fill keeps its image. Its tiling, destination inset, DPI and rotate-with-shape setting do not carry | 1/61 |
 | `table.rowAuto` | Both | unsupported | Auto-height rows get an even share of the table height instead of fitting their content | 1/61 |
-| `table.style` | Both | unsupported | A table with no style ID takes the output deck's default table style | 1/61 |
 | `text.bullet.schemeToken` | Both | unwritable | A bullet colour outside the ten mapped scheme tokens is baked to hex | 1/61 |
 | `text.field` | Both | unread | The text of a date or footer field, or of a slide number beside other text, is dropped | 1/61 |
 | `text.kern` | Both | unwritable | A spaced run that states no kerning comes back stating `kern="0"`, because the write path turns kerning off on spaced text it is given no kerning for | 1/61 |

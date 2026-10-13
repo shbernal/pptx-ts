@@ -83,6 +83,19 @@ async function irForStyled(build: (pres: PptxTs) => unknown) {
 	return readModelToIr(await Presentation.load(buf))
 }
 
+describe('table replication — a table that names no style', () => {
+	// Every table without an `a:tableStyleId`, `addTable`'s own default among them, was noted
+	// `table.style` / `dropped`, though the replay writes the same bare `<a:tblPr/>` (#258).
+	test('replays with no tableStyle and no note', async () => {
+		const ir = await irFor((pres) => {
+			pres.addSlide().addTable([[{ text: 'a' }, { text: 'b' }]], { x: 1, y: 1, w: 4 })
+		})
+		assertEqual(optionsOf(tableCall(ir))['tableStyle'], undefined, 'no style is invented')
+		assert(!constructs(ir).has('table.style'), 'nothing is declared lost')
+		assert((await replay(tableCall(ir))).includes('<a:tblPr/>'), 'the replay writes the same bare a:tblPr')
+	})
+})
+
 describe('table replication — vertical cell text (a:tcPr/@vert)', () => {
 	test('a vert270 cell comes back vertical instead of being flattened', async () => {
 		const ir = await irFor((pres) => {
@@ -471,13 +484,9 @@ describe('table replication — every new construct at once', () => {
 		})
 
 		// No note may claim any of this was lost. A construct that regressed to "dropped" would
-		// show up here even if its own leg still passed for the wrong reason.
-		//
-		// `table.style` is excluded by name, not by loosening the filter: the fixture sets no
-		// `tableStyle`, so the generated deck's default one applies, and that note is correct
-		// and unrelated to anything here. Excluding it by name keeps the assertion able to fail
-		// on a construct nobody expected.
-		const raised = [...constructs(ir)].filter((c) => c.startsWith('table.') && c !== 'table.style')
+		// show up here even if its own leg still passed for the wrong reason. That includes
+		// `table.style`: the fixture sets no `tableStyle`, and neither does the replay (#258).
+		const raised = [...constructs(ir)].filter((c) => c.startsWith('table.'))
 		assertEqual(raised.join(','), '', 'no table construct is reported as lost')
 
 		const call = tableCall(ir)
