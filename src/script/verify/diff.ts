@@ -244,7 +244,7 @@ export function diffDeckIr(expected: CanonicalDeck, actual: CanonicalDeck, notes
 		(difference.kind === 'added' && Object.keys(WRITER_DEFAULTS).some((spec) => specCovers(spec, difference, 'suffix')))
 
 	return {
-		slideCount: Math.max(expected.slides.length, actual.slides.length),
+		slideCount,
 		differences,
 		undeclared: differences.filter((difference) => !accounted(difference)),
 		declared: differences.filter((difference) => difference.declaredBy !== null),

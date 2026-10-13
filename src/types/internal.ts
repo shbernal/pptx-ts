@@ -324,12 +324,12 @@ export interface SlideRelMedia {
 	type: string
 	opts?: MediaProps
 	path?: string
-	extn?: string
-	data?: string | ArrayBuffer
+	extn: string
+	data: string
 	/**
 	 * An `addMedia` poster frame the caller supplied no `cover` for, so it takes the library's
-	 * default play-button artwork. `addMediaDefinition` pushes the rel with this flag and no
-	 * `data`; `encodeSlideMediaRels` fills the bytes in during the async media pass, behind the
+	 * default play-button artwork. `addMediaDefinition` pushes the rel with this flag and an
+	 * empty `data`; `encodeSlideMediaRels` fills the bytes in during the async media pass, behind the
 	 * dynamic import that keeps the artwork out of every consumer's entry chunk. Every rel
 	 * carrying it has its `data` resolved before any part is emitted.
 	 */
@@ -500,6 +500,8 @@ export interface PresSlideInternal extends SlideBaseProps, Slide {
 	_rId: number
 	_slideLayout: SlideLayoutInternal | null
 	_slideId: number
+	/** Review comments; a slide always has the list, empty until `addComment` pushes one. */
+	_comments: SlideComment[]
 	/** Preset build animations on this slide, in play order (see {@link Slide.addAnimation}). */
 	_animations: AnimationProps[]
 }

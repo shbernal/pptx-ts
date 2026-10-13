@@ -143,13 +143,12 @@ function createMediaParts(slide: PartTarget, zip: ZipWriter, written: Set<string
 			// and a caller-supplied `addImage({ data })` may be either. A prefix-correcting
 			// block used to sit here and is gone -- it only ever prepended a label the decoder
 			// then stripped, so it could not change a single byte of any payload.
-			const data: string = rel.data && typeof rel.data === 'string' ? rel.data : ''
+			const bytes = decodeBase64ToBytes(rel.data)
+			if (!bytes) return
 
 			// B: Already-compressed formats (JPEG/PNG/video/…) gain ~nothing from DEFLATE, so
 			// STORE them to avoid wasted compression CPU on large decks; other parts inherit
 			// global compression.
-			const bytes = decodeBase64ToBytes(data)
-			if (!bytes) return
 			const extn = (rel.extn || rel.Target.split('.').pop() || '').toLowerCase()
 			zip.add(path, bytes, {
 				store: ALREADY_COMPRESSED_MEDIA_EXTN.has(extn) || ZIP_CONTAINER_EXTN.has(extn),
@@ -220,13 +219,13 @@ export async function buildPackageParts(
 		const canonicalMediaTargets = new Map<string, string>()
 		for (const target of mediaTargets) {
 			for (const rel of target._relsMedia) {
-				if (rel.type === 'online' || rel.type === 'hyperlink' || typeof rel.data !== 'string' || !rel.data) continue
+				if (rel.type === 'online' || rel.type === 'hyperlink' || !rel.data) continue
 				// OLE payloads are exempt: PowerPoint gives every embedded object its own part, and
 				// collapsing two identical ones would make editing either rewrite the other's source.
 				if (rel.oleRelType) continue
 				// Key on extension + bytes so identical content with differing part
 				// extensions is never merged into one mistyped file.
-				const key = (rel.extn || '') + '\0' + rel.data
+				const key = rel.extn + '\0' + rel.data
 				const canonical = canonicalMediaTargets.get(key)
 				if (canonical) rel.Target = canonical
 				else canonicalMediaTargets.set(key, rel.Target)
