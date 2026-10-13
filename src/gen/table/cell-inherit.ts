@@ -26,6 +26,7 @@
 export const CELL_INHERITED_TEXT_KEYS = [
 	'align',
 	'bold',
+	'breakLine',
 	'charSpacing',
 	'fontFace',
 	'fontSize',
@@ -36,8 +37,30 @@ export const CELL_INHERITED_TEXT_KEYS = [
 	'valign',
 ] as const
 
-/** The keys only the emitter inherits: they paint, or the fitter does not model them. */
-const CELL_INHERITED_EMIT_KEYS = ['border', 'color', 'fill', 'textDirection', 'underline'] as const
+/**
+ * The keys only the emitter inherits: they paint, or the fitter does not model them.
+ *
+ * `TableProps` takes every `TextBaseProps` key, and each of these writes on a cell. Eleven of them
+ * used to be missing from both lists, so a table-level `highlight` or `bullet` was accepted and
+ * wrote nothing, with no warning (#227).
+ */
+const CELL_INHERITED_EMIT_KEYS = [
+	'border',
+	'bullet',
+	'caps',
+	'color',
+	'fill',
+	'fontFaceEA',
+	'highlight',
+	'lang',
+	'paraIndent',
+	'paraMarginLeft',
+	'softBreakBefore',
+	'tabStops',
+	'textDirection',
+	'transparency',
+	'underline',
+] as const
 
 /** Every key the emitter inherits from the table onto a cell. */
 export const CELL_INHERITED_KEYS = [...CELL_INHERITED_TEXT_KEYS, ...CELL_INHERITED_EMIT_KEYS] as const
