@@ -15,7 +15,14 @@ import { validateBuf, validatorInstalled } from '../validator.ts'
 /** What `addComment` writes, as `Slide.comments` reads it back. */
 function comments(deck: Presentation) {
 	return deck.slides.map((slide) =>
-		slide.comments.map(({ author, authorInitials, text, x, y, date }) => ({ author, authorInitials, text, x, y, date }))
+		slide.comments.map(({ author, authorInitials, text, x, y, date }) => ({
+			author,
+			authorInitials,
+			text,
+			x,
+			y,
+			date,
+		}))
 	)
 }
 
@@ -91,5 +98,23 @@ describe('appendSlides carries review comments', () => {
 		const template = await new PptxTs().write({ outputType: 'uint8array' })
 		const { reread } = await appendOnto(template, generator())
 		expect([...reread.opc.parts.keys()].filter((name) => /comment/i.test(name))).toEqual([])
+	})
+
+	test('a fromTemplate replay numbers its comments from 1 again, as the source did (#244)', async () => {
+		// The template has one comment, so its author has lastIdx 1. fromTemplate strips that slide
+		// and its comment, and the replayed comment must take idx 1 again, not 2.
+		const comment = { author: 'Ada Probe', initials: 'AP', text: 'Probe comment', x: 1, y: 1 }
+		const bytes = await generator(comment).write({ outputType: 'uint8array' })
+
+		const shell = await Presentation.fromTemplate(bytes)
+		expect(shell.commentAuthors.map(({ name, lastIdx }) => ({ name, lastIdx }))).toEqual([
+			{ name: 'Ada Probe', lastIdx: 0 },
+		])
+		await shell.appendSlides(generator(comment), { layout: at(shell.layouts(), 0) })
+		const replay = await Presentation.load(await shell.save())
+		const source = await Presentation.load(bytes)
+
+		expect(replay.commentAuthors).toEqual(source.commentAuthors)
+		expect(at(replay.slides, 0).comments.map((c) => c.idx)).toEqual([1])
 	})
 })

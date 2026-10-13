@@ -121,3 +121,22 @@ export function carryCommentAuthors(dest: DeckTarget, source: DeckTarget, slideP
 	comments.forEach(renumber)
 	part.markDirty()
 }
+
+/**
+ * Reset every author's `lastIdx` in the deck's registry to 0, for a deck with no comments left
+ * (#244). `fromTemplate` strips the template's slides, and their comments with them, but the
+ * registry keeps counting from the comments it removed, so the next comment would be numbered
+ * after one the deck no longer has. `lastIdx` is the author's highest used index (ECMA-376
+ * §19.4.2), and in an empty deck that is none. The authors themselves stay, with their ids and
+ * colours, so a comment re-authored under the same name lands on the same entry.
+ * @param dest - the deck whose slides were all removed
+ */
+export function resetCommentAuthorIndexes(dest: DeckTarget): void {
+	const part = singleRelPart(dest.opc, dest.presentationPart.partName, COMMENT_AUTHORS_REL)
+	const root = part?.dom.documentElement
+	if (!part || !root) return
+	const authors = getElements(root, 'p:cmAuthor').filter((author) => attr(author, 'lastIdx') !== '0')
+	if (authors.length === 0) return
+	for (const author of authors) setAttr(author, 'lastIdx', '0')
+	part.markDirty()
+}
