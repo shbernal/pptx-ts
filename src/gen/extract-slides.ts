@@ -4,7 +4,7 @@
  * The serialization pass behind `Presentation.extractSlides()`: it runs the same
  * pre-serialization work a write does (`./prepare`), serializes each slide body, and resolves
  * everything the body *references* — image media, audio/video, online video, hyperlinks,
- * charts, notes — into descriptors the read side's `appendSlides` can splice into a loaded
+ * charts, notes, comments — into descriptors the read side's `appendSlides` can splice into a loaded
  * deck without touching that deck's masters, layouts or theme.
  *
  * Nothing here resolves a descriptor into a package part. Reserving parts and rebuilding the
@@ -255,6 +255,7 @@ export async function extractSlides(
 				onlineMedia: onlineMediaOf(slide, relByRid),
 				...(notes ? { notes } : {}),
 				...(transitionSound ? { transitionSound } : {}),
+				...(slide._comments?.length ? { comments: slide._comments } : {}),
 			}
 		})
 	} finally {

@@ -11,8 +11,8 @@ import type { PresSlideInternal } from '../../../src/types/internal.ts'
 //
 // Note for anyone reading a coverage report: this file imports from `src/`, not `dist/`, so none of
 // it counts toward the reported numbers — the suite is instrumented on the bundle. That is why
-// `gen/slide/comments.ts` still shows five red branches (`slides || []`, `slide._comments || []`
-// twice, the `?? 0` idx seed, and the `!m` skip below) despite being exercised here. All five are
+// `gen/slide/comments.ts` still shows four red branches (`slides || []`, `slide._comments || []`,
+// the `?? 0` idx seed, and the `!m` skip below) despite being exercised here. All four are
 // defensive fallbacks that the public API cannot reach: `assemble.ts` always passes an array,
 // `SlideBuilder` always initializes `_comments`, and every comment in `_comments` has been seen by
 // `resolveCommentAuthors` by the time `makeXmlComments` runs. Reaching them takes the stub slides
@@ -65,14 +65,14 @@ describe('makeXmlComments', () => {
 	test('cm attribute order: authorId, dt, idx (dt present)', () => {
 		const c = comment({ date: '2026-06-24T10:00:00Z' })
 		const meta = new Map([[c, { authorId: 0, idx: 1 }]])
-		const xml = makeXmlComments(slideWith([c]), meta)
+		const xml = makeXmlComments([c], meta)
 		expect(xml).toContain('<p:cm authorId="0" dt="2026-06-24T10:00:00Z" idx="1">')
 	})
 
 	test('dt attribute is omitted (not emitted empty) when date is unset', () => {
 		const c = comment()
 		const meta = new Map([[c, { authorId: 0, idx: 1 }]])
-		const xml = makeXmlComments(slideWith([c]), meta)
+		const xml = makeXmlComments([c], meta)
 		expect(xml).toContain('<p:cm authorId="0" idx="1">')
 		expect(xml).not.toContain('dt=')
 	})
@@ -80,27 +80,27 @@ describe('makeXmlComments', () => {
 	test('child order is p:pos then p:text; pos coords are rounded EMU', () => {
 		const c = comment({ x: 1, y: 0.5, text: 'hello' })
 		const meta = new Map([[c, { authorId: 0, idx: 1 }]])
-		const xml = makeXmlComments(slideWith([c]), meta)
+		const xml = makeXmlComments([c], meta)
 		expect(xml).toContain('<p:pos x="914400" y="457200"/><p:text>hello</p:text>')
 	})
 
 	test('text and dt are escaped', () => {
 		const c = comment({ text: 'A & B < C', date: 'Q&A' })
 		const meta = new Map([[c, { authorId: 0, idx: 1 }]])
-		const xml = makeXmlComments(slideWith([c]), meta)
+		const xml = makeXmlComments([c], meta)
 		expect(xml).toContain('<p:text>A &amp; B &lt; C</p:text>')
 		expect(xml).toContain('dt="Q&amp;A"')
 	})
 
 	test('a comment absent from meta is silently skipped (defensive branch)', () => {
 		const c = comment()
-		const xml = makeXmlComments(slideWith([c]), new Map())
+		const xml = makeXmlComments([c], new Map())
 		expect(xml).not.toContain('<p:cm ')
 		expect(xml).toContain('<p:cmLst')
 	})
 
 	test('no comments on the slide emits an empty cmLst', () => {
-		const xml = makeXmlComments(slideWith([]), new Map())
+		const xml = makeXmlComments([], new Map())
 		expect(xml).toContain('></p:cmLst>')
 	})
 })

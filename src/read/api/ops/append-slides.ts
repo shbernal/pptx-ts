@@ -3,7 +3,8 @@
  *
  * The hybrid "generate onto an existing deck" path: a slide producer authors slides, they are
  * spliced into this package under fresh partnames, and every dependency each one carries —
- * images, embedded and online media, hyperlinks, speaker notes, charts, intra-batch slide links
+ * images, embedded and online media, hyperlinks, speaker notes, review comments, charts, intra-batch
+ * slide links
  * — is wired into its `.rels`.
  *
  * Here rather than on the class for the reason `presentation.ts` states about the four import
@@ -23,6 +24,7 @@ import type { Relationships } from '../../opc/relationships.js'
 import { InternalError, InvalidOptionError, PackageReadError } from '../../../errors.js'
 import {
 	AUDIO_REL,
+	COMMENTS_REL,
 	CHART_COLOR_STYLE_CONTENT_TYPE,
 	CHART_COLOR_STYLE_REL,
 	CHART_CONTENT_TYPE,
@@ -47,6 +49,7 @@ import type { Slide } from '../slide.js'
 import type { AppendSlidesOptions, ExtractedSlide, LayoutHandle, SlideSource } from '../presentation-types.js'
 import { carryGeneratedEmbeddedFonts } from './embedded-fonts.js'
 import { addNotesSlidePart, ensureNotesMasterFromXml } from './notes-master.js'
+import { addCommentsPart } from './comments.js'
 import { requireEqualSlideSize } from './slide-size.js'
 import { pickDefined } from '../../../options-internal.js'
 
@@ -328,8 +331,8 @@ function wireFixedIdRels(
 }
 
 /**
- * The second phase: the rels the slide body names by no id — its notes and its layout — numbered
- * by `add()`, which takes one past the highest id present.
+ * The second phase: the rels the slide body names by no id — its notes, its comments and its
+ * layout — numbered by `add()`, which takes one past the highest id present.
  *
  * Strictly after {@link wireFixedIdRels}. The generator numbers a slide's rels from rId1, so an
  * auto id taken before a fixed one is claimed is routinely that fixed one: the notes rel used to
@@ -340,9 +343,11 @@ function wireAutoIdRels(
 	rels: Relationships,
 	partName: string,
 	notesPartName: string | null,
+	commentsPartName: string | null,
 	layoutPartName: string
 ): void {
 	if (notesPartName) rels.add(NOTES_SLIDE_REL, relativePartName(partName, notesPartName))
+	if (commentsPartName) rels.add(COMMENTS_REL, relativePartName(partName, commentsPartName))
 	rels.add(SLIDE_LAYOUT_REL, relativePartName(partName, layoutPartName))
 }
 
@@ -407,7 +412,10 @@ export async function appendSlides(
 	placed.forEach((placedSlide, i) => {
 		const rels = deck.opc.relationshipsFor(placedSlide.partName)
 		const notesPartName = wireFixedIdRels(deck, rels, placedSlide, extracted.notesMaster, partBySourceNumber, i)
-		wireAutoIdRels(rels, placedSlide.partName, notesPartName, target.partName)
+		// The comments part, and the authors it registers in the deck's commentAuthors.xml (#221).
+		const comments = placedSlide.slide.comments
+		const commentsPartName = comments?.length ? addCommentsPart(deck, comments) : null
+		wireAutoIdRels(rels, placedSlide.partName, notesPartName, commentsPartName, target.partName)
 
 		// Wire into presentation.xml (rel + p:sldId) at the requested position.
 		const at = options.at === undefined ? undefined : options.at + i

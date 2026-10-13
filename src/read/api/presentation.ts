@@ -619,6 +619,10 @@ export class Presentation {
 	 * (with the theme its `.rels` needs) — but only when this deck has none of its own, so
 	 * an existing notes master and its styling always win.
 	 *
+	 * Review comments (`addComment`) ride across as a comments part per slide. Their
+	 * authors merge into this deck's `commentAuthors.xml` by name and initials: an author
+	 * the deck already has keeps its id and continues its numbering, and a new one is added.
+	 *
 	 * Limitations:
 	 * - An internal link to a source slide outside the appended batch throws (its
 	 *   target has no counterpart in the destination).
