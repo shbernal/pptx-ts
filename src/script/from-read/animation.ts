@@ -16,7 +16,7 @@ import type { BuildEffect } from '../../read/api/animation.js'
 import { ANIM_PRESET_IDENTITY } from '../../ooxml/anim-presets.js'
 import type { PresetEffect } from '../../types/animation.js'
 import type { NoteScope } from '../fidelity.js'
-import type { CallIr } from '../ir.js'
+import { irCall, type CallIr } from '../ir.js'
 import type { MapContext } from './context.js'
 import { compact } from './values.js'
 
@@ -92,17 +92,16 @@ export function animationCalls(slide: Slide, ctx: MapContext): CallIr[] {
 		} else {
 			step.longest = Math.max(step.longest, duration)
 		}
-		calls.push({
-			method: 'addAnimation',
-			args: [
+		calls.push(
+			irCall('addAnimation', [
 				compact({
 					preset,
 					objectName: name,
 					trigger: trigger === 'onClick' ? undefined : trigger,
 					durationMs: stated === null || stated === identity.defaultDurationMs ? undefined : stated,
 				}) ?? { preset },
-			],
-		})
+			])
+		)
 	}
 	if (retimed) {
 		notes.note(

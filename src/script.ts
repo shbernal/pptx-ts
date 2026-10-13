@@ -28,16 +28,19 @@ export { canonicalDeckIr } from './script/verify/canonical.js'
 export type { CanonicalCall, CanonicalChrome, CanonicalDeck, CanonicalSlide } from './script/verify/canonical.js'
 export { diffDeckIr, isKnownNoteConstruct, knownNoteConstructs } from './script/verify/diff.js'
 export type { DifferenceKind, IrDifference, RoundTripReport } from './script/verify/diff.js'
-export { isAssetRef } from './script/ir.js'
+export { irArgs, isAssetRef } from './script/ir.js'
 export type {
 	AssetIr,
 	AssetRef,
 	BackgroundIr,
 	CallIr,
+	CallMethod,
+	CallParameters,
 	ChromeIr,
 	DeckIr,
 	DeckPropKey,
 	DeckPropsIr,
+	IrArg,
 	IrValue,
 	MasterIr,
 	SlideIr,

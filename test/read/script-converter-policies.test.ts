@@ -11,7 +11,7 @@
 import { describe, test } from 'vitest'
 import JSZip from 'jszip'
 import { Presentation } from '../../dist/read.js'
-import { readModelToIr, type DeckIr } from '../../dist/script.js'
+import { irArgs, readModelToIr, type DeckIr } from '../../dist/script.js'
 import { assert, assertEqual, defined, readEntry, at as atIndex } from '../helpers.ts'
 import { authorRead } from './authored.ts'
 import { at, opt } from './ir-path.ts'
@@ -75,7 +75,7 @@ describe('an unwritable scheme token is baked and noted, not passed through raw'
 			constructs(ir).includes('table.fill.schemeToken'),
 			'the table background bake is noted; got ' + JSON.stringify(constructs(ir))
 		)
-		const color = at(tableCall(ir).args[1], 'tableFill', 'color')
+		const color = at(irArgs(tableCall(ir))[1], 'tableFill', 'color')
 		assert(color !== 'lt2', `the raw token must not reach the script; got ${String(color)}`)
 	})
 
@@ -165,7 +165,7 @@ describe('an unwritable scheme token is baked and noted, not passed through raw'
 	const effectOf = (ir: DeckIr, key: string) =>
 		opt(
 			atIndex(ir.slides, 0)
-				.calls.flatMap((call) => call.args)
+				.calls.flatMap((call) => irArgs(call))
 				.find((arg) => arg !== null && typeof arg === 'object' && key in arg),
 			key
 		)
@@ -537,6 +537,6 @@ describe('a fill transparency is read on every surface that can carry one', () =
 				'<a:tblPr><a:solidFill><a:schemeClr val="lt2"><a:alpha val="60000"/></a:schemeClr></a:solidFill></a:tblPr>'
 			)
 		)
-		assertEqual(at(tableCall(ir).args[1], 'tableFill', 'transparency'), 40, 'and so does the table behind it')
+		assertEqual(at(irArgs(tableCall(ir))[1], 'tableFill', 'transparency'), 40, 'and so does the table behind it')
 	})
 })

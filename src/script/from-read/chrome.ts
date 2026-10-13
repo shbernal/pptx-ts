@@ -39,7 +39,7 @@
 import type { Presentation } from '../../read/api/presentation.js'
 import type { SlideLayout, SlideMaster, Theme } from '../../read/api/chrome.js'
 import { isGroupShape, type AnyShape } from '../../read/api/shapes.js'
-import { uniqueTitle, type ChromeIr, type IrValue, type MasterIr, type SlideIr, type ThemeIr } from '../ir.js'
+import { irArgs, uniqueTitle, type ChromeIr, type IrValue, type MasterIr, type SlideIr, type ThemeIr } from '../ir.js'
 import { layoutShapeScope, type NoteScope } from '../fidelity.js'
 import { masterObject } from './shape.js'
 import { forShape, type MapContext } from './context.js'
@@ -269,7 +269,7 @@ export function pruneUnfilledPlaceholders(chrome: ChromeIr, slides: SlideIr[], n
 		if (!Array.isArray(objects)) continue
 		const bound = slides.filter((slide) => slide.layout?.index === master.layoutIndex)
 		if (bound.length === 0) continue
-		const bindings = bound.map((slide) => slide.calls.flatMap((call) => placeholderBindingsOf(call.args)))
+		const bindings = bound.map((slide) => slide.calls.flatMap((call) => placeholderBindingsOf(irArgs(call))))
 		const kept = objects.filter((object) => {
 			const definition = definitionOf(object)
 			if (!definition) return true

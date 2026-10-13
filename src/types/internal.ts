@@ -67,7 +67,7 @@ export type MaybeUndefined<T> = Omit<T, OptionalKeysOf<T>> & { [K in OptionalKey
  * was on the public interface, where a caller setting it by hand would collide with the
  * registration pass rather than being ignored.
  */
-export interface HyperlinkPropsInternal extends HyperlinkProps {
+export type HyperlinkPropsInternal = HyperlinkProps & {
 	_rId?: number
 }
 

@@ -26,6 +26,8 @@
  */
 import type { FidelityNote } from './fidelity.js'
 import type { CoreProperties, ExtendedProperties } from '../read/api/document-properties.js'
+import type { CHART_NAME } from '../enums.js'
+import type { ChartMulti, ChartOpts, OptsChartData, Slide } from '../types/index.js'
 
 /**
  * A reference to bytes held in {@link DeckIr.assets}, standing where a write-API option
@@ -78,33 +80,84 @@ export interface AssetIr {
 	bytes: Uint8Array
 }
 
+/** The slide methods a {@link CallIr} names. */
+export type CallMethod =
+	| 'addText'
+	| 'addShape'
+	| 'addImage'
+	| 'addMedia'
+	| 'addTable'
+	| 'addChart'
+	| 'addConnector'
+	| 'addGroup'
+	| 'addComment'
+	| 'addAnimation'
+	| 'addNotes'
+
+/**
+ * Each method's positional parameters, from the write API. `addChart` is overloaded, and
+ * `Parameters` would see only its last signature, so both are spelled here.
+ */
+export type CallParameters = { [M in Exclude<CallMethod, 'addChart'>]: Parameters<Slide[M]> } & {
+	addChart:
+		| [data: OptsChartData[], options: ChartOpts & { type: CHART_NAME }]
+		| [charts: ChartMulti[], options?: ChartOpts]
+}
+
+/**
+ * A write-API value as the IR holds it. An optional key or argument is absent rather than
+ * `undefined`, as {@link IrValue} requires, and a `data` or `cover` key, where the write API
+ * takes bytes, may hold an {@link AssetRef}.
+ */
+export type IrArg<T> = T extends string | number | boolean | null
+	? T
+	: T extends readonly unknown[]
+		? { [K in keyof T]: IrArg<Exclude<T[K], undefined>> }
+		: T extends object
+			? {
+					[K in keyof T]: K extends 'data' | 'cover'
+						? IrArg<Exclude<T[K], undefined>> | AssetRef
+						: IrArg<Exclude<T[K], undefined>>
+				}
+			: never
+
 /**
  * One write-API call on a slide, in the order it must be made. `method` names a real
- * method on the authored slide and `args` are its positional arguments — so a printer is
- * a formatter, and `readModelToIr` owns every semantic choice.
+ * method on the authored slide and `args` are its positional arguments, typed per method from
+ * the write API — so a printer is a formatter, and `readModelToIr` owns every semantic choice.
+ * Narrowing on `method` types `args`: after `call.method === 'addTable'`, `call.args[1]` is a
+ * `TableProps` as the IR spells it.
  *
  * Ordering is z-order: OOXML paints a slide's shape tree front-to-back in document order,
  * and so does the write path, so preserving call order preserves overlap.
  */
-export interface CallIr {
-	method:
-		| 'addText'
-		| 'addShape'
-		| 'addImage'
-		| 'addMedia'
-		| 'addTable'
-		| 'addChart'
-		| 'addConnector'
-		| 'addGroup'
-		| 'addComment'
-		| 'addAnimation'
-		| 'addNotes'
-	args: IrValue[]
-	/**
-	 * The source shape's name (`p:cNvPr/@name`), when it had one. Not an argument —
-	 * carried so a printer can comment the call and a fidelity note can point at it.
-	 */
-	sourceName?: string
+export type CallIr = {
+	[M in CallMethod]: {
+		method: M
+		args: IrArg<CallParameters[M]>
+		/**
+		 * The source shape's name (`p:cNvPr/@name`), when it had one. Not an argument —
+		 * carried so a printer can comment the call and a fidelity note can point at it.
+		 */
+		sourceName?: string
+	}
+}[CallMethod]
+
+/**
+ * Build a {@link CallIr} from arguments a mapper assembled as {@link IrValue}s.
+ *
+ * A cast, for the reason {@link asIrValue} gives in the other direction: the mappers in
+ * `from-read/` build arguments generically, and that each one matches its method's write-API
+ * parameters is checked where it counts, by type-checking the printed scripts
+ * (`test/read/script-printed-source-typechecks.test.ts`), not here.
+ */
+export function irCall(method: CallMethod, args: IrValue[], name?: { sourceName?: string }): CallIr {
+	return { method, args, ...name } as unknown as CallIr
+}
+
+/** A call's arguments widened to {@link IrValue}, for code that walks them generically. */
+export function irArgs(call: CallIr): IrValue[] {
+	return call.args as unknown as IrValue[]
 }
 
 /**

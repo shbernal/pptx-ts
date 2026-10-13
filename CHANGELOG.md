@@ -136,6 +136,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   up the master's level-1 bullet and hanging indent. Without `textStyles` that is the built-in
   `•` at 0.375in. Set `bullet: false` on the definition to keep the old output for its slides, or
   on the slide text for one paragraph ([#174](https://github.com/shbernal/pptx-ts/issues/174)).
+- **Breaking: `HyperlinkProps` is a union with one destination per arm.** It is
+  `UrlHyperlinkProps | SlideHyperlinkProps | ActionHyperlinkProps`, each taking `tooltip`, so the
+  type refuses `{}` and any two of `url`, `slide` and `action`, as the writer does. The writer also
+  refuses `action` beside a `url` or a `slide` (`hyperlink/conflicting-targets`), where it used to
+  drop the action and follow the other. **Migration:** build the link in one expression
+  (`{ url, tooltip }`) instead of assigning fields to a `HyperlinkProps` one at a time; code that
+  sets one destination is unaffected.
+- **Breaking: `CallIr` is a union discriminated on `method`, its `args` typed from the write API.**
+  `args` was `IrValue[]` for every method. Narrowing on `method` now types it: after
+  `call.method === 'addTable'`, `call.args` is `[rows, options?]` spelled as `IrArg<TableRow[]>`
+  and `IrArg<TableProps>`. `IrArg<T>` is a write-API type as the IR holds it: no `undefined`, and an
+  `AssetRef` where a `data` or `cover` key takes bytes. `CallMethod`, `CallParameters` and `IrArg`
+  are exported from `pptx-ts/script`. **Migration:** code that walks any call's arguments
+  generically reads them through the new `irArgs(call)`, which returns `IrValue[]` as before; code
+  that builds a `CallIr` by hand gives each method the arguments its write-API call takes.
 - **`baseline` is a percent.** It counted twentieths of a percent (written as
   `Math.round(baseline * 50)` thousandths), unlike `bullet.size`, `fit.fontScale`,
   `Run.baselinePct` and every other percentage in the API

@@ -8,7 +8,7 @@
  * printed two slightly different ways would mean the round-trip oracle certifies one tier and
  * only resembles a check on the other, and the drift would be invisible in review.
  */
-import { asIrValue, type AssetRef, type DeckIr, type IrValue, type SlideIr } from '../ir.js'
+import { asIrValue, irArgs, type AssetRef, type DeckIr, type IrValue, type SlideIr } from '../ir.js'
 import { inches } from '../units.js'
 import { scopeNotes, type FidelityNote, type NoteCollector } from '../fidelity.js'
 import { commentText, printArguments, printString, printValue, type AssetPrinter } from './literal.js'
@@ -245,7 +245,7 @@ export function printSlide(
 		// The source shape name makes a fidelity note navigable: a note carries the same
 		// name, and without it a reader has no way to find the call it refers to.
 		if (call.sourceName) lines.push(`// ${commentText(call.sourceName.replace(/\s+/g, ' '))}`)
-		lines.push(printArguments(`${identifier}.${call.method}`, call.args, 0, printAsset))
+		lines.push(printArguments(`${identifier}.${call.method}`, irArgs(call), 0, printAsset))
 	}
 
 	return lines

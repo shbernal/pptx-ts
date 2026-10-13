@@ -49,7 +49,8 @@ export function hyperlinkRel(rId: number, hyperlink: HyperlinkProps): SlideRel {
  * definer and the run emitter each checked their own subset, and the shape path checked nothing. An
  * image refused an action-only link that a shape accepted, and nothing refused `url` together with
  * `slide`: that wrote two `<a:hlinkClick>` into one `<p:cNvPr>`, which allows one, over a slide-typed
- * relationship whose target was built from the URL.
+ * relationship whose target was built from the URL. An `action` beside a `url` or a `slide` was
+ * dropped without a word, so it is refused too.
  *
  * A `slide` has to be a 1-based slide number. `-1` and `1.5` were written as the targets
  * `slide-1.xml` and `slide1.5.xml`, parts no deck has. Whether the numbered slide exists is only
@@ -65,10 +66,11 @@ export function validateHyperlink(hyperlink: unknown, call: string): asserts hyp
 			`${call}: \`hyperlink\` option should be an object. Ex: \`hyperlink:{url:'https://github.com'}\``
 		)
 	const { url, slide, action } = hyperlink as HyperlinkProps
-	if (url && slide)
+	const stated = (['url', 'slide', 'action'] as const).filter((key) => (hyperlink as HyperlinkProps)[key])
+	if (stated.length > 1)
 		throw new InvalidOptionError(
 			'hyperlink/conflicting-targets',
-			`${call}: \`hyperlink\` takes one destination but states both \`url\` and \`slide\`.`
+			`${call}: \`hyperlink\` takes one destination but states ${stated.map((key) => `\`${key}\``).join(' and ')}.`
 		)
 	if (slide != null && !(Number.isInteger(slide) && slide >= 1))
 		throw new InvalidOptionError(

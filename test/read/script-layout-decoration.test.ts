@@ -46,6 +46,7 @@ import {
 import {
 	canonicalDeckIr,
 	diffDeckIr,
+	irArgs,
 	printScript,
 	printStandaloneScript,
 	readModelToIr,
@@ -177,7 +178,7 @@ describe('layout decoration — the IR, read against the deck rather than the co
 			const idx = at(definition, 'placeholder', 'options', 'idx')
 			for (const slide of bound) {
 				const fills = slide.calls.some((call) =>
-					call.args.some((arg) => {
+					irArgs(call).some((arg) => {
 						const binding = opt(arg, 'placeholder')
 						return binding === at(definition, 'placeholder', 'options', 'name') || opt(binding, 'idx') === idx
 					})

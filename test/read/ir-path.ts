@@ -1,6 +1,6 @@
-// Asserting steps into a script IR value. A call's `args` are `IrValue[]`, and the script
-// tests probe deep into them; these helpers keep each step checked instead of casting the
-// whole argument to a write-API type.
+// Asserting steps into a script IR value. A call narrowed on its `method` types its `args`;
+// the tests that walk any call's arguments widen them with `irArgs` and step in with these
+// helpers, which keep each step checked.
 //
 // Not a test file (no `.test.` in the name), so Vitest's default glob skips it.
 
