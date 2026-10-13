@@ -127,11 +127,13 @@ Tier 5 writes four defaults onto every cell. They are direct formatting, so they
 | Property | Default on every cell |
 | --- | --- |
 | `border` | no line on all four sides, on a table without `tableStyle` |
-| `color` | `'000000'` |
+| `color` | the slide's `color`, else `'000000'` on a table without `tableStyle` |
 | `fontSize` | `12` |
 | `margin` | `[0.05, 0.1, 0.05, 0.1]` inches |
 
 A cell that holds a hyperlink, on the cell or on one of its runs, gets no black default. Otherwise the words after the link would stay black instead of taking the theme text colour. The other cells keep the default.
+
+A table with `tableStyle` gets no black default either, so its text takes the style's colours, such as the white of Medium Style 2's header row. Set the slide's `color` and every cell without a colour of its own takes that instead.
 
 To brand a table, use direct formatting:
 

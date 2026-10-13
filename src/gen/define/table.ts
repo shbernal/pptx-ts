@@ -517,7 +517,8 @@ export function addTableDefinition(
 	// a hyperlink is left out (`cellHasHyperlink`), because the default paints the whole run, so
 	// the words *after* a link would come out black instead of following the link colour. That
 	// cell is emitted with no `<a:solidFill>` and PowerPoint resolves its text from the theme's
-	// `tx1`.
+	// `tx1`. A table that names a `tableStyle` gets no black either, only a slide colour: its
+	// style's `a:tcTxStyle` decides the text colour (#243).
 	if (!opt.color) {
 		// table option > the slide's `color` > black. An empty `color` is unstated, as it was when
 		// black was written over it here.
