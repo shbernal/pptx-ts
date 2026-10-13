@@ -603,7 +603,7 @@ describe('combo replay', () => {
 			)
 		})
 		const subcharts = call.args[0] as unknown as ChartMulti[]
-		expect(subcharts[0]?.options.barGrouping).toBe('stacked')
+		expect(subcharts[0]?.options?.barGrouping).toBe('stacked')
 		expect(optionsOf(call).barGrouping, 'not stated for the chart, where the line would take it').toBeUndefined()
 		expect(copy).toEqual(source)
 	})

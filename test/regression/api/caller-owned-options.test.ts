@@ -133,7 +133,7 @@ defineRegressionSuite('Caller-owned options', [
 			const STYLE = { x: 0.5, y: 0.5, w: 6, colW: [3, 3] }
 			const { zip, warnings } = await buildCapturingLogs((p) => {
 				const s = p.addSlide()
-				// @ts-expect-error bare-string cells are taken at runtime; TableRow types only cell objects
+				// @ts-expect-error accepted leniency, not API: TableRow types only cell objects, bare strings are taken at runtime
 				s.addTable([['A1', 'B1']], STYLE)
 				// @ts-expect-error as above
 				s.addTable([['A2', 'B2']], { ...STYLE, y: 3 })
@@ -163,7 +163,7 @@ defineRegressionSuite('Caller-owned options', [
 			const STYLE = { x: 0.5, y: 0.5, w: 6, border: BORDER }
 			const { zip } = await build((p) => {
 				const s = p.addSlide()
-				// @ts-expect-error bare-string cells are the subject; TableRow types only cell objects
+				// @ts-expect-error accepted leniency, not API: bare-string cells are the subject; TableRow types only cell objects
 				s.addTable([['A1', 'B1']], STYLE)
 			})
 			assertIncludes(await readEntry(zip, 'ppt/slides/slide1.xml'), 'FF0000', 'the table border colour')

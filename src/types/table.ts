@@ -11,7 +11,7 @@ import type {
 	PresetMaterialType,
 	TextHorzOverflowType,
 } from '../ooxml/st-enums.js'
-import type { DataOrPathProps, Margin, PositionProps } from './core.js'
+import type { DataOrPathProps, Margin, PlaceholderPositionProps, PositionProps } from './core.js'
 import type { ObjectNameProps, PlaceholderOption } from './object.js'
 import type { ShapeProps } from './shape.js'
 import type { BorderProps, FillOption, HyperlinkProps, ShadowProps } from './style.js'
@@ -315,7 +315,7 @@ export interface TableCellProps extends TextBaseProps {
 	 */
 	fit?: 'none' | 'shrink' | 'resize' | TextFitShrinkProps
 }
-export interface TableProps extends PositionProps, TextBaseProps, ObjectNameProps {
+export interface TableProps extends PlaceholderPositionProps, TextBaseProps, ObjectNameProps {
 	/**
 	 * Name of a table/content placeholder defined on the slide layout/master to bind this table to.
 	 * - when it matches a layout/master placeholder, the table's `<p:graphicFrame>` emits that

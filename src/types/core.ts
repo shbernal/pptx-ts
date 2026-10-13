@@ -56,6 +56,36 @@ export interface PositionProps {
 	w?: Coord
 }
 /**
+ * {@link PositionProps} for an object that can fill a layout placeholder: text, an image, a table
+ * or a chart. Each axis also takes `null`, which leaves it unstated, as omitting it does. With
+ * `placeholder`, an unstated axis comes from the layout placeholder; without one, it takes the
+ * object's default. `null` is how a computed value says "unset" where `exactOptionalPropertyTypes`
+ * refuses `undefined`.
+ * @example { placeholder: 'body', x: indent ?? null } // the placeholder's left edge unless indented
+ */
+export interface PlaceholderPositionProps {
+	/**
+	 * Horizontal position, as {@link PositionProps.x}. `null` leaves it unstated: the layout
+	 * placeholder's, with `placeholder`.
+	 */
+	x?: Coord | null
+	/**
+	 * Vertical position, as {@link PositionProps.y}. `null` leaves it unstated: the layout
+	 * placeholder's, with `placeholder`.
+	 */
+	y?: Coord | null
+	/**
+	 * Height, as {@link PositionProps.h}. `null` leaves it unstated: the layout placeholder's, with
+	 * `placeholder`.
+	 */
+	h?: Coord | null
+	/**
+	 * Width, as {@link PositionProps.w}. `null` leaves it unstated: the layout placeholder's, with
+	 * `placeholder`.
+	 */
+	w?: Coord | null
+}
+/**
  * Reusable optional data/path fields.
  * Use `DataOrPathRequiredProps` for APIs that require at least one source.
  */

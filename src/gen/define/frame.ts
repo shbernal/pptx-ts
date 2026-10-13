@@ -15,8 +15,8 @@ import type { Coord } from '../../types/index.js'
 type Axis = 'x' | 'y' | 'w' | 'h'
 const AXES: readonly Axis[] = ['x', 'y', 'w', 'h']
 
-/** A frame as the caller wrote it: any axis may be missing or `undefined`. */
-export type AuthoredFrame = { [A in Axis]?: Coord | undefined }
+/** A frame as the caller wrote it: any axis may be missing, `undefined` or `null`. */
+export type AuthoredFrame = { [A in Axis]?: Coord | null | undefined }
 
 /** `0`, as a number or as a unit string such as `'0in'` or `'0%'`. */
 function isZeroCoord(value: Coord | undefined): boolean {
@@ -51,8 +51,8 @@ export function resolveAuthoredFrame<K extends Axis>(
 	api: string,
 	zeroExtentAllowed = false
 ): Record<K, Coord> & AuthoredFrame {
-	const fallback: AuthoredFrame = defaults
-	const frame: AuthoredFrame = {}
+	const fallback: { [A in Axis]?: Coord } = defaults
+	const frame: { [A in Axis]?: Coord } = {}
 	for (const axis of AXES) {
 		const value = given[axis] ?? fallback[axis]
 		if (value !== undefined) frame[axis] = value

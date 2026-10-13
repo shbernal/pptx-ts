@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **The types admit three inputs the writer already took.** On text, an image, a table or a chart,
+  `x`, `y`, `w` and `h` take `null` (the new `PlaceholderPositionProps`), which leaves the axis
+  unstated as omitting it does, so with `placeholder` it comes from the layout placeholder. A text
+  option's `underline` takes `true` as shorthand for `{ style: 'sng' }`, and `false`, which states
+  nothing. A combo subchart's `ChartMulti.options` is optional, and an omitted one takes the chart's
+  options.
 - **`Shape.hasOwnLine`** says whether the shape has an `spPr/a:ln` of its own. The line getters report
   `null` for both a missing `a:ln` and an empty one, and the empty one inherits the whole outline
   ([#214](https://github.com/shbernal/pptx-ts/issues/214)).
@@ -164,6 +170,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   A default import (`import PptxTs from 'pptx-ts'`) names the class itself and is unaffected.
 
 ### Fixed
+
+- **A `null` axis and `underline: true` hold on every object they reach.** Text with `placeholder` and
+  `x: null` was placed at 0 rather than at the layout placeholder's left edge, as an image, a table
+  and a chart already were. `underline: true` on a table cell or a slide number wrote no underline;
+  it is now resolved where every run's properties are written, not only in `addText`.
 
 - **A slide's copy of a layout placeholder it leaves unfilled inherits an outline that paints
   nothing.** Where the definition's line names no paint, or there is none, the copy wrote an

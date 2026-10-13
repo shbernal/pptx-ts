@@ -49,7 +49,8 @@ export interface GroupProps extends PositionProps, ObjectNameProps {
 	/** Flip the group vertically */
 	flipV?: boolean
 }
-export interface ObjectOptions extends ImageBaseProps, PositionProps, ShapeProps, TableCellProps, TextPropsOptions {
+export interface ObjectOptions
+	extends ImageBaseProps, Omit<ShapeProps, keyof PositionProps>, TableCellProps, TextPropsOptions {
 	cx?: Coord
 	cy?: Coord
 	margin?: Margin

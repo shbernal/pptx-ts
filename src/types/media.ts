@@ -4,16 +4,24 @@
  * Re-exported by `./index.js`, which is the import site for the rest of `src/`.
  */
 import type { SHAPE_NAME } from '../enums.js'
-import type { Color, Coord, DataOrPathProps, DataOrPathRequiredProps, GeometryPoint, PositionProps } from './core.js'
+import type {
+	Color,
+	Coord,
+	DataOrPathProps,
+	DataOrPathRequiredProps,
+	GeometryPoint,
+	PlaceholderPositionProps,
+	PositionProps,
+} from './core.js'
 import type { ObjectNameProps, PlaceholderOption } from './object.js'
 import type { ShapeAdjustValue } from './shape.js'
 import type { HyperlinkProps, ShadowProps, ShapeLineProps } from './style.js'
 
 export type MediaType = 'audio' | 'online' | 'video'
 
-export interface ImageBaseProps extends PositionProps, ObjectNameProps {
+export interface ImageBaseProps extends PlaceholderPositionProps, ObjectNameProps {
 	/**
-	 * Sizing note (`w`/`h` inherited from {@link PositionProps}):
+	 * Sizing note (`w`/`h` inherited from {@link PlaceholderPositionProps}):
 	 * - When a `data` (base64) image is supplied and `w`/`h` are omitted, the natural pixel
 	 *   size is read from the image header (PNG/JPEG/GIF/BMP/WebP) and used at 96 DPI
 	 *   (natural pixels / 96 = inches).

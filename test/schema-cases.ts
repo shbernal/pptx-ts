@@ -1922,7 +1922,6 @@ export default [
 			const { buf } = await build((p) => {
 				p.addSlide().addChart(
 					[
-						// @ts-expect-error ChartMulti requires `options`, though a subchart without them builds
 						{
 							type: ChartType.bar,
 							data: [{ name: 'Bars', labels: ['A', 'B', 'C'], values: [3, 5, 2] }],

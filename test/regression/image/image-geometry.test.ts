@@ -113,9 +113,10 @@ describe('image geometry', () => {
 		assert(!/<p:bg>[\s\S]*?<a:blip/.test(xml), 'and the slide paints no background image')
 	})
 
-	test('a table and an image with a null axis both take it from the placeholder', async () => {
+	test('a table, an image and text with a null axis all take it from the placeholder', async () => {
 		// The image treated `null` as unstated and the table did not: a table with `x: null` landed at
-		// the half-inch default rather than the placeholder's 3in.
+		// the half-inch default rather than the placeholder's 3in. Text kept the `null` to the render
+		// pass, which wrote it as 0.
 		const withPlaceholder = (p: PptxTs) =>
 			p.defineSlideMaster({
 				title: 'M',
@@ -124,17 +125,21 @@ describe('image geometry', () => {
 		const unset = null
 		const tableXml = await slideXml((p) => {
 			withPlaceholder(p)
-			// @ts-expect-error a null coordinate, which a JavaScript caller can pass for an unset axis
 			p.addSlide({ masterTitle: 'M' }).addTable([[{ text: 't' }]], { placeholder: 'body', x: unset })
 		})
 		const tableX = /<p:graphicFrame>[\s\S]*?<a:off x="(-?\d+)"/.exec(tableXml)?.[1]
 		assertEqual(Number(tableX), 3 * EMU_PER_INCH, 'the table')
 		const imageXml = await slideXml((p) => {
 			withPlaceholder(p)
-			// @ts-expect-error a null coordinate, which a JavaScript caller can pass for an unset axis
 			p.addSlide({ masterTitle: 'M' }).addImage({ data: pngData(32, 32), placeholder: 'body', x: unset })
 		})
 		assertEqual(pictureFrame(imageXml).x, 3 * EMU_PER_INCH, 'the image')
+		const textXml = await slideXml((p) => {
+			withPlaceholder(p)
+			p.addSlide({ masterTitle: 'M' }).addText('t', { placeholder: 'body', x: unset })
+		})
+		const textX = /<p:sp>[\s\S]*?<a:off x="(-?\d+)"/.exec(textXml)?.[1]
+		assertEqual(Number(textX), 3 * EMU_PER_INCH, 'the text')
 	})
 
 	test('Picture.setImage refuses a fit on a zero-extent picture, and leaves the picture as it was', async () => {

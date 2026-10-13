@@ -25,7 +25,7 @@ import type {
 	TickMark,
 	TimeUnit,
 } from '../ooxml/st-enums.js'
-import type { Color, HexColor, PatternFillProps, PositionProps } from './core.js'
+import type { Color, HexColor, PatternFillProps, PlaceholderPositionProps, PositionProps } from './core.js'
 import type { ObjectNameProps, PlaceholderOption } from './object.js'
 import type { BorderProps, FillOption, ShadowProps, StrokeProps } from './style.js'
 import type { TextBaseProps } from './text.js'
@@ -231,7 +231,11 @@ export interface OptsChartGridLine extends StrokeProps {
 export interface ChartMulti {
 	type: CHART_NAME
 	data: OptsChartData[]
-	options: ChartOpts
+	/**
+	 * This subchart's options, merged over the combo chart's own. Omitted, the subchart takes the
+	 * chart's options as they are.
+	 */
+	options?: ChartOpts
 }
 export interface ChartPropsFillLine {
 	/**
@@ -1108,7 +1112,7 @@ export interface ChartOpts
 		ChartPropsLegend,
 		ChartPropsTitle,
 		ObjectNameProps,
-		PositionProps {
+		PlaceholderPositionProps {
 	/**
 	 * Chart type — required when using the canonical `addChart(data, options)` signature.
 	 * - Omit only for multi-type (combo) charts, where each `ChartMulti` entry carries its own `type`.

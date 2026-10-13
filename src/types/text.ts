@@ -21,7 +21,7 @@ import type {
 	HAlign,
 	HexColor,
 	Margin,
-	PositionProps,
+	PlaceholderPositionProps,
 	TextVertType,
 	VAlign,
 } from './core.js'
@@ -279,12 +279,18 @@ export interface TextBaseProps {
 	 *   underline the run would otherwise inherit from its list style, placeholder, layout or
 	 *   master. Omitting the option instead states nothing and lets that inheritance stand —
 	 *   the two are different facts, not two spellings of one.
+	 * - `true` is shorthand for `{ style: 'sng' }`, a single line. `false` states nothing, as omitting
+	 *   the option does, so an inherited underline stands; `{ style: 'none' }` is the explicit off.
 	 * @default (unset) inherit
+	 * @example underline: true // single underline
+	 * @example underline: { style: 'dbl', color: 'FF0000' } // red double underline
 	 */
-	underline?: {
-		style?: (typeof TEXT_UNDERLINE_TYPES)[number]
-		color?: Color
-	}
+	underline?:
+		| boolean
+		| {
+				style?: (typeof TEXT_UNDERLINE_TYPES)[number]
+				color?: Color
+		  }
 	/**
 	 * vertical alignment
 	 * @default 'top'
@@ -332,7 +338,7 @@ export interface TextFitShrinkProps {
 	lnSpcReduction?: number
 }
 
-export interface TextPropsOptions extends PositionProps, DataOrPathProps, TextBaseProps, ObjectNameProps {
+export interface TextPropsOptions extends PlaceholderPositionProps, DataOrPathProps, TextBaseProps, ObjectNameProps {
 	/**
 	 * Preset-geometry start/end angles for text frames (`shape` + these build `<a:prstGeom>`
 	 * adjustment guides through the shared emitter — `genXmlPresetGeom` reads them whether
