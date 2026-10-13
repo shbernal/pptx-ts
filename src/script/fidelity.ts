@@ -349,7 +349,6 @@ export const NOTE_CONSTRUCTS = {
 	// the four it can now round-trip, so this no longer excuses every vertical cell.
 	'table.cell.vert': { fields: ['textDirection', 'vert'], tiers: BOTH_TIERS },
 	'table.rowAuto': { fields: ['rowH'], tiers: BOTH_TIERS },
-	'table.style': { fields: ['tableStyle'], tiers: BOTH_TIERS },
 	'text.align': { fields: ['align'], tiers: BOTH_TIERS },
 	'text.endParagraph.lang': { fields: [], tiers: BOTH_TIERS },
 	// `text.bullet.numberStartAt` and `text.bullet.style` used to live here, for

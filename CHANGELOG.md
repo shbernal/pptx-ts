@@ -186,6 +186,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`readModelToIr` no longer notes `table.style` on a table that names no style.** It filed
+  `table.style` / `dropped` for every table without an `a:tableStyleId`, `addTable`'s own default
+  among them, though the replay names no style either and writes the same `<a:tblPr/>`
+  ([#258](https://github.com/shbernal/pptx-ts/issues/258)).
 - **A custom-geometry path value can name a guide, on both sides.** A path point, `arcTo` radius or
   angle that named a guide (`<a:pt x="g0"/>`) read back as `0`, and `GeometryPoint` refused a name
   with `coord/invalid-format`, so a guide could never shape the drawn outline. `GeometryCommand`
