@@ -930,6 +930,32 @@ describe('deck IR — a hyperlinked run with no colour of its own', () => {
 	})
 })
 
+describe('deck IR — a cell of a styled table with no colour of its own', () => {
+	// The writer leaves it uncoloured so the style's `a:tcTxStyle` colours it, and the IR used to
+	// bake the resolved colour in under a note blaming the writer (#243).
+
+	test('stays uncoloured, so the replay leaves it to the table style', async () => {
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addTable([[{ text: 'head' }], [{ text: 'body' }]], {
+				x: 1,
+				y: 1,
+				w: 4,
+				tableStyle: '{5C22544A-7EE6-4342-B048-85BDC9FD1C3A}',
+				hasHeader: true,
+			})
+		})
+		const ir = readModelToIr(presentation)
+		const args = defined(allCalls(ir).find((c) => c.method === 'addTable')).args
+		assert(!JSON.stringify(args[0]).includes('"color"'), `no cell states a colour: ${JSON.stringify(args[0])}`)
+		assert(!constructs(ir).has('text.color.inherited'), 'and declares no loss, because there is none')
+		const { buf } = await authorRead((pres) => {
+			pres.addSlide().addTable(...(args as Parameters<ReturnType<typeof pres.addSlide>['addTable']>))
+		})
+		const replayed = await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml')
+		assert(!/<a:rPr[^>]*>\s*<a:solidFill>/.test(replayed), `and the replay leaves every run uncoloured: ${replayed}`)
+	})
+})
+
 describe('deck IR — a table cell border keeps its cap and transparency', () => {
 	// `cap` had no accessor and the stroke alpha was read but not mapped, so both came back as the
 	// writer's defaults, with no note (#81).

@@ -58,7 +58,7 @@ export function tableCall(frame: GraphicFrame, table: Table, ctx: MapContext): C
 			// exists only so the grid stays rectangular. The write path derives those from
 			// colspan/rowspan, so emitting them would double-count the span.
 			if (cell.isMergeContinuation) continue
-			cells.push(cellIr(cell, hasStyle, ctx))
+			cells.push(cellIr(cell, hasStyle, styleId !== null, ctx))
 		}
 		rows.push(cells)
 		rowHeights.push(row.heightEmu ?? 0)
@@ -150,8 +150,10 @@ function tableFill(table: Table, ctx: MapContext): IrValue | undefined {
  * Cell text reuses the shape text mapper, so a per-run format inside a cell behaves
  * identically to one on a shape — the read model already shares `TextFrame` between the
  * two, and diverging here would be a difference with no cause.
+ * @param styled - the table names a `tableStyle`, so the write path leaves an uncoloured run
+ *   uncoloured and the style's `a:tcTxStyle` colours it (#243)
  */
-function cellIr(cell: TableCell, hasStyle: boolean, ctx: MapContext): IrValue {
+function cellIr(cell: TableCell, hasStyle: boolean, styled: boolean, ctx: MapContext): IrValue {
 	const { notes } = ctx
 	const frame = cell.textFrame
 	const anchor = cell.anchor
@@ -202,19 +204,19 @@ function cellIr(cell: TableCell, hasStyle: boolean, ctx: MapContext): IrValue {
 			: undefined,
 		// A cell's own runs may each carry formatting; the first run's options double as the
 		// cell default, which is how the write path applies cell-level character formatting.
-		...cellRunDefaults(frame?.paragraphs[0]?.runs[0], ctx),
+		...cellRunDefaults(frame?.paragraphs[0]?.runs[0], styled, ctx),
 	})
 
-	return compact({ text: frame ? textRuns(frame, ctx) : cell.text, options }) ?? { text: '' }
+	return compact({ text: frame ? textRuns(frame, ctx, styled) : cell.text, options }) ?? { text: '' }
 }
 
 /**
  * The first run's options as the cell's defaults, less the two `TableCellProps` has no field for.
  * A run's `outline` and `glow` stay on the run itself, in the cell's `text`.
  */
-function cellRunDefaults(run: Run | undefined, ctx: MapContext): Record<string, IrValue> {
+function cellRunDefaults(run: Run | undefined, styled: boolean, ctx: MapContext): Record<string, IrValue> {
 	if (!run) return {}
-	const { outline: _outline, glow: _glow, ...defaults } = runOptions(run, ctx) ?? {}
+	const { outline: _outline, glow: _glow, ...defaults } = runOptions(run, ctx, styled) ?? {}
 	return defaults
 }
 

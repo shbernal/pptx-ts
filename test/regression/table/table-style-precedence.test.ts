@@ -33,6 +33,7 @@ import { TableStyle, type TableProps, type TableRow } from '../../../dist/node.j
 // The per-cell defaults are part of that second mechanism, not an accident: every cell gets a
 // `{type:'none'}` border on all four sides and black text as *direct* formatting, and direct
 // formatting outranks a style region. That is what keeps an unstyled table free of grid lines.
+// A table that names a style gets neither, so the style's grid and text colours apply.
 //
 // `defineTableStyle()` and `TableProps.styleDrivenCells` used to live here. Both were removed
 // once the render evidence showed a custom style is unreachable markup in PowerPoint whatever
@@ -138,6 +139,31 @@ defineRegressionSuite('Table styling: built-in styles and the direct-formatting 
 		fn: async () => {
 			const { slide } = await tableParts()
 			assert(firstRPr(slide).includes('<a:srgbClr val="000000"/>'), 'black is stamped; got: ' + firstRPr(slide))
+		},
+	},
+	{
+		name: 'a styled table leaves uncoloured text to the style',
+		fn: async () => {
+			// A run's own fill beats the style's `a:tcTxStyle`, so the black default drew black text on
+			// Medium Style 2's accent header, whose style says white (#243).
+			const { slide } = await tableParts({ tableStyle: TableStyle.MEDIUM_STYLE_2_ACCENT_1 }, [
+				[{ text: 'H1' }],
+				[{ text: 'B1' }],
+			])
+			assert(!slide.includes('<a:solidFill><a:srgbClr val="000000"/>'), 'no run is painted black; got: ' + slide)
+			assert(!/<a:rPr[^>]*>\s*<a:solidFill>/.test(slide), 'no run states a fill; got: ' + slide)
+		},
+	},
+	{
+		name: "a styled table still takes the slide's colour, which the caller stated",
+		fn: async () => {
+			const { zip } = await build((p) => {
+				const slide = p.addSlide()
+				slide.color = 'C00000'
+				slide.addTable([[{ text: 'H1' }]], { ...AT, tableStyle: TableStyle.MEDIUM_STYLE_2_ACCENT_1 })
+			})
+			const rPr = firstRPr(await readEntry(zip, 'ppt/slides/slide1.xml'))
+			assert(rPr.includes('<a:srgbClr val="C00000"/>'), 'the slide colour lands; got: ' + rPr)
 		},
 	},
 	{
