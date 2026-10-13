@@ -378,7 +378,6 @@ export const NOTE_CONSTRUCTS = {
 	'text.glow.schemeToken': { fields: ['options.glow.color'], tiers: BOTH_TIERS },
 	// A dropped break moves text between lines; no field carries it, like `text.kern`.
 	'text.softBreak': { fields: [], tiers: BOTH_TIERS },
-	'text.equation': { fields: ['*'], tiers: BOTH_TIERS },
 	'text.field': { fields: ['*'], tiers: BOTH_TIERS },
 	// A run link the run-level `hyperlink` cannot spell is left off, so the difference lands there.
 	'text.hyperlink': { fields: ['hyperlink'], tiers: BOTH_TIERS },

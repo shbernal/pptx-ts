@@ -31,12 +31,13 @@ export function parseXml(xml: string): Document {
 }
 
 /**
- * Serialize a Document to an XML string. Does not pretty-print or normalize
- * whitespace. The XML declaration is not part of the DOM; callers that need
- * it (see `Part.serialize`) must prepend it themselves.
+ * Serialize a Document, or one element of it, to an XML string. Does not pretty-print or
+ * normalize whitespace. The XML declaration is not part of the DOM; callers that need it (see
+ * `Part.serialize`) must prepend it themselves. An element is written with the namespace
+ * declarations its subtree uses but inherits from an ancestor, so it stands alone.
  */
-export function serializeXml(doc: Document): string {
-	return new XMLSerializer().serializeToString(doc)
+export function serializeXml(node: Document | Element): string {
+	return new XMLSerializer().serializeToString(node)
 }
 
 // The registry itself lives in `ooxml/namespaces.ts`, which has no runtime imports, so the

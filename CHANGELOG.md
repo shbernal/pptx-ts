@@ -190,6 +190,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `table.style` / `dropped` for every table without an `a:tableStyleId`, `addTable`'s own default
   among them, though the replay names no style either and writes the same `<a:tblPr/>`
   ([#258](https://github.com/shbernal/pptx-ts/issues/258)).
+- **An equation reads back, and `readModelToIr` replays it.** Nothing on the read side reached an
+  OMML equation (`a14:m`): `Paragraph.runs` skipped it and `readModelToIr` dropped it as
+  `text.equation`, so every equation `TextProps.math` writes was lost on its own round trip.
+  `Paragraph.equations` reads each as an `Equation` (`omml`, `inline`, and `runIndex`, its place
+  among the runs), and a shape's replays as `{ math, inline }` in that place. A table cell's is
+  still noted, now as `table.cell.equation` / `unwritable`
+  ([#259](https://github.com/shbernal/pptx-ts/issues/259)).
 - **A custom-geometry path value can name a guide, on both sides.** A path point, `arcTo` radius or
   angle that named a guide (`<a:pt x="g0"/>`) read back as `0`, and `GeometryPoint` refused a name
   with `coord/invalid-format`, so a guide could never shape the drawn outline. `GeometryCommand`

@@ -160,7 +160,7 @@ The counts come from `pnpm run script:census`, run in a clone of the repository 
 
 A count is the number of fixtures that raise the note at least once. Each fixture targets a few constructs, so a count shows what the corpus exercises, not how often a construct occurs in real decks. The table lists only constructs some fixture raises. [`knownNoteConstructs()`](api/script/functions/knownNoteConstructs.md) returns the full catalogue.
 
-The Output column says where the note fires. A construct that fires in both outputs has the same count in each. A construct under the `layout.` prefix is the slide construct of the same name, raised while re-authoring a layout's shapes. Across the corpus the standalone output raises 880 notes and the template-anchored output 431, which is 3 to 12 more per deck.
+The Output column says where the note fires. A construct that fires in both outputs has the same count in each. A construct under the `layout.` prefix is the slide construct of the same name, raised while re-authoring a layout's shapes. Across the corpus the standalone output raises 878 notes and the template-anchored output 429, which is 3 to 12 more per deck.
 
 | Construct | Output | Cause | What happens | Fixtures |
 | --- | --- | --- | --- | --- |
@@ -178,7 +178,6 @@ The Output column says where the note fires. A construct that fires in both outp
 | `group.childSpace` | Both | unsupported | The children of a group that scales them are printed pre-scaled, so resizing the group no longer rescales them | 2/61 |
 | `shape.empty` | Both | unsupported | A shape with no text and no geometry of its own, such as an unfilled placeholder, is omitted | 2/61 |
 | `slide.comment.modern` | Both | unwritable | Modern (`p188`) review comments are dropped. Legacy comments carry as `addComment` | 2/61 |
-| `text.equation` | Both | unread | An OMML equation is dropped from its shape | 2/61 |
 | `chart.axis` | Both | unwritable | An axis crossing at the other axis' maximum or minimum crosses at zero, and a custom display unit is dropped. A combo's secondary axis takes a setting its primary axis states and it does not | 1/61 |
 | `chart.blanks` | Both | unwritable | A blank cached data point becomes 0, so a line chart dips to the axis where the source showed a break | 1/61 |
 | `chart.combo` | Both | unwritable | A combo whose plots `addChart` cannot combine becomes a single chart of its first plot's type. A combo it can combine (area, bar, line and scatter plots) keeps its plots, and numbers its series plot by plot, so a source that numbers them otherwise changes its legend and colour order | 1/61 |
@@ -265,7 +264,7 @@ A crop with a negative inset, or with opposite insets that add up to 100% or mor
 
 - The theme's format scheme (`a:fmtScheme`), and with it the width and dash of an outline taken from the theme
 - Master text styles (`p:txStyles`)
-- OMML equations and text fields
+- Text fields
 - Graphic frames other than tables, charts and SmartArt
 
 ## Verifying a conversion
