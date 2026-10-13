@@ -48,7 +48,7 @@ export function ptToHundredths(pt: number): number {
 }
 
 /**
- * English Metric Units — the integer unit OOXML serializes geometry in (914400 per inch).
+ * English Metric Units: the integer unit OOXML serializes geometry in (914400 per inch).
  *
  * Branded so a value that has already been resolved to EMU cannot be silently fed back into a
  * unit converter: {@link coordToEmu} only accepts a user `Coord`, so passing an `Emu` into it is
@@ -57,7 +57,7 @@ export function ptToHundredths(pt: number): number {
  */
 export type Emu = number & { readonly __unit: 'emu' }
 
-/** A bare number larger than this (in inches) is almost certainly a mistake — likely a raw EMU
+/** A bare number larger than this (in inches) is almost certainly a mistake, likely a raw EMU
  *  value passed where inches are expected. We interpret it as inches (the documented contract) but
  *  warn, pointing at the explicit `"<n>emu"` form. ~1000in is far beyond any real slide. */
 const IMPLAUSIBLE_INCHES = 1000
@@ -82,7 +82,7 @@ export interface StandardLayout {
 	readonly layout: StandardLayoutName
 	/** PresentationML slide-size preset name, or `custom` for PowerPoint widescreen. */
 	readonly name: string
-	/** Slide width in inches — inches is pptx-ts's default coordinate unit, so this is the value to use for `addText`/`addShape` math. */
+	/** Slide width in inches. Inches is pptx-ts's default coordinate unit, so this is the value to use for `addText`/`addShape` math. */
 	readonly widthIn: number
 	/** Slide height in inches. */
 	readonly heightIn: number
@@ -115,7 +115,7 @@ export function pixelsToEmu(pixels: number, dpi: number): Emu {
  * only `parseCoord` needs it, because every `'50%'` a caller writes comes through there; it is
  * exported because a consumer computing its own geometry against a slide axis needs the same
  * arithmetic, and it belongs with the rest of the conversion set beside it rather than hidden
- * behind the one caller. Left exported deliberately rather than by oversight — this note is the
+ * behind the one caller. Left exported deliberately rather than by oversight. This note is the
  * difference between the two, as it is on {@link emuToPixels}.
  * @param percent - percentage value (e.g. `50` for 50%)
  * @param axisEmu - the axis length in EMU (slide width for x/w, height for y/h)
@@ -185,15 +185,15 @@ export function emuToInches(emu: number): number {
  * EMU → points, the unit the write API states line widths, font sizes and text insets in.
  *
  * The one conversion, for the library as well as for a consumer: three private forms of
- * `emu / EMU_PER_POINT` had grown around it — the read model's `null`-propagating `ptFromEmu`,
- * the script mapper's `points`, and a dozen inline divisions — while this stayed published and
+ * `emu / EMU_PER_POINT` had grown around it (the read model's `null`-propagating `ptFromEmu`,
+ * the script mapper's `points`, and a dozen inline divisions) while this stayed published and
  * uncalled.
  *
  * **The policy, and its one exception.** Every EMU→points conversion goes through here or through
  * `ptFromEmu` in `src/read/api/coords.ts`, which is this with a `null` passed along. (Named rather
  * than linked: it is internal, so a reference link to it resolves to nothing in the published
  * reference.) The exception is
- * `measure/*` — `fit.ts`, `paragraphs.ts`, `table-fit.ts` — where an inner box is computed as
+ * `measure/*` (`fit.ts`, `paragraphs.ts`, `table-fit.ts`), where an inner box is computed as
  * `(extent - inset - inset) / EMU_PER_POINT` and then guarded with `!(x > 0)`. That guard is
  * written NaN-first on purpose: a box that cannot be measured is skipped, not reported. This
  * function asserts a finite input and throws instead, which is the right answer for a caller
@@ -211,7 +211,7 @@ export function emuToPoints(emu: number): number {
  * **Published for consumers, and used nowhere in `src/` on purpose.** Nothing inside the
  * library thinks in pixels: it is the unit a caller placing library output on a canvas or in a
  * `<img>` needs, and the DPI is theirs to choose. Left exported deliberately rather than by
- * oversight — this note is the difference between the two.
+ * oversight. This note is the difference between the two.
  */
 export function emuToPixels(emu: number, dpi: number): number {
 	assertFiniteNumber(emu, 'emu')

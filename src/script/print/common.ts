@@ -1,8 +1,8 @@
 /**
  * The parts of printing a script that do not depend on which tier is being printed.
  *
- * Two printers target the same IR — one anchored to the source deck as a template, one
- * standalone — and they differ only in how a deck and its chrome are set up. Everything after
+ * Two printers target the same IR (one anchored to the source deck as a template, one
+ * standalone), and they differ only in how a deck and its chrome are set up. Everything after
  * that is identical: a slide's statements, how image bytes reach the script, and how the
  * fidelity notes are rendered into the banner. Keeping that here is not tidiness. A slide body
  * printed two slightly different ways would mean the round-trip oracle certifies one tier and
@@ -57,7 +57,7 @@ export interface CommonPrintOptions {
 }
 
 /**
- * Default import specifier for an emitted script — this package's *published* name, which is
+ * Default import specifier for an emitted script: this package's *published* name, which is
  * not its directory name. Getting it wrong produces a script that prints and typechecks and
  * then fails at `import`, so it is pinned by a test rather than left to a literal.
  */
@@ -111,7 +111,7 @@ export function assetIdentifiers(ir: DeckIr): Map<string, string> {
 		const raw = asset.name.replace(/\.[^.]*$/, '').replace(/[^A-Za-z0-9_$]/g, '_')
 		// The SANITISED base seeds the collision candidates too. Re-deriving them from the raw
 		// one made the first candidate for a name starting with a digit `_1image` and the next
-		// `1image_2` — not a legal identifier, so the emitted script would not parse.
+		// `1image_2`, not a legal identifier, so the emitted script would not parse.
 		const base = /^[A-Za-z_$]/.test(raw) ? raw : `_${raw}`
 		let identifier = base
 		let suffix = 2
@@ -159,7 +159,7 @@ export function assetPrinter(identifiers: Map<string, string>): RecordingAssetPr
 /**
  * One `const` per printed asset, each holding a complete `data:` URI.
  *
- * Both modes bind the same *kind* of value — a data URI string — so the call sites are
+ * Both modes bind the same *kind* of value (a data URI string), so the call sites are
  * identical and `addImage`'s `data` option is used either way. Only where the bytes come
  * from changes. Rewriting the option key to `path` in file mode would have the printer
  * reshaping an argument, which is precisely the thing that keeps the IR checkable.
@@ -203,8 +203,8 @@ export function printAssetBindings(
  * One slide: a comment, the statement that creates it, then its slide-level properties and
  * its calls in z-order.
  *
- * `comment` and `construction` are the tier's business — one binds a layout by name at append
- * time, the other names a master up front — and everything after them is not.
+ * `comment` and `construction` are the tier's business (one binds a layout by name at append
+ * time, the other names a master up front), and everything after them is not.
  */
 export function printSlide(
 	slide: SlideIr,
@@ -326,7 +326,7 @@ function wrap(text: string, width: number, continuation: string): string[] {
  *
  * Both tiers end this way, and the `assetMode` test is the whole reason it is worth
  * naming. In `'inline'` mode the bytes are already in {@link PrintedScript.code} as
- * `data:` literals, so the map must come back **empty** — a tier that returned them
+ * `data:` literals, so the map must come back **empty**. A tier that returned them
  * anyway would have its caller write every image to disk as well, and the script would
  * ignore the files it was handed.
  * @param {string[]} lines - the script's lines, in order
@@ -384,7 +384,7 @@ export function printPreamble(packageName: string, imports: { fs: readonly strin
 /**
  * The three lines that construct a generator and size it to the source deck.
  *
- * Both tiers print them, and both used to convert the EMU slide size themselves — reaching
+ * Both tiers print them, and both used to convert the EMU slide size themselves, reaching
  * across the seam into `from-read/values.ts` to do it. `ir.ts` keeps `slideSize` in EMU
  * deliberately, because converting there "would introduce a rounding decision at the wrong
  * layer"; the printer is not that layer either, so the conversion lives in `script/units.ts`

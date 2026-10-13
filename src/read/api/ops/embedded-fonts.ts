@@ -1,8 +1,8 @@
 /**
  * Merging embedded font faces into a deck's `p:embeddedFontLst`.
  *
- * Fonts arrive two ways — copied out of another `Presentation`, or handed over as raw bytes by a
- * generator during an append — and the two differ only in how the binary part comes into being.
+ * Fonts arrive two ways (copied out of another `Presentation`, or handed over as raw bytes by a
+ * generator during an append), and the two differ only in how the binary part comes into being.
  * That difference is confined to a per-face thunk, so both paths share one merge core: entries
  * join by typeface, faces de-dupe by slot, and the thunk runs only for a face actually being
  * added, so a face the deck already embeds never mints an orphan part.
@@ -105,7 +105,7 @@ interface IncomingEmbeddedFont {
  * every face this deck would copy names a part that is actually there.
  *
  * Every import that carries fonts calls it before it changes anything, because the carry runs
- * last — after the page or the masters are already in the deck — and a face it cannot copy would
+ * last (after the page or the masters are already in the deck), and a face it cannot copy would
  * throw with parts added and no way back. A face whose `r:id` names no relationship and a face
  * whose relationship names no part are the same failure to a caller, the face's binary is not in
  * the package, so both are `package/part-missing`.
@@ -196,7 +196,7 @@ export function carryGeneratedEmbeddedFonts(dest: Presentation, fonts: EmbeddedF
 
 /**
  * Merge normalized {@link IncomingEmbeddedFont} entries into this deck's
- * `p:embeddedFontLst` — the shared core of {@link carryEmbeddedFonts} (import-side)
+ * `p:embeddedFontLst`: the shared core of {@link carryEmbeddedFonts} (import-side)
  * and {@link carryGeneratedEmbeddedFonts} (append-side). Entries merge by `typeface`,
  * faces de-dupe by slot (a face this deck already embeds is left as is). For each newly
  * added face the `fntdata` Default is ensured, the binary part is created via the face's

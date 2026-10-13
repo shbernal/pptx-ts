@@ -2,11 +2,11 @@
  * Spid-aware, otherwise-opaque handling of a slide's build-animation tree
  * (`p:timing` / `p:bldLst`).
  *
- * The `p:timing` subtree is `CT_TimeNodeList` — deeply recursive and modeled
+ * The `p:timing` subtree is `CT_TimeNodeList`, deeply recursive and modeled
  * here as opaque DOM (an unmodified slide round-trips it byte-identically for
  * free). The only structured data we extract or rewrite is the set of `spid`
- * references — `<p:spTgt spid>` inside the timing tree and `<p:bldP spid>` in the
- * build list — so animations stay coherent when shape ids change. Three purely
+ * references (`<p:spTgt spid>` inside the timing tree and `<p:bldP spid>` in the
+ * build list), so animations stay coherent when shape ids change. Three purely
  * structural operations: **enumerate**, **remap**, and **prune**. See
  * `docs/contributing/design/animations.md` ("spid-aware operations").
  */
@@ -38,7 +38,7 @@ function spidElements(root: Element): Element[] {
 }
 
 /**
- * Whether the slide carries build animations — a `<p:bldP>` entry or any timing
+ * Whether the slide carries build animations: a `<p:bldP>` entry or any timing
  * node with a `presetID` (distinguishing animation timing from the media-loop
  * timing that has neither).
  */
@@ -280,7 +280,7 @@ export function pruneSpids(root: Element, spids: Iterable<number>): boolean {
  * This is the whole-slide counterpart to {@link pruneSpids} (which drops the
  * builds of specific shapes). It only removes staging; it never deletes shapes,
  * so a slide that animated alternating states over the same region will show
- * them all at once after flattening — that is "drop animations", distinct from
+ * them all at once after flattening. That is "drop animations", distinct from
  * "remove staged/duplicate shapes".
  */
 export function flattenAnimations(root: Element): boolean {
@@ -374,7 +374,7 @@ function getOrCreateMainSeqChildTnLst(root: Element, doc: Document): Element {
 	// Otherwise insert a fresh mainSeq into the tmRoot child list (before any media nodes).
 	let tmRootChildLst = timing.getElementsByTagNameNS(P_NS, 'childTnLst')[0]
 	if (!tmRootChildLst) {
-		// Degenerate timing with no tmRoot child list — graft the full scaffold's tnLst.
+		// Degenerate timing with no tmRoot child list: graft the full scaffold's tnLst.
 		const fresh = importScaffold(doc, TIMING_SCAFFOLD)
 		const freshTnLst = firstChild(fresh, 'p:tnLst')
 		if (freshTnLst) insertInOrder(timing, freshTnLst, TIMING_AFTER_TNLST)
@@ -407,7 +407,7 @@ function getOrCreateBldLst(timing: Element, doc: Document): Element {
  * id on the destination). For each mapped shape: its mainSeq click-group `<p:par>`
  * (the whole click step) and `<p:bldP>` are cloned, their `spid`s remapped, their
  * `<p:cTn>` ids renumbered to stay collision-free in the destination, and appended
- * after any existing build — matching how PowerPoint merges a pasted shape's
+ * after any existing build, matching how PowerPoint merges a pasted shape's
  * animation. Returns `true` when anything was carried (so the caller can
  * `markDirty()`), `false` when the source shapes have no animation.
  */

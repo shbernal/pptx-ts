@@ -66,8 +66,8 @@ const CHART_SPACE_NS = {
 /**
  * Whether a chart-area/plot-area `fill` says anything the fill dispatch can act on.
  *
- * `c:spPr` is `a:CT_ShapeProperties` — the same optional `EG_FillProperties` group the
- * shape path writes into — so gradient, pattern and an omitted fill child are all legal
+ * `c:spPr` is `a:CT_ShapeProperties`, the same optional `EG_FillProperties` group the
+ * shape path writes into, so gradient, pattern and an omitted fill child are all legal
  * here. The gate used to be `fill?.color`, which meant every spelling carrying no colour
  * (`gradient`, `pattern`, `image`, `inherit`) fell to the no-fill arm and did nothing.
  *
@@ -81,7 +81,7 @@ const CHART_SPACE_NS = {
  * matches the shape path: only `line` infers its type from a bare `gradient`, fills have
  * always wanted `type: 'gradient'` spelled out.
  *
- * A bare {@link Color} string is stated — it is the solid-colour shorthand every other fill
+ * A bare {@link Color} string is stated: it is the solid-colour shorthand every other fill
  * site takes. This one used to be the exception: the string reached here having already been
  * spread into `{0:'F',1:'F',…}` by `copyChartOptions`, so it named neither `color` nor `type`
  * and a chart area asked for `fill: 'FF0000'` came out `<a:noFill/>`.
@@ -97,7 +97,7 @@ function isStatedFill(fill?: FillOption): fill is FillOption {
  * The override bag carries a third state the rest of the generator does not: a *present*
  * `undefined`, meaning "this subchart's own value was rejected, so emit nothing here", as against
  * an absent key, which inherits the chart-level value (see {@link ChartOptsOverrides}). The spread
- * is what applies that distinction — and once it has, the keys still holding `undefined` have said
+ * is what applies that distinction, and once it has, the keys still holding `undefined` have said
  * everything they had to say, so they are dropped. What the plot builders receive is an ordinary
  * options bag with one spelling of absent.
  * @param chartOptions - the chart-level options, already normalized
@@ -116,7 +116,7 @@ function resolveSubchartOptions(chartOptions: ChartOptsInternal, overrides: Char
  * followed by the 3-D scene, for the two families that plot into one.
  */
 function makeChartHeaderXml(rel: SlideRelChart): string {
-	// NOTE: `autoTitleDeleted` is emitted in both arms — without it PowerPoint creates a default
+	// NOTE: `autoTitleDeleted` is emitted in both arms. Without it PowerPoint creates a default
 	// chart title even when `showTitle` is false.
 	const title = rel.opts.showTitle
 		? genXmlTitle(
@@ -261,7 +261,7 @@ function makeChartAxesXml(rel: SlideRelChart, plan: ComboAxisPlan): string {
 	let strXml = ''
 	// Stock charts drive their own (date/category)+value axis pair. The non-volume styles use just
 	// the primary pair (the generic path below would also produce it), but the volume styles add a
-	// secondary pair for the price series (the volume bar owns the primary pair) — so route all stock
+	// secondary pair for the price series (the volume bar owns the primary pair), so route all stock
 	// axes here, reusing the shared cat/val emitters. `barDir` defaults to 'col' in the define layer,
 	// which already gives the correct axis positions (category at bottom, value at left).
 	if (rel.opts._type === ChartType.stock) {
@@ -384,7 +384,7 @@ function makeChartAxesXml(rel: SlideRelChart, plan: ComboAxisPlan): string {
  *
  * The lightest of the four `BorderProps` strokes: paint only, with neither the `a:prstDash`
  * nor the `a:round` its siblings write. It also branches on the border being *absent* rather
- * than on `type: 'none'` — the caller here has an optional border where
+ * than on `type: 'none'`: the caller here has an optional border where
  * `createChartBorderLine` (`gen/chart/chart-parts.ts`) has a resolved one.
  */
 function chartShapeProps(fill: FillOption | undefined, border: BorderProps | undefined): string {
@@ -646,7 +646,7 @@ export function makeXmlCharts(rel: SlideRelChart): string {
 		isScatterChart(rel.opts._type) ? raw(voidEl('c:showDLblsOverMax', { val: 1 })) : null,
 	])
 
-	// STEP 4: the chart space around it — shape props, the embedded workbook relationship, and
+	// STEP 4: the chart space around it: shape props, the embedded workbook relationship, and
 	// the metadata extension (CT_ChartSpace order: externalData → printSettings → userShapes → extLst).
 	return (
 		XML_DECL +
@@ -757,7 +757,7 @@ function makeChartType(
 	// `<c:dLbls><c:numFmt>` mask, so one effective value format is resolved here and stamped onto
 	// every value cache below and every dLbls mask, and all three engines agree.
 	// Precedence keeps the historical `valLabelFormatCode` winner, then the data-table format, then
-	// `dataLabelFormatCode` — which `normalizeChartOptions` always assigns, defaulting it to `#,##0`,
+	// `dataLabelFormatCode`, which `normalizeChartOptions` always assigns, defaulting it to `#,##0`,
 	// so there is no fourth arm: the cache is never left as `General` by this path.
 	const valFmtCode = opts.valLabelFormatCode || opts.dataTableFormatCode || opts.dataLabelFormatCode || '#,##0'
 

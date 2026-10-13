@@ -1,19 +1,19 @@
 /**
  * pptx-ts: turning a caller's string into something that can sit inside XML.
  *
- * Three escapers with three notions of what is dangerous used to live here-and-there — one under
- * `gen/`, one under `read/oxml/`, and a fourth-of-a-job local one in `embedded-fonts.ts` — and the
+ * Three escapers with three notions of what is dangerous used to live here-and-there (one under
+ * `gen/`, one under `read/oxml/`, and a fourth-of-a-job local one in `embedded-fonts.ts`), and the
  * weakest was the one reached by the least-checked input. `serializeEmbeddedFontLst` puts
  * `font.typeface` straight from `pptx.embedFont({ typeface })` through an escaper that handled
  * `& < > "` and nothing else, so `embedFont({ typeface: 'Foo\v' })` wrote a vertical tab into
- * `<p:font typeface="…">` — a character XML 1.0 forbids outright, and exactly what the write side
- * strips at every other emission site — and `'Foo\nBar'` lost its newline to attribute-value
+ * `<p:font typeface="…">`, a character XML 1.0 forbids outright and exactly what the write side
+ * strips at every other emission site, and `'Foo\nBar'` lost its newline to attribute-value
  * normalisation.
  *
  * The copies had a real reason: `embedded-fonts.ts` is imported by `read/api/ops/`, so it must not
  * pull in `src/gen/`, and `read/oxml/dom.ts` is on the same side of that line. The answer to
  * "both halves need this" is a dependency-free root module, the same placement and rationale as
- * `hex-color.ts` — not a third, weaker copy.
+ * `hex-color.ts`, not a third, weaker copy.
  *
  * This module imports nothing.
  */
@@ -51,7 +51,7 @@ export function hasIllegalXmlChars(value: string): boolean {
  *
  * ELEMENT TEXT ONLY. A literal tab, carriage return or line feed is left alone here because in
  * character data it *is* the content (`<a:t>` line breaks depend on it). Inside an attribute value
- * the same three characters are destroyed by the parser rather than preserved — see
+ * the same three characters are destroyed by the parser rather than preserved; see
  * {@link encodeXmlAttrValue}, which every attribute-emitting path must use instead.
  * @param {string | number} xml - value to encode (numbers are stringified, as callers pass counts/sizes)
  * @returns {string} escaped XML

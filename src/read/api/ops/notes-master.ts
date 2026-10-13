@@ -3,7 +3,7 @@
  *
  * A `notesSlide` is not self-contained: it back-references the slide it annotates and forward-
  * references the deck's notes master. `CT_NotesMasterIdList` allows at most one master per
- * presentation, so a deck that already has one keeps it — the destination's notes styling wins —
+ * presentation, so a deck that already has one keeps it (the destination's notes styling wins),
  * and a source master is copied only into a deck that has none. That single rule is why both the
  * `Presentation`-to-`Presentation` path and the generator-XML path funnel through
  * `registerNotesMaster`: they differ only in how the *part* comes into being.
@@ -37,7 +37,7 @@ const textEncoder = new TextEncoder()
  * `slide → notesSlide` rel on the new slide, and rebuilds the copied notesSlide's
  * own relationships:
  *
- * - its `slide` back-rel is repointed at the new slide (`newSlidePartName`) — the
+ * - its `slide` back-rel is repointed at the new slide (`newSlidePartName`); the
  *   source slide is *not* copied (that would be circular);
  * - its `notesMaster` rel is resolved through {@link ensureNotesMaster}, which
  *   reuses this deck's notesMaster when it has one and copies the source's only
@@ -69,8 +69,8 @@ export function carryNotes(
 	target.relationshipsFor(newSlidePartName).add(NOTES_SLIDE_REL, relativePartName(newSlidePartName, newNotesPartName))
 
 	// A notes slide is a part its page *owns* (see `page-owned.ts`), and so is
-	// whatever it owns in turn. Two copies of one source page — `importSlide`
-	// called twice, or one `importSlides` batch naming the page twice — each get
+	// whatever it owns in turn. Two copies of one source page (`importSlide`
+	// called twice, or one `importSlides` batch naming the page twice) each get
 	// notes of their own here; without a scope the second copy would share the
 	// first's OLE embedding or chart through the registry, which is a package
 	// PowerPoint refuses to open. Media stays shared, as everywhere else.
@@ -164,8 +164,8 @@ function presentationRoot(dest: Presentation): Element {
  * allows. Returns the partname, so callers can use it as a rel target.
  *
  * Split out of {@link ensureNotesMaster} because the two ways a notesMaster arrives
- * — copied from another `Presentation`, or authored by a generator and injected by
- * {@link Presentation.appendSlides} — differ only in how the *part* is created, not in how it is
+ * (copied from another `Presentation`, or authored by a generator and injected by
+ * {@link Presentation.appendSlides}) differ only in how the *part* is created, not in how it is
  * registered.
  */
 function registerNotesMaster(dest: Presentation, notesMasterPartName: string): string {
@@ -249,7 +249,7 @@ export function ensureNotesMasterFromXml(dest: Presentation, master: { xml: stri
  * arrangement PowerPoint writes (`theme1.xml` for the master, `theme2.xml` for the
  * notes master).
  *
- * Throws when the deck has no theme to clone — a package that malformed cannot be
+ * Throws when the deck has no theme to clone: a package that malformed cannot be
  * given a valid notesMaster, and silently emitting one without a resolvable theme
  * is what PowerPoint reports as a repair prompt rather than a bad edit.
  * @param {Presentation} dest - the deck being authored onto

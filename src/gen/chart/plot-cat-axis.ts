@@ -178,7 +178,7 @@ export const makeCatAxisPlot: PlotBuilder = (chartType, data, opts, valAxisId, c
 				raw(serShapeProps(chartType, opts, seriesColor, seriesOverride?.lineSize, idx)),
 				// `invertIfNegative` is bar-only in the schema (CT_BarSer); area/line/radar must omit it.
 				isBarLike(chartType) ? raw(voidEl('c:invertIfNegative', { val: 0 })) : null,
-				// The marker takes the series' own colour, not a second palette lookup — the two used to
+				// The marker takes the series' own colour, not a second palette lookup. The two used to
 				// read different entries, so bar(2) + line(1) drew a `C0504D` line with `9BBB59` dots and
 				// a `seriesOptions.color` override moved the body and not the dots.
 				isLineLike(chartType) ? raw(serMarker(opts, seriesColor, seriesColor)) : null,
@@ -217,7 +217,7 @@ export const makeCatAxisPlot: PlotBuilder = (chartType, data, opts, valAxisId, c
 		raw(sers),
 		raw(chartDataLabels(opts, true)),
 		raw(plotOptions),
-		// Axis id order matters: category comes first. Only 3-D charts get a series axis — emitting a
+		// Axis id order matters: category comes first. Only 3-D charts get a series axis; emitting a
 		// SERIES_PRIMARY axId for a 2-D chart left a dangling reference, and every axId in
 		// `<c:plotArea>` must resolve to a defined catAx/valAx.
 		raw(voidEl('c:axId', { val: catAxisId })),

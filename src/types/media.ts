@@ -25,7 +25,7 @@ export interface ImageBaseProps extends PlaceholderPositionProps, ObjectNameProp
 	 * - When a `data` (base64) image is supplied and `w`/`h` are omitted, the natural pixel
 	 *   size is read from the image header (PNG/JPEG/GIF/BMP/WebP) and used at 96 DPI
 	 *   (natural pixels / 96 = inches).
-	 * - When only one of `w`/`h` is given, the other is derived from the natural aspect ratio —
+	 * - When only one of `w`/`h` is given, the other is derived from the natural aspect ratio,
 	 *   for an SVG too, from its `width`/`height` or `viewBox`.
 	 * - A `path` image is measured at export time (its bytes are not available synchronously);
 	 *   an omitted dimension falls back to 1 inch if it stays unmeasurable.
@@ -156,7 +156,7 @@ export interface ImageBaseProps extends PlaceholderPositionProps, ObjectNameProp
 		/**
 		 * Sizing type
 		 * - `cover` / `contain` fit the image into the `w`×`h` box using the image's *natural*
-		 *   aspect ratio — read from the embedded PNG/JPEG/GIF/BMP/WebP header, or from an SVG's
+		 *   aspect ratio, read from the embedded PNG/JPEG/GIF/BMP/WebP header, or from an SVG's
 		 *   `width`/`height` or `viewBox`. If the natural size cannot be determined (an
 		 *   unrecognized format, or an SVG carrying neither) the displayed `w`/`h` ratio is used
 		 *   as a fallback and a warning is logged.
@@ -242,7 +242,7 @@ export interface ImageBaseProps extends PlaceholderPositionProps, ObjectNameProp
 	}
 	/**
 	 * Recolor the image by mapping one source color to another (`<a:clrChange>`)
-	 * - every pixel matching `from` is repainted `to` — the classic "swap the flat background out" recolour
+	 * - every pixel matching `from` is repainted `to`: the classic "swap the flat background out" recolour
 	 *   (MS-PPT > Format Picture > Picture Color > Set Transparent Color is the single-colour sibling)
 	 * - colors accept `HexColor` or `ThemeColor`, same as fills / `duotone`
 	 * @example { from: '000000', to: 'FF0000' } // turn black pixels red
@@ -301,7 +301,7 @@ interface MediaBaseProps extends PositionProps, ObjectNameProps {
  */
 interface OleObjectBaseProps extends PositionProps, ObjectNameProps {
 	/**
-	 * Picture of the embedded document shown on the slide — a raster image `path` (Node/local)
+	 * Picture of the embedded document shown on the slide: a raster image `path` (Node/local)
 	 * or base64 `data:` URI.
 	 * - the library is Node-first and cannot render an Office document, so when this is omitted a
 	 *   neutral gray placeholder is embedded; PowerPoint draws the live object over it, but every
@@ -320,7 +320,7 @@ interface OleObjectBaseProps extends PositionProps, ObjectNameProps {
 	 */
 	extn?: string
 	/**
-	 * OLE server ProgID — what PowerPoint launches on double-click.
+	 * OLE server ProgID: what PowerPoint launches on double-click.
 	 * - defaults from the resolved extension (`xlsx` → `Excel.Sheet.12`, `docx` → `Word.Document.12`,
 	 *   `pptx` → `PowerPoint.Show.12`, anything else → `Package`)
 	 * @example 'Excel.Sheet.12'

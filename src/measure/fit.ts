@@ -85,7 +85,7 @@ function formatCodepoints(cps: Set<number>): string {
 }
 
 /**
- * Layout-time text measurement against registered metrics — the public engine
+ * Layout-time text measurement against registered metrics: the public engine
  * behind `pptx.measureText()`. Uses the **same** calibrated wrap model, resolver
  * semantics, and conservative safety factors as the export-time bake
  * (`applyMeasuredFit` / {@link solveResize} / {@link solveShrink}), so a
@@ -102,7 +102,7 @@ function formatCodepoints(cps: Set<number>): string {
  * and is reported in `approximatedFaces`; an unnamed theme-default face returns
  * `measurable: false`. Code points a *registered* face has no glyph for are reported
  * in `uncoveredCodepoints`, and are the one case where the height may come back short
- * rather than tall — there is no font fallback here, only the font's `.notdef` advance.
+ * rather than tall: there is no font fallback here, only the font's `.notdef` advance.
  */
 export function measureText(
 	registry: FontMetricsRegistry,
@@ -137,7 +137,7 @@ export function measureText(
 	const heuristicFaces = new Set<string>()
 	const resolve = makeRegistryResolver(registry, (face) => heuristicFaces.add(face))
 
-	// Coverage is a property of the runs, not of the layout, so it is audited up front —
+	// Coverage is a property of the runs, not of the layout, so it is audited up front,
 	// which also keeps it out of the resolver that `shrinkScaleFor()` re-enters.
 	const uncoveredByFace = new Map<string, Set<number>>()
 	collectUncoveredCodepoints(paragraphs, registry, uncoveredByFace)
@@ -224,7 +224,7 @@ export function applyMeasuredFit(slides: PresSlideInternal[], registry: FontMetr
 
 	// A deck that registered *some* metrics has opted into measured fit, so a named
 	// face we have no exact metrics for falls back to the conservative heuristic rather
-	// than degrading to the bare flag — overflow still self-corrects, just less precisely.
+	// than degrading to the bare flag: overflow still self-corrects, just less precisely.
 	// An unnamed (theme-default) face stays unmeasurable: we cannot guess which face it is.
 	const heuristicFaces = new Set<string>()
 	const resolve = makeRegistryResolver(registry, (face) => heuristicFaces.add(face))
@@ -237,7 +237,7 @@ export function applyMeasuredFit(slides: PresSlideInternal[], registry: FontMetr
 			for (const run of para.runs) if (!resolve(run)) into.add(run.fontFace ?? '(theme default)')
 	}
 
-	/** Audit every set of runs the pass is about to measure — see the warning below. */
+	/** Audit every set of runs the pass is about to measure (see the warning below). */
 	const auditCoverage = (paragraphs: FitParagraph[]): void =>
 		collectUncoveredCodepoints(paragraphs, registry, uncoveredByFace)
 
@@ -245,7 +245,7 @@ export function applyMeasuredFit(slides: PresSlideInternal[], registry: FontMetr
 	 * Bake measured shrink into a table's cells. Walks the cell grid (accounting for
 	 * colspan/rowspan) to size each cell's box from its column widths and row heights,
 	 * then lowers the run font sizes of any `fit:'shrink'` cell that overflows. Cells
-	 * in auto-height rows (no fixed `rowH`/table `h`) are skipped — the row grows instead.
+	 * in auto-height rows (no fixed `rowH`/table `h`) are skipped. The row grows instead.
 	 */
 	const measureTableCells = (tableObj: SlideObject, layout: PresSlideInternal['_presLayout']): void => {
 		const rows = tableObj.arrTabRows
@@ -253,7 +253,7 @@ export function applyMeasuredFit(slides: PresSlideInternal[], registry: FontMetr
 		const tableOpts = (tableObj.options ?? {}) as RunOpts
 		const { numCols, colWidthsEmu, rowHeightEmu: pinnedRowHeightEmu } = resolveTableGridEmu(rows, tableOpts, layout)
 		if (!(numCols > 0)) return
-		// `null` is an auto-height row — it grows to fit, so there is nothing to shrink into.
+		// `null` is an auto-height row: it grows to fit, so there is nothing to shrink into.
 		const rowHeightEmu = (rIdx: number): number => pinnedRowHeightEmu(rIdx) ?? 0
 
 		for (const { cell, row: r, col: colStart, colSpan, rowSpan } of walkTableGrid(rows, numCols)) {

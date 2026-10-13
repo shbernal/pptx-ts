@@ -1,8 +1,8 @@
 /**
  * What a page copy may share with the page it was copied from, and what it must own.
  *
- * Duplicating a page — `cloneSlide`, `importSlide` of the same page twice,
- * `importSlides` naming it twice — copies the page part and then has to decide,
+ * Duplicating a page (`cloneSlide`, `importSlide` of the same page twice,
+ * `importSlides` naming it twice) copies the page part and then has to decide,
  * for every part hanging off it, whether the copy points at the same part or gets
  * one of its own. Sharing is the cheap answer and is right for most of the graph:
  * a layout, a master, a theme, an image are deck-wide assets PowerPoint itself
@@ -11,7 +11,7 @@
  * It is not right for the parts a page *owns*. A chart and its embedded workbook,
  * a SmartArt diagram's five parts, an OLE embedding, a notes slide: PowerPoint
  * treats each as belonging to exactly one page, and a package where two slides
- * resolve to one of them is one it refuses to open at all — the "the file or
+ * resolve to one of them is one it refuses to open at all: the "the file or
  * directory is corrupted and unreadable" (`0x80070570`) dialog, with the whole
  * deck rejected rather than the duplicate page. The schema validator accepts such
  * a package: nothing in ECMA-376 says a chart part has one referrer, so this rule
@@ -45,7 +45,7 @@ const SHARED_BY_PAGE_COPIES: ReadonlySet<string> = new Set(SHARED_PARTS.map((kin
 
 /**
  * Whether a page copy may point at this relationship's target rather than taking
- * a copy of it. Everything not listed is owned by the page and copied — see the
+ * a copy of it. Everything not listed is owned by the page and copied; see the
  * module comment for why that is the safe default.
  */
 export function isSharedByPageCopies(relType: string): boolean {

@@ -35,7 +35,7 @@ import {
  * Both the stroke fill and the cap read the same way as in `plot-scatter.ts` and
  * `plot-cat-axis.ts`, which this used to differ from on both counts with nothing saying why.
  * The colour went through `genXmlColorSelection` directly, so a `'transparent'` palette entry
- * reached colour validation, warned, and painted the bubble outline black — the exact hole
+ * reached colour validation, warned, and painted the bubble outline black: the exact hole
  * `chartColorLineFill` exists to close. The cap was hardcoded `flat`, so `lineCap` was accepted
  * and silently dropped for bubble charts alone; it is visible here, because a bubble outline
  * carries `lineDash` and a cap shapes the end of every dash.
@@ -103,7 +103,7 @@ export const makeBubblePlot: PlotBuilder = (chartType, data, opts, valAxisId, ca
 				raw(voidEl('c:order', { val: idx })),
 				raw(seriesNameRef(obj, sheet)),
 				raw(spPr),
-				// No `<c:dLbls>` per series — the chart-level block below carries the labels.
+				// No `<c:dLbls>` per series; the chart-level block below carries the labels.
 				raw(xVal),
 				raw(yVal),
 				raw(sizeVal),

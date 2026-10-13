@@ -7,7 +7,7 @@
  * exports along and pushed the entry past its size budget.
  *
  * Chunked because `String.fromCharCode(...spread)` blows the argument-count limit on a payload
- * of any real size — a multi-megabyte video rel would throw rather than encode.
+ * of any real size: a multi-megabyte video rel would throw rather than encode.
  * @param {Uint8Array} bytes - the payload
  * @returns {string} one character per byte
  */

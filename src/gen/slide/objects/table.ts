@@ -63,7 +63,7 @@ interface GridEdge {
  * The perimeter is decided per **grid position**, not per authored cell, which is what makes
  * merges work: a colspan's origin sits at the left of its span and its covered `_hmerge`
  * cells sit to the right, so a span straddling the last column gets that column's rule on the
- * covered cell — exactly where PowerPoint defines a merged region's outer edge. A cell in the
+ * covered cell, exactly where PowerPoint defines a merged region's outer edge. A cell in the
  * table's interior touches no edge and comes back untouched.
  *
  * Returns the input array (not a copy) when nothing applies, so the common no-perimeter path
@@ -301,14 +301,14 @@ export function renderTableObject(ctx: RenderContext): string {
 			lastCol: xsdBoolIfTrue(objTabOpts.hasLastColumn),
 		}
 		// `CT_TableProperties` sequences its children as EG_FillProperties, EG_EffectProperties,
-		// then the tableStyle/tableStyleId choice — so a table background precedes the style id.
+		// then the tableStyle/tableStyleId choice, so a table background precedes the style id.
 		// (No effects surface: PowerPoint's UI exposes no table-level effect, so a source deck
 		// will not contain one and there would be nothing to reproduce.)
 		rejectEmptyColor(objTabOpts.tableFill, 'tableFill')
 		const tableFillXml = objTabOpts.tableFill ? genXmlColorSelection(objTabOpts.tableFill) : ''
 		const tblPrChildren =
 			tableFillXml + (objTabOpts.tableStyle ? el('a:tableStyleId', null, objTabOpts.tableStyle) : '')
-		// Paired when it carries a fill or a style id, else self-closing — an arity difference.
+		// Paired when it carries a fill or a style id, else self-closing: an arity difference.
 		const tblPr = elOrVoid('a:tblPr', tblPrAttrs, tblPrChildren)
 		// The `<a:tbl>` children accumulate here and are wrapped once at STEP 5, so the byte-significant
 		// (and non-depth-regular) indentation on the closing tags is described in one place.
@@ -328,7 +328,7 @@ export function renderTableObject(ctx: RenderContext): string {
 	// Per-column inches from an explicit `colW` array, else split the table's
 	// resolved EMU width (`cx`) evenly. `resolveTableColWidthsEmu` is the single
 	// source of truth shared with the measured-fit pass. NOTE: divide the EMU
-	// width, not the raw inches `options.w` — the latter collapsed auto-width
+	// width, not the raw inches `options.w`. The latter collapsed auto-width
 	// tables to ~0-EMU columns (e.g. `w=9` → `gridCol w="3"`).
 	{
 		const gridColsEmu = resolveTableColWidthsEmu(objTabOpts.colW, cx, intColCnt)
@@ -367,7 +367,7 @@ export function renderTableObject(ctx: RenderContext): string {
 		const tableHeightEmu = itemOpts.h ? cy : typeof itemOpts.cy === 'number' ? itemOpts.cy : 0
 		const intRowH = resolveTableRowHeightEmu(objTabOpts.rowH, rIdx, tableHeightEmu, arrTabRows.length) ?? 0
 
-		// B: Start row — cells accumulate here and the row wraps them once, below.
+		// B: Start row. Cells accumulate here and the row wraps them once, below.
 		const rowCells: string[] = []
 
 		// C: Loop over each CELL
@@ -396,7 +396,7 @@ export function renderTableObject(ctx: RenderContext): string {
 				let spanPrXml = ''
 				// Outside the `origin` guard below: a covered cell on the table's edge carries that
 				// edge's rule whether or not its origin was resolvable.
-				// A null tuple side means "this edge is omitted" (inherits) — normalize it to a
+				// A null tuple side means "this edge is omitted" (inherits); normalize it to a
 				// hole here, which `applyOuterBorder` already treats as "leave the edge alone".
 				const originBorder = applyOuterBorder(
 					Array.isArray(originOpts.border) ? originOpts.border.map((side) => side ?? undefined) : null,
@@ -411,7 +411,7 @@ export function renderTableObject(ctx: RenderContext): string {
 					// a `blipFill` against the same relationship.
 					// NOTE: PowerPoint itself writes a bare `<a:tcPr/>` on a covered cell and repeats no
 					// fill there (verified against `test/read/fixtures/table-cell-image-fill.pptx`). We
-					// diverge deliberately: a covered cell is never rendered — the origin spans over it —
+					// diverge deliberately: a covered cell is never rendered (the origin spans over it),
 					// so copying the fill is invisible either way, and keeping it uniform with the solid
 					// case avoids a branch that would change nothing on screen.
 					rejectEmptyColor(originOpts.fill, 'cell fill')
@@ -446,7 +446,7 @@ export function renderTableObject(ctx: RenderContext): string {
 			const cellFill = fillColor ? genXmlColorSelection(fillColor) : ''
 
 			const cellMargin = resolveCellMarginsInches(cellOpts.margin)
-			// Cell text ALWAYS wraps — PowerPoint has no per-cell no-wrap, so there is nothing to emit
+			// Cell text ALWAYS wraps. PowerPoint has no per-cell no-wrap, so there is nothing to emit
 			// for one. `wrap="none"` on a cell's `<a:bodyPr>` renders inert and is stripped on the next
 			// save, and `TextFrame.WordWrap` is read-only on a cell over COM (it reports msoTrue whatever
 			// the XML says). `horzOverflow` below is NOT that switch: per ECMA-376 §20.1.10.68 it decides
@@ -459,7 +459,7 @@ export function renderTableObject(ctx: RenderContext): string {
 			// goes last, which is both where CT_TableCellProperties declares it and where PowerPoint
 			// writes it, so an existing cell's bytes are unchanged while it stays unset. `anchorCtr`
 			// follows `anchor`, matching the schema's own adjacency; that the emitter's `anchor`/`vert`
-			// pair is inverted relative to CT_TableCellProperties is pre-existing and harmless — XML
+			// pair is inverted relative to CT_TableCellProperties is pre-existing and harmless: XML
 			// attributes are unordered, so the order is only about keeping emitted bytes stable.
 			const tcPrAttrs: XmlAttrs = {
 				marL: marginToEmu(cellMargin[3]),
@@ -478,7 +478,7 @@ export function renderTableObject(ctx: RenderContext): string {
 			// Child order is the CT_TableCellProperties sequence: the four edges, the two diagonals,
 			// `cell3D`, then the fill. Unlike the edges, the diagonals are NOT copied onto a merged
 			// region's covered cells (see `genTableCellBorderXml`).
-			// A null tuple side is *omitted* (inherits) — normalize it to a hole, which
+			// A null tuple side is *omitted* (inherits); normalize it to a hole, which
 			// `applyOuterBorder` already treats as "leave the edge alone".
 			const cellBorder = applyOuterBorder(
 				Array.isArray(cellOpts.border) ? cellOpts.border.map((side) => side ?? undefined) : null,

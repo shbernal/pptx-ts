@@ -3,7 +3,7 @@
  *
  * `fetch`, `btoa` and `TextEncoder` exist in Node, in every browser, and in the edge/worker
  * runtimes the neutral adapter serves, so the remote-load paths were the same code in all three
- * adapters — byte-identical in two of them and an inline branch in the third. What is genuinely
+ * adapters: byte-identical in two of them and an inline branch in the third. What is genuinely
  * per-runtime stays in each adapter: `node:fs`, `FileReader`, the canvas rasterizer, the
  * `<a download>` writer.
  *
@@ -18,13 +18,13 @@ import type { SlideRelMedia } from '../types/internal.js'
 /**
  * Whether `source` names something to `fetch` rather than something to read from a filesystem.
  *
- * A real scheme test, not `source.startsWith('http')`. That prefix matched a *relative path* —
- * `httpdocs/logo.png`, `http-icons/x.svg` — and sent it to `fetch`, which then failed with a
+ * A real scheme test, not `source.startsWith('http')`. That prefix matched a *relative path*
+ * (`httpdocs/logo.png`, `http-icons/x.svg`) and sent it to `fetch`, which then failed with a
  * fetch error naming a file that exists on disk. It was also case-sensitive, so
  * `HTTPS://example.com/f.ttf` missed and went to `fs.readFile`.
  *
  * Only `http:` and `https:` count. A `file:` or `data:` URL falls through to the adapter's
- * local branch, where it fails — the same as before this was tightened, and deliberately left
+ * local branch, where it fails, the same as before this was tightened, and deliberately left
  * that way: making either work is a feature with its own decisions (what a `file:` URL means
  * off Node, whether a `data:` URL should bypass loading entirely), not a side effect of fixing
  * a prefix test.
@@ -42,7 +42,7 @@ export async function fetchFontBytes(source: string): Promise<Uint8Array> {
 }
 
 /**
- * Fetch a media file as raw base64 (no `data:` prefix) — see {@link RuntimeAdapter.loadMedia}
+ * Fetch a media file as raw base64 (no `data:` prefix). See {@link RuntimeAdapter.loadMedia}
  * for why both encodings are accepted.
  *
  * Encodes through `bytesToBase64` rather than `Buffer`, so the same function serves a runtime

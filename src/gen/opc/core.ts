@@ -27,7 +27,7 @@ export const CORE_PROPS_NS = {
 }
 
 /**
- * Now, as `dcterms:W3CDTF` without milliseconds — the precision Office writes.
+ * Now, as `dcterms:W3CDTF` without milliseconds, the precision Office writes.
  *
  * Call it **once** per part and reuse the value for `created` and `modified`: two calls make a
  * part whose two timestamps can disagree by a millisecond depending on when the build crossed a

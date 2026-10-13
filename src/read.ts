@@ -8,14 +8,14 @@
  * @module
  */
 
-// OPC layer — low-level package, parts, content types, relationships.
+// OPC layer: low-level package, parts, content types, relationships.
 export { OpcPackage, type OpcInput } from './read/opc/package.js'
 export { Part } from './read/opc/part.js'
 export { ContentTypes } from './read/opc/content-types.js'
 export { Relationships, type Relationship } from './read/opc/relationships.js'
 export { resolveRelativePartName, relsPartNameFor } from './read/opc/partnames.js'
 
-// Read object model — navigable presentation → slides → shapes → text.
+// Read object model: navigable presentation → slides → shapes → text.
 export { Presentation } from './read/api/presentation.js'
 export type {
 	SlideSize,
@@ -196,14 +196,14 @@ export {
 export type { ColorContext, ThemeContext } from './read/oxml/theme.js'
 // DrawingML colour-transform application (base hex + transforms → effective hex).
 export { applyColorTransforms, type ColorTransform, type EffectiveColor } from './read/oxml/color-transform.js'
-// The ECMA-376 preset colour table, so a caller holding a raw preset name — `GradientStop`
-// and `RecolorColor` both report one — can make it literal the same way the reader does.
+// The ECMA-376 preset colour table, so a caller holding a raw preset name (`GradientStop`
+// and `RecolorColor` both report one) can make it literal the same way the reader does.
 export { presetColorHex } from './read/oxml/preset-color.js'
 
-// Error taxonomy — see `entry-errors.ts`. Re-exported from every entry so `instanceof`
+// Error taxonomy: see `entry-errors.ts`. Re-exported from every entry so `instanceof`
 // works whichever subpath a consumer imports.
 export * from './entry-errors.js'
 
-// Diagnostics — see `entry-diagnostics.ts`. Re-exported from every entry so a consumer of any
+// Diagnostics: see `entry-diagnostics.ts`. Re-exported from every entry so a consumer of any
 // subpath can install a handler for the warnings that subpath emits.
 export * from './entry-diagnostics.js'

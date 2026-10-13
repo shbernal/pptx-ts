@@ -1,5 +1,5 @@
 /**
- * The deck IR — a serializable description of a deck as a sequence of write-API calls.
+ * The deck IR: a serializable description of a deck as a sequence of write-API calls.
  *
  * This is the seam between reading a `.pptx` and printing TypeScript for it. Everything
  * upstream of the IR knows about OOXML and the read model; everything downstream knows
@@ -11,12 +11,12 @@
  * Two rules keep that seam honest, and both are load-bearing:
  *
  * 1. **The IR is data, not objects.** No DOM nodes, no read-model instances, no
- *    functions — `structuredClone` and `JSON.stringify` both round-trip it. A round-trip
+ *    functions; `structuredClone` and `JSON.stringify` both round-trip it. A round-trip
  *    test can therefore compare two IRs directly (see {@link FidelityNote}), and an IR
  *    can be cached or shipped without dragging a whole `Presentation` along.
  * 2. **`args` are literal write-API option objects.** A {@link CallIr} is exactly what
  *    the emitted source will pass, so the printer never invents, reshapes, or defaults a
- *    value — it spells out what is already there. If the printer had to interpret, the
+ *    value; it spells out what is already there. If the printer had to interpret, the
  *    same construct could mean two things depending on which half you asked.
  *
  * Media is the one thing that cannot be a literal, since bytes are not source text. It
@@ -32,7 +32,7 @@ import type { ChartMulti, ChartOpts, OptsChartData, Slide } from '../types/index
 /**
  * A reference to bytes held in {@link DeckIr.assets}, standing where a write-API option
  * wants image/media data. Printed as a `path` or an inline `data:` literal depending on
- * the print options — an IR-level decision would bake one choice into the IR and force a
+ * the print options. An IR-level decision would bake one choice into the IR and force a
  * re-read to change it.
  *
  * The `$asset` sigil is deliberate: no write-API option object has a `$`-prefixed key,
@@ -61,7 +61,7 @@ export type IrValue = null | boolean | number | string | AssetRef | IrValue[] | 
  *
  * A cast, and unavoidably so. An optional key on an interface types as `T | undefined`,
  * while `IrValue` deliberately excludes `undefined` so that "absent" has exactly one
- * spelling — which makes the two mutually unassignable even though every value a mapper
+ * spelling, which makes the two mutually unassignable even though every value a mapper
  * actually produces satisfies both. The invariant that closes the gap is enforced at the
  * source (`compact` and the conditional spreads in `from-read/`, pinned by the "no value is
  * `undefined`" corpus test) rather than by the type system, so it is stated once here
@@ -124,7 +124,7 @@ export type IrArg<T> = T extends string | number | boolean | null
 /**
  * One write-API call on a slide, in the order it must be made. `method` names a real
  * method on the authored slide and `args` are its positional arguments, typed per method from
- * the write API — so a printer is a formatter, and `readModelToIr` owns every semantic choice.
+ * the write API, so a printer is a formatter, and `readModelToIr` owns every semantic choice.
  * Narrowing on `method` types `args`: after `call.method === 'addTable'`, `call.args[1]` is a
  * `TableProps` as the IR spells it.
  *
@@ -136,7 +136,7 @@ export type CallIr = {
 		method: M
 		args: IrArg<CallParameters[M]>
 		/**
-		 * The source shape's name (`p:cNvPr/@name`), when it had one. Not an argument —
+		 * The source shape's name (`p:cNvPr/@name`), when it had one. Not an argument;
 		 * carried so a printer can comment the call and a fidelity note can point at it.
 		 */
 		sourceName?: string
@@ -163,11 +163,11 @@ export function irArgs(call: CallIr): IrValue[] {
 /**
  * How a slide's content gets into the output deck.
  *
- * `authored` — every shape is transcribed into {@link CallIr}s and regenerated through
+ * `authored`: every shape is transcribed into {@link CallIr}s and regenerated through
  * the write API. This is the goal: the emitted source is editable, and a reader can see
  * what the deck contains.
  *
- * `carried` — the slide holds at least one construct the write API cannot express at all
+ * `carried`: the slide holds at least one construct the write API cannot express at all
  * (`chartEx` is the clear case: a full reader, no emitter), so transcribing it would
  * silently produce a different deck. A printer that *can* copy the slide from the source
  * package should do so: fidelity is higher than transcription, though the emitted source then
@@ -184,7 +184,7 @@ export type SlideSource = 'authored' | 'carried'
  * A slide's background, already reduced to what the write API's `background` accepts.
  *
  * `data` rather than `image`, because `BackgroundProps` is `DataOrPathProps & ShapeFillProps`
- * and `data` is the key it actually reads — an `image` key would print, typecheck against
+ * and `data` is the key it actually reads. An `image` key would print, typecheck against
  * `IrValue`, and be ignored at run time.
  *
  * `type`, `gradient` and `pattern` are the `ShapeFillProps` keys a non-solid background is
@@ -207,15 +207,15 @@ export interface BackgroundIr {
  *
  * `data` rather than `path`, for the same reason a background image uses `data`: the bytes
  * are the thing the IR carries, and a path would bind the script to a file layout the IR
- * knows nothing about. The stop-previous form has no bytes at all — it silences a sound
- * still playing from the previous slide — so it is the one shape here with no {@link AssetRef}.
+ * knows nothing about. The stop-previous form has no bytes at all (it silences a sound
+ * still playing from the previous slide), so it is the one shape here with no {@link AssetRef}.
  */
 export interface TransitionSoundIr {
 	/** Bytes of the embedded WAV, for a start sound. Absent for {@link stopPrevious}. */
 	data?: AssetRef
 	/** `p:snd@name`, the display name PowerPoint shows for the sound. */
 	name?: string
-	/** `p:stSnd@loop` — repeat until the next sound starts. Omitted when false, its default. */
+	/** `p:stSnd@loop`: repeat until the next sound starts. Omitted when false, its default. */
 	loop?: boolean
 	/** The `p:endSnd` form: stop the previous slide's sound rather than start one. */
 	stopPrevious?: boolean
@@ -226,7 +226,7 @@ export interface TransitionSoundIr {
  *
  * Only the base ECMA-376 transitions reach this type. The read model reports
  * `TransitionInfo.type` as an *open string*, because PowerPoint's modern effects
- * (Morph, Vortex, …) live in the `p14`/`p15`/`p159` namespaces and it decodes those too —
+ * (Morph, Vortex, …) live in the `p14`/`p15`/`p159` namespaces and it decodes those too,
  * but the write path names 21 base ones and nothing else, so `from-read/transition.ts`
  * filters against that vocabulary and notes what it drops. Anything that survives is a name
  * the write API's own `TransitionType` union accepts, which is what keeps a printed script
@@ -235,7 +235,7 @@ export interface TransitionSoundIr {
 export interface TransitionIr {
 	/** The transition-type element's local name, guaranteed to be a writable one. */
 	type: string
-	/** `p:transition@spd`. Always present — see `from-read/transition.ts` for why it is not omitted. */
+	/** `p:transition@spd`. Always present; see `from-read/transition.ts` for why it is not omitted. */
 	speed: 'slow' | 'med' | 'fast'
 	/** `p14:dur` in milliseconds, when the source carried an exact duration. */
 	durationMs?: number
@@ -254,7 +254,7 @@ export interface TransitionIr {
  *
  * The **name** is the portable identity: it is what lets a script built from one deck be
  * re-pointed at a different template whose layouts happen to be named the same, and it is
- * what a reader recognises. But `p:cSld@name` is not unique — a deck with several masters
+ * what a reader recognises. But `p:cSld@name` is not unique: a deck with several masters
  * routinely carries several "Title and Content" layouts, and binding by an ambiguous name
  * is an error, not a coin flip. The **index** into the deck's layout gallery always
  * resolves, so it is the fallback, and {@link nameIsUnique} says which to trust.
@@ -275,7 +275,7 @@ export interface SlideIr {
 	source: SlideSource
 	/** The layout to bind to, or `null` when the source slide resolves none. */
 	layout: SlideLayoutIr | null
-	/** `p:sld/@show="0"` — a slide hidden from presentation but present in the deck. */
+	/** `p:sld/@show="0"`: a slide hidden from presentation but present in the deck. */
 	hidden: boolean
 	/** `p:cSld/@name`, when the source slide had one. */
 	name?: string
@@ -294,7 +294,7 @@ export interface SlideIr {
 	/**
 	 * The show transition, when the source has one the write API can name. Slide-scoped
 	 * rather than a {@link CallIr} because the write API models it as a property assignment
-	 * on the slide, not a method — the IR's `method` union names real methods only.
+	 * on the slide, not a method; the IR's `method` union names real methods only.
 	 */
 	transition?: TransitionIr
 	/**
@@ -306,19 +306,19 @@ export interface SlideIr {
 	 * Write-API calls in z-order.
 	 *
 	 * Populated for every slide, **including a `carried` one**. A printer that can copy the
-	 * source slide ignores these; one that cannot — a standalone output has no source package
-	 * to copy from — prints them and is left with only the unwritable construct missing rather
+	 * source slide ignores these; one that cannot (a standalone output has no source package
+	 * to copy from) prints them and is left with only the unwritable construct missing rather
 	 * than the whole slide. Marking a slide `carried` is a recommendation, not an erasure.
 	 */
 	calls: CallIr[]
 }
 
 /**
- * A deck's theme, reduced to what `ThemeProps` accepts — the 12 `a:clrScheme` slots and the
+ * A deck's theme, reduced to what `ThemeProps` accepts: the 12 `a:clrScheme` slots and the
  * major/minor Latin, East-Asian and complex-script faces.
  *
- * What is *not* here is the point of the tier split. `a:fmtScheme` — the three fill, three
- * line and three effect style lists a shape's `p:style` references — has no write-API
+ * What is *not* here is the point of the tier split. `a:fmtScheme` (the three fill, three
+ * line and three effect style lists a shape's `p:style` references) has no write-API
  * counterpart and no read accessor, so a theme cannot be reproduced, only approximated.
  */
 export interface ThemeIr {
@@ -337,7 +337,7 @@ export interface ThemeIr {
  *
  * The naming is the write API's, not OOXML's: `defineSlideMaster` creates a *layout* under
  * the single shared master, which is exactly the granularity a source layout needs. A source
- * deck's masters have no counterpart at all — hence {@link ChromeIr}'s multi-master note.
+ * deck's masters have no counterpart at all, hence {@link ChromeIr}'s multi-master note.
  */
 export interface MasterIr {
 	/**
@@ -354,7 +354,7 @@ export interface MasterIr {
 }
 
 /**
- * `base`, or `base (2)`, `base (3)`, … — the first spelling `used` does not already hold.
+ * `base`, or `base (2)`, `base (3)`, …: the first spelling `used` does not already hold.
  *
  * The rule {@link MasterIr}'s `props.title` is made unique by. Shared because the standalone
  * printer has to predict the title the reader gives the write path's own `DEFAULT` layout when a
@@ -368,7 +368,7 @@ export function uniqueTitle(base: string, used: ReadonlySet<string>): string {
 
 /**
  * The deck's shared chrome, approximated for an output that has no template to inherit it
- * from. A template-anchored printer ignores this entirely — the source deck *is* the chrome.
+ * from. A template-anchored printer ignores this entirely: the source deck *is* the chrome.
  */
 export interface ChromeIr {
 	theme: ThemeIr

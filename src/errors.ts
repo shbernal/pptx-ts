@@ -4,7 +4,7 @@
  * Every failure pptx-ts raises is a {@link PptxTsError} carrying a stable {@link ErrorCode}, so a
  * consumer can tell *"you passed a bad coordinate"* from *"this font file is corrupt"* from
  * *"these bytes are not a package"* without matching on message substrings. The classes are a
- * deliberately flat, coarse bucket — five of them — and the code carries the specificity. Do not
+ * deliberately flat, coarse bucket (five of them), and the code carries the specificity. Do not
  * add a class per throw site; add a code.
  *
  * **The class and the code are API. The message is not.** Branch on `instanceof` and on `code`;
@@ -54,11 +54,11 @@ export interface PptxTsErrorOptions extends ErrorOptions {
  * Base class for every error pptx-ts throws.
  *
  * Catch this to catch anything from the library; narrow with `instanceof` on a subclass, or branch
- * on {@link PptxTsError.code}, to react to something specific. It is never thrown directly — every
+ * on {@link PptxTsError.code}, to react to something specific. It is never thrown directly: every
  * site picks one of the five subclasses.
  */
 export class PptxTsError extends Error {
-	/** Stable condition identifier — see {@link ErrorCode}. Branch on this, not on the text. */
+	/** Stable condition identifier (see {@link ErrorCode}). Branch on this, not on the text. */
 	readonly code: ErrorCode
 
 	/** Structured context for the condition, when the throwing site had any to give. */
@@ -81,7 +81,7 @@ export class PptxTsError extends Error {
 }
 
 /**
- * The caller passed something the library cannot use — a non-finite coordinate, an unknown enum
+ * The caller passed something the library cannot use: a non-finite coordinate, an unknown enum
  * value, a required option left out, a value outside its legal range.
  *
  * This is the error behind the project's throw-rather-than-coerce policy: emitting a degenerate
@@ -100,8 +100,8 @@ export class InvalidOptionError extends PptxTsError {
  * installed, the runtime lacks a capability, or the shape/feature has no OOXML representation the
  * library emits.
  *
- * Distinct from {@link InvalidOptionError} because the caller did nothing wrong — the answer is
- * "not here", not "not like that" — and the fix is usually to install something or pick a different
+ * Distinct from {@link InvalidOptionError} because the caller did nothing wrong (the answer is
+ * "not here", not "not like that"), and the fix is usually to install something or pick a different
  * approach rather than to correct a value.
  */
 export class UnsupportedFeatureError extends PptxTsError {
@@ -113,7 +113,7 @@ export class UnsupportedFeatureError extends PptxTsError {
 
 /**
  * The bytes handed to the library are not a package it can read, or a part inside one is
- * structurally malformed — a missing `[Content_Types].xml`, a relationship pointing at nothing, a
+ * structurally malformed: a missing `[Content_Types].xml`, a relationship pointing at nothing, a
  * slide part with no root element.
  *
  * Always about *input*. A problem with something the library is being asked to produce is an
@@ -130,7 +130,7 @@ export class PackageReadError extends PptxTsError {
  * A referenced image, font, or audio/video resource could not be fetched, read, or decoded.
  *
  * Kept apart from {@link PackageReadError} because the failure is in a resource the deck *points
- * at*, not in the package structure — a broken URL, an unreadable path, a corrupt font file — and
+ * at*, not in the package structure (a broken URL, an unreadable path, a corrupt font file), and
  * a consumer typically retries or substitutes rather than rejecting the deck.
  */
 export class MediaError extends PptxTsError {
@@ -143,7 +143,7 @@ export class MediaError extends PptxTsError {
 /**
  * Where a report of an `InternalError` should go. Appended to the message rather than left to the
  * docs, because a stack trace is the only artefact of the failure that reaches whoever (or
- * whatever) is debugging it — a pointer anywhere else is a pointer they have to already be looking
+ * whatever) is debugging it. A pointer anywhere else is a pointer they have to already be looking
  * for. Most code that calls this library is written by an agent in a repository that is not this
  * one, and an agent that hits a library defect routes around it silently unless something in front
  * of it says the report is worth making.
@@ -161,12 +161,12 @@ const REPORT_NOTICE =
  *
  * It is the one class in the taxonomy that extends its own message, appending `REPORT_NOTICE`
  * below the invariant that broke. The constructor is where that lives so a throw site added later
- * inherits it — the alternative, a notice pasted at each of the sites, is one every future site can
+ * inherits it. The alternative, a notice pasted at each of the sites, is one every future site can
  * forget. Every other class leaves `message` exactly as given: a malformed package is the routine
  * outcome for a library that reads untrusted files, and a "report this" banner on each corrupt
  * input would train callers to ignore the one banner that always means something.
  *
- * This does not make the message API — see the class doc on {@link PptxTsError}. Branch on
+ * This does not make the message API (see the class doc on {@link PptxTsError}). Branch on
  * `instanceof` or on {@link InternalError.code}, never on the text.
  */
 export class InternalError extends PptxTsError {

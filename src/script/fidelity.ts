@@ -1,5 +1,5 @@
 /**
- * Fidelity notes — the declared, machine-checkable list of what a deck loses on the way
+ * Fidelity notes: the declared, machine-checkable list of what a deck loses on the way
  * to a script.
  *
  * A converter that warns about losses to a log has no way to be tested: the warnings are
@@ -77,7 +77,7 @@ const TEMPLATE_ONLY = ['template'] as const
  *   scope, and a deck's `master.background` excused every run colour and every lost image in the
  *   deck.
  *
- * `'*'` covers every difference inside the note's scope — correct only where the note says the
+ * `'*'` covers every difference inside the note's scope. It is correct only where the note says the
  * whole shape or slide is gone or was copied wholesale, never as a shortcut for a construct
  * whose fields are merely tedious to enumerate.
  *
@@ -85,7 +85,7 @@ const TEMPLATE_ONLY = ['template'] as const
  * sides (a slide's build animations, a paragraph's `a:pPr/@marL`, a connector's shape
  * binding), so the note is a caveat for a human and there is nothing here to exclude. Saying
  * so explicitly is what keeps it from looking like an oversight. A construct can leave that
- * state — `slide.transition` was an empty entry until the converter learned to transcribe
+ * state: `slide.transition` was an empty entry until the converter learned to transcribe
  * transitions, and the IR gaining a field is exactly when its note gains a mapping.
  *
  * Each entry also names the printers whose output the note describes (`tiers`), and each printer
@@ -142,7 +142,7 @@ export const NOTE_CONSTRUCTS = {
 	// Empty, and the temptation to list title/author/subject/revision here has to be
 	// resisted: this note is about the *other* seven docProps, which have no setter and are
 	// absent from the IR. Listing the four that do have setters would excuse a printer that
-	// stopped writing them — measured, by exactly that mutation.
+	// stopped writing them (measured, by exactly that mutation).
 	'deck.docProps': { fields: [], tiers: STANDALONE_ONLY },
 	// Nothing to exclude: the differences it predicts are `added`, which WRITER_DEFAULTS covers
 	// by kind. The note exists so a reader of the emitted script learns the deck gained them.
@@ -150,7 +150,7 @@ export const NOTE_CONSTRUCTS = {
 	'deck.slideSize': { fields: ['slideSize.*'], tiers: BOTH_TIERS },
 	'diagram.all': { fields: ['*'], tiers: BOTH_TIERS },
 	// A gradient that cannot be expressed falls back to no gradient, so the difference lands on
-	// the fill option itself. The `line.` twins below are the same construct on a stroke —
+	// the fill option itself. The `line.` twins below are the same construct on a stroke;
 	// `gradientStops` is shared by both surfaces and scopes its notes by which one it is on.
 	'fill.gradient': { fields: ['gradient', 'fill'], tiers: BOTH_TIERS },
 	'fill.gradient.path': { fields: ['gradient', 'fill'], tiers: BOTH_TIERS },
@@ -159,12 +159,12 @@ export const NOTE_CONSTRUCTS = {
 	'line.gradient.path': { fields: ['gradient', 'line'], tiers: BOTH_TIERS },
 	'line.gradient.center': { fields: ['gradient', 'line'], tiers: BOTH_TIERS },
 	'line.gradient.schemeToken': { fields: ['gradient', 'line'], tiers: BOTH_TIERS },
-	// Recorded only when an image-filled surface cannot carry its *bytes* — a linked blip, an
+	// Recorded only when an image-filled surface cannot carry its *bytes*: a linked blip, an
 	// SVG the write path refuses, a part missing from the package. The fill option is then
 	// absent from the output entirely, so the difference lands on `fill` itself.
 	'fill.picture': { fields: ['fill'], tiers: BOTH_TIERS },
 	// Empty, and deliberately so: this note declares that a picture fill's tiling, crop, DPI
-	// and rotWithShape do not survive, and *none of them is in the IR on either side* — the
+	// and rotWithShape do not survive, and *none of them is in the IR on either side*. The
 	// write API expresses a picture fill as bytes plus transparency, so the converter never
 	// emits them. Widening this to `fill` would be the mistake it looks like a fix for: it
 	// would excuse an image fill that failed to come back at all, which is the thing the
@@ -196,13 +196,13 @@ export const NOTE_CONSTRUCTS = {
 	},
 	// Covers the picture's bytes, not just an `svg` option: an SVG picture's raster fallback
 	// is regenerated rather than carried, so the blip the round trip compares is a different
-	// image from the source's — which is precisely the loss this note is about.
+	// image from the source's, which is precisely the loss this note is about.
 	'image.svg': { fields: ['svg', 'data', '$asset'], tiers: BOTH_TIERS },
 	'line.arrowSize': { fields: ['beginArrowType', 'endArrowType'], tiers: BOTH_TIERS },
 	// The chrome notes. Most are empty for the reason stated above and it is the common case
 	// here rather than the exception: `a:fmtScheme`, `p:txStyles`, a *master's* decoration and a
-	// layout's placeholder definitions are all absent from the IR on *both* sides — the first two
-	// because nothing reads them, the other two because nothing writes them — so there is nothing
+	// layout's placeholder definitions are all absent from the IR on *both* sides (the first two
+	// because nothing reads them, the other two because nothing writes them), so there is nothing
 	// for a note to exclude and the note exists for a human. A *layout's* decoration is the one
 	// that left this state: it is now in the IR as `objects` and is genuinely compared, which is
 	// what makes the `layout.` entries below worth stating separately.
@@ -236,8 +236,8 @@ export const NOTE_CONSTRUCTS = {
 	// The two layout-shape notes with no slide counterpart to inherit a mapping from. Both are
 	// empty for the same reason, and it is worth spelling out because both *look* like they
 	// should exclude something. A table on a layout is absent from the `objects` array on both
-	// sides — the source's because this converter skips it, the output's because it was never
-	// written — so there is no difference to excuse. A flattened group is stronger still: the
+	// sides (the source's because this converter skips it, the output's because it was never
+	// written), so there is no difference to excuse. A flattened group is stronger still: the
 	// source layout's group becomes N loose objects here and the output layout genuinely *has*
 	// N loose objects, so the two agree exactly and the note is a caveat for a human reading the
 	// emitted script, not an exclusion.
@@ -290,7 +290,7 @@ export const NOTE_CONSTRUCTS = {
 	// this note is only ever recorded when the whole transition is gone.
 	'slide.transition': { fields: ['transition'], tiers: BOTH_TIERS },
 	// The sound alone, one level down. Scoped to `transition.sound` so it cannot also excuse a
-	// transition whose type or timing came back wrong — the loss it declares is exactly the missing
+	// transition whose type or timing came back wrong: the loss it declares is exactly the missing
 	// `p:sndAc`, and the `.*` also covers the case where the sound survives with other bytes.
 	'slide.transitionSound': { fields: ['transition.sound.*'], tiers: BOTH_TIERS },
 	// A dash outside `ST_PresetLineDashVal` cannot be written back, so the edge comes out as
@@ -298,10 +298,10 @@ export const NOTE_CONSTRUCTS = {
 	'table.cell.borders.dash': { fields: ['border', 'diagonal'], tiers: BOTH_TIERS },
 	// `table.cell.fill` used to live here, for a cell whose own fill could not be told apart
 	// from the one it inherited from the table style. `TableCell.hasOwnFill` tells them apart,
-	// so the mapper emits the right one and records nothing — the note is gone rather than
+	// so the mapper emits the right one and records nothing. The note is gone rather than
 	// unmapped. Its `.gradient` / `.picture` children below are separate constructs and stay.
-	// Empty, and correctly so: `a:tc/@id` and `a:tcPr/a:headers` have no write option — the
-	// IR has nowhere to put them on either side, so there is nothing to exclude. The note
+	// Empty, and correctly so: `a:tc/@id` and `a:tcPr/a:headers` have no write option, so the
+	// IR has nowhere to put them on either side and there is nothing to exclude. The note
 	// exists so a reader of the emitted script learns the association was there and is gone.
 	'table.cell.headers': { fields: [], tiers: BOTH_TIERS },
 	// A field or an equation in a cell contributes no run, so its text is in neither IR. Not
@@ -324,7 +324,7 @@ export const NOTE_CONSTRUCTS = {
 	'table.fill.picture': { fields: ['tableFill'], tiers: BOTH_TIERS },
 	'table.fill.picture.geometry': { fields: [], tiers: BOTH_TIERS },
 	// A gradient that cannot be expressed falls back to no gradient, so the difference lands
-	// on the fill option itself — `tableFill` for the background, `fill` for a cell.
+	// on the fill option itself: `tableFill` for the background, `fill` for a cell.
 	'table.fill.gradient': { fields: ['tableFill'], tiers: BOTH_TIERS },
 	'table.fill.gradient.path': { fields: ['tableFill'], tiers: BOTH_TIERS },
 	'table.fill.gradient.center': { fields: ['tableFill'], tiers: BOTH_TIERS },
@@ -345,7 +345,7 @@ export const NOTE_CONSTRUCTS = {
 		fields: ['fill.pattern.fgColor', 'fill.pattern.bgColor'],
 		tiers: BOTH_TIERS,
 	},
-	// Narrowed to the East-Asian `ST_TextVerticalType` modes `textDirection` cannot spell —
+	// Narrowed to the East-Asian `ST_TextVerticalType` modes `textDirection` cannot spell, not
 	// the four it can now round-trip, so this no longer excuses every vertical cell.
 	'table.cell.vert': { fields: ['textDirection', 'vert'], tiers: BOTH_TIERS },
 	'table.rowAuto': { fields: ['rowH'], tiers: BOTH_TIERS },
@@ -355,11 +355,11 @@ export const NOTE_CONSTRUCTS = {
 	// `text.bullet.numberStartAt` and `text.bullet.style` used to live here, for
 	// `a:buAutoNum/@startAt` and for a bullet's own font/size/colour. `Paragraph.bulletDetail`
 	// reads all four, so the mapper emits `numberStartAt` / `fontFace` / `size` / `color` and
-	// records nothing — the notes are gone rather than unmapped. What remains of the size half
+	// records nothing. The notes are gone rather than unmapped. What remains of the size half
 	// is `text.bullet.sizePt`, which is a genuinely unwritable unit rather than an unread value.
 	'text.bullet.numberType': { fields: ['bullet'], tiers: BOTH_TIERS },
-	// An absolute bullet size (`a:buSzPts`) has no write option at all — `bullet.size` is a
-	// percentage of the run size — so the difference lands on the bullet option.
+	// An absolute bullet size (`a:buSzPts`) has no write option at all (`bullet.size` is a
+	// percentage of the run size), so the difference lands on the bullet option.
 	'text.bullet.sizePt': { fields: ['bullet'], tiers: BOTH_TIERS },
 	// A percentage outside 25–400%, which the write path rejects with a warning and replaces
 	// with the run's own size.
@@ -389,13 +389,13 @@ export const NOTE_CONSTRUCTS = {
 	// Spaced text that states no `kern` comes back with `kern="0"`, the write path's pairing for
 	// spacing; no option leaves the attribute out. Both IRs omit `kerning`, so no field differs.
 	'text.kern': { fields: [], tiers: BOTH_TIERS },
-	// `text.bullet.inherited` used to live here — a paragraph stating no bullet of its own was
+	// `text.bullet.inherited` used to live here: a paragraph stating no bullet of its own was
 	// re-emitted with an explicit `a:buNone`, because omitting the write API's `bullet` is that
 	// element rather than silence. `bullet: 'inherit'` says silence now, so the mapper carries
 	// the state instead of excusing its loss and the note is gone rather than unmapped.
 	//
 	// `text.indent` used to live here, empty, because a paragraph's `a:pPr/@marL` and `@indent`
-	// were in neither IR — the write API had no option for them, so the mapper never emitted one
+	// were in neither IR. The write API had no option for them, so the mapper never emitted one
 	// and the diff compared two models both missing the field. `paraMarginLeft` / `paraIndent`
 	// put it in both, which is what turns an empty entry into a comparison rather than a caveat,
 	// so the note is gone rather than unmapped.
@@ -424,7 +424,7 @@ type StripLayoutPrefix<T> = T extends `layout.${infer Rest}` ? Rest : never
  * What a call site may name: the catalogue, plus the `layout.`-prefixed constructs spelled
  * relative to the prefix, which is how the layout walk records them.
  *
- * One union rather than two scope types, because a TypeScript method parameter is bivariant —
+ * One union rather than two scope types, because a TypeScript method parameter is bivariant:
  * a narrower `LayoutNoteScope` would have been assignable to `NoteScope` in both directions and
  * enforced nothing. The cost is that a slide mapper could name a layout-relative construct; the
  * thing worth catching is a construct with no entry AT ALL, which this does catch.
@@ -436,13 +436,13 @@ export type Disposition =
 	/** Gone: nothing in the output carries it. */
 	| 'dropped'
 	/**
-	 * Present but structurally simplified — a value survives while the structure around
+	 * Present but structurally simplified: a value survives while the structure around
 	 * it does not (threaded comment replies flattened into separate comments, a per-script
 	 * font scheme reduced to latin, a placeholder demoted to a plain shape).
 	 */
 	| 'flattened'
 	/**
-	 * Present and structurally intact, but not the same value — a re-encoding that a
+	 * Present and structurally intact, but not the same value: a re-encoding that a
 	 * viewer may or may not be able to tell apart (a modern transition mapped to the
 	 * nearest named one, a chart rebuilt from cached points rather than its workbook).
 	 */
@@ -472,7 +472,7 @@ export interface FidelityNote {
 	 */
 	shapeName: string | null
 	/**
-	 * Stable dotted identifier for the lost construct — `line.width`, `text.tabStops`,
+	 * Stable dotted identifier for the lost construct: `line.width`, `text.tabStops`,
 	 * `chart.workbook`. Matched mechanically by the round-trip check, so it must name a
 	 * field path rather than describe one. Reuse an existing key for the same construct
 	 * instead of coining a synonym.
@@ -508,7 +508,7 @@ export class NoteCollector {
 	}
 
 	/**
-	 * The notes, in the order first recorded — which is deck order, since the walk is
+	 * The notes, in the order first recorded, which is deck order, since the walk is
 	 * ordered, so a reader meets them the way they meet the slides.
 	 */
 	get notes(): FidelityNote[] {
@@ -520,7 +520,7 @@ export class NoteCollector {
  * Namespace for a loss recorded against a shape on a **slide layout** rather than on a slide,
  * prepended to the construct by `layoutShapeScope`.
  *
- * The chrome mapper reuses the slide shape mapper wholesale — a rectangle on a layout is
+ * The chrome mapper reuses the slide shape mapper wholesale: a rectangle on a layout is
  * transcribed by the same code that transcribes one on a slide, which is what keeps the two
  * from drifting. That sharing brings the slide vocabulary with it: a themed outline on a
  * layout records `line.width` exactly as a slide's would. Left unmarked, those notes would be
@@ -531,7 +531,7 @@ export class NoteCollector {
  *
  * `layout.` rather than `master.`, which is how the other chrome constructs are spelled: those
  * are named after the `defineSlideMaster` call that authors them, while these name the source
- * tier the loss is on — and a master's own decoration is not re-authored at all, so a note
+ * tier the loss is on. And a master's own decoration is not re-authored at all, so a note
  * under this prefix is always about a layout.
  */
 export const LAYOUT_NOTE_PREFIX = 'layout.'
@@ -552,7 +552,7 @@ export function noteAppliesTo(construct: string, tier: PrintTier): boolean {
 }
 
 /**
- * `a`, `a and b`, `a, b and c` — a note is a sentence a human reads, and a bare
+ * `a`, `a and b`, `a, b and c`: a note is a sentence a human reads, and a bare
  * `join(', ')` made a two-item one read as a list that had lost its last member.
  */
 export function andList(items: readonly string[]): string {
@@ -607,7 +607,7 @@ export function scopeNotes(
 
 /**
  * Wrap a scope so every construct recorded through it is namespaced under
- * {@link LAYOUT_NOTE_PREFIX} — see there for why.
+ * {@link LAYOUT_NOTE_PREFIX}. See there for why.
  *
  * Constructs written at a call site inside the layout walk are therefore *relative*: the
  * decoration mapper records `decoration`, and what lands in the note list is

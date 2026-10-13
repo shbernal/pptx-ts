@@ -8,13 +8,13 @@
  * it is the same as not checking at all.
  *
  * **Every rule here must be an equivalence, not a convenience.** A rule that merely makes
- * the report shorter hides a defect permanently and silently — the exact failure mode this
+ * the report shorter hides a defect permanently and silently, the exact failure mode this
  * subsystem exists to catch. So each one below cites the OOXML default that makes the
  * explicit and the absent spelling mean the same thing, and none of them drops a value that
  * a viewer could render differently. When in doubt the value stays in and the difference is
  * reported: a noisy report is recoverable, a quiet one is not.
  *
- * Canonicalising is deliberately *symmetric* — it runs over both IRs, so it cannot favour
+ * Canonicalising is deliberately *symmetric*: it runs over both IRs, so it cannot favour
  * the output. A rule that only made sense in one direction would be an exclusion dressed up
  * as a normalisation.
  */
@@ -32,7 +32,7 @@ export interface CanonicalCall {
 	 * group's children.
 	 *
 	 * A fidelity note about a group's child is scoped to that child's name, but the child is
-	 * not a call of its own — it is an argument to the group's. Without this the note and the
+	 * not a call of its own; it is an argument to the group's. Without this the note and the
 	 * difference it predicted would carry different names and never match, and a declared loss
 	 * would be reported as a defect.
 	 */
@@ -45,7 +45,7 @@ export interface CanonicalSlide {
 	hidden: boolean
 	/**
 	 * The name of the layout this slide binds to, which is the only part of the binding that
-	 * is portable — a gallery *index* shifts whenever the output's gallery differs from the
+	 * is portable. A gallery *index* shifts whenever the output's gallery differs from the
 	 * source's, which it always does for a standalone output.
 	 *
 	 * Here because the binding is otherwise invisible: a printer that bound every slide to the
@@ -78,7 +78,7 @@ export interface CanonicalSlide {
  *
  * Included for one reason: without it the diff cannot see the standalone tier's whole job.
  * That tier re-authors the theme and one master per source layout, and a projection that
- * covers only slides would report a printer emitting *neither* as a clean round trip — the
+ * covers only slides would report a printer emitting *neither* as a clean round trip: the
  * same shape of hole mutation testing found in `added` differences, one level up. A
  * template-anchored output compares equal here by construction, which is the claim that tier
  * makes and is worth checking rather than assuming.
@@ -101,24 +101,24 @@ export interface CanonicalDeck {
  * Option values that mean exactly what their absence means.
  *
  * Keyed by option name because the IR's argument objects are the write API's own option
- * objects, where a name identifies a construct uniquely — there is no `bold` that means
+ * objects, where a name identifies a construct uniquely. There is no `bold` that means
  * something other than `a:rPr/@b`.
  *
  * Each entry is an OOXML default:
  *
- * - `bold`, `italic` — `a:rPr/@b` / `@i` are `ST_OnOff`, default `false`.
- * - `baseline` — `a:rPr/@baseline` is a percentage, default `0` (no super/subscript).
- * - `breakLine` — not OOXML but the IR's own flat encoding: a run that does not end its
+ * - `bold`, `italic`: `a:rPr/@b` / `@i` are `ST_OnOff`, default `false`.
+ * - `baseline`: `a:rPr/@baseline` is a percentage, default `0` (no super/subscript).
+ * - `breakLine`: not OOXML but the IR's own flat encoding: a run that does not end its
  *   paragraph. The final run of a text frame never carries one, so absent and `false` are
  *   the same statement.
- * - `wrap` — `a:bodyPr/@wrap` defaults to `square`, which the write API spells `true`.
- * - `rotate` — `a:xfrm/@rot` defaults to `0`.
- * - `flipH`, `flipV` — `a:xfrm/@flipH` / `@flipV` default to `false`.
- * - `transparency` — an alpha of 0% removed, i.e. fully opaque, which is also the default
+ * - `wrap`: `a:bodyPr/@wrap` defaults to `square`, which the write API spells `true`.
+ * - `rotate`: `a:xfrm/@rot` defaults to `0`.
+ * - `flipH`, `flipV`: `a:xfrm/@flipH` / `@flipV` default to `false`.
+ * - `transparency`: an alpha of 0% removed, i.e. fully opaque, which is also the default
  *   when no `a:alpha` transform is present.
- * - `indentLevel` — `a:p/@lvl` defaults to `0`.
- * - `dashType` — `a:ln`'s dash defaults to `solid` when no `a:prstDash` is present.
- * - `textDirection` — `a:bodyPr/@vert` and `a:tcPr/@vert` both default to `horz`.
+ * - `indentLevel`: `a:p/@lvl` defaults to `0`.
+ * - `dashType`: `a:ln`'s dash defaults to `solid` when no `a:prstDash` is present.
+ * - `textDirection`: `a:bodyPr/@vert` and `a:tcPr/@vert` both default to `horz`.
  *
  * Line width is deliberately **absent**: `a:ln/@w` defaults to 0 (hairline) while the write
  * path defaults it to 1pt, so those two are not the same line and the difference is real.
@@ -206,7 +206,7 @@ function canonicalValue(value: IrValue, digests: Map<string, string>): IrValue {
 	if (isAssetRef(value)) {
 		const digest = digests.get(value.$asset)
 		// An unresolved reference used to fall back to `unknown:<name>`, which is the asset's own
-		// NAME — so if neither side resolved it, both canonicalised to the same string and the round
+		// NAME, so if neither side resolved it, both canonicalised to the same string and the round
 		// trip came back clean on bytes it never compared. That is the one case where names carry no
 		// information, which is precisely what the digest exists to avoid. It is already an
 		// `InvalidOptionError` on the print path, so it is an invariant violation rather than a

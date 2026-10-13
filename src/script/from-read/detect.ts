@@ -4,7 +4,7 @@
  * These reach through the documented raw hatch (`element_`) rather than through a typed
  * accessor, which needs justifying. The rule they follow: **detect, never decode.** Each
  * function answers only "is this here?", so the answer can become a {@link FidelityNote}.
- * Nothing here interprets a value or feeds one into a call — that would be building a
+ * Nothing here interprets a value or feeds one into a call. That would be building a
  * private read path alongside the public one, and it would rot the moment the element's
  * meaning changed.
  *
@@ -50,8 +50,8 @@ function has(element: unknown, namespaceURI: string, localName: string): boolean
  * The first *direct* child with this name.
  *
  * A subtree search is wrong for structural lookups, in two ways that both bite here.
- * `a:ext` names two unrelated elements — a shape extent (`@cx`/`@cy`) and an extension-list
- * entry (`@uri`) — so a subtree search finds whichever comes first in document order. And on
+ * `a:ext` names two unrelated elements, a shape extent (`@cx`/`@cy`) and an extension-list
+ * entry (`@uri`), so a subtree search finds whichever comes first in document order. And on
  * a group it descends into the group's own children, so a nested group's transform answers
  * for its parent's.
  */
@@ -92,7 +92,7 @@ export function hasEquation(element: unknown): boolean {
  * `true` when this `p:sp` is a text box rather than an auto shape.
  *
  * The discriminator is one attribute, `p:cNvSpPr/@txBox`, and nothing reads it. The
- * tempting substitute — "it has no preset geometry" — is wrong for the common case:
+ * tempting substitute ("it has no preset geometry") is wrong for the common case:
  * PowerPoint gives every text box an explicit `<a:prstGeom prst="rect"/>`, so that test
  * calls every real text box an auto shape. The difference is not cosmetic. PowerPoint
  * autofits, wraps and resizes a text box by different rules, and offers a different
@@ -104,7 +104,7 @@ export function hasEquation(element: unknown): boolean {
  * Parsed through {@link boolValue} rather than compared to `'1'`: `txBox` is `xsd:boolean`, and
  * this module's whole job is reading decks this library did not write. PowerPoint and `gen/` both
  * emit `1`, so a bare comparison is right for every fixture here and wrong for a producer that
- * spells it `true` — which would convert that deck's text boxes as auto shapes, silently.
+ * spells it `true`, which would convert that deck's text boxes as auto shapes, silently.
  */
 export function isTextBox(element: unknown): boolean {
 	const nvSpPr = child(element as ElementLike | null, OOXML_NS.p, 'nvSpPr')
@@ -117,7 +117,7 @@ export function isTextBox(element: unknown): boolean {
  *
  * `addGroup` always emits an identity child space; a source group whose `a:chOff`/`a:chExt`
  * differ scales or shifts its contents, and that behaviour cannot be reproduced. The read
- * model has no accessor for the child space — `absoluteFrame` deliberately composes it away,
+ * model has no accessor for the child space: `absoluteFrame` deliberately composes it away,
  * which is right for locating a shape and wrong for spotting this difference.
  *
  * A group with no explicit transform inherits an identity one, so a missing `a:xfrm` is
@@ -156,7 +156,7 @@ export function hasFormatScheme(element: unknown): boolean {
 /**
  * `true` when this slide master declares per-level text styles (`p:txStyles`) with content.
  *
- * `SlideMasterProps.textStyles` can author them, so this is purely a read-side gap — the
+ * `SlideMasterProps.textStyles` can author them, so this is purely a read-side gap. The
  * default size, face, colour and bullet of every placeholder level is invisible to the
  * converter and comes back as PowerPoint's built-in default.
  */
@@ -166,7 +166,7 @@ export function hasTextStyles(element: unknown): boolean {
 }
 
 /**
- * `true` when this shape is a placeholder — the tier that *reserves* a region for a slide to
+ * `true` when this shape is a placeholder: the tier that *reserves* a region for a slide to
  * fill, as opposed to the decoration that is drawn as-is.
  *
  * A DOM predicate rather than `shape.placeholder !== null`, and that is not an oversight: only
@@ -176,7 +176,7 @@ export function hasTextStyles(element: unknown): boolean {
  *
  * Not a direct-child lookup, unlike its neighbours: the `p:ph` sits two or three levels down
  * inside whichever `p:nv*Pr` the shape kind uses. That means a *group* containing a
- * placeholder answers `true` for its child, which is the wanted answer anyway — a group is
+ * placeholder answers `true` for its child, which is the wanted answer anyway. A group is
  * never itself a placeholder, and a layout that put one inside a group is one whose grouping
  * cannot survive being flattened into loose objects.
  */
@@ -185,14 +185,14 @@ export function isPlaceholderShape(element: unknown): boolean {
 }
 
 /**
- * `true` when this master or layout carries a shape that is not a placeholder — a logo, a
+ * `true` when this master or layout carries a shape that is not a placeholder: a logo, a
  * rule, a background image, a footer graphic.
  *
  * Only the **master** arm still needs this. A layout's decoration is now transcribed into its
  * `defineSlideMaster({ objects })` call, so what did not survive is reported per shape rather
  * than as a blanket count. A master's cannot be: `defineSlideMaster` authors a *layout* under
  * the one shared master, so a master's own shape tree has no write-side counterpart at all,
- * and a deck whose master carries none loses nothing — which is why this is a presence check
+ * and a deck whose master carries none loses nothing, which is why this is a presence check
  * rather than an unconditional note.
  */
 export function hasDecorativeShapes(element: unknown): boolean {

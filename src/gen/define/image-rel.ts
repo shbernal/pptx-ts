@@ -1,7 +1,7 @@
 /**
  * pptx-ts: the one place a media relationship is registered on a slide, layout or master.
  *
- * Every definer that embeds bytes pushes a media rel — images, image fills, previews, picture
+ * Every definer that embeds bytes pushes a media rel: images, image fills, previews, picture
  * bullets, backgrounds, audio and video, OLE payloads, 3D models, and the transition sound the
  * packager adds. They pushed the record by hand, each spelled slightly differently: two copies of
  * the dedupe match below, three spellings of the placeholder path, and one that put a base64
@@ -52,7 +52,7 @@ export interface MediaRelSource {
 	kind: string
 	/** The part's file extension, without the dot. */
 	extn: string
-	/** The part's content type — or `online` for an external video link, which writes no part. */
+	/** The part's content type, or `online` for an external video link, which writes no part. */
 	type: string
 	/** A file or URL the media pass loads the bytes from, when the source is one. */
 	path?: string | undefined
@@ -66,8 +66,8 @@ export interface MediaRelSource {
 	 * Point at the part an identical earlier source already has, rather than naming a new one.
 	 *
 	 * De-dup is per target and by source, not by bytes: a file-path source matches on `path`,
-	 * while inline `data` sources have no real path — they all share the {@link preencodedPath}
-	 * placeholder — so they match on their payload instead, which is what stops the same inline
+	 * while inline `data` sources have no real path (they all share the {@link preencodedPath}
+	 * placeholder), so they match on their payload instead, which is what stops the same inline
 	 * image being embedded once per use. A rel already marked `isDuplicate` is never matched
 	 * against, so every duplicate points at the one original rather than at a chain.
 	 *
@@ -127,7 +127,7 @@ export function pushMediaRel(target: PresSlideInternal, source: MediaRelSource):
 /**
  * Push an image media rel onto `target`, reusing an identical source's package part.
  *
- * Three definers need it — an image *fill* on a shape or text box (`registerImageFillMedia`), an
+ * Three definers need it: an image *fill* on a shape or text box (`registerImageFillMedia`), an
  * `addImage()` raster (`addImageDefinition`), and the cached preview raster a Zoom tile, an OLE
  * object or a 3D model is drawn from (`registerPreviewImage`). See {@link MediaRelSource.dedupe} for the match.
  * @param target - slide (or layout/master) the rel is registered on

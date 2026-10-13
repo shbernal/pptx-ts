@@ -6,15 +6,14 @@
  * inset by has to carry the numbers itself. Four places did, in three units and two orders:
  * the script mapper as a points record, the round-trip canonicaliser as an inches tuple in
  * `[top, right, bottom, left]`, `inspect.ts` as two inch scalars, and the measured-fit
- * solver as two EMU scalars — that last one deciding the inner box every `autoFit` is
- * computed against, so a correction here would have left every fit decision on the old
- * numbers.
+ * solver as two EMU scalars. That last one decides the inner box every `autoFit` is computed
+ * against, so a correction here would have left every fit decision on the old numbers.
  *
  * The canonicaliser's tuple in particular has to be exactly `pointsToInches` of the mapper's
  * record, or `isDefaultMargin` stops matching and every text frame that spells its insets
  * reports four spurious differences. Nothing linked them; this module is the link.
  *
- * It is a fact about the schema, so — like `st-enums.ts` — it belongs to neither `gen/` nor
+ * It is a fact about the schema, so, like `st-enums.ts`, it belongs to neither `gen/` nor
  * `read/` nor `script/`.
  */
 
@@ -24,7 +23,7 @@ import { EMU_PER_POINT, POINTS_PER_INCH } from './emu.js'
 export const BODY_INSET_DEFAULTS_PT = { left: 7.2, right: 7.2, top: 3.6, bottom: 3.6 } as const
 
 /**
- * The same four in inches, in the write API's `margin` order — `[top, right, bottom, left]`.
+ * The same four in inches, in the write API's `margin` order: `[top, right, bottom, left]`.
  *
  * Derived rather than transcribed, so it cannot drift from {@link BODY_INSET_DEFAULTS_PT}.
  */

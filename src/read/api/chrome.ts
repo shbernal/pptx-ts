@@ -1,25 +1,25 @@
 /**
- * Read-model proxies for a deck's shared *chrome* — the slide masters, slide
+ * Read-model proxies for a deck's shared *chrome*: the slide masters, slide
  * layouts, and themes reachable through the presentation → master → layout → theme
  * graph but owned by no single slide. A slide's concrete content is modeled by
  * `Slide`; this module models the property tiers a slide
  * *inherits* from: the theme's colour scheme and font scheme, the master's colour
  * map, and each master/layout placeholder's own geometry.
  *
- * The three parts form a chain — a {@link SlideLayout} resolves its {@link SlideMaster}
- * (which resolves its {@link Theme}) — and a {@link Slide} enters it through
+ * The three parts form a chain: a {@link SlideLayout} resolves its {@link SlideMaster}
+ * (which resolves its {@link Theme}), and a {@link Slide} enters it through
  * `slide.layout`. Placeholders (master/layout `p:sp` shapes carrying a `p:ph`) are
  * modeled as {@link Placeholder}s: type/idx/name/id, own-`a:xfrm` geometry (EMU),
- * and a navigable {@link TextFrame}. Unlike a notes placeholder — whose geometry is
- * inherited and so reads `null` on an authored deck — a master/layout placeholder
+ * and a navigable {@link TextFrame}. Unlike a notes placeholder (whose geometry is
+ * inherited and so reads `null` on an authored deck), a master/layout placeholder
  * carries its geometry explicitly, so position/size round-trip.
  *
- * A master's and a layout's *non*-placeholder content — the bands, rules, logos and
- * decorative furniture a template is recognized by — is reached through
+ * A master's and a layout's *non*-placeholder content (the bands, rules, logos and
+ * decorative furniture a template is recognized by) is reached through
  * {@link SlideMaster.shapes} / {@link SlideLayout.shapes}, which return the same
  * `AnyShape` union `Slide.shapes` does (both classes are {@link ShapeHost}s). Those
- * shapes carry the full paint surface — `resolvedFill`, `resolvedLine`,
- * `presetGeometry`, `rotation`, `absoluteFrame` — so a template renders, not merely
+ * shapes carry the full paint surface (`resolvedFill`, `resolvedLine`,
+ * `presetGeometry`, `rotation`, `absoluteFrame`), so a template renders, not merely
  * positions. `placeholders` remains the filtered convenience view over the same tree.
  *
  * A *slide* placeholder's effective inherited geometry against this chain resolves
@@ -58,11 +58,11 @@ export type { ThemeColorSlot, ColorMapToken }
  * per-script `<a:font>` fallback list is not decoded here.
  */
 export interface ThemeFontFace {
-	/** `<a:latin@typeface>` — the primary face (e.g. `Calibri Light`), or `null` when empty. */
+	/** `<a:latin@typeface>`: the primary face (e.g. `Calibri Light`), or `null` when empty. */
 	latin: string | null
-	/** `<a:ea@typeface>` — the East-Asian face, or `null` when empty. */
+	/** `<a:ea@typeface>`: the East-Asian face, or `null` when empty. */
 	ea: string | null
-	/** `<a:cs@typeface>` — the complex-script face, or `null` when empty. */
+	/** `<a:cs@typeface>`: the complex-script face, or `null` when empty. */
 	cs: string | null
 }
 
@@ -70,9 +70,9 @@ export interface ThemeFontFace {
 export interface ThemeFontScheme {
 	/** `<a:fontScheme@name>` (e.g. `Office`), or `null` when unnamed. */
 	name: string | null
-	/** The `a:majorFont` family — the heading (`+mj-*`) fonts. */
+	/** The `a:majorFont` family: the heading (`+mj-*`) fonts. */
 	major: ThemeFontFace
-	/** The `a:minorFont` family — the body (`+mn-*`) fonts. */
+	/** The `a:minorFont` family: the body (`+mn-*`) fonts. */
 	minor: ThemeFontFace
 }
 
@@ -179,7 +179,7 @@ function placeholderShapes(spTree: Element | null): Element[] {
 }
 
 /**
- * One placeholder shape (`p:sp` with a `p:ph`) of a slide master or slide layout —
+ * One placeholder shape (`p:sp` with a `p:ph`) of a slide master or slide layout:
  * the definition a slide's placeholder of the same `type`/`idx` inherits geometry
  * and text style from. Geometry getters read the placeholder's *own* `a:xfrm`,
  * which a master/layout placeholder carries explicitly (so it round-trips, unlike a
@@ -203,7 +203,7 @@ export class Placeholder {
 	 * `xfrm()` + `emuFrom`; and,
 	 * the one that showed, the text frame was built with **no** inheritance context, so
 	 * `Run.resolvedSizePt`, `resolvedFontFace`, `resolvedColor` and `resolvedBold` resolved
-	 * through `SlideMaster.shapes` and came back `null` through `SlideMaster.placeholders` —
+	 * through `SlideMaster.shapes` and came back `null` through `SlideMaster.placeholders`:
 	 * two views of one element disagreeing about the same run.
 	 */
 	protected readonly shape: AutoShape
@@ -211,7 +211,7 @@ export class Placeholder {
 	constructor(
 		/** The placeholder's `p:sp`. `protected` so {@link NotesPlaceholder} can read it. */
 		protected readonly sp: Element,
-		/** The part the `p:sp` lives in — a master, a layout, or a notes slide. */
+		/** The part the `p:sp` lives in: a master, a layout, or a notes slide. */
 		protected readonly host: ShapeHost
 	) {
 		this.shape = new AutoShape(sp, host)
@@ -287,7 +287,7 @@ export class Placeholder {
 }
 
 /**
- * The shared body of a slide master and a slide layout — the two template tiers a slide
+ * The shared body of a slide master and a slide layout, the two template tiers a slide
  * inherits from.
  *
  * Both are an OPC part holding a `p:cSld` with a shape tree and a resolvable theme context, and
@@ -305,7 +305,7 @@ export class Placeholder {
  *
  * `Slide` deliberately does not extend this. It is a shape host too, but it is constructed from
  * a `Presentation` rather than an `OpcPackage`, reaches its relationships through that, and
- * reports an unnamed slide as `null` where a template tier reports `''` — three differences in
+ * reports an unnamed slide as `null` where a template tier reports `''`. That is three differences in
  * the same handful of members, which is more contortion than the sharing is worth.
  */
 abstract class TemplatePart implements ShapeHost {
@@ -335,7 +335,7 @@ abstract class TemplatePart implements ShapeHost {
 	}
 
 	/**
-	 * Every shape in this tier's `p:cSld/p:spTree`, in document order — the same `AnyShape`
+	 * Every shape in this tier's `p:cSld/p:spTree`, in document order: the same `AnyShape`
 	 * union `Slide.shapes` returns, so shape-walking code applies unchanged.
 	 *
 	 * {@link placeholders} is the filtered view of the same tree.
@@ -427,7 +427,7 @@ export class SlideMaster extends TemplatePart {
 
 	/**
 	 * The master's *own* background (`p:cSld/p:bg`), decoded, or `null` when it defines
-	 * none. Scoped to the master's own element — a slide's *effective* background,
+	 * none. Scoped to the master's own element. A slide's *effective* background,
 	 * resolved through the slide → layout → master chain, is `Slide.background`.
 	 */
 	override get background(): SlideBackground | null {
@@ -443,22 +443,22 @@ export class SlideMaster extends TemplatePart {
 		)
 	}
 
-	/** A master's context is its own `p:clrMap` plus its theme — no walk beyond this part. */
+	/** A master's context is its own `p:clrMap` plus its theme; no walk beyond this part. */
 	protected override resolveThemeContext(): ThemeContext {
 		return resolveMasterColorContext(this.opc, this.partName)
 	}
 }
 
 /**
- * A deck's slide layout (`slideLayoutN.xml`) as a modeled object — the gallery entry
+ * A deck's slide layout (`slideLayoutN.xml`) as a modeled object: the gallery entry
  * a slide binds to. Exposes its {@link name}, its {@link type} (import-only; the
  * writer authors none), its {@link master} (and, through it, the {@link theme}), its
  * `shapes` and the `placeholders` subset of them, and its own {@link background}.
  * Reachable from `Slide.layout` and {@link SlideMaster.layouts}.
  *
  * The write API authors non-placeholder shapes into a layout: every
- * `defineSlideMaster({ objects })` member that is not a `placeholder` — a `rect`, a
- * `line`, an `image`, a `chart`, a `text` box — lands in this tier's tree.
+ * `defineSlideMaster({ objects })` member that is not a `placeholder` (a `rect`, a
+ * `line`, an `image`, a `chart`, a `text` box) lands in this tier's tree.
  */
 export class SlideLayout extends TemplatePart {
 	/**
@@ -474,7 +474,7 @@ export class SlideLayout extends TemplatePart {
 	/**
 	 * Whether this layout draws the master's non-placeholder shapes
 	 * (`p:sldLayout/@showMasterSp`). `xsd:boolean` defaulting to `true`, so an absent
-	 * attribute means shown — the layout-tier counterpart of `Slide.showMasterSp`,
+	 * attribute means shown. This is the layout-tier counterpart of `Slide.showMasterSp`,
 	 * and the one PowerPoint actually writes on a section-divider or full-bleed
 	 * layout. A renderer resolving what to paint under a slide's own shapes has to
 	 * consult both: the slide's flag, then its layout's.
@@ -497,7 +497,7 @@ export class SlideLayout extends TemplatePart {
 
 	/**
 	 * The layout's *own* background (`p:cSld/p:bg`), decoded, or `null` when it defines
-	 * none. A layout usually authors one — an explicit fill (`p:bgPr`) or a
+	 * none. A layout usually authors one: an explicit fill (`p:bgPr`) or a
 	 * theme-indexed reference (`p:bgRef`). The slide's *effective* background is
 	 * `Slide.background`.
 	 */

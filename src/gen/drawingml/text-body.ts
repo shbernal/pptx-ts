@@ -36,7 +36,7 @@ function genXmlBodyProperties(slideObject: SlideObject | TableCellInternal): str
 	if (slideObject._type === SlideObjectType.tablecell) return voidEl('a:bodyPr')
 
 	// Placeholders (incl. master/layout placeholders) carry their margin/valign in `_bodyProp` just
-	// like text boxes, so they must emit the same configured `<a:bodyPr>` — otherwise a placeholder
+	// like text boxes, so they must emit the same configured `<a:bodyPr>`; otherwise a placeholder
 	// authored with insets or a vertical anchor silently degrades to the default.
 	// `_bodyProp`/`options` are optional on the type but present on text/placeholder objects that reach
 	// this branch; bind them once so the body reads a narrowed, non-undefined value.
@@ -44,7 +44,7 @@ function genXmlBodyProperties(slideObject: SlideObject | TableCellInternal): str
 		!slideObject ||
 		(slideObject._type !== SlideObjectType.text && slideObject._type !== SlideObjectType.placeholder)
 	) {
-		// DEFAULT: paired, not self-closing — `<a:bodyPr .../>` would be a byte change.
+		// DEFAULT: paired, not self-closing: `<a:bodyPr .../>` would be a byte change.
 		return el('a:bodyPr', { wrap: 'square', rtlCol: '0' })
 	}
 	// A text/placeholder object with no `_bodyProp` still takes the full builder below, and its
@@ -52,7 +52,7 @@ function genXmlBodyProperties(slideObject: SlideObject | TableCellInternal): str
 	// authored object, which is the kind of write a serializer does not get to make; the empty
 	// bag is spelled here instead.
 	//
-	// `addShape` is who arrives here that way — it builds a `_type === text` object and never
+	// `addShape` is who arrives here that way: it builds a `_type === text` object and never
 	// writes `_bodyProp`, where `addTextDefinition` always does. So every shape's `wrap` is
 	// decided by what an *absent* key means, which is why it is stated rather than read off a
 	// truthiness test below.
@@ -65,10 +65,10 @@ function genXmlBodyProperties(slideObject: SlideObject | TableCellInternal): str
 	const attrs: XmlAttrs = {
 		// A: Enable or disable textwrapping none or square. Only an explicit `false` turns wrapping
 		// off: `square` is PowerPoint's own default and what `addTextDefinition` writes whenever it
-		// runs, so an object that carries no `wrap` at all is one nobody made a decision about —
+		// runs, so an object that carries no `wrap` at all is one nobody made a decision about,
 		// and the un-decided case is the default, not the opposite of it.
 		wrap: bodyProp.wrap === false ? 'none' : 'square',
-		// B: Textbox margins [padding] — an explicit zero is meaningful, so test for it separately
+		// B: Textbox margins [padding]: an explicit zero is meaningful, so test for it separately
 		lIns: bodyProp.lIns || bodyProp.lIns === 0 ? bodyProp.lIns : null,
 		tIns: bodyProp.tIns || bodyProp.tIns === 0 ? bodyProp.tIns : null,
 		rIns: bodyProp.rIns || bodyProp.rIns === 0 ? bodyProp.rIns : null,
@@ -116,12 +116,12 @@ function genXmlBodyProperties(slideObject: SlideObject | TableCellInternal): str
  * nothing usable.
  *
  * `null` means "no answer here", not "omit the attribute": each call site then applies its own
- * default — the text definer's is `ctr`, while a table cell and the slide-number placeholder
+ * default. The text definer's is `ctr`, while a table cell and the slide-number placeholder
  * leave the attribute off and inherit.
  *
  * `ST_TextAnchoringType` is an enumeration, so a string outside it makes PowerPoint report the
- * package as needing repair. Typed callers are unaffected — `VAlign` is
- * `'top' | 'middle' | 'bottom'` — and a JavaScript caller passing something else now gets a
+ * package as needing repair. Typed callers are unaffected (`VAlign` is
+ * `'top' | 'middle' | 'bottom'`), and a JavaScript caller passing something else now gets a
  * diagnostic instead of an attribute the schema rejects.
  * @param valign - the caller's `valign`, in any of the spellings above
  */
@@ -188,7 +188,7 @@ export function genXmlTextBody(slideObj: SlideObject | TableCellInternal, slideC
 
 		// B: 'lstStyle'
 		// NOTE: shape type 'LINE' has different text align needs (a lstStyle.lvl1pPr between bodyPr and p)
-		// KNOWN LIMITATION: horizontal align on a LINE does not work — text is always left-aligned inside the line.
+		// KNOWN LIMITATION: horizontal align on a LINE does not work: text is always left-aligned inside the line.
 		if (opts.h === 0 && opts.line && opts.align)
 			strSlideXml += el('a:lstStyle', null, raw(voidEl('a:lvl1pPr', { algn: 'l' })))
 		else if (slideObj._type === SlideObjectType.placeholder && !slideObj._seeded)
@@ -210,7 +210,7 @@ export function genXmlTextBody(slideObj: SlideObject | TableCellInternal, slideC
 	} else if (Array.isArray(slideObj.text)) {
 		// Handle cases 3,4,5
 		// NOTE: use cast as text is TextProps[]|TableCellInternal[] and their `options` dont overlap (they share the same TextBaseProps though)
-		// `math` carries raw OMML for native equation paragraphs — preserved here so STEP 5/6 can isolate it.
+		// `math` carries raw OMML for native equation paragraphs, preserved here so STEP 5/6 can isolate it.
 		tmpTextObjects = (slideObj.text as TextProps[]).map((item) => {
 			// Projected key by key rather than spread: the array may really be `TableCellInternal[]` (see
 			// the cast note above), and only these four belong on a `TextProps`. A key the item
@@ -245,7 +245,7 @@ export function genXmlTextBody(slideObj: SlideObject | TableCellInternal, slideC
 			lines.forEach((line, lineIdx) => {
 				const isLast = lineIdx === lines.length - 1
 				// Non-last pieces need a paragraph break after them (the \n implies it).
-				// The last piece inherits the caller's breakLine intent, *including* none — writing the
+				// The last piece inherits the caller's breakLine intent, *including* none; writing the
 				// key as `undefined` would make an unstated intent look like a stated one to the next
 				// spread. Copied rather than mutated, so the caller's own options are untouched.
 				const lineOptions: TextPropsOptions = { ...itext.options }
@@ -335,7 +335,7 @@ export function genXmlPlaceholder(
 	//
 	// NOT built with the element builder, deliberately. This template's own source indentation
 	// reaches the file: attributes are separated by a newline + two tabs, each carries an extra
-	// leading space, and an ABSENT attribute still emits its separator — so the whitespace depends
+	// leading space, and an ABSENT attribute still emits its separator, so the whitespace depends
 	// on which attributes are missing. `voidEl` joins attributes with exactly one space and omits
 	// absent ones entirely, so this layout is not expressible. 105 baseline parts carry `<p:ph`,
 	// so tidying it is a visible byte change and belongs in its own fixture-gated commit.

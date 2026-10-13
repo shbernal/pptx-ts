@@ -8,7 +8,7 @@ import { alternateContentEl } from '../../oxml/alternate-content.js'
 import { type RenderContext, cNvPrEl, graphicFrameEl, previewPicBody } from './shared.js'
 import { xsdBoolIfTrue } from '../../../ooxml/xsd-boolean.js'
 
-/** VML namespace — declared by an OLE object's `mc:Choice Requires="v"` (no VML content is emitted). */
+/** VML namespace, declared by an OLE object's `mc:Choice Requires="v"` (no VML content is emitted). */
 const VML_NS = 'urn:schemas-microsoft-com:vml'
 /** graphicData URI for an embedded OLE object (`<p:oleObj>`). */
 const OLE_NS = 'http://schemas.openxmlformats.org/presentationml/2006/ole'
@@ -21,7 +21,7 @@ const OLE_NS = 'http://schemas.openxmlformats.org/presentationml/2006/ole'
  * PowerPoint renders by drawing the live embedded document); the `mc:Fallback` repeats it with a
  * `<p:pic>` preview so every other consumer shows the cached picture.
  *
- * Note `mc:Choice Requires="v"` only *declares* the VML namespace — modern PowerPoint writes no
+ * Note `mc:Choice Requires="v"` only *declares* the VML namespace. Modern PowerPoint writes no
  * `spid` and no `vmlDrawing` part, so neither is emitted here.
  */
 export function renderOleObject(ctx: RenderContext): string {

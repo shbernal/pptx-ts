@@ -120,7 +120,7 @@ function cellStyleParts(
 /**
  * The fill a single `a:tcStyle` contributes. `fall` means the part defines no fill
  * (only borders, or nothing) so resolution continues to the next-lower part;
- * `stop` means the part settles the fill — either a resolved solid colour or `null`
+ * `stop` means the part settles the fill, with either a resolved solid colour or `null`
  * for an explicit `a:noFill` / a non-solid style fill (a gradient has no single hex).
  */
 function tcStyleFill(

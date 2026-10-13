@@ -1,5 +1,5 @@
 /**
- * `a:hlinkClick` — the one reading of a click hyperlink, wherever it hangs.
+ * `a:hlinkClick`: the one reading of a click hyperlink, wherever it hangs.
  *
  * DrawingML puts the same element in two places: on a run's `a:rPr`, which links a span of text,
  * and on a shape's `p:cNvPr`, which links the whole shape. They are the same element with the same

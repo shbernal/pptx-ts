@@ -21,8 +21,8 @@ import { SHOW_JUMPS } from '../../ooxml/show-jumps.js'
 /**
  * The relationship record one hyperlink serializes to.
  *
- * `data` distinguishes the two targets a hyperlink rel can have — `'slide'` for an internal
- * slide-to-slide link, `'dummy'` for an external URL — and `Target` is stored RAW, because
+ * `data` distinguishes the two targets a hyperlink rel can have (`'slide'` for an internal
+ * slide-to-slide link, `'dummy'` for an external URL), and `Target` is stored RAW, because
  * every emitter escapes it on the way out (see the note on `SlideRel.Target`).
  *
  * Four sites built this record by hand: the two below, `addImage`'s own hyperlink, and the
@@ -96,8 +96,8 @@ export function validateHyperlink(hyperlink: unknown, call: string): asserts hyp
  * the hyperlink so the emitter can write `r:id`.
  *
  * The id comes from {@link getNewRelId}, which skips every id already held on the slide.
- * `addImage` used to increment the image's own id instead, which is how an SVG picture — a
- * pair that already consumes two ids — ended up sharing the second of them with its
+ * `addImage` used to increment the image's own id instead, which is how an SVG picture (a
+ * pair that already consumes two ids) ended up sharing the second of them with its
  * hyperlink and emitting a duplicate `Relationship Id`.
  * @returns the allocated relationship id
  */

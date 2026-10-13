@@ -29,7 +29,7 @@ const textEncoder = new TextEncoder()
  * table resolves its `@tableStyleId` against the *destination* `tableStyles` and
  * silently falls back when that id is absent; the source `<a:tblStyle>` is itself
  * symbolic (scheme colours), so copying it verbatim under the **same** id lets the
- * table keep its structure while re-branding to this deck's theme — no table-XML
+ * table keep its structure while re-branding to this deck's theme, with no table-XML
  * rewrite needed. Idempotent: an id this deck already defines is left as-is, and a
  * referenced id with no source definition is skipped. Creates and wires a
  * `tableStyles.xml` part if this deck has none.
@@ -60,7 +60,7 @@ export function copySourceTableStyles(dest: DeckTarget, sourceOpc: OpcPackage, s
 
 /**
  * Append each source `<a:tblStyle>` this deck does not already define, keyed by
- * `styleId` — the shared core of {@link copySourceTableStyles} (which offers only
+ * `styleId`: the shared core of {@link copySourceTableStyles} (which offers only
  * the styles a restyled slide references) and {@link carryTableStyles} (which
  * offers the source's whole list). Destination-wins per id: a style this deck
  * already defines is left untouched, so a re-call adds nothing. Returns whether
@@ -83,14 +83,14 @@ function addTableStyles(destList: Element, styles: Iterable<Element>): boolean {
  * Copy the source deck's **whole** `tableStyles.xml` into this deck: every
  * `<a:tblStyle>` it defines, plus its `a:tblStyleLst@def` (the default table
  * style). Presentation-level, so a separate traversal from the master/layout copy
- * chain — and whole-deck, since `tableStyles.xml` does not record which style
+ * chain, and whole-deck, since `tableStyles.xml` does not record which style
  * belongs to which master. See `ImportSlideMastersOptions.tableStyles`.
  *
  * Styles union by `styleId` (destination-wins per id, via {@link addTableStyles}),
  * but `def` is **source-wins**: a caller asking for the source's table styling
  * wants its default too, and the destination's `def` is typically a generator stub
  * rather than a deliberate choice. Carrying the styles without the `def` would be
- * the worse half-measure — the standard default GUID is one most templates also
+ * the worse half-measure: the standard default GUID is one most templates also
  * define, so a new table would silently resolve to the wrong style rather than
  * visibly to none. Idempotent: a re-call re-adds nothing and re-sets `def` to the
  * same value.

@@ -4,12 +4,12 @@
  * (`p:cmAuthorLst/p:cmAuthor` in `ppt/commentAuthors.xml`), the read counterparts
  * of the write-side `slide.addComment(...)` / `commentAuthors.xml` emitter.
  *
- * This models the ISO/IEC 29500 §13 *legacy* comment schema — the one the writer
+ * This models the ISO/IEC 29500 §13 *legacy* comment schema, the one the writer
  * authors and older PowerPoint decks carry. The 2018 **modern** comment parts
  * (`p188:cm` / `ppt/comments/modernComment_*` + `authors.xml`) are a separate,
  * GUID-keyed, thread-capable schema; they are decoded read-only by the
  * `readModern*` functions below, and have no writer (preserved byte-perfect on
- * round-trip). The two schemas do not coexist in a single deck in practice —
+ * round-trip). The two schemas do not coexist in a single deck in practice;
  * {@link commentSchema} reports which one a deck uses.
  */
 import { OpcPackage } from '../opc/package.js'
@@ -125,7 +125,7 @@ export function readSlideComments(opc: OpcPackage, slidePart: Part, authors: Com
 
 /** One entry of the modern deck-wide author registry (`p188:author`). */
 export interface ModernCommentAuthor {
-	/** Author id (`@id`) — a GUID string like `{E8A64ABA-…}`, referenced by each comment's `@authorId`. */
+	/** Author id (`@id`): a GUID string like `{E8A64ABA-…}`, referenced by each comment's `@authorId`. */
 	id: string | null
 	/** Display name (`@name`). */
 	name: string

@@ -35,7 +35,7 @@ import { InvalidOptionError, PackageReadError } from '../../../errors.js'
  * One import in progress: where parts are going, where they are coming from, and
  * what has already come across.
  *
- * `source` and `registry` are one fact, not two — a registry maps partnames *of
+ * `source` and `registry` are one fact, not two: a registry maps partnames *of
  * that package*, so pairing it with any other package silently returns partnames
  * for parts that were never copied. Holding them in a single value makes the
  * pairing a type invariant rather than a call-site convention; mint one with
@@ -55,7 +55,7 @@ export interface ImportContext {
 	 * gets its own part even when the registry already holds a copy of it, which is
 	 * what lets one source page be imported more than once.
 	 *
-	 * Both import entry points set it — {@link Presentation.importSlides} for the
+	 * Both import entry points set it: {@link Presentation.importSlides} for the
 	 * whole batch, {@link copySlidePart} for the single page of one
 	 * {@link Presentation.importSlide}. For the batch it carries a second meaning:
 	 * `slide → slide` relationships resolve only within the set, so an imported page
@@ -66,7 +66,7 @@ export interface ImportContext {
 	 * as an output, and a map to *many* destinations would make every jump link
 	 * ambiguous. A batch asked for the same page N times therefore runs the
 	 * traversal N times, each round naming that page's Nth reserved partname and the
-	 * other pages' first — see `importSlides` step 3.
+	 * other pages' first (see `importSlides` step 3).
 	 */
 	readonly selection?: SelectionPlan
 	/**
@@ -135,7 +135,7 @@ export interface PlannedRel {
  * it would throw, found before anything in the destination moves.
  *
  * This is what lets a refused import leave the deck byte-identical. The copy changes the deck as it
- * goes — parts added, a master registered in `presentation.xml`, a layout linked into its master —
+ * goes (parts added, a master registered in `presentation.xml`, a layout linked into its master),
  * so a failure it met halfway would leave all of that behind. An import therefore runs the same
  * traversal twice: first with a plan in its context, which throws what the copy would and writes
  * nothing, then for real. The dry run used to be a separate walk of the source, transcribed from the
@@ -146,8 +146,8 @@ export interface PlannedRel {
  * A plan stands in for the destination package as a {@link CopyTarget}. It hands out the partnames
  * the copy will be given, keeps its own copy of each source's registry so a part it planned is found
  * again as the copy would find it, and remembers the notes master it would install in a deck that has
- * none. Destination bookkeeping that adds no part — registering a master, linking a layout into it —
- * is not recorded.
+ * none. Destination bookkeeping that adds no part, such as registering a master or linking a layout
+ * into it, is not recorded.
  */
 export class CopyPlan implements CopyTarget {
 	/** The parts the copy would add, in the order it would add them. */
@@ -225,7 +225,7 @@ export class CopyPlan implements CopyTarget {
  * registry idempotence is right for a theme, master, layout or image, where a
  * second copy is waste; applied to the slide it made a repeated import of the
  * same source page return the first copy's partname, and the caller then wired a
- * second `p:sldId` to a part that already had one — a package PowerPoint refuses
+ * second `p:sldId` to a part that already had one: a package PowerPoint refuses
  * to open (0x80070570), with nothing in the read model to show for it. So the
  * page goes into the selection plan `copyPart` already honours for a batch, which
  * re-materializes exactly the named pages and leaves the dedup of their
@@ -246,7 +246,7 @@ export function copySlidePart(ctx: ImportContext, sourcePartName: string): strin
  * per source package via the copy registry. Relationship ids are preserved so
  * the copied part body's `r:id`/`r:embed` references stay valid; targets are
  * rewritten to the freshly-allocated partnames. Notes relationships are
- * dropped. A copied `slideMaster` does not drag in all its sibling layouts —
+ * dropped. A copied `slideMaster` does not drag in all its sibling layouts;
  * each imported `slideLayout` wires itself into the master instead (see
  * {@link linkLayoutIntoMaster}).
  *
@@ -256,13 +256,13 @@ export function copySlidePart(ctx: ImportContext, sourcePartName: string): strin
  * a `slide → slide` link may not leave the selection is enforced as each link is
  * followed (see {@link rebuildRels}). Imports run this traversal as a
  * {@link CopyPlan} first, which throws that and every other failure the copy
- * could meet — so once copying starts there is nothing left to throw, and a
+ * could meet, so once copying starts there is nothing left to throw, and a
  * rejected batch never leaves a half-copied deck behind.
  *
  * Idempotence stops at the page's own parts. Reaching a page opens an
  * {@link OwnedScope}, and everything under it that {@link isSharedByPageCopies}
- * does not clear for sharing — a chart, a diagram, an OLE embedding, each with
- * its own subtree — is copied into that scope instead of the registry, so the
+ * does not clear for sharing (a chart, a diagram, an OLE embedding, each with
+ * its own subtree) is copied into that scope instead of the registry, so the
  * next copy of the page gets parts of its own. Pass `owned` to open the scope
  * from outside, as the rebinding import paths do for the page they build
  * themselves.
@@ -287,7 +287,7 @@ export function copyPart(
 		// hit on the *selected* destination means this batch already walked the page
 		// (register-before-recurse makes mutually-linked selected pages terminate);
 		// a hit on any OTHER partname is either a shared non-slide dependency from
-		// an earlier traversal or a page a previous import brought across — both are
+		// an earlier traversal or a page a previous import brought across. Both are
 		// reused rather than duplicated. Only a selected page whose registered
 		// partname differs (imported by a previous call) is re-materialized fresh:
 		// each batch request owns exactly one output page.
@@ -463,7 +463,7 @@ export function rebuildRels(ctx: ImportContext, options: RebuildRelsOptions): vo
  * The page's shared targets are carried as the source wrote them. Each owned one is repointed at a
  * fresh copy, and the subtree under it is copied the same way, so a chart's workbook and
  * user-shapes drawing come along while the image inside that drawing stays shared. A relationship
- * *back* to the source page — a notes slide names the slide it annotates — is repointed at the
+ * *back* to the source page (a notes slide names the slide it annotates) is repointed at the
  * clone, which is what makes the copied notes belong to it.
  *
  * Unlike an import, a clone keeps its page's notes, and nothing here consults the copy registry or

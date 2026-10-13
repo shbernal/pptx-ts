@@ -4,18 +4,18 @@
  * {@link Presentation.importSlide} picks one by `options.theme`, and the difference between
  * them is entirely about what happens to the slide's *look*:
  *
- * - **`copy`** — not here. It copies the source theme subgraph wholesale via `copyPart`, so
+ * - **`copy`**: not here. It copies the source theme subgraph wholesale via `copyPart`, so
  *   the slide keeps its look by keeping its own theme; nothing needs rewriting.
- * - **`preserve`** ({@link importSlidePreserve}) — rebind to this deck's master, then bake
+ * - **`preserve`** ({@link importSlidePreserve}): rebind to this deck's master, then bake
  *   the source theme into the slide XML. The slide looks the same as it did; it just no
  *   longer depends on the theme it came from.
- * - **`restyle`** ({@link importSlideRestyle}) — rebind and bake *nothing*, so the slide's
+ * - **`restyle`** ({@link importSlideRestyle}): rebind and bake *nothing*, so the slide's
  *   symbolic theme references re-resolve against the destination theme and it re-brands.
  *
  * The two share {@link importSlideRebind} and are exact inverses on top of it: preserve
  * resolves every reference it can, restyle resolves none. Any baking added to the shared
  * rebind would break restyle by pinning the slide to its source look, which is why the
- * rebind carries no theme handling of its own — not even the inherited background.
+ * rebind carries no theme handling of its own, not even the inherited background.
  *
  * These were private methods on `Presentation`, where they made the read model's own surface
  * (open a deck, walk slides, read shapes) hard to see: the import machinery was roughly two
@@ -82,17 +82,17 @@ export function importSlidePreserve(
 
 /**
  * Import a slide in `restyle` mode: rebind it to this deck's master/layout and then
- * {@link restyleSlide} it — drop its colour map override but bake *nothing*, so its symbolic
+ * {@link restyleSlide} it: drop its colour map override but bake *nothing*, so its symbolic
  * theme references re-resolve against the destination theme and the slide re-brands.
  *
  * The deliberate inverse of `preserve`: no flatten, no inherited-background bake, no
- * placeholder colour/size/geometry bake — every one of those would pin the slide to its
+ * placeholder colour/size/geometry bake. Every one of those would pin the slide to its
  * source look, the opposite of re-branding. Carried decorations are left symbolic too, so
  * they re-brand along with the slide.
  *
  * With `remapLiterals` it additionally force-remaps the slide's source-theme literal colours
- * back to symbolic scheme colours and copies any referenced source table style into this deck
- * — the two things plain `restyle` cannot re-brand.
+ * back to symbolic scheme colours and copies any referenced source table style into this deck:
+ * the two things plain `restyle` cannot re-brand.
  * @param {Presentation} dest - the destination deck
  * @param {ImportContext} ctx - the open import out of the source package
  * @param {Presentation} source - the source deck
@@ -124,11 +124,11 @@ export function importSlideRestyle(
 /**
  * The rebind shared by `preserve` and `restyle`: copy the slide bytes into a fresh part,
  * rebuild its relationships (drop notes, repoint the `slideLayout` rel at this deck's
- * existing layout, copy every other internal target — media/charts — and pass externals
+ * existing layout, copy every other internal target (media/charts), and pass externals
  * through), and optionally bake the source master/layout decorations onto the slide. Returns
  * the new part, its name, and its live root element for the caller's mode-specific pass.
  *
- * This carries *no* theme baking of its own — not even the inherited background.
+ * This carries *no* theme baking of its own, not even the inherited background.
  * `preserve` adds that via {@link flattenSlide}'s context; `restyle` must not, so the
  * background stays symbolic and re-brands.
  * @param {Presentation} dest - the destination deck
@@ -230,8 +230,8 @@ function rebind(
 /**
  * Bake the source `slideLayout`/`slideMaster` shape-tree decorations onto the imported slide
  * (the `carryMasterGraphics` path). Every shape on those trees *except* placeholders is
- * deep-copied into the slide's `p:spTree` ahead of its own content — master decorations
- * first, then layout, then the slide's shapes — so document (z-)order keeps the master
+ * deep-copied into the slide's `p:spTree` ahead of its own content (master decorations
+ * first, then layout, then the slide's shapes), so document (z-)order keeps the master
  * furthest back. Each decoration's media and other relationship targets are copied into this
  * package and its `r:embed`/`r:id`/… references rewritten to fresh slide-local ids. The
  * injected shapes are left for the caller's {@link flattenSlide} pass to resolve any theme

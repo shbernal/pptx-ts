@@ -7,7 +7,7 @@
  * file alongside the script and of leaving the design uneditable. This one ships a single
  * `.ts` file. Everything the source deck's chrome contained has to be *re-authored* from what
  * the read model exposes, and the read model deliberately exposes the property tiers a slide
- * inherits — colours, fonts, placeholder geometry — not the parts a slide merely sits on top
+ * inherits (colours, fonts, placeholder geometry), not the parts a slide merely sits on top
  * of. So the output is a deck that renders its slides faithfully and wears a different suit.
  *
  * **The ceiling is measured, not estimated, and no amount of printer work moves it.** Two
@@ -18,11 +18,11 @@
  * reason the other tier shipped first. A **master's** own decoration joins them for a
  * structural reason rather than a reading one: `defineSlideMaster` creates a layout, so there
  * is no master shape tree to write to. A *layout's* decoration used to be on this list and is
- * not any more — it is transcribed into that layout's `objects`.
+ * not any more; it is transcribed into that layout's `objects`.
  *
  * **One structural difference beyond the chrome.** A slide marked `carried` has no source
  * package to be carried from here, so it is transcribed like any other and loses only the
- * construct that made it uncarryable — which each shape has already declared for itself. That
+ * construct that made it uncarryable, which each shape has already declared for itself. That
  * is why {@link DeckIr}'s calls are populated even for a carried slide.
  */
 import { DECK_PROP_KEYS, uniqueTitle, type DeckIr, type IrValue, type MasterIr } from '../ir.js'
@@ -57,7 +57,7 @@ export function printStandaloneScript(ir: DeckIr, options: PrintStandaloneScript
 	// EVERY part that records a note is walked before the header is built: this tier's own notes
 	// are only known afterwards, and `notes` below is a snapshot of the collector rather than a
 	// live view. `printDocProps` used to run after that snapshot was taken, so the one note it
-	// records reached neither the header nor the returned list — it was collected and dropped.
+	// records reached neither the header nor the returned list: it was collected and dropped.
 	const masters = printMasters(ir, collector, printAsset)
 	const body = printSlides(ir, collector, printAsset)
 	const props = printDocProps(ir, collector)
@@ -129,13 +129,13 @@ function printDocProps(ir: DeckIr, collector: NoteCollector): string[] {
 	const entries = Object.entries(ir.props).filter(([, value]) => typeof value === 'string')
 
 	// A deck built through the write API is stamped with the library's own author, subject,
-	// title, revision and company in the constructor, and a property cannot be unset — writing
+	// title, revision and company in the constructor, and a property cannot be unset. Writing
 	// `''` emits an empty element rather than removing it. So whatever the source left blank
 	// comes back filled in, which is a change to the deck rather than a formatting detail.
 	//
 	// `company` sat outside this list while nothing populated it in the IR: it was
 	// unconditionally "missing", so every standalone script carried a note claiming the source
-	// deck declared no company — a claim the converter had never checked and one that is false
+	// deck declared no company, a claim the converter had never checked and one that is false
 	// for most real decks. Now that `Presentation.appProperties` reads `docProps/app.xml`, the
 	// key is populated when the source states one and the note is only raised when it does not.
 	const stamped = DECK_PROP_KEYS.filter((key) => !(key in ir.props))
@@ -160,7 +160,7 @@ function printDocProps(ir: DeckIr, collector: NoteCollector): string[] {
  *
  * The naming is the write API's rather than OOXML's: a `defineSlideMaster` call creates a
  * *layout* under the single shared master, which is the right granularity for a source layout.
- * It carries the layout's name, its background, and its decoration — the bands, rules and
+ * It carries the layout's name, its background, and its decoration: the bands, rules and
  * wordmarks that make the gallery recognisable rather than a list of blank rectangles. What it
  * still cannot carry is the layout's *placeholder definitions*, and that is a write-path
  * consequence rather than a reading one (see `from-read/chrome.ts`). The name earns its place

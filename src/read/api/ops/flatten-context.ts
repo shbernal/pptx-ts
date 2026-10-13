@@ -1,8 +1,8 @@
 /**
  * The theme context a source slide is flattened against.
  *
- * `preserve`-mode import bakes a slide's *source* look into its XML — scheme colours and
- * style-matrix fills resolved to literals — so it keeps that look after being attached to a
+ * `preserve`-mode import bakes a slide's *source* look into its XML (scheme colours and
+ * style-matrix fills resolved to literals), so it keeps that look after being attached to a
  * different deck's master. Doing so needs the source subgraph's colour map, colour scheme,
  * format scheme, and the background the slide inherits but does not itself carry. This
  * gathers exactly that.

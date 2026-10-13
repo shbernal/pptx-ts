@@ -5,7 +5,7 @@
  * `a:bevel` plus an optional `a:lightRig`, which is why an empty `cell3D: {}` still produces
  * a bevel element (at the schema's own defaults) rather than an empty, invalid `a:cell3D`.
  *
- * The surface is deliberately minimal — preset, size, material and light rig. PowerPoint's
+ * The surface is deliberately minimal: preset, size, material and light rig. PowerPoint's
  * table UI exposes no control for any of it, so a cell3D reaches a deck from a theme or
  * another producer; this exists to author and reproduce one, not to model DrawingML 3-D.
  */
@@ -56,7 +56,7 @@ export function genTableCell3DXml(cell3D?: TableCell3DProps): string {
 		prst: resolveEnum(cell3D.preset, BEVEL_PRESETS, 'preset'),
 	})
 	// Both `rig` and `dir` are required on CT_LightRig, so a half-specified rig is dropped
-	// whole — emitting one attribute would produce a part PowerPoint calls corrupt.
+	// whole. Emitting one attribute would produce a part PowerPoint calls corrupt.
 	const rig = resolveEnum(cell3D.lightRig?.rig, LIGHT_RIGS, 'lightRig.rig')
 	const dir = resolveEnum(cell3D.lightRig?.dir, LIGHT_RIG_DIRECTIONS, 'lightRig.dir')
 	const lightRig = rig && dir ? voidEl('a:lightRig', { rig, dir }) : ''

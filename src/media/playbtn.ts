@@ -8,9 +8,9 @@
  * dynamic import instead, and leave it out of the entry chunk.
  *
  * It is resolved during the async media pass, for a deck that actually carries media and only
- * where the caller supplied no `cover` of their own — see `SlideRelMedia.isDefaultCover`.
+ * where the caller supplied no `cover` of their own (see `SlideRelMedia.isDefaultCover`).
  *
- * **Generated — do not hand-edit.** `scripts/gen-playbtn.mjs` draws it from measured geometry and
+ * **Generated: do not hand-edit.** `scripts/gen-playbtn.mjs` draws it from measured geometry and
  * writes this file; that script's header is where the design and its two deliberate departures
  * from the original artwork are written down. `pnpm run media:playbtn` rewrites it.
  */

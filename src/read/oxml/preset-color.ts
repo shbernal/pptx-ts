@@ -4,10 +4,10 @@
  * `ST_PresetColorVal` (§20.1.10.47) enumerates 190 names, and the standard gives each one an
  * RGB triple. They are the HTML/CSS named colours: every value in the enumeration has the same
  * RGB here as the CSS colour of the same name, and the 190 names collapse to the 140 distinct
- * CSS names below through three mechanical spelling rules the enumeration adds on top —
+ * CSS names below through three mechanical spelling rules the enumeration adds on top:
  *
  *  - abbreviated prefixes: `dk*`/`lt*`/`med*` alongside `dark*`/`light*`/`medium*`
- *    (`dkSlateBlue` is `darkSlateBlue`), and only as a *prefix* — `medium…` is not `mediumium…`;
+ *    (`dkSlateBlue` is `darkSlateBlue`), and only as a *prefix* (`medium…` is not `mediumium…`);
  *  - both spellings of grey: `dimGrey` is `dimGray`;
  *  - case: the enumeration is camelCase, the table below is folded to lower case.
  *
@@ -18,7 +18,7 @@
  *
  * This is spec data, not observed behaviour: the values come from the enumeration's own
  * documentation, and the table is asserted complete against the schema's 190-value list in
- * `test/read/preset-color.test.ts` — a name the reader cannot resolve is a hole in the table,
+ * `test/read/preset-color.test.ts`. A name the reader cannot resolve is a hole in the table,
  * and that test is what finds it.
  */
 

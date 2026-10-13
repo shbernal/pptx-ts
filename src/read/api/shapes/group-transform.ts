@@ -1,11 +1,11 @@
 /**
- * Group-shape transform composition — the `p:grpSp` child-space mapping, shared
+ * Group-shape transform composition: the `p:grpSp` child-space mapping, shared
  * by every surface that needs slide-absolute geometry.
  *
  * A `p:grpSp` declares two frames on its `a:xfrm`: where it sits on the slide
  * (`a:off`/`a:ext`) and the coordinate space its children are authored in
  * (`a:chOff`/`a:chExt`). A child's own `a:off`/`a:ext` is expressed in that child
- * space, so it is not directly placeable on the slide — it must be mapped through
+ * space, so it is not directly placeable on the slide. It must be mapped through
  * `off + (p - chOff) * (ext / chExt)` for every enclosing group, with the group's
  * `@rot`/`@flipH`/`@flipV` composed on top.
  *
@@ -87,8 +87,8 @@ function rotatePoint(
  * `groups` runs **innermost first** (the shape's immediate `p:grpSp` parent, then
  * outward). An empty list returns the shape's own box and orientation unchanged.
  *
- * The returned `box` is the *unrotated* placement box — the same box PowerPoint
- * writes when you Ungroup — with the effective rotation reported separately.
+ * The returned `box` is the *unrotated* placement box (the same box PowerPoint
+ * writes when you Ungroup), with the effective rotation reported separately.
  * Values are exact; callers round or convert units as they see fit.
  *
  * Returns `null` when a group's `a:chExt` is degenerate (zero on either axis):
@@ -107,7 +107,7 @@ export function composeGroupFrame(shape: ShapeTransform, groups: GroupTransform[
 	const chain: { center: { x: number; y: number }; rotation: number; flipH: boolean; flipV: boolean }[] = []
 
 	for (const group of groups) {
-		if (group.child.cx === 0 || group.child.cy === 0) return null // degenerate child frame — no resolvable mapping
+		if (group.child.cx === 0 || group.child.cy === 0) return null // degenerate child frame: no resolvable mapping
 		const ratioX = group.outer.cx / group.child.cx
 		const ratioY = group.outer.cy / group.child.cy
 

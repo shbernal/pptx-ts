@@ -1,11 +1,11 @@
 /**
  * pptx-ts: named clip silhouettes for images
  *
- * A `ClipShape` is declarative data — a named silhouette plus its options — and {@link clipPath}
+ * A `ClipShape` is declarative data (a named silhouette plus its options), and {@link clipPath}
  * resolves it to the freeform `points` path `addImage` emits as the `<a:custGeom>` clip mask on
  * the `<p:pic>`. Paired with `sizing: { type: 'cover' }` (an `<a:srcRect>` crop) it reproduces
- * what a PowerPoint *picture placeholder* does — a layout `custGeom` clipping an inherited
- * blipFill — but standalone, with no placeholder involved.
+ * what a PowerPoint *picture placeholder* does (a layout `custGeom` clipping an inherited
+ * blipFill), but standalone, with no placeholder involved.
  *
  * These are silhouettes recurring often enough in real decks to be worth naming; hand-authored
  * `points` remain available for anything else. Nothing here is theme- or brand-aware: which
@@ -33,8 +33,8 @@ export type FlatSide = 'left' | 'right'
 /**
  * Which half-disc proportion to trace. Both are flat-on-one-edge, bulging half-discs whose arc
  * reaches the opposite edge near mid-height; they differ only in how far the arc reaches.
- * - `'deep'` — the arc spans about 32% of the box width, symmetric about mid-height (the default).
- * - `'shallow'` — the arc spans about 13%, slightly asymmetric, with its apex just below mid-height.
+ * - `'deep'`: the arc spans about 32% of the box width, symmetric about mid-height (the default).
+ * - `'shallow'`: the arc spans about 13%, slightly asymmetric, with its apex just below mid-height.
  */
 export type HalfDiscPreset = 'deep' | 'shallow'
 
@@ -42,7 +42,7 @@ export type HalfDiscPreset = 'deep' | 'shallow'
 export type ClipShape =
 	/**
 	 * A rectangle with one side replaced by an elliptical arc that bulges toward the opposite
-	 * edge, reaching it near mid-height — the "D" a picture placeholder cuts on a cover slide.
+	 * edge, reaching it near mid-height: the "D" a picture placeholder cuts on a cover slide.
 	 */
 	{ kind: 'half-disc'; flat: FlatSide; preset?: HalfDiscPreset }
 
@@ -53,7 +53,7 @@ export type ClipShape =
  * mid-left apex, cubic back to the top tip, then closes.
  *
  * Each preset spells out every fraction rather than sharing a mirrored `topEdgeX`, because the
- * presets are independent freeforms — the shallow one is asymmetric top-to-bottom, so a
+ * presets are independent freeforms. The shallow one is asymmetric top-to-bottom, so a
  * symmetric parameterization could not express it without changing its shape.
  */
 interface HalfDiscSpec {
@@ -79,7 +79,7 @@ interface HalfDiscSpec {
 	c2t: { x: number; y: number }
 }
 
-/** `deep` — symmetric top/bottom, apex at mid-height. */
+/** `deep`: symmetric top/bottom, apex at mid-height. */
 const DEEP_DISC: HalfDiscSpec = {
 	topEdgeX: 0.31788,
 	botEdgeX: 0.31788,
@@ -94,7 +94,7 @@ const DEEP_DISC: HalfDiscSpec = {
 	c2t: { x: 0.11594, y: 0.13167 },
 }
 
-/** `shallow` — a slightly asymmetric top/bottom inset and an apex just below mid-height. */
+/** `shallow`: a slightly asymmetric top/bottom inset and an apex just below mid-height. */
 const SHALLOW_DISC: HalfDiscSpec = {
 	topEdgeX: 0.12611,
 	botEdgeX: 0.11128,
@@ -148,7 +148,7 @@ function halfDisc(w: number, h: number, flat: FlatSide, preset: HalfDiscPreset):
  * to `addImage({ points })`.
  *
  * `w`/`h` are the image box's size **in inches** and must match the `w`/`h` the picture is drawn
- * at — the path is emitted in the box's own coordinate space, not normalized (see the module
+ * at, because the path is emitted in the box's own coordinate space, not normalized (see the module
  * note above).
  * @param {ClipShape} shape - the named silhouette and its options
  * @param {number} w - image box width (inches)

@@ -72,7 +72,7 @@ function loadMml2omml(): (mathml: string) => string {
 
 /**
  * mathml2omml puts namespace declarations on the `<m:oMath>` opening tag: `xmlns:m`
- * (redundant — the `<a14:m>` envelope the `math:` option authors already declares it)
+ * (redundant, since the `<a14:m>` envelope the `math:` option authors already declares it)
  * and `xmlns:w` (unused in the output it produces). Strip them so the result is a bare
  * `<m:oMath>` that drops into the `math:` option cleanly.
  */
@@ -88,15 +88,15 @@ const DISPLAY_PARA_PR = '<m:oMathParaPr><m:jc m:val="centerGroup"/></m:oMathPara
  * puts in the `<mo>` of an accent and valued by the combining mark OMML wants in `m:chr`.
  *
  * Two halves of one problem. **Which** `<mover>`s are accents: temml renders every accent
- * command as a bare `<mover>` with no `accent="true"`, which is correct for a browser —
- * MathML renderers derive accent positioning from the operator dictionary, so the attribute
- * is redundant there — but mathml2omml has no dictionary and keys strictly off the
+ * command as a bare `<mover>` with no `accent="true"`, which is correct for a browser
+ * (MathML renderers derive accent positioning from the operator dictionary, so the attribute
+ * is redundant there), but mathml2omml has no dictionary and keys strictly off the
  * attribute, mapping a bare `<mover>` to `<m:limUpp>` (an over-*limit*, with limit spacing)
  * instead of `<m:acc>`. Membership in this table is the dictionary lookup that is otherwise
  * missing. **Which character** to attach: mathml2omml passes the `<mo>` text straight
  * through to `m:chr`, and temml emits the *spacing* modifiers (U+02C6 MODIFIER LETTER
  * CIRCUMFLEX, U+2192 RIGHTWARDS ARROW) while ECMA-376 §22.1.2.20 says an `accPr` character
- * "should be within the range of (U+0300–U+036F) or (U+20D0–U+20EF)" — the combining marks,
+ * "should be within the range of (U+0300–U+036F) or (U+20D0–U+20EF)": the combining marks,
  * which is also what Word itself writes. Left alone, `\vec{v}` would hang a full-size arrow
  * over the base instead of an arrow accent.
  *
@@ -132,20 +132,20 @@ const TRAILING_MO = /<mo\b([^>]*)>([^<]*)<\/mo>\s*$/
  *
  * Scoped as narrowly as the defect. Only `<mo stretchy="false">` qualifies, which is how
  * temml distinguishes a true accent from a *wide* one (`\widehat`, `\overrightarrow`) or a
- * group character (`\overbrace`, `\overgroup`) — those already reach `m:groupChr`, which is
+ * group character (`\overbrace`, `\overgroup`). Those already reach `m:groupChr`, which is
  * a reasonable rendering, so they are left alone rather than churned. `\stackrel` is an
  * over-relation whose character comes from the caller, so it stays `m:limUpp` unless the
  * caller happened to stack a diacritic. An `<mover>` that already states `accent` is the
  * author's call and is never rewritten.
  *
- * `<munder>` is deliberately **not** touched. The symmetric-looking fix — stamping
- * `accentunder="true"` — makes mathml2omml emit `<m:acc>`, which is an *over*-accent: it
+ * `<munder>` is deliberately **not** touched. The symmetric-looking fix, stamping
+ * `accentunder="true"`, makes mathml2omml emit `<m:acc>`, which is an *over*-accent: it
  * would move `\utilde`'s tilde above the base. OMML has no under-accent object, so the
  * `m:limLow` an under-accent already produces is the closest thing available.
  *
  * Implemented against the tag text rather than through a DOM. temml's output is
  * machine-generated and well-formed, so pairing `<mover>` with `</mover>` on a stack is
- * exact, and this subpath otherwise carries no XML parser — the read path's is a different
+ * exact, and this subpath otherwise carries no XML parser. The read path's is a different
  * dependency and pulling it in here would grow the module for one rewrite.
  */
 function markAccentedMovers(mathml: string): string {
@@ -258,10 +258,10 @@ export function latexToOmml(latex: string, opts: LatexToOmmlOptions = {}): strin
 	return display ? `<m:oMathPara>${DISPLAY_PARA_PR}${oMath}</m:oMathPara>` : oMath
 }
 
-// Error taxonomy — see `entry-errors.ts`. Re-exported from every entry so `instanceof`
+// Error taxonomy: see `entry-errors.ts`. Re-exported from every entry so `instanceof`
 // works whichever subpath a consumer imports.
 export * from './entry-errors.js'
 
-// Diagnostics — see `entry-diagnostics.ts`. Re-exported from every entry so a consumer of any
+// Diagnostics: see `entry-diagnostics.ts`. Re-exported from every entry so a consumer of any
 // subpath can install a handler for the warnings that subpath emits.
 export * from './entry-diagnostics.js'

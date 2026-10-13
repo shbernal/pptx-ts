@@ -35,8 +35,8 @@ import {
  * theme1/tableStyles, then commentAuthors when the deck has any comment, then the embedded
  * fonts.
  *
- * The rels writer and `makeXmlPresentation` both need these numbers — the presentation part
- * names the notesMaster and each embedded face by `r:id` — and each derived them separately,
+ * The rels writer and `makeXmlPresentation` both need these numbers (the presentation part
+ * names the notesMaster and each embedded face by `r:id`), and each derived them separately,
  * one as `slides.length + 2` under a comment saying it copied the other's logic. Inserting a
  * relationship before `notesMaster` then broke the presentation's own reference with no
  * signal.
@@ -65,7 +65,7 @@ export function presentationFixedRelIds(slides: PresSlideInternal[]): {
 }
 
 /**
- * The first relationship id free for embedded-font rels — {@link presentationFixedRelIds}'
+ * The first relationship id free for embedded-font rels: {@link presentationFixedRelIds}'
  * `fontStart`, kept as its own name because that is what the two font walks ask for.
  */
 export function presentationFontRelStart(slides: PresSlideInternal[]): number {

@@ -2,10 +2,9 @@
  * pptx-ts: the body of {@link Presentation.appendSlides}
  *
  * The hybrid "generate onto an existing deck" path: a slide producer authors slides, they are
- * spliced into this package under fresh partnames, and every dependency each one carries —
- * images, embedded and online media, hyperlinks, speaker notes, review comments, charts, intra-batch
- * slide links
- * — is wired into its `.rels`.
+ * spliced into this package under fresh partnames, and every dependency each one carries
+ * (images, embedded and online media, hyperlinks, speaker notes, review comments, charts,
+ * intra-batch slide links) is wired into its `.rels`.
  *
  * Here rather than on the class for the reason `presentation.ts` states about the four import
  * bodies: the *contract* is the doc comment a caller reads and stays on the public method, while
@@ -63,7 +62,7 @@ type PlacedSlide = {
 }
 
 /**
- * Resolve `options.layout` — a layout *name* or a {@link LayoutHandle} — against this deck's
+ * Resolve `options.layout` (a layout *name* or a {@link LayoutHandle}) against this deck's
  * gallery, with no silent fallback: an unusable value is one of four named errors rather than a
  * default layout, because a slide bound to the wrong layout is a deck that looks authored.
  *
@@ -165,8 +164,8 @@ function wireTransitionSound(
 }
 
 /**
- * Online (external-link) video: two External rels share the link Target — the ECMA video rel and
- * the MS-2007 media rel — with no media binary part and no content-type entry. The poster image is
+ * Online (external-link) video: two External rels share the link Target (the ECMA video rel and
+ * the MS-2007 media rel), with no media binary part and no content-type entry. The poster image is
  * wired by {@link wireMedia}, which runs first.
  */
 function wireOnlineMedia(rels: Relationships, slide: PlacedSlide['slide']): void {
@@ -185,7 +184,7 @@ function wireHyperlinks(rels: Relationships, slide: PlacedSlide['slide']): void 
 
 /**
  * Speaker notes. The notes part carries its own rel namespace, independent of the slide's:
- * rId1 = notesMaster, rId2 = the slide it annotates, hyperlinks from rId3 — the order the
+ * rId1 = notesMaster, rId2 = the slide it annotates, hyperlinks from rId3. That is the order the
  * generator's body was serialized against, so these are added by explicit id rather than left to
  * auto-numbering.
  *
@@ -219,7 +218,7 @@ function wireNotes(
  *
  * A chartEx chart differs in every other coordinate: the `chartEx{N}.xml` name family, the MS
  * chartex content type, the MS `chartEx` rel off the slide, and two mandatory sidecars at
- * rId2/rId3 — without which PowerPoint reports the deck as corrupt (schema-valid but unopenable).
+ * rId2/rId3, without which PowerPoint reports the deck as corrupt (schema-valid but unopenable).
  * `c.chartEx` carries both sidecar bodies; the generator built them, so nothing here reaches into
  * the emitters.
  */
@@ -302,8 +301,8 @@ function requireLinksInBatch(slides: readonly PlacedSlide['slide'][]): void {
 }
 
 /**
- * The first of pass 2's two phases: every rel the slide body names by id — media, embedded and
- * online media, a transition sound, hyperlinks, charts, slide links — each added with the rId the
+ * The first of pass 2's two phases: every rel the slide body names by id (media, embedded and
+ * online media, a transition sound, hyperlinks, charts, slide links), each added with the rId the
  * generator wrote.
  * Also creates the notes part, whose own rels are fixed ids too.
  *
@@ -331,8 +330,8 @@ function wireFixedIdRels(
 }
 
 /**
- * The second phase: the rels the slide body names by no id — its notes, its comments and its
- * layout — numbered by `add()`, which takes one past the highest id present.
+ * The second phase: the rels the slide body names by no id (its notes, its comments and its
+ * layout), numbered by `add()`, which takes one past the highest id present.
  *
  * Strictly after {@link wireFixedIdRels}. The generator numbers a slide's rels from rId1, so an
  * auto id taken before a fixed one is claimed is routinely that fixed one: the notes rel used to
@@ -367,7 +366,7 @@ export async function appendSlides(
 	// 2. Author + extract; enforce equal slide size (no geometry rescale in v1).
 	const extracted = await source.extractSlides(pickDefined(options, ['onMediaError']))
 	// The extracted size is always known, so it is lifted into a `SlideSize` rather than kept
-	// as a loose pair — that is what let this call site keep a second formatter alive.
+	// as a loose pair; that is what let this call site keep a second formatter alive.
 	requireEqualSlideSize(
 		deck.slideSize,
 		{
@@ -394,7 +393,7 @@ export async function appendSlides(
 
 	// Pass 1: reserve + add every slide body first, so internal slide-to-slide
 	// links (which may point forward) can resolve to any appended slide. Adding
-	// each part immediately claims its name — reservePartNameLike returns max+1
+	// each part immediately claims its name: reservePartNameLike returns max+1
 	// from the existing parts, so the next reservation sees it. (addPart registers
 	// the slide's Override content type.)
 	const placed: PlacedSlide[] = extracted.slides.map((slide) => {

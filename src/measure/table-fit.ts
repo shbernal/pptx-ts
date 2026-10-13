@@ -4,7 +4,7 @@
  * A table is measured cell by cell against its resolved grid: each cell inherits the table's text
  * options where it sets none, gets its own margins resolved to EMU insets, and is laid out inside
  * the column span it actually occupies. A merged region is measured once, at its origin, across
- * the columns it covers — which is what `walkTableGrid` exists to hand out.
+ * the columns it covers, which is what `walkTableGrid` exists to hand out.
  */
 
 import { DEF_FONT_SIZE, MIN_FONT_SIZE_PT } from '../constants-internal.js'
@@ -40,7 +40,7 @@ import type {
  * emitter's list that decides how text lays out. This used to be its own list, claiming in its
  * docstring to mirror the emitter's while naming four keys the emitter did not.
  *
- * PowerPoint has no text-autofit for a table cell — `a:tcPr` carries no autofit, and the app
+ * PowerPoint has no text-autofit for a table cell: `a:tcPr` carries no autofit, and the app
  * ignores a `normAutofit` inside one; rows auto-grow instead. So a cell's `fit: 'shrink'` is
  * honoured by baking a *reduced literal font size* onto its runs, which both PowerPoint and
  * LibreOffice render identically with no edit or resize. That is what makes these options worth
@@ -99,8 +99,8 @@ export function scaleCellFontSizes(cell: TableCellInternal, eff: RunOpts, f: num
 /**
  * The options {@link resolveTableGridEmu} reads.
  *
- * `cy` is on `ObjectOptions` rather than `TableProps` — it is the already-resolved EMU height
- * the auto-pager and the measured-fit pass stamp on — so the parameter is the intersection
+ * `cy` is on `ObjectOptions` rather than `TableProps` (it is the already-resolved EMU height
+ * the auto-pager and the measured-fit pass stamp on), so the parameter is the intersection
  * rather than either type, and every caller's own bag satisfies it structurally.
  */
 type TableGridOpts = Pick<TableProps, 'w' | 'h' | 'colW' | 'rowH'> & { cy?: Coord }
@@ -121,7 +121,7 @@ interface TableGridEmu {
  * Resolve a table's grid the one way every consumer has to see it.
  *
  * Three sites derived these four things: `pptx.tableLayout()`, the export-time measured-fit
- * pass, and the table emitter (the height alone). They already disagreed — only the fit pass
+ * pass, and the table emitter (the height alone). They already disagreed: only the fit pass
  * read `cy`, the EMU height the auto-pager and the fit pass itself stamp onto the options, so
  * `addTable(rows, { cy })` with no `h` gave a file whose rows are pinned and a
  * `pptx.tableLayout()` that reported every row auto-height. That is the same drift the one
@@ -155,12 +155,12 @@ export function resolveTableGridEmu(
 }
 
 /**
- * Compute per-cell geometry (inches) for a table laid out at `opts.x`/`y`/`w` — the
- * engine behind `pptx.tableLayout()`. Column widths come from the same
+ * Compute per-cell geometry (inches) for a table laid out at `opts.x`/`y`/`w`. This is
+ * the engine behind `pptx.tableLayout()`. Column widths come from the same
  * {@link resolveTableColWidthsEmu} the writer uses, so cell x/width are exact. Row
  * heights are exact when pinned by `rowH` (array or scalar) or table `h`; otherwise
  * each auto-height row is estimated with the same conservative (tall) text model as
- * {@link measureText} and flagged `heightExact: false`. Single-slide only —
+ * {@link measureText} and flagged `heightExact: false`. Single-slide only:
  * `autoPage` paging across slides is not modeled. Rowspan cells do not drive a row's
  * estimated height (mirrors `gen/table/autopage.ts`, which exempts them from line-height growth).
  */
@@ -179,7 +179,7 @@ export function computeTableLayout(
 	// Reuse TableProps as a bag of inheritable text props; only CELL_INHERITED_TEXT_KEYS are
 	// read from it. Route through `unknown` because TableProps.columns (per-column cell
 	// styling, TableCellProps[]) collides by name with TextPropsOptions.columns (text
-	// column count, number) — the two never overlap here since `columns` isn't inherited.
+	// column count, number), but the two never overlap here since `columns` isn't inherited.
 	const o = opts as unknown as RunOpts
 
 	const tableXEmu = opts.x != null ? getSmartParseNumber(opts.x, 'X', presLayout) : 0
@@ -190,7 +190,7 @@ export function computeTableLayout(
 	const colXEmu = new Array<number>(numCols + 1).fill(0)
 	for (let c = 0; c < numCols; c++) colXEmu[c + 1] = (colXEmu[c] ?? 0) + (colWidthsEmu[c] ?? 0)
 
-	// Explicit row height (EMU) or null when the row is auto-height — the same reading the writer
+	// Explicit row height (EMU) or null when the row is auto-height: the same reading the writer
 	// bakes and the export-time fit pass measures against.
 	const explicitRowHEmu = grid.rowHeightEmu
 	const resolve = makeRegistryResolver(registry)
@@ -245,7 +245,7 @@ export function computeTableLayout(
 
 	// A row touched only by rowspans (no single-row cell, no explicit height) still
 	// needs a non-zero height: give it one default line. That height is this function's own
-	// invention, so the row stops being exact — a caller told it was pinned would place the
+	// invention, so the row stops being exact. A caller told it was pinned would place the
 	// next shape against a number nothing in the file agrees with.
 	for (let r = 0; r < numRows; r++)
 		if ((rowHeightsEmu[r] ?? 0) <= 0) {

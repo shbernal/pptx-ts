@@ -21,10 +21,10 @@ import { pickDefined } from '../../options-internal.js'
  * `addGroupDefinition` (group children) so the descriptor mapping lives in one place.
  *
  * The mapping is handed in rather than spelled here. It used to be an `if` chain naming four
- * `add*Definition` functions, which put the chart definer — and every plot module under it — in the
+ * `add*Definition` functions, which put the chart definer (and every plot module under it) in the
  * graph of any program that can define a slide master, which is all of them.
  *
- * `placeholder` is intentionally not handled here — it is master-specific and needs the object's
+ * `placeholder` is intentionally not handled here: it is master-specific and needs the object's
  * index for `_placeholderIdx`, so `createSlideMaster` handles that case itself.
  * @param target - slide (or master) the object is appended to
  * @param object - the child descriptor
@@ -52,7 +52,7 @@ export function addChildDefinition(
  * Warn about a child descriptor {@link addChildDefinition} did not author, from `call`.
  *
  * Two conditions arrive here and they have different fixes, so they get different codes. A key
- * {@link CHILD_DESCRIPTOR_FAMILIES} claims is valid and typed and was simply left uncomposed —
+ * {@link CHILD_DESCRIPTOR_FAMILIES} claims is valid and typed and was simply left uncomposed:
  * the family that would have drawn it is not in this presentation's list, so the message names it
  * the way `familyMethodUnavailable` names the family behind a missing method. Any other key is a
  * typo, which is all this walk used to be able to say, because before the split a descriptor that
@@ -83,7 +83,7 @@ export function warnUnauthoredChild(object: SlideMasterObject | GroupChildProps,
  * group itself to the slide. Nested `group` children recurse, so a group can contain other groups.
  *
  * An identity child coordinate space is kept at every depth (emitted in `gen/slide/object.ts` as
- * `chOff/chExt == off/ext`), so children — including descendants of nested groups — keep their
+ * `chOff/chExt == off/ext`), so children, including descendants of nested groups, keep their
  * slide-absolute coordinates and grouping is visually a no-op while making the objects one
  * selectable PowerPoint group. Charts, media, tables, and placeholders are not supported as group
  * children yet; each is skipped with a warning. When `opts.x/y/w/h` are omitted the group's bounds
@@ -105,7 +105,7 @@ function buildGroupObject(
 	const groupObjects: SlideObject[] = []
 
 	;(children || []).forEach((child) => {
-		// Nested group: recurse and embed the child group object directly (no slide splice — its own
+		// Nested group: recurse and embed the child group object directly (no slide splice; its own
 		// leaf descendants still register against `target` inside the recursive call).
 		if ('group' in child) {
 			groupObjects.push(buildGroupObject(target, child.group.children, child.group.options || {}, childAuthors))
@@ -117,7 +117,7 @@ function buildGroupObject(
 			return
 		}
 		// Reuse the existing add*Definition logic (which registers any image/chart rels on the slide,
-		// correctly — grouped children still reference slide-level relationships), then move the
+		// correctly, since grouped children still reference slide-level relationships), then move the
 		// just-appended object(s) off the slide's top-level list into this group's child list.
 		const before = target._slideObjects.length
 		if (!addChildDefinition(target, child, childAuthors)) {
@@ -128,7 +128,7 @@ function buildGroupObject(
 	})
 
 	// A group with no renderable children resolves to a zero-size <p:grpSp> (auto-bounds over an empty
-	// bbox is 0×0). That is the degenerate result the warn-or-throw rule says to warn on rather than emit silently —
+	// bbox is 0×0). That is the degenerate result the warn-or-throw rule says to warn on rather than emit silently,
 	// the same class as the partial-frame fallback. Warn once here, at the group that is actually empty:
 	// a nested empty group has already warned in its own recursion, and its non-empty parent has not.
 	if (groupObjects.length === 0) {
@@ -147,7 +147,7 @@ function buildGroupObject(
  * Wrap already-built child render-objects in a group (`<p:grpSp>`) render-object, without appending
  * the group anywhere. Shared by `buildGroupObject` (children built from descriptors) and
  * `groupObjectsDefinition` (children lifted off the slide) so both entry points name and frame a
- * group identically — including the all-or-nothing frame, which is left to `gen/slide/object.ts` to resolve:
+ * group identically, including the all-or-nothing frame, which is left to `gen/slide/object.ts` to resolve:
  * passing `x/y/w/h` through unset is what makes the bounds auto-compute to the children's bounding
  * box, so neither caller needs bounds math of its own.
  *
@@ -170,7 +170,7 @@ function makeGroupObject(target: PresSlideInternal, groupObjects: SlideObject[],
 		_type: SlideObjectType.group,
 		_groupObjects: groupObjects,
 		// `pickDefined`, not a key-by-key literal: a group that states no `rotate` carries no
-		// `rotate` key, where the literal wrote one holding `undefined` — and the group emitter
+		// `rotate` key, where the literal wrote one holding `undefined`, and the group emitter
 		// decides on key presence for the geometry it derives from its children.
 		options: {
 			...pickDefined(opts, ['x', 'y', 'w', 'h', 'rotate', 'flipH', 'flipV', 'altText', 'objectLock']),
@@ -197,7 +197,7 @@ export function addGroupDefinition(
 
 /**
  * Object kinds `groupObjects()` accepts. Text (which shapes and text boxes both are), images,
- * connectors, and groups — the last so consumers can build nested logical groups out of groups they
+ * connectors, and groups; the last so consumers can build nested logical groups out of groups they
  * already made. Charts, media, tables, and placeholders are excluded for the same reason
  * `addGroup()` excludes them (rels/id/transform work pending); a placeholder is excluded on top of
  * that because grouping it would sever the layout inheritance that makes it a placeholder.
@@ -211,8 +211,8 @@ const GROUPABLE_TYPES: readonly SlideObjectType[] = [
 
 /**
  * Whether `groupObjects()` would accept this object, given only what it is. The remaining reasons a
- * call can still fail are about the *selection* rather than the object — an unresolved, duplicated
- * or ambiguous name — so a consumer cannot decide those from one object either way.
+ * call can still fail are about the *selection* rather than the object (an unresolved, duplicated
+ * or ambiguous name), so a consumer cannot decide those from one object either way.
  *
  * Exported because `Slide.objects` reports it as `canGroup`, and a consumer that had to re-state the
  * rule would be pinning a copy of the list above: it would keep refusing the day grouping learns a
@@ -243,14 +243,14 @@ function findNameInGroups(objects: SlideObject[], name: string): boolean {
  * renderers: the objects already exist, so replaying their descriptors just to group them would mean
  * every renderer exposing its internals.
  *
- * Grouping is visually a no-op — children keep their slide-absolute geometry, their ids, their rels,
+ * Grouping is visually a no-op: children keep their slide-absolute geometry, their ids, their rels,
  * and their relative z-order, exactly as with `addGroup()`. Two ordering rules make that true:
  * children are ordered by their existing slide z-order (**not** by the order they are named, which
  * would silently restack the slide), and the group itself takes the topmost member's former slot, so
  * it lands where the selection's top edge already was.
  *
  * Every failure here throws rather than warns. An unmatched name is not a degenerate deck the author
- * might still want — it means the intended object is silently still loose on the slide, which is the
+ * might still want. It means the intended object is silently still loose on the slide, which is the
  * footgun the group was meant to remove.
  * @param target - slide holding the objects
  * @param objectNames - `objectName`s of the top-level objects to group
@@ -316,7 +316,7 @@ export function groupObjectsDefinition(target: PresSlideInternal, objectNames: s
 	const memberSet = new Set(members)
 	const children = target._slideObjects.filter((obj) => memberSet.has(obj))
 
-	// The wrapper takes the topmost member's former slot — i.e. it sits above everything the selection
+	// The wrapper takes the topmost member's former slot, i.e. it sits above everything the selection
 	// sat above, and below everything it sat below. Counting the *survivors* ahead of that slot gives
 	// the post-removal index directly, so the removal below cannot shift it.
 	const topmostIdx = Math.max(...members.map((obj) => target._slideObjects.indexOf(obj)))

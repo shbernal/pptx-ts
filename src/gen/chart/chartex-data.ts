@@ -7,7 +7,7 @@
  * mirrors their values into `<cx:lvl>` string/number caches so PowerPoint can render without
  * opening the workbook. The category label levels occupy the leading columns (0 of them for a
  * category-less histogram, 1 for a flat chart, N for a hierarchical treemap/sunburst) and the one
- * value series sits in the next column — so the references here line up 1:1 with the workbook
+ * value series sits in the next column, so the references here line up 1:1 with the workbook
  * written by {@link ./embed-xlsx}.
  */
 
@@ -37,7 +37,7 @@ function valueDimType(type: ChartType): 'size' | 'val' | 'colorVal' {
  * `<cx:externalData r:id="rId1">` points at the embedded workbook (same `rId1` the chart part's
  * `.rels` maps to the `.xlsx`).
  *
- * Category labels are `string[][]` — one inner array per hierarchy level (leaf first). A flat chart
+ * Category labels are `string[][]`: one inner array per hierarchy level (leaf first). A flat chart
  * has a single level; treemap/sunburst carry several. Each level becomes one `<cx:lvl>`, emitted
  * leaf-first to match PowerPoint. The workbook ({@link ./embed-xlsx}) lays the levels out in
  * columns A..N (outermost in A, leaf in the last label column) with the value series in the next
@@ -61,7 +61,7 @@ export function makeChartExData(rel: SlideRelChart, sheet: WorksheetLayout): str
 	const lastRow = ptCount + 1
 	const valueCol = sheet.valueColumn(0)
 
-	// Category (string) dimension — one <cx:lvl> per hierarchy level, leaf-first, over columns A..totLvl.
+	// Category (string) dimension: one <cx:lvl> per hierarchy level, leaf-first, over columns A..totLvl.
 	// A category-less layout (histogram bins raw observations itself) emits no strDim at all.
 	let catDim = ''
 	if (totLvl > 0) {
@@ -77,7 +77,7 @@ export function makeChartExData(rel: SlideRelChart, sheet: WorksheetLayout): str
 		])
 	}
 
-	// Numeric dimension — the value column. Skip null/non-finite points (a valid sparse cache);
+	// Numeric dimension: the value column. Skip null/non-finite points (a valid sparse cache);
 	// warn on non-finite, matching the classic side's `numCachePt` policy.
 	let valPts = ''
 	vals.forEach((value, idx) => {
@@ -105,7 +105,7 @@ export function makeChartExData(rel: SlideRelChart, sheet: WorksheetLayout): str
 }
 
 /**
- * The `Sheet1` cell holding the series name (the numeric dimension's header) — column immediately
+ * The `Sheet1` cell holding the series name (the numeric dimension's header): the column immediately
  * after all label columns, row 1. A category-less histogram lands on `$A$1`; a flat chart on
  * `$B$1`; a 3-level treemap on `$D$1`.
  * @param {WorksheetLayout} sheet - the chart's worksheet layout

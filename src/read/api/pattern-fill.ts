@@ -3,7 +3,7 @@
  * slide's `p:bg/p:bgPr`, and a table's `a:tblPr` / cell's `a:tcPr`.
  *
  * `a:pattFill` is a preset hatch name plus two wrapped colours, and decoding it is three
- * lines — which is exactly why it had been open-coded in each place that needed it. Sharing
+ * lines, which is exactly why it had been open-coded in each place that needed it. Sharing
  * it is what keeps the three from drifting into different answers for the same element, the
  * same reason `readGradientFill` and
  * `readPictureFill` are shared.
@@ -13,7 +13,7 @@ import type { ColorContext } from '../oxml/theme.js'
 import { readColorRef, type ColorRef } from './theme-context.js'
 
 /**
- * A pattern fill (`a:pattFill`) — a two-colour preset hatch. The write-side
+ * A pattern fill (`a:pattFill`): a two-colour preset hatch. The write-side
  * `fill: { type: 'pattern', pattern: { preset, fgColor, bgColor } }` emits the same element,
  * so the {@link preset} name and both colours round-trip.
  */

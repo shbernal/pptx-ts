@@ -15,8 +15,8 @@ import { warn } from '../../diagnostics.js'
 import { InvalidOptionError } from '../../errors.js'
 
 /**
- * Several `<a:custGeom>` children are emitted as `<a:avLst />` — with a space before the
- * slash — where the rest of the tree writes `<a:avLst/>`. Byte-significant, so it stays.
+ * Several `<a:custGeom>` children are emitted as `<a:avLst />` (with a space before the
+ * slash) where the rest of the tree writes `<a:avLst/>`. Byte-significant, so it stays.
  */
 const SPACE_BEFORE_SLASH = { closePrefix: ' ' }
 
@@ -29,12 +29,12 @@ const BEZ_INDENT = { childPrefix: '\n\t\t\t\t\t', closePrefix: '\n\t\t\t\t\t' }
 
 /**
  * The 17 guide-formula operations ECMA-376 Part 1 §20.1.9.11 (`a:gd/@fmla`) defines.
- * The set is closed — the spec enumerates every operation with its arity — so an
+ * The set is closed (the spec enumerates every operation with its arity), so an
  * unrecognized leading token is always a caller mistake, not a newer dialect.
  *
  * Only the operation is checked. The operands are deliberately left uninterpreted:
  * they may be literals, adjust names, or other guide names resolved in declaration
- * order, and validating them would mean re-implementing the geometry engine — which
+ * order, and validating them would mean re-implementing the geometry engine, which
  * is exactly what this passthrough exists to avoid.
  */
 const GEOM_GUIDE_OPS = new Set([
@@ -75,8 +75,8 @@ const RECT_RADIUS_ADJ1_SHAPES = new Set(['round2SameRect', 'round2DiagRect'])
  *
  * An unknown `prst` value corrupts the package: PowerPoint shows the "needs
  * repair" dialog and drops the shape. So this is the safety net for every
- * `prstGeom` emitter — `addShape`, and the `shape` option on `addText`/`addImage`
- * — and it is also called during `addShape` normalization, so the caller sees
+ * `prstGeom` emitter (`addShape`, and the `shape` option on `addText`/`addImage`),
+ * and it is also called during `addShape` normalization, so the caller sees
  * their own typo at the API boundary rather than at serialization time.
  * @param {string} shapeName - the resolved preset geometry name
  * @throws {InvalidOptionError} `shape/unknown-preset` when the name is not a preset
@@ -123,16 +123,16 @@ export function genXmlPresetGeom(shapeName: string, options: ObjectOptions, cx: 
 		avLst += voidEl('a:gd', { name, fmla: `val ${fmlaVal}` })
 		emittedAdjNames.add(name)
 	}
-	// Zero is a deliberate value for every shortcut here — radius 0 is a sharp corner,
-	// `[0, 0]` is a closed arc, thickness ratio 0 is a zero-thickness band — so each gate
+	// Zero is a deliberate value for every shortcut here: radius 0 is a sharp corner,
+	// `[0, 0]` is a closed arc, thickness ratio 0 is a zero-thickness band. So each gate
 	// asks whether the option was supplied (`!== undefined`), not whether it is truthy.
 	// A truthy check silently dropped rectRadius: 0's guide entirely (PowerPoint then fell
 	// back to the preset default rounding) and arcThicknessRatio: 0's adj3. (#24)
 	if (options.rectRadius !== undefined) {
 		// The radius is stated as a length and emitted as a fraction of the shape's SHORTER side,
-		// which makes that side a divisor. A shape with no stated height reaches here as `cy === 0`
-		// — `objects/text.ts` rescues a height for a line-less text shape, but `addShapeDefinition`
-		// always stamps a `line`, so every `addShape` skips that rescue — and the division then
+		// which makes that side a divisor. A shape with no stated height reaches here as `cy === 0`.
+		// `objects/text.ts` rescues a height for a line-less text shape, but `addShapeDefinition`
+		// always stamps a `line`, so every `addShape` skips that rescue, and the division then
 		// writes `fmla="val Infinity"`. Both that and a non-finite radius are tokens PowerPoint
 		// cannot evaluate, so warn and leave the handle at the preset's own default, which is the
 		// policy `shapeAdjust` below already applies to a guide it will not emit.
@@ -164,7 +164,7 @@ export function genXmlPresetGeom(shapeName: string, options: ObjectOptions, cx: 
 
 		if (options.arcThicknessRatio !== undefined) {
 			// Same reading as `rectRadius` above: a guide formula is a string, so nothing downstream
-			// refuses `val NaN` — this is the only place it can be caught.
+			// refuses `val NaN`; this is the only place it can be caught.
 			if (Number.isFinite(options.arcThicknessRatio))
 				emitGuide('adj3', Math.round(options.arcThicknessRatio * (PERCENT_SCALE / 2)))
 			else
@@ -221,7 +221,7 @@ function isArcPoint(point: GeometryPoint): point is Extract<GeometryPoint, { cur
  * `<a:ahLst>`) and guide formulas (`guides` → `<a:gdLst>`) that make the shape connectable and
  * editable. Shared by the shape and image code paths so that path emission stays in one place.
  * Points and connection-site/handle positions are authored in the object's own inch/EMU space
- * (0..cx, 0..cy) — not slide-relative and not normalized; a bare non-`Coord` string is passed
+ * (0..cx, 0..cy), not slide-relative and not normalized; a bare non-`Coord` string is passed
  * through verbatim as a guide-name reference (matching `ST_AdjCoordinate`'s number-or-name union).
  * @param {ObjectOptions} options - object options carrying `points`/`guides`/`connectionSites`/`adjustHandles`
  * @param {number} cx - object width (EMU), used as the path viewport width
@@ -303,7 +303,7 @@ export function genXmlCustGeom(options: ObjectOptions, cx: number, cy: number, l
 		}
 	})
 
-	// custGeom preamble — the sub-lists OOXML requires before `<a:pathLst>` in this exact order:
+	// custGeom preamble: the sub-lists OOXML requires before `<a:pathLst>` in this exact order:
 	// adjust values (avLst), guide formulas (gdLst), adjust handles (ahLst), connection sites
 	// (cxnLst), and the text rectangle (rect). `avLst` and `rect` stay as pptx-ts drives them
 	// from the path; the other three are populated from caller options when supplied, and MUST
@@ -363,7 +363,7 @@ export function genXmlCustGeom(options: ObjectOptions, cx: number, cy: number, l
 		if (cxnEls.length) cxnLst = el('a:cxnLst', null, cxnEls.map(raw))
 	}
 
-	// `<a:ahLst>`: draggable adjust handles — XY or polar, discriminated by any polar-only key.
+	// `<a:ahLst>`: draggable adjust handles, XY or polar, discriminated by any polar-only key.
 	let ahLst = voidEl('a:ahLst', null, SPACE_BEFORE_SLASH)
 	if (options.adjustHandles?.length) {
 		const ahEls: string[] = options.adjustHandles.map((h) => {
@@ -418,7 +418,7 @@ export function genXmlCustGeom(options: ObjectOptions, cx: number, cy: number, l
 }
 
 /**
- * `<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>` — the unadjusted rectangle every emitter
+ * `<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>`: the unadjusted rectangle every emitter
  * that draws a plain box writes, seven of them by hand.
  *
  * `fmt` carries the caller's `openPrefix`, because indentation before this element is

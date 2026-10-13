@@ -73,7 +73,7 @@ const HLINK_TEXT_COLOR_EXT = el(
  *
  * Two call sites downstream of the emitter act on "this paragraph has a bullet" rather than on
  * "this paragraph says something about its bullet", and both were plain truthiness tests until
- * `'inherit'` — a truthy string that draws nothing — joined the union. Left as truthiness they
+ * `'inherit'`, a truthy string that draws nothing, joined the union. Left as truthiness they
  * would have broken the line grouping (every run starting its own paragraph) and eaten a real
  * leading `•` from text that emits no `a:buChar` to duplicate it.
  * @param {TextPropsOptions['bullet']} bullet - the option value
@@ -88,12 +88,12 @@ function emitsBulletMarkup(bullet: TextPropsOptions['bullet']): boolean {
  *
  * Three inputs, because the option has three states and so does the attribute: an explicit
  * number is clamped and written, `'inherit'` writes nothing, and an absent option falls back to
- * whatever the `bullet` arm decided — which is also `null` for `bullet: 'inherit'`, the one arm
+ * whatever the `bullet` arm decided, which is also `null` for `bullet: 'inherit'`, the one arm
  * that states nothing on its own.
  *
  * BOTH arms go through the clamp. The fallback used to be returned verbatim on the grounds that
  * the emitter computed it, but the emitter computes it from the caller's `bullet.indent` and
- * `indentLevel`, so it is caller input one multiplication later — and it reached `@marL` at
+ * `indentLevel`, so it is caller input one multiplication later, and it reached `@marL` at
  * ~6700x the `ST_TextMargin` ceiling. The fallback arrives in EMU rather than points because the
  * bullet arms do their arithmetic there; the round trip through the clamp's own unit is exact
  * for any value in range, so a paragraph that was already legal emits the same bytes.
@@ -116,7 +116,7 @@ function resolveParagraphMargin(
  * The paragraph's outline level, or `0` when the caller named none or named one `a:p/@lvl`
  * cannot hold.
  *
- * Resolved once because the level is read twice — for the attribute, and as the multiplier on
+ * Resolved once because the level is read twice: for the attribute, and as the multiplier on
  * the bullet arms' default `@marL`. Validating it for one use and multiplying a margin by it in
  * the other is how `indentLevel: 1e6` reached `marL="342900342900"` under a warning that said
  * the value was being ignored.
@@ -132,8 +132,8 @@ function resolveIndentLevel(level: number | undefined): number {
 
 /**
  * The `@marL` a bulleted paragraph defaults to: the bullet's own hang, plus one more of it for
- * every outline level. Two arms of the bullet chain write it — `bullet: {…}` and `bullet: true`
- * — and each had the expression spelled out, which is how one of them would have been fixed
+ * every outline level. Two arms of the bullet chain write it (`bullet: {…}` and `bullet: true`),
+ * and each had the expression spelled out, which is how one of them would have been fixed
  * and the other left behind.
  * @param {number} bulletMarLEmu - the hang one level is worth, in EMU
  * @param {number} indentLevel - the resolved outline level
@@ -164,7 +164,7 @@ export function genXmlParagraphProperties(textObj: SlideObject | TextProps, isDe
 	// records the default it has always written and `paraMarginLeft`/`paraIndent` override it;
 	// `null` means the attribute is not written at all, which is what leaves the margin to the
 	// `a:lstStyle` -> placeholder -> layout -> master chain. They are resolved and appended once,
-	// after the chain, rather than by each arm — the arms decide a default, not the output.
+	// after the chain, rather than by each arm: the arms decide a default, not the output.
 	let defaultMarL: number | null = null
 	let defaultIndent: number | null = null
 	// The no-bullet arm writes `indent` before `marL`; every other arm writes `marL` first.
@@ -175,7 +175,7 @@ export function genXmlParagraphProperties(textObj: SlideObject | TextProps, isDe
 	// NOTE: this open tag is deliberately NOT built with `openTag`/`el`. When `rtlMode` is set the
 	// historical template emits `rtl="1" ` with a TRAILING space while every attribute appended
 	// below contributes a LEADING one, so `rtl` + `algn` produces a DOUBLE space between them.
-	// `openTag` joins attributes with exactly one space, so that layout is not expressible — and
+	// `openTag` joins attributes with exactly one space, so that layout is not expressible, and
 	// the demo deck contains no RTL text (zero `rtl="1"` parts), so the byte gate could not catch
 	// the change. Left as-is; the children below are built with the element builder.
 	let paragraphPropXml = `<${tag}${opts.rtlMode ? ' rtl="1" ' : ''}`
@@ -240,14 +240,14 @@ export function genXmlParagraphProperties(textObj: SlideObject | TextProps, isDe
 			// `<a:buSzPct val="100000"/>` *overrides* whatever bullet size the layout's or
 			// master's list style sets, so every bullet this path wrote silently forced its glyph
 			// back to full size. The same class of bug as the explicit `a:buNone` an omitted
-			// `bullet` emits — and invisible until `Paragraph.bulletDetail` gave the round-trip
+			// `bullet` emits, and invisible until `Paragraph.bulletDetail` gave the round-trip
 			// check something to see it with, which reported the added 100% on every bulleted
 			// fixture.
 			// 25-400% is ST_TextBulletSizePercent's range (and what PowerPoint's bullet-size
 			// dialog accepts), so an out-of-range value goes through the same clamp every other
 			// percentage option uses: a finite one moves to the nearest bound and warns, and a
-			// value that is not a number throws. Dropping the attribute instead — what this did
-			// until the policies were unified — resized the glyph to whatever the list style
+			// value that is not a number throws. Dropping the attribute instead (what this did
+			// until the policies were unified) resized the glyph to whatever the list style
 			// inherits, which is a discarded request reported as a warning.
 			const bulletSizePct =
 				opts.bullet.size === undefined
@@ -255,7 +255,7 @@ export function genXmlParagraphProperties(textObj: SlideObject | TextProps, isDe
 					: percentToFixedPercent(opts.bullet.size, 'bullet/size-out-of-range', 'bullet.size', 25, 400)
 			const strXmlBulletSize = bulletSizePct === undefined ? '' : voidEl('a:buSzPct', { val: bulletSizePct })
 			// NOTE: the builder escapes `typeface`, so the manual `encodeXmlEntities` that used to
-			// wrap it here is gone — keeping both would double-escape (`&` -> `&amp;amp;`).
+			// wrap it here is gone; keeping both would double-escape (`&` -> `&amp;amp;`).
 			const strXmlBulletFont = opts.bullet.fontFace ? voidEl('a:buFont', { typeface: opts.bullet.fontFace }) : ''
 
 			if (isPictureBullet) {
@@ -305,17 +305,17 @@ export function genXmlParagraphProperties(textObj: SlideObject | TextProps, isDe
 			// The paragraph states NOTHING about its bullet: no `a:buChar`/`a:buAutoNum`, no
 			// `a:buNone`, and none of the margin attributes the other arms write. Bullet
 			// properties resolve down the `a:lstStyle` -> placeholder -> layout -> master chain,
-			// so silence is what lets the list style keep reaching this paragraph — `a:buNone`
+			// so silence is what lets the list style keep reaching this paragraph. `a:buNone`
 			// *overrides* it, which is a different fact even where the inherited style has no
 			// bullet, because a later edit to the master then stops arriving.
 			//
 			// Omission means this on a placeholder definition and on text filling one (#174), where
 			// `addTextDefinition` defaults it; anywhere else omission still means `a:buNone`. Same
-			// resolution as `fill: { type: 'inherit' }` (#10) — name the state that had no name.
+			// resolution as `fill: { type: 'inherit' }` (#10): name the state that had no name.
 		} else if (opts.bullet) {
 			defaultMarL = bulletHangMarL(bulletMarL, indentLevel)
 			defaultIndent = -bulletMarL
-			// No `a:buSzPct` here either — `bullet: true` asks for a bullet, not for one pinned
+			// No `a:buSzPct` here either: `bullet: true` asks for a bullet, not for one pinned
 			// to 100% of the body size in defiance of the master's list style. Same reasoning as
 			// the `a:buNone` note just below, and it keeps `bullet: true` byte-identical to
 			// `bullet: { type: 'bullet' }`, which the object branch above now also leaves out.
@@ -334,7 +334,7 @@ export function genXmlParagraphProperties(textObj: SlideObject | TextProps, isDe
 		// That conflated two facts on one element: `bullet: false` could not suppress a bullet
 		// without ALSO flattening an inherited hanging indent to zero, and no state could set a
 		// margin without drawing a bullet. An explicit value wins over the arm's default in every
-		// state, and `'inherit'` takes the attribute out entirely — the third state omission
+		// state, and `'inherit'` takes the attribute out entirely, the third state omission
 		// cannot spell here either, since omission is what writes the default.
 		const marLEmu = resolveParagraphMargin(opts.paraMarginLeft, defaultMarL, clampParaMarginEmu)
 		const indentEmu = resolveParagraphMargin(opts.paraIndent, defaultIndent, clampParaIndentEmu)
@@ -422,7 +422,7 @@ export function genXmlTextRunProperties(opts: ObjectOptions | TextPropsOptions, 
 		// NOTE: clamp+round so sizes like '7.5' or out-of-range values wont cause corrupt presentations
 		sz: mapStated(opts.fontSize, clampFontSizeSz) ?? null,
 		// NOTE: `b`/`i` were written as `opts.bold ? '1' : '0'` inside a truthiness guard, so the
-		// "0" arm was unreachable — the emitted value is always "1".
+		// "0" arm was unreachable: the emitted value is always "1".
 		b: xsdBoolIfTrue(opts?.bold),
 		i: xsdBoolIfTrue(opts?.italic),
 		strike: opts?.strike
@@ -477,8 +477,8 @@ export function genXmlTextRunProperties(opts: ObjectOptions | TextPropsOptions, 
 			// Match how PowerPoint writes a font picked from the UI: the chosen typeface goes in the
 			// Latin (`<a:latin>`) and complex-script (`<a:cs>`) slots. The East Asian slot (`<a:ea>`) is
 			// only written when an EA face is explicitly chosen (`fontFaceEA`); otherwise it inherits the
-			// theme. Forcing a Latin-only font into `<a:ea>` — especially with the bogus charset values
-			// PowerPoint never emits on ea/cs — duplicates/ghosts text in Office 365.
+			// theme. Forcing a Latin-only font into `<a:ea>` (especially with the bogus charset values
+			// PowerPoint never emits on ea/cs) duplicates/ghosts text in Office 365.
 			// NOTE: order must be latin, ea, cs per CT_TextCharacterProperties.
 			// `fontFace`/`fontFaceEA` are caller-supplied and unsanitized upstream, so they are escaped:
 			// an unescaped `"` or `&` in a font name closes the attribute early and emits a
@@ -527,7 +527,7 @@ export function genXmlTextRunProperties(opts: ObjectOptions | TextPropsOptions, 
 			const link: HyperlinkPropsInternal = opts.hyperlink
 			// runProps += '<a:uFill>'+ genXmlColorSelection('0000FF') +'</a:uFill>'; // Breaks PPT2010!
 			// NOTE: `tooltip` is escaped by the builder now (the manual `encodeXmlEntities` is gone), and
-			// it is written even when absent — an empty `tooltip=""` is part of today's bytes.
+			// it is written even when absent: an empty `tooltip=""` is part of today's bytes.
 			const linkAttrs: XmlAttrs = opts.hyperlink.url
 				? {
 						'r:id': `rId${link._rId}`,
@@ -590,7 +590,7 @@ export function genXmlTextRun(textObj: TextProps): string {
 
 	// Return paragraph with text run
 	if (textObj.text === undefined || textObj.text === null) return ''
-	// `<a:t>` takes a TEXT child, so the builder escapes it — same `encodeXmlEntities` this used to call.
+	// `<a:t>` takes a TEXT child, so the builder escapes it with the same `encodeXmlEntities` this used to call.
 	return el('a:r', null, [
 		raw(genXmlTextRunProperties(textObj.options ?? {}, false)),
 		raw(el('a:t', null, String(textObj.text))),
@@ -631,7 +631,7 @@ export function groupRunsIntoLines(arrTextObjects: RunProps[], opts: ObjectOptio
 	const arrLines: RunProps[][] = []
 	let arrTexts: RunProps[] = []
 	arrTextObjects.forEach((textObj, idx) => {
-		// A0: A DISPLAY math equation is its own paragraph — flush any pending runs and
+		// A0: A DISPLAY math equation is its own paragraph. Flush any pending runs and
 		// give it its own line so STEP 6 emits the <a14:m><m:oMathPara> wrapper instead of text runs.
 		// Inline math (dn-inline-math) flows mid-paragraph, so it falls through to the run-buffering
 		// path below and STEP 6 emits a bare <a14:m><m:oMath> run alongside the plain text runs.
@@ -676,7 +676,7 @@ export function groupRunsIntoLines(arrTextObjects: RunProps[], opts: ObjectOptio
 }
 
 /**
- * The options a run inherits from its shape — exactly the keys `genXmlTextRunProperties`
+ * The options a run inherits from its shape: exactly the keys `genXmlTextRunProperties`
  * reads off a run's bag, in the order it reads them.
  *
  * This used to be `Object.entries(opts)` filtered on `!textOptions[key]`, which had two
@@ -794,7 +794,7 @@ export function renderTextParagraphsXml(
 
 		// A: Accumulate the paragraph's children; the `<a:p>` wrapper closes over them at the end.
 		let paraXml = ''
-		// NOTE: the `<a:pPr ${rtlMode ? ' rtl="1" ' : ''}` seed that used to sit here was dead —
+		// NOTE: the `<a:pPr ${rtlMode ? ' rtl="1" ' : ''}` seed that used to sit here was dead.
 		// `genXmlParagraphProperties` builds its own open tag (with the same `rtlMode` check) and
 		// overwrote this on the first run, and nothing read it in between.
 		let paragraphPropEmitted = false
@@ -812,8 +812,8 @@ export function renderTextParagraphsXml(
 			// B: Inherit pPr-type options from parent shape's `options`.
 			// `setOrClear`, not plain assignment: where neither the run nor the shape states one,
 			// the key stays off the run's bag rather than being written as an `undefined`. Run
-			// option bags are spread — `{ ...itext.options }` in `text-body.ts`, and a placeholder's
-			// options onto a slide's in `gen/define/text.ts` — and there the two are not the same.
+			// option bags are spread (`{ ...itext.options }` in `text-body.ts`, and a placeholder's
+			// options onto a slide's in `gen/define/text.ts`), and there the two are not the same.
 			const paraOptions = textObj.options as TextPropsOptions & Record<string, unknown>
 			const paraShapeOptions = opts as ObjectOptions & Record<string, unknown>
 			for (const key of PARAGRAPH_FALSY_IS_UNSTATED) {
@@ -832,10 +832,10 @@ export function renderTextParagraphsXml(
 			// The paragraph's properties are the FIRST run's, decided once: this used to retry on
 			// each subsequent run until one produced non-empty XML, which was unreachable while
 			// every `bullet` state wrote something (an omitted one still emitted `marL="0"
-			// indent="0"` + `a:buNone`) — and became wrong the moment `bullet: 'inherit'` made an
+			// indent="0"` + `a:buNone`), and became wrong the moment `bullet: 'inherit'` made an
 			// empty pPr possible. A retry would take its properties from a *continuation* run,
 			// which by convention states no bullet, so the paragraph got back the very `a:buNone`
-			// the first run asked to leave out — and got it appended AFTER that run's `<a:r>`,
+			// the first run asked to leave out, and got it appended AFTER that run's `<a:r>`,
 			// where a `pPr` is not allowed.
 			if (!paragraphPropEmitted) {
 				paragraphPropEmitted = true
@@ -869,10 +869,10 @@ export function renderTextParagraphsXml(
 			// D: Add formatted textrun
 			// When this paragraph emits bullet markup (`bullet:true` or any object
 			// form), strip a single leading bullet glyph (+ optional whitespace) from
-			// the first run's text. Otherwise PowerPoint renders two bullets — one
+			// the first run's text. Otherwise PowerPoint renders two bullets: one
 			// from the paragraph-level `<a:buChar/>` and one from the literal glyph
 			// in `<a:t>`. Mid-text glyphs are unaffected, and so are `bullet:false`,
-			// `bullet:'inherit'` and no-bullet — none of them emit a glyph to double.
+			// `bullet:'inherit'` and no-bullet; none of them emit a glyph to double.
 			let _textRunObj = textObj
 			if (idx === 0 && emitsBulletMarkup(line[0]?.options.bullet) && typeof textObj.text === 'string') {
 				const _stripped = textObj.text.replace(/^[\u2022\u25E6\u25AA\u25AB\u25CF\u25CB\u2023\u2043\u2219]\s*/, '')

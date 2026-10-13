@@ -91,15 +91,15 @@ export function dLblShowFlags(flags: {
  * The data-label run properties, in the attribute order the scatter and custom-label paths
  * emit: `sz, b, i, u, strike`.
  *
- * There is a second ordering in this file — `b, i, strike, sz, u`, used by
- * {@link chartDataLabels} and by the bubble plot — and the two are **deliberately not
+ * There is a second ordering in this file, `b, i, strike, sz, u`, used by
+ * {@link chartDataLabels} and by the bubble plot, and the two are **deliberately not
  * merged**. Attribute order carries no meaning in XML, so either is correct and a reader is
  * right to want one; but merging them moves bytes in a refactor whose whole claim is that it
  * does not, and the byte-identity gate is what makes that claim checkable. Unifying the
  * spelling is a decision to take on its own, with its own re-baseline.
  *
  * `over` layers a series' own `seriesOptions` entry on top with `??`, leaving the chart-level
- * reading below it exactly as it was — a series that states nothing produces the same bytes.
+ * reading below it exactly as it was: a series that states nothing produces the same bytes.
  * @param opts - the chart's normalized options
  * @param over - this series' `seriesOptions` entry, whose stated fields win over the chart's
  */
@@ -182,7 +182,7 @@ export function labelRun(opts: ChartOptsInternal, text: string, over?: ChartSeri
  * The `<c:txPr>` a data-label block wraps its run properties in: an empty `<a:bodyPr>`, an empty
  * `<a:lstStyle>`, then one `<a:p>` carrying the `<a:pPr>` the caller built.
  *
- * Five sites spelled this out byte-identically — the shared `<c:dLbls>` builder, the bubble,
+ * Five sites spelled this out byte-identically: the shared `<c:dLbls>` builder, the bubble,
  * category-axis and pie plots, and the pie's plot-level block. The axis one in `chart-axes.ts`
  * is deliberately NOT this: it carries a rotation on the `bodyPr` and an `<a:endParaRPr>` after
  * the `<a:pPr>`.
@@ -241,7 +241,7 @@ export function c15LeaderLinesExt(val: XsdBool | 1): string {
  * This and {@link labelFontAttrs} read the same five options and read them the same way:
  * `over?.X ?? opts.X ?? DEFAULT`. Attribute order is the only difference left between them.
  *
- * They disagreed on the operator once — `??` here against `||` there — and which one a chart
+ * They disagreed on the operator once (`??` here against `||` there), and which one a chart
  * reached was decided by its type and its label format, so `dataLabelFontSize: 0` had three
  * answers: a bar warned and clamped, a pie dropped the value with no diagnostic at all, and an
  * `XY` scatter, which reaches both builders, emitted `sz="100"` on one label block and
@@ -330,7 +330,7 @@ export function validTimeUnit(value: string | undefined, optionName: string): Ti
  * `undefined` when the caller's value is not one.
  *
  * `catAxisLabelFrequency` and `serAxisLabelFrequency` were typed as free-form strings and
- * emitted verbatim, so `'every other'` reached `<c:tickLblSkip val="every other"/>` — and the
+ * emitted verbatim, so `'every other'` reached `<c:tickLblSkip val="every other"/>`, and the
  * type also rejected the natural `2`. Same shape as {@link validTimeUnit} beside it: warn and
  * emit nothing rather than write a value outside the attribute's own type.
  * @param value - the caller's value, a number or a numeric string
@@ -354,7 +354,7 @@ export function positiveIntAttr(value: number | string | undefined, optionName: 
  * for a rule, and `defaultRule` when the caller stated neither.
  *
  * The two axis builders each spelled this decision out, and both opened it with
- * `typeof value === 'number'` — the one numeric guard in the file that `NaN` passes, since every
+ * `typeof value === 'number'`, the one numeric guard in the file that `NaN` passes, since every
  * other numeric axis option is guarded by truthiness. `{ valAxisCrossesAt: NaN }` therefore
  * emitted `<c:crossesAt val="NaN"/>`, and `ST_Double` has no such value.
  * @param value - the caller's `*AxisCrossesAt`: a position, a `ST_Crosses` rule, or nothing
@@ -428,12 +428,12 @@ function seriesDash(opts: ChartOptsInternal, serIndex: number): string {
 /**
  * Fill fragment for a `chartColors`-derived series/line/marker colour.
  *
- * A `'transparent'` entry means "no fill" — an invisible series, connecting line, or marker
- * stroke — and maps to `<a:noFill/>`. Any real colour goes through the normal solid-fill path.
+ * A `'transparent'` entry means "no fill" (an invisible series, connecting line, or marker
+ * stroke) and maps to `<a:noFill/>`. Any real colour goes through the normal solid-fill path.
  * The series and marker *fill* paths already special-case `'transparent'`; without this the
  * *stroke* paths (`<a:ln>` on the series line and marker border) would instead pass the literal
  * `'transparent'` through colour validation, warn "not a valid scheme color or hex RGB", and
- * render as black — leaving a stray black line/border where a transparent series was requested.
+ * render as black, leaving a stray black line/border where a transparent series was requested.
  */
 export function chartColorLineFill(color: string): string {
 	return color === 'transparent' ? voidEl('a:noFill') : genXmlColorSelection(color)
@@ -445,7 +445,7 @@ export function chartColorLineFill(color: string): string {
  * otherwise.
  *
  * Read against {@link chartColorLineFill}, which is the same decision for a *stroke* and stops
- * one step earlier — a stroke has no opacity option to fold in. Three plot builders (bubble,
+ * one step earlier: a stroke has no opacity option to fold in. Three plot builders (bubble,
  * scatter, and the whole category-axis family) each carried this expression verbatim, down to
  * the diagnostic code and the option name in its message, which is what made the `transparent`
  * arm easy to add to one and forget in another.
@@ -464,7 +464,7 @@ function seriesFill(opts: ChartOptsInternal, serColor: string): string {
 }
 
 /**
- * One plotted series' stroke: a width, this series' dash, the palette colour and a round join —
+ * One plotted series' stroke (a width, this series' dash, the palette colour and a round join),
  * or `<a:noFill/>` when the caller asked for no line at all.
  *
  * Three plot builders had this, differing only in whether a per-series `lineSize` could override
@@ -541,7 +541,7 @@ export function serMarker(opts: ChartOptsInternal, markerColor: string, seriesCo
  * its element: `<a:latin>` covers Latin/ASCII, `<a:ea>` covers East Asian, and
  * `<a:cs>` covers complex scripts. Emitting `<a:latin>` alone leaves East Asian
  * (e.g. Chinese) and complex-script glyphs falling back to the theme font, so a
- * user-specified font never takes effect for that text — most visibly on
+ * user-specified font never takes effect for that text, most visibly on
  * PowerPoint for Mac. Stamping the same typeface onto all three classes is what
  * choosing a font in PowerPoint's UI does.
  * @param {string} typeface - font face name
@@ -550,7 +550,7 @@ export function serMarker(opts: ChartOptsInternal, markerColor: string, seriesCo
 
 export function createChartTextFonts(typeface: string): string {
 	// Every caller passes a caller-supplied font option (dataLabelFontFace, catAxisLabelFontFace,
-	// legendFontFace, ...), so escaping happens here — one site covers all of them. voidEl()'s
+	// legendFontFace, ...), so escaping happens here, and one site covers all of them. voidEl()'s
 	// attrs escape by construction: an unescaped `"` or `&` would otherwise close the attribute
 	// early and emit a non-parseable chart part.
 	return voidEl('a:latin', { typeface }) + voidEl('a:ea', { typeface }) + voidEl('a:cs', { typeface })
@@ -580,11 +580,11 @@ function chartCoordInches(value: Coord | undefined): number | undefined {
 }
 
 export function genXmlTitle(opts: MaybeUndefined<ChartPropsTitle>, chartX?: Coord, chartY?: Coord): string {
-	// `sizeAttr` is empty when the caller set no font size — PowerPoint then picks the default —
+	// `sizeAttr` is empty when the caller set no font size (PowerPoint then picks the default),
 	// and interpolating it empty leaves TWO spaces between the tag name and `b=`. Those are
 	// emitted bytes, and `el()` writes exactly one space before an attribute by design, so the
-	// two run-property tags below stay hand-written. Dropping the padding would be the real fix —
-	// no XML consumer can see it — but that is an output change, and a whitespace-only diff is a
+	// two run-property tags below stay hand-written. Dropping the padding would be the real fix
+	// (no XML consumer can see it), but that is an output change, and a whitespace-only diff is a
 	// stop rather than a cleanup. Flattening the chart emitters did NOT take it: that space is
 	// inside a tag rather than between elements, which is a different claim needing different
 	// evidence, and `prove-whitespace` freezes intra-tag whitespace so it stays visible
@@ -606,7 +606,7 @@ export function genXmlTitle(opts: MaybeUndefined<ChartPropsTitle>, chartX?: Coor
 	// Schema order is xMode, yMode, x, y.
 	/**
 	 * Fold a slide-relative offset into the fraction-of-chart value `c:x`/`c:y` want, or
-	 * `undefined` when it does not read as a finite number — `ST_Double` has no `NaN`, and
+	 * `undefined` when it does not read as a finite number: `ST_Double` has no `NaN`, and
 	 * omitting the axis is what CT_ManualLayout already means by "leave this one automatic".
 	 */
 	const edgeFraction = (offset: number): number | undefined => {
@@ -620,7 +620,7 @@ export function genXmlTitle(opts: MaybeUndefined<ChartPropsTitle>, chartX?: Coor
 	 * The chart's own offset along one axis, in inches, to fold into the caller's `titlePos`.
 	 *
 	 * Resolved here rather than by the caller so the warning fires only where the value is
-	 * actually used — a chart with `showTitle` and no `titlePos` folds nothing and says nothing.
+	 * actually used. A chart with `showTitle` and no `titlePos` folds nothing and says nothing.
 	 */
 	const chartOffset = (value: Coord | undefined, axis: 'x' | 'y'): number => {
 		const inches = chartCoordInches(value)
@@ -805,7 +805,7 @@ export function chartDataLabels(opts: ChartOptsInternal, leaderLines: boolean): 
 }
 
 /**
- * An `<a:solidFill>` of the theme text colour dimmed towards the background — the grey the chart
+ * An `<a:solidFill>` of the theme text colour dimmed towards the background: the grey the chart
  * furniture (stock hi-low lines and up/down bars, the data-table grid) is drawn in.
  * `lumMod`/`lumOff` are the two halves of one dimming: how much of the luminance survives, and
  * how much white is mixed back in.
@@ -842,7 +842,7 @@ export function dimmedTextLine(lumMod: number, lumOff: number): string {
  * gaps and are skipped silently (a sparse, idx-keyed cache is valid).
  *
  * **PowerPoint is the only oracle for this.** `<c:v>` is `s:ST_Xstring` in the schema, not
- * `xsd:double` — nothing above is a schema violation, and the OpenXmlValidator reports every one
+ * `xsd:double`. Nothing above is a schema violation, and the OpenXmlValidator reports every one
  * of those three packages clean. An *empty* `<c:v>` is the case that shows why the distinction is
  * worth stating rather than reasoning about: it looks equally invalid and it is not, opening
  * cleanly and reading back as an empty point. See `pieValues` in
@@ -1033,7 +1033,7 @@ export function makeCustomDLblXml(idx: number, text: string, opts: ChartOptsInte
 }
 
 /**
- * The `<a:ln>` a chart-level `dataBorder` paints around every data point — the bubble, the
+ * The `<a:ln>` a chart-level `dataBorder` paints around every data point: the bubble, the
  * pie slice, the bar.
  *
  * A near-sibling of {@link createChartBorderLine} rather than the same thing, and the three
@@ -1062,7 +1062,7 @@ export function createDataBorderLine(dataBorder: BorderProps, cap: string): stri
  * caller asked for none. See {@link createDataBorderLine} for why the two are separate.
  *
  * `type: 'dash'` here means the `dash` preset, not the `sysDash` a table border's `type`
- * resolves to — a chart border has no `dashType` of its own to name a preset with, so the
+ * resolves to. A chart border has no `dashType` of its own to name a preset with, so the
  * three-way switch is the whole vocabulary and it picks the plain one.
  * @param border - the chart's `border` (`type`, `color`, `width`, `transparency`)
  */
@@ -1301,8 +1301,8 @@ export function xySeriesRefs(
  * A `<c:cat>` category reference: the `<c:f>` formula plus the `<c:numCache>`/`<c:strCache>` that
  * mirrors the label cells it points at.
  *
- * `kind` picks the cache: `'num'` for numeric categories — dates, which need a `<c:formatCode>` so
- * PowerPoint renders them as dates rather than serial numbers — and `'str'` for text ones. Stock
+ * `kind` picks the cache: `'num'` for numeric categories (dates, which need a `<c:formatCode>` so
+ * PowerPoint renders them as dates rather than serial numbers) and `'str'` for text ones. Stock
  * and cat-axis each carried both arms of that choice, and surface carried the string one, five
  * copies of the same `<c:f>` + `<c:ptCount>` + `<c:pt idx>` loop.
  *
@@ -1333,13 +1333,13 @@ export function catRefBlock(kind: 'num' | 'str', ref: string, labels: string[], 
  * it points at.
  *
  * Scatter and bubble each carried their own copy of this twice over, four near-identical
- * twelve-line blocks, and bubble's per-point sizes were a fifth — the same block under a third
+ * twelve-line blocks, and bubble's per-point sizes were a fifth: the same block under a third
  * wrapping tag with a constant format code. `values` is the exact point list to cache, so the
  * caller decides what a gap is: the Y series is emitted against the X series' length (a caller
- * may supply fewer Y values than X — a timeline with only the first few months filled in), and
+ * may supply fewer Y values than X, e.g. a timeline with only the first few months filled in), and
  * the shorter array's tail arrives here as `undefined`, which {@link numCachePt} skips.
  *
- * `ptCount` is the length of the cached *range* — the number of cells `ref` spans — which is not
+ * `ptCount` is the length of the cached *range* (the number of cells `ref` spans), which is not
  * always `values.length`. A category chart caches one column against the chart's category count
  * and may hold fewer values than that, so it states the count explicitly; scatter and bubble pad
  * their arrays to the range instead and let the default stand. Both spellings mean the same

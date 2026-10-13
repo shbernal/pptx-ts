@@ -22,7 +22,7 @@ import {
  * The `p:cSld` of a slide/layout/master/notes part root.
  *
  * Takes a nullable root and returns a nullable element so a caller can chain from
- * `part?.dom.documentElement` without a guard of its own — which is what a dozen callers were
+ * `part?.dom.documentElement` without a guard of its own, which is what a dozen callers were
  * writing by hand, each in a slightly different spelling (`root && …`, `root ? … : null`).
  */
 export function cSldOf(root: Element | null | undefined): Element | null {
@@ -38,8 +38,8 @@ export function spTreeOf(root: Element | null | undefined): Element | null {
 /**
  * The `p:nvPr` of a shape, whichever `*nvPr` wrapper its kind uses.
  *
- * The wrapper's name varies by shape kind — `p:nvSpPr` on a `p:sp`, `p:nvPicPr` on a `p:pic`,
- * `p:nvGraphicFramePr`, `p:nvCxnSpPr`, `p:nvGrpSpPr` — but it is always the shape's first child
+ * The wrapper's name varies by shape kind (`p:nvSpPr` on a `p:sp`, `p:nvPicPr` on a `p:pic`,
+ * `p:nvGraphicFramePr`, `p:nvCxnSpPr`, `p:nvGrpSpPr`), but it is always the shape's first child
  * element, and `p:nvPr` is always inside it. Taking the first child element rather than naming
  * the wrapper is what lets one helper serve every kind; the callers that named `p:nvSpPr`
  * silently returned null on a picture.

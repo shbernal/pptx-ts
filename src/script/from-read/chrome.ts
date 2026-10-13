@@ -11,18 +11,18 @@
  *
  * **Two ceilings meet here, and neither moves by working harder on this file:**
  *
- * 1. `a:fmtScheme` is unreachable from *both* directions — no read accessor, and the write
+ * 1. `a:fmtScheme` is unreachable from *both* directions: no read accessor, and the write
  *    path emits a hardcoded Office one. A shape whose look comes from `p:style` is repainted.
  * 2. `p:txStyles` has a write counterpart (`SlideMasterProps.textStyles`) and no reader, so
  *    the per-level placeholder defaults are invisible.
  *
  * **A layout's decoration used to be a third, and is not any more.** `SlideLayout.shapes`
  * decodes it, and {@link masterObject} re-tags each shape as an entry in the layout's
- * `defineSlideMaster({ objects })` array — through the *same* mapper the slides use, so a band
+ * `defineSlideMaster({ objects })` array, through the *same* mapper the slides use, so a band
  * or a wordmark on a layout is transcribed exactly as one on a slide would be. What is left of
  * the ceiling is narrow and named per shape (`layout.*`): a table has no variant in that
  * union, and a group is flattened into its children because the union has no `group` either.
- * A **master's** own decoration is still lost outright, and structurally so — `defineSlideMaster`
+ * A **master's** own decoration is still lost outright, and structurally so: `defineSlideMaster`
  * creates a *layout* under the one shared master, so a master's shape tree has no counterpart
  * to be written to.
  *
@@ -31,7 +31,7 @@
  * placeholder the slide did not populate, as an empty text shape
  * (`src/gen/define/placeholder.ts`). Since this converter transcribes every source shape as
  * concrete absolute-positioned content and never binds one to a placeholder, reproducing the
- * layout's placeholders would add a ghost shape to every slide for each of them — shapes the
+ * layout's placeholders would add a ghost shape to every slide for each of them, shapes the
  * source deck does not have. Dropping them costs an editing affordance; emitting them would
  * cost the output's shape tree. It is also what makes the decoration walk below a *filter*
  * rather than a straight transcription of `SlideLayout.shapes`.
@@ -143,7 +143,7 @@ function recordMasterLosses(masters: SlideMaster[], theme: Theme | null, notes: 
 
 /**
  * One `defineSlideMaster` descriptor per source layout, in the same gallery order
- * `Presentation.layouts()` reports — which is what lets a slide bind by index.
+ * `Presentation.layouts()` reports, which is what lets a slide bind by index.
  *
  * Titles are made unique because they are the lookup key `addSlide({ masterTitle })` matches
  * on, and `p:cSld@name` is not unique: a multi-master deck routinely carries several layouts
@@ -167,7 +167,7 @@ function layoutsToIr(masters: SlideMaster[], ctx: MapContext): MasterIr[] {
 			if (title !== base) collided.push(`${JSON.stringify(base)} → ${JSON.stringify(title)}`)
 			used.add(title)
 
-			// The layout's own background if it has one, else the master's — which is what a slide
+			// The layout's own background if it has one, else the master's, which is what a slide
 			// bound to that layout actually shows, and the only tier the write API can set it at.
 			// The cast is the one `print/common.ts` makes for the same value: a `BackgroundIr` is
 			// exactly the shape the write option takes, and the layout props bag is untyped.
@@ -329,7 +329,7 @@ function fills(binding: IrValue, definition: DefinitionKey): boolean {
 }
 
 /**
- * A layout's own shapes as the `objects` of its `defineSlideMaster` call — the bands, rules,
+ * A layout's own shapes as the `objects` of its `defineSlideMaster` call: the bands, rules,
  * wordmarks and footer graphics that make a deck recognisable as somebody's template.
  *
  * **Placeholders are filtered out, not mapped.** They are the other half of a layout's tree and
@@ -337,13 +337,13 @@ function fills(binding: IrValue, definition: DefinitionKey): boolean {
  * seeds every slide with each layout placeholder it did not populate, so re-declaring one here
  * would put an empty ghost shape on every slide bound to the layout (see the module header).
  * The test is a DOM predicate rather than `shape.placeholder`, because only `AutoShape` reports
- * one — see {@link isPlaceholderShape}.
+ * one (see {@link isPlaceholderShape}).
  *
  * **A group is flattened into its children rather than dropped.** `SlideMasterObject` has no
  * `group` variant, and unlike the slide-side `addGroup` mapping this loses nothing visual:
  * `absoluteFrame` already composes an enclosing group's offset, rotation, flips *and* its
  * child-space scaling, so each child lands exactly where the group put it. What goes is the
- * grouping itself — one selectable object in PowerPoint becomes several.
+ * grouping itself: one selectable object in PowerPoint becomes several.
  *
  * Notes are recorded through a {@link layoutShapeScope}, so the slide vocabulary the shared
  * mapper speaks lands under `layout.` and stays attributable to the layout tier. Constructs
@@ -388,7 +388,7 @@ function collectObjects(shapes: AnyShape[], out: IrValue[], ctx: MapContext): vo
  * Not a style choice: XML normalises a literal tab, carriage return or line feed inside an
  * attribute value to a space (XML 1.0 §3.3.3), and the write path emits a layout title as a
  * literal rather than as a `&#10;` character reference. So a PowerPoint layout named across
- * two lines — "Abschnitts-⏎überschrift" is a real one, in the German built-in set — comes back
+ * two lines ("Abschnitts-⏎überschrift" is a real one, in the German built-in set) comes back
  * with a space either way. Doing it here rather than leaving it to the serializer means the
  * emitted script states the title the output will actually have, and the round trip compares
  * two decks that agree instead of reporting a rename it cannot act on.

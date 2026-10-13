@@ -4,7 +4,7 @@
  * Tables are the one place the exact-EMU rule stops. `colW` and `rowH` are number-typed
  * (inches) rather than `Coord`-typed, so they cannot take a raw-EMU string the way every
  * position and size can. They print at six decimal places, which is the measured minimum
- * at which `Math.round(inches × 914400)` returns the original EMU — the drift is bounded
+ * at which `Math.round(inches × 914400)` returns the original EMU. The drift is bounded
  * at 0.4572 EMU, roughly half a millionth of an inch, and rounding shorter to make the
  * numbers look tidy would turn a cosmetic problem into a real geometry loss.
  *
@@ -64,13 +64,13 @@ export function tableCall(frame: GraphicFrame, table: Table, ctx: MapContext): C
 		rowHeights.push(row.heightEmu ?? 0)
 	}
 
-	// A row of height 0 is PowerPoint's "auto — as tall as its content needs", not a
+	// A row of height 0 is PowerPoint's "auto: as tall as its content needs", not a
 	// zero-height row, and neither the mixed nor the all-auto case survives the write path.
 	// Nothing is visibly wrong either way; what is lost is the *implicitness*, which matters
 	// the moment someone edits a cell and expects the row to grow.
 	//
-	// The all-auto case is the more common of the two — a table authored without explicit row
-	// heights has `a:tr/@h="0"` on every row — and it went undeclared for longer precisely
+	// The all-auto case is the more common of the two (a table authored without explicit row
+	// heights has `a:tr/@h="0"` on every row), and it went undeclared for longer precisely
 	// because it looks like the harmless one. It is the case where `rowH` is omitted entirely
 	// below, and `addTable` then divides the frame height evenly rather than leaving the rows
 	// auto, so three auto rows come back pinned to a third of the frame each.
@@ -148,7 +148,7 @@ function tableFill(table: Table, ctx: MapContext): IrValue | undefined {
  * One cell as a `TableCell`.
  *
  * Cell text reuses the shape text mapper, so a per-run format inside a cell behaves
- * identically to one on a shape — the read model already shares `TextFrame` between the
+ * identically to one on a shape: the read model already shares `TextFrame` between the
  * two, and diverging here would be a difference with no cause.
  * @param styled - the table names a `tableStyle`, so the write path leaves an uncoloured run
  *   uncoloured and the style's `a:tcTxStyle` colours it (#243)
@@ -225,7 +225,7 @@ function cellRunDefaults(run: Run | undefined, styled: boolean, ctx: MapContext)
  *
  * Kept out of {@link cellBorders}' tuple for the same reason the write option is: they are
  * not edges. Every dash and colour a diagonal can carry is one an edge can, so they share
- * {@link borderIr} — including its out-of-enum dash note.
+ * {@link borderIr}, including its out-of-enum dash note.
  */
 function cellDiagonals(cell: TableCell, notes: NoteScope): IrValue | undefined {
 	const borders = cell.borders
@@ -277,7 +277,7 @@ const WRITABLE_TEXT_DIRECTIONS: Record<NonNullable<TextBaseProps['textDirection'
  *
  * `ST_TextVerticalType` has seven values and the write option covers four. The other three
  * (`eaVert`, `mongolianVert` and `wordArtVertRtl`) are East-Asian and right-to-left layout
- * modes with no `TextBaseProps` spelling, so they are noted rather than written — passing
+ * modes with no `TextBaseProps` spelling, so they are noted rather than written. Passing
  * one straight through would put a value the option does not admit into the attribute.
  */
 function cellTextDirection(cell: TableCell, notes: NoteScope): IrValue | undefined {
@@ -300,7 +300,7 @@ function cellTextDirection(cell: TableCell, notes: NoteScope): IrValue | undefin
  * the two differ for a styled table: `resolvedFill` answers the first, folding the cell's
  * own `a:solidFill` together with the colour it merely inherits from the style's
  * header/banding rules. Writing an inherited colour back would turn every banded cell into
- * an explicitly-filled one — the copy looks right until someone changes its table style, and
+ * an explicitly-filled one: the copy looks right until someone changes its table style, and
  * then nothing moves.
  *
  * {@link TableCell.hasOwnFill} separates them: an `a:tcPr` either carries an
@@ -317,7 +317,7 @@ function cellFill(cell: TableCell, hasStyle: boolean, ctx: MapContext): IrValue 
  * The four edge borders as the write API's `[top, right, bottom, left]` tuple.
  *
  * A suppressed edge (`a:noFill`) becomes `type: 'none'`, which is distinct from an absent
- * one — the first means "deliberately no rule here", the second means "inherit". The two
+ * one: the first means "deliberately no rule here", the second means "inherit". The two
  * diagonals the read model also decodes are carried separately, by {@link cellDiagonals}.
  */
 function cellBorders(cell: TableCell, notes: NoteScope): IrValue | undefined {

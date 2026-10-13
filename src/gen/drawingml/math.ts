@@ -2,7 +2,7 @@
  * pptx-ts: DrawingML native equations (OMML)
  *
  * Wrap raw OMML markup into the `<a14:m>` marker PowerPoint uses for editable
- * equations — as a standalone display paragraph (`genXmlMathParagraph`) or as an
+ * equations, either as a standalone display paragraph (`genXmlMathParagraph`) or as an
  * inline run that flows between the surrounding `<a:r>` runs (`genXmlInlineMath`).
  */
 
@@ -42,7 +42,7 @@ export function genXmlMathParagraph(omml: string): string {
  *
  * Unlike the display form ({@link genXmlMathParagraph}), an inline equation is *not* its own
  * paragraph: PowerPoint authors an `<a14:m>` marker wrapping a bare `<m:oMath>` (no `<m:oMathPara>`,
- * no `<m:oMathParaPr>`/`<m:jc>`) that flows between the surrounding `<a:r>` runs in one `<a:p>` —
+ * no `<m:oMathParaPr>`/`<m:jc>`) that flows between the surrounding `<a:r>` runs in one `<a:p>`,
  * pinned by the `math-omml-inline.pptx` oracle. The `mc:AlternateContent` envelope stays at the
  * shape level (see `objectHasMath`), so nothing wraps the run itself. We declare the `a14` and `m`
  * namespaces on the `<a14:m>` element so the supplied OMML needs none of its own, and accept the
@@ -54,7 +54,7 @@ export function genXmlMathParagraph(omml: string): string {
  */
 export function genXmlInlineMath(omml: string): string {
 	const trimmed = (omml || '').trim()
-	// Extract a bare <m:oMath>…</m:oMath> — this both strips a display <m:oMathPara> wrapper and
+	// Extract a bare <m:oMath>…</m:oMath>. This both strips a display <m:oMathPara> wrapper and
 	// leaves an already-bare <m:oMath> untouched; inner-only OMML is wrapped in <m:oMath>.
 	const oMathMatch = trimmed.match(/<m:oMath[\s>][\s\S]*<\/m:oMath>/)
 	return a14Math(oMathMatch ? oMathMatch[0] : el('m:oMath', null, raw(trimmed)))

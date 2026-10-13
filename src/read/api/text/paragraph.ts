@@ -1,7 +1,7 @@
 /**
  * The `Paragraph` read/write proxy (`a:p`).
  *
- * A paragraph owns its `a:pPr` — alignment, indents, spacing, the bullet — and hands each
+ * A paragraph owns its `a:pPr` (alignment, indents, spacing, the bullet) and hands each
  * `a:r` to a {@link Run}. It is handed its frame's {@link TextContext}, and builds the one
  * {@link InheritedRunProps} its runs share.
  */
@@ -263,7 +263,7 @@ export class Paragraph {
 	}
 
 	/**
-	 * This paragraph's bullet — its kind, and for a drawn bullet the glyph, the
+	 * This paragraph's bullet: its kind, and for a drawn bullet the glyph, the
 	 * numbering start, and the bullet's own font/size/colour. `null` when the
 	 * paragraph names no bullet at all and inherits one from the list style.
 	 *
@@ -271,7 +271,7 @@ export class Paragraph {
 	 * previous `bullet` accessor reported `'none'` / `'char:•'` /
 	 * `'autoNum:arabicPeriod'`, and that shape is ambiguous when the glyph is
 	 * itself a colon; worse, it reads as a bare glyph, which is exactly how the
-	 * script converter first consumed it — `'none'.codePointAt(0)` put a literal
+	 * script converter first consumed it: `'none'.codePointAt(0)` put a literal
 	 * `n` bullet on every converted deck, silently. See {@link BulletDetail}.
 	 */
 	get bulletDetail(): BulletDetail | null {
@@ -362,7 +362,7 @@ export class Paragraph {
 	/**
 	 * Replace **this paragraph's** content with a single run, preserving the character
 	 * formatting (`a:rPr`) of its first existing run and leaving its `a:pPr` (level,
-	 * alignment, bullet) alone. Sibling paragraphs are untouched — the difference from
+	 * alignment, bullet) alone. Sibling paragraphs are untouched. That is the difference from
 	 * {@link TextFrame.text}, which collapses the whole body to one paragraph.
 	 */
 	set text(value: string) {

@@ -47,7 +47,7 @@ export function computeRescale(source: SlideSize, target: SlideSize, mode: Resca
 
 /**
  * Rescale every top-level transform on a `p:spTree`: shapes/pictures/connectors
- * (`p:spPr/a:xfrm`), groups (`p:grpSpPr/a:xfrm` — only the group's own off/ext, so
+ * (`p:spPr/a:xfrm`), groups (`p:grpSpPr/a:xfrm`, only the group's own off/ext, so
  * its children remap via the unchanged `chOff`/`chExt` rather than being recursed
  * into), and graphic frames (`p:graphicFrame/p:xfrm`, plus any inner table grid).
  * Placeholders that inherit geometry carry no `a:xfrm` and are left to inherit from
@@ -100,8 +100,8 @@ function rescaleXfrm(xfrm: Element | null, t: RescaleTransform): void {
 }
 
 /**
- * Scale a graphic-frame table's intrinsic dimensions — column widths by `sx`, row
- * heights by `sy` — so the table resizes with the slide (PowerPoint derives table
+ * Scale a graphic-frame table's intrinsic dimensions (column widths by `sx`, row
+ * heights by `sy`) so the table resizes with the slide (PowerPoint derives table
  * geometry from the grid, not the frame `a:ext`). No-op for non-table frames.
  */
 function rescaleTableGrid(graphicFrame: Element, t: RescaleTransform): void {

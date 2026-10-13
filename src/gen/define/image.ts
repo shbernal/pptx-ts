@@ -80,7 +80,7 @@ export function registerImageFillMedia(target: PresSlideInternal, fill: ShapeFil
  * Normalize an `addImage()` call into a slide image object and register its media relationships.
  *
  * Resolves the image source (path or base64 `data:`), allocates the drawing relationship id(s)
- * — SVG needs a second rId for its PNG rasterization fallback — appends the bytes to
+ * (SVG needs a second rId for its PNG rasterization fallback), appends the bytes to
  * `target._relsMedia` (deduping identical sources), and inherits any omitted x/y/w/h from a
  * matching layout picture placeholder. The resulting `SlideObject` is pushed onto the slide;
  * `gen/slide/objects/image.ts` later emits the `<p:pic>`.
@@ -111,7 +111,7 @@ export function addImageDefinition(target: PresSlideInternal, opt: ImageProps): 
 	const strImageData = opt.data || (opt.svg && !opt.path ? svgMarkupToDataUri(opt.svg) : '')
 	const strImagePath = opt.path || ''
 
-	// REALITY-CHECK: an unusable source has nothing to degrade to — there is no image to place —
+	// REALITY-CHECK: an unusable source has nothing to degrade to (there is no image to place),
 	// so these reject rather than warn, as `addMedia()` does. Every check runs before anything is
 	// registered, the hyperlink's included: a refused link used to throw after the image's media
 	// part and relationship were already on the slide, with no picture ever added to use them.
@@ -161,8 +161,8 @@ export function addImageDefinition(target: PresSlideInternal, opt: ImageProps): 
 	// PowerPoint inserts images at 96 DPI, so natural pixels / 96 == inches.
 	//
 	// A vector source is measured for its RATIO only. An SVG's user units are dependable
-	// relative to each other and merely conventional in absolute terms — a 24-unit icon is
-	// authored to be drawn at whatever size it is placed, not as a quarter-inch object — so an
+	// relative to each other and merely conventional in absolute terms (a 24-unit icon is
+	// authored to be drawn at whatever size it is placed, not as a quarter-inch object), so an
 	// SVG with one side given derives the other, and an SVG with neither keeps the 1in fallback.
 	let defWidth = givenW
 	let defHeight = givenH
@@ -200,7 +200,7 @@ export function addImageDefinition(target: PresSlideInternal, opt: ImageProps): 
 	// `key: opt.key`: an image that asks for no `crop` carries no `crop` key, where the literal
 	// wrote one holding `undefined`. Every one of these is read by an emitter that branches on the
 	// option being *there* (`if (opts.crop)`, `if (opts.duotone)`), so they were two spellings of
-	// the same request — and `ObjectOptions` is spread onto a placeholder's options besides.
+	// the same request. And `ObjectOptions` is spread onto a placeholder's options besides.
 	const frame = resolveAuthoredFrame(
 		{ x: givenX, y: givenY, w: defWidth, h: defHeight },
 		{ x: 0, y: 0, w: 1, h: 1 },
@@ -244,7 +244,7 @@ export function addImageDefinition(target: PresSlideInternal, opt: ImageProps): 
 
 	// STEP 5: Add this image to this Slide Rels (rId/rels count spans all slides! Count all images to get next rId)
 	if (strImgExtn === 'svg') {
-		// An SVG consumes *TWO* rels — the PNG fallback and the SVG itself — allocated and
+		// An SVG consumes *TWO* rels, the PNG fallback and the SVG itself, allocated and
 		// pushed by `registerSvgImageRels`, which the picture-bullet definer shares.
 		newObject.imageRid = registerSvgImageRels(target, {
 			path: source.path,

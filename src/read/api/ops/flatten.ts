@@ -3,7 +3,7 @@
  * `importShape`.
  *
  * A slide imported into another deck is rebound to the *destination* master, so everything it
- * resolved symbolically against its own theme silently re-resolves against a different one — its
+ * resolved symbolically against its own theme silently re-resolves against a different one: its
  * scheme colours change, its style-matrix fills change, its placeholders snap to different
  * geometry and type sizes. The `theme: 'preserve'` mode exists to stop that: each pass here
  * resolves a dependency against the **source** theme (via `read/oxml/theme.ts` and
@@ -12,25 +12,25 @@
  *
  * What gets flattened, and why each one matters:
  *
- * 1. **`a:schemeClr` tokens** — rewritten to the literal `a:srgbClr` the source `clrMap` +
+ * 1. **`a:schemeClr` tokens**: rewritten to the literal `a:srgbClr` the source `clrMap` +
  *    `clrScheme` produce. Child transforms (`lumMod`/`shade`/`alpha`/…) are carried through
  *    untouched, so tints and shades render identically; only the *base* reference is swapped,
  *    never the transform math.
- * 2. **Style-matrix refs** — a shape's `p:style` (`lnRef`/`fillRef`/`effectRef`) indexes the
+ * 2. **Style-matrix refs**: a shape's `p:style` (`lnRef`/`fillRef`/`effectRef`) indexes the
  *    theme `fmtScheme`; the indexed entry is resolved into an explicit `spPr` fill/line/effect
  *    (with its `phClr` substituted) and the ref neutralized so it cannot re-resolve. The
- *    `fontRef` is deliberately left intact so its font can re-bind to the destination theme —
- *    the "normalize fonts on attach" bonus.
- * 3. **Placeholder-inherited run colour, size and weight** — a run that sets none of its own
+ *    `fontRef` is deliberately left intact so its font can re-bind to the destination theme
+ *    (the "normalize fonts on attach" bonus).
+ * 3. **Placeholder-inherited run colour, size and weight**: a run that sets none of its own
  *    takes them from the source placeholder → layout → master text-style chain. Rebinding
  *    replaces that chain, so each is resolved from the source styles and written onto the run.
- *    Typeface (`a:latin`) is deliberately *not* baked — it re-binds along with `fontRef`.
+ *    Typeface (`a:latin`) is deliberately *not* baked; it re-binds along with `fontRef`.
  *    A shape that is not a placeholder takes the same properties from the presentation's
  *    `p:defaultTextStyle` instead, which the rebind swaps for the destination's, so those
  *    are baked from the source one. A table cell's text takes its size from the master's
  *    `p:otherStyle`, and its weight too where the table style states none, so those are
  *    baked from the source master.
- * 4. **Placeholder-inherited geometry** — a placeholder with no own `a:xfrm` takes position and
+ * 4. **Placeholder-inherited geometry**: a placeholder with no own `a:xfrm` takes position and
  *    size from the matching source layout/master placeholder; without baking it, a title snaps
  *    to the destination default and often clips off-canvas.
  *
@@ -112,8 +112,8 @@ import { resolveTableCellTextStyle, type TableCellTextStyle, type TableCondition
 /**
  * A {@link ThemeContext} plus the one thing only the flatten pass needs to write from.
  *
- * It is separate from `ThemeContext` because every *other* consumer of a theme context — the
- * read model's colour, font and geometry getters — resolves against a source subgraph without
+ * It is separate from `ThemeContext` because every *other* consumer of a theme context (the
+ * read model's colour, font and geometry getters) resolves against a source subgraph without
  * ever carrying a background to apply. Keeping the field here means those callers cannot be
  * handed one and quietly ignore it.
  */
@@ -164,7 +164,7 @@ export function flattenSlide(slideRoot: Element, ctx: FlattenContext): void {
 }
 
 /**
- * Flatten a single lifted shape's theme dependencies in place — the shape-scoped
+ * Flatten a single lifted shape's theme dependencies in place: the shape-scoped
  * subset of {@link flattenSlide} used by `Presentation.importShape` `preserve`
  * mode. It runs every pass that resolves a *shape's* theme references against the
  * source theme (style-matrix refs, placeholder-inherited geometry/colour/size/
@@ -185,7 +185,7 @@ export function flattenSlide(slideRoot: Element, ctx: FlattenContext): void {
  *
  * `shapeRoot` must be an element whose *descendants* include the lifted shape
  * (the passes match via `getElementsByTagNameNS`, which excludes the root element
- * itself) — the caller wraps the imported `p:sp`/`p:pic`/`p:graphicFrame`/`p:grpSp`
+ * itself), so the caller wraps the imported `p:sp`/`p:pic`/`p:graphicFrame`/`p:grpSp`
  * in a throwaway container before calling. The caller marks the part dirty.
  */
 export function flattenShape(shapeRoot: Element, ctx: FlattenContext): void {
@@ -203,7 +203,7 @@ export function flattenShape(shapeRoot: Element, ctx: FlattenContext): void {
 
 /**
  * Restyle a rebound slide in place (the `theme: 'restyle'` mode): the exact
- * inverse of {@link flattenSlide}. It bakes *nothing* — leaving every
+ * inverse of {@link flattenSlide}. It bakes *nothing*: leaving every
  * `a:schemeClr`/style-matrix ref and `p:bg` `bgRef` symbolic is the whole point,
  * so they re-resolve against the *destination* master's `clrMap` + theme once the
  * slide is rebound. The single mutation is dropping the slide's own colour-map
@@ -227,14 +227,14 @@ export function restyleSlide(slideRoot: Element): void {
  * destination theme; a literal matching no slot (the common case) is left exactly
  * as authored. Transform children (`lumMod`/`shade`/`alpha`/…) are carried across.
  *
- * Plain `restyle` cannot re-brand a literal — it carries no theme reference. This
+ * Plain `restyle` cannot re-brand a literal, since it carries no theme reference. This
  * re-introduces one by matching the literal's RGB against the slots the *source*
  * theme defined, emitting the scheme token that routes through the source `clrMap`
  * (so a literal equal to the source `accent1` slot becomes `schemeClr accent1`,
  * which the destination `clrMap`/theme then re-resolve). Slots are matched in
  * `clrScheme` order, so the first slot defining a given RGB wins when several share
  * it. Opt-in because it deliberately reinterprets authored literals as theme
- * colours — visual QA territory, the same caveat as the rest of `restyle`.
+ * colours: visual QA territory, the same caveat as the rest of `restyle`.
  */
 export function remapLiteralColors(slideRoot: Element, ctx: ColorContext): void {
 	const slotByHex = reverseClrScheme(ctx.clrScheme)
@@ -306,7 +306,7 @@ function resolveSchemeColors(root: Element, ctx: FlattenContext): void {
 	for (const schemeClr of descendantsByTag(root, OOXML_NS.a, 'schemeClr')) {
 		const token = attr(schemeClr, 'val')
 		const hex = token ? resolveSchemeToken(token, ctx) : null
-		if (!hex) continue // phClr or an unmapped token — leave it for the destination theme.
+		if (!hex) continue // phClr or an unmapped token: leave it for the destination theme.
 		replaceColorElement(schemeClr, 'a:srgbClr', hex)
 	}
 }
@@ -335,7 +335,7 @@ function resolvePlaceholderRunColors(slideRoot: Element, ctx: FlattenContext): v
  * `resolve` is asked once per *list level* per shape and memoized, because walking the
  * layout/master style chain is the expensive half and every paragraph at the same level gets
  * the same answer. `write` then runs per run, and owns the decision to skip a run the slide
- * already fixes — the two passes ask that question differently (one colour check versus three
+ * already fixes. The two passes ask that question differently (one colour check versus three
  * independent property checks), so it stays on their side of the boundary rather than becoming
  * a predicate parameter only one caller could use.
  *
@@ -426,7 +426,7 @@ function resolvePlaceholderGeometry(slideRoot: Element, ctx: FlattenContext): vo
 		const ph = placeholderOf(sp)
 		if (!ph) continue
 		const spPr = firstChild(sp, 'p:spPr')
-		if (spPr && firstChild(spPr, 'a:xfrm')) continue // explicit geometry is not inherited — leave it
+		if (spPr && firstChild(spPr, 'a:xfrm')) continue // explicit geometry is not inherited; leave it
 		const found = placeholderInheritedXfrm(attr(ph, 'type'), attr(ph, 'idx') ?? '0', ctx)
 		if (!found) continue
 		const target = getOrAddChild(sp, 'p:spPr', SHAPE_AFTER_SPPR)
@@ -443,12 +443,12 @@ function resolvePlaceholderGeometry(slideRoot: Element, ctx: FlattenContext): vo
  * We resolve the effective anchor from the source chain and write it explicitly.
  * Shapes whose `a:bodyPr` already fixes `@anchor`, and placeholders with no
  * resolvable inherited anchor, are left untouched. Other `a:bodyPr` knobs (insets,
- * autofit) are left as authored — they have sane defaults a plain shape keeps.
+ * autofit) are left as authored; they have sane defaults a plain shape keeps.
  */
 function resolvePlaceholderBodyPr(shapeRoot: Element, ctx: FlattenContext): void {
 	forEachPlaceholderTextBody(shapeRoot, ctx, (txBody, type, idx) => {
 		const bodyPr = firstChild(txBody, 'a:bodyPr')
-		if (bodyPr && attr(bodyPr, 'anchor') != null) return // slide fixes it — not inherited
+		if (bodyPr && attr(bodyPr, 'anchor') != null) return // slide fixes it, so not inherited
 		const anchor = placeholderInheritedAnchor(type, idx, ctx)
 		if (!anchor) return
 		setAttr(bodyPr ?? getOrAddChild(txBody, 'a:bodyPr', TXBODY_AFTER_BODYPR), 'anchor', anchor)
@@ -457,21 +457,20 @@ function resolvePlaceholderBodyPr(shapeRoot: Element, ctx: FlattenContext): void
 
 /**
  * Bake the placeholder-inherited list style onto a lifted shape's text body (the
- * {@link flattenShape} placeholder-demotion path). A placeholder's per-level
- * *paragraph* formatting — indent (`marL`/`indent`), bullets (`a:buChar`/
- * `a:buAutoNum`/`a:buNone`), alignment, and the level `a:defRPr` — is inherited
- * from the source layout/master placeholder `a:lstStyle` and the master
- * `p:txStyles` category style. Run colour/size are baked onto each run by the
- * sibling passes, but paragraph-level defaults live here; once
- * {@link demotePlaceholders} strips the `p:ph` the shape stops inheriting them, so
- * bullets and indents would vanish. We materialize the effective list style onto
- * the shape's `p:txBody/a:lstStyle`.
+ * {@link flattenShape} placeholder-demotion path). A placeholder inherits its per-level
+ * *paragraph* formatting from the source layout/master placeholder `a:lstStyle` and
+ * the master `p:txStyles` category style: indent (`marL`/`indent`), bullets
+ * (`a:buChar`/`a:buAutoNum`/`a:buNone`), alignment, and the level `a:defRPr`. Run
+ * colour/size are baked onto each run by the sibling passes, but paragraph-level
+ * defaults live here; once {@link demotePlaceholders} strips the `p:ph` the shape
+ * stops inheriting them, so bullets and indents would vanish. We materialize the
+ * effective list style onto the shape's `p:txBody/a:lstStyle`.
  *
  * Resolution is per *level*, most specific tier wins whole: the slide's own level
  * (if it defines one) is kept verbatim, else the first source tier that defines it
  * (layout placeholder, then master placeholder, then master category style) is
  * cloned. This is a whole-element overlay, not the per-attribute merge PowerPoint
- * does — but explicit paragraph `a:pPr` on the slide's own runs travels with the
+ * does, but explicit paragraph `a:pPr` on the slide's own runs travels with the
  * shape and still wins, so this only supplies defaults for the inherited case
  * (paragraphs that set no `a:pPr` of their own). Scheme colours in the cloned
  * levels are resolved by the later `resolveSchemeColors` pass.
@@ -501,7 +500,7 @@ function resolvePlaceholderListStyle(shapeRoot: Element, ctx: FlattenContext): v
  * Strip the `p:ph` marker from every placeholder shape in a lifted subtree so it
  * becomes a self-contained ordinary shape (the {@link flattenShape} path only). By
  * the time this runs, the shape's inherited geometry, colour, run size, anchor, and
- * list style are all baked explicitly, so it no longer needs — and must not keep —
+ * list style are all baked explicitly, so it no longer needs (and must not keep)
  * its placeholder identity: a surviving `p:ph` would re-resolve against the *host*
  * deck's layout/master placeholder of the same type/idx (wrong inheritance, or a
  * fallback when the host has none) and could collide with the host slide's own
@@ -520,7 +519,7 @@ function demotePlaceholders(shapeRoot: Element): void {
  * {@link resolvePlaceholderRunColors}: for each placeholder run that sets no
  * `sz`/`b`/`i` of its own (nor at paragraph/text-body level on the *slide*),
  * resolve the value it would inherit from the source `slideLayout`/`slideMaster`
- * text styles — per paragraph list level — and write it explicitly onto the run's
+ * text styles, per paragraph list level, and write it explicitly onto the run's
  * `a:rPr`. Each property resolves independently up the chain. Typeface (`a:latin`)
  * is left to re-bind to the destination theme, as the colour pass does for the `fontRef`.
  */

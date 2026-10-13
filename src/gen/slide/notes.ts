@@ -111,8 +111,8 @@ function genXmlNotesParagraphs(runs: TextProps[]): string {
 /**
  * PowerPoint's creation-id extension, on the `p:cSld` of both notes parts.
  *
- * The value is a fixed literal, and that is the point of naming it: it looks like data — a
- * per-deck identifier PowerPoint would vary — so left inline in two places, someone eventually
+ * The value is a fixed literal, and that is the point of naming it: it looks like data (a
+ * per-deck identifier PowerPoint would vary), so left inline in two places, someone eventually
  * changes one of them. It is deliberately constant, which is what keeps the two notes parts
  * byte-identical across builds.
  */
@@ -338,8 +338,8 @@ export function makeXmlNotesSlide(slide: PresSlideInternal, notes: NotesSlideCon
 /**
  * The notes slide's fixed frame, with the only two slide-dependent strings passed in.
  *
- * A notes slide is the same three placeholders every time — the thumbnail (`sldImg`),
- * the notes body, and the slide-number field — so everything except the body's
+ * A notes slide is the same three placeholders every time: the thumbnail (`sldImg`),
+ * the notes body, and the slide-number field. So everything except the body's
  * paragraphs and the cached slide number is a constant. It is a parameter of its own
  * because the read model authors notes onto a *loaded* deck (`Slide.addNotes`), where
  * there is no `PresSlideInternal` to serialize but the part must come out identical:
@@ -460,7 +460,7 @@ export function makeXmlNotesSlideRel(notes: NotesSlideContent, slideNumber: numb
 export function makeXmlNotesMasterRel(): string {
 	return relationshipsPart(
 		[relationshipEl(1, THEME_REL, '../theme/theme2.xml')],
-		// The closing tag is indented to child depth, not parent depth — as emitted today.
+		// The closing tag is indented to child depth, not parent depth, as emitted today.
 		{ childPrefix: '\n\t\t', closePrefix: '\n\t\t' }
 	)
 }

@@ -10,7 +10,7 @@
  * property of the write path rather than of this mapper: `genXmlImageFill` emits every
  * picture fill as `<a:blipFill dpi="0" rotWithShape="1">…<a:stretch><a:fillRect/></a:stretch>`
  * with only its `<a:srcRect>` under the caller's control, so a tiled fill still comes back
- * stretched. That is a visible change, so it is noted when — and only when — the source
+ * stretched. That is a visible change, so it is noted when, and only when, the source
  * actually uses it.
  */
 import type { FillRect, PictureFill } from '../../read/api/picture-fill.js'
@@ -27,14 +27,14 @@ export interface PictureFillSubject {
 	 * checked against the catalogue.
 	 */
 	construct: 'fill.picture' | 'table.fill.picture' | 'table.cell.fill.picture'
-	/** The surface as a note's detail names it — "this shape's surface", "this table cell". */
+	/** The surface as a note's detail names it: "this shape's surface", "this table cell". */
 	subject: string
 	/** Where the fill sits in the source XML, for a note's detail. */
 	element: string
 }
 
 /**
- * A picture fill as `ShapeFillProps`, or `undefined` when its bytes cannot be carried —
+ * A picture fill as `ShapeFillProps`, or `undefined` when its bytes cannot be carried,
  * in which case a `dropped` note has been recorded and the surface comes out unfilled.
  */
 export function pictureFillOption(
@@ -107,7 +107,7 @@ export function isRectSet(rect: FillRect | null): boolean {
 }
 
 /**
- * The source crop as the write API's `crop`, or `undefined` when this rect cannot be one — in which
+ * The source crop as the write API's `crop`, or `undefined` when this rect cannot be one, in which
  * case the caller notes it as uncarried instead. A picture fill's `image.crop` and a picture's own
  * `crop` take the same percentage insets, so both go through here.
  *
@@ -147,7 +147,7 @@ export function cropOption(srcRect: FillRect | null): IrValue | undefined {
  *
  * Only the ones the source actually uses: a note on every picture fill would say nothing,
  * and the round-trip check reads an unmatched note as a candidate for review. `cropCarried`
- * is the one that is conditional on more than the source — the crop is expressible as
+ * is the one that is conditional on more than the source: the crop is expressible as
  * `image.crop` unless its insets fall outside what that option accepts, so whether it is
  * lost is the caller's answer to give.
  */

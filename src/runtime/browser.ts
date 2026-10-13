@@ -16,7 +16,7 @@ export function createBrowserRuntime(): RuntimeAdapter {
 }
 
 /**
- * Returns a `data:` URI, not raw base64 — see {@link RuntimeAdapter.loadMedia}. The `FileReader`
+ * Returns a `data:` URI, not raw base64; see {@link RuntimeAdapter.loadMedia}. The `FileReader`
  * is what makes this adapter's own implementation worth keeping: it decodes the blob off the main
  * thread, where the shared `fetchMediaBase64` would encode the whole payload synchronously.
  */
@@ -66,8 +66,8 @@ async function createSvgPngPreview(rel: SlideRelMedia): Promise<MediaError | nul
 			try {
 				// `rel.type` is `image/png`, not the SVG's type, so this is a valid canvas output
 				// type and not an `image/svg+xml` that silently falls back to PNG.
-				// `createSvgPngPreview` is only called on a rel flagged `isSvgPng` — all three
-				// call sites in `gen/media.ts` filter on it — and the only two places that
+				// `createSvgPngPreview` is only called on a rel flagged `isSvgPng` (all three
+				// call sites in `gen/media.ts` filter on it), and the only two places that
 				// create such a rel (`gen/define/image.ts`, `gen/define/text.ts`) set the
 				// *fallback's* type, since that is the part this writes. The SVG keeps its own
 				// rel beside it.

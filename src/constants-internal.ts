@@ -1,11 +1,11 @@
 /**
- * Generator-internal constants — the non-published half of the enums module.
+ * Generator-internal constants: the non-published half of the enums module.
  *
  * `enums.ts` holds the genuinely public surface (the `ChartType`/`ShapeType`/
  * `SchemeColor`/`AlignH`… enums, the shape-preset sets, and the `*_NAME` unions) and is
  * `export *`-ed by every entrypoint. This module holds the constants only the generators
- * need — default styling, fixed axis/field ids, colour palettes, layout bases, and the
- * base64 placeholder images — none of which are part of the public API. Splitting them out
+ * need (default styling, fixed axis/field ids, colour palettes, layout bases, and the
+ * base64 placeholder images), none of which are part of the public API. Splitting them out
  * keeps `export *` from leaking them onto the package surface, mirroring the
  * `units-internal.ts` / `types/internal.ts` split. Nothing here is exported from an entrypoint.
  */
@@ -122,7 +122,7 @@ export const PIECHART_COLORS: string[] = [
 // field and auto-updates the page number. Consumed in `gen/slide/object.ts` (`slideObjectToXml`).
 export const SLDNUMFLDID = '{F7021451-1387-4CA6-816F-3879F97B5CBC}'
 
-// Cached text of a slide-number field on a part that has no slide number of its own — a master
+// Cached text of a slide-number field on a part that has no slide number of its own: a master
 // or a layout. Guillemets around a hash, which is verbatim what PowerPoint caches there: every
 // en-US master and layout in `test/read/fixtures/` writes `<a:t>‹#›</a:t>`. (A German-locale
 // deck writes `‹Nr.›`; the cache is recomputed on open, so the en-US spelling is the one to
@@ -151,7 +151,7 @@ export const LEVEL_MARGINS_EMU: readonly number[] = Array.from({ length: 9 }, (_
  * where it has one, `indent` and `algn`) ahead of them.
  *
  * `algn` is deliberately not in here even though three of the four sites write `algn="l"`.
- * The fourth computes it per level — a configured master's title can be centred or right —
+ * The fourth computes it per level (a configured master's title can be centred or right),
  * and a spread that carried `algn` would silently overwrite that: a later key in an object
  * literal replaces the value without moving the key, so the attribute order would still look
  * right while the alignment was wrong. No gate deck configures a master text style, so

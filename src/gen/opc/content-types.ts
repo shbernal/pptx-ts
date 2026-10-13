@@ -6,7 +6,7 @@
  * Override entries for every part the package skeleton writes.
  *
  * Entries that exist only because a construct family put a part in the package arrive as
- * {@link ContentTypeContributions} — already resolved to data and grouped by where they land.
+ * {@link ContentTypeContributions}, already resolved to data and grouped by where they land.
  * The order below is a property of the format, not of whoever assembled that list, so a deck
  * written by a program that links three families and one that links ten emit the same bytes.
  */
@@ -53,7 +53,7 @@ export interface ContentTypeDefault {
 
 /**
  * One `Override` entry: an absolute part name and its content type. `leadingSpace` asks for the
- * historic insignificant space before the tag — see {@link LEADING_SPACE}; which entries carry it
+ * historic insignificant space before the tag (see {@link LEADING_SPACE}); which entries carry it
  * is a fact about the bytes already shipped, not a style choice.
  */
 export interface ContentTypeOverride {
@@ -78,7 +78,7 @@ export interface ContentTypeContributions {
 	readonly trailing: readonly ContentTypeOverride[]
 }
 
-/** Nothing beyond the skeleton — the shape a deck written with no construct families contributes. */
+/** Nothing beyond the skeleton: the shape a deck written with no construct families contributes. */
 export const NO_CONTENT_TYPE_CONTRIBUTIONS: ContentTypeContributions = Object.freeze({
 	defaults: [],
 	presentation: [],

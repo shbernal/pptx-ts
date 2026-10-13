@@ -1,5 +1,5 @@
 /**
- * Base64 payload handling for media parts — isomorphic across Node and browsers
+ * Base64 payload handling for media parts, isomorphic across Node and browsers
  * (`TextEncoder`/`atob`/`btoa` only, no `Buffer`).
  */
 
@@ -30,7 +30,7 @@ export function bytesToBase64(bytes: Uint8Array): string {
  * Present a freshly loaded media payload as a `data:` URI.
  *
  * A {@link RuntimeAdapter.loadMedia} implementation returns whichever encoding its host
- * makes cheap — the browser adapter a full URI, because `FileReader.readAsDataURL` is what
+ * makes cheap: the browser adapter a full URI, because `FileReader.readAsDataURL` is what
  * decodes a blob without blocking; Node and the neutral adapter raw base64, because neither
  * has a `FileReader`. This is where the two become one, so nothing downstream of the load
  * has to ask which it got.

@@ -1,7 +1,7 @@
 /**
  * Parsing an `xsd:boolean` attribute value.
  *
- * **Why a function at all.** `xsd:boolean` has four lexical forms — `1`, `0`, `true`, `false` —
+ * **Why a function at all.** `xsd:boolean` has four lexical forms (`1`, `0`, `true`, `false`),
  * and OOXML attributes typed with it accept every one of them. PowerPoint writes only `1` and
  * `0`, so a hand-rolled `=== '1'` test passes against every deck this library produces and
  * against every deck PowerPoint produces, and silently misreads the other producers. That is the
@@ -10,7 +10,7 @@
  * **Why this module is neither `gen/` nor `read/`.** The lexical space of a schema type is a fact
  * about the schema, like `sequence.ts`'s document order and `body-insets.ts`'s defaults. The
  * parser lived in `read/oxml/dom.ts` because reading is where most of the demand is, and three
- * private copies had collapsed into it — but `read/oxml/dom.ts` imports `@xmldom/xmldom`, so
+ * private copies had collapsed into it, but `read/oxml/dom.ts` imports `@xmldom/xmldom`, so
  * anything outside `read/` that wants this five-line function has to take a DOM dependency to get
  * it, or write a fourth copy. `script/from-read/detect.ts` hit exactly that and wrote the copy.
  *
@@ -18,7 +18,7 @@
  * *that* one really is about reading an element.
  *
  * **The write direction is here too**, and it is where the interesting distinction lives: an
- * emitter writing a boolean has THREE useful shapes, not one — see {@link xsdBool} and
+ * emitter writing a boolean has THREE useful shapes, not one; see {@link xsdBool} and
  * {@link xsdBoolIfTrue}. Sixty-odd inline ternaries spelled them in three ways with nothing
  * naming which was which.
  */
@@ -49,7 +49,7 @@ export type XsdBool = '1' | '0'
  *
  * Writes the attribute either way, so `false` is *stated*. Use this wherever the schema
  * default is `true`, or wherever the absence of the attribute would mean something other
- * than `false` — a value inherited from a list style, a layout or the theme.
+ * than `false`: a value inherited from a list style, a layout or the theme.
  * @param value - the resolved boolean
  */
 export function xsdBool(value: boolean | undefined | null): XsdBool {
@@ -62,7 +62,7 @@ export function xsdBool(value: boolean | undefined | null): XsdBool {
  * **Correct only where the schema default is `false`.** It collapses "false" and "unset" into
  * one output, which is the two-spellings-for-three-states shape the API policy warns about: the
  * next attribute with a `true` default written this way reads as correct and is wrong. Every
- * current caller is on a `false`-defaulting attribute, so the collapse costs nothing today —
+ * current caller is on a `false`-defaulting attribute, so the collapse costs nothing today;
  * naming it is what makes the next one visible.
  * @param value - the resolved boolean
  */

@@ -1,7 +1,7 @@
 /**
  * pptx-ts: preview/cover image registration.
  *
- * Several objects are drawn from a cached raster the library cannot render itself — a Zoom tile's
+ * Several objects are drawn from a cached raster the library cannot render itself: a Zoom tile's
  * thumbnail of its target slide, an OLE object's picture of the embedded document, a 3D model's
  * preview. Each registers that raster as an ordinary slide image rel and references it by rId.
  * Shared here so the definers agree on the placeholder fallback and on extension sniffing; the rel itself goes through
@@ -12,7 +12,7 @@ import type { PresSlideInternal } from '../../types/internal.js'
 import { getNewRelId } from '../utils.js'
 import { type ImageSource, registerImageMediaRel, resolveImageSource } from './image-rel.js'
 
-/** 32×32 solid #E7E6E6 PNG — the neutral placeholder shown when the caller supplies no cover image. */
+/** 32×32 solid #E7E6E6 PNG, the neutral placeholder shown when the caller supplies no cover image. */
 const PLACEHOLDER_PNG =
 	'iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAxSURBVFhH7c4hAQAACMAw+geFGOAJAGbi5mpRmf1Z7HEdAAAAAAAAAAAAAAAAAADAAPwOyNPFH3F8AAAAAElFTkSuQmCC'
 

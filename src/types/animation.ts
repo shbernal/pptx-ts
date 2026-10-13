@@ -40,8 +40,8 @@ export interface TransitionProps {
 }
 
 /**
- * A transition sound (`p:sndAc`). Either a **start sound** — an embedded WAV played
- * when the transition runs (`p:stSnd` → `p:snd`), optionally looped — or the
+ * A transition sound (`p:sndAc`). Either a **start sound** (an embedded WAV played
+ * when the transition runs, `p:stSnd` → `p:snd`, optionally looped) or the
  * **stop-previous** form (`p:endSnd`) that silences a still-playing transition
  * sound. Built-in PowerPoint sounds embed identically to a custom file, so there is
  * no separate built-in path: supply the WAV bytes via `data` or `path`.

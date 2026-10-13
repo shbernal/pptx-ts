@@ -124,7 +124,7 @@ export function renderChartObject(ctx: RenderContext): string {
 /**
  * Build the `<mc:Fallback>` placeholder shape shown when a chartEx chart cannot be rendered
  * (any consumer older than PowerPoint 2016 / Microsoft 365). A light-grey rectangle at the chart's
- * position carrying a short explanatory note — enough that the slide reads sensibly rather than
+ * position carrying a short explanatory note, enough that the slide reads sensibly rather than
  * showing a void where the chart would be.
  */
 function renderChartExFallback(

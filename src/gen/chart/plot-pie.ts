@@ -153,8 +153,8 @@ function pieCategories(labels: string[], sheet: WorksheetLayout): string {
  *   (`SeriesCollection(1).Values` reads `Empty` at that index in both), and export to a
  *   byte-identical PNG. A sensitivity check confirms the cache is what paints: perturbing a
  *   *neighbouring* cached value moves both the read-back and the pixels.
- * - `<c:v>Infinity</c:v>` was not. PowerPoint refuses the package with 0x80070570 — the
- *   corrupt-file error — and so does `NaN` or `INF` in that position. A pie was therefore the one
+ * - `<c:v>Infinity</c:v>` was not. PowerPoint refuses the package with 0x80070570 (the
+ *   corrupt-file error), and so does `NaN` or `INF` in that position. A pie was therefore the one
  *   family where a non-finite value reached the deck instead of being warned about and dropped.
  */
 function pieValues(obj: OptsChartDataInternal, count: number, valFmtCode: string, sheet: WorksheetLayout): string {
@@ -198,7 +198,7 @@ export function makePiePlot(
 		return ''
 	}
 
-	// The series' own shape props are a placeholder — every slice overrides them in its `<c:dPt>`.
+	// The series' own shape props are a placeholder: every slice overrides them in its `<c:dPt>`.
 	const spPr = el('c:spPr', null, [
 		raw(el('a:solidFill', null, raw(voidEl('a:schemeClr', { val: 'accent1' })))),
 		raw(

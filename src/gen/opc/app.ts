@@ -62,7 +62,7 @@ export function makeXmlApp(slides: PresSlideInternal[], company: string, presLay
 			raw(el('vt:lpstr', null, 'Arial', ITEM)),
 			raw(el('vt:lpstr', null, 'Calibri', ITEM)),
 			raw(el('vt:lpstr', null, 'Office Theme', ITEM)),
-			// The slide titles share one line, so the indent is emitted once — and it is
+			// The slide titles share one line, so the indent is emitted once, and it is
 			// emitted whether or not there are any titles to follow it.
 			raw(INDENT_3),
 			...slides.map((_slideObj, idx) => raw(el('vt:lpstr', null, `Slide ${idx + 1}`))),

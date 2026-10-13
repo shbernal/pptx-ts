@@ -20,7 +20,7 @@ import type { TextBaseProps } from './text.js'
 export interface SlideNumberProps
 	extends PositionProps, Omit<TextBaseProps, 'bullet' | 'breakLine' | 'softBreakBefore' | 'tabStops'> {
 	/**
-	 * margin (inches) — text-frame internal margin; a value `>= 1` warns as a likely legacy points value
+	 * margin (inches): text-frame internal margin; a value `>= 1` warns as a likely legacy points value
 	 */
 	margin?: Margin
 }
@@ -40,7 +40,7 @@ export interface SlideMasterChartProps {
  * One object on a slide master, as a key-tagged descriptor.
  *
  * The six descriptors it shares with a group child are {@link CommonObjectDescriptor}; the two
- * below are the master's own — a chart, which a group cannot hold, and a placeholder, which is
+ * below are the master's own: a chart, which a group cannot hold, and a placeholder, which is
  * the whole point of a master.
  */
 export type SlideMasterObject =
@@ -58,7 +58,7 @@ export type SlideMasterObject =
 	  }
 /**
  * Bullet configuration for one slide-master text-style level (`a:buChar`/`a:buAutoNum`/`a:buNone`).
- * A focused subset of the run-level bullet model — picture bullets and per-glyph sizing are not
+ * A focused subset of the run-level bullet model: picture bullets and per-glyph sizing are not
  * supported in master defaults (those require slide rels). Set `bullet: false` to suppress the
  * level's bullet entirely.
  */
@@ -84,7 +84,7 @@ export interface MasterTextStyleLevel {
 	fontSize?: number
 	/** Font face (`a:defRPr/a:latin@typeface`). Unset keeps the theme font (`+mn-lt`/`+mj-lt`). */
 	fontFace?: string
-	/** Text color — hex (`'C00000'`) or theme slot (`'tx1'`) — emitted as `a:defRPr/a:solidFill`. */
+	/** Text color, hex (`'C00000'`) or theme slot (`'tx1'`), emitted as `a:defRPr/a:solidFill`. */
 	color?: Color
 	/** Bold text (`a:defRPr@b`). */
 	bold?: boolean

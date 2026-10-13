@@ -1,13 +1,13 @@
 /**
  * Read-only proxies for a chartEx (`cx:chartSpace`) chart hosted in a
- * `p:graphicFrame`. chartEx is the Office-2016 chart family — waterfall, funnel,
- * treemap, sunburst, histogram, pareto, box-and-whisker, region map — a separate
+ * `p:graphicFrame`. chartEx is the Office-2016 chart family (waterfall, funnel,
+ * treemap, sunburst, histogram, pareto, box-and-whisker, region map), a separate
  * subsystem from the classic `c:chart` (see {@link ./chart.js `Chart`}).
  *
  * A chartEx chart lives in its own part (`/ppt/charts/chartEx{N}.xml`) whose root
  * is `cx:chartSpace`, referenced from the graphic frame by relationship id (the MS
  * `chartEx` rel, not the ECMA `chart` rel). The frame itself is wrapped in an
- * `mc:AlternateContent` — the reader unwraps the `mc:Choice` to reach it.
+ * `mc:AlternateContent`; the reader unwraps the `mc:Choice` to reach it.
  *
  * Unlike the classic side, the layout geometry is keyed on `cx:series/@layoutId`
  * (`waterfall`, `funnel`, `treemap`, `clusteredColumn` for histogram/pareto, …)
@@ -30,7 +30,7 @@ import {
 } from '../oxml/dom.js'
 import { readIndexedPoints } from '../oxml/point-cache.js'
 
-/** A chartEx legend (`cx:legend`) — a leaf element carrying position/alignment attributes. */
+/** A chartEx legend (`cx:legend`): a leaf element carrying position/alignment attributes. */
 export interface ChartExLegend {
 	/** Legend position (`@pos`): `t`/`b`/`l`/`r`. */
 	position: string | null
@@ -65,7 +65,7 @@ export class ChartEx {
 	}
 
 	/**
-	 * The `cx:series/@layoutId` tokens in plot-area document order — the raw chartEx
+	 * The `cx:series/@layoutId` tokens in plot-area document order: the raw chartEx
 	 * layout names (`waterfall`, `funnel`, `treemap`, `sunburst`, `boxWhisker`,
 	 * `regionMap`, or `clusteredColumn`/`paretoLine` for histogram & pareto). This is
 	 * the OOXML truth: a histogram and a pareto both surface as `clusteredColumn`, so
@@ -216,7 +216,7 @@ export class ChartExSeries {
 	}
 
 	/**
-	 * Cached category labels (`cx:strDim`'s leaf `cx:lvl` — the first level, which
+	 * Cached category labels (`cx:strDim`'s leaf `cx:lvl`, the first level, which
 	 * the writer emits leaf-first). Empty when the data block carries no `cx:strDim`.
 	 */
 	get categories(): (string | null)[] {

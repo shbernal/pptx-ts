@@ -910,7 +910,7 @@ export class ChartSeries {
 	}
 
 	/**
-	 * Series line/stroke (`c:spPr/a:ln`) — width, dash, colour. `null` when the
+	 * Series line/stroke (`c:spPr/a:ln`): width, dash, colour. `null` when the
 	 * series `c:spPr` has no `a:ln` (bar/area fills carry no line by default).
 	 */
 	get line(): ChartLine | null {

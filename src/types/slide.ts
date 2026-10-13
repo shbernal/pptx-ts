@@ -33,7 +33,7 @@ export type GroupChildProps = CommonObjectDescriptor | { group: { children: Grou
  * Options for `slide.addGroup()`.
  *
  * The group keeps an identity child coordinate space (`chOff/chExt == off/ext`) at every depth:
- * children — including nested groups — keep their slide-absolute `x/y/w/h`. A consequence worth
+ * children, including nested groups, keep their slide-absolute `x/y/w/h`. A consequence worth
  * knowing: a group's own frame never moves or scales its children, it only places the selection
  * handle and the rotate pivot.
  *
@@ -79,7 +79,7 @@ export interface SlideLayout {
 
 /**
  * One authored object on a slide, as {@link Slide.objects} reports it: what it is and how it is
- * addressed, not how it is drawn. It is a snapshot taken when the getter ran, not a live handle —
+ * addressed, not how it is drawn. It is a snapshot taken when the getter ran, not a live handle:
  * nothing on it writes back, and a later `addShape`/`groupObjects` leaves it describing the slide
  * as it was.
  *
@@ -87,11 +87,11 @@ export interface SlideLayout {
  * whose descriptors nobody kept, and the only durable handle on them is the `objectName` each one
  * was authored with; without a way to enumerate those, a consumer that wants to act on what is
  * already there has to either make every renderer surrender its internals or keep a parallel
- * ledger of what it added — and a ledger is wrong the moment a renderer adds an object it did not
+ * ledger of what it added, and a ledger is wrong the moment a renderer adds an object it did not
  * announce.
  */
 export interface SlideObjectInfo {
-	/** What kind of object this is — the same value the object was authored as. */
+	/** What kind of object this is: the same value the object was authored as. */
 	readonly type: SlideObjectType
 	/**
 	 * Selection Pane name, in the spelling the caller passed to `objectName`, so it can be handed
@@ -99,7 +99,7 @@ export interface SlideObjectInfo {
 	 *
 	 * Always a string: an object authored without a name still gets the generated `Shape 3` /
 	 * `Text 1` / `Group 2` identity PowerPoint shows in the Selection Pane, and that name addresses
-	 * it just as well. The two are indistinguishable here on purpose — nothing downstream of
+	 * it just as well. The two are indistinguishable here on purpose: nothing downstream of
 	 * authoring records which is which, and a consumer that cares can tell them apart by the
 	 * naming convention it chose for its own objects.
 	 */
@@ -108,7 +108,7 @@ export interface SlideObjectInfo {
 	readonly isPlaceholder: boolean
 	/**
 	 * Whether `groupObjects()` would accept this object on kind alone. It cannot speak for the
-	 * *selection* — an unresolved, duplicated or ambiguous name still throws — so it answers "is
+	 * *selection* (an unresolved, duplicated or ambiguous name still throws), so it answers "is
 	 * this object groupable", never "will this call succeed".
 	 */
 	readonly canGroup: boolean
@@ -126,7 +126,7 @@ export interface SlideObjectInfo {
  * `exactOptionalPropertyTypes`: `SlideBuilder` implements them as accessor pairs, so the property
  * is *always* present on a real slide and its getter answers `undefined` when nothing is set.
  * There is no absent state for the declaration to describe. Writing one is also how the setters
- * are cleared — `slide.transition = undefined` removes the `p:transition` — and an interface that
+ * are cleared (`slide.transition = undefined` removes the `p:transition`), and an interface that
  * could not express the value its own setter takes would be describing a different type.
  */
 export interface Slide {
@@ -135,7 +135,7 @@ export interface Slide {
 	addConnector: (options: ConnectorProps) => Slide
 	addImage: (options: ImageProps) => Slide
 	addMedia: (options: MediaProps) => Slide
-	/** Embed a 3D model (Insert ▸ 3D Models) — a `.glb` PowerPoint 2019+ renders live. */
+	/** Embed a 3D model (Insert ▸ 3D Models): a `.glb` PowerPoint 2019+ renders live. */
 	addModel3d: (options: Model3dProps) => Slide
 	/** Embed an OLE object (Insert ▸ Object) whose bytes travel inside the `.pptx`. */
 	addOleObject: (options: OleObjectProps) => Slide
@@ -150,23 +150,23 @@ export interface Slide {
 	/** Group objects already on this slide, addressed by their `objectName`, into a single group. */
 	groupObjects: (objectNames: string[], options?: GroupProps) => Slide
 	/**
-	 * Add a Slide Zoom — a clickable tile that zooms to a single target slide (Insert ▸ Zoom).
+	 * Add a Slide Zoom: a clickable tile that zooms to a single target slide (Insert ▸ Zoom).
 	 * @example slide.addSlideZoom({ target: intro, x: 1, y: 1, w: 3, h: 1.7 })
 	 */
 	addSlideZoom: (options: SlideZoomProps) => Slide
 	/**
-	 * Add a Section Zoom — a clickable tile that zooms to the start of a named section.
+	 * Add a Section Zoom: a clickable tile that zooms to the start of a named section.
 	 * @example slide.addSectionZoom({ sectionTitle: 'Results', x: 1, y: 1, w: 3, h: 1.7 })
 	 */
 	addSectionZoom: (options: SectionZoomProps) => Slide
 	/**
-	 * Add a Summary Zoom — a grid of tiles, one per section (excluding this slide's own section).
+	 * Add a Summary Zoom: a grid of tiles, one per section (excluding this slide's own section).
 	 * @example slide.addSummaryZoom({ x: 0.5, y: 1.5, w: 11, h: 4.5 })
 	 */
 	addSummaryZoom: (options: SummaryZoomProps) => Slide
 
 	/**
-	 * The objects authored on this slide so far, bottom-to-top in z-order — the read-back half of
+	 * The objects authored on this slide so far, bottom-to-top in z-order: the read-back half of
 	 * `groupObjects()`, which addresses those same objects by name but until now gave no way to
 	 * learn the names.
 	 *

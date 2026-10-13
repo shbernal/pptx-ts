@@ -2,8 +2,8 @@
  * pptx-ts: Table Definition
  *
  * `addTableDefinition` applies the `headerRow` / `columns` sugar, normalizes rows into
- * fully-resolved `TableCellInternal`s (incl. 4-side borders), computes width, and — when `autoPage` is
- * set — shreds the table across overflow slides via `getSlidesForTableRows`.
+ * fully-resolved `TableCellInternal`s (incl. 4-side borders), computes width, and (when `autoPage` is
+ * set) shreds the table across overflow slides via `getSlidesForTableRows`.
  */
 import { namedColorOr } from '../drawingml/color.js'
 import { SlideObjectType } from '../../enums.js'
@@ -58,7 +58,7 @@ type OuterBorderTuple = NonNullable<Extract<TableProps['outerBorder'], unknown[]
 function normalizeBorderTuple(border: BorderProps | BorderTuple): BorderTuple {
 	// A fresh array either way. A cell that inherits the TABLE's tuple used to be handed the same
 	// array object as every other cell, so the per-side completion below wrote through all of
-	// them — and the table-level pass that ran afterwards reached into cells that had already
+	// them, and the table-level pass that ran afterwards reached into cells that had already
 	// captured it.
 	return Array.isArray(border) ? [...border] : [border, border, border, border]
 }
@@ -195,8 +195,8 @@ function normalizeTableRows(srcRows: TableRow[], opt: TablePropsInternal): Table
 			row.forEach((cell: number | string | TableCellInternal) => {
 				// A: the cell's options, COPIED. `addTableDefinition` takes ownership of the table
 				// options for exactly this reason and left the per-cell ones aliased, so everything
-				// below — the border completion here, the hyperlink `_rId` the definer stamps later,
-				// and the table-level inheritance the emitter resolves — wrote into the caller's own
+				// below (the border completion here, the hyperlink `_rId` the definer stamps later,
+				// and the table-level inheritance the emitter resolves) wrote into the caller's own
 				// object. A `rows` literal reused across two tables therefore came out styled by the
 				// first table both times, and came back holding keys the caller never wrote.
 				const newCellOptions: TableCellProps = withRunShadow(
@@ -228,7 +228,7 @@ function normalizeTableRows(srcRows: TableRow[], opt: TablePropsInternal): Table
 
 				// C: Set cell borders
 				// A side nobody asked for is written as an explicit `{type:'none'}`. That is direct
-				// formatting, so it beats any border a built-in table style would draw — which is
+				// formatting, so it beats any border a built-in table style would draw, which is
 				// what keeps an unstyled table free of grid lines, PowerPoint's own no-style look
 				// being a black hairline grid. Whatever the caller *did* author, on the cell or on
 				// the table, is untouched.
@@ -269,7 +269,7 @@ function normalizeTableRows(srcRows: TableRow[], opt: TablePropsInternal): Table
 						const side = cellBorderTuple[idx]
 						if (!side) return
 						// `withBorderDefaults` spreads first and overrides only the defaulted keys.
-						// Rebuilding the side from a fixed key list dropped `cap` — public on
+						// Rebuilding the side from a fixed key list dropped `cap`, public on
 						// `BorderProps` and already read by `genTableCellBorderXml`, so every table
 						// border emitted cap="flat" whatever the caller asked for (and `dashType`
 						// would go the same way). The spread also gives each side its own object,
@@ -294,7 +294,7 @@ function normalizeTableRows(srcRows: TableRow[], opt: TablePropsInternal): Table
  * Resolve `autoPageHeaderRows` to a usable count of header rows.
  *
  * It is a count, so it has to be a whole number, at least one, and no larger than the table
- * itself — a header taller than the table repeats every row onto every continuation slide and
+ * itself: a header taller than the table repeats every row onto every continuation slide and
  * leaves no room for body content. Anything else falls back to `1` and reports
  * `table/invalid-header-row-count`.
  *
@@ -324,16 +324,16 @@ function resolveHeaderRowCount(value: number | undefined, rowCount: number): num
  *
  * Three fill sources are walked, which between them cover every way a picture reaches a table:
  * the resolved cells (per-cell `options.fill`, plus `headerRow` and `columns[i]`, both baked
- * onto cells by the sugar step above), the table-level `fill`, which is *not* baked —
- * `gen/slide/objects/table.ts` copies it onto each cell at emit time — and `tableFill`, which
+ * onto cells by the sugar step above), the table-level `fill`, which is *not* baked
+ * (`gen/slide/objects/table.ts` copies it onto each cell at emit time), and `tableFill`, which
  * lands on `a:tblPr` itself and so needs its own relationship for the same reason.
  *
  * Keyed on fill **object identity**, not on the image source. The sugar spreads its options
  * shallowly, so one `headerRow` fill object is shared by every cell it styles; registering
  * per cell would mint a redundant relationship each time and let the later call overwrite
  * the `_imgRid` the first one stashed. Two cells given separately-authored fills for the
- * same file still get one relationship each — matching how two shapes sharing an image
- * behave — while the bytes are deduped into a single media part downstream.
+ * same file still get one relationship each (matching how two shapes sharing an image
+ * behave), while the bytes are deduped into a single media part downstream.
  *
  * Must run only after auto-paging has shredded the rows across slides, for the same reason
  * `createHyperlinkRels` does: `target` has to be the slide the cell actually lands on, or
@@ -393,8 +393,8 @@ export function addTableDefinition(
 	const presLayout = target._presLayout
 	const slides: PresSlideInternal[] = [target] // Create array of Slides as more may be added by auto-paging
 	// Take ownership of the options before touching them, the same way `addTextDefinition` does.
-	// Everything below normalizes in place — `objectName`, `fontSize`, `margin`, `color`, the
-	// `autoPage*` family, the resolved `w`/`colW` — and without the copy all of that lands on the
+	// Everything below normalizes in place (`objectName`, `fontSize`, `margin`, `color`, the
+	// `autoPage*` family, the resolved `w`/`colW`), and without the copy all of that lands on the
 	// CALLER's object, so a style literal reused across tables carries one table's settings (and its
 	// `objectName`) into the next. No cell shares this object: `normalizeTableRows` gives every cell,
 	// a plain string included, an options bag of its own, and the emitter resolves the table-level
@@ -406,7 +406,7 @@ export function addTableDefinition(
 	const opt: TablePropsInternal = options && typeof options === 'object' ? { ...options } : {}
 	if (Array.isArray(opt.border)) opt.border = [...opt.border] as typeof opt.border
 	// Through `nextObjectNameIdx` like every other definer. This counted the tables already in
-	// `_slideObjects` instead — the derivation `object-name.ts` documents as having been replaced,
+	// `_slideObjects` instead, the derivation `object-name.ts` documents as having been replaced,
 	// because a splice into a group makes the count go backwards.
 	opt.objectName = resolveObjectName(target, SlideObjectType.table, {
 		label: 'Table',
@@ -414,7 +414,7 @@ export function addTableDefinition(
 		supplied: opt.objectName,
 	})
 
-	// STEP 0: PLACEHOLDER — a table targeting a layout placeholder inherits that placeholder's
+	// STEP 0: PLACEHOLDER. A table targeting a layout placeholder inherits that placeholder's
 	// position/size for any of x/y/w/h the caller omits, mirroring the image and
 	// text placeholder inheritance. Explicit values always win; this only fills the gaps so
 	// the table fills the placeholder geometry rather than the default 1in/full-width fallback.
@@ -474,14 +474,14 @@ export function addTableDefinition(
 		}
 	}
 
-	// STEP 1.5: `headerRow` / `columns` inline sugar — bake blanket styling into cells as
+	// STEP 1.5: `headerRow` / `columns` inline sugar. Bake blanket styling into cells as
 	// direct per-cell formatting so it flows through the normal cell pipeline (incl. border
 	// defaulting below). Precedence (highest wins), matching how PowerPoint resolves styling
 	// (direct formatting overrides a style region): explicit per-cell `options` > `headerRow`
 	// (row 0) > `columns[colIdx]` > `tableStyle`/defaults. The merge is property-level, so a
 	// header cell keeps `headerRow` typography and takes its column's fill when they differ.
 	// Setting `headerRow` implies `hasHeader` unless the caller set it explicitly. The caller's
-	// `tableRows` array is not mutated — only affected rows (and their cells) are shallow-copied.
+	// `tableRows` array is not mutated; only affected rows (and their cells) are shallow-copied.
 	// Range-check the spans before anything reads them, the sugar's grid walk included. The
 	// auto-pager and the emitter's merge grid both lay a grid out from a span, and a caller-supplied
 	// `colspan: 4294967295` aborts the process rather than throwing. Checking once, here, is what
@@ -527,7 +527,7 @@ export function addTableDefinition(
 	}
 	if (Array.isArray(opt.border)) {
 		// A HOLE stays a hole. The cell path has always been explicit that a `null` side is
-		// *omitted* rather than erased — it keeps inheriting from the built-in style — and this
+		// *omitted* rather than erased (it keeps inheriting from the built-in style), and this
 		// filled it with `{ type: 'none' }`, so the identical sparse tuple meant "inherit" on a
 		// cell and "erase the style's rule" on the table. Same reading now on both, which is what
 		// leaves `[rule, null, rule, null]` with one meaning instead of two.
@@ -545,7 +545,7 @@ export function addTableDefinition(
 	}
 	// The perimeter is resolved here but applied at emit time: which cells sit on the table's
 	// outer edge is only knowable once the merge grid exists, and the serializer is what builds
-	// it — a colspan reaching the last column puts that column's rule on a *covered* cell.
+	// it: a colspan reaching the last column puts that column's rule on a *covered* cell.
 	const outerBorder = normalizeOuterBorder(opt.outerBorder)
 	if (outerBorder) opt.outerBorder = outerBorder
 	else delete opt.outerBorder
@@ -554,7 +554,7 @@ export function addTableDefinition(
 	opt.autoPagePlaceholder = typeof opt.autoPagePlaceholder === 'boolean' ? opt.autoPagePlaceholder : false
 	opt.autoPageRepeatHeader = typeof opt.autoPageRepeatHeader === 'boolean' ? opt.autoPageRepeatHeader : false
 	// A header-row count is a count: a whole number, not negative, and not more rows than the
-	// table has. The NaN test this replaces was none of those — `''` read as `0` header rows and
+	// table has. The NaN test this replaces was none of those: `''` read as `0` header rows and
 	// `Infinity` was accepted as a count, which is the same shape of hole `autoPageLineWeight`
 	// has been guarded against two lines down since it was written.
 	opt.autoPageHeaderRows = resolveHeaderRowCount(opt.autoPageHeaderRows, tableRows.length)
@@ -637,14 +637,14 @@ export function addTableDefinition(
 			delete opt.colW
 		}
 	} else if (opt.w) {
-		// Keep raw user `Coord` — resolved to EMU once at emission. (No pre-conversion.)
+		// Keep raw user `Coord`; it is resolved to EMU once at emission. (No pre-conversion.)
 	} else {
 		opt.w = defaultTableWidthIn()
 	}
 
 	// Shrink-to-fit (`fitColumns: 'shrink'`): proportionally scale columns down so a
 	// too-wide table fits between `x` and the right slide margin. Runs after the width-calc
-	// above so it sees the resolved form — either a surviving per-column `colW` array, or a
+	// above so it sees the resolved form: either a surviving per-column `colW` array, or a
 	// single `w`. Rewriting the widths here (the table definition) means both the emitter and
 	// the measured-fit pass inherit the fitted grid; shrink only, no minimum-width floor.
 	if (opt.fitColumns === 'shrink') {
@@ -729,7 +729,7 @@ export function addTableDefinition(
 			}
 
 			// B: Reset opt.y to `option`/`margin` after first Slide
-			// Keep raw inches — resolved to EMU once at emission. (No pre-conversion.)
+			// Keep raw inches; they are resolved to EMU once at emission. (No pre-conversion.)
 			// The pager decided where each continuation starts when it budgeted its height, and hands
 			// it back on the page. This used to re-derive it as `autoPageSlideStartY || margin`, which
 			// dropped a stated `0` and lacked the pager's `Math.min(y, margin)`, so a continuation
@@ -759,7 +759,7 @@ export function addTableDefinition(
 				// exactly as the caller spelled it, absent included.
 				// `headerRow` is inline styling for row 0 and was baked into the cells at definition
 				// time. Carrying it here made the recursive `addTable` re-run that sugar against
-				// EACH PAGE's row 0 — an arbitrary body row — so with the default repeat-header off,
+				// EACH PAGE's row 0 (an arbitrary body row), so with the default repeat-header off,
 				// row 11 and row 22 came out bold and filled like the header. Stripped by key rather
 				// than by a blanket strip: `columns` is positional, so re-applying it per page is
 				// correct and it has to stay.

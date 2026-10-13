@@ -2,7 +2,7 @@
  * pptx-ts: the two things every read-side mapper needs, in one parameter.
  *
  * A mapper records what it could not carry (`notes`) and registers the bytes it references
- * (`assets`), and the pair was threaded positionally through about twenty signatures — several
+ * (`assets`), and the pair was threaded positionally through about twenty signatures, several
  * of which had already grown a third and fourth parameter around them. A pair that always
  * travels together and is never split is one argument.
  *

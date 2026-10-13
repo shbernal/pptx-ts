@@ -3,14 +3,14 @@
  *
  * What a construct family adds to a written package: the parts it puts in the zip, and the
  * `[Content_Types].xml` entries those parts need in order to resolve. The packager
- * (`package/assemble.ts`) owns the skeleton every deck has — content types, the rels graph,
- * docProps, theme, slides, layouts, the master, media — and calls a list of contributors at fixed
+ * (`package/assemble.ts`) owns the skeleton every deck has (content types, the rels graph,
+ * docProps, theme, slides, layouts, the master, media) and calls a list of contributors at fixed
  * points in it, so it never names a family.
  *
  * It has to be a list rather than imports, for the same reason the shape walk is handed its
  * renderers (`gen/slide/objects/shared.ts`): a named import inside a reachable function body is
  * retained unconditionally, so a packager that calls `createExcelWorksheet` itself links all of
- * `gen/chart/` — the plot modules, the axes, the chartEx sidecars — into every program that writes
+ * `gen/chart/` (the plot modules, the axes, the chartEx sidecars) into every program that writes
  * a deck, text-only ones included. Same argument, the other axis: that one is about which XML
  * lands in a slide, this one about which parts land in the zip.
  *
@@ -27,7 +27,7 @@ import type {
 	SlideMasterInternal,
 } from '../../types/internal.js'
 
-/** A slide, a layout, or the master — anything carrying the rel arrays a part can be derived from. */
+/** A slide, a layout, or the master: anything carrying the rel arrays a part can be derived from. */
 export type PartTarget = PresSlideInternal | SlideLayoutInternal | SlideMasterInternal
 
 /**
@@ -58,7 +58,7 @@ export interface ContributedParts {
 	/** Written once, after the slide master and its rels. */
 	readonly afterMaster?: (pres: PresentationPropsInternal, zip: ZipWriter) => void
 	/**
-	 * Written from one target's rel arrays, for every layout, then every slide, then the master —
+	 * Written from one target's rel arrays, for every layout, then every slide, then the master,
 	 * last, alongside the media parts. Any promises returned join the single pool the packager
 	 * awaits, so a family with async part work does not serialize the write.
 	 */
@@ -93,7 +93,7 @@ export function orderedContributors(contributors: readonly PartContributor[]): P
 
 /**
  * Ask every contributor for its content-type entries and flatten them into the slot-keyed data
- * `makeXmlContTypes` emits. Takes the contributors already ordered — within a slot the entries
+ * `makeXmlContTypes` emits. Takes the contributors already ordered; within a slot the entries
  * come out in the order they are collected here.
  */
 export function collectContentTypes(

@@ -2,8 +2,8 @@
  * pptx-ts: the `<a:fmtScheme>` block, shared by the two themes this library writes.
  *
  * The fill/line/effect/background style matrices that shape style indices (`<p:style>`) point
- * at. Fixed Office boilerplate: no caller data reaches it, so — unlike the `<a:clrScheme>` and
- * `<a:fontScheme>` blocks beside it in `gen/pres/theme.ts` — there is no escaping risk to remove
+ * at. Fixed Office boilerplate: no caller data reaches it, so, unlike the `<a:clrScheme>` and
+ * `<a:fontScheme>` blocks beside it in `gen/pres/theme.ts`, there is no escaping risk to remove
  * by rebuilding it node by node, and it stays a raw literal rather than ~90 nested `el()` calls
  * written for uniformity alone.
  *

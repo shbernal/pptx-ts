@@ -64,13 +64,13 @@ function buildThemeClrScheme(scheme?: ThemeColorScheme): string {
 
 /**
  * The per-script theme font fallback table (`a:fontScheme`'s CT_TextFont lists), in OOXML
- * document order. Static Office defaults — no caller data, no escaping risk — unlike the
+ * document order. Static Office defaults (no caller data, no escaping risk), unlike the
  * `<a:latin>`/`<a:ea>`/`<a:cs>` slots above.
  *
  * Forty-one of the forty-seven scripts take the same face in the major and minor lists, so the
  * shared table below is the whole thing and the two override maps hold the six-odd rows that
  * actually differ. Written out twice, ninety-four lines said less than these do, and one row
- * mistyped in one copy produces a theme that opens fine and paints a script in the wrong face —
+ * mistyped in one copy produces a theme that opens fine and paints a script in the wrong face:
  * a difference nobody reviewing a diff of two 47-row tables would see.
  */
 const THEME_FONT_LIST: ReadonlyArray<readonly [string, string]> = [

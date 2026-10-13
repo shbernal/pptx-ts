@@ -3,8 +3,8 @@
  *
  * Emits a `model3d` slide object as an `<mc:AlternateContent>`. The `mc:Choice` carries the real
  * `<p:graphicFrame>` in the 2017 `am3d` namespace, rendered live by PowerPoint 2019+; the
- * `mc:Fallback` carries a plain preview picture, which is what every other consumer — older
- * PowerPoint, applications without a 3D renderer — actually draws. See `gen/define/model3d.ts`.
+ * `mc:Fallback` carries a plain preview picture, which is what every other consumer (older
+ * PowerPoint, applications without a 3D renderer) actually draws. See `gen/define/model3d.ts`.
  *
  * Every constant below is transcribed from a PowerPoint-authored deck
  * (`test/read/fixtures/model3d.pptx`, `Shapes.Add3DModel`), including the lighting rig, which came
@@ -31,7 +31,7 @@ const AM3D_NS = 'http://schemas.microsoft.com/office/drawing/2017/model3d'
 /** Denominator of every `am3d` rational element (`@n`/`@d`). */
 const RATIO_DEN = 1000000
 /**
- * `am3d:raster@rName`/`@rVer` — the renderer that produced the cached preview. PowerPoint stamps
+ * `am3d:raster@rName`/`@rVer`: the renderer that produced the cached preview. PowerPoint stamps
  * its own renderer here; pptx-ts did not rasterize anything, but the attributes are what PowerPoint
  * writes and the element is where the preview blip lives, so they are reproduced verbatim.
  */
@@ -48,16 +48,16 @@ interface PtLight {
 	intensityN: number
 	pos: { x: number; y: number; z: number }
 }
-/** The three point lights PowerPoint writes for every inserted model — key, fill and rim. */
+/** The three point lights PowerPoint writes for every inserted model: key, fill and rim. */
 const PT_LIGHTS: readonly PtLight[] = [
 	{ clr: { r: 100000, g: 75000, b: 50000 }, intensityN: 9765625, pos: { x: 21959998, y: 70920001, z: 16344003 } },
 	{ clr: { r: 40000, g: 60000, b: 95000 }, intensityN: 12250000, pos: { x: -37964106, y: 51130435, z: 57631972 } },
 	{ clr: { r: 86837, g: 72700, b: 100000 }, intensityN: 3125000, pos: { x: -37739122, y: 58056624, z: -34769649 } },
 ]
-/** `am3d:ambientLight` — neutral 50% scRGB at half illuminance, constant like the point lights. */
+/** `am3d:ambientLight`: neutral 50% scRGB at half illuminance, constant like the point lights. */
 const AMBIENT = { clr: { r: 50000, g: 50000, b: 50000 }, illuminanceN: 500000 }
 
-/** `<am3d:clr><a:scrgbClr …/></am3d:clr>` — the colour wrapper both light kinds share. */
+/** `<am3d:clr><a:scrgbClr …/></am3d:clr>`: the colour wrapper both light kinds share. */
 function lightColor(clr: { r: number; g: number; b: number }): string {
 	return el('am3d:clr', null, raw(voidEl('a:scrgbClr', clr)))
 }
@@ -74,7 +74,7 @@ function cameraEl(model: Model3dInternal): string {
 
 /**
  * The `am3d:trans` block: model-unit scale plus an identity placement. Only `meterPerModelUnit`
- * varies — `preTrans`/`scale`/`rot`/`postTrans` are the identity PowerPoint writes for a model
+ * varies; `preTrans`/`scale`/`rot`/`postTrans` are the identity PowerPoint writes for a model
  * inserted without any subsequent 3D manipulation, and `am3d:rot` is emitted attribute-less.
  */
 function transEl(model: Model3dInternal): string {
@@ -107,7 +107,7 @@ function lightsXml(): string {
 	)
 }
 
-/** The `mc:Fallback` picture — the cached preview, drawn by everything that is not PowerPoint 2019+. */
+/** The `mc:Fallback` picture: the cached preview, drawn by everything that is not PowerPoint 2019+. */
 function fallbackPic(
 	picId: number,
 	objectName: string | undefined,
@@ -124,7 +124,7 @@ function fallbackPic(
 						'p:cNvPicPr',
 						null,
 						raw(
-							// PowerPoint's model-3d lock set: the zoom/picture set plus `noCrop` — a 3D model is
+							// PowerPoint's model-3d lock set: the zoom/picture set plus `noCrop`. A 3D model is
 							// reframed by its camera, never by cropping the cached raster. Fixed even though
 							// `Model3dProps` has an `objectLock`, for the reason the zoom emitter spells out:
 							// this is the `mc:Fallback` picture, and `a:picLocks` takes a different flag set
@@ -176,8 +176,8 @@ export function renderModel3dObject(ctx: RenderContext): string {
 			el(
 				'p:cNvGraphicFramePr',
 				null,
-				// PowerPoint writes an empty `<a:graphicFrameLocks/>` here — no flags, but the
-				// element present — so that is what an unlocked model emits. `genXmlObjectLock`
+				// PowerPoint writes an empty `<a:graphicFrameLocks/>` here (no flags, but the
+				// element present), so that is what an unlocked model emits. `genXmlObjectLock`
 				// returns `''` when nothing is set, hence the fallback.
 				raw(
 					genXmlObjectLock('a:graphicFrameLocks', GRAPHIC_FRAME_LOCK_ATTRS, opts.objectLock, opts.objectName) ||

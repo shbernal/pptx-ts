@@ -1,10 +1,10 @@
 /**
- * pptx-ts: units at the read model's boundary — validated on the way in, converted on the way out.
+ * pptx-ts: units at the read model's boundary, validated on the way in and converted on the way out.
  *
  * Every read-side setter that takes a measurement has to answer the same two questions before
  * the value reaches an attribute: is it finite, and (for an extent) is it positive. `NaN` or
  * `Infinity` written verbatim makes the part invalid, and silently coercing it to something
- * drawable is exactly the footgun the project's API policy rules out — so both are a throw.
+ * drawable is exactly the footgun the project's API policy rules out, so both are a throw.
  *
  * The two halves used to be split across `table-edit.ts` (threw, then rounded) and `slide.ts`
  * (threw only, with the rounding done eight lines later at each build site), under two spellings
@@ -33,7 +33,7 @@ export function checkFiniteEmu(
 }
 
 /**
- * As {@link checkFiniteEmu}, and additionally rejects a non-positive value — the guard an
+ * As {@link checkFiniteEmu}, and additionally rejects a non-positive value: the guard an
  * *extent* needs, since `ST_PositiveCoordinate` has no room for zero or below and a zero-size
  * shape is a degenerate result rather than a small one.
  */
@@ -69,8 +69,8 @@ export function checkLineWidthEmu(value: number, field: string, code: InvalidOpt
  * insets in points while the DOM stores EMU, so `x === null ? null : x / EMU_PER_POINT` stood at
  * five getters across `chart.ts`, `shapes/base.ts`, `table.ts` and `text.ts`.
  *
- * The accumulator sites whose target is `number | undefined` do not come through here —
- * propagating a `null` would only have to be unwrapped again — but they do not open-code the
+ * The accumulator sites whose target is `number | undefined` do not come through here
+ * (propagating a `null` would only have to be unwrapped again), but they do not open-code the
  * division either: they unwrap the `null` themselves and call `emuToPoints`. {@link emuToPoints}
  * states the whole policy and names the one place still allowed to divide inline.
  */

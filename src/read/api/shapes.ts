@@ -4,13 +4,13 @@
  * The `p:spTree` holds five shape kinds; each wraps its element and exposes
  * non-visual identity (id/name), geometry (left/top/width/height in EMU), and
  * kind-specific reads. Proxies hold a back-reference to the owning
- * {@link ShapeHost} — the slide, layout, or master whose part carries the tree —
+ * {@link ShapeHost} (the slide, layout, or master whose part carries the tree),
  * so pictures can resolve their image relationship and so edits can mark that
  * part dirty.
  *
  * This module is the entry point for that model: the `Shape` base and the four leaf kinds live in
- * `./shapes/`, and only the dispatch that turns an element into a proxy — plus `GroupShape`, which
- * recurses back through it — is here. Everything the read API surfaces is re-exported below, so
+ * `./shapes/`, and only the dispatch that turns an element into a proxy (plus `GroupShape`, which
+ * recurses back through it) is here. Everything the read API surfaces is re-exported below, so
  * `pptx-ts/read` and its consumers keep importing shapes from one place.
  */
 import { ELEMENT_NODE, OOXML_NS, firstChild, getElements, getOrAddChild, type Element } from '../oxml/dom.js'
@@ -62,7 +62,7 @@ export type {
 } from './shapes/types.js'
 
 /**
- * A group shape (`p:grpSp`) — contains nested shapes.
+ * A group shape (`p:grpSp`), which contains nested shapes.
  *
  * It is the one kind defined here rather than under `./shapes/`: its `shapes` getter recurses
  * through `buildShapes` below, so putting it in a sibling module would make the dispatch and the
@@ -99,7 +99,7 @@ export class GroupShape extends Shape {
 	 * element is incomplete.
 	 *
 	 * Most consumers should not need this: {@link Shape.absoluteFrame} already
-	 * composes the whole ancestor chain — child space, group flips and rotations —
+	 * composes the whole ancestor chain (child space, group flips and rotations),
 	 * and doing that arithmetic per consumer is how a shape in a nested group ends
 	 * up subtly displaced. It is here for a *replica* consumer rather than a
 	 * *paint* one: rebuilding this group and its children as OOXML needs the
@@ -124,14 +124,14 @@ export class GroupShape extends Shape {
  * {@link Shape.shapeType} literal. The read API (`Slide.shapes`,
  * `Slide.shapeById`, `GroupShape.shapes`, `Presentation.importShape`, …) returns
  * this rather than the abstract {@link Shape} base, so a consumer can narrow to a
- * subtype by its discriminant and reach the subtype-only members — e.g.
+ * subtype by its discriminant and reach the subtype-only members, e.g.
  * `if (shape.shapeType === 'graphicFrame') shape.chart` or, equivalently, the
  * {@link isGraphicFrame} guard. The abstract {@link Shape} base is still exported
  * for the "common members only" case and for `instanceof` checks.
  */
 export type AnyShape = AutoShape | Picture | Connector | GraphicFrame | GroupShape
 
-/** Narrow a shape to an {@link AutoShape} (`p:sp` — auto shape, text box, or placeholder). */
+/** Narrow a shape to an {@link AutoShape} (`p:sp`: auto shape, text box, or placeholder). */
 export function isAutoShape(shape: Shape): shape is AutoShape {
 	return shape.shapeType === 'autoShape'
 }
@@ -146,7 +146,7 @@ export function isConnector(shape: Shape): shape is Connector {
 	return shape.shapeType === 'connector'
 }
 
-/** Narrow a shape to a {@link GraphicFrame} (`p:graphicFrame` — table/chart host). */
+/** Narrow a shape to a {@link GraphicFrame} (`p:graphicFrame`, the table/chart host). */
 export function isGraphicFrame(shape: Shape): shape is GraphicFrame {
 	return shape.shapeType === 'graphicFrame'
 }
@@ -183,7 +183,7 @@ export function wrapShapeElement(element: Element, host: ShapeHost): AnyShape | 
  * The richer of an `mc:AlternateContent`'s two branches: the first `mc:Choice`
  * that carries a shape element (what PowerPoint renders when it understands the
  * required feature), falling back to `mc:Fallback`. PowerPoint wraps a shape this
- * way when its full form needs a feature namespace a plain consumer lacks — a
+ * way when its full form needs a feature namespace a plain consumer lacks: a
  * chartEx chart's `p:graphicFrame`, a zoom frame, an inline-math shape. Returns
  * the wrapped inner shape, or `null` when neither branch holds one.
  */
@@ -224,7 +224,7 @@ export function buildShapes(parent: Element, host: ShapeHost): AnyShape[] {
 /**
  * The first shape in `shapes` with the given drawing id (`p:cNvPr/@id`), walked
  * pre-order so a group is visited before its children. Backs
- * {@link ShapeHost.shapeByIdDeep} on all three hosts — drawing ids are unique
+ * {@link ShapeHost.shapeByIdDeep} on all three hosts. Drawing ids are unique
  * within a part, so the first match is the only match and the walk order just
  * fixes a deterministic one. A `null` id, as a shape's `id` reads when it has
  * no `@id`, is a miss, not a match on the first shape that lacks one too.

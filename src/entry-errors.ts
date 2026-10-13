@@ -5,7 +5,7 @@
  *
  * Each published subpath (`.`, `./read`, `./html`, `./zip`, …) re-exports this module so
  * `instanceof` works whichever one a consumer imports. That property depends on all of them
- * resolving to a single `errors.js` — which they do, because there is one module here and
+ * resolving to a single `errors.js`. They do, because there is one module here and
  * every entry names it. This file exists so that stays structurally true: the list used to be
  * pasted into all ten entries, identical down to the comment, and nothing would have caught
  * one of them drifting.

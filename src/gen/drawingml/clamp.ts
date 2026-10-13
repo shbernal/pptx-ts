@@ -2,7 +2,7 @@
  * pptx-ts: DrawingML value clamps
  *
  * Clamp font/character/line spacing values into their ST_* schema ranges and convert to the
- * units the attributes expect — hundredths of a point for most of them, thousandths of a
+ * units the attributes expect: hundredths of a point for most of them, thousandths of a
  * percent for the one measure the caller states as a multiple rather than a size.
  * Out-of-range values make PowerPoint report the package as needing repair.
  */
@@ -182,7 +182,7 @@ export function clampKerningKern(kerningPts: number): number {
 
 /**
  * Clamp a paragraph's left margin (points) into ST_TextMargin (0..4032pt, i.e. 0..51206400 EMU);
- * returns EMU for `a:pPr/@marL`. The type is unsigned — a negative margin is not a narrower one,
+ * returns EMU for `a:pPr/@marL`. The type is unsigned. A negative margin is not a narrower one;
  * it is a value PowerPoint reports as needing repair.
  */
 export function clampParaMarginEmu(marginPts: number): number {

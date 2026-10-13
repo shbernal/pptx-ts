@@ -3,15 +3,15 @@
  *
  * Every part is named at least three times: the assembler writes it, `[Content_Types].xml`
  * declares an `Override` for it, and one or more `.rels` parts target it. Each of those was
- * its own template literal in its own module, and the three spellings differ — a zip entry
+ * its own template literal in its own module, and the three spellings differ (a zip entry
  * name, a leading-slash part name, a relationship target resolved against the part that
- * states it — so nothing tied them together. A part written but not declared is a
+ * states it), so nothing tied them together. A part written but not declared is a
  * PowerPoint repair, and so is a relationship pointing at a part nobody wrote.
  *
  * The canonical spelling here is the zip entry name: `ppt/slides/slide1.xml`, no leading
- * slash, which is what {@link ZipWriter.add} takes. The other two are derivations —
+ * slash, which is what {@link ZipWriter.add} takes. The other two are derivations:
  * {@link overrideName} for the content-types declaration, {@link targetFromPresentation} and
- * {@link targetFromPptSubpart} for a relationship target — so a path can only be spelled once
+ * {@link targetFromPptSubpart} for a relationship target. So a path can only be spelled once
  * and then transformed, never re-typed in a second dialect.
  *
  * Indices are 1-based throughout, matching the OPC naming rather than the arrays that drive it.
@@ -40,7 +40,7 @@ export function slideLayoutPath(n: number): string {
 
 /**
  * The `n`-th notes-slide part. One is written for every slide, empty notes included, so the
- * index is the slide's own — see the assembler, which keeps the two enumerations in step.
+ * index is the slide's own; see the assembler, which keeps the two enumerations in step.
  */
 export function notesSlidePath(n: number): string {
 	return `ppt/notesSlides/notesSlide${n}.xml`
@@ -77,7 +77,7 @@ export function overrideName(path: string): string {
 }
 
 /**
- * `path` as a relationship target stated by a part directly under `ppt/` — presentation.xml,
+ * `path` as a relationship target stated by a part directly under `ppt/`: presentation.xml,
  * whose rels reach `slides/slide1.xml` with no traversal at all.
  */
 export function targetFromPresentation(path: string): string {
@@ -85,7 +85,7 @@ export function targetFromPresentation(path: string): string {
 }
 
 /**
- * `path` as a relationship target stated by a part one level below `ppt/` — a slide, a layout,
+ * `path` as a relationship target stated by a part one level below `ppt/`: a slide, a layout,
  * a notes slide, the master: `../slides/slide1.xml`.
  */
 export function targetFromPptSubpart(path: string): string {
@@ -102,7 +102,7 @@ export function targetFromPptSubpart(path: string): string {
  *
  * It exists because the slide-link target used to be spelled `slide${n}.xml` unconditionally, by
  * a function that also serves layouts and the master. A relationship target resolves against the
- * part that states it, so from `ppt/slideLayouts/` that named `ppt/slideLayouts/slide1.xml` — a
+ * part that states it, so from `ppt/slideLayouts/` that named `ppt/slideLayouts/slide1.xml`, a
  * part no package has. Deriving the target from the emitting part's own path means the question
  * is asked once, by the only code that can answer it.
  */

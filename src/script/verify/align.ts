@@ -4,8 +4,8 @@
  * The round trip compares a deck against the deck its script produced, and both the slide
  * calls and the chrome masters have to be paired up before anything can be diffed. Position
  * alone is wrong the moment one item drops out: every later one shifts by one, and the report
- * fills with mismatches that are really one missing shape. So a stable key — a shape's
- * `objectName`, a master's title — aligns what it can, with position as the fallback.
+ * fills with mismatches that are really one missing shape. So a stable key (a shape's
+ * `objectName`, a master's title) aligns what it can, with position as the fallback.
  *
  * Both sides wrote this out, down to two near-identical `nextUnclaimed` closures, and they
  * differed in one respect that matters. `diffChrome`'s own reasoning is recorded there: a

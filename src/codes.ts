@@ -1,5 +1,5 @@
 /**
- * The library's condition vocabulary — one registry covering both surfaces a problem can take.
+ * The library's condition vocabulary: one registry covering both surfaces a problem can take.
  *
  * A **code** names a *condition*, in `area/condition` form. The same condition keeps the same code
  * whichever way it reaches the consumer: as a non-fatal {@link Diagnostic} (see `diagnostics.ts`)
@@ -9,7 +9,7 @@
  *
  * **A code is API; the message that carries it is not.** Adding a code is back-compatible;
  * removing or renaming one is a breaking change. Every union here is closed, so a new warning or
- * throw site cannot be written without naming its condition in this file — that is the enforcement
+ * throw site cannot be written without naming its condition in this file. That is the enforcement
  * mechanism for keeping the vocabulary curated rather than accumulated. Reuse an existing code when
  * the condition is genuinely the same, even if the wording differs and even if it is reported from
  * a different entry point.
@@ -19,7 +19,7 @@
  * A condition that can genuinely arrive under two different classes needs two codes, because the
  * class is part of what the consumer branches on.
  *
- * This module is types only — it emits no runtime code, so importing it can never create an import
+ * This module is types only. It emits no runtime code, so importing it can never create an import
  * cycle and `diagnostics.ts` keeps the "safe to use from anywhere" property its header claims.
  */
 
@@ -27,7 +27,7 @@
  * The stable identifier for a non-fatal condition the library reports and then works around.
  *
  * Codes are shared across entry points where the *condition* is the same even though the message
- * differs — an image whose natural size cannot be measured reports
+ * differs. An image whose natural size cannot be measured reports
  * `image/unmeasurable-natural-size` whether it came from `addImage` or from `Picture.setImage`.
  */
 export type DiagnosticCode =
@@ -204,7 +204,7 @@ export type DiagnosticCode =
 /**
  * Conditions carried by `InvalidOptionError`: the caller passed something the library cannot use.
  *
- * This is the largest group by design — the project's stated policy is to throw rather than coerce
+ * This is the largest group by design: the project's stated policy is to throw rather than coerce
  * (`docs/contributing/development.md` → "Warn or throw?"), so most throws are here.
  */
 export type InvalidOptionErrorCode =
@@ -287,8 +287,8 @@ export type InvalidOptionErrorCode =
 	| 'table/rows-not-nested'
 	| 'table/invalid-style-id'
 	// Editing a table in an existing deck (`pptx-ts/read`). Each names an attribute value
-	// outside its schema enum, or a measurement that cannot be written — conditions the read
-	// path throws on rather than drops, because a caller editing one attribute would
+	// outside its schema enum, or a measurement that cannot be written. These are conditions
+	// the read path throws on rather than drops, because a caller editing one attribute would
 	// otherwise be left looking at an unchanged deck with nothing to explain it.
 	| 'table/invalid-cell-anchor'
 	| 'table/invalid-cell-vert'
@@ -343,12 +343,12 @@ export type InvalidOptionErrorCode =
 	// Text
 	| 'font/size-not-positive'
 	// Printing a deck back out as a script (`pptx-ts/script`). Both name an inconsistency in the
-	// `DeckIr` handed to the printer — unreachable from an IR the library built itself, but the
+	// `DeckIr` handed to the printer. It is unreachable from an IR the library built itself, but the
 	// IR is a public type a caller may construct or edit.
 	| 'script/unresolved-asset-reference'
 	| 'script/non-finite-literal'
 	// OPC package operations asked of the library (distinct from a malformed package,
-	// which is a `PackageReadError` — see `package/duplicate-relationship-id`)
+	// which is a `PackageReadError`; see `package/duplicate-relationship-id`)
 	| 'package/duplicate-part-name'
 	| 'part/not-xml'
 	| 'relationship/duplicate-id'
@@ -380,7 +380,7 @@ export type InvalidOptionErrorCode =
 /**
  * Conditions carried by `UnsupportedFeatureError`: the request is well-formed, but this build,
  * runtime, or shape cannot express it. Distinct from `InvalidOptionError` because the caller did
- * nothing wrong — the answer is "not here", not "not like that".
+ * nothing wrong: the answer is "not here", not "not like that".
  */
 export type UnsupportedFeatureErrorCode =
 	// Requests with no OOXML expression the library emits
@@ -461,7 +461,7 @@ export type MediaErrorCode =
 
 /**
  * Conditions carried by `InternalError`: an invariant the library maintains itself did not hold.
- * Reaching one is a bug in pptx-ts, not something a consumer can fix by changing their input —
+ * Reaching one is a bug in pptx-ts, not something a consumer can fix by changing their input,
  * which is exactly why it is worth being able to tell apart from the four classes above.
  */
 export type InternalErrorCode =
@@ -473,7 +473,7 @@ export type InternalErrorCode =
 	| 'comment/not-resolved'
 	// A slide part was about to be wired into `p:sldIdLst` a second time. The list is
 	// the deck's slide order, so a part named twice is a package PowerPoint will not
-	// open — and one the read model reports as two slides. Caught at the insert.
+	// open, and one the read model reports as two slides. Caught at the insert.
 	| 'slide/part-already-in-deck'
 	| 'import/part-went-missing'
 	// `appendSlides` wired a slide link to a source slide number it had placed no slide for. The
@@ -484,7 +484,7 @@ export type InternalErrorCode =
 	// refuses that before it copies anything, so reaching the rescale with it means a path skipped
 	// the check.
 	| 'import/rescale-mode-changed'
-	// A chart emitter was handed a `ChartType` it has no arm for — one the *other* emitter
+	// A chart emitter was handed a `ChartType` it has no arm for: one the *other* emitter
 	// owns, or a newly added member nobody routed. The classic and chartEx builders partition
 	// `ChartType` between them and the caller picks by `isChartExType`, so reaching either one
 	// off-catalog is a routing bug, not bad input.
@@ -492,7 +492,7 @@ export type InternalErrorCode =
 	// A slide object reached the shape-tree walk in a family the renderer table it was handed has
 	// no entry for. The table decides which shape families a program can emit, and an object of a
 	// family it omits has already reserved a `<p:cNvPr>` id that connectors, animations and group
-	// bounds may point at — so the alternative to throwing is a dangling reference to a shape that
+	// bounds may point at, so the alternative to throwing is a dangling reference to a shape that
 	// was quietly never written.
 	| 'slide/object-type-not-routed'
 	// A successor list was asked for a child that is not in the sequence it names. The lists
@@ -527,7 +527,7 @@ export type InternalErrorCode =
  * carrying it says so at runtime. A `PackageReadErrorCode` on a file that opens cleanly in
  * PowerPoint, a `MediaErrorCode` on an asset every other tool loads, and an
  * `UnsupportedFeatureErrorCode` for something PowerPoint can plainly express are all gaps on our
- * side rather than bad input — the project's supported bar is "the output opens cleanly in
+ * side rather than bad input. The project's supported bar is "the output opens cleanly in
  * Microsoft PowerPoint", and it reads in both directions. An `InvalidOptionErrorCode` is worth
  * reporting only if the deck it refused is one PowerPoint can express.
  *

@@ -98,8 +98,8 @@ export class Picture extends Shape {
 	readonly shapeType = 'picture' as const
 
 	// A picture's image is its sibling `p:blipFill`, not a fill of `p:spPr`, so a
-	// solid `spPr` fill would not clobber the image. Setting one is still refused —
-	// recolouring a picture surface is rarely what a caller means — and the border
+	// solid `spPr` fill would not clobber the image. Setting one is still refused
+	// (recolouring a picture surface is rarely what a caller means), and the border
 	// takes a line colour. A fill a deck already wrote still reads and clears.
 	protected override paintSurface(): PaintSurface | null {
 		const surface = super.paintSurface()
@@ -138,7 +138,7 @@ export class Picture extends Shape {
 	 * Microsoft SVG blip extension (`a:blip/a:extLst/a:ext/asvg:svgBlip/@r:embed`),
 	 * or `null` when the picture has no SVG. PowerPoint usually pairs this with a
 	 * raster fallback in `a:blip/@r:embed` ({@link imageRelId}), but some exporters
-	 * emit an SVG-only blip where `imageRelId` is absent and only this resolves —
+	 * emit an SVG-only blip where `imageRelId` is absent and only this resolves,
 	 * so a reader that wants the real drawn art must consult both.
 	 */
 	get svgRelId(): string | null {
@@ -153,14 +153,14 @@ export class Picture extends Shape {
 
 	/**
 	 * Which drawable media this picture carries:
-	 * - `'raster'` — only a raster blip (`a:blip/@r:embed`);
-	 * - `'svg'` — only a vector blip (`asvg:svgBlip/@r:embed`, no raster). This
+	 * - `'raster'`: only a raster blip (`a:blip/@r:embed`);
+	 * - `'svg'`: only a vector blip (`asvg:svgBlip/@r:embed`, no raster). This
 	 *   is what PowerPoint's *Insert → Icons* and a plain SVG insert produce;
-	 * - `'both'` — a raster fallback *and* an SVG (PowerPoint's usual pairing);
-	 * - `'none'` — a `p:pic` with no embedded blip at all (e.g. a linked image).
+	 * - `'both'`: a raster fallback *and* an SVG (PowerPoint's usual pairing);
+	 * - `'none'`: a `p:pic` with no embedded blip at all (e.g. a linked image).
 	 *
-	 * Lets a caller distinguish an SVG-only picture — where {@link imagePartName}
-	 * is legitimately `null` — from a genuinely empty one, without two null checks.
+	 * Lets a caller distinguish an SVG-only picture (where {@link imagePartName}
+	 * is legitimately `null`) from a genuinely empty one, without two null checks.
 	 */
 	get mediaKind(): 'raster' | 'svg' | 'both' | 'none' {
 		const hasRaster = this.imageRelId != null
@@ -173,7 +173,7 @@ export class Picture extends Shape {
 
 	/**
 	 * Absolute partname of whichever part actually carries this picture's drawn
-	 * data — the raster part when present, otherwise the SVG part — or `null`
+	 * data (the raster part when present, otherwise the SVG part), or `null`
 	 * when the picture embeds neither. Use this when you just want "the bytes
 	 * this picture shows"; prefer {@link imagePartName} / {@link svgPartName}
 	 * (and {@link mediaKind}) when you need to know *which* kind it is. An
@@ -234,7 +234,7 @@ export class Picture extends Shape {
 
 	/**
 	 * The picture's crop as fractions of the *source image*, read from
-	 * `p:blipFill/a:srcRect` — `{ left, top, right, bottom }`, each the amount
+	 * `p:blipFill/a:srcRect` as `{ left, top, right, bottom }`, each the amount
 	 * trimmed off that edge (so `0.1` = 10 % cropped away, an uncropped edge is
 	 * `0`). `null` when there is no `a:srcRect` at all; an explicit
 	 * `{0,0,0,0}` crop still reports zeros, since its presence is meaningful.
@@ -320,7 +320,7 @@ export class Picture extends Shape {
 	 *
 	 * `fit` controls the picture's `a:srcRect` crop against its current frame
 	 * extent (`a:xfrm/a:ext`):
-	 * - omitted (default): geometry and crop are left untouched — the caller owns
+	 * - omitted (default): geometry and crop are left untouched; the caller owns
 	 *   sizing. Note an inherited `a:srcRect` was tuned to the *previous* image's
 	 *   aspect ratio, so swapping in an image of a different ratio reuses a crop
 	 *   that no longer fits and the result looks stretched; pass `fit` to refit.

@@ -33,7 +33,7 @@ export const previewRid = (mediaRid: number): number => mediaRid + 2
 
 /**
  * Check that a media item's three rels really did come out consecutive. The ids come from
- * three separate `getNewRelId` calls, so nothing but call order makes them so — and every
+ * three separate `getNewRelId` calls, so nothing but call order makes them so, and every
  * reader of the triple assumes it.
  */
 function assertConsecutiveMediaRids(base: number, second: number, third: number): void {
@@ -127,19 +127,19 @@ export function addMediaDefinition(target: PresSlideInternal, opt: MediaProps): 
 	let mediaRid: number
 	let msRid: number
 	if (strType === 'online') {
-		// A: ECMA video rel (external link) — referenced by <a:videoFile r:link>.
+		// A: ECMA video rel (external link), referenced by <a:videoFile r:link>.
 		const online = { kind: 'media', extn: strExtn, type: 'online', path: strPath, data: 'dummy' }
 		mediaRid = getNewRelId(target)
 		pushMediaRel(target, { ...online, rId: mediaRid, target: { external: strLink } })
 
-		// B: MS-2007 media rel — PowerPoint authors a second external rel sharing the
+		// B: MS-2007 media rel. PowerPoint authors a second external rel sharing the
 		// same link Target; the body points at it via <p14:media r:link>. (Mirrors the
 		// embedded A/V pair, but External and with no media binary part.)
 		msRid = getNewRelId(target)
 		pushMediaRel(target, { ...online, rId: msRid, target: { external: strLink } })
 	} else {
-		// A: "relationships/video". An identical source already on the slide — the same path, or the
-		// same inline payload — lends its part rather than embedding the bytes twice.
+		// A: "relationships/video". An identical source already on the slide (the same path, or the
+		// same inline payload) lends its part rather than embedding the bytes twice.
 		const embedded = { kind: 'media', extn: strExtn, type: strType + '/' + strExtn, path: strPath, data: strData }
 		mediaRid = getNewRelId(target)
 		const video = pushMediaRel(target, { ...embedded, rId: mediaRid, dedupe: true })

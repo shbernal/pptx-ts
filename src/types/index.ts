@@ -1,12 +1,12 @@
 /**
- * pptx-ts Interfaces — re-export barrel
+ * pptx-ts Interfaces: re-export barrel
  *
  * The public typed contract lives in `src/types/`, split by domain. This module re-exports
  * all of it so that `types/index.js` is the single import site for consumers and for the
  * rest of `src/`.
  *
  * The generator-internal `*Internal` wire shapes live alongside it in `types/internal.ts`
- * but are deliberately NOT re-exported here — they are not part of the published surface.
+ * but are deliberately NOT re-exported here; they are not part of the published surface.
  * Internal code imports them straight from `./internal.js`.
  *
  * Where things live:
@@ -26,7 +26,7 @@
  *   - `types/zoom.ts`      Slide/Section/Summary Zoom links
  *   - `types/model3d.ts`   embedded 3D models (`.glb`)
  *
- * Note: this barrel is not types-only — `types/text.ts` also exports the `textRun` /
+ * Note: this barrel is not types-only: `types/text.ts` also exports the `textRun` /
  * `textRuns` run-array helpers.
  */
 
