@@ -44,7 +44,6 @@ defineRegressionSuite('Diagnostics handler', [
 			assertEqual(seen.length, 0, 'an installed handler must suppress the console fallback entirely')
 
 			const diagnostic = defined(captured.diagnostics.find((d) => d.code === 'text/invalid-columns'))
-			assertEqual(typeof diagnostic.message, 'string', 'a diagnostic carries a message string')
 			assert(diagnostic.message.length > 0, 'the message is non-empty')
 			// The prefix belongs to the default console handler, not to the message. A message that
 			// carried its own would double up the moment the default handler printed it.
@@ -171,7 +170,6 @@ defineRegressionSuite('Diagnostics handler', [
 			const base = await import('../../../dist/node.js')
 			for (const entry of ['read', 'measure', 'script', 'inspect', 'html', 'math', 'zip']) {
 				const mod = (await import(`../../../dist/${entry}.js`)) as Record<string, unknown>
-				assertEqual(typeof mod.setDiagnosticHandler, 'function', `pptx-ts/${entry} must publish setDiagnosticHandler`)
 				assertEqual(typeof mod.resetDiagnosticState, 'function', `pptx-ts/${entry} must publish resetDiagnosticState`)
 				assert(
 					mod.setDiagnosticHandler === base.setDiagnosticHandler,

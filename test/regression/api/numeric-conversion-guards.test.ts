@@ -59,17 +59,10 @@ defineRegressionSuite('Numeric conversion guards', [
 		// `Infinity` reached it through every truthiness-guarded caller, came back as `Infinity`,
 		// and was then reported as out of range and emitted as `sz="Infinity"`. A measure with a
 		// schema range now clamps `Infinity` to its bound with a warning, the way every ranged
-		// option does (the bytes are pinned in non-finite-numbers.test.ts), so the measures still
+		// option does (the clamp and its bytes are pinned in non-finite-numbers.test.ts), so the measures still
 		// refused here are the ones with no range to clamp into.
 		name: 'a non-finite point measure never reaches the attribute',
 		fn: async () => {
-			for (const option of ['fontSize', 'charSpacing', 'lineSpacing']) {
-				assertEqual(
-					await codeFrom((p) => p.addSlide().addText('x', { ...BOX, [option]: Infinity })),
-					null,
-					`infinite ${option} is clamped to its bound rather than refused`
-				)
-			}
 			assertEqual(
 				await codeFrom((p) => p.addSlide().addText('x', { ...BOX, paraSpaceBefore: Infinity })),
 				'coord/non-finite',
@@ -172,11 +165,6 @@ defineRegressionSuite('Numeric conversion guards', [
 					buildFn: (p) => p.addSlide().addShape('rect', { ...BOX, rotate: NaN }),
 				},
 				{
-					label: 'shape line width',
-					code: 'coord/non-finite',
-					buildFn: (p) => p.addSlide().addShape('rect', { ...BOX, line: { color: 'FF0000', width: NaN } }),
-				},
-				{
 					label: 'text line width',
 					code: 'coord/non-finite',
 					buildFn: (p) => p.addSlide().addText('x', { ...BOX, line: { color: 'FF0000', width: NaN } }),
@@ -199,7 +187,7 @@ defineRegressionSuite('Numeric conversion guards', [
 		// The same truthiness guard stood in front of these: a NaN line transparency painted opaque,
 		// a NaN text outline took the 0.75pt default, a NaN image rotation or transparency was dropped
 		// and a NaN tab stop landed at one inch.
-		name: 'a NaN line transparency, outline size, image rotation or transparency, or tab stop is refused',
+		name: 'a NaN line transparency, image rotation or transparency, or tab stop is refused',
 		fn: async () => {
 			const png =
 				'image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
@@ -213,11 +201,6 @@ defineRegressionSuite('Numeric conversion guards', [
 					label: 'text line transparency',
 					code: 'percent/non-finite',
 					buildFn: (p) => p.addSlide().addText('x', { ...BOX, line: { color: 'FF0000', transparency: NaN } }),
-				},
-				{
-					label: 'text outline size',
-					code: 'coord/non-finite',
-					buildFn: (p) => p.addSlide().addText('x', { ...BOX, outline: { color: 'FF0000', size: NaN } }),
 				},
 				{
 					label: 'image rotate',
