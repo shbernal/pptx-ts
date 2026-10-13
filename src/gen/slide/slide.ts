@@ -33,7 +33,7 @@ export function makeXmlSlide(slide: PresSlideInternal, renderers: RendererTable,
 			'p:sld',
 			{
 				...PML_ROOT_NS,
-				show: slide?.hidden ? '0' : null,
+				show: slide.hidden ? '0' : null,
 			},
 			[
 				raw(slideObjectToXml(slide, renderers)),

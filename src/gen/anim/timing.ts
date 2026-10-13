@@ -36,7 +36,7 @@ export function slideTimingToXml(slide: PresSlideInternal): string {
 	// Resolve preset build animations to their target shape ids. `collectSlideShapeIds` covers group
 	// children as well as top-level objects, so `objectName` addresses any shape on the slide.
 	const shapeIds = collectSlideShapeIds(slide._slideObjects)
-	const animations = (slide._animations ?? [])
+	const animations = slide._animations
 		.filter((anim) => hasKnownAnimationPreset(anim))
 		.map((anim) => ({ anim, spid: resolveAnimationSpid(shapeIds, slide._slideObjects, anim) }))
 		.filter((entry): entry is { anim: AnimationProps; spid: number } => entry.spid !== null)
