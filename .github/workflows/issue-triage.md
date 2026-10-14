@@ -30,6 +30,9 @@ engine:
   api-target: api.z.ai
   env:
     ANTHROPIC_BASE_URL: https://api.z.ai/api/anthropic
+    # Claude Code's telemetry and update checks go to api.anthropic.com, which the
+    # firewall blocks and then reports at the foot of every triage comment.
+    CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: '1'
 
 # Issue types are an organization feature and this repo is user-owned, so there is no
 # `set-issue-type`. The label list is the repo's own kind labels plus the triage ones.
@@ -47,6 +50,9 @@ safe-outputs:
       - duplicate
       - invalid
     max: 4
+    # Without this, a label the agent sends with a rationale becomes a GitHub suggestion
+    # waiting for a maintainer to accept it, not a label on the issue.
+    issue-intent: false
   add-comment:
     max: 1
 
