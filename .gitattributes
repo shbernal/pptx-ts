@@ -27,3 +27,6 @@
 # provisioning scripts keep CRLF in every working tree.
 tools/powerpoint-vm/oem/*.bat text eol=crlf
 tools/powerpoint-vm/oem/*.cmd text eol=crlf
+
+# Compiled by `gh aw compile` from the sibling `.md` workflow; collapsed in diffs.
+.github/workflows/*.lock.yml linguist-generated=true
