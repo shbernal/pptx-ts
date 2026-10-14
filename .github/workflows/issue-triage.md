@@ -34,6 +34,14 @@ engine:
     # firewall blocks and then reports at the foot of every triage comment.
     CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: '1'
 
+# The agent checks published versions on npm and reads Microsoft's Open XML docs when an
+# issue turns on PowerPoint behavior. `defaults` keeps gh-aw's base allow-list.
+network:
+  allowed:
+    - defaults
+    - learn.microsoft.com
+    - registry.npmjs.org
+
 # Issue types are an organization feature and this repo is user-owned, so there is no
 # `set-issue-type`. The label list is the repo's own kind labels plus the triage ones.
 safe-outputs:
