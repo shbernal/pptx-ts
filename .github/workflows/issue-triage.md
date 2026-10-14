@@ -1,5 +1,5 @@
 ---
-description: |
+description: >-
   Triages new and reopened issues: checks the report against what this repo's
   issue forms ask for, applies a kind and priority label, finds duplicates, and
   posts one maintainer-facing report.
