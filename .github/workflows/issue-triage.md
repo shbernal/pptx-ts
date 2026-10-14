@@ -192,7 +192,8 @@ speculative implementation plan.
 
 ## 7. Report
 
-Post one concise comment for the maintainer:
+Post one concise comment for the maintainer. Before posting, load the `unslop` skill
+and apply it to the comment's prose.
 
 ```markdown
 ## Triage report
