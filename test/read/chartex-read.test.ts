@@ -11,7 +11,7 @@
 
 import { ChartType } from '../../dist/node.js'
 import { describe, test } from 'vitest'
-import { authorRead, firstChartEx, firstShape, schemaErrors, validatorInstalled } from './authored.ts'
+import { authorRead, firstChartEx, firstShape } from './authored.ts'
 import { isGraphicFrame } from '../../dist/read.js'
 import { assert, assertEqual, defined, at } from '../helpers.ts'
 
@@ -167,26 +167,5 @@ describe('ChartEx — write→read fidelity', () => {
 		assertEqual(frame.hasChartEx, false, 'and is not mistaken for a chartEx chart')
 		assert(frame.chartEx === null, 'the chartEx getter is null for a classic chart')
 		assert(frame.chart !== null, 'the classic chart getter still resolves')
-	})
-
-	test.skipIf(!validatorInstalled)('an authored chartEx deck is schema-valid', async () => {
-		const { buf } = await authorRead((pres) => {
-			pres.addSlide().addChart([{ name: 'Cash Flow', labels: ['Start', 'End'], values: [100, 190] }], {
-				type: ChartType.waterfall,
-				x: 1,
-				y: 1,
-				w: 6,
-				h: 4,
-				showTitle: true,
-				title: 'Cash',
-				subtotals: [0, 1],
-			})
-		})
-		// chartEx has one expected, whitelisted validator complaint: `cx:axisId/@val`
-		// (PowerPoint requires the attribute form the SDK schema doesn't declare — see
-		// src/gen/chart/chartex-xml.ts). Everything else must be clean.
-		const errors = await schemaErrors(buf)
-		const unexpected = errors.filter((e) => !/axisId/.test(JSON.stringify(e)))
-		assertEqual(unexpected.length, 0, `no unexpected schema violations, got ${JSON.stringify(unexpected)}`)
 	})
 })

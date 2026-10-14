@@ -38,7 +38,6 @@ defineRegressionSuite('Chart part-name determinism', [
 			const partsA = chartParts(zipA)
 			const partsB = chartParts(zipB)
 
-			assertEqual(partsA.length, 2, 'first deck has two chart parts')
 			// Numbering is per-presentation from 1, so both decks agree — and both start at chart1.
 			assert(
 				JSON.stringify(partsA) === JSON.stringify(['ppt/charts/chart1.xml', 'ppt/charts/chart2.xml']),

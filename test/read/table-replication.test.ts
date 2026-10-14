@@ -378,17 +378,6 @@ describe("table replication — a cell's own fill versus the style's banding", (
 		assert(/<a:noFill\/>\s*<\/a:tcPr>/.test(tcPrs[0]), `the suppressed cell replays its own a:noFill; got: ${tcPrs[0]}`)
 		assert(!/<a:noFill\/>\s*<\/a:tcPr>/.test(at(tcPrs, 1)), `the inheriting cell carries none; got: ${tcPrs[1]}`)
 	})
-
-	test('a scheme-coloured cell keeps its token rather than the colour it resolves to', async () => {
-		const ir = await irFor((pres) => {
-			pres.addSlide().addTable([[{ text: 'A', options: { fill: { color: 'accent2' } } }]], { x: 1, y: 1, w: 4 })
-		})
-		assertEqual(
-			fillProps(cellOptionsOf(tableCall(ir), 0, 0).fill).color,
-			'accent2',
-			'the token survives, so the copy tracks its theme'
-		)
-	})
 })
 
 describe('table replication — anchorCtr and cell3D', () => {

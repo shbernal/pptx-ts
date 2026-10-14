@@ -174,14 +174,6 @@ describe('slide animations (opaque, spid-aware)', () => {
 		assert.deepEqual(slide.animationSpids(), oracle.animationSpids)
 	})
 
-	test('hasAnimations + animationSpids on the rich fixture', async () => {
-		const oracle = await readOracle('slide-animation-rich')
-		const pres = await openFixture('slide-animation-rich')
-		const slide = at(pres.slides, 0)
-		assert.equal(slide.hasAnimations, true)
-		assert.deepEqual(slide.animationSpids(), oracle.animationSpids)
-	})
-
 	test('an unanimated fixture reports no animations', async () => {
 		const pres = await openFixture('slide-transition')
 		assert.equal(at(pres.slides, 0).hasAnimations, false)

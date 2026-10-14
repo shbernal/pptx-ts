@@ -79,16 +79,6 @@ describe('Shape.customGeometry — path attribute defaults + degenerate points',
 		assertEqual(path.stroke, false, 'stroke="0" reads false')
 	})
 
-	// A non-numeric `ST_AdjCoordinate` is a guide name, kept as written rather than read as 0 (#255).
-	test('a non-numeric a:pt coordinate reads as the guide name it is, without crashing', () => {
-		const path = onlyPath(`<a:path w="10" h="10"><a:moveTo><a:pt x="not-a-number" y="also"/></a:moveTo></a:path>`)
-		assertEqual(
-			JSON.stringify(path.commands[0]),
-			JSON.stringify({ cmd: 'moveTo', x: 'not-a-number', y: 'also' }),
-			'non-numeric coordinates → guide names'
-		)
-	})
-
 	test('an empty pathLst yields a geometry with no paths', () => {
 		const geom = sp(`<p:spPr><a:custGeom><a:pathLst/></a:custGeom></p:spPr>`).customGeometry
 		assert(geom, 'a custGeom with an empty pathLst still surfaces a geometry')

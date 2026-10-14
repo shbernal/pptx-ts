@@ -20,7 +20,7 @@ import https from 'node:https'
 import path from 'node:path'
 import { ROOT, collect } from '../script-utils.mjs'
 import { readVmEnv } from './connection.mjs'
-import { DEFAULT_TIMEOUT_MS, MAX_TIMEOUT_MS, normalizeRelPath, resolveInWorkspace, validateJob } from './job.mjs'
+import { DEFAULT_TIMEOUT_MS, MAX_TIMEOUT_MS, normalizeRelPath, validateJob } from './job.mjs'
 import { createRunner } from './runner.mjs'
 import { clearResiliency, killPowerPoint, readPowerPointInfo } from './windows.mjs'
 
@@ -235,24 +235,4 @@ export function packFiles(repoRelativePaths, { root = ROOT } = {}) {
  */
 export function returnedFiles(result) {
 	return new Map(Object.entries(result.files).map(([rel, b64]) => [rel, Buffer.from(b64, 'base64')]))
-}
-
-/**
- * Write the files a job returned under `into`, at their job paths. A path that would land
- * outside `into` is refused, whatever sent it.
- * @param {import('./job.mjs').JobResult} result
- * @param {{into: string}} options
- * @returns {string[]} the absolute paths written
- */
-export function writeReturnedFiles(result, { into }) {
-	const root = path.resolve(into)
-	/** @type {string[]} */
-	const written = []
-	for (const [rel, content] of returnedFiles(result)) {
-		const abs = resolveInWorkspace(root, normalizeRelPath(rel, 'returned file'))
-		fs.mkdirSync(path.dirname(abs), { recursive: true })
-		fs.writeFileSync(abs, content)
-		written.push(abs)
-	}
-	return written
 }

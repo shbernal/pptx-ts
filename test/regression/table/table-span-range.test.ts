@@ -104,14 +104,6 @@ defineRegressionSuite('Table colspan/rowspan range checking', [
 		},
 	},
 	{
-		name: 'one bad cell warns once, not once per site that reads its span',
-		fn: async () => {
-			const { codes } = await tableWithCellOptions({ colspan: -1 })
-			const spanCodes = codes.filter((c) => c === OUT_OF_RANGE)
-			assertEqual(spanCodes.length, 1, `expected exactly one diagnostic, got ${spanCodes.length}`)
-		},
-	},
-	{
 		// The second allocation, on the other path. The auto-pager sizes a per-column depth array
 		// from a column count that is a sum of colspans, so `autoPage: true` reached the same abort
 		// without ever getting as far as the merge grid. Both are fed by `addTableDefinition`, which

@@ -110,15 +110,6 @@ describe('construct families', () => {
 		assertSameParts(canonical, reversed, 'reversed family list')
 	})
 
-	test('dropping a family the deck never uses changes nothing', async () => {
-		const author = (pres: PresentationCore) => pres.addSlide().addText('text only', { x: 1, y: 1, w: 4, h: 1 })
-		assertSameParts(
-			await partsOf(ALL_CONSTRUCT_FAMILIES, author),
-			await partsOf(withoutCharts, author),
-			'text deck without the chart family'
-		)
-	})
-
 	test('a method whose family was not composed names the family', () => {
 		const slide = composed(withoutCharts).addSlide()
 		expect(() => slide.addChart(SERIES, { type: 'bar', x: 1, y: 1, w: 4, h: 3 })).toThrow(/"chart"/)

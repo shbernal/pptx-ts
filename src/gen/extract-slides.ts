@@ -78,8 +78,8 @@ function avMediaOf(slide: PresSlideInternal, relByRid: RelsByRid): ExtractedSlid
 			const mediaRel = relByRid.get(mediaRid)
 			const previewRel = relByRid.get(previewRid(mediaRid))
 			if (!mediaRel || !previewRel) return null
-			const mediaBytes = decodeBase64ToBytes(typeof mediaRel.data === 'string' ? mediaRel.data : '')
-			const previewBytes = decodeBase64ToBytes(typeof previewRel.data === 'string' ? previewRel.data : '')
+			const mediaBytes = decodeBase64ToBytes(mediaRel.data)
+			const previewBytes = decodeBase64ToBytes(previewRel.data)
 			if (!mediaBytes || !previewBytes) return null
 			const mediaExtn = relExtension(mediaRel, 'mp4')
 			const previewExtn = relExtension(previewRel, 'png')
@@ -122,8 +122,7 @@ function imageMediaOf(slide: PresSlideInternal, avPreviewRids: ReadonlySet<numbe
 		.map((rel) => {
 			// `decodeBase64ToBytes` takes a bare payload and a `data:` URI alike, so there is no prefix to
 			// normalize. The one this used to add changed no decoded byte.
-			const data: string = rel.data && typeof rel.data === 'string' ? rel.data : ''
-			const bytes = decodeBase64ToBytes(data)
+			const bytes = decodeBase64ToBytes(rel.data)
 			const extn = relExtension(rel, 'png')
 			return bytes ? { rId: rel.rId, bytes, extn, contentType: imageContentType(extn) } : null
 		})
@@ -137,7 +136,7 @@ function imageMediaOf(slide: PresSlideInternal, avPreviewRids: ReadonlySet<numbe
 function transitionSoundOf(rId: number | undefined, relByRid: RelsByRid): ExtractedSlide['transitionSound'] {
 	const rel = rId === undefined ? undefined : relByRid.get(rId)
 	if (!rel || rId === undefined) return undefined
-	const bytes = decodeBase64ToBytes(typeof rel.data === 'string' ? rel.data : '')
+	const bytes = decodeBase64ToBytes(rel.data)
 	if (!bytes) return undefined
 	const extn = relExtension(rel, 'wav')
 	return { rId, bytes, extn, contentType: avContentType(extn, 'audio') }

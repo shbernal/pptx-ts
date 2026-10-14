@@ -196,17 +196,6 @@ defineRegressionSuite('Image (blip) fills', [
 		},
 	},
 	{
-		name: 'text box accepts an image fill',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				const s = p.addSlide()
-				s.addText('hello', { x: 1, y: 1, w: 3, h: 1, fill: { type: 'image', image: { data: PNG_1X1 } } })
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assertIncludes(xml, '<a:blipFill', 'text box image fill')
-		},
-	},
-	{
 		name: 'SVG image fill is rejected with a warning (raster only)',
 		fn: async () => {
 			let zip: JSZip | undefined

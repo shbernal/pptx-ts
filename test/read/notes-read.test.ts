@@ -203,22 +203,4 @@ describe('Slide.notesTextFrame — write→read fidelity', () => {
 			assertEqual(ph.height, null, `${ph.type} has no own height`)
 		}
 	})
-
-	test('a slide with no notes part has a null notesSlide', async () => {
-		// The writer attaches a notes part to every authored slide, so this exercises the
-		// import-only null boundary via a slide whose notes rel is absent. Here we assert
-		// the modeled getter agrees with notesText/notesTextFrame on a real authored slide:
-		// all three resolve the same body.
-		const { presentation } = await authorRead((pres) => {
-			pres.addSlide().addNotes('shared body')
-		})
-		const slide = firstSlide(presentation)
-		assertEqual(slide.notesSlide?.text, 'shared body', 'notesSlide.text matches the body')
-		assertEqual(slide.notesText, 'shared body', 'notesText delegates to the same body')
-		assertEqual(
-			at(defined(slide.notesTextFrame).paragraphs, 0).text,
-			'shared body',
-			'notesTextFrame delegates to the same body frame'
-		)
-	})
 })

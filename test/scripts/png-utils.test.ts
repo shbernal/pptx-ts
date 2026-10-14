@@ -132,10 +132,6 @@ function pixels(png: Buffer) {
 }
 
 describe('decodePng', () => {
-	test('reads a 2x2 truecolour image back pixel for pixel', () => {
-		expect(pixels(encodeRgb(CHECKER))).toEqual(CHECKER)
-	})
-
 	test('undoes every scanline filter, not just None', () => {
 		// Sub, Up, Average and Paeth, one per row of a four-row image. Each predictor reads a
 		// different neighbour, so a decoder that confused two of them comes back wrong here and

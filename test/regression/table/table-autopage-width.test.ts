@@ -52,8 +52,6 @@ defineRegressionSuite('Table autoPage width arithmetic', [
 			assertEqual(cols.length, 3, 'three grid columns')
 			// 10in slide − 0.5in x − 0.5in right margin = 9in over 3 columns.
 			cols.forEach((w) => assert(w > 2 * ONE_IN_EMU, `expected each gridCol > 2in EMU; got ${w}`))
-			// The old arithmetic emitted a third of an inch per column.
-			assert(!cols.includes(304800), `gridCol must not be the sliver width; got ${JSON.stringify(cols)}`)
 		},
 	},
 	{

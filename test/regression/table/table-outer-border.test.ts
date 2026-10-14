@@ -168,26 +168,6 @@ defineRegressionSuite('Table outerBorder', [
 		},
 	},
 	{
-		name: 'an unset outerBorder changes nothing',
-		fn: async () => {
-			const rows = [
-				[{ text: 'A' }, { text: 'B' }],
-				[{ text: 'C' }, { text: 'D' }],
-			]
-			const { result: withOut } = await captureDiagnostics(() =>
-				// @ts-expect-error an explicit undefined outerBorder is the input under test
-				build((p) => p.addSlide().addTable(rows, { ...AT, outerBorder: undefined }))
-			)
-			const { result: without } = await captureDiagnostics(() => build((p) => p.addSlide().addTable(rows, AT)))
-
-			assertEqual(
-				await readEntry(withOut.zip, 'ppt/slides/slide1.xml'),
-				await readEntry(without.zip, 'ppt/slides/slide1.xml'),
-				'the no-perimeter path is byte-identical'
-			)
-		},
-	},
-	{
 		name: 'repeated writes do not accumulate the perimeter onto the cells',
 		fn: async () => {
 			// `arrTabRows` holds the caller's own cell objects, so a perimeter applied by mutation

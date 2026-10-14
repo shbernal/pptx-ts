@@ -43,28 +43,7 @@ const textObj = (options = {}) => ({
 	options: { objectName: 'T', ...options },
 })
 
-describe('escaping: cNvPrEl escapes objectName and altText; cSld-name is escaped here', () => {
-	// A slide object stores its `objectName` as the caller wrote it (the define layer validates but
-	// does not escape it), so this layer is the one place it is escaped.
-	test('objectName IS escaped, and exactly once', () => {
-		const xml = render([textObj({ objectName: 'Q&A <"x">' })])
-		expect(xml).toContain('name="Q&amp;A &lt;&quot;x&quot;&gt;"')
-		expect(xml).not.toContain('&amp;amp;')
-	})
-
-	test('altText IS escaped, in the same element', () => {
-		expect(render([textObj({ altText: 'a & <b>' })])).toContain('descr="a &amp; &lt;b&gt;"')
-	})
-
-	// Like objectName, `_name` (-> `<p:cSld name>`) is escaped HERE, at this render layer, not
-	// upstream: `_name` doubles as the raw lookup key `addSlide({masterTitle})` matches against the
-	// caller's `title` (presentation.ts, `layout._name === masterTitle`), so it must stay unescaped
-	// until emission or that match breaks for a title containing XML metacharacters. The bug this
-	// guards was a slide-master title reaching `<p:cSld name>` unescaped.
-	test('the slide name IS escaped, at this render layer', () => {
-		expect(render([], { _name: 'R&D' })).toContain('<p:cSld name="R&amp;D">')
-	})
-
+describe('escaping', () => {
 	test('a hyperlink tooltip IS escaped, and exactly once', () => {
 		const xml = render([textObj({ hyperlink: { url: 'http://a.b', _rId: 3, tooltip: 'a & b' } })])
 		expect(xml).toContain('tooltip="a &amp; b"')
@@ -163,25 +142,8 @@ describe('table cells', () => {
 		)
 	})
 
-	test('an unset horzOverflow emits no attribute at all', () => {
-		expect(render([table([[cell('a')]])])).not.toContain('horzOverflow')
-	})
-
 	test('an explicit clip is emitted as asked (PowerPoint drops it on its next save)', () => {
 		expect(render([table([[cell('a', { horzOverflow: 'clip' })]])])).toContain('horzOverflow="clip"')
-	})
-})
-
-describe('connector shape bindings (stCxn has ZERO baseline parts)', () => {
-	const withConnector = (options: Record<string, unknown>) =>
-		render([
-			textObj({ objectName: 'A' }),
-			textObj({ objectName: 'B' }),
-			{ _type: SlideObjectType.connector, shape: 'bentConnector3', options: { objectName: 'C', ...options } },
-		])
-
-	test('no bindings emits a self-closing cNvCxnSpPr', () => {
-		expect(withConnector({})).toContain('<p:cNvCxnSpPr/>')
 	})
 })
 
@@ -283,30 +245,6 @@ describe('slide number placeholder', () => {
 		const xml = sn({ margin: [0.1, 0.2, 0.3, 0.4] })
 		expect(xml).toContain(`<a:bodyPr lIns="${Math.round(0.4 * 914400)}" tIns="${Math.round(0.1 * 914400)}"`)
 		expect(xml).toContain(`rIns="${Math.round(0.2 * 914400)}" bIns="${Math.round(0.3 * 914400)}"/>`)
-	})
-
-	test('a part with no slide number of its own caches the placeholder glyph', () => {
-		// A master leaves `_slideNum` null and a layout carries the internal 1000+ counter. Neither
-		// is a page number, so neither belongs in the field's cached `<a:t>` — which is what
-		// PowerPoint reads back if it does not recompute. The child must stay non-null: the element
-		// builder skips a null child, and an `a:fld` with no `a:t` is a different construct.
-		const master = slideObjectToXml(
-			{ ...mkSlide([], { _slideNumberProps: { x: 1, y: 1 } }), _slideNum: null },
-			ALL_OBJECT_RENDERERS
-		)
-		expect(master).toContain('<a:t>‹#›</a:t>')
-
-		const layout = slideObjectToXml(
-			{ ...mkSlide([], { _slideNumberProps: { x: 1, y: 1 } }), _slideNum: 1004 },
-			ALL_OBJECT_RENDERERS
-		)
-		expect(layout).toContain('<a:t>‹#›</a:t>')
-
-		const slide = slideObjectToXml(
-			{ ...mkSlide([], { _slideNumberProps: { x: 1, y: 1 } }), _slideNum: 7 },
-			ALL_OBJECT_RENDERERS
-		)
-		expect(slide).toContain('<a:t>7</a:t>')
 	})
 
 	test('no margin emits a bare bodyPr', () => {

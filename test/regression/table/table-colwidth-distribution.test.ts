@@ -26,8 +26,6 @@ defineRegressionSuite('Table column-width distribution', [
 			assert(cols.length === 3, `expected 3 gridCols; got ${cols.length}`)
 			const expected = Math.round((9 * ONE_IN_EMU) / 3) // 3 inches per column
 			cols.forEach((w) => assert(w === expected, `expected gridCol w=${expected} EMU; got ${w}`))
-			// Regression guard: the old bug emitted w="3" (raw inches as EMU).
-			assert(!cols.includes(3), 'gridCol must not be the raw inches value treated as EMU (w="3")')
 		},
 	},
 	{

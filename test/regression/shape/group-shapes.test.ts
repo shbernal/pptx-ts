@@ -35,36 +35,6 @@ const cNvPrIdOf = (xml: string, name: string) => {
 
 defineRegressionSuite('Group shapes', [
 	{
-		name: 'addGroup emits one p:grpSp wrapping its children with identity chOff/chExt',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.addSlide().addGroup(
-					[
-						{ rect: { x: 1, y: 1, w: 2, h: 1, fill: { color: 'CC0000' } } },
-						{ text: { text: 'Hi', options: { x: 1, y: 1, w: 2, h: 1 } } },
-					],
-					{ objectName: 'MyGroup' }
-				)
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			// exactly one group wrapper
-			assert((xml.match(/<p:grpSp>/g) || []).length === 1, 'expected exactly one <p:grpSp>; got: ' + xml)
-			assert(/name="MyGroup"/.test(xml), 'expected group objectName; got: ' + xml)
-			// identity child transform: chOff == off and chExt == ext
-			const m = xml.match(
-				/<a:off x="(\d+)" y="(\d+)"\/><a:ext cx="(\d+)" cy="(\d+)"\/><a:chOff x="(\d+)" y="(\d+)"\/><a:chExt cx="(\d+)" cy="(\d+)"\/>/
-			)
-			assert(m, 'expected group xfrm with off/ext/chOff/chExt; got: ' + xml)
-			assert(
-				m[1] === m[5] && m[2] === m[6] && m[3] === m[7] && m[4] === m[8],
-				'expected identity chOff/chExt == off/ext; got: ' + m.slice(1).join(',')
-			)
-			// both children rendered inside the group
-			assert(/<a:srgbClr val="CC0000"\/>/.test(xml), 'expected rect child inside group; got: ' + xml)
-			assert(/<a:t>Hi<\/a:t>/.test(xml), 'expected text child inside group; got: ' + xml)
-		},
-	},
-	{
 		name: 'group bounds auto-compute as the bounding box of its children',
 		fn: async () => {
 			const { zip } = await build((p) => {

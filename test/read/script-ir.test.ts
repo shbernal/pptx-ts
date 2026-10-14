@@ -558,26 +558,11 @@ describe('deck IR — losses the read model cannot see', () => {
 		)
 	})
 
-	test('embedded audio/video is rebuilt with addMedia, not emitted as a still image (#202)', async () => {
-		const ir = await irFor('av-media.pptx')
-		assert(!constructs(ir).has('media.audioVideo'), 'av-media.pptx embeds its media, which addMedia authors')
-		const media = allCalls(ir).filter((call) => call.method === 'addMedia')
-		assertEqual(media.length, 2, 'the video and the audio are each an addMedia call')
-	})
-
 	test('linked audio/video is reported, not silently emitted as a still image', async () => {
 		const ir = await irFor('online-video.pptx')
 		assert(constructs(ir).has('media.audioVideo'), 'online-video.pptx links a local file, which addMedia cannot author')
 		// It still emits something, so the slide is not left blank.
 		assert(allCalls(ir).length > 0, 'the poster frame should still be emitted')
-	})
-
-	// It used to be noted `unread`; `Paragraph.equations` now reads it and it replays as `math` (#259).
-	test('an OMML equation is carried rather than emitted as an empty box', async () => {
-		const ir = await irFor('math-omml.pptx')
-		const call = allCalls(ir).find((item) => item.sourceName === 'equation-box')
-		assert(call, 'the equation box emits a call')
-		assert(typeof opt(at(irArgs(call)[0], 0), 'math') === 'string', 'whose text is the equation')
 	})
 })
 

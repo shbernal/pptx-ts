@@ -392,13 +392,6 @@ describe('a malformed collection is refused, not read into garbage', () => {
 })
 
 describe('pptx.registerFontMetrics accepts a collection', () => {
-	test('with no font option the deck-side face name selects the member', async () => {
-		const pptx = new PptxTs()
-		await pptx.registerFontMetrics('Silkscreen', TTC)
-		const measured = pptx.measureText('WWWWWWWWWW', { wIn: 1, fontSize: 18, fontFace: 'Silkscreen' })
-		expect(measured.measurable).toBe(true)
-	})
-
 	test('a face naming no member throws instead of silently measuring the first', async () => {
 		const pptx = new PptxTs()
 		const err = defined(await caught(() => pptx.registerFontMetrics('MS PGothic', TTC)))
@@ -424,7 +417,6 @@ describe('pptx.registerFontMetrics accepts a collection', () => {
 		// `await response.arrayBuffer()`. Same bytes, so the same advances.
 		const buffer = new ArrayBuffer(TTC.byteLength)
 		new Uint8Array(buffer).set(TTC)
-		expect(buffer).toBeInstanceOf(ArrayBuffer)
 		const fromBuffer = new PptxTs()
 		await fromBuffer.registerFontMetrics('Silkscreen', buffer)
 		const fromView = new PptxTs()

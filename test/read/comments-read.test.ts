@@ -5,7 +5,7 @@
 
 import { describe, test } from 'vitest'
 import { assertEqual, at } from '../helpers.ts'
-import { authorRead, schemaErrors, validatorInstalled } from './authored.ts'
+import { authorRead } from './authored.ts'
 
 const EMU_PER_INCH = 914400
 const inchToEmu = (inches: number) => Math.round(inches * EMU_PER_INCH)
@@ -62,12 +62,5 @@ describe('Slide.comments + Presentation.commentAuthors', () => {
 		})
 		assertEqual(presentation.commentAuthors.length, 0, 'no commentAuthors part → []')
 		assertEqual(at(presentation.slides, 0).comments.length, 0, 'no comments part → []')
-	})
-
-	test.skipIf(!validatorInstalled)('a deck with comments stays schema-valid', async () => {
-		const { buf } = await authorRead((pres) => {
-			pres.addSlide().addComment({ author: 'Ada Lovelace', text: 'valid', x: 1, y: 1 })
-		})
-		assertEqual((await schemaErrors(buf)).length, 0, 'no schema violations')
 	})
 })

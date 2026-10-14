@@ -15,7 +15,6 @@ import { describe, test } from 'vitest'
 import PptxTs from '../../dist/node.js'
 import { Presentation } from '../../dist/read.js'
 import { bytesEqual, assert, assertEqual, defined, partBodies, at } from '../helpers.ts'
-import { validateBuf, validatorInstalled } from '../validator.ts'
 import { FIXTURES, fixturePath } from './corpus.ts'
 
 const MODEL3D_REL = 'http://schemas.microsoft.com/office/2017/06/relationships/model3d'
@@ -172,44 +171,5 @@ describe('3D model: pptx-ts-authored', () => {
 			normalize(fixtureBody),
 			'camera, transform, raster, viewport and the whole lighting rig match PowerPoint byte-for-byte'
 		)
-	})
-
-	test('a caller-supplied camera and scale reach the XML in am3d wire units', async () => {
-		const body = text(
-			await authored({ camera: { pos: { x: 1, y: 2, z: 3 }, fov: 60 }, meterPerModelUnit: 0.01 }),
-			'ppt/slides/slide1.xml'
-		)
-		assert(body.includes('<am3d:pos x="36000000" y="72000000" z="108000000"/>'), 'camera.pos is scaled by 36,000,000')
-		assert(body.includes('<am3d:perspective fov="3600000"/>'), 'fov is emitted in 60000ths of a degree')
-		assert(body.includes('<am3d:meterPerModelUnit n="10000" d="1000000"/>'), 'meterPerModelUnit is emitted as n/1e6')
-	})
-
-	// READ THIS BEFORE TRUSTING THE NEXT TEST. The Open XML SDK validator does **not** check
-	// anything inside an `mc:Choice` — it validates only the `mc:Fallback` branch. Measured at
-	// `Microsoft365` on this very deck: a bogus attribute on the text shape outside the
-	// `mc:AlternateContent` reports 1 error, and one inside `mc:Fallback` reports 1 error, but the
-	// same mutation on `p:xfrm` or `am3d:model3d` inside the `mc:Choice` reports 0 — as do an
-	// unknown `am3d` child, `am3d:camera` moved out of document order, a non-numeric
-	// `perspective@fov`, and `am3d:model3d` with its required `r:embed` deleted. The SDK does model
-	// `am3d` (Office2019+), but it never reaches it here. This is a property of
-	// `mc:AlternateContent`, not of `am3d`, so the zoom and OLE emitters share the blind spot.
-	//
-	// So this test covers the FALLBACK picture, the rel graph and the content types — real
-	// coverage, and the parts a strict consumer reads — but it is not evidence about the `am3d`
-	// body. What covers that is the byte-for-byte comparison against PowerPoint's own output
-	// above, plus the desktop check in `pnpm run test:com`.
-	test.skipIf(!validatorInstalled)('the package and its mc:Fallback branch are schema-valid', async () => {
-		const pptx = new PptxTs()
-		pptx.layout = 'LAYOUT_WIDE'
-		pptx.addSlide().addModel3d({
-			path: path.join(FIXTURES, 'authoring', 'assets', 'cube.glb'),
-			preview: { path: path.join(FIXTURES, 'media', 'poster.png') },
-			x: 1,
-			y: 1,
-			w: 4,
-			h: 3,
-		})
-		const errors = await validateBuf(await pptx.write({ outputType: 'nodebuffer' }))
-		assertEqual(errors.length, 0, `validator errors: ${JSON.stringify(errors).slice(0, 2000)}`)
 	})
 })

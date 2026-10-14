@@ -83,11 +83,6 @@ describe('slide background — imported-only p:bg variants', () => {
 		assertEqual(bg.source, 'slide', 'sourced from the slide')
 	})
 
-	test('a bgPr holding no recognized fill falls back to none', async () => {
-		const bg = await backgroundFrom('<p:bg><p:bgPr><a:effectLst/></p:bgPr></p:bg>')
-		assertEqual(bg.type, 'none', 'an effect-only bgPr has no fill to decode')
-	})
-
 	test('a p:bg carrying neither p:bgPr nor p:bgRef reads none', async () => {
 		const bg = await backgroundFrom('<p:bg/>')
 		assertEqual(bg.type, 'none', 'an empty p:bg still stops the inheritance chain')

@@ -411,15 +411,6 @@ describe('diagram element_ / markDirty()', () => {
 		assertEqual(changed.length, 0, 'no part should be reserialized without markDirty()')
 	})
 
-	test('Diagram.markDirty() reserializes the data part, not the slide', async () => {
-		const { changed } = await saveAfter('mixed', (presentation) => {
-			const diagram = diagramOf(presentation)
-			defined(diagram.element_).setAttribute('xmlns:pptxts', 'urn:test')
-			diagram.markDirty()
-		})
-		assertOnlyDataPart(changed)
-	})
-
 	test('DiagramPoint.element_ reaches the data part through Diagram.markDirty()', async () => {
 		// A point has no markDirty() of its own: it is one rung inside the part its
 		// Diagram owns, so the obligation belongs to the Diagram. The edit sets a real

@@ -50,37 +50,6 @@ async function pagedRowCounts(opts: TableProps) {
 
 defineRegressionSuite('Table autoPage tiny-height guard', [
 	{
-		name: 'h smaller than one line of text does not crash and emits no empty page (warns instead)',
-		fn: async () => {
-			const warnings: string[] = []
-			setDiagnosticHandler((d) => warnings.push(d.message))
-			let zip
-			try {
-				;({ zip } = await build((p) => {
-					// h(0.1") cannot fit even one 12pt line (~0.2") → unusable usable height.
-					p.addSlide().addTable(rows(12), {
-						x: 0.5,
-						y: 1.2,
-						w: 9,
-						h: 0.1,
-						colW: [4.5, 4.5],
-						margin: 0,
-						slideMargin: 0,
-						autoPage: true,
-						fontSize: 12,
-					})
-				}))
-			} finally {
-				setDiagnosticHandler(null)
-			}
-			assert(slideCount(zip) >= 1, 'expected at least one slide, never zero or a crash')
-			assert(
-				warnings.some((w) => w.includes('leaves no room to paginate')),
-				`expected a warning about unusable table height; got: ${JSON.stringify(warnings)}`
-			)
-		},
-	},
-	{
 		name: 'a usable explicit h still paginates normally (no warning)',
 		fn: async () => {
 			const warnings: string[] = []

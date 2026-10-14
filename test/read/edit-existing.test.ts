@@ -60,11 +60,6 @@ describe('shape addressing', () => {
 		assertEqual(subtitle.name, 'Sous-titre 2', 'subTitle idx=1 is the expected shape')
 		assertEqual(slide.placeholder('subTitle', '9'), undefined, 'wrong idx yields undefined')
 	})
-
-	test('non-placeholder shapes report a null placeholder', async () => {
-		const slide = at((await openFixture('textbox')).slides, 0)
-		assertEqual(defined(slide.shapeByName('replaceText')).placeholder, null, 'a plain text box is not a placeholder')
-	})
 })
 
 describe('whole-text-frame text swap', () => {

@@ -39,7 +39,7 @@ export const DEFAULT_TABLE_STYLE = TableStyle.MEDIUM_STYLE_2_ACCENT_1
  * @param definitions - the `a:tblStyle` elements the part carries, in order
  * @return {string} XML
  */
-export function makeXmlTableStyles(definitions: readonly string[] = []): string {
+export function makeXmlTableStyles(definitions: readonly string[]): string {
 	return (
 		XML_DECL +
 		CRLF +
