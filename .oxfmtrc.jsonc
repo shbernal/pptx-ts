@@ -93,6 +93,9 @@
 		// (`assets/readme/demo/build.py`). It is laid out to fit that window; formatted, it is
 		// 43 lines and the demo cuts it off.
 		"assets/readme/demo/report.mts",
+		// Written by `gh aw compile` from the `.md` beside it, in the compiler's own layout.
+		// Formatting it would make `format:check` fail after every compile.
+		".github/workflows/*.lock.yml",
 		"package-lock.json",
 		"pnpm-lock.yaml",
 		"**/*.min.js",

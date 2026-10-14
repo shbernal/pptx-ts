@@ -78,6 +78,11 @@
 			"groupName": "math (temml / mathml2omml)"
 		},
 		{
+			"description": "Leave gh-aw lock files alone. `gh aw compile` writes them from the `.md` workflow beside them and pins their actions itself, so a Renovate edit would be silently undone by the next compile. Update them with `gh aw upgrade`.",
+			"matchFileNames": [".github/workflows/*.lock.yml"],
+			"enabled": false
+		},
+		{
 			"description": "Pin GitHub Actions to commit SHAs and batch their updates.",
 			"matchManagers": ["github-actions"],
 			"pinDigests": true,
