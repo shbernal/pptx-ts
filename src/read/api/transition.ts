@@ -117,7 +117,6 @@ function typeElement(transition: Element): Element | null {
 
 /** Namespace prefix for a URI, defaulting to `p` for the base presentationml namespace. */
 function prefixFor(uri: string | null): string {
-	if (!uri) return 'p'
 	for (const [prefix, ns] of Object.entries(OOXML_NS)) {
 		if (ns === uri) return prefix
 	}

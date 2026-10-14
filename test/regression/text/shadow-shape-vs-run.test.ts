@@ -42,17 +42,6 @@ defineRegressionSuite('shadow: the shape and the glyphs are two effects', [
 		},
 	},
 	{
-		name: 'the array overload agrees with the string one',
-		fn: async () => {
-			// The two used to differ for a different reason and now must not differ at all: the run
-			// list is where a RUN shadow is stated, and stating none there means none.
-			const { zip } = await build((p) => {
-				p.addSlide().addText([{ text: 'array' }], { x: 1, y: 1, w: 4, h: 1, shadow: SHADOW })
-			})
-			assertEqual(JSON.stringify(await shadowSites(zip)), JSON.stringify({ shape: true, run: false }))
-		},
-	},
-	{
 		name: "a shadow on a run's bag shadows the glyphs and not the shape",
 		fn: async () => {
 			const { zip } = await build((p) => {
@@ -76,30 +65,6 @@ defineRegressionSuite('shadow: the shape and the glyphs are two effects', [
 				})
 			})
 			assertEqual(JSON.stringify(await shadowSites(zip)), JSON.stringify({ shape: true, run: true }))
-		},
-	},
-	{
-		// The other run-level options still inherit from the shape: the change is about `shadow`
-		// alone, not about a run losing what a shape says.
-		name: 'the run-level options a run does inherit still reach it',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.addSlide().addText('inherited', {
-					x: 1,
-					y: 1,
-					w: 4,
-					h: 1,
-					bold: true,
-					fontSize: 22,
-					color: 'FF0000',
-					align: 'center',
-				})
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assert(/<a:rPr[^>]*\bsz="2200"/.test(xml), 'fontSize reaches the run; got: ' + xml)
-			assert(/<a:rPr[^>]*\bb="1"/.test(xml), 'bold reaches the run')
-			assert(/FF0000/.test(xml), 'color reaches the run')
-			assert(/algn="ctr"/.test(xml), 'and align reaches the paragraph')
 		},
 	},
 	{

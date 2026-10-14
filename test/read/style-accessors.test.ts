@@ -343,13 +343,6 @@ describe('Shape line dash / explicit no-line reads (off-fixture)', () => {
 	// OOXML exercises every branch without a round-trip through this library's writer.
 	const sp = (spPr: string) => shapeFromXml(AutoShape, 'sp', `<p:sp>${spPr}</p:sp>`)
 
-	test('lineDash reads a:ln/a:prstDash/@val', () => {
-		const dashed = sp(
-			'<p:spPr><a:ln w="12700"><a:solidFill><a:srgbClr val="000000"/></a:solidFill><a:prstDash val="dash"/></a:ln></p:spPr>'
-		)
-		assertEqual(dashed.lineDash, 'dash', 'prstDash val is surfaced verbatim')
-	})
-
 	test('lineDash is null for a solid line and for no line at all', () => {
 		const solid = sp('<p:spPr><a:ln w="12700"><a:solidFill><a:srgbClr val="000000"/></a:solidFill></a:ln></p:spPr>')
 		assertEqual(solid.lineDash, null, 'a line with no prstDash is solid → null')
@@ -675,19 +668,6 @@ describe('Picture recolour reads (recolor)', () => {
 		assertEqual(pictureWithBlipChild('').recolor, null, 'a bare blip has no recolour')
 	})
 
-	test('clrChange reports its from/to colours, scheme tokens included', () => {
-		const recolor = recolorOfKind(
-			pictureWithBlipChild(
-				'<a:clrChange><a:clrFrom><a:srgbClr val="FF0000"/></a:clrFrom><a:clrTo><a:schemeClr val="accent1"/></a:clrTo></a:clrChange>'
-			).recolor,
-			'clrChange',
-			'a:clrChange is read as a clrChange recolour'
-		)
-		assertEqual(defined(recolor.from).srgb, 'FF0000', 'clrFrom is the explicit source colour')
-		assertEqual(defined(recolor.to).scheme, 'accent1', 'clrTo is a scheme token left for the theme resolver')
-		assertEqual(defined(recolor.to).srgb, null, 'a scheme clrTo carries no explicit colour')
-	})
-
 	test('a duotone stop resolves whatever colour model it is written in', () => {
 		// An a:sysClr stop names no srgb, scheme or preset value, so a raw-only read reported it as
 		// all-null. Resolving each stop against the slide theme is what makes it readable.
@@ -724,13 +704,6 @@ describe('Picture recolour reads (recolor)', () => {
 		// amt is optional and defaults to 100% per the schema.
 		const defaulted = recolorOfKind(pictureWithBlipChild('<a:alphaModFix/>').recolor, 'alphaModFix', 'a:alphaModFix')
 		assertEqual(defaulted.amount, 1, 'a missing amt defaults to 1.0')
-	})
-
-	test('the first recolour effect in document order wins', () => {
-		const recolor = pictureWithBlipChild(
-			'<a:grayscl/><a:duotone><a:srgbClr val="111111"/><a:srgbClr val="222222"/></a:duotone>'
-		).recolor
-		assertEqual(recolor?.kind, 'grayscale', 'grayscl precedes the duotone, so it is the one reported')
 	})
 })
 

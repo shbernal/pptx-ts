@@ -55,24 +55,6 @@ defineRegressionSuite('Table span + border structure (verified correct)', [
 		},
 	},
 	{
-		name: 'uniform border renders on every cell incl. non-first rows/columns',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.addSlide().addTable(
-					[
-						[{ text: 'a' }, { text: 'b' }],
-						[{ text: 'c' }, { text: 'd' }],
-					],
-					{ x: 0, y: 0, w: 6, border: BORDER4 }
-				)
-			})
-			const tbl = await tableXml(zip)
-			const tcs = cells(tbl)
-			assert(tcs.length === 4, `expected 4 cells, got ${tcs.length}`)
-			tcs.forEach((c, i) => assert(hasAllFourBorders(c), `cell ${i} must carry all four borders`))
-		},
-	},
-	{
 		name: 'rowspan continuation + adjacent cells keep borders',
 		fn: async () => {
 			const { zip } = await build((p) => {

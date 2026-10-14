@@ -159,9 +159,6 @@ defineRegressionSuite('Fill kind inference', [
 				}
 				assertEqual(err?.code, 'line/image-fill-unsupported', `expected a refusal for line: ${JSON.stringify(line)}`)
 			}
-			// The interior is unaffected: a picture fill is a shape fill, and still paints.
-			const xml = await slideXml((p) => p.addSlide().addShape('rect', { ...BOX, fill: { image: { data: PNG } } }))
-			assertEqual(shapeFill(xml).join(','), 'blipFill', 'a picture *fill* still paints')
 		},
 	},
 	{

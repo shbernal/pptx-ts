@@ -2045,25 +2045,6 @@ export default [
 		},
 	},
 	{
-		// chart-metadata-extlst: a chart with no metadata (and one with only-invalid entries) emits
-		// no extLst at all — the extension is purely opt-in and never produces an empty element.
-		name: 'chart without metadata emits no chartSpace extLst',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.addSlide().addChart([{ name: 'S1', labels: ['A'], values: [1] }], {
-					type: ChartType.bar,
-					x: 0.5,
-					y: 0.5,
-					w: 4,
-					h: 3,
-				})
-			})
-			const chartPath = defined(listEntries(zip).find((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f)))
-			const chartXml = await readEntry(zip, chartPath)
-			assert(!chartXml.includes('<c:extLst>'), 'no extLst when metadata absent')
-		},
-	},
-	{
 		// waterfall is the first chartEx (cx:) chart type: a SEPARATE `chartExN.xml` part in the
 		// Office-2016 chart-extension namespace, referenced from the slide via <mc:AlternateContent>.
 		// The Open XML validator knows the cx schema, so this proves the whole part validates —

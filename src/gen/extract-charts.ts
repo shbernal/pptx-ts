@@ -28,7 +28,7 @@ export function chartsOf(slide: PresSlideInternal): ExtractedSlide['charts'] {
 		embeddingBytes: buildEmbeddedWorksheet(rel),
 		...chartPartBodies(rel),
 		pictures: (rel.media ?? []).flatMap((picture) => {
-			const bytes = decodeBase64ToBytes(typeof picture.rel.data === 'string' ? picture.rel.data : '')
+			const bytes = decodeBase64ToBytes(picture.rel.data)
 			const extn = (picture.rel.extn || 'png').toLowerCase()
 			return bytes ? [{ rId: picture.rId, bytes, extn, contentType: imageContentType(extn) }] : []
 		}),

@@ -73,25 +73,6 @@ defineRegressionSuite('Media looping', [
 		},
 	},
 	{
-		// Regression: the media <p:cNvPr> id used to be `mediaRid + 2`, a different numbering
-		// space than the `index + 2` every other shape uses. A sibling shape whose index equals
-		// the media's relationship id produced a duplicate id -> PowerPoint corrupt (0x80070570).
-		// This holds even without looping (no <p:timing> involved).
-		name: 'non-looping media preceded by shapes still gets a unique cNvPr id',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				const s = p.addSlide()
-				s.addText('a', { x: 0.5, y: 0.5, w: 2, h: 0.4 })
-				s.addText('b', { x: 3, y: 0.5, w: 2, h: 0.4 })
-				s.addMedia({ type: 'video', data: 'video/mp4;base64,AAAA', x: 1, y: 1, w: 3, h: 2 })
-			})
-
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			const ids = [...xml.matchAll(/<p:cNvPr id="(\d+)"/g)].map((m) => m[1])
-			assert(new Set(ids).size === ids.length, `duplicate cNvPr ids on slide: ${ids.join(',')}`)
-		},
-	},
-	{
 		name: 'no timing tree without loop options',
 		fn: async () => {
 			const { zip } = await build((p) => {

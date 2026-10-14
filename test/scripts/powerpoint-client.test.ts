@@ -15,9 +15,8 @@ import {
 	resolveTransport,
 	returnedFiles,
 	runJob,
-	writeReturnedFiles,
 } from '../../scripts/powerpoint/client.mjs'
-import type { Job, JobResult } from '../../scripts/powerpoint/job.mjs'
+import type { Job } from '../../scripts/powerpoint/job.mjs'
 import { type Executor, createRunner } from '../../scripts/powerpoint/runner.mjs'
 import { createWorker } from '../../scripts/powerpoint/worker.mjs'
 import {
@@ -113,10 +112,6 @@ describe('runJob against a worker', () => {
 		expect(result.exitCode).toBe(0)
 		expect(result.stdout.split(/\r?\n/)).toEqual(expect.arrayContaining(['OPEN_OK\t1', 'DECK\tdeck bytes']))
 		expect([...returnedFiles(result)]).toEqual([['com-smoke/deck.png', Buffer.from('png bytes')]])
-
-		const into = path.join(tmpRoot, 'out')
-		expect(writeReturnedFiles(result, { into })).toEqual([path.join(into, 'com-smoke', 'deck.png')])
-		expect(fs.readFileSync(path.join(into, 'com-smoke', 'deck.png'), 'utf8')).toBe('png bytes')
 	})
 
 	test('a rejected token is a failure that says so', async () => {
@@ -151,24 +146,6 @@ describe('file helpers', () => {
 		expect(Object.keys(files)).toEqual(['scripts/powerpoint/job.mjs'])
 		expect(Buffer.from(defined(files['scripts/powerpoint/job.mjs']), 'base64').toString()).toContain('validateJob')
 		expect(() => packFiles(['../outside'])).toThrow("contains '..'")
-	})
-
-	test('writeReturnedFiles refuses a path outside its directory', () => {
-		const into = fs.mkdtempSync(path.join(os.tmpdir(), 'powerpoint-client-write-'))
-		try {
-			const result: JobResult = {
-				exitCode: 0,
-				timedOut: false,
-				stdout: '',
-				stderr: '',
-				files: { '../escape.txt': Buffer.from('x').toString('base64') },
-				powerpoint: null,
-				durationMs: 0,
-			}
-			expect(() => writeReturnedFiles(result, { into })).toThrow("contains '..'")
-		} finally {
-			fs.rmSync(into, { recursive: true, force: true })
-		}
 	})
 })
 

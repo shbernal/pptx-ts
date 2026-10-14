@@ -30,7 +30,6 @@ defineRegressionSuite('Connector shapes', [
 				})
 			})
 			const cxn = defined((xml.match(/<p:cxnSp>[\s\S]*?<\/p:cxnSp>/g) || [])[0], 'a p:cxnSp')
-			assert(cxn, 'expected a <p:cxnSp> element')
 			assert(cxn.includes('<a:prstGeom prst="straightConnector1">'), 'expected straightConnector1 preset')
 			// origin = min corner (1in,1in = 914400 EMU); ext = |4-1|x|3-1| = 3in x 2in.
 			assert(cxn.includes('<a:off x="914400" y="914400"/>'), 'expected origin at min corner')

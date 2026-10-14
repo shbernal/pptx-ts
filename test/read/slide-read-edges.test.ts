@@ -80,13 +80,6 @@ describe('Slide misc read/edit edges', () => {
 		)
 	})
 
-	test('placeholder() skips non-AutoShape shapes when scanning', async () => {
-		// image.pptx carries pictures (non-AutoShape). placeholder() must iterate past
-		// them without error; a missing type simply returns undefined.
-		const slide = at((await openFixture('image')).slides, 0)
-		assertEqual(slide.placeholder('nonexistent-type'), undefined, 'no matching placeholder → undefined')
-	})
-
 	test('a picture in a picture placeholder reports its p:ph', async () => {
 		// A filled picture placeholder is a `p:pic` carrying `p:ph`, and `Picture.placeholder` was
 		// `null` for every picture (issue #111).

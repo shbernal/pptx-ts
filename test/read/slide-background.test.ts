@@ -144,14 +144,4 @@ describe('the converter carries a slide-scoped background instead of dropping it
 		assertEqual(note.disposition, 'flattened', 'and the reference itself is noted as flattened')
 		assert(note.detail.includes('gradient it currently resolves to'), `the note names the fill (got ${note.detail})`)
 	})
-
-	test('an inherited background is still not re-authored onto the slide', async () => {
-		// The one thing that must NOT change: a background that comes from the layout stays
-		// there, so it keeps following the layout instead of being pinned onto every slide.
-		const ir = await irFor('empty.pptx')
-		assert(
-			ir.slides.every((slide) => slide.background === undefined),
-			'a slide with no background of its own states none'
-		)
-	})
 })

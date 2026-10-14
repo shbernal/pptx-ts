@@ -35,13 +35,13 @@ function definedIds(xml: string): string[] {
 
 describe('makeXmlTableStyles', () => {
 	test('with no definitions, emits a self-closing tblStyleLst naming the default style id', () => {
-		expect(makeXmlTableStyles()).toContain(
+		expect(makeXmlTableStyles([])).toContain(
 			`<a:tblStyleLst xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" def="${TableStyle.MEDIUM_STYLE_2_ACCENT_1}"/>`
 		)
 	})
 
 	test('is a complete XML document', () => {
-		expect(makeXmlTableStyles().startsWith('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>')).toBe(true)
+		expect(makeXmlTableStyles([]).startsWith('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>')).toBe(true)
 	})
 })
 

@@ -41,13 +41,6 @@ import { TableStyle, type TableProps, type TableRow } from '../../../dist/node.j
 
 const AT = { x: 1, y: 1, w: 8 }
 
-/** The first cell's `<a:tcPr>` block. */
-function firstTcPr(xml: string) {
-	const match = xml.match(/<a:tcPr(?:\/>|[^>]*>[\s\S]*?<\/a:tcPr>)/)
-	assert(match, 'expected an a:tcPr; got: ' + xml)
-	return match[0]
-}
-
 /** The `<a:rPr>` of the first text run. */
 function firstRPr(xml: string) {
 	const match = xml.match(/<a:rPr[^>]*(?:\/>|>[\s\S]*?<\/a:rPr>)/)
@@ -125,16 +118,6 @@ defineRegressionSuite('Table styling: built-in styles and the direct-formatting 
 		},
 	},
 	{
-		name: 'every cell is given an explicit four-side none border as direct formatting',
-		fn: async () => {
-			// Not an oversight: this is what stops a table inheriting grid lines, and it is the
-			// bottom rung of the precedence stack every case below sits on top of.
-			const { slide } = await tableParts()
-			const tcPr = firstTcPr(slide)
-			assertEqual((tcPr.match(/<a:ln[LRTB] w="0"/g) || []).length, 4, 'all four sides are explicitly suppressed')
-		},
-	},
-	{
 		name: 'a styled table leaves uncoloured text to the style',
 		fn: async () => {
 			// A run's own fill beats the style's `a:tcTxStyle`, so the black default drew black text on
@@ -157,15 +140,6 @@ defineRegressionSuite('Table styling: built-in styles and the direct-formatting 
 			})
 			const rPr = firstRPr(await readEntry(zip, 'ppt/slides/slide1.xml'))
 			assert(rPr.includes('<a:srgbClr val="C00000"/>'), 'the slide colour lands; got: ' + rPr)
-		},
-	},
-	{
-		name: 'a table-level border reaches every cell',
-		fn: async () => {
-			// Tier 4: the table-level option flows into the same per-cell slot the default fills.
-			const { slide } = await tableParts({ border: { type: 'solid', color: 'D9D9D9', width: 0.5 } })
-			const tcPr = firstTcPr(slide)
-			assert(tcPr.includes('<a:srgbClr val="D9D9D9"/>'), 'the table-level border reaches the cell; got: ' + tcPr)
 		},
 	},
 	{

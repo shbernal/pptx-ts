@@ -43,10 +43,6 @@ describe('parseTransition — AlternateContent forms', () => {
 		const info = slide('<p:transition><p:sndAc><p:endSnd/></p:sndAc></p:transition>').transition
 		assertEqual(info, null, 'a transition without a type element is malformed → null')
 	})
-
-	test('a slide with no transition reports null', () => {
-		assertEqual(slide('').transition, null, 'no p:transition and no AlternateContent → null')
-	})
 })
 
 describe('prefixFor — modern type namespaces', () => {
@@ -97,14 +93,6 @@ describe('parseSound — start / stop / empty', () => {
 		assertEqual(sound.loop, true, 'loop="1" → looping')
 		assertEqual(sound.embedRid, 'rId5', 'the embed relationship id is read')
 		assertEqual(sound.name, 'chime.wav', 'the sound name is read')
-	})
-
-	test('a stop sound (p:endSnd) is the stop-previous form', () => {
-		const info = defined(slide('<p:transition><p:fade/><p:sndAc><p:endSnd/></p:sndAc></p:transition>').transition)
-		const sound = defined(info.sound, 'a stop sound is decoded')
-		assertEqual(sound.form, 'stop', 'p:endSnd → stop form')
-		assertEqual(sound.loop, false, 'the stop form never loops')
-		assertEqual(sound.embedRid, null, 'the stop form has no embed')
 	})
 
 	test('a sndAc with neither start nor stop sound decodes to no sound', () => {

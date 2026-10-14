@@ -65,7 +65,6 @@ describe('CJK line breaking', () => {
 		// Five surrogate pairs — `.length` is 10, but only 5 advances are charged,
 		// so this lays out exactly like the 5-character Han case above.
 		const extB = '\u{20000}\u{20001}\u{20002}\u{20003}\u{20004}'
-		expect(extB.length).toBe(10)
 		const m = measureText(reg, 'aaaaaaaaaa ' + extB + ' bbbbbbbbbb', OPTS)
 		expect(m.lineCount).toBe(2)
 		expect(m.widestLineIn * 72).toBeCloseTo(15 * CHAR_PT, 6)

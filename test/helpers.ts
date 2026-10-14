@@ -500,7 +500,7 @@ async function captureDiagnostics<R>(fn: () => R | Promise<R>) {
 	}
 }
 
-export type { RegressionCase, ThrownError }
+export type { ThrownError }
 
 export {
 	PptxTs,
@@ -541,8 +541,6 @@ export {
 	assertNoContentTypeDefault,
 	assertContentTypeOverride,
 	assertXmlOrder,
-	nonVisualDrawingProperties,
-	findNonVisualDrawingProperty,
 	assertNonVisualDrawingProperty,
 	xmlOpeningTags,
 }

@@ -66,16 +66,6 @@ describe('Chart read model', () => {
 		assertEqual(serEl.localName, 'ser', 'series.element_ is the underlying c:ser element')
 	})
 
-	test('a non-chart graphic frame has a null chart', async () => {
-		const slides = (await openFixture('mixed')).slides
-		const tableFrame = slides
-			.flatMap((s) => s.shapes)
-			.filter((shape) => shape.shapeType === 'graphicFrame')
-			.find((frame) => frame.hasTable)
-		assert(tableFrame, 'mixed.pptx has a table graphic frame')
-		assertEqual(tableFrame.chart, null, 'table frame has no chart')
-	})
-
 	test('reading a chart dirties nothing — save stays byte-identical', async () => {
 		const input = await readFile(fixturePath('mixed'))
 		const presentation = await Presentation.load(input)

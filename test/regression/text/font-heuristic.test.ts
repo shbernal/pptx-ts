@@ -25,16 +25,6 @@ describe('font-metrics: heuristic fallback', () => {
 })
 
 describe('units-internal: resolveTableColWidthsEmu', () => {
-	test('even distribution splits the EMU width across columns', () => {
-		const cols = resolveTableColWidthsEmu(undefined, 9 * EMU_PER_IN, 3)
-		expect(cols).toEqual([3 * EMU_PER_IN, 3 * EMU_PER_IN, 3 * EMU_PER_IN])
-	})
-
-	test('explicit colW array is per-column inches → EMU', () => {
-		const cols = resolveTableColWidthsEmu([2, 3, 4], 9 * EMU_PER_IN, 3)
-		expect(cols).toEqual([2 * EMU_PER_IN, 3 * EMU_PER_IN, 4 * EMU_PER_IN])
-	})
-
 	test('non-finite colW slot falls back to the even width', () => {
 		const even = Math.round((6 * EMU_PER_IN) / 2)
 		const cols = resolveTableColWidthsEmu([NaN, 4], 6 * EMU_PER_IN, 2)

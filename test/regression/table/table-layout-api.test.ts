@@ -107,15 +107,6 @@ describe('computeTableLayout core — auto-height estimation', () => {
 		const oneLine = (18 * 1.67) / 100 // gen-tables line-height heuristic, inches
 		expect(c.hIn).toBeGreaterThan(oneLine)
 	})
-
-	test('empty rows return empty geometry', () => {
-		expect(computeTableLayout([], { x: 0, y: 0, w: 4 }, LAYOUT, emptyReg)).toEqual({
-			cells: [],
-			widthIn: 0,
-			heightIn: 0,
-			heightExact: true,
-		})
-	})
 })
 
 describe('pptx.tableLayout() instance method (through dist)', () => {

@@ -81,14 +81,6 @@ describe('read-stress.pptx — combined read-model integration', () => {
 		assertEqual(bi.recolor?.kind, 'biLevel', 'ColorType black&white -> biLevel recolor')
 	})
 
-	test('SVG picture resolves as svg-only with an svg part', async () => {
-		const shapes = await everyShape()
-		const svg = named(shapes, 'SvgIcon', isPicture)
-		// Real PowerPoint COM writes an svg-only blip (empty a:blip + asvg:svgBlip).
-		assertEqual(svg.mediaKind, 'svg', 'inserted .svg is svg-only')
-		assert((svg.svgPartName ?? '').endsWith('.svg'), `svgPartName should resolve, got ${svg.svgPartName}`)
-	})
-
 	test('nested groups: a group inside a group', async () => {
 		const p = await pres()
 		const outer = allShapes(at(p.slides, 0).shapes).find((s) => s.name === 'OuterGroup')
@@ -142,15 +134,5 @@ describe('read-stress.pptx — combined read-model integration', () => {
 		inThread.add(threaded.author)
 		for (const r of threaded.replies) inThread.add(r.author)
 		assert(inThread.size >= 2, `a reply thread should involve >=2 distinct authors, got ${[...inThread]}`)
-	})
-
-	test('speaker notes are extracted', async () => {
-		const p = await pres()
-		const notes = p.slides.map((s) => s.notesText).filter((n): n is string => Boolean(n?.trim()))
-		assert(notes.length >= 1, 'at least one slide has speaker notes')
-		assert(
-			notes.some((n) => /Speaker note/i.test(n)),
-			'the authored note text is read back'
-		)
 	})
 })

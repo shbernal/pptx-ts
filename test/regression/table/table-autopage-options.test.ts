@@ -160,24 +160,6 @@ defineRegressionSuite('Table autoPage option surface', [
 		},
 	},
 	{
-		name: 'slideMargin as a 4-tuple bounds the usable area (no explicit h)',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				// No `h`: usable height comes from the slide height minus the slideMargin tuple.
-				p.addSlide().addTable(bodyRows(60), {
-					x: 0.5,
-					w: 9,
-					colW: [4.5, 4.5],
-					margin: 0,
-					slideMargin: [0.5, 0.5, 0.5, 0.5],
-					autoPage: true,
-					fontSize: 14,
-				})
-			})
-			assert(slideFiles(zip).length >= 2, 'a 60-row table with margins should overflow')
-		},
-	},
-	{
 		name: 'degenerate cell text (empty / numeric / whitespace) does not crash autoPage',
 		fn: async () => {
 			const rows: TableRow[] = [

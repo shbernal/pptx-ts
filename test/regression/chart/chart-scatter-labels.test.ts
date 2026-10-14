@@ -33,7 +33,6 @@ defineRegressionSuite('Chart scatter data labels', [
 				})
 			})
 			const xml = await chartXml(zip)
-			assertIncludes(xml, '<c:dLbl>', 'custom emits per-point dLbl')
 			// One <c:dLbl> per label in the (single) label group.
 			assert((xml.match(/<c:dLbl>/g) || []).length === 3, 'one dLbl per label')
 			assertIncludes(xml, '<a:t>Alpha</a:t>', 'custom label text is rendered as rich run')
