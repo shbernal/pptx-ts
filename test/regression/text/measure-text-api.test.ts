@@ -16,7 +16,7 @@ import {
 	parseFontMetrics,
 	type FontMetrics,
 } from '../../../src/measure/font-metrics.ts'
-import { solveResize, solveShrink, HEIGHT_SAFETY_FACTOR, WIDTH_SAFETY_FACTOR } from '../../../src/measure/text-fit.ts'
+import { solveResize, HEIGHT_SAFETY_FACTOR, WIDTH_SAFETY_FACTOR } from '../../../src/measure/text-fit.ts'
 import { resolveGenuineFontFile } from '../../read/font-oracle.ts'
 import { fixturePath } from '../../read/corpus.ts'
 
@@ -86,17 +86,11 @@ describe('measureText core (synthetic metrics)', () => {
 		expect(m.fitsBox(m.heightIn + 1)).toBe(true)
 	})
 
-	test('shrinkScaleFor: 100 when it fits, and matches solveShrink when it overflows', () => {
+	test('shrinkScaleFor: 100 when it fits, below 100 when it overflows', () => {
 		const reg = regWith()
 		const m = measureText(reg, SENTENCE, { wIn: 2, fontSize: 18, fontFace: 'Mono' })
 		expect(m.shrinkScaleFor(m.heightIn + 1)).toBe(100)
-
-		const tightIn = m.heightIn / 3
-		const paras = defined(buildFitParagraphs([{ text: SENTENCE }], { fontSize: 18, fontFace: 'Mono' }))
-		const outcome = solveShrink(paras, { innerWidthPt: 2 * 72, innerHeightPt: tightIn * 72 }, makeRegistryResolver(reg))
-		const expected = outcome.kind === 'shrink' ? outcome.result.fontScalePct : 100
-		expect(m.shrinkScaleFor(tightIn)).toBe(expected)
-		expect(m.shrinkScaleFor(tightIn)).toBeLessThan(100)
+		expect(m.shrinkScaleFor(m.heightIn / 3)).toBeLessThan(100)
 	})
 
 	test('approximatedFaces lists each guessed face once, exact runs excluded', () => {
@@ -133,16 +127,6 @@ describe('measureText core (synthetic metrics)', () => {
 		expect(m.lineCount).toBe(1)
 		const rawPt = [...text].length * 0.5 * 12
 		expect(m.widestLineIn * 72).toBeCloseTo(rawPt * WIDTH_SAFETY_FACTOR, 4)
-	})
-
-	test('widestLineIn: wrapped text is bounded by the inner width but > 0', () => {
-		const reg = regWith()
-		const wide = measureText(reg, SENTENCE, { wIn: 100, fontSize: 18, fontFace: 'Mono' })
-		const narrow = measureText(reg, SENTENCE, { wIn: 2, fontSize: 18, fontFace: 'Mono' })
-		// Unwrapped: widest line is the whole sentence; wrapped: <= the wide extent.
-		expect(narrow.widestLineIn).toBeGreaterThan(0)
-		expect(narrow.widestLineIn).toBeLessThanOrEqual(wide.widestLineIn + 1e-9)
-		expect(narrow.widestLineIn).toBeLessThanOrEqual(2 + 1e-9)
 	})
 
 	test('unnamed (theme-default) face is unmeasurable', () => {

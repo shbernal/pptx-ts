@@ -1,15 +1,10 @@
 import { ChartType } from '../../../dist/node.js'
 import type PptxTs from '../../../dist/node.js'
-import type JSZip from 'jszip'
 import { defineRegressionSuite, build, readEntry, assert, captureDiagnostics, caught } from '../../helpers.ts'
 
 const SLIDE_XML = 'ppt/slides/slide1.xml'
 const MASTER_XML = 'ppt/slideMasters/slideMaster1.xml'
-
-/** The `ppt/charts/chartN.xml` a one-chart deck emits. */
-async function chartXml(zip: JSZip) {
-	return readEntry(zip, 'ppt/charts/chart1.xml')
-}
+const CHART_XML = 'ppt/charts/chart1.xml'
 
 // Values whose `ST_` type has a range, reaching an attribute that had no guard on the way in.
 // Each of these had a sibling site that DID guard the same value, which is why none of them was
@@ -38,7 +33,7 @@ defineRegressionSuite('Schema value guards', [
 						titleFontSize: 5000,
 					})
 				})
-				return chartXml(zip)
+				return readEntry(zip, CHART_XML)
 			})
 			const sizes = [...xml.matchAll(/sz="(-?\d+)"/g)].map((m) => Number(m[1]))
 			assert(sizes.length > 0, 'expected some sz attributes')
@@ -219,7 +214,7 @@ defineRegressionSuite('Schema value guards', [
 						legendPos: 'middle',
 					})
 				})
-				return chartXml(zip)
+				return readEntry(zip, CHART_XML)
 			})
 			assert(!xml.includes('middle'), `the bad value must not reach the part; got: ${xml}`)
 			assert(xml.includes('<c:legendPos val="r"/>'), `it falls back to the default; got: ${xml}`)

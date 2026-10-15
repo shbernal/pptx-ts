@@ -162,7 +162,7 @@ function warnUnknownBorderKeys(border: BorderProps): void {
  * @param {number} defaultPt - width to use when `width` is not a number
  * @returns {number} resolved width in points
  */
-export function resolveBorderWidth(border: BorderProps, defaultPt: number): number {
+function resolveBorderWidth(border: BorderProps, defaultPt: number): number {
 	warnUnknownBorderKeys(border)
 	const val = border.width
 	return typeof val === 'number' ? val : defaultPt

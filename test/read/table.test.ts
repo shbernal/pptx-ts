@@ -101,14 +101,7 @@ describe('Table read model', () => {
 })
 
 describe('Table cell editing', () => {
-	test('cell.text setter replaces text and survives a reload', async () => {
-		const presentation = await openFixture('table')
-		defined(firstTable(presentation).cell(0, 0)).text = 'EDITED'
-		const reopened = await Presentation.load(await presentation.save())
-		assertEqual(defined(firstTable(reopened).cell(0, 0)).text, 'EDITED', 'edited cell text reloads')
-	})
-
-	test('cell.text setter preserves the first run formatting', async () => {
+	test('cell.text setter replaces the text, keeps the first run formatting, and survives a reload', async () => {
 		const presentation = await openFixture('table')
 		// First-table cells carry sz="1400"; the replacement run should keep it.
 		const before = at(
@@ -118,8 +111,9 @@ describe('Table cell editing', () => {
 		assertEqual(before, 14, 'precondition: cell run is 14pt')
 		defined(firstTable(presentation).cell(0, 0)).text = 'KEEP'
 		const reopened = await Presentation.load(await presentation.save())
-		const run = at(at(defined(defined(firstTable(reopened).cell(0, 0)).textFrame).paragraphs, 0).runs, 0)
-		assertEqual(run.text, 'KEEP', 'text replaced')
+		const cell = defined(firstTable(reopened).cell(0, 0))
+		assertEqual(cell.text, 'KEEP', 'the whole cell text is replaced and reloads')
+		const run = at(at(defined(cell.textFrame).paragraphs, 0).runs, 0)
 		assertEqual(run.fontSizePt, 14, 'first-run formatting preserved')
 	})
 

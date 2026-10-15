@@ -14,6 +14,7 @@ import {
 	assertIncludes,
 	assertNotIncludes,
 	captureDiagnostics,
+	caughtSync,
 	defined,
 	at,
 } from '../../helpers.ts'
@@ -27,16 +28,6 @@ import { chartXml } from './chart-parts.ts'
 
 const SERIES = [{ name: 'S1', labels: ['A', 'B', 'C'], values: [1, 2, 3] }]
 const BASE = { x: 1, y: 1, w: 6, h: 3 }
-
-/** The error `fn` throws, or `null` when it returns. */
-function thrownBy(fn: () => unknown): unknown {
-	try {
-		fn()
-	} catch (err) {
-		return err
-	}
-	return null
-}
 
 /** Build one chart and return its XML with the diagnostics it raised. */
 async function chartWith(data: OptsChartData[], options: ChartOpts & { type: CHART_NAME }) {
@@ -888,7 +879,7 @@ defineRegressionSuite('Chart option validation', [
 				'<c:logBase val="500"/>',
 				'a base past the old documented 99 is kept'
 			)
-			const thrown = thrownBy(() =>
+			const thrown = caughtSync(() =>
 				new PptxTs().addSlide().addChart(SERIES, { ...BASE, type: ChartType.bar, valAxisLogScaleBase: NaN })
 			)
 			assert(thrown instanceof InvalidOptionError, `a NaN base throws; got ${thrown}`)
@@ -987,7 +978,7 @@ defineRegressionSuite('Chart option validation', [
 				['valAxes[0].valAxisMinVal: NaN', { valAxes: [{ valAxisMinVal: NaN }], catAxes: [{}] }],
 			]
 			for (const [label, options] of cases) {
-				const thrown = thrownBy(() =>
+				const thrown = caughtSync(() =>
 					new PptxTs().addSlide().addChart(SERIES, { ...BASE, type: ChartType.bar, ...options })
 				)
 				assert(thrown instanceof InvalidOptionError, `${label} throws; got ${thrown}`)
@@ -1031,7 +1022,7 @@ defineRegressionSuite('Chart option validation', [
 				['size', { value: 1, size: NaN }, 'coord/non-finite'],
 			]
 			for (const [label, bar, code] of cases) {
-				const thrown = thrownBy(() =>
+				const thrown = caughtSync(() =>
 					new PptxTs().addSlide().addChart([{ ...SERIES[0], errorBars: bar }], { ...BASE, type: ChartType.bar })
 				)
 				assert(thrown instanceof InvalidOptionError, `a NaN ${label} throws; got ${thrown}`)
@@ -1090,7 +1081,7 @@ defineRegressionSuite('Chart option validation', [
 			const over = await chartWith(SERIES, { type: ChartType.bar, chartColorsOpacity: 150 })
 			assertIncludes(over.xml, '<a:alpha val="100000"/>', 'an opacity above 100 clamps')
 			assert(over.codes.includes('chart/option-out-of-range'), `and warns; got ${JSON.stringify(over.codes)}`)
-			const thrown = thrownBy(() =>
+			const thrown = caughtSync(() =>
 				new PptxTs().addSlide().addChart(SERIES, { ...BASE, type: ChartType.bar, chartColorsOpacity: NaN })
 			)
 			assert(thrown instanceof InvalidOptionError, `a NaN opacity throws; got ${thrown}`)

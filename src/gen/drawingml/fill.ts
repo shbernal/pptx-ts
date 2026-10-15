@@ -68,7 +68,7 @@ function normalizeGradientStops(stops: GradientStopProps[] | undefined): Gradien
  * @param {GradientFillProps} gradient gradient fill options
  * @returns XML string
  */
-export function genXmlGradientFill(gradient: GradientFillProps | undefined): string {
+function genXmlGradientFill(gradient: GradientFillProps | undefined): string {
 	if (!gradient || (gradient.kind !== 'linear' && gradient.kind !== 'radial')) {
 		throw new UnsupportedFeatureError(
 			'gradient/type-unsupported',

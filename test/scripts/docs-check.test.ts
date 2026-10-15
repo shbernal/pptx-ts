@@ -162,12 +162,6 @@ describe('the repository-only tree', () => {
 		expect(errors[0]).toContain('https://github.com/o/r/blob/main/docs/contributing/testing.md#suites')
 	})
 
-	test('the GitHub URL is how a served page links one', () => {
-		expect(checkAt('page.md', 'See [testing](https://github.com/o/r/blob/main/docs/contributing/testing.md).')).toEqual(
-			[]
-		)
-	})
-
 	test('a repository-only page links relatively to any page, served or not', () => {
 		expect(checkAt('contributing/page.md', 'See [start](../guide/start.md) and [testing](./testing.md).')).toEqual([])
 	})

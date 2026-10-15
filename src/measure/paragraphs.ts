@@ -40,7 +40,7 @@ interface RunSource {
 }
 
 /** Normalize `slideObj.text` (string | TextProps | TextProps[]) to a run list. */
-export function normalizeRuns(obj: RunSource): TextProps[] {
+function normalizeRuns(obj: RunSource): TextProps[] {
 	const opts = obj.options ?? {}
 	const text = obj.text
 	if (text == null) return []

@@ -60,9 +60,7 @@ export const makeSurfacePlot: PlotBuilder = (chartType, data, opts, valAxisId, c
 	// The palette counts this plot's own series from 0, where `<c:idx>` counts rows across the chart;
 	// the two agree on a surface chart of its own.
 	const sers = data
-		.map((obj, idx) =>
-			makeSurfaceSer(chartType, obj, opts, valFmtCode, paletteColor(chartColors, idx, '4472C4'), sheet)
-		)
+		.map((obj, idx) => makeSurfaceSer(chartType, obj, opts, valFmtCode, paletteColor(chartColors, idx), sheet))
 		.join('')
 	return el(`c:${tag}`, null, [
 		raw(voidEl('c:wireframe', { val: xsdBool(opts.surfaceWireframe) })),

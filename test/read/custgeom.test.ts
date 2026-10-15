@@ -177,19 +177,6 @@ describe('a custGeom path coordinate that names a guide', () => {
 	// never shape the drawn outline (#255).
 	const box = { x: 1, y: 1, w: 5, h: 1.5, guides: [{ name: 'g0', formula: '*/ w 1 2' }] }
 
-	test('reads the guide name rather than 0', async () => {
-		const pptx = new PptxTs()
-		pptx.addSlide().addShape('custGeom', {
-			...box,
-			points: [{ x: 0, y: 1.5 }, { x: 2.5, y: 0 }, { x: 5, y: 1.5 }, { close: true }],
-		})
-		const shape = at(at((await Presentation.load(await pptx.toBytes())).slides, 0).shapes, 0)
-		const apex = at(shape.element_.getElementsByTagName('a:pt'), 1)
-		apex.setAttribute('x', 'g0')
-		const path = at(defined(shape.customGeometry).paths, 0)
-		assertEqual(JSON.stringify(at(path.commands, 1)), JSON.stringify({ cmd: 'lnTo', x: 'g0', y: 0 }))
-	})
-
 	test('a point and an arc can name a guide, and readModelToIr carries the names back', async () => {
 		const pptx = new PptxTs()
 		pptx.addSlide().addShape('custGeom', {

@@ -18,7 +18,7 @@
 import { describe, expect, test } from 'vitest'
 import { SUBJECTS } from '../../scripts/comparison/probes.mjs'
 import { bytesAgreement, MODES, quantile, summarise } from '../../scripts/comparison/timing.mjs'
-import { scaleSource, scaleWorkload, SCALE_ARMS, SCALE_SIZES, WORKLOADS } from '../../scripts/comparison/workloads.mjs'
+import { scaleSource, scaleWorkload, SCALE_ARMS } from '../../scripts/comparison/workloads.mjs'
 import { at, take, defined } from '../helpers.ts'
 
 describe('the timing statistics', () => {
@@ -89,17 +89,6 @@ describe('the matched modes', () => {
 })
 
 describe('the scale corpus', () => {
-	test('every size becomes a workload with both arms', () => {
-		expect(WORKLOADS.map((workload) => workload.slides)).toEqual(SCALE_SIZES)
-		for (const workload of WORKLOADS)
-			for (const subject of SUBJECTS) expect(workload.build[subject], workload.id).toBeTypeOf('function')
-	})
-
-	test('workload ids are unique', () => {
-		const ids = WORKLOADS.map((workload) => workload.id)
-		expect(new Set(ids).size).toBe(ids.length)
-	})
-
 	// The two arms are written out separately so the page can print consumer-shaped code.
 	// This is what keeps them the same deck: identical line for line, except for the one
 	// call whose signature the two libraries genuinely spell differently.

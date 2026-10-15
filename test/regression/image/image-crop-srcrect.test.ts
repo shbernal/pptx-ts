@@ -7,7 +7,7 @@ import {
 	defineRegressionSuite,
 	readEntry,
 	selfClosingTags,
-	setDiagnosticHandler,
+	captureDiagnostics,
 	xmlAttributes,
 } from '../../helpers.ts'
 
@@ -56,10 +56,8 @@ defineRegressionSuite('Image explicit crop (srcRect percentage insets)', [
 		// crop wins over sizing (mutually exclusive) and warns.
 		name: 'crop overrides sizing and warns',
 		fn: async () => {
-			const warnings: string[] = []
-			setDiagnosticHandler((d) => warnings.push(d.message))
-			try {
-				const r = await srcRectFor({
+			const { result: r, messages: warnings } = await captureDiagnostics(() =>
+				srcRectFor({
 					data: PNG_1X1,
 					x: 1,
 					y: 1,
@@ -68,10 +66,8 @@ defineRegressionSuite('Image explicit crop (srcRect percentage insets)', [
 					crop: { l: 25, r: 25 },
 					sizing: { type: 'cover', w: 2, h: 2 },
 				})
-				assert(r.l === 25000 && r.r === 25000, `expected crop srcRect (l=r=25000); got ${JSON.stringify(r)}`)
-			} finally {
-				setDiagnosticHandler(null)
-			}
+			)
+			assert(r.l === 25000 && r.r === 25000, `expected crop srcRect (l=r=25000); got ${JSON.stringify(r)}`)
 			assert(
 				warnings.some((w) => w.includes('mutually exclusive')),
 				`expected a mutual-exclusion warning; got: ${JSON.stringify(warnings)}`

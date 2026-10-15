@@ -113,22 +113,11 @@ type HyperlinkTextObject = (TextProps | SlideObject | TableCellInternal) & {
 	text?: string | number | TextProps[] | TableCellInternal[]
 }
 
-type HyperlinkTree =
-	| number
-	| string
-	| SlideObject
-	| TextProps
-	| TextProps[]
-	| TableCellInternal[]
-	| TableCellInternal[][]
+type HyperlinkTree = SlideObject | TextProps | TextProps[] | TableCellInternal[] | TableCellInternal[][]
 
 /** The objects one level of a text or table-cell tree holds: a table row is itself an array. */
 function hyperlinkTreeLevel(text: HyperlinkTree): Array<HyperlinkTextObject | TableCellInternal[]> {
-	// Only text objects can have hyperlinks, bail when text param is plain text
-	if (typeof text === 'string' || typeof text === 'number') return []
-	// IMPORTANT: Array.isArray must come before typeof===object! Otherwise, code will exhaust recursion!
-	if (Array.isArray(text)) return text
-	return typeof text === 'object' ? [text] : []
+	return Array.isArray(text) ? text : [text]
 }
 
 /**
@@ -138,7 +127,7 @@ function hyperlinkTreeLevel(text: HyperlinkTree): Array<HyperlinkTextObject | Ta
  * refused link on a second run used to throw after the first run's relationship was already on
  * the slide, left pointing at a shape that was never added.
  * @param {PresSlideInternal} target - slide object that any hyperlinks will be be added to
- * @param {number | string | TextProps | TextProps[] | TableCellInternal[][]} text - text to parse
+ * @param {SlideObject | TextProps | TextProps[] | TableCellInternal[][]} text - text to parse
  * @param call - the method the objects were authored through, for a refused hyperlink's message
  */
 export function createHyperlinkRels(target: PresSlideInternal, text: HyperlinkTree, call = 'addText'): void {

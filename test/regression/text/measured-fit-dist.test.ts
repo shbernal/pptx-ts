@@ -5,15 +5,8 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, test, expect } from 'vitest'
-import PptxTs, {
-	setDiagnosticHandler,
-	type Diagnostic,
-	type TableCell,
-	type TableProps,
-	type TableRow,
-	type TextPropsOptions,
-} from '../../../dist/node.js'
-import { defined, expectDefined, partXml, at, take } from '../../helpers.ts'
+import PptxTs, { type TableCell, type TableProps, type TableRow, type TextPropsOptions } from '../../../dist/node.js'
+import { captureDiagnostics, defined, expectDefined, partXml, at, take } from '../../helpers.ts'
 // The `pptx-ts/measure` entry publishes the calibrated constants the bake uses, so a test
 // can state "inflated by the height safety factor" instead of re-pinning its value here.
 import { HEIGHT_SAFETY_FACTOR } from '../../../dist/measure.js'
@@ -694,20 +687,8 @@ describe('measured fit: code points the registered face has no glyph for', () =>
 	// conservative in a fixed direction. See docs/contributing/design/text-fit.md ("Font fallback").
 	const WITH_NBH = 'Fine print\u2011here'
 
-	/** Run `fn` with the process-global diagnostic handler capturing, then restore it. */
-	async function captured(fn: () => Promise<unknown>) {
-		const seen: Diagnostic[] = []
-		setDiagnosticHandler((d) => seen.push(d))
-		try {
-			await fn()
-		} finally {
-			setDiagnosticHandler(null)
-		}
-		return seen
-	}
-
 	test('several uncovered code points come back sorted and deduplicated', async () => {
-		// The single-code-point case above cannot tell a sorted list from an arbitrary one,
+		// A single uncovered code point cannot tell a sorted list from an arbitrary one,
 		// nor a deduplicated one from a per-occurrence one. Fed descending and repeated,
 		// the list is the documented shape: ascending, each code point once.
 		const pres = await pptxWithSilkscreen()
@@ -720,7 +701,7 @@ describe('measured fit: code points the registered face has no glyph for', () =>
 		// Ten uncovered code points, so the message must show eight and count the rest.
 		const many = [0x2011, 0x3042, 0x3044, 0x3046, 0x4e00, 0x4e8c, 0x65e5, 0x6708, 0x706b, 0x6c34]
 		const text = many.map((cp) => String.fromCodePoint(cp)).join('')
-		const seen = await captured(async () => {
+		const { diagnostics: seen } = await captureDiagnostics(async () => {
 			const pres = await pptxWithSilkscreen()
 			pres.addSlide().addText(text, { x: 1, y: 1, w: 3, h: 1, fontFace: 'Silkscreen', fontSize: 18, fit: 'shrink' })
 			await pres.toBytes()
@@ -736,7 +717,7 @@ describe('measured fit: code points the registered face has no glyph for', () =>
 	})
 
 	test('the export pass warns once, naming the face and the code point', async () => {
-		const seen = await captured(async () => {
+		const { diagnostics: seen } = await captureDiagnostics(async () => {
 			const pres = await pptxWithSilkscreen()
 			const slide = pres.addSlide()
 			// Two boxes, so the "once per export" contract is what is being asserted.
@@ -751,7 +732,7 @@ describe('measured fit: code points the registered face has no glyph for', () =>
 	})
 
 	test('the export pass stays quiet when every code point is covered', async () => {
-		const seen = await captured(async () => {
+		const { diagnostics: seen } = await captureDiagnostics(async () => {
 			const pres = await pptxWithSilkscreen()
 			pres.addSlide().addText(OVERFLOW, { x: 1, y: 1, w: 3, h: 1, fontFace: 'Silkscreen', fontSize: 18, fit: 'shrink' })
 			await pres.toBytes()
@@ -760,7 +741,7 @@ describe('measured fit: code points the registered face has no glyph for', () =>
 	})
 
 	test('the table-cell shrink pass is audited too', async () => {
-		const seen = await captured(async () => {
+		const { diagnostics: seen } = await captureDiagnostics(async () => {
 			const pres = await pptxWithSilkscreen()
 			pres
 				.addSlide()
@@ -776,7 +757,7 @@ describe('measured fit: code points the registered face has no glyph for', () =>
 	})
 
 	test('an unregistered face is NOT audited — the heuristic has no cmap to consult', async () => {
-		const seen = await captured(async () => {
+		const { diagnostics: seen } = await captureDiagnostics(async () => {
 			const pres = await pptxWithSilkscreen()
 			pres.addSlide().addText(WITH_NBH, { x: 1, y: 1, w: 3, h: 1, fontFace: 'Helvetica', fontSize: 18, fit: 'shrink' })
 			await pres.toBytes()

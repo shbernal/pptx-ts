@@ -1,14 +1,5 @@
-import PptxTs, { ShapeType } from '../../../dist/node.js'
-import JSZip from 'jszip'
-import { defineRegressionSuite, assert } from '../../helpers.ts'
-
-async function buildSlide1(pres: PptxTs) {
-	const buf = await pres.toBytes()
-	const zip = await JSZip.loadAsync(buf)
-	const entry = zip.file('ppt/slides/slide1.xml')
-	if (!entry) throw new Error('slide1.xml missing')
-	return entry.async('string')
-}
+import { ShapeType } from '../../../dist/node.js'
+import { defineRegressionSuite, assert, slideXml } from '../../helpers.ts'
 
 // Compute expected emitted alpha integer for a 2-char alpha hex (PowerPoint scale: 100000).
 function alphaPct(hex: string) {
@@ -19,11 +10,10 @@ defineRegressionSuite('Alpha channel colors [legacy bug-08]', [
 	{
 		name: 'text color "00FF0080" splits to val="00FF00" + <a:alpha val="50196"/>',
 		fn: async () => {
-			const pres = new PptxTs()
-			const slide = pres.addSlide()
-			slide.addText('hello', { x: 1, y: 1, w: 4, h: 0.5, color: '00FF0080' })
-
-			const xml = await buildSlide1(pres)
+			const xml = await slideXml((pres) => {
+				const slide = pres.addSlide()
+				slide.addText('hello', { x: 1, y: 1, w: 4, h: 0.5, color: '00FF0080' })
+			})
 			assert(xml.indexOf('val="00FF0080"') === -1, 'expected no 8-char val="00FF0080" in slide XML; got:\n' + xml)
 			const expectedAlpha = alphaPct('80') // 50196
 			const expectedFragment = `<a:srgbClr val="00FF00"><a:alpha val="${expectedAlpha}"/></a:srgbClr>`
@@ -33,17 +23,16 @@ defineRegressionSuite('Alpha channel colors [legacy bug-08]', [
 	{
 		name: 'shape line color "0000FF40" splits to val="0000FF" + <a:alpha val="..."/>',
 		fn: async () => {
-			const pres = new PptxTs()
-			const slide = pres.addSlide()
-			slide.addShape(ShapeType.rect, {
-				x: 1,
-				y: 1,
-				w: 2,
-				h: 1,
-				line: { color: '0000FF40', width: 2 },
+			const xml = await slideXml((pres) => {
+				const slide = pres.addSlide()
+				slide.addShape(ShapeType.rect, {
+					x: 1,
+					y: 1,
+					w: 2,
+					h: 1,
+					line: { color: '0000FF40', width: 2 },
+				})
 			})
-
-			const xml = await buildSlide1(pres)
 			assert(xml.indexOf('val="0000FF40"') === -1, 'expected no 8-char val="0000FF40" in slide XML; got:\n' + xml)
 			const expectedAlpha = alphaPct('40') // 25098
 			const expectedFragment = `<a:srgbClr val="0000FF"><a:alpha val="${expectedAlpha}"/></a:srgbClr>`
@@ -53,21 +42,20 @@ defineRegressionSuite('Alpha channel colors [legacy bug-08]', [
 	{
 		name: 'shadow color "88888880" with a removed `opacity` input — color-derived alpha wins, opacity ignored',
 		fn: async () => {
-			const pres = new PptxTs()
-			const slide = pres.addSlide()
-			slide.addShape(ShapeType.rect, {
-				x: 1,
-				y: 1,
-				w: 2,
-				h: 1,
-				fill: { color: 'CCCCCC' },
-				// `opacity` is no longer a public ShadowProps field; it must be ignored rather than
-				// taking priority the way it did while it was still an accepted (deprecated) input.
-				// @ts-expect-error verifying a legacy/untyped caller's `opacity` is ignored, not honored
-				shadow: { type: 'outer', color: '88888880', blur: 6, offset: 2, opacity: 0.5 },
+			const xml = await slideXml((pres) => {
+				const slide = pres.addSlide()
+				slide.addShape(ShapeType.rect, {
+					x: 1,
+					y: 1,
+					w: 2,
+					h: 1,
+					fill: { color: 'CCCCCC' },
+					// `opacity` is no longer a public ShadowProps field; it must be ignored rather than
+					// taking priority the way it did while it was still an accepted (deprecated) input.
+					// @ts-expect-error verifying a legacy/untyped caller's `opacity` is ignored, not honored
+					shadow: { type: 'outer', color: '88888880', blur: 6, offset: 2, opacity: 0.5 },
+				})
 			})
-
-			const xml = await buildSlide1(pres)
 			assert(xml.indexOf('val="88888880"') === -1, 'expected no 8-char val="88888880" in slide XML; got:\n' + xml)
 
 			const effectIdx = xml.indexOf('<a:effectLst>')
@@ -90,17 +78,16 @@ defineRegressionSuite('Alpha channel colors [legacy bug-08]', [
 	{
 		name: 'hash-prefixed 8-char "#FF0000FF" splits to val="FF0000" + <a:alpha val="100000"/>',
 		fn: async () => {
-			const pres = new PptxTs()
-			const slide = pres.addSlide()
-			slide.addShape(ShapeType.rect, {
-				x: 1,
-				y: 1,
-				w: 2,
-				h: 1,
-				fill: { color: '#FF0000FF' },
+			const xml = await slideXml((pres) => {
+				const slide = pres.addSlide()
+				slide.addShape(ShapeType.rect, {
+					x: 1,
+					y: 1,
+					w: 2,
+					h: 1,
+					fill: { color: '#FF0000FF' },
+				})
 			})
-
-			const xml = await buildSlide1(pres)
 			assert(xml.indexOf('val="#') === -1, 'expected no <a:srgbClr val="#..."> in slide XML; got:\n' + xml)
 			assert(xml.indexOf('val="FF0000FF"') === -1, 'expected no 8-char val="FF0000FF" in slide XML; got:\n' + xml)
 			const expectedFragment = '<a:srgbClr val="FF0000"><a:alpha val="100000"/></a:srgbClr>'

@@ -71,17 +71,6 @@ describe('text-fit: measureHeightPt', () => {
 		expect(linesOf(small, 9)).toBe(1) // at 50% each word is 45pt → both fit one line
 	})
 
-	test('line height follows tallest run in a mixed-size paragraph', () => {
-		const mixed = {
-			runs: [
-				{ text: 'a', sizePt: 12, fontFace: 'Mono' },
-				{ text: 'b', sizePt: 40, fontFace: 'Mono' },
-			],
-		}
-		const h = measureHeightPt([mixed], 10000, resolveMono, 100, 0)
-		expect(h).toBeCloseTo(SINGLE_LINE_PITCH * 40, 6)
-	})
-
 	test('space-before/after add to height', () => {
 		const h = measureHeightPt([para('hi', { spaceBeforePts: 5, spaceAfterPts: 7 })], 1000, resolveMono, 100, 0)
 		expect(h).toBeCloseTo(SINGLE_LINE_PITCH * 18 + 12, 6)

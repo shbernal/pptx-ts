@@ -1,5 +1,5 @@
 import {
-	setDiagnosticHandler,
+	captureDiagnostics,
 	build,
 	readEntry,
 	listEntries,
@@ -42,14 +42,8 @@ const COVER_JPG = 'test/assets/cc_logo.jpg'
 
 /** Build, capturing library warnings (`log.ts` routes every one through `console.warn`). */
 async function buildCapturingWarnings(buildFn: (pres: PptxTs) => unknown) {
-	const warnings: string[] = []
-	setDiagnosticHandler((d) => warnings.push(d.message))
-	try {
-		const result = await build(buildFn)
-		return { ...result, warnings }
-	} finally {
-		setDiagnosticHandler(null)
-	}
+	const { result, messages } = await captureDiagnostics(() => build(buildFn))
+	return { ...result, warnings: messages }
 }
 
 function assertWarned(warnings: string[], pattern: RegExp, label?: string) {
@@ -59,15 +53,13 @@ function assertWarned(warnings: string[], pattern: RegExp, label?: string) {
 	)
 }
 
-const attrs = (tag: string): Record<string, string> => xmlAttributes(tag)
-
 /** The `<a:off>`/`<a:ext>` of a graphicFrame's own `<p:xfrm>` (the zoom frame, not a tile). */
 function frameExtent(xml: string): Record<string, string> {
 	const frame = firstXmlBlock(xml, 'p:graphicFrame')
 	const xfrm = firstXmlBlock(frame, 'p:xfrm')
 	const off = at(selfClosingTags(xfrm, 'a:off'), 0)
 	const ext = at(selfClosingTags(xfrm, 'a:ext'), 0)
-	return { ...attrs(off), ...attrs(ext) }
+	return { ...xmlAttributes(off), ...xmlAttributes(ext) }
 }
 
 /** Every `Relationship` in slide 1's rels part, as `{ id, type, target }`. */
@@ -287,8 +279,8 @@ defineRegressionSuite('Zoom definition', [
 			// Two sections → a 2×1 grid: same y and size, second offset to the right of the first.
 			const zm = xml.slice(xml.indexOf('<psuz:summaryZm>'), xml.indexOf('<psuz:gridLayout/>'))
 			const cells = selfClosingTags(zm, 'a:off').map((tag, i) => ({
-				...attrs(tag),
-				...attrs(at(selfClosingTags(zm, 'a:ext'), i)),
+				...xmlAttributes(tag),
+				...xmlAttributes(at(selfClosingTags(zm, 'a:ext'), i)),
 			}))
 			assertEqual(cells.length, 2, 'expected two tile xfrms')
 			assertEqual(at(cells, 0).y, at(cells, 1).y, 'both tiles should sit on one row')

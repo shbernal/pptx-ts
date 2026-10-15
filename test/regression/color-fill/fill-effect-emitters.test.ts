@@ -2,7 +2,9 @@ import { Presentation, isAutoShape } from '../../../dist/read.js'
 import {
 	assert,
 	assertEqual,
+	assertIncludes,
 	assertRejects,
+	PNG_1X1,
 	build,
 	captureDiagnostics,
 	defineRegressionSuite,
@@ -28,16 +30,7 @@ import {
 // to change. If they were, that is an OOXML change and needs a schema fixture too (`docs/contributing/ooxml.md`);
 // if they were not, the builder call is wrong.
 
-/** A 1x1 transparent PNG — the smallest thing that resolves to a real media relationship. */
-const PNG =
-	'image/png;base64,' +
-	'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
-
 const BOX = { x: 1, y: 1, w: 2, h: 1 }
-
-function assertContainsExactly(xml: string, expected: string, label: string) {
-	assert(xml.includes(expected), `expected ${label}:\n  ${expected}\nin:\n${xml}`)
-}
 
 defineRegressionSuite('Fill and effect emitters the byte-identity corpus never reaches', [
 	{
@@ -46,7 +39,7 @@ defineRegressionSuite('Fill and effect emitters the byte-identity corpus never r
 			const defaults = await slideXml((pres) => {
 				pres.addSlide().addShape('rect', { ...BOX, fill: { type: 'pattern', pattern: { preset: 'diagCross' } } })
 			})
-			assertContainsExactly(
+			assertIncludes(
 				defaults,
 				'<a:pattFill prst="diagCross"><a:fgClr><a:srgbClr val="000000"/></a:fgClr>' +
 					'<a:bgClr><a:srgbClr val="FFFFFF"/></a:bgClr></a:pattFill>',
@@ -61,7 +54,7 @@ defineRegressionSuite('Fill and effect emitters the byte-identity corpus never r
 					fill: { type: 'pattern', pattern: { preset: 'pct50', fgColor: '003366', bgColor: 'accent2' } },
 				})
 			})
-			assertContainsExactly(
+			assertIncludes(
 				explicit,
 				'<a:pattFill prst="pct50"><a:fgClr><a:srgbClr val="003366"/></a:fgClr>' +
 					'<a:bgClr><a:schemeClr val="accent2"/></a:bgClr></a:pattFill>',
@@ -91,11 +84,11 @@ defineRegressionSuite('Fill and effect emitters the byte-identity corpus never r
 		name: 'image fill emits a stretched blip; `transparency` adds the only alphaModFix',
 		fn: async () => {
 			const plain = await slideXml((pres) => {
-				pres.addSlide().addShape('rect', { ...BOX, fill: { type: 'image', image: { data: PNG } } })
+				pres.addSlide().addShape('rect', { ...BOX, fill: { type: 'image', image: { data: PNG_1X1 } } })
 			})
 			// `<a:blip>` stays paired even with nothing to nest — self-closing is decided by
 			// arity, not by whether the child list happens to be empty.
-			assertContainsExactly(
+			assertIncludes(
 				plain,
 				'<a:blipFill dpi="0" rotWithShape="1"><a:blip r:embed="rId1"></a:blip>' +
 					'<a:srcRect/><a:stretch><a:fillRect/></a:stretch></a:blipFill>',
@@ -103,9 +96,11 @@ defineRegressionSuite('Fill and effect emitters the byte-identity corpus never r
 			)
 
 			const faded = await slideXml((pres) => {
-				pres.addSlide().addShape('rect', { ...BOX, fill: { type: 'image', image: { data: PNG }, transparency: 40 } })
+				pres
+					.addSlide()
+					.addShape('rect', { ...BOX, fill: { type: 'image', image: { data: PNG_1X1 }, transparency: 40 } })
 			})
-			assertContainsExactly(
+			assertIncludes(
 				faded,
 				'<a:blipFill dpi="0" rotWithShape="1"><a:blip r:embed="rId1"><a:alphaModFix amt="60000"/></a:blip>' +
 					'<a:srcRect/><a:stretch><a:fillRect/></a:stretch></a:blipFill>',
@@ -140,7 +135,7 @@ defineRegressionSuite('Fill and effect emitters the byte-identity corpus never r
 				pres.addSlide().addShape('rect', { ...BOX, fill: { type: 'none' }, objectName: 'ghost' })
 			})
 			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			assertContainsExactly(
+			assertIncludes(
 				xml,
 				'<a:prstGeom prst="rect"><a:avLst></a:avLst></a:prstGeom><a:noFill/>',
 				'no-fill after geometry'
@@ -173,8 +168,8 @@ defineRegressionSuite('Fill and effect emitters the byte-identity corpus never r
 			// `addShape` defaults `line` to `{ type: 'none' }`, whose own `a:noFill` is a *stroke*
 			// and unrelated to this. So both assertions anchor on the geometry-to-stroke seam.
 			const geom = '<a:prstGeom prst="rect"><a:avLst></a:avLst></a:prstGeom>'
-			assertContainsExactly(xml, `${geom}<a:ln>`, 'no fill child at all between geometry and stroke')
-			assertContainsExactly(xml, `${geom}<a:noFill/><a:ln>`, 'an explicit no-fill for the shape that omitted it')
+			assertIncludes(xml, `${geom}<a:ln>`, 'no fill child at all between geometry and stroke')
+			assertIncludes(xml, `${geom}<a:noFill/><a:ln>`, 'an explicit no-fill for the shape that omitted it')
 			assertEqual(
 				xml.split(`${geom}<a:noFill/>`).length - 1,
 				1,
@@ -199,7 +194,7 @@ defineRegressionSuite('Fill and effect emitters the byte-identity corpus never r
 			const centred = await slideXml((pres) => {
 				pres.addSlide().addShape('rect', { ...BOX, fill: { type: 'gradient', gradient: { kind: 'radial', stops } } })
 			})
-			assertContainsExactly(
+			assertIncludes(
 				centred,
 				'<a:gradFill rotWithShape="1"><a:gsLst>' +
 					'<a:gs pos="0"><a:srgbClr val="FF0000"/></a:gs>' +
@@ -219,8 +214,8 @@ defineRegressionSuite('Fill and effect emitters the byte-identity corpus never r
 					},
 				})
 			})
-			assertContainsExactly(shifted, '<a:gradFill rotWithShape="0">', 'radial gradient with rotateWithShape off')
-			assertContainsExactly(
+			assertIncludes(shifted, '<a:gradFill rotWithShape="0">', 'radial gradient with rotateWithShape off')
+			assertIncludes(
 				shifted,
 				'<a:path path="circle"><a:fillToRect l="20000" t="80000" r="80000" b="20000"/></a:path>',
 				'radial focus shifted to 20/80'
@@ -247,7 +242,7 @@ defineRegressionSuite('Fill and effect emitters the byte-identity corpus never r
 						fill: { type: 'gradient', gradient: { kind: 'linear', angle: 45, scaled, stops } },
 					})
 				})
-				assertContainsExactly(xml, expected, `linear gradient with scaled=${String(scaled)}`)
+				assertIncludes(xml, expected, `linear gradient with scaled=${String(scaled)}`)
 			}
 		},
 	},
@@ -262,7 +257,7 @@ defineRegressionSuite('Fill and effect emitters the byte-identity corpus never r
 					shadow: { type: 'inner', color: 'C0504D', blur: 4, offset: 2, angle: 90, transparency: 25 },
 				})
 			})
-			assertContainsExactly(
+			assertIncludes(
 				inner,
 				'<a:innerShdw blurRad="50800" dist="25400" dir="5400000">' +
 					'<a:srgbClr val="C0504D"><a:alpha val="75000"/></a:srgbClr></a:innerShdw>',
@@ -275,7 +270,7 @@ defineRegressionSuite('Fill and effect emitters the byte-identity corpus never r
 					shadow: { type: 'outer', color: 'accent4', blur: 6, offset: 3, angle: 270, rotateWithShape: true },
 				})
 			})
-			assertContainsExactly(
+			assertIncludes(
 				outer,
 				'<a:outerShdw sx="100000" sy="100000" kx="0" ky="0" algn="bl" rotWithShape="1" ' +
 					'blurRad="76200" dist="38100" dir="16200000">' +
@@ -303,7 +298,7 @@ defineRegressionSuite('Fill and effect emitters the byte-identity corpus never r
 			const xml = await slideXml((pres) => {
 				pres.addSlide().addText([{ text: 'glow', options: { glow: { size: 8, color: 'FFFF00', opacity: 0.6 } } }], BOX)
 			})
-			assertContainsExactly(
+			assertIncludes(
 				xml,
 				'<a:glow rad="101600"><a:srgbClr val="FFFF00"><a:alpha val="60000"/></a:srgbClr></a:glow>',
 				'text glow'
@@ -319,7 +314,7 @@ defineRegressionSuite('Fill and effect emitters the byte-identity corpus never r
 			const xml = await slideXml((pres) => {
 				pres.addSlide().addShape('rect', { ...BOX, fill: { color: '1F386480' } })
 			})
-			assertContainsExactly(
+			assertIncludes(
 				xml,
 				'<a:solidFill><a:srgbClr val="1F3864"><a:alpha val="50196"/></a:srgbClr></a:solidFill>',
 				'RGBA fill'

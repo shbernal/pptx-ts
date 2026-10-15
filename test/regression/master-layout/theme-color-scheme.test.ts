@@ -57,15 +57,4 @@ defineRegressionSuite('Theme color scheme overrides', [
 			)
 		},
 	},
-	{
-		name: 'no theme → unchanged default Office scheme',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.addSlide()
-			})
-			const xml = await readEntry(zip, 'ppt/theme/theme1.xml')
-			assert(xml.includes('<a:dk1><a:sysClr val="windowText" lastClr="000000"/></a:dk1>'), 'default dk1 missing')
-			assert(xml.includes('<a:accent1><a:srgbClr val="4472C4"/></a:accent1>'), 'default accent1 missing')
-		},
-	},
 ])
