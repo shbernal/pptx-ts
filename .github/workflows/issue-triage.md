@@ -34,6 +34,15 @@ engine:
     # firewall blocks and then reports at the foot of every triage comment.
     CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: '1'
 
+# The firewall's API proxy prices every request to enforce gh-aw's AI-credit caps, and
+# rejects a model missing from its table with HTTP 400 before the agent starts; glm-5.3 is
+# not in it. Z.ai bills a flat plan, so these rates are a stand-in that keeps the per-run
+# and daily caps meaningful, not a price.
+models:
+  default-ai-credits-pricing:
+    input: 1.0
+    output: 4.0
+
 # The agent checks published versions on npm and reads Microsoft's Open XML docs when an
 # issue turns on PowerPoint behavior. `defaults` keeps gh-aw's base allow-list.
 network:
