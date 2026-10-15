@@ -21,6 +21,18 @@ permissions:
   contents: read
   issues: read
 
+# `roles: all` lets an outside report start a run, but on a public repo gh-aw also filters
+# what the agent can read through the GitHub tools, and its default (`approved`) drops
+# content by anyone who is not an owner, member or collaborator, starting with the issue
+# itself. `unapproved` admits contributors and first-time or unaffiliated authors while
+# still excluding blocked users; gh-aw's integrity guide recommends it for community triage.
+tools:
+  github:
+    min-integrity: unapproved
+    # Setting a guard policy replaces the automatic one wholesale, whose repo scope was
+    # `public`; keep it rather than widen to `all`.
+    allowed-repos: public
+
 # Claude Code against Z.ai's Anthropic-compatible endpoint (GLM Coding Plan). The
 # ANTHROPIC_API_KEY secret holds the Z.ai key, not an Anthropic one; gh-aw only knows
 # that secret name for the claude engine.
