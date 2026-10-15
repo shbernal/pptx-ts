@@ -141,9 +141,6 @@ describe('mixed.pptx — connectors, groups, graphic frames', () => {
 	// narrow on: exactly one guard matches each shape, across every kind the deck
 	// contains (autoShape/picture/connector/graphicFrame/group).
 	test('type guards partition shapes by their shapeType discriminant', async () => {
-		function allShapes(shapes: readonly AnyShape[]): AnyShape[] {
-			return shapes.flatMap((shape) => (shape.shapeType === 'group' ? [shape, ...allShapes(shape.shapes)] : [shape]))
-		}
 		const guards = {
 			autoShape: isAutoShape,
 			picture: isPicture,

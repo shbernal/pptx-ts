@@ -108,10 +108,7 @@ export function createShadowEffectLst(options: ShadowPropsInternal | undefined, 
  * @returns a fresh normalized bag, or `undefined` when the caller stated no shadow object
  */
 export function normalizeShadowOptions(shadow?: ShadowProps | null): ShadowPropsInternal | undefined {
-	if (!shadow || typeof shadow !== 'object') {
-		// warn("`shadow` options must be an object. Ex: `{shadow: {type:'none'}}`")
-		return undefined
-	}
+	if (!shadow || typeof shadow !== 'object') return undefined
 	const corrected: ShadowPropsInternal = { ...shadow }
 	// No `opacity` scrub is needed: the derived alpha lives under the private `_alpha` name, so a
 	// stray `opacity` from an untyped/legacy caller lands on a field nothing reads (inert) rather

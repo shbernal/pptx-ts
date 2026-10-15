@@ -279,7 +279,7 @@ export function buildTree(tokens) {
  * @param {ElementNode} node
  * @returns {boolean}
  */
-export function isTextFrozen(node) {
+function isTextFrozen(node) {
 	if (TEXT_BEARING.has(node.name)) return true
 	const hasElementChild = node.children.some((child) => child.type === 'element')
 	if (!hasElementChild) return true

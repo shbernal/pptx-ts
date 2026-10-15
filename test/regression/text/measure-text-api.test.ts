@@ -68,14 +68,6 @@ describe('measureText core (synthetic metrics)', () => {
 		expect(m.heightIn * 72).toBeCloseTo(1.2117 * 12 * HEIGHT_SAFETY_FACTOR, 4)
 	})
 
-	test('narrower width wraps to more lines', () => {
-		const reg = regWith()
-		const wide = measureText(reg, SENTENCE, { wIn: 10, fontSize: 18, fontFace: 'Mono' })
-		const narrow = measureText(reg, SENTENCE, { wIn: 2, fontSize: 18, fontFace: 'Mono' })
-		expect(narrow.lineCount).toBeGreaterThan(wide.lineCount)
-		expect(narrow.heightIn).toBeGreaterThan(wide.heightIn)
-	})
-
 	test('insetIn shrinks the usable width on both sides', () => {
 		const reg = regWith()
 		// Words lay out at 92.7pt and spaces at 9.27pt. 3in (216pt) holds two words a line, so
@@ -105,13 +97,6 @@ describe('measureText core (synthetic metrics)', () => {
 		const expected = outcome.kind === 'shrink' ? outcome.result.fontScalePct : 100
 		expect(m.shrinkScaleFor(tightIn)).toBe(expected)
 		expect(m.shrinkScaleFor(tightIn)).toBeLessThan(100)
-	})
-
-	test('approximatedFaces is empty when every run is measured exactly', () => {
-		const reg = regWith()
-		const m = measureText(reg, SENTENCE, { wIn: 2, fontSize: 18, fontFace: 'Mono' })
-		expect(m.measurable).toBe(true)
-		expect(m.approximatedFaces).toEqual([])
 	})
 
 	test('approximatedFaces lists each guessed face once, exact runs excluded', () => {

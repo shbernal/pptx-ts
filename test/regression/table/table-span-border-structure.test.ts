@@ -2,15 +2,14 @@ import type JSZip from 'jszip'
 import type { StrokeProps } from '../../../dist/node.js'
 import { defineRegressionSuite, build, readEntry, assert, defined, at } from '../../helpers.ts'
 
-// Verification suite for several historical upstream table reports that this project already
-// emits correctly. These guard against regressing back into the reported symptoms:
-//   colspan > 1 produced extra empty cells/columns
+// Verification suite for historical upstream table reports that this project already emits
+// correctly. These guard against regressing back into the reported symptoms:
 //   top/left borders missing on non-first rows/columns
 //   rowspan continuation cells lost borders
 //   border of the cell adjacent to a rowspan was not applied
-// All four reduce to two invariants in the generated <a:tbl>: (1) the grid/cell counts match the
-// declared spans, and (2) every cell — including span continuation (hMerge/vMerge) cells — carries
-// the full four-sided border when a uniform border is configured.
+// All three reduce to one invariant in the generated <a:tbl>: every cell, including a span
+// continuation (vMerge) cell, carries the full four-sided border when a uniform border is
+// configured. The colspan grid shape is pinned by table-columns-sugar-grid.test.ts.
 
 const SOLID: StrokeProps = { type: 'solid', width: 1, color: 'FF0000' }
 const BORDER4: [StrokeProps, StrokeProps, StrokeProps, StrokeProps] = [SOLID, SOLID, SOLID, SOLID]
@@ -29,31 +28,6 @@ function hasAllFourBorders(cellXml: string) {
 }
 
 defineRegressionSuite('Table span + border structure (verified correct)', [
-	{
-		name: 'colspan produces correct grid/cell counts, no extra empty columns',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.addSlide().addTable(
-					[
-						[{ text: 'A', options: { colspan: 2 } }, { text: 'C' }],
-						[{ text: 'd' }, { text: 'e' }, { text: 'f' }],
-					],
-					{ x: 0, y: 0, w: 9, colW: [3, 3, 3] }
-				)
-			})
-			const tbl = await tableXml(zip)
-			assert((tbl.match(/<a:gridCol/g) || []).length === 3, 'expected exactly 3 grid columns')
-			const rows = tbl.split('</a:tr>').filter((r) => r.includes('<a:tr'))
-			assert(rows.length === 2, `expected 2 rows, got ${rows.length}`)
-			rows.forEach((r, i) => {
-				const tcCount = (r.match(/<a:tc[ >]/g) || []).length
-				assert(tcCount === 3, `row ${i} should have 3 cells (incl. hMerge filler), got ${tcCount}`)
-			})
-			// Origin cell carries gridSpan=2 and exactly one hMerge filler exists in row 0.
-			assert(/gridSpan="2"/.test(at(rows, 0)), 'colspan origin cell should declare gridSpan="2"')
-			assert((at(rows, 0).match(/hMerge="1"/g) || []).length === 1, 'row 0 should have exactly one hMerge filler cell')
-		},
-	},
 	{
 		name: 'rowspan continuation + adjacent cells keep borders',
 		fn: async () => {

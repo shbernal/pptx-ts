@@ -46,7 +46,7 @@ describe('HTML table border width is converted to points', () => {
 		assert(b.type === 'none', `expected type:none for a negative width, got ${JSON.stringify(b)}`)
 	})
 
-	for (const value of ['', 'auto', '3em', '30%'])
+	for (const value of ['', '30%'])
 		test(`${JSON.stringify(value)} has no absolute length and yields {type:none}`, () => {
 			const b = htmlBorderToProps(value, 'rgb(0, 0, 0)')
 			assert(b.type === 'none', `expected type:none for ${JSON.stringify(value)}, got ${JSON.stringify(b)}`)

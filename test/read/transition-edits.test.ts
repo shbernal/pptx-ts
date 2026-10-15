@@ -64,12 +64,10 @@ describe('prefixFor — modern type namespaces', () => {
 		assertEqual(info.namespace, 'p159', 'the 2015/9 namespace maps to p159')
 	})
 
-	test('an unrecognised type namespace falls back to the p prefix', () => {
-		const info = defined(slide('<p:transition><x:glitz xmlns:x="urn:example:unknown"/></p:transition>').transition)
-		assertEqual(info.namespace, 'p', 'an unknown namespace URI defaults to p')
-	})
+	test('an unrecognised or missing type namespace falls back to the p prefix', () => {
+		const unknown = defined(slide('<p:transition><x:glitz xmlns:x="urn:example:unknown"/></p:transition>').transition)
+		assertEqual(unknown.namespace, 'p', 'an unknown namespace URI defaults to p')
 
-	test('a type element with no namespace falls back to the p prefix', () => {
 		const info = defined(slide('<p:transition><cut/></p:transition>').transition)
 		assertEqual(info.type, 'cut', 'the no-namespace child is still the type')
 		assertEqual(info.namespace, 'p', 'a null namespace URI defaults to p')

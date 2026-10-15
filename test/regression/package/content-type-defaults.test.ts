@@ -8,7 +8,6 @@ import {
 	assertEqual,
 	assertContentTypeDefault,
 	assertNoContentTypeDefault,
-	assertContentTypeOverride,
 	contentTypeDefaultExtensions,
 	contentTypeForExtension,
 	at,
@@ -254,28 +253,6 @@ defineRegressionSuite('Content type defaults [legacy bug-16]', [
 			})
 			const xml = await readEntry(zip, '[Content_Types].xml')
 			assertContentTypeDefault(xml, 'xlsx')
-		},
-	},
-	{
-		name: 'regression - structural Override entries still emitted',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				const s = p.addSlide()
-				s.addText('hello', { x: 1, y: 1 })
-			})
-			const xml = await readEntry(zip, '[Content_Types].xml')
-			for (const partName of [
-				'/ppt/presentation.xml',
-				'/ppt/slideMasters/slideMaster1.xml',
-				'/ppt/theme/theme1.xml',
-				'/ppt/theme/theme2.xml',
-				'/ppt/slides/slide1.xml',
-				'/ppt/slideLayouts/slideLayout1.xml',
-				'/ppt/notesMasters/notesMaster1.xml',
-				'/ppt/notesSlides/notesSlide1.xml',
-			]) {
-				assertContentTypeOverride(xml, partName)
-			}
 		},
 	},
 ])

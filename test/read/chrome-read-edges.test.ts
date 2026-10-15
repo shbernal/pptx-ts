@@ -56,10 +56,6 @@ import { assert, assertEqual, readEntry, at, take } from '../helpers.ts'
 import { authorRead, schemaErrors, validatorInstalled } from './authored.ts'
 import { openFixture } from './corpus.ts'
 
-async function open(name: string, ext = 'pptx') {
-	return openFixture(`${name}.${ext}`)
-}
-
 /**
  * Author a one-slide deck and rewrite its `slideMaster1.xml` with `mutate`, leaving
  * the rest of the package — theme, layout, slide, rels — the writer's own. Returns
@@ -82,14 +78,14 @@ async function patchedMaster(mutate: (xml: string) => string) {
 
 describe('SlideMaster.background — the master tier of the chain', () => {
 	test("an explicit p:bgPr on the master reads as the master's own solid fill", async () => {
-		const bg = at((await open('mixed')).masters(), 0).background
+		const bg = at((await openFixture('mixed')).masters(), 0).background
 		assert(bg?.type === 'solid', "mixed.pptx's master authors a solid p:bgPr")
 		assertEqual(bg.source, 'master', 'the source records the master tier, not slide/layout')
 		assertEqual(bg.colorRef.resolved?.effectiveHex, 'FFFFFF', 'the fill colour resolves')
 	})
 
 	test('a p:bgRef on the master keeps its idx and resolves through the theme', async () => {
-		const bg = at((await open('theme-colors')).masters(), 0).background
+		const bg = at((await openFixture('theme-colors')).masters(), 0).background
 		assert(bg?.type === 'themeRef', 'the Ion master authors a theme-indexed background')
 		assertEqual(bg.source, 'master', 'sourced from the master')
 		assertEqual(bg.idx, 1003, 'the raw bgRef index')
@@ -119,13 +115,13 @@ describe('SlideMaster.background — the master tier of the chain', () => {
 
 describe('SlideLayout — inherited tiers', () => {
 	test('a layout defining no background of its own reads null', async () => {
-		const layout = at(at((await open('theme-colors')).masters(), 0).layouts, 0)
+		const layout = at(at((await openFixture('theme-colors')).masters(), 0).layouts, 0)
 		assertEqual(layout.name, 'Title Slide', 'the first Ion layout')
 		assertEqual(layout.background, null, 'PowerPoint layouts usually inherit the master background')
 	})
 
 	test('a layout resolves its theme through its master', async () => {
-		const layout = at(at((await open('theme-colors')).masters(), 0).layouts, 0)
+		const layout = at(at((await openFixture('theme-colors')).masters(), 0).layouts, 0)
 		const theme = layout.theme
 		assert(theme, 'layout.theme walks layout → master → theme')
 		assertEqual(theme.name, 'Ion', 'the fixture theme')
@@ -135,14 +131,14 @@ describe('SlideLayout — inherited tiers', () => {
 	test("the import-only layout @type reads PowerPoint's value", async () => {
 		// chrome-read.test.ts pins this as null on an authored deck (the writer emits
 		// none); the imported side is where a real value shows up.
-		const layout = at(at((await open('theme-colors')).masters(), 0).layouts, 0)
+		const layout = at(at((await openFixture('theme-colors')).masters(), 0).layouts, 0)
 		assertEqual(layout.type, 'title', 'an imported layout carries its @type')
 	})
 })
 
 describe('Placeholder geometry — inherited rather than own', () => {
 	test('a layout placeholder with no own a:xfrm reads null geometry on all four axes', async () => {
-		const layouts = at((await open('theme-colors')).masters(), 0).layouts
+		const layouts = at((await openFixture('theme-colors')).masters(), 0).layouts
 		const inherited = layouts.flatMap((l) => l.placeholders).find((ph) => ph.type === 'dt')
 		assert(inherited, 'the Ion layouts carry a date placeholder')
 		// It still identifies itself — only the geometry is absent, because PowerPoint

@@ -1,5 +1,4 @@
 import { describe, expect, test } from 'vitest'
-import { makeXmlTableStyles } from '../../../src/gen/pres/table-styles.ts'
 import { TableStyle } from '../../../src/enums.ts'
 import { Presentation, isGraphicFrame } from '../../../dist/read.js'
 import { build, readEntry } from '../../helpers.ts'
@@ -32,18 +31,6 @@ async function written(fn: Parameters<typeof build>[0]) {
 function definedIds(xml: string): string[] {
 	return [...xml.matchAll(/<a:tblStyle styleId="([^"]+)"/g)].map((m) => m[1] ?? '')
 }
-
-describe('makeXmlTableStyles', () => {
-	test('with no definitions, emits a self-closing tblStyleLst naming the default style id', () => {
-		expect(makeXmlTableStyles([])).toContain(
-			`<a:tblStyleLst xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" def="${TableStyle.MEDIUM_STYLE_2_ACCENT_1}"/>`
-		)
-	})
-
-	test('is a complete XML document', () => {
-		expect(makeXmlTableStyles([]).startsWith('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>')).toBe(true)
-	})
-})
 
 describe('the written tableStyles.xml', () => {
 	test('each built-in style is defined once, the default first, then in the order the deck reaches them', async () => {

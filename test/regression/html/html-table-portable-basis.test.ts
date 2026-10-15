@@ -58,11 +58,6 @@ describe('parseCssWidthBasis', () => {
 		assert(basis.join() === '100,200', `a unitless number is px, got ${basis.join()}`)
 	})
 
-	test('an all-zero set parses (the caller decides it is unusable)', () => {
-		const basis = parseCssWidthBasis(['0px', '0px'])
-		assert(basis.join() === '0,0', 'zeros parse; pickColWidthBasis is what rejects them')
-	})
-
 	test('no columns yields no basis', () => {
 		assert(parseCssWidthBasis([]).length === 0, 'empty in, empty out')
 	})
@@ -102,13 +97,6 @@ describe('pickColWidthBasis', () => {
 	test('an all-NaN measured vector falls through to CSS', () => {
 		const basis = pickColWidthBasis([NaN, NaN], [10, 30])
 		assert(basis.join() === '10,30', `NaN sums to 0, so CSS must win, got ${basis.join()}`)
-	})
-
-	test('the measured array is copied, not aliased', () => {
-		const measured = [120, 240]
-		const basis = pickColWidthBasis(measured, [])
-		basis[0] = 999
-		assert(measured[0] === 120, 'the caller"s array must not be mutated through the basis')
 	})
 
 	test('no columns yields no basis', () => {

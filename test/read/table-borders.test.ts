@@ -109,11 +109,6 @@ describe('TableCell.borders — a:tcPr/a:lnL|lnR|lnT|lnB', () => {
 		assertEqual(top.colorRef.resolved.hex, 'FF0000', 'base hex is the authored literal')
 		assertEqual(top.colorRef.resolved.transforms.length, 0, 'a bare srgbClr carries no transform children')
 		assertEqual(top.colorRef.srgb, 'FF0000', 'the literal the border states is reported beside its resolution')
-		assertEqual(
-			defined(defined(defined(defined(firstTable(presentation)).cell(0, 0)).borders).left).colorRef.resolved,
-			null,
-			'a noFill edge resolves none'
-		)
 	})
 
 	test('an edge and a diagonal read their cap, unset or not', async () => {

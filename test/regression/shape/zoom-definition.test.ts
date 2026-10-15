@@ -32,16 +32,10 @@ import type PptxTs from '../../../dist/node.js'
 // today; a test that only ever passes valid input would not notice the day one of those guards
 // starts throwing, or starts emitting a graphicFrame pointing at nothing.
 //
-// Three branches across the two modules are deliberately left red, all "unreachable by
-// construction" in the sense of docs/contributing/testing.md:
-//   - `if (!firstSlide) return` in the Summary Zoom tile loop. The list it walks was already
-//     filtered on `_slides.length > 0`; the guard is there to keep the callback total, and its
-//     own comment says so. Covering it would mean reaching past the public surface.
-//   - the `'sm'` and `sl-<n>` arms of the media-key ternary in `preview-image.ts`. That ternary
-//     is copied from `gen/define/image.ts`, where a master (`_slideNum === null`) or a layout
-//     (`_slideNum >= 1000`) really can own an image. A preview image cannot: the only two callers
-//     are the zoom and OLE definers, both reachable only from `SlideBuilder`, which always carries
-//     a 1-based `_slideNum`. Dead here, load-bearing where it was copied from.
+// One branch is deliberately left red, "unreachable by construction" in the sense of
+// docs/contributing/testing.md: `if (!firstSlide) return` in the Summary Zoom tile loop. The list
+// it walks was already filtered on `_slides.length > 0`; the guard is there to keep the callback
+// total, and its own comment says so. Covering it would mean reaching past the public surface.
 
 /** A jpg on disk, so a cover image can be supplied by `path` with no `data` alongside it. */
 const COVER_JPG = 'test/assets/cc_logo.jpg'

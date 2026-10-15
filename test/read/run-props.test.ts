@@ -58,15 +58,11 @@ describe('Run character formatting — a:rPr attributes', () => {
 		assertEqual(run(runs, 'Plain').caps, null, 'a run with no caps reports null')
 	})
 
-	test('baseline reads super/subscript as a percentage', async () => {
+	test('baseline reads super/subscript and a stated baseline as a percentage', async () => {
 		const runs = runsOf((await authorRead(formattedRuns)).presentation)
 		assertEqual(run(runs, 'Super').baselinePct, 30, 'superscript → +30%')
 		assertEqual(run(runs, 'Sub').baselinePct, -40, 'subscript → -40%')
 		assertEqual(run(runs, 'Plain').baselinePct, null, 'a baseline-shifted-none run reports null')
-	})
-
-	test('a stated baseline is a percent, read back as the same percent', async () => {
-		const runs = runsOf((await authorRead(formattedRuns)).presentation)
 		assertEqual(run(runs, 'Raised').baselinePct, 30, 'baseline: 30 raises the text as superscript does')
 		assertEqual(run(runs, 'Lowered').baselinePct, -12.5, 'baseline: -12.5 → -12.5%')
 	})

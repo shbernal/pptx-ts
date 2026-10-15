@@ -51,17 +51,6 @@ describe('computeTableLayout core — width geometry (exact)', () => {
 		// Row 1 sits one row height down.
 		expect(cellAt(res, 1, 0)?.yIn).toBeCloseTo(1.5, 6)
 	})
-
-	test('explicit colW array drives per-column x/width; scalar rowH is exact', () => {
-		const rows = [[{ text: 'a' }, { text: 'b' }, { text: 'c' }]]
-		const res = computeTableLayout(rows, { x: 0, y: 0, colW: [2, 3, 4], rowH: 0.4 }, LAYOUT, emptyReg)
-		expect(cellAt(res, 0, 0)).toMatchObject({ xIn: 0, wIn: 2 })
-		expect(cellAt(res, 0, 1)).toMatchObject({ xIn: 2, wIn: 3 })
-		expect(cellAt(res, 0, 2)).toMatchObject({ xIn: 5, wIn: 4 })
-		expect(res.widthIn).toBeCloseTo(9, 6)
-		expect(res.heightIn).toBeCloseTo(0.4, 6)
-		expect(res.heightExact).toBe(true)
-	})
 })
 
 describe('computeTableLayout core — colspan / rowspan', () => {

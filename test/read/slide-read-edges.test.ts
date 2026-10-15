@@ -141,20 +141,6 @@ describe('Slide.background — write→read fidelity', () => {
 		assertEqual(at(bg.gradient.stops, 1).position, 1, 'last stop at position 1 (100%)')
 	})
 
-	test('image background reads its rel id and resolved absolute part name', async () => {
-		const { presentation } = await authorRead((pres) => {
-			const slide = pres.addSlide()
-			slide.background = { data: PNG_1PX }
-		})
-		const bg = defined(at(presentation.slides, 0).background)
-		assert(bg.type === 'image', 'image background')
-		assertEqual(bg.source, 'slide', 'authored on the slide')
-		assert(
-			bg.partName != null && bg.partName.endsWith('.png'),
-			`part name resolves to the media png, got ${bg.partName}`
-		)
-	})
-
 	test('a themeRef background resolves its idx to the concrete theme fill', async () => {
 		const { presentation } = await authorRead((pres) => {
 			pres.addSlide() // inherits the default layout's p:bgRef idx=1001

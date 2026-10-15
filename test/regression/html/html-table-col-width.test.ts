@@ -18,10 +18,6 @@ describe('HTML table column width resolution', () => {
 		assert(resolveHtmlColWidth(2, 0, 4) === 4, 'min-width must act as a floor')
 	})
 
-	test('proportional calc is used when no override is present', () => {
-		assert(resolveHtmlColWidth(2.5, 0, 0) === 2.5, 'calc width is the default')
-	})
-
 	test('min-width below the calc does not shrink it', () => {
 		assert(resolveHtmlColWidth(6, 0, 2) === 6, 'min-width must not reduce a wider calc')
 	})

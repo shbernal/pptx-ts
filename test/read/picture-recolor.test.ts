@@ -6,9 +6,9 @@
 // write API, reads it back through the deep model, and asserts the `Recolor`
 // union round-trips — proving the very bytes the writer emits decode faithfully.
 //
-// (The read side of these modes is already covered off-fixture in
-// style-accessors.test.ts via hand-authored `a:clrChange`/`a:grayscl`/`a:biLevel`
-// XML; this file proves the *writer* now produces those same bytes.)
+// (The read side of `a:grayscl`/`a:biLevel` is also covered off-fixture in
+// style-accessors.test.ts via hand-authored XML; this file proves the *writer*
+// now produces those same bytes.)
 
 import { isPicture } from '../../dist/read.js'
 import type { ImageBaseProps } from '../../dist/node.js'

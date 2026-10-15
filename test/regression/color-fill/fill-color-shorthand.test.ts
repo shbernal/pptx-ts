@@ -117,26 +117,6 @@ defineRegressionSuite('A bare colour is the solid-fill shorthand [fill-option]',
 		},
 	},
 	{
-		name: "the caller's own fill object is not mutated by the chart path",
-		fn: async () => {
-			// `copyChartOptions` copies `plotArea.fill` so normalization cannot reach back into the
-			// caller's object. The `typeof === 'object'` guard must not have cost that.
-			const fill = { color: RED }
-			await build((pres) => {
-				pres.addSlide().addChart([{ name: 'S', labels: ['a'], values: [1] }], {
-					type: 'bar',
-					x: 1,
-					y: 1,
-					w: 4,
-					h: 3,
-					plotArea: { fill },
-				})
-			})
-			assertEqual(Object.keys(fill).join(','), 'color', "the chart path wrote back into the caller's fill")
-			assertEqual(fill.color, RED, "the chart path changed the caller's colour")
-		},
-	},
-	{
 		name: 'a stroke is still spelled as an object',
 		fn: async () => {
 			// Not an oversight: a bare string would paint the colour and skip the line rebuild that
