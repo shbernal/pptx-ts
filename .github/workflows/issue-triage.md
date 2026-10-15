@@ -20,6 +20,9 @@ on:
 permissions:
   contents: read
   issues: read
+  # The default GitHub toolsets include pull_requests, which the agent uses to find the PR
+  # that fixed a duplicate.
+  pull-requests: read
 
 # `roles: all` lets an outside report start a run, but on a public repo gh-aw also filters
 # what the agent can read through the GitHub tools, and its default (`approved`) drops
