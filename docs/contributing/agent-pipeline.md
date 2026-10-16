@@ -20,13 +20,15 @@ app installation token.
 | App | Bot login | Repository permissions | Role |
 | --- | --- | --- | --- |
 | `pptx-ts-agents` | `pptx-ts-agents[bot]` | Contents RW, Issues RW, Pull requests RW, Metadata R | Opens branches and PRs, comments, edits labels |
-| `pptx-ts-reviewer` | `pptx-ts-reviewer[bot]` | Contents R, Pull requests RW, Issues RW, Metadata R | Reviews agent PRs |
+| `pptx-ts-reviewer` | `pptx-ts-reviewer[bot]` | Contents RW, Pull requests RW, Issues RW, Metadata R | Reviews agent PRs |
 
 There are two apps because GitHub does not let a PR's author approve it: the bot that opens
 a PR cannot be the one whose approval counts. Neither app has the Workflows permission, so
 neither can change `.github/workflows/`. Neither has a webhook; workflows mint their tokens
 with `actions/create-github-app-token`. The reviewer needs Issues write because gh-aw's
-safe-outputs job requests it for PR comments and failure reports.
+safe-outputs job requests it for PR comments and failure reports. It needs Contents write
+only because GitHub counts an approval toward a required review only from an account with
+write access; no reviewer token is ever minted with it.
 
 ### Where the credentials live
 
@@ -196,3 +198,25 @@ The PR gets `needs-maintainer`, and auto-merge is turned off, when:
 - a round changes nothing, so there is nothing to re-review
 - a round's change touches a protected path
 - the run fails
+
+## Merging
+
+Two rulesets protect `main`:
+
+- `Protect main` blocks deletion and force pushes, requires the CI checks and allows squash
+  merges only, which keeps `main` in Conventional Commit form.
+- `Agent review` requires one approving review, dismisses it on a later push, requires the
+  approval to come after the last push, and requires a code-owner review. Maintainer PRs
+  merge as before.
+
+So an agent PR merges on its own once CI is green and `pptx-ts-reviewer[bot]` has approved
+its latest commit. A push after the approval, such as a fix round, dismisses it until the
+reviewer approves again.
+
+`.github/CODEOWNERS` names the maintainer for the protected paths, so a PR touching them
+needs the maintainer's review even if the agent workflows failed to stop it. Keep it, the
+`agent-protected-paths` action and the list above in step.
+
+Releases stay manual. `publish.yml` runs only on a `v*` tag push, the agent workflows never
+create tags, and cutting a release is the maintainer's job. Nothing an agent merges reaches
+npm until the maintainer releases it.
