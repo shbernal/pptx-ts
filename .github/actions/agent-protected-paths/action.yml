@@ -1,0 +1,42 @@
+name: Agent protected paths
+description: >-
+  Lists the protected paths an agent change touches. An agent PR that touches any of them
+  waits for the maintainer instead of auto-merging.
+
+inputs:
+  base:
+    description: The branch the change merges into, such as `origin/main`.
+    required: true
+  head:
+    description: The commit holding the change. Both histories must be in the checkout.
+    required: true
+
+outputs:
+  paths:
+    description: The protected paths changed, one per line; empty when there are none.
+    value: ${{ steps.check.outputs.paths }}
+
+runs:
+  using: composite
+  steps:
+    # Paths whose changes reach every user or the pipeline itself. Keep in step with
+    # .github/CODEOWNERS and docs/contributing/agent-pipeline.md. Compared from the merge base,
+    # so changes `main` gained after the branch point do not count.
+    - id: check
+      shell: bash
+      env:
+        BASE: ${{ inputs.base }}
+        HEAD: ${{ inputs.head }}
+      run: |
+        fork=$(git merge-base "$BASE" "$HEAD")
+        paths=$(git diff --name-only "$fork" "$HEAD" |
+          grep -E '^(\.github/|scripts/release|scripts/sync-version\.mjs$|tsdown\.config\.ts$)' || true)
+        if ! diff <(git show "$fork:package.json" | jq 'del(.devDependencies)') \
+          <(git show "$HEAD:package.json" | jq 'del(.devDependencies)') > /dev/null; then
+          paths+=$'\npackage.json'
+        fi
+        {
+          echo 'paths<<EOF'
+          sed '/^$/d' <<<"$paths"
+          echo EOF
+        } >> "$GITHUB_OUTPUT"
