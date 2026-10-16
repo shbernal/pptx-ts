@@ -38,6 +38,8 @@ jobs:
     permissions:
       contents: read
       issues: read
+    outputs:
+      issue: ${{ steps.gate.outputs.issue }}
 
     steps:
       # `app-id` is deprecated in favor of `client-id` but still accepted; the secret holds
@@ -204,7 +206,7 @@ jobs:
           # Paths whose changes reach every user or the pipeline itself. Keep in step with
           # .github/CODEOWNERS.
           protected=$(git diff --name-only HEAD~1 HEAD |
-            grep -E '^(\.github/|scripts/release|scripts/sync-version\.mjs$|tsdown\.config\.ts$|CHANGELOG\.md$)' || true)
+            grep -E '^(\.github/|scripts/release|scripts/sync-version\.mjs$|tsdown\.config\.ts$)' || true)
           if ! diff <(git show HEAD~1:package.json | jq 'del(.devDependencies)') \
             <(jq 'del(.devDependencies)' package.json) > /dev/null; then
             protected+=$'\npackage.json'
@@ -218,13 +220,26 @@ jobs:
           fi
           gh issue edit "$ISSUE" --remove-label agent:working
 
-      - name: Report a failed run
-        if: failure() && steps.gate.outputs.issue
+  # A job of its own so `implement`, where Claude runs, keeps a read-only token, and so a
+  # failure before the app token exists is still reported. A comment by `GITHUB_TOKEN` starts
+  # no workflow, which is all this needs. A sweep that fails before picking an issue has
+  # nothing to comment on; GitHub's failed-run email covers it.
+  report:
+    name: Report a failure
+    needs: implement
+    if: failure() && (needs.implement.outputs.issue || github.event_name == 'workflow_dispatch' || github.event.issue.user.login == 'shbernal')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Comment on the issue
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          ISSUE: ${{ steps.gate.outputs.issue }}
+          ISSUE: ${{ needs.implement.outputs.issue || github.event.issue.number || inputs.issue_number }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           gh issue comment "$ISSUE" --body "The implementer run failed: $RUN_URL"
-          gh issue edit "$ISSUE" --remove-label agent:working --add-label needs-maintainer
+          gh issue edit "$ISSUE" --add-label needs-maintainer
+          gh issue edit "$ISSUE" --remove-label agent:working || true
