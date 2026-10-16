@@ -81,7 +81,7 @@ body:
       description: A disclosure, not a filter. Every answer is welcome. See [CONTRIBUTING.md](https://github.com/shbernal/pptx-ts/blob/main/CONTRIBUTING.md#ai-disclosure).
       options:
         - None
-        - AI-assisted, and a person reviewed this report
+        - AI-assisted, human-reviewed
         - Filed by an AI agent
     validations:
       required: true
