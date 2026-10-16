@@ -497,7 +497,7 @@ export class Run {
 		if (hasFillChoice(rPr)) return resolveSolidFillColor(rPr, this.context.ctx)
 		const hlinkClick = rPr && firstChild(rPr, 'a:hlinkClick')
 		if (hlinkClick && !followsTextColor(hlinkClick)) {
-			const hex = resolveSchemeToken('folHlink', this.context.ctx)
+			const hex = resolveSchemeToken('hlink', this.context.ctx)
 			return hex ? { hex, transforms: [], effectiveHex: hex } : null
 		}
 		const inherit = this.context.inherit
