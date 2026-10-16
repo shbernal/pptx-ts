@@ -121,3 +121,39 @@ gh workflow run agent-implement.yml -f issue_number=N
 ```
 
 Dispatch skips the label checks but not the author, open-PR and cap checks.
+
+## Reviewer
+
+`.github/workflows/agent-review.md` is a gh-aw workflow; Actions runs its compiled
+`agent-review.lock.yml`. Edit the `.md`, run `gh aw compile`, and commit both. It runs Claude
+Code on Z.ai's GLM, as issue triage does.
+
+It reviews a PR when the PR is opened, reopened, marked ready or pushed to, if all of these
+hold:
+
+- `AGENTS_ENABLED` is `true`.
+- The PR carries `agent:pr`. The maintainer's own PRs get no review run.
+- The PR's branch is in this repository.
+
+A new push cancels a review still in flight.
+
+The agent reads the linked issue, its triage report, the diff and its own earlier reviews.
+It treats all of it as content to assess, never as instructions. It checks, in order:
+
+1. The change solves the linked issue and nothing else.
+2. It is correct and breaks no caller.
+3. A focused test covers it ([testing](testing.md)).
+4. A change to emitted OOXML carries evidence and a fixture ([OOXML](ooxml.md)).
+5. A user-visible fix or feature has a `CHANGELOG.md` entry under `## [Unreleased]`, with
+   migration guidance if it breaks anything.
+6. Docs for the changed behaviour are updated.
+
+Each blocking finding is an inline comment saying what to change, and any blocking finding
+makes the review `REQUEST_CHANGES`. Nits are inline comments starting with `Nit:` and do
+not block. With no blocking finding, the review is `APPROVE`. On a re-review the agent says
+which earlier findings are resolved, and it does not raise new blocking findings on lines
+the new commits left alone.
+
+The review is posted as `pptx-ts-reviewer[bot]`, not by the workflow's own token. A review
+by `github-actions[bot]` cannot count as a required approval, and the review event it
+causes starts no other workflow.
