@@ -18,7 +18,7 @@ function assertFontTrio(xml: string, face: string, label: string): void {
 
 defineRegressionSuite('Chart East Asian fonts', [
 	{
-		name: 'chart title font emits latin/ea/cs trio',
+		name: 'title, legend, axis label and data label fonts each emit the latin/ea/cs trio',
 		fn: async () => {
 			const { zip } = await build((p) => {
 				p.addSlide().addChart([{ name: 'S1', labels: ['A', 'B'], values: [1, 2] }], {
@@ -30,64 +30,19 @@ defineRegressionSuite('Chart East Asian fonts', [
 					showTitle: true,
 					title: '图表标题',
 					titleFontFace: 'Microsoft YaHei',
-				})
-			})
-			const xml = await chartXml(zip)
-			assertFontTrio(xml, 'Microsoft YaHei', 'title')
-		},
-	},
-	{
-		name: 'legend font emits latin/ea/cs trio (no orphaned latin-only run)',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.addSlide().addChart([{ name: 'S1', labels: ['A', 'B'], values: [1, 2] }], {
-					type: ChartType.bar,
-					x: 1,
-					y: 1,
-					w: 6,
-					h: 3,
 					showLegend: true,
 					legendFontFace: 'SimSun',
-				})
-			})
-			const xml = await chartXml(zip)
-			assertFontTrio(xml, 'SimSun', 'legend')
-		},
-	},
-	{
-		name: 'category and value axis label fonts emit latin/ea/cs trio',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.addSlide().addChart([{ name: 'S1', labels: ['A', 'B'], values: [1, 2] }], {
-					type: ChartType.bar,
-					x: 1,
-					y: 1,
-					w: 6,
-					h: 3,
 					catAxisLabelFontFace: 'KaiTi',
 					valAxisLabelFontFace: 'FangSong',
-				})
-			})
-			const xml = await chartXml(zip)
-			assertFontTrio(xml, 'KaiTi', 'catAxis')
-			assertFontTrio(xml, 'FangSong', 'valAxis')
-		},
-	},
-	{
-		name: 'data label font emits latin/ea/cs trio',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.addSlide().addChart([{ name: 'S1', labels: ['A', 'B'], values: [1, 2] }], {
-					type: ChartType.bar,
-					x: 1,
-					y: 1,
-					w: 6,
-					h: 3,
 					showValue: true,
 					dataLabelFontFace: 'NSimSun',
 				})
 			})
 			const xml = await chartXml(zip)
+			assertFontTrio(xml, 'Microsoft YaHei', 'title')
+			assertFontTrio(xml, 'SimSun', 'legend')
+			assertFontTrio(xml, 'KaiTi', 'catAxis')
+			assertFontTrio(xml, 'FangSong', 'valAxis')
 			assertFontTrio(xml, 'NSimSun', 'dataLabel')
 		},
 	},

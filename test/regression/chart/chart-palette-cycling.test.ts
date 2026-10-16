@@ -7,9 +7,8 @@ import { chartXml } from './chart-parts.ts'
 // instead, which made the same deck emit different bytes on every build -- invisible to the
 // byte-identity harness, because no deck in its corpus reached that far into a palette.
 //
-// The cases below go past the end on purpose. They assert the two properties the wraparound has
-// to hold: the colour repeats from the start of the palette, and a second build of the same
-// chart is byte-identical to the first.
+// The cases below go past the end on purpose and assert that the colour repeats from the start
+// of the palette.
 
 const SERIES_COUNT = 12 // longer than either default palette
 

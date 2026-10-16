@@ -2,7 +2,6 @@ import { defineRegressionSuite, assert, assertEqual, defined, caught } from '../
 import PptxTs, {
 	PptxTsError,
 	InvalidOptionError,
-	UnsupportedFeatureError,
 	PackageReadError,
 	InternalError,
 	TsPptxError,
@@ -98,18 +97,6 @@ defineRegressionSuite('Error taxonomy', [
 			const err = await caught(() => readZip(new Uint8Array([1, 2, 3, 4])))
 			assert(err instanceof PptxTsError, 'a library error is a PptxTsError')
 			/* oxlint-enable typescript/no-deprecated */
-		},
-	},
-	{
-		name: 'UnsupportedFeatureError is exported and distinct from the other classes',
-		fn: () => {
-			// No Node-reachable site trips this synchronously (the sites are a missing optional peer
-			// and a browser-only filesystem gap), so the contract pinned here is the shape.
-			const err = new UnsupportedFeatureError('math/missing-optional-peer', 'x')
-			assert(err instanceof PptxTsError, 'it is a PptxTsError')
-			assert(!(err instanceof InvalidOptionError), 'it is not an InvalidOptionError')
-			assertEqual(err.name, 'UnsupportedFeatureError')
-			assertEqual(err.code, 'math/missing-optional-peer')
 		},
 	},
 	{

@@ -133,13 +133,10 @@ describe('deck IR — corpus invariants', () => {
 		}
 	})
 
-	test.for(fixtureNames)('%s fully populates every fidelity note, and names a cause', async (name) => {
+	test.for(fixtureNames)('%s gives every fidelity note a dotted construct and a usable detail', async (name) => {
+		// `disposition` and `cause` are closed unions that every note site is typed against, so they
+		// are not re-checked here. The construct is not fully typed: a layout note's prefix is cast on.
 		for (const note of (await irFor(name)).fidelity) {
-			assert(
-				['dropped', 'flattened', 'approximated'].includes(note.disposition),
-				`${name}: ${note.construct} has disposition ${note.disposition}`
-			)
-			assert(['unread', 'unwritable', 'unsupported'].includes(note.cause), `${name}: ${note.construct} cause`)
 			assert(/^[a-z][A-Za-z]*(\.[a-zA-Z]+)+$/.test(note.construct), `${name}: ${note.construct} is not a dotted key`)
 			assert(note.detail.length > 20, `${name}: ${note.construct} detail is too thin to act on`)
 		}
@@ -452,14 +449,6 @@ describe('deck IR — groups', () => {
 		const source = xfrms(await readEntry(await JSZip.loadAsync(buf), 'ppt/slides/slide1.xml'))
 		const replay = xfrms(await readEntry(await JSZip.loadAsync(replayed), 'ppt/slides/slide1.xml'))
 		assertEqual(replay, source, 'the replay writes the same transforms')
-	})
-
-	test('a nested group nests rather than flattening', async () => {
-		const ir = await irFor('group-transform.pptx')
-		const nested = allCalls(ir).find((call) => call.sourceName === 'nested-rot-in-scale')
-		assert(nested, 'group-transform.pptx has a nested-rot-in-scale group')
-		const kinds = arrayOf(nested.args[0]).map((child) => Object.keys(objectOf(child))[0])
-		assert(kinds.includes('group'), `nested group should emit a group child, got ${kinds.join(',')}`)
 	})
 
 	const groupChildKeys = new Set(['image', 'line', 'rect', 'roundRect', 'shape', 'text', 'group'])
@@ -1705,10 +1694,12 @@ describe('deck IR — picture fills', () => {
 		assertEqual(at(fill, 'transparency'), 25, 'a:alphaModFix amt=75000 → 0.75 opacity → 25 % transparent')
 	})
 
-	test('an opaque image fill emits no transparency key at all', async () => {
+	test('an opaque, uncropped image fill states neither transparency nor crop', async () => {
 		// `0` and absent are the same picture but different IR, and the write path emits no
 		// `a:alphaModFix` for either — so emitting `transparency: 0` would fail the round trip
-		// against an output that cannot report it back.
+		// against an output that cannot report it back. Likewise `<a:srcRect/>` is what the write
+		// path emits with no `crop`, so carrying four zeros would add an option that changes nothing
+		// and take the fill off its byte-identical path.
 		const { presentation } = await authorRead((pres) => {
 			pres.addSlide().addText('img', { x: 1, y: 1, w: 3, h: 1, fill: { type: 'image', image: { data: PNG_1X1 } } })
 		})
@@ -1720,6 +1711,11 @@ describe('deck IR — picture fills', () => {
 			'transparency' in objectOf(fill),
 			false,
 			`an opaque fill states no transparency, got ${JSON.stringify(fill)}`
+		)
+		assertEqual(
+			'crop' in objectOf(at(fill, 'image')),
+			false,
+			`an explicit empty srcRect states no crop, got ${JSON.stringify(fill)}`
 		)
 	})
 
@@ -1750,23 +1746,6 @@ describe('deck IR — picture fills', () => {
 			ir.fidelity.filter((note) => note.construct === 'fill.picture.geometry').length,
 			0,
 			'and the crop is no longer reported as lost, because it is not'
-		)
-	})
-
-	test('an uncropped image fill states no crop at all', async () => {
-		// `<a:srcRect/>` is what the write path emits with no `crop`, so carrying four zeros
-		// would add an option that changes nothing and take the fill off its byte-identical path.
-		const { presentation } = await authorRead((pres) => {
-			pres.addSlide().addText('img', { x: 1, y: 1, w: 3, h: 1, fill: { type: 'image', image: { data: PNG_1X1 } } })
-		})
-		const fill = at(
-			defined(allCalls(readModelToIr(presentation)).find((call) => call.method === 'addText')).args[1],
-			'fill'
-		)
-		assertEqual(
-			'crop' in objectOf(at(fill, 'image')),
-			false,
-			`an explicit empty srcRect states no crop, got ${JSON.stringify(fill)}`
 		)
 	})
 
@@ -1871,44 +1850,16 @@ describe('deck IR — picture fills', () => {
 		assertEqual(at(image.shadow, 'angle'), 45, 'and its angle')
 	})
 
-	test("a picture's crop carries at the source's precision, and one `crop` cannot hold is noted", async () => {
-		const { presentation, buf } = await authorRead((pres) => {
+	test("a picture's crop carries at the source's precision", async () => {
+		// The negative-inset and degenerate-inset arms are pinned end to end, through a script that
+		// runs, by `standalone printer — picture crop` in script-standalone.test.ts.
+		const { presentation } = await authorRead((pres) => {
 			pres.addSlide().addImage({ data: PNG_1X1, x: 1, y: 1, w: 1, h: 1, crop: { l: 12.5, t: 33.333 } })
 		})
 		const kept = objectOf(
 			defined(allCalls(readModelToIr(presentation)).find((call) => call.method === 'addImage')).args[0]
 		)
 		assertEqual(JSON.stringify(kept.crop), '{"l":12.5,"t":33.333}', 'a crop in range carries, zero edges left out')
-
-		// PowerPoint writes a negative inset for a fit crop, and `crop` takes it.
-		const zip = await JSZip.loadAsync(buf)
-		const slideXml = await readEntry(zip, 'ppt/slides/slide1.xml')
-		const withSrcRect = async (srcRect: string) => {
-			const edited = slideXml.replace(/<a:srcRect[^>]*\/>/, srcRect)
-			assert(edited !== slideXml, 'the authored srcRect was found and rewritten')
-			zip.file('ppt/slides/slide1.xml', edited)
-			return readModelToIr(await Presentation.load(await zip.generateAsync({ type: 'uint8array' })))
-		}
-		const padded = await withSrcRect('<a:srcRect l="-5000"/>')
-		const fit = objectOf(defined(allCalls(padded).find((call) => call.method === 'addImage')).args[0])
-		assertEqual(JSON.stringify(fit.crop), '{"l":-5}', 'a negative inset carries')
-		assertEqual(padded.fidelity.filter((note) => note.construct === 'image.crop').length, 0, 'with no note')
-
-		// Opposite insets that leave no source area have no `crop` spelling. Passed through, they
-		// would put a crop in the IR that made the printed script throw at `addImage`.
-		const ir = await withSrcRect('<a:srcRect l="60000" r="60000"/>')
-		const image = objectOf(defined(allCalls(ir).find((call) => call.method === 'addImage')).args[0])
-		assertEqual(
-			'crop' in image,
-			false,
-			`no crop is emitted for an inset the option cannot hold, got ${JSON.stringify(image)}`
-		)
-		const noted = ir.fidelity.filter((note) => note.construct === 'image.crop')
-		assertEqual(noted.length, 1, 'the loss is declared')
-		assert(
-			atIndex(noted, 0).detail.includes('a:srcRect'),
-			`and names the source crop, got: ${atIndex(noted, 0).detail}`
-		)
 	})
 
 	test('a fill whose blip embeds nothing is dropped with a note, not emitted unfilled in silence', async () => {

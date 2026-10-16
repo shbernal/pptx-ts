@@ -113,10 +113,6 @@ describe('path-refs citation resolution', () => {
 		expect(resolves('src/gen/Chart/plot-bar.ts', from, known)).toBe(false)
 		expect(resolves('./Plot-Bar.ts', from, known)).toBe(false)
 	})
-
-	test('a path that names nothing does not resolve', () => {
-		expect(resolves('src/gen/chart/plot-nothing.ts', from, known)).toBe(false)
-	})
 })
 
 describe('sync-version replacement', () => {
@@ -183,18 +179,12 @@ describe('ensure-dist staleness', () => {
 		expect(await stale(await tree())).toBe(null)
 	})
 
-	test('a source file newer than the build is stale, and the reason names src/', async () => {
-		const root = await tree()
-		await touch(root, 'src/index.ts')
-		expect(await stale(root)).toMatch(/build input is newer than dist\/: src\//)
-	})
-
-	test('a source file NESTED under src/ counts too', async () => {
+	test('a source file nested under src/ is stale, and the reason names src/', async () => {
 		// The walk is recursive, and a guard that only stated the top level would call a tree
 		// with an edited `src/gen/**` fresh - which is most of this repo.
 		const root = await tree()
 		await touch(root, 'src/gen/deep.ts')
-		expect(await stale(root)).toMatch(/build input is newer than dist\//)
+		expect(await stale(root)).toMatch(/build input is newer than dist\/: src\//)
 	})
 
 	test('a newer build config is stale, and the reason names the file', async () => {

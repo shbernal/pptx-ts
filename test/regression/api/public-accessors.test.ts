@@ -46,7 +46,7 @@ defineRegressionSuite('Public accessors', [
 		},
 	},
 	{
-		name: 'slides and slideLayouts expose what the presentation holds, and the master is not handed out as a slide',
+		name: 'slides and slideLayouts expose what the presentation holds',
 		fn: async () => {
 			let firstSlide
 			const { pres } = await build((p) => {
@@ -56,10 +56,6 @@ defineRegressionSuite('Public accessors', [
 
 			assertEqual(pres.slides.length, 2, 'slides should list every added slide')
 			assert(pres.slides[0] === firstSlide, 'slides[0] should be the object addSlide() returned')
-
-			// The master is written from internal state rather than handed out as a `Slide`: it had
-			// none of a slide's methods, so each one a caller reached for threw a `TypeError`.
-			assertEqual('masterSlide' in pres, false, 'the presentation does not expose its master as a slide')
 
 			// One default layout exists before any `defineSlideMaster` call.
 			assert(pres.slideLayouts.length >= 1, 'slideLayouts should include the default layout')

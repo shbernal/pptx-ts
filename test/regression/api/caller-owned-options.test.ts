@@ -1,15 +1,15 @@
 import type JSZip from 'jszip'
-import type { Diagnostic, MediaProps, ShadowProps } from '../../../dist/node.js'
+import type { MediaProps, ShadowProps } from '../../../dist/node.js'
 import {
-	setDiagnosticHandler,
+	PNG_1X1_DATA_URI,
 	build,
+	captureDiagnostics,
 	defined,
 	readEntry,
 	defineRegressionSuite,
 	assertEqual,
 	assertIncludes,
 	assertNonVisualDrawingProperty,
-	type PptxTs,
 	at,
 } from '../../helpers.ts'
 
@@ -36,26 +36,10 @@ import {
 // what the caller wrote -- the actual contract), the diagnostics (no name collision), and the bytes
 // (each object gets its own identity). The last two are what breaks without the first.
 
-/** Build, capturing library diagnostics as `{ code, message }` pairs. */
-async function buildCapturingLogs(buildFn: (pres: PptxTs) => unknown) {
-	const warnings: Diagnostic[] = []
-	setDiagnosticHandler((d) => warnings.push(d))
-	try {
-		const result = await build(buildFn)
-		return { ...result, warnings }
-	} finally {
-		setDiagnosticHandler(null)
-	}
-}
-
 /** `<p:sp>` blocks on slide 1, in document order. */
 async function shapesOn(zip: JSZip, part = 'ppt/slides/slide1.xml') {
 	return (await readEntry(zip, part)).match(/<p:sp>[\s\S]*?<\/p:sp>/g) || []
 }
-
-// 1x1 PNG (red pixel).
-const PNG_DATA =
-	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP8z8DwHwAFAAH/Re1ZlAAAAABJRU5ErkJggg=='
 
 defineRegressionSuite('Caller-owned options', [
 	{
@@ -65,18 +49,20 @@ defineRegressionSuite('Caller-owned options', [
 		name: 'a reused options literal is left untouched and does not leak between shapes',
 		fn: async () => {
 			const STYLE = { x: 1, y: 1, w: 2, h: 1 }
-			const { zip, warnings } = await buildCapturingLogs((p) => {
-				const s = p.addSlide()
-				s.addShape('rect', STYLE)
-				s.addShape('ellipse', { ...STYLE, y: 2.5 })
-				s.addShape('roundRect', { ...STYLE, y: 4 })
-			})
-			const shapes = await shapesOn(zip)
+			const { result, codes } = await captureDiagnostics(() =>
+				build((p) => {
+					const s = p.addSlide()
+					s.addShape('rect', STYLE)
+					s.addShape('ellipse', { ...STYLE, y: 2.5 })
+					s.addShape('roundRect', { ...STYLE, y: 4 })
+				})
+			)
+			const shapes = await shapesOn(result.zip)
 			assertEqual(shapes.length, 3, 'expected all three shapes')
 			assertNonVisualDrawingProperty(defined(shapes[0]), { name: 'Shape 1' }, 'the first shape')
 			assertNonVisualDrawingProperty(at(shapes, 1), { name: 'Shape 2' }, 'the second shape')
 			assertNonVisualDrawingProperty(at(shapes, 2), { name: 'Shape 3' }, 'the third shape')
-			assertEqual(warnings.length, 0, `expected no diagnostics; got ${JSON.stringify(warnings)}`)
+			assertEqual(codes.length, 0, `expected no diagnostics; got ${JSON.stringify(codes)}`)
 			assertEqual(
 				JSON.stringify(STYLE),
 				JSON.stringify({ x: 1, y: 1, w: 2, h: 1 }),
@@ -131,19 +117,21 @@ defineRegressionSuite('Caller-owned options', [
 		name: 'a reused options literal is left untouched and does not leak between tables',
 		fn: async () => {
 			const STYLE = { x: 0.5, y: 0.5, w: 6, colW: [3, 3] }
-			const { zip, warnings } = await buildCapturingLogs((p) => {
-				const s = p.addSlide()
-				// @ts-expect-error accepted leniency, not API: TableRow types only cell objects, bare strings are taken at runtime
-				s.addTable([['A1', 'B1']], STYLE)
-				// @ts-expect-error as above
-				s.addTable([['A2', 'B2']], { ...STYLE, y: 3 })
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
+			const { result, codes } = await captureDiagnostics(() =>
+				build((p) => {
+					const s = p.addSlide()
+					// @ts-expect-error accepted leniency, not API: TableRow types only cell objects, bare strings are taken at runtime
+					s.addTable([['A1', 'B1']], STYLE)
+					// @ts-expect-error as above
+					s.addTable([['A2', 'B2']], { ...STYLE, y: 3 })
+				})
+			)
+			const xml = await readEntry(result.zip, 'ppt/slides/slide1.xml')
 			const frames = xml.match(/<p:graphicFrame>[\s\S]*?<\/p:graphicFrame>/g) || []
 			assertEqual(frames.length, 2, 'expected both tables')
 			assertNonVisualDrawingProperty(defined(frames[0]), { name: 'Table 1' }, 'the first table')
 			assertNonVisualDrawingProperty(at(frames, 1), { name: 'Table 2' }, 'the second table')
-			assertEqual(warnings.length, 0, `expected no diagnostics; got ${JSON.stringify(warnings)}`)
+			assertEqual(codes.length, 0, `expected no diagnostics; got ${JSON.stringify(codes)}`)
 			assertEqual(
 				JSON.stringify(STYLE),
 				JSON.stringify({ x: 0.5, y: 0.5, w: 6, colW: [3, 3] }),
@@ -185,7 +173,7 @@ defineRegressionSuite('Caller-owned options', [
 		// regressing into the same shape as the other three. Pinned here alongside them.
 		name: 'image and media options are left untouched',
 		fn: async () => {
-			const IMG = { data: PNG_DATA, x: 1, y: 1, w: 1, h: 1 }
+			const IMG = { data: PNG_1X1_DATA_URI, x: 1, y: 1, w: 1, h: 1 }
 			const VID: MediaProps = { type: 'video', data: 'video/mp4;base64,AAAA', x: 3, y: 1, w: 2, h: 1 }
 			await build((p) => {
 				const s = p.addSlide()
@@ -194,7 +182,7 @@ defineRegressionSuite('Caller-owned options', [
 			})
 			assertEqual(
 				JSON.stringify(IMG),
-				JSON.stringify({ data: PNG_DATA, x: 1, y: 1, w: 1, h: 1 }),
+				JSON.stringify({ data: PNG_1X1_DATA_URI, x: 1, y: 1, w: 1, h: 1 }),
 				'the caller-owned addImage literal'
 			)
 			assertEqual(

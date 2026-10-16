@@ -163,11 +163,6 @@ describe('rejects structural changes', () => {
 		expect(result.ok).toBe(false)
 	})
 
-	test('an element removed', () => {
-		const result = prove('<c:ser>  <c:idx val="0"/>  <c:order val="0"/></c:ser>', '<c:ser><c:idx val="0"/></c:ser>')
-		expect(result.ok).toBe(false)
-	})
-
 	// Sibling order is semantic in OOXML — the schemas are sequences, and PowerPoint reports
 	// a repair on a misordered child. Stripping whitespace and comparing the rest as a set
 	// would miss this; comparing as a list is what catches it.

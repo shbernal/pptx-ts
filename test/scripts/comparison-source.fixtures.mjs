@@ -8,11 +8,6 @@
 /** @typedef {import('../../dist/node.js').default} PptxTs */
 
 /** @param {PptxTs} pres */
-export const addSlideBuild = (pres) => {
-	pres.addSlide()
-}
-
-/** @param {PptxTs} pres */
 export const multiLineBuild = (pres) => {
 	pres.addSlide().addText('probe', {
 		x: 1,

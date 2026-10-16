@@ -46,8 +46,11 @@ async function newestMtimeIn(dir) {
 	let entries
 	try {
 		entries = await fs.readdir(dir, { withFileTypes: true })
-	} catch {
-		return 0
+	} catch (error) {
+		// Absent is "nothing newer". Any other failure must surface: reading an unreadable
+		// tree as 0 is the fresh-when-stale verdict this guard exists to rule out.
+		if (/** @type {NodeJS.ErrnoException} */ (error).code === 'ENOENT') return 0
+		throw error
 	}
 	for (const entry of entries) {
 		const full = path.join(dir, entry.name)

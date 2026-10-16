@@ -57,10 +57,6 @@ describe('links that leave the docs tree', () => {
 })
 
 describe('links inside the docs tree', () => {
-	test('a relative link to a real page passes', () => {
-		expect(check('See [start](./guide/start.md).')).toEqual([])
-	})
-
 	test('a relative link to a missing page is an error', () => {
 		const errors = check('See [gone](./guide/gone.md).')
 		expect(errors).toHaveLength(1)

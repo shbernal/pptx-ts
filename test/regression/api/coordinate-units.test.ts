@@ -23,10 +23,11 @@ async function offExtFor(opts: Box) {
 
 defineRegressionSuite('Coordinate units', [
 	{
-		name: 'bare number is inches',
+		// The old heuristic read a number >= 100 as EMU, so `x: 120` became a 120 EMU dot.
+		name: 'bare number is inches, however large',
 		fn: async () => {
-			const r = await offExtFor({ x: 1, y: 2, w: 3, h: 0.5 })
-			assert(r.x === IN && r.y === 2 * IN && r.cx === 3 * IN && r.cy === 0.5 * IN, JSON.stringify(r))
+			const r = await offExtFor({ x: 120, y: 2, w: 3, h: 0.5 })
+			assert(r.x === 120 * IN && r.y === 2 * IN && r.cx === 3 * IN && r.cy === 0.5 * IN, JSON.stringify(r))
 		},
 	},
 	{
@@ -90,14 +91,6 @@ defineRegressionSuite('Coordinate units', [
 				const code = (await caught(() => offExtFor(opts)))?.code ?? null
 				assert(code === 'coord/out-of-range', `${label}: expected coord/out-of-range; got ${code}`)
 			}
-		},
-	},
-	{
-		name: 'a bare number >= 100 is inches now (no EMU passthrough)',
-		fn: async () => {
-			// Under the old heuristic this 120 would have been emitted as 120 EMU (a collapsed dot).
-			const r = await offExtFor({ x: 120, y: 1, w: 1, h: 1 })
-			assert(r.x === 120 * IN, `expected ${120 * IN} (120in), got ${r.x}`)
 		},
 	},
 ])
