@@ -106,7 +106,10 @@ auto-merge stays off:
 - `package.json` outside `devDependencies`
 - `scripts/release*` and `scripts/sync-version.mjs`
 - `tsdown.config.ts`
-- `CHANGELOG.md`
+
+`CHANGELOG.md` is not on the list: an agent fix or feature adds its entry under
+`## [Unreleased]`, as any PR does. Cutting a release, which dates those entries, stays with the
+maintainer.
 
 ### Rerunning
 
