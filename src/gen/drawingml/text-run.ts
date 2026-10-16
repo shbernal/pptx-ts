@@ -45,9 +45,6 @@ import {
 import { genXmlInlineMath, genXmlMathParagraph } from './math.js'
 import { xsdBoolIfTrue } from '../../ooxml/xsd-boolean.js'
 
-/** The 2018 hyperlink-color extension namespace, written on the `<ahyp:hlinkClr>` element itself. */
-const AHYP_NS = 'http://schemas.microsoft.com/office/drawing/2018/hyperlinkcolor'
-
 /**
  * `<a:extLst>` marking a hyperlink whose color should follow the text color rather than the
  * theme's hyperlink color. The leading spaces are byte-significant: this block was authored as
@@ -61,7 +58,7 @@ const HLINK_TEXT_COLOR_EXT = el(
 		el(
 			'a:ext',
 			{ uri: '{A12FA001-AC4F-418D-AE19-62706E023703}' },
-			raw(voidEl('ahyp:hlinkClr', { 'xmlns:ahyp': AHYP_NS, val: 'tx' }, { openPrefix: '   ' })),
+			raw(voidEl('ahyp:hlinkClr', { 'xmlns:ahyp': OOXML_NS.ahyp, val: 'tx' }, { openPrefix: '   ' })),
 			{ openPrefix: '  ', closePrefix: '  ' }
 		)
 	),

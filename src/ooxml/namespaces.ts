@@ -21,6 +21,7 @@
 export const OOXML_NS = Object.freeze({
 	a: 'http://schemas.openxmlformats.org/drawingml/2006/main',
 	a14: 'http://schemas.microsoft.com/office/drawing/2010/main',
+	ahyp: 'http://schemas.microsoft.com/office/drawing/2018/hyperlinkcolor',
 	asvg: 'http://schemas.microsoft.com/office/drawing/2016/SVG/main',
 	c: 'http://schemas.openxmlformats.org/drawingml/2006/chart',
 	c15: 'http://schemas.microsoft.com/office/drawing/2012/chart',

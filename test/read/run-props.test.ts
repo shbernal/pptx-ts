@@ -155,6 +155,34 @@ describe('Run hyperlink — a:hlinkClick', () => {
 		assertEqual(link.action, 'ppaction://hlinksldjump', 'slide jump action token')
 		assert(link.targetPartName?.endsWith('slide2.xml'), `jump resolves to slide 2 (${link.targetPartName})`)
 	})
+
+	// #282: an uncoloured link paints in the theme's hlink colour, not the text colour.
+	test('an uncoloured link resolves the theme\'s hlink, and hlinkClr val="tx" the text colour', async () => {
+		const runs = runsOf(
+			(
+				await authorRead((pres) => {
+					pres.theme = { colorScheme: { dk1: '101820', hlink: '0050A0' } }
+					pres.addSlide().addText(
+						[
+							{ text: 'Link', options: { hyperlink: { url: 'https://example.com/' } } },
+							{ text: 'Pinned', options: { hyperlink: { url: 'https://example.com/' }, color: 'C00000' } },
+						],
+						{ x: 1, y: 1, w: 4, h: 1 }
+					)
+				})
+			).presentation
+		)
+		const link = run(runs, 'Link')
+		assertEqual(link.color, null, 'the link states no colour of its own')
+		assertEqual(link.resolvedColor?.effectiveHex, '0050A0', "it resolves the theme's hlink slot")
+
+		const pinned = run(runs, 'Pinned')
+		assertEqual(pinned.resolvedColor?.effectiveHex, 'C00000', 'an own fill still wins')
+		// Clearing the fill leaves the hlinkClr val="tx" extension the write path pinned it with.
+		pinned.color = null
+		assert(pinned.hyperlink, 'the link survives clearing the colour')
+		assertEqual(pinned.resolvedColor?.effectiveHex, '101820', 'hlinkClr val="tx" asks for the text colour (tx1 → dk1)')
+	})
 })
 
 describe('Paragraph line spacing — a:lnSpc', () => {
