@@ -1,13 +1,5 @@
-# Two decisions here are load-bearing and were made against real filings, not taste:
-#
-# 1. A fidelity limit is a severity, not a third form. It is neither a bug (the
-#    OOXML is valid and the deck opens) nor a missing accessor — but three forms
-#    is more chooser than intake for a repo this size.
-# 2. There is no browser or package-manager field. Every filing that had them
-#    answered `n/a`. PowerPoint version is optional for the same reason: it is
-#    meaningless for an API-shape report and load-bearing for a render one.
 name: Bug or fidelity limit
-description: Wrong output, a repair prompt, a regression, or a construct that does not survive a round trip.
+description: Wrong output, a thrown error, a repair prompt, a regression, wrong types, or a construct that does not survive a round trip.
 labels: [bug]
 body:
   - type: markdown
@@ -16,9 +8,8 @@ body:
         Thanks for filing. Before you start:
 
         - Confirm the problem still happens on the **latest release**.
-        - pptx-ts is **ESM, Node-first**. CommonJS and IIFE/global browser bundles are not supported and reports about them will be closed.
-        - If this is a security problem, **stop** — do not file it publicly. See [SECURITY.md](https://github.com/shbernal/pptx-ts/blob/main/SECURITY.md).
-        - If a downstream consumer prompted this, describe the need **anonymously**: no consumer name, deck or client names, or file paths from its tree.
+        - If this is a security problem, **stop** and do not file it publicly. See [SECURITY.md](https://github.com/shbernal/pptx-ts/blob/main/SECURITY.md).
+        - **Do not attach a deck containing real data.** Presentations carry client names, unreleased strategy, pricing and internal logos, and this tracker is public. Reduce the failure to a script that builds its own deck.
 
   - type: dropdown
     id: severity
@@ -33,6 +24,17 @@ body:
     validations:
       required: true
 
+  - type: input
+    id: error-class-and-code
+    attributes:
+      label: Error class and code
+      description: >-
+        `error.name` and `error.code`, if anything was thrown. The code is a stable
+        `area/condition` string and is the fastest thing to search on.
+      placeholder: InternalError / oxml/node-has-no-document
+    validations:
+      required: false
+
   - type: textarea
     id: observed
     attributes:
@@ -45,6 +47,9 @@ body:
     id: expected
     attributes:
       label: What should happen instead
+      description: >-
+        And why you believe that: a clause of ECMA-376, what PowerPoint itself does with
+        the same input, or what the docs promise.
     validations:
       required: true
 
@@ -52,16 +57,28 @@ body:
     id: repro
     attributes:
       label: Minimal reproduction
-      description: The smallest script that produces the offending `.pptx`. Please paste the code rather than attaching a project.
+      description: >-
+        The smallest script that builds its own deck and shows the problem. Paste the code
+        rather than attaching a project, and cut it down until removing anything more makes
+        the failure disappear.
       render: javascript
     validations:
       required: true
+
+  - type: textarea
+    id: output
+    attributes:
+      label: Error output
+      description: Verbatim message, `error.detail`, and stack trace, if anything was thrown. Do not paraphrase.
+      render: shell
+    validations:
+      required: false
 
   - type: input
     id: construct-key
     attributes:
       label: Construct key
-      description: If the gap surfaces as a conversion fidelity note, its key — e.g. `table.rowAuto`. See [pptx-to-script](https://shbernal.github.io/pptx-ts/reference/pptx-to-script).
+      description: If the gap surfaces as a conversion fidelity note, its key, e.g. `table.rowAuto`. See [pptx-to-script](https://shbernal.github.io/pptx-ts/reference/pptx-to-script).
       placeholder: table.rowAuto
     validations:
       required: false
@@ -70,7 +87,7 @@ body:
     id: cause-and-fixes
     attributes:
       label: Cause, and possible fixes
-      description: If you traced it, say where it goes wrong and what the options are. A recommendation among them is welcome — it is the most useful thing an issue can carry.
+      description: If you traced it, say where it goes wrong and what the options are. A recommendation among them is welcome, since it is the most useful thing an issue can carry.
     validations:
       required: false
 
@@ -78,7 +95,8 @@ body:
     id: version-pptx-ts
     attributes:
       label: pptx-ts version
-      placeholder: 2.0.0
+      description: 'Exact installed version: `node -p "require(''pptx-ts/package.json'').version"`'
+      placeholder: 4.1.0
     validations:
       required: true
 
@@ -92,6 +110,15 @@ body:
       required: true
 
   - type: input
+    id: platform
+    attributes:
+      label: Operating system
+      description: Path handling, filesystem case sensitivity, and line endings differ by platform. Leave blank if the report cannot depend on them.
+      placeholder: Windows 11 x64 / macOS 15 arm64 / Ubuntu 24.04 x64
+    validations:
+      required: false
+
+  - type: input
     id: version-powerpoint
     attributes:
       label: PowerPoint version
@@ -99,3 +126,25 @@ body:
       placeholder: Microsoft 365, Version 2406 (Windows)
     validations:
       required: false
+
+  - type: dropdown
+    id: ai-involvement
+    attributes:
+      label: AI involvement
+      description: A disclosure, not a filter. Every answer is welcome. See [CONTRIBUTING.md](https://github.com/shbernal/pptx-ts/blob/main/CONTRIBUTING.md#ai-disclosure).
+      options:
+        - None
+        - AI-assisted, human-reviewed
+        - Filed by an AI agent
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: >-
+            No confidential data appears in this report, and any attached file was
+            synthesized or authored by hand with no real data in it.
+          required: true

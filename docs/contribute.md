@@ -18,7 +18,7 @@ Security issues go through
 
 [CONTRIBUTING.md](https://github.com/shbernal/pptx-ts/blob/main/CONTRIBUTING.md) covers setting
 up the repository, the git hooks, the scope it is maintained for, reporting a bug or promoting a
-downstream need, and installing an unreleased commit.
+downstream need, and installing an unreleased build.
 
 The documentation for working on the repository is read on GitHub:
 

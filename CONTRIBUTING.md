@@ -1,7 +1,4 @@
-# Contributing
-
-Thanks for your interest in pptx-ts. The README describes what the package does for the people who
-install it. This file covers how the repository is built, tested and contributed to.
+# Contributing to pptx-ts
 
 ## Start here
 
@@ -117,17 +114,15 @@ scope statement and suggested testing approaches.
 ## Reporting bugs and proposing changes
 
 GitHub issues are the only tracker; there is no local ledger. The
-[new-issue chooser](https://github.com/shbernal/pptx-ts/issues/new/choose) offers three
+[new-issue chooser](https://github.com/shbernal/pptx-ts/issues/new/choose) offers two
 forms, from `.github/ISSUE_TEMPLATE/`:
 
-- **Bug or fidelity limit**: wrong output, a repair prompt, a regression, or a
-  construct that does not survive a round trip. Bring a minimal repro, a small script
-  that produces the offending `.pptx`.
+- **Bug or fidelity limit**: a thrown error, wrong output, a repair prompt, a regression,
+  wrong types, or a construct that does not survive a round trip. Bring a minimal repro, a
+  small script that produces the offending `.pptx`. The library's own `InternalError`
+  messages link to this form.
 - **API gap**: a missing accessor, or a property the write side authors that the read
   side cannot see.
-- **Agent-assisted report**: a defect an agent found while using pptx-ts in another project.
-  The library's own error messages link to this form, and it asks which error class and code
-  was thrown.
 
 Neither fits? File a blank issue. A good issue in the wrong shape beats a bad issue in
 the right one. See [errors and warnings](docs/errors-and-warnings.md#which-failures-are-worth-reporting) for
@@ -139,6 +134,19 @@ open a public issue; see [SECURITY.md](SECURITY.md).
 
 Breaking changes are acceptable when they make the API clearer or safer. Record them,
 with migration guidance, in [CHANGELOG.md](CHANGELOG.md).
+
+### AI disclosure
+
+Say how AI was involved in an issue or a pull request. AI-assisted and agent-filed work is
+welcome here; the disclosure tells a reviewer how to read it, and it never decides whether
+the work is accepted.
+
+- **Issues**: both forms ask for it. An issue filed through the API or as a blank issue says
+  it under an `### AI involvement` heading.
+- **Pull requests**: fill in the AI involvement section of the pull request template.
+
+Disclose in the issue or pull request body, never in a commit message. The `no-ai-attribution`
+commit-msg hook rejects attribution trailers, and the body is where a reviewer reads it.
 
 ### Promoting a downstream need
 
@@ -201,23 +209,20 @@ issue number afterwards. It also covers the far end of the cycle, which is the h
 that usually rots: when a release lands, finding every workaround it retires and
 deleting them.
 
-## Installing an unreleased commit
+## Installing an unreleased build
 
-Any commit is installable directly from GitHub, without waiting for a release. This is
-how you try a fix before it ships:
+Every push to `main` that passes CI is published to npm under the `next` dist-tag. This
+is how you try a fix before it ships:
 
 ```bash
-pnpm add github:shbernal/pptx-ts#<commit-sha>
+pnpm add pptx-ts@next
 ```
 
-`main` (`github:shbernal/pptx-ts`) works too, but pin the sha: a branch spec
-re-resolves to whatever is at the head of it when the lockfile is next written.
+Each build is versioned `<base>-next.<run>.g<sha>`, for example `4.1.1-next.128.g4a69534`:
+`<base>` is the patch after the last release, `<run>` orders the builds, and `<sha>` names
+the commit it was built from. The lockfile pins the exact build, and `pres.version` reports
+the same string. `npm view pptx-ts dist-tags` shows which build `next` points at.
 
-`dist/` is not committed, so this builds the package on install: your package manager
-clones the repo, installs this package's `devDependencies`, and runs its `prepare`
-script. That makes the install slow and heavier than a registry install, and it needs a
-working Node toolchain. It is meant for trying a fix, not for production dependencies.
-
-Note that `pres.version` reports the version in `package.json` at that commit, so
-several different commits report the same number. The sha in your `package.json` is
-what identifies the build.
+`latest` never moves to one of these, and a caret range never matches a prerelease, so no
+install receives a `next` build without asking for it. Only `pptx-ts` is published here, not
+the scoped alias. It is meant for trying a fix, not for production dependencies.

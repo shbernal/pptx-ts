@@ -91,7 +91,7 @@ try {
 makeXmlSlideRel: no slide at index 3
 
 This is a bug in pptx-ts, not in your deck or your code. Please report it:
-https://github.com/shbernal/pptx-ts/issues/new?template=agent-report.yml
+https://github.com/shbernal/pptx-ts/issues/new?template=bug.yml
 ```
 
 The constructor adds the notice, so every `InternalError` carries it. No other class changes its message. The notice is still message text, so do not assert on it.
