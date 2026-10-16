@@ -1,10 +1,10 @@
 ---
 doc-schema-version: 1
 title: "Release workflow"
-summary: "How a release reaches npm under both package names, what to check in the comparison snapshot, and how to finish a half-published release."
+summary: "How a tag push reaches npm under both package names and becomes a GitHub Release, what stops a release, and how to finish a half-published one."
 read_when:
   - Preparing a release
-  - Updating npm publish or GitHub Release workflow documentation
+  - Updating the npm publish workflow or its documentation
   - Checking release verification steps
 doc_type: "runbook"
 ---
@@ -17,7 +17,8 @@ the alias is a second publish of the same build under a second name. `scripts/al
 stages that copy: the `name` differs, the README gains a banner naming `pptx-ts`, and the `scripts`
 block is dropped. You never bump, tag or stage the alias by hand.
 
-`.github/workflows/publish.yml` publishes both, when a GitHub Release is published. It also
+`.github/workflows/publish.yml` publishes both when a `vX.Y.Z` tag is pushed, then creates the
+GitHub Release for it. It also
 publishes a prerelease of every push to `main` under the `next` dist-tag; see
 [The `next` channel](#the-next-channel). The
 [`release-publish` skill](https://github.com/shbernal/pptx-ts/blob/main/.agents/skills/release-publish/SKILL.md)
@@ -27,18 +28,16 @@ has the commands for each step. This page says why the steps are shaped the way 
 
 ```mermaid
 flowchart TD
-  s1["1. Refresh the comparison<br/>comparison:measure, comparison:render"] --> s2["2. Review the snapshot diff"]
-  s2 --> s3["3. Write and stage the CHANGELOG entry"]
-  s3 --> s4["4. Local gate<br/>check:static, verify, npm view for a 404 on both names"]
-  s4 --> s5["5. pnpm version<br/>bumps, syncs the constant, commits, tags"]
-  s5 --> s6["6. Push main, then the vX.Y.Z tag"]
-  s6 --> s7["7. Publish a GitHub Release from the tag"]
-  s7 --> s8["8. Workflow guards<br/>ci.yml gate, tag matches version, a name still lacks it"]
-  s8 --> s9["9. Publish pptx-ts"]
-  s9 --> s10["10. Publish @shbernal/ts-pptx"]
-  s10 --> s11["11. Post-publish checks<br/>npm view both names, comment on closed issues"]
-  s10 -- "alias publish failed" --> retry["Re-dispatch publish.yml on the same tag"]
-  retry --> s8
+  s1["1. Write and stage the CHANGELOG entries"] --> s2["2. Refresh the comparison<br/>comparison:measure, comparison:render, comparison:diff"]
+  s2 --> s3["3. pnpm version<br/>preflight and local gate, bump, date the changelog, commit, tag"]
+  s3 --> s4["4. git push --atomic origin main vX.Y.Z"]
+  s4 --> s5["5. Workflow guards<br/>ci.yml gate, tag matches version, a name still lacks it"]
+  s5 --> s6["6. Publish pptx-ts"]
+  s6 --> s7["7. Publish @shbernal/ts-pptx"]
+  s7 --> s8["8. Create the GitHub Release<br/>notes from the CHANGELOG section"]
+  s8 --> s9["9. Comment on closed issues"]
+  s7 -- "alias publish failed" --> retry["Re-dispatch publish.yml on the same tag"]
+  retry --> s5
 ```
 
 ## Prerequisites
@@ -47,7 +46,7 @@ flowchart TD
   exchanges the OIDC token per package. Both name repository `shbernal/pptx-ts`, workflow
   `publish.yml`, environment `npm-publish`, and the action `npm publish`.
 - The GitHub environment `npm-publish` exists, and its deployment policy allows only tags matching
-  `v*` (the `release` event runs on the tag) and the branch `main` (manual dispatch, and the
+  `v*` (a tag push runs on the tag) and the branch `main` (manual dispatch, and the
   `next` channel, whose `workflow_run` event runs on the default branch). A run from any other ref
   fails at the publish job.
 - `package.json#repository.url` points at `shbernal/pptx-ts`.
@@ -71,11 +70,13 @@ release out of date, so re-run the fetch later instead.
 
 ### What to stop on in the snapshot diff
 
-A diff whose only changes are `generatedAt`, a download count and the timing medians is the normal
-case. A clock took the timings, so they move on every run, and a few percent either way means
-nothing. Stop on these:
+`pnpm run comparison:diff` (`scripts/comparison/diff.mjs`) compares the refreshed snapshot with the
+committed one and exits 1 on any of the changes below, listing each. The release stops there until
+someone has looked. A diff whose only changes are `generatedAt`, a download count and the timing
+medians is the normal case and passes. A clock took the timings, so they move on every run, and a
+few percent either way means nothing. It stops on these:
 
-- **A coverage row that flipped**, in either direction. A construct one library emits and the other
+- **A coverage row that flipped**, in either direction, or one added or removed. A construct one library emits and the other
   does not is the substance of the page. A flip means a real capability moved, or a probe stopped
   measuring what it claims to.
 - **A validity count that moved**, ours especially. The page states how many probe decks pass the
@@ -84,8 +85,9 @@ nothing. Stop on these:
   worth a closer look.
 - **A timing row that changed sign, or a `compression` ratio near 1.** The page's reading of the
   timing tables holds only while every compressed row favours us and every stored row favours
-  upstream, and the rendered page drops it when that stops being true. A ratio near 1 is the louder
-  signal: one library stopped compressing when asked, so its compressed column times something else.
+  upstream, and the rendered page drops it when that stops being true. A ratio near 1 (below 1.5
+  in the script) is the louder signal: one library stopped compressing when asked, so its compressed
+  column times something else.
 
 ## Bumping the version
 
@@ -99,19 +101,30 @@ on a drift either way.
 pnpm version minor --message 'chore(release): v%s' --no-git-checks
 ```
 
-This bumps `package.json`, runs the `version` lifecycle script, which rewrites and stages the
-constant, and makes one commit holding `package.json`, the constant and the staged `CHANGELOG.md`,
-tagged `vX.Y.Z`. Both flags are needed:
+This runs the `preversion` lifecycle script, bumps `package.json`, runs the `version` lifecycle
+script, and makes one commit holding `package.json`, the constant, the changelog and the staged
+comparison refresh, tagged `vX.Y.Z`. The `version` script rewrites and stages the constant, and
+`scripts/changelog.mjs --release` turns `## [Unreleased]` into
+`## [X.Y.Z](…/releases/tag/vX.Y.Z) - YYYY-MM-DD` under a fresh empty `[Unreleased]`, so neither the
+heading nor the date is typed by hand. Both flags are needed:
 
 - `--message`: pnpm's default subject is the bare version (`3.2.0`). pnpm ignores npm's `message`
   config, so setting it in `.npmrc` does nothing, and the flag is the only control.
 - `--no-git-checks`: pnpm refuses to run on an unclean tree (`ERR_PNPM_UNCLEAN_WORKING_TREE`), and
-  the staged `CHANGELOG.md` counts. Waiving the check keeps the release to one commit. It waives
-  the check for everything, so run `git status` first and leave scratch files untracked.
+  the staged `CHANGELOG.md` counts. Waiving the check keeps the release to one commit.
 
-The local gate runs before this command, so the tag lands on a commit that already passed
-`check:static` and `verify`. The heavier gates are CI's: the publish workflow runs every `ci.yml`
-leg before it publishes, so they are not repeated locally.
+The waiver covers everything, so `preversion` makes the checks a release needs instead.
+`scripts/release-preflight.mjs` (`pnpm run release:preflight`) fails unless the branch is `main` at
+the same commit as `origin/main`, no tracked file has an unstaged change, nothing is staged but the
+changelog and the comparison files, both the changelog and the snapshot are staged, `package.json`
+still has the last tag's version, and `[Unreleased]` has entries. `preversion` then runs
+`check:static` and `verify`, so the tag lands on a commit that already passed them. All of this
+runs before pnpm changes anything, so a failure leaves the tree as it was. The heavier gates are
+CI's: the publish workflow runs every `ci.yml` leg before it publishes, so they are not repeated
+locally.
+
+Push the branch and the tag in one `git push --atomic origin main vX.Y.Z`, so a rejected `main`
+cannot leave a pushed tag behind. The tag push starts the publish.
 
 ## What the workflow checks
 
@@ -124,6 +137,13 @@ leg before it publishes, so they are not repeated locally.
 - It builds once, publishes `pptx-ts`, then stages the alias with
   `node scripts/alias-package.mjs --out .tmp/alias-package` and publishes that directory. Each
   publish step is skipped when its own name already has the version.
+- Its `release` job then creates the GitHub Release for the tag, with
+  `node scripts/changelog.mjs --notes vX.Y.Z` as the notes: the version's CHANGELOG section and a
+  full-changelog link. It runs only after both publishes, so a Release never names a version npm
+  lacks, and it is a separate job so `contents: write` stays out of the job that holds the OIDC
+  token. It skips when the Release already exists. If it is the only job that failed, run
+  `gh run rerun <run-id> --failed`. A re-dispatch would stop at the guard, since both names have
+  the version.
 
 ### Retrying a half-published release
 

@@ -44,6 +44,7 @@ are in every aggregate the repo has.
 | `bundle-size-ratchet.mjs` | Gate | Gzipped size of the browser entry's closure vs `bundle-size-budget.json` | `verify:full`, `check:package` |
 | `bundle-tier-size.mjs` | Gate | Gzipped size of three bundled consumer programs vs `bundle-tier-budget.json` | `verify:full`, `check:package` |
 | `byte-identity.mjs` | Diagnostic | Freeze/compare emitted bytes across a refactor; `prove-whitespace` discharges one recorded reformat | manual — see note below |
+| `changelog.mjs` | Generator + Library | Turns `[Unreleased]` in `CHANGELOG.md` into a dated, linked section for `package.json`'s version (`--release`); prints a released section as GitHub Release notes (`--notes`) | the `version` lifecycle script (`pnpm version …`); `--notes` in `publish.yml` (`release` job) |
 | `coverage-gate.mjs` | Gate | Per-area coverage thresholds from `coverage-gates.json` | CI (`coverage` job) |
 | `coverage-merge.mjs` | Library | Merges Node + browser coverage into one report | `coverage:gate` |
 | `coverage-project.mjs` | Library | Re-expresses the browser lane's hits in the Node report's own instrumentation maps, so merging can move counts but never the denominator | `coverage-merge.mjs` |
@@ -79,6 +80,7 @@ are in every aggregate the repo has.
 | `read-blindness-census.mjs` | Diagnostic | Which OOXML the read model never looks at | manual (`read:census`) |
 | `read-emit-edits.mjs` | Generator | Edited decks for the manual PowerPoint check | manual |
 | `read-emit-roundtrip.mjs` | Generator | `load()`→`save()` decks for the manual PowerPoint check | manual |
+| `release-preflight.mjs` | Gate | Refuses a release from the wrong branch, a tree with stray or unstaged changes, a hand-bumped version or an empty `[Unreleased]` | the `preversion` lifecycle script (`pnpm version …`); manual (`release:preflight`) |
 | `run-steps.mjs` | Library | Runs a list of package scripts as one sequence; assembles every aggregate | `verify`, `verify:full`, `check:core`, `check:static`, `check:package` |
 | `script-roundtrip.mjs` | Gate | Generated script must rebuild the deck it came from | `verify:full`, CI |
 | `script-utils.mjs` | Library | `ROOT` and `repoRel`, the process helpers (`run()`, `runNodeBin`, `collect`), and the shared CLI front end | — |
@@ -98,6 +100,7 @@ are in every aggregate the repo has.
 | `powerpoint/vm-sync.mjs` | Generator | Stages the worker and its token in the PowerPoint VM's shared folder and restarts a running VM | manual (`ppt:vm:sync`, `ppt:vm:up`) |
 | `powerpoint/worker.mjs` | Service | HTTP worker that runs jobs against desktop PowerPoint, so a Windows VM serves as a remote oracle; it executes what it is sent, so it binds to the host only | the PowerPoint VM's logon task, or by hand on Windows (`--fake` anywhere); unit-tested |
 | `comparison/corpus-data.mjs` | Library | Keeps each corpus's shared values out of the libraries' reach: the copy the page renders is cloned before any arm runs, and the live values are restored between arms | `comparison/probes.mjs`, `comparison/programs.mjs` |
+| `comparison/diff.mjs` | Gate | Compares a refreshed `comparison/snapshot.json` with a committed one and fails on a coverage flip, a moved validity count, an upstream bump, a timing sign flip or a compression ratio near 1 | manual (`comparison:diff`, release step) |
 | `comparison/health.mjs` | Library | Activity, adoption and source size for both projects, from the GitHub and npm APIs and a shallow clone | `comparison/measure.mjs` |
 | `comparison/hygiene.mjs` | Library | What each library costs to install and to ship, from clean per-library installs | `comparison/measure.mjs` |
 | `comparison/measure.mjs` | Generator | Builds every probe with pptx-ts and with upstream pptxgenjs, reads the emitted parts, measures the other three families, and writes `comparison/snapshot.json` | manual (release step, see `docs/contributing/releasing.md`) |

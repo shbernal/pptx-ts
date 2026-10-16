@@ -182,6 +182,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   involvement in the body instead. Pull requests disclose it in the template; see
   [CONTRIBUTING.md](CONTRIBUTING.md#ai-disclosure). Re-run `npx skills update pptx-ts-upstream`
   to pick up the new filing step.
+- **Contributors: pushing the `vX.Y.Z` tag is the release.** `publish.yml` runs on the tag push
+  and creates the GitHub Release itself once both names are published, with the version's
+  changelog section as its notes. `pnpm version` now refuses a release from anywhere but an
+  up-to-date `main`, from a tree with unstaged or stray staged changes, or with a hand-bumped
+  version, then runs `check:static` and `verify`. It dates the `[Unreleased]` heading itself.
+  `pnpm run comparison:diff` fails on the snapshot changes a release stops on. See
+  [Release workflow](docs/contributing/releasing.md).
 
 ### Deprecated
 
