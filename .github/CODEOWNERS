@@ -1,0 +1,8 @@
+# Changes here reach every user or the agent pipeline itself, so they need the maintainer's
+# review. Keep in step with .github/actions/agent-protected-paths and
+# docs/contributing/agent-pipeline.md.
+/.github/ @shbernal
+/package.json @shbernal
+/scripts/release* @shbernal
+/scripts/sync-version.mjs @shbernal
+/tsdown.config.ts @shbernal
