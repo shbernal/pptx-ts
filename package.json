@@ -219,7 +219,7 @@
 		"oxfmt": "^0.72.0",
 		"oxlint": "^1.87.0",
 		"oxlint-tsgolint": "7.0.2004",
-		"pptx-html": "0.2.2-next.9.g8d98719",
+		"pptx-html": "0.2.2-next.13.g4cf4d8e",
 		"publint": "^0.3.25",
 		"temml": "^0.14.0",
 		"tsdown": "^0.23.1",
