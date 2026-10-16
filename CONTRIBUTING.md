@@ -117,17 +117,15 @@ scope statement and suggested testing approaches.
 ## Reporting bugs and proposing changes
 
 GitHub issues are the only tracker; there is no local ledger. The
-[new-issue chooser](https://github.com/shbernal/pptx-ts/issues/new/choose) offers three
+[new-issue chooser](https://github.com/shbernal/pptx-ts/issues/new/choose) offers two
 forms, from `.github/ISSUE_TEMPLATE/`:
 
-- **Bug or fidelity limit**: wrong output, a repair prompt, a regression, or a
-  construct that does not survive a round trip. Bring a minimal repro, a small script
-  that produces the offending `.pptx`.
+- **Bug or fidelity limit**: a thrown error, wrong output, a repair prompt, a regression,
+  wrong types, or a construct that does not survive a round trip. Bring a minimal repro, a
+  small script that produces the offending `.pptx`. The library's own `InternalError`
+  messages link to this form.
 - **API gap**: a missing accessor, or a property the write side authors that the read
   side cannot see.
-- **Agent-assisted report**: a defect an agent found while using pptx-ts in another project.
-  The library's own error messages link to this form, and it asks which error class and code
-  was thrown.
 
 Neither fits? File a blank issue. A good issue in the wrong shape beats a bad issue in
 the right one. See [errors and warnings](docs/errors-and-warnings.md#which-failures-are-worth-reporting) for
@@ -139,6 +137,19 @@ open a public issue; see [SECURITY.md](SECURITY.md).
 
 Breaking changes are acceptable when they make the API clearer or safer. Record them,
 with migration guidance, in [CHANGELOG.md](CHANGELOG.md).
+
+### AI disclosure
+
+Say how AI was involved in an issue or a pull request. AI-assisted and agent-filed work is
+welcome here; the disclosure tells a reviewer how to read it, and it never decides whether
+the work is accepted.
+
+- **Issues**: both forms ask for it. An issue filed through the API or as a blank issue says
+  it under an `### AI involvement` heading.
+- **Pull requests**: fill in the AI involvement section of the pull request template.
+
+Disclose in the issue or pull request body, never in a commit message. The `no-ai-attribution`
+commit-msg hook rejects attribution trailers, and the body is where a reviewer reads it.
 
 ### Promoting a downstream need
 

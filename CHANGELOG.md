@@ -175,6 +175,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   else.
 - **Contributors: the `TSPPTX_*` environment variables are now `PPTXTS_*`.** The old names are not
   read. Rename the keys in `tools/powerpoint-vm/.env` and in any shell export.
+- **`InternalError` links to the bug form, and the agent-report form is gone.** Agents filing
+  through `pptx-ts-upstream` use the API, which applies no form and drops labels from anyone
+  without push access, so the form's `agent-reported` label never reached them. The bug form takes
+  its error class and code, error output and operating system fields, and both forms ask for AI
+  involvement in the body instead. Pull requests disclose it in the template; see
+  [CONTRIBUTING.md](CONTRIBUTING.md#ai-disclosure). Re-run `npx skills update pptx-ts-upstream`
+  to pick up the new filing step.
 
 ### Deprecated
 

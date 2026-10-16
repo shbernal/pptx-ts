@@ -69,7 +69,7 @@ An `InternalError` means an invariant of the library did not hold. Its message e
 
 ```text
 This is a bug in pptx-ts, not in your deck or your code. Please report it:
-https://github.com/shbernal/pptx-ts/issues/new?template=agent-report.yml
+https://github.com/shbernal/pptx-ts/issues/new?template=bug.yml
 ```
 
 A check that fails while you work on the repository is covered in [When a check fails](https://github.com/shbernal/pptx-ts/blob/main/docs/contributing/development.md#when-a-check-fails).

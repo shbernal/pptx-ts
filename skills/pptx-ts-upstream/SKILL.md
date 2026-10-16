@@ -192,71 +192,30 @@ file from this project is attached. When you cannot manage a self-contained repr
 the answer is a thinner report, the prose description from step 3. Not a question, and
 not an attachment.
 
-Three forms; pick by what you are reporting:
+Two forms; pick by what you are reporting:
 
-| form               | for                                                                       |
-| ------------------ | ------------------------------------------------------------------------- |
-| `agent-report.yml` | you hit this while using the library in another project. Start here.       |
-| `bug.yml`          | wrong output, a repair prompt, a regression, a fidelity limit              |
-| `api-gap.yml`      | the OOXML carries it but no accessor reaches it                            |
+| form          | for                                                                                        |
+| ------------- | ------------------------------------------------------------------------------------------ |
+| `bug.yml`     | a thrown error, wrong output, a repair prompt, a regression, wrong types, a fidelity limit |
+| `api-gap.yml` | the OOXML carries it but no accessor reaches it                                            |
 
-If none fits, file a blank issue rather than bending one of them. Blank issues are
+If neither fits, file a blank issue rather than bending one of them. Blank issues are
 enabled deliberately.
 
-`gh` defaults to the *current* repository, which here is the consumer's, not pptx-ts's.
-Always pass `--repo shbernal/pptx-ts` explicitly, or you will file the bug into the wrong
-tracker.
+File through whatever you have: a GitHub MCP server, `gh`, or `curl` against the REST API
+with `GITHUB_TOKEN`. Whichever it is, target `shbernal/pptx-ts` explicitly. `gh` and most
+tools default to the *current* repository, which here is the consumer's. Do not send
+labels: the API drops them for anyone without push access, and triage applies them.
 
-```bash
-gh issue create --repo shbernal/pptx-ts \
-  --title "<InternalError|reads|writes|round-trip|types>: <one specific symptom>" \
-  --label agent-reported \
-  --body-file <a path your repo ignores>/pptx-ts-report.md
-```
+None of those routes applies a form, so write the body with the form's headings
+(`### Severity`, `### What happens`, `### Minimal reproduction`, and the rest of
+[`bug.yml`](https://github.com/shbernal/pptx-ts/blob/main/.github/ISSUE_TEMPLATE/bug.yml)),
+and answer `### AI involvement` with `Filed by an AI agent`. If you stage the body in a
+file, put it somewhere the consumer's `.gitignore` already covers, so the reproduction does
+not end up in someone else's history.
 
-Write the body somewhere the consumer's own `.gitignore` already covers: its scratch or
-temp directory, whatever that repo calls it. A report file committed by accident is a
-second copy of the reproduction living in someone else's history.
-
-The web form (`agent-report.yml`) is what the error message links to; `gh` does not apply
-issue forms, so mirror its sections in the body file so both routes land the same shape:
-
-````markdown
-### pptx-ts version
-<x.y.z>
-
-### Node.js version
-<vXX.Y.Z>
-
-### Operating system
-<Windows 11 x64 / macOS 15 arm64 / Ubuntu 24.04 x64>
-
-### PowerPoint version
-<only if the report depends on how PowerPoint renders or repairs the file>
-
-### Error class and code
-<InternalError / oxml/node-has-no-document>   (or: nothing threw, the output is wrong)
-
-### What happened
-<observed>
-
-### What should have happened
-<expected, and why you believe that: an ECMA-376 clause, what PowerPoint itself does
-with the same input, or what the docs promise>
-
-### Minimal reproduction
-```js
-<the script from step 3>
-```
-
-### Error output
-```
-<verbatim message, detail, and stack>
-```
-
-### Attached file
-<none / synthesized, and how it was generated>
-````
+With no way to authenticate, give the user the report and
+<https://github.com/shbernal/pptx-ts/issues/new?template=bug.yml> to paste it into.
 
 Tell the user the issue number and URL once it exists. After the fact, as a result, not
 as a request. They should be able to read what you filed and close it if they disagree.
@@ -318,12 +277,6 @@ and refresh the installed skill in the same commit. Then, per stopgap:
    the same self-contained form as the original reproduction. A maintainer's own tests
    say the fix works; a consumer's say it works *where it was found*, which is the thing
    they cannot write themselves.
-
-## If `gh` is unavailable
-
-Print the assembled report and this URL, and ask the user to paste it in:
-
-<https://github.com/shbernal/pptx-ts/issues/new?template=agent-report.yml>
 
 ## Keeping this skill current
 
