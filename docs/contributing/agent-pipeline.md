@@ -20,12 +20,25 @@ app installation token.
 | App | Bot login | Repository permissions | Role |
 | --- | --- | --- | --- |
 | `pptx-ts-agents` | `pptx-ts-agents[bot]` | Contents RW, Issues RW, Pull requests RW, Metadata R | Opens branches and PRs, comments, edits labels |
-| `pptx-ts-reviewer` | `pptx-ts-reviewer[bot]` | Contents R, Pull requests RW, Issues R, Metadata R | Reviews agent PRs |
+| `pptx-ts-reviewer` | `pptx-ts-reviewer[bot]` | Contents R, Pull requests RW, Issues RW, Metadata R | Reviews agent PRs |
 
 There are two apps because GitHub does not let a PR's author approve it: the bot that opens
 a PR cannot be the one whose approval counts. Neither app has the Workflows permission, so
 neither can change `.github/workflows/`. Neither has a webhook; workflows mint their tokens
-with `actions/create-github-app-token`.
+with `actions/create-github-app-token`. The reviewer needs Issues write because gh-aw's
+safe-outputs job requests it for PR comments and failure reports.
+
+### Where the credentials live
+
+Claude can run any code in the job it works in: `pnpm run` executes scripts it may have
+edited. Code in a job can read every secret that job uses. So no job where Claude runs holds a
+write credential or an app key:
+
+- Claude's job has the read-only job token and `CLAUDE_CODE_OAUTH_TOKEN`. It commits locally,
+  through the lefthook pre-commit and pre-push gates, and hands the commit on as a git bundle.
+- A separate job mints the app token, checks out `main`, accepts the bundle only if it is
+  exactly one commit on top of the expected starting point, and pushes it. It runs no code
+  from the agent's branch.
 
 ## Secrets and the kill switch
 
@@ -80,13 +93,12 @@ One run goes at a time.
 
 ### What it does
 
-The issue moves from `agent:ready` to `agent:working`. Claude Code works on branch
-`agent/issue-N` with the job's read-only token. It can read the repository and issues, edit
-files and run `pnpm run` scripts, but has no credential to commit, push or open a PR. It
-ends with one of three outcomes:
+The issue moves from `agent:ready` to `agent:working`. Claude Code works with the job's
+read-only token: it can read the repository and issues, edit files and run `pnpm run`
+scripts, but has no credential to push or open a PR. It ends with one of three outcomes:
 
 - `pr`: the workflow runs `pnpm run verify` itself, commits as `pptx-ts-agents[bot]` with a
-  Conventional Commit subject, pushes and opens a PR labelled `agent:pr`. The body follows
+  Conventional Commit subject, pushes it to `agent/issue-N` and opens a PR labelled `agent:pr`. The body follows
   the PR template: AI involvement is "Mostly written by an AI agent", and the verify box is
   ticked only if that run passed. Auto-merge (squash) is armed.
 - `blocked`: the issue needs an API or scope decision, desktop PowerPoint, or a change under
@@ -157,3 +169,30 @@ the new commits left alone.
 The review is posted as `pptx-ts-reviewer[bot]`, not by the workflow's own token. A review
 by `github-actions[bot]` cannot count as a required approval, and the review event it
 causes starts no other workflow.
+
+## Fix rounds
+
+`.github/workflows/agent-address-review.yml` fixes an agent PR when either of these happens:
+
+- `pptx-ts-reviewer[bot]` submits a review requesting changes.
+- The `CI` workflow fails on the PR.
+
+It skips the PR when it is closed, lacks `agent:pr`, carries `needs-maintainer`, or has moved
+past the commit the review or CI run was about; a newer push has its own review and CI run.
+One round runs at a time per PR.
+
+Claude gets the review and its inline comments, or the failed jobs' log tails, and the PR's
+checkout. It fixes each blocking finding or declines it with a reason, and runs
+`pnpm run verify`. The workflow then pushes one commit, `fix: address review` or
+`fix: repair CI`, to the PR's branch. The squash merge keeps the PR title, so these subjects
+never reach `main`. The push starts CI and a re-review.
+
+Claude's answer to each inline comment is posted as a reply on its thread, starting with
+`Fixed:` or `Declined:`, and a summary of the round goes on the PR as a comment.
+
+The PR gets `needs-maintainer`, and auto-merge is turned off, when:
+
+- three fix rounds have run and the reviewer or CI still fails it
+- a round changes nothing, so there is nothing to re-review
+- a round's change touches a protected path
+- the run fails
