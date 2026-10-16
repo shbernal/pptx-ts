@@ -8,7 +8,6 @@ body:
         Thanks for filing. Before you start:
 
         - Confirm the accessor is still missing on the **latest release**.
-        - **Issues here are public.** If a downstream consumer prompted this, describe the need **anonymously**: state the missing PPTX behaviour and how *any* consumer would reproduce it. Never a consumer name, a deck or client name, or a path from its source tree.
 
   - type: textarea
     id: gap

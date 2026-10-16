@@ -1,16 +1,3 @@
-# Three decisions here are load-bearing and were made against real filings, not taste:
-#
-# 1. A fidelity limit is a severity, not a separate form. It is neither a bug (the
-#    OOXML is valid and the deck opens) nor a missing accessor, but every extra form
-#    is more chooser than intake for a repo this size.
-# 2. There is no browser or package-manager field. Every filing that had them
-#    answered `n/a`. PowerPoint version is optional for the same reason: it is
-#    meaningless for an API-shape report and load-bearing for a render one.
-# 3. Who filed is a field, not a form. An `agent-report.yml` form once took filings
-#    from agents, but the agents that file through the `pptx-ts-upstream` skill use
-#    the API, which applies no form, and the API drops labels sent by anyone without
-#    push access. So the form's label never reached those filings. The AI involvement
-#    dropdown below discloses the same fact in the body, where every route keeps it.
 name: Bug or fidelity limit
 description: Wrong output, a thrown error, a repair prompt, a regression, wrong types, or a construct that does not survive a round trip.
 labels: [bug]
@@ -21,13 +8,8 @@ body:
         Thanks for filing. Before you start:
 
         - Confirm the problem still happens on the **latest release**.
-        - pptx-ts is **ESM, Node-first**. CommonJS and IIFE/global browser bundles are not supported and reports about them will be closed.
         - If this is a security problem, **stop** and do not file it publicly. See [SECURITY.md](https://github.com/shbernal/pptx-ts/blob/main/SECURITY.md).
         - **Do not attach a deck containing real data.** Presentations carry client names, unreleased strategy, pricing and internal logos, and this tracker is public. Reduce the failure to a script that builds its own deck.
-        - If a downstream consumer prompted this, describe the need **anonymously**: no consumer name, deck or client names, or file paths from its tree.
-
-        Filing from an agent? The `pptx-ts-upstream` skill walks through all of this:
-        `npx skills add shbernal/pptx-ts --skill pptx-ts-upstream`
 
   - type: dropdown
     id: severity

@@ -38,7 +38,7 @@
 -->
 
 - [ ] None
-- [ ] AI-assisted, and I reviewed every change
+- [ ] AI-assisted, human-reviewed
 - [ ] Mostly written by an AI agent
 
 ## Checklist
@@ -49,8 +49,7 @@
 - [ ] **Emitted-OOXML changes only:** the change is grounded in evidence and
       carries a fixture, per
       [docs/contributing/ooxml.md](../docs/contributing/ooxml.md#evidence-and-fixtures).
-- [ ] **Breaking changes only:** [CHANGELOG.md](../CHANGELOG.md) records the
-      change and its migration guidance.
+- [ ] **Breaking changes only:** [CHANGELOG.md](../CHANGELOG.md) records the change and its migration guidance.
 - [ ] I read [CONTRIBUTING.md](../CONTRIBUTING.md), the authoritative contributor doc.
 
 ## Notes for the reviewer

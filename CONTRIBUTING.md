@@ -1,7 +1,4 @@
-# Contributing
-
-Thanks for your interest in pptx-ts. The README describes what the package does for the people who
-install it. This file covers how the repository is built, tested and contributed to.
+# Contributing to pptx-ts
 
 ## Start here
 
@@ -212,23 +209,20 @@ issue number afterwards. It also covers the far end of the cycle, which is the h
 that usually rots: when a release lands, finding every workaround it retires and
 deleting them.
 
-## Installing an unreleased commit
+## Installing an unreleased build
 
-Any commit is installable directly from GitHub, without waiting for a release. This is
-how you try a fix before it ships:
+Every push to `main` that passes CI is published to npm under the `next` dist-tag. This
+is how you try a fix before it ships:
 
 ```bash
-pnpm add github:shbernal/pptx-ts#<commit-sha>
+pnpm add pptx-ts@next
 ```
 
-`main` (`github:shbernal/pptx-ts`) works too, but pin the sha: a branch spec
-re-resolves to whatever is at the head of it when the lockfile is next written.
+Each build is versioned `<base>-next.<run>.g<sha>`, for example `4.1.1-next.128.g4a69534`:
+`<base>` is the patch after the last release, `<run>` orders the builds, and `<sha>` names
+the commit it was built from. The lockfile pins the exact build, and `pres.version` reports
+the same string. `npm view pptx-ts dist-tags` shows which build `next` points at.
 
-`dist/` is not committed, so this builds the package on install: your package manager
-clones the repo, installs this package's `devDependencies`, and runs its `prepare`
-script. That makes the install slow and heavier than a registry install, and it needs a
-working Node toolchain. It is meant for trying a fix, not for production dependencies.
-
-Note that `pres.version` reports the version in `package.json` at that commit, so
-several different commits report the same number. The sha in your `package.json` is
-what identifies the build.
+`latest` never moves to one of these, and a caret range never matches a prerelease, so no
+install receives a `next` build without asking for it. Only `pptx-ts` is published here, not
+the scoped alias. It is meant for trying a fix, not for production dependencies.
