@@ -169,6 +169,7 @@ Every getter below takes the first tier that defines a value.
 
 - The list-style tiers are: the paragraph's `a:pPr/a:defRPr`, the text body's `a:lstStyle` for the paragraph level, the matching layout placeholder's `a:lstStyle`, the matching master placeholder's `a:lstStyle`, the master's `p:txStyles`, and the presentation's `p:defaultTextStyle`. A run outside a placeholder skips the three placeholder tiers.
 - A run whose own fill is not a solid colour, such as `a:noFill` or a gradient, reads `null` from `resolvedColor`.
+- A run with a click hyperlink (`a:hlinkClick`) and no fill of its own reads the theme's `hlink` colour from `resolvedColor`, through the slide's colour map, in place of the inherited tiers. A link carrying the `ahyp:hlinkClr val="tx"` extension reads the inherited text colour instead.
 - A table cell's text inherits differently: see [Tables](#tables).
 - A `schemeClr` token resolves through the colour map of the tier that holds the shape, then the theme's colour scheme.
 

@@ -11,12 +11,15 @@ import { type Hyperlink, readHyperlink } from '../hyperlink.js'
 import {
 	attr,
 	boolValue,
+	childElements,
 	type Element,
 	ELEMENT_NODE,
 	firstChild,
 	firstChildElement,
+	getElements,
 	getOrAddChild,
 	numberValue,
+	OOXML_NS,
 	pctPointsAttr,
 	removeAttr,
 	removeChildrenByQName,
@@ -25,7 +28,7 @@ import {
 import { applySolidFill, hasFillChoice, solidFillColor, type SolidFillEdit } from '../../oxml/fill.js'
 import { checkEnumOrThrow } from '../../../ooxml/check-enum.js'
 import { TEXT_UNDERLINE_TYPES } from '../../../ooxml/st-enums.js'
-import { resolveThemeFont, type ThemeContext } from '../../oxml/theme.js'
+import { resolveSchemeToken, resolveThemeFont, type ThemeContext } from '../../oxml/theme.js'
 import {
 	readColorRef,
 	resolveColorElement,
@@ -483,12 +486,20 @@ export class Run {
 	 * `null` too when the run's own fill is not a solid colour (`a:noFill`, a gradient):
 	 * the run decides its own colour then, and the one it would otherwise inherit is not
 	 * what it paints in, the rule `Shape.resolvedFill` and `TableCell.resolvedFill` follow.
+	 * A run with a click hyperlink (`a:hlinkClick`) and no fill of its own is painted in the
+	 * theme's `hlink` colour instead, resolved through the slide's colour map, unless the link
+	 * carries the 2018 `ahyp:hlinkClr val="tx"` extension, which asks for the text colour above.
 	 * The returned {@link ResolvedColor} carries `effectiveHex`, the base colour with
 	 * its child transforms (`lumMod`/`shade`/…) applied, for the final rendered colour.
 	 */
 	get resolvedColor(): ResolvedColor | null {
 		const rPr = this.#rPr()
 		if (hasFillChoice(rPr)) return resolveSolidFillColor(rPr, this.context.ctx)
+		const hlinkClick = rPr && firstChild(rPr, 'a:hlinkClick')
+		if (hlinkClick && !followsTextColor(hlinkClick)) {
+			const hex = resolveSchemeToken('hlink', this.context.ctx)
+			return hex ? { hex, transforms: [], effectiveHex: hex } : null
+		}
 		const inherit = this.context.inherit
 		return inherit?.fontRef?.color ?? inherit?.tableText?.color ?? this.inherited?.color() ?? null
 	}
@@ -601,6 +612,18 @@ export class Run {
 				: applySolidFill(this.#rPr(), edit, () => this.#getOrAddRPr(), RPR_FILL_AFTER)
 		if (changed) this.context.part.markDirty()
 	}
+}
+
+/** Whether a hyperlink's `ahyp:hlinkClr val="tx"` extension asks for the text colour rather than the theme's `hlink`. */
+function followsTextColor(hlinkClick: Element): boolean {
+	const extLst = firstChild(hlinkClick, 'a:extLst')
+	if (!extLst) return false
+	for (const ext of getElements(extLst, 'a:ext')) {
+		for (const child of childElements(ext)) {
+			if (child.localName === 'hlinkClr' && child.namespaceURI === OOXML_NS.ahyp) return attr(child, 'val') === 'tx'
+		}
+	}
+	return false
 }
 
 /**

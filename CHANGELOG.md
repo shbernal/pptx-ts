@@ -200,6 +200,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`Run.resolvedColor` of an uncoloured link is the theme's `hlink` colour.** A run with an
+  `a:hlinkClick` and no fill of its own read back as the text colour it would inherit, though
+  PowerPoint paints it in the theme's `hlink` slot, which it now resolves through the slide's colour
+  map. A link carrying the `ahyp:hlinkClr val="tx"` extension still reads the text colour
+  ([#282](https://github.com/shbernal/pptx-ts/issues/282)).
 - **`readModelToIr` no longer notes `table.style` on a table that names no style.** It filed
   `table.style` / `dropped` for every table without an `a:tableStyleId`, `addTable`'s own default
   among them, though the replay names no style either and writes the same `<a:tblPr/>`

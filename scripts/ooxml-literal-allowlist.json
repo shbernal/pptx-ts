@@ -35,11 +35,6 @@
 		"reason": "Content type of an embedded .pptm payload. Only the OLE payload table names it."
 	},
 	{
-		"file": "src/gen/drawingml/text-run.ts",
-		"literal": "http://schemas.microsoft.com/office/drawing/2018/hyperlinkcolor",
-		"reason": "The hyperlink-colour extension namespace, written only by the text-run emitter."
-	},
-	{
 		"file": "src/gen/opc/custom-props.ts",
 		"literal": "http://schemas.openxmlformats.org/officeDocument/2006/custom-properties",
 		"reason": "Default namespace of docProps/custom.xml, declared only by the custom-properties part writer."
