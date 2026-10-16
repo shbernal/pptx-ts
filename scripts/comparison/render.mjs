@@ -46,7 +46,7 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
-import { isMain, parseCli, ROOT, runCli } from '../script-utils.mjs'
+import { isMain, parseCli, repoRel, ROOT, runCli } from '../script-utils.mjs'
 import { programFrame } from './programs.mjs'
 import { isUnavailable } from './unavailable.mjs'
 
@@ -55,6 +55,9 @@ const PAGE = path.join(ROOT, 'docs', 'comparison.md')
 const METHOD_PAGE = path.join(ROOT, 'docs', 'comparison-method.md')
 const SYNTAX_PAGE = path.join(ROOT, 'docs', 'comparison-syntax.md')
 const README = path.join(ROOT, 'README.md')
+
+/** Every file a render writes, repo-relative: what a release commits beside the snapshot. */
+export const RENDERED_FILES = [PAGE, METHOD_PAGE, SYNTAX_PAGE, README].map(repoRel)
 
 /** The generated region inside `README.md`. Everything between these lines is rewritten. */
 const REGION_START = '<!-- comparison:start -->'

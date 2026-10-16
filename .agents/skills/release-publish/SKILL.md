@@ -1,183 +1,80 @@
 ---
 name: release-publish
-description: Use to cut and publish a new pptx-ts version (any "do a release", "minor/major/patch release", "publish vX.Y.Z", "ship a release" request in this repo). Encodes the exact release flow: the comparison refresh, the CHANGELOG, the `pnpm version` bump that writes the other two version files and tags, and the GitHub Release that triggers CI. IMPORTANT: publishing to npm is done by CI (trusted publishing), never by running `npm publish` locally. Do not run `npm publish`, `npm login`, or `npm token` for a release.
+description: Use to cut and publish a new pptx-ts version (any "do a release", "minor/major/patch release", "publish vX.Y.Z", "ship a release" request in this repo). The sequence is the comparison refresh, the CHANGELOG entries, `pnpm version` (which checks, gates, bumps, dates the changelog and tags), and the tag push that makes CI publish both npm names and create the GitHub Release.
 metadata:
   internal: true
 ---
 
-# Releasing and publishing pptx-ts
+# Releasing pptx-ts
 
-CI publishes to npm. A release is finished by publishing a **GitHub Release** for a `vX.Y.Z` tag,
-which fires `.github/workflows/publish.yml`. The workflow authenticates through trusted publishing
-(OIDC), so there is no npm token and no `npm login`.
+Pushing a `vX.Y.Z` tag is the release. `.github/workflows/publish.yml` runs the full CI gate,
+publishes `pptx-ts` and its alias `@shbernal/ts-pptx`, then creates the GitHub Release from the
+CHANGELOG. `docs/contributing/releasing.md` explains why each step is shaped the way it is.
 
-**Never run `npm publish` locally**, not for a release and not to repair a failed one. If you are
-about to type it, stop and use the workflow instead.
+## Choosing the version
 
-A release publishes `pptx-ts` and then `@shbernal/ts-pptx`, the same build staged under a second
-name by `scripts/alias-package.mjs`. You do not bump, tag or stage the alias, and there is one
-changelog.
-
-`docs/contributing/releasing.md` explains why each step is shaped the way it is: the snapshot
-review rubric, the `pnpm version` flags, the workflow guards. This skill is the sequence.
-
-## Choosing the version (SemVer)
-
-Read the current version from `package.json`, and pick the bump from what landed since the last
-release (`git log --oneline vLAST..HEAD`). The user's explicit ask wins:
-
-- **patch** (`X.Y.Z+1`): only `fix:` or internal changes, no API change.
-- **minor** (`X.Y+1.0`): any `feat:` or additive API, or a fix the user wants shipped as a minor.
-- **major** (`X+1.0.0`): a breaking API change (allowed here; see "Reporting bugs and proposing changes" in `CONTRIBUTING.md`).
-
-If the user says "minor release", do that even for a lone fix.
+The user's ask wins: "minor release" means minor, even for a lone fix. Otherwise read
+`git log --oneline vLAST..HEAD`: a breaking API change is major, any `feat:` is minor, and anything
+else is patch.
 
 ## Steps
 
-Use today's date as `YYYY-MM-DD` in the CHANGELOG.
+1. **Write the CHANGELOG entries.** Every commit since the last tag needs an entry under
+   `[Unreleased]` in `CHANGELOG.md`, in the dense prose style of the existing ones. Add the missing
+   ones. Leave the heading alone, because `pnpm version` dates it. Stage the file.
 
-### 1. Confirm the working tree
+2. **Refresh the comparison.** Leave the machine idle while `comparison:measure` runs, because it
+   times both libraries. Never pass `--allow-unavailable`. If a fetch fails, re-run later.
 
-- Run `git status`. Leave scratch and plan files untracked, and never `git add -A`. Only the
-  release files go in the release commit.
-- `git log --oneline vLAST..HEAD`: every commit must be represented under `[Unreleased]` in
-  `CHANGELOG.md`. Write a missing entry now, in the dense prose style of the existing ones.
+   ```bash
+   pnpm run comparison:measure && pnpm run comparison:render && pnpm run comparison:diff
+   ```
 
-### 2. Refresh the comparison
+   If `comparison:diff` fails, stop and show the user what it printed. Continue only if they say so.
+   Then stage the snapshot and the rendered pages:
 
-```bash
-pnpm run comparison:measure      # network: npm install, GitHub and npm APIs; about a minute
-pnpm run comparison:render
-```
+   ```bash
+   git add scripts/comparison/snapshot.json docs/comparison.md docs/comparison-method.md docs/comparison-syntax.md README.md
+   ```
 
-Leave the machine idle while `comparison:measure` runs, because it times both libraries. Never
-pass `--allow-unavailable`; if a fetch fails, re-run later.
+3. **Bump, commit and tag.**
 
-Read the diff of `scripts/comparison/snapshot.json` against "What to stop on in the snapshot diff"
-in `docs/contributing/releasing.md` before staging. Stop and report to the user on a flipped
-coverage row, a moved validity count, an upstream version bump, or a timing row that changed sign.
+   ```bash
+   pnpm version <major|minor|patch> --message 'chore(release): v%s' --no-git-checks
+   ```
 
-```bash
-git add scripts/comparison/snapshot.json docs/comparison.md docs/comparison-method.md docs/comparison-syntax.md README.md
-```
+   `preversion` runs `release:preflight`, then `check:static` and `verify`, and stops with nothing
+   changed if any of them fails. Fix what it names and run the command again. If it gets past the
+   preflight and then fails, run `git status` before retrying.
 
-### 3. Write the CHANGELOG entry and stage it
+4. **Push.** This publishes:
 
-Do not hand-edit `package.json` or `src/presentation.ts`. `pnpm version` in step 5 bumps the first
-and rewrites the second, and a hand edit puts you on a path where it refuses to run.
+   ```bash
+   git push --atomic origin main vX.Y.Z
+   ```
 
-Convert the `## [Unreleased]` region into a released section, keeping an empty `## [Unreleased]`
-above it:
+5. **Watch the run.**
 
-```
-## [Unreleased]
+   ```bash
+   gh run watch --exit-status "$(gh run list --workflow=publish.yml --event push --limit 1 --json databaseId -q '.[0].databaseId')"
+   ```
 
-## [X.Y.Z](https://github.com/shbernal/pptx-ts/releases/tag/vX.Y.Z) - YYYY-MM-DD
+   The release is done when "Publish to npm", "Publish scoped alias" and "GitHub Release" have
+   all succeeded. A publish step marked as skipped means that name already had the version.
 
-### Fixed
-- ...
-### Added
-- ...
-```
+6. **Comment on every issue the release closes.** The new CHANGELOG section cites them:
 
-```bash
-git add CHANGELOG.md
-```
+   ```bash
+   gh issue comment <N> --repo shbernal/pptx-ts --body "Released in X.Y.Z."
+   ```
 
-### 4. Run the local gate
+   After a major release, also open an issue on `pptx-html` asking for a matching release.
 
-The publish workflow's gate is `ci.yml`, which runs every heavy gate before anything publishes.
-Locally, run the cheap part, which catches a bad CHANGELOG or comparison edit before the tag:
+## If the run fails
 
-```bash
-pnpm run check:static && pnpm run verify
-```
-
-Do not run `verify:full`; CI carries it.
-
-Then confirm the version is new under both names. Both commands should fail with a registry 404:
-
-```bash
-npm view pptx-ts@X.Y.Z version
-npm view @shbernal/ts-pptx@X.Y.Z version
-```
-
-### 5. Bump, commit and tag
-
-```bash
-pnpm version <major|minor|patch> --message 'chore(release): v%s' --no-git-checks
-```
-
-This makes one commit holding `package.json`, the rewritten `VERSION` constant and the staged
-`CHANGELOG.md`, and creates the annotated tag. The commit subject is `chore(release): vX.Y.Z`, with
-no AI attribution footer and no cross-repo file references.
-
-If it fails partway, check `git status` before retrying: the bump, the constant rewrite and the
-commit are separate steps, so the version files can end up ahead of the commit.
-`pnpm run version:check` says whether the constant and the manifest agree.
-
-### 6. Push
-
-```bash
-git push origin main
-git push origin vX.Y.Z
-```
-
-### 7. Create the GitHub Release (this is what publishes)
-
-The body is the version's CHANGELOG section followed by a full-changelog link. Match prior releases
-(`gh release view vLAST`). Write the notes to a file and pass the file.
-
-```bash
-gh release create vX.Y.Z --title vX.Y.Z --notes-file <path/to/notes.md>
-```
-
-```markdown
-### Fixed
-
-- <the changelog bullet(s) for this version>
-
-**Full changelog:** https://github.com/shbernal/pptx-ts/blob/vX.Y.Z/CHANGELOG.md
-```
-
-### 8. Watch the publish run
-
-```bash
-gh run list --workflow=publish.yml --event release --limit 1
-gh run watch <run-id>      # or: gh run view <run-id> --log-failed
-```
-
-The release is done when "Publish to npm" and "Publish scoped alias" both succeed. A step reported
-as skipped means that name already had the version, which is the expected shape of a re-dispatch.
-
-### 9. Post-publish checks
-
-```bash
-npm view pptx-ts@X.Y.Z version dist-tags --json
-npm view @shbernal/ts-pptx@X.Y.Z version dist-tags --json
-gh release view vX.Y.Z --repo shbernal/pptx-ts
-```
-
-Comment on every issue the release closes (the CHANGELOG entry cites them):
-
-```bash
-gh issue comment <N> --repo shbernal/pptx-ts --body "Released in X.Y.Z."
-```
-
-After a major release, open an issue on `pptx-html` asking for a matching release. Do not hold the
-release for it.
-
-## If the publish run fails
-
-- **Tag and version mismatch, or both names already published**: the tag and `package.json`
-  disagree, or the version was reused. Fix the version, re-tag, and cut a new Release.
-- **A CI gate failed**: fix on `main`, then bump to the next patch and release that. Prefer a
-  fresh patch over force-moving a tag that has been pushed.
-- **The canonical publish succeeded and the alias failed**: re-dispatch the workflow on the same
-  tag. The guard passes because the alias still lacks the version, and the `pptx-ts` step skips.
-
-  ```bash
-  gh workflow run publish.yml --repo shbernal/pptx-ts --ref vX.Y.Z
-  ```
-
-- **A transient failure**: the same `gh workflow run` command re-runs the workflow from the tag.
+- **A CI gate failed:** fix it on `main`, then release the next patch. Don't move a tag that has
+  already been pushed.
+- **The alias publish or a transient step failed:** re-dispatch on the same tag. The steps that
+  already succeeded are skipped:
+  `gh workflow run publish.yml --repo shbernal/pptx-ts --ref vX.Y.Z`.
+- **Only the GitHub Release job failed:** `gh run rerun <run-id> --failed`.

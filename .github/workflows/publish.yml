@@ -2,8 +2,10 @@ name: Publish to npm
 
 on:
   workflow_dispatch:
-  release:
-    types: [published]
+  # Pushing a `vX.Y.Z` tag is the release. The GitHub Release is created by the `release`
+  # job below once both names are on npm, so it never announces a version npm lacks.
+  push:
+    tags: ['v*']
   # The `next` channel: every push to `main` that passes CI, published as a prerelease
   # under the `next` dist-tag. See the `next` job below.
   workflow_run:
@@ -15,7 +17,7 @@ permissions:
   contents: read
   id-token: write
 
-# A release never cancels: two of them on one tag are a re-dispatch racing the original,
+# A release never cancels: two runs on one tag are a re-dispatch racing the original,
 # and the second waits for the first. The `next` channel does cancel, because only the
 # newest commit on `main` is worth publishing and a queued older one would be skipped by
 # its own head-commit check anyway.
@@ -129,6 +131,39 @@ jobs:
         run: |
           node scripts/alias-package.mjs --out .tmp/alias-package
           npm publish .tmp/alias-package --access public --provenance --ignore-scripts
+
+  # The GitHub Release for the tag, with that version's changelog section as its notes
+  # (scripts/changelog.mjs). Its own job so `contents: write` stays out of the job that holds
+  # the OIDC token. Skipped when the Release already exists, so a re-dispatch that only had
+  # to finish the alias publish leaves it alone.
+  release:
+    name: GitHub Release
+    if: github.repository == 'shbernal/pptx-ts' && github.event_name != 'workflow_run'
+    needs: publish
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # The script imports only Node built-ins, so no dependency install.
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version-file: .node-version
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "Release $GITHUB_REF_NAME already exists."
+            exit 0
+          fi
+          node scripts/changelog.mjs --notes "$GITHUB_REF_NAME" > "$RUNNER_TEMP/notes.md"
+          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/notes.md" --verify-tag
 
   # The `next` channel: a prerelease of every push to `main` that passed CI, for projects
   # that would rather take an unreleased build than wait for the release. It publishes
