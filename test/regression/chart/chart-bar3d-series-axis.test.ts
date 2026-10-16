@@ -103,17 +103,6 @@ defineRegressionSuite('Chart bar3d series axis', [
 		},
 	},
 	{
-		name: 'serAxisLabelPos unset defaults the tickLblPos by bar direction',
-		fn: async () => {
-			// bar3d defaults to barDir 'col', so the unset default is 'low'.
-			const { zip } = await build((p) => {
-				p.addSlide().addChart(DATA, { type: ChartType.bar3d, x: 1, y: 1, w: 6, h: 4 })
-			})
-			const serAx = serAxBlock(await chartXml(zip))
-			assertIncludes(serAx, '<c:tickLblPos val="low"/>', 'unset serAxisLabelPos falls back to the col default (low)')
-		},
-	},
-	{
 		name: 'the series axis line takes a width and a dash, like the other two axes',
 		fn: async () => {
 			// The series axis could be shown and coloured but not sized or dashed: the emitter
@@ -142,14 +131,16 @@ defineRegressionSuite('Chart bar3d series axis', [
 		},
 	},
 	{
-		name: 'a series axis stating no width or dash is unchanged',
+		name: 'an unstyled series axis takes the bar-direction label position, one point and solid',
 		fn: async () => {
-			// The defaults are the values that were hardcoded, so every existing deck emits
-			// exactly what it did before the options existed.
+			// The line defaults are the values that were hardcoded, so every existing deck emits
+			// exactly what it did before the options existed. bar3d defaults to barDir 'col', so
+			// the unset label position is 'low'.
 			const { zip } = await build((p) => {
 				p.addSlide().addChart(DATA, { type: ChartType.bar3d, x: 1, y: 1, w: 6, h: 4 })
 			})
 			const serAx = serAxBlock(await chartXml(zip))
+			assertIncludes(serAx, '<c:tickLblPos val="low"/>', 'unset serAxisLabelPos falls back to the col default (low)')
 			assertIncludes(serAx, '<a:ln w="12700"', 'the default width is one point')
 			assertIncludes(serAx, '<a:prstDash val="solid"/>', 'and the default dash is solid')
 		},

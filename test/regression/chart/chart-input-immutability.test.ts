@@ -20,6 +20,7 @@ import {
 	defined,
 	at,
 } from '../../helpers.ts'
+import { chartXml } from './chart-parts.ts'
 
 const chartNumber = (path: string): number => Number(defined(path.match(/\d+/))[0])
 
@@ -28,12 +29,6 @@ function chartPartPaths(zip: JSZip): string[] {
 	return listEntries(zip)
 		.filter((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))
 		.sort((a, b) => chartNumber(a) - chartNumber(b))
-}
-
-async function firstChartPart(zip: JSZip): Promise<string> {
-	const [path] = chartPartPaths(zip)
-	assert(path, 'no chart part found in package: ' + listEntries(zip).join(', '))
-	return readEntry(zip, path)
 }
 
 const POS = { x: 1, y: 1, w: 6, h: 3 }
@@ -54,7 +49,7 @@ defineRegressionSuite('Chart input immutability', [
 			assert(at(data, 0).labels === labels, 'the caller`s labels array should still be the same object')
 			assert(!('_dataIndex' in at(data, 0)), '_dataIndex should not be stamped onto the caller`s series')
 			// The normalization still reaches the emitter.
-			assertIncludes(await firstChartPart(zip), '<c:v>A</c:v>', 'chart part')
+			assertIncludes(await chartXml(zip), '<c:v>A</c:v>', 'chart part')
 		},
 	},
 	{
@@ -108,7 +103,7 @@ defineRegressionSuite('Chart input immutability', [
 			})
 
 			expect(data).toEqual(before)
-			const xml = await firstChartPart(zip)
+			const xml = await chartXml(zip)
 			assertIncludes(xml, '<c:multiLvlStrRef>', 'chart part')
 			assertIncludes(xml, '<c:v>FY25</c:v>', 'chart part')
 		},
@@ -131,7 +126,7 @@ defineRegressionSuite('Chart input immutability', [
 
 			// The subchart series are plotted from `opts._type[i].data`, so the normalized copies
 			// have to reach that path: without them the second series emits `<c:idx val="undefined"/>`.
-			const xml = await firstChartPart(zip)
+			const xml = await chartXml(zip)
 			assertIncludes(xml, '<c:barChart>', 'chart part')
 			assertIncludes(xml, '<c:lineChart>', 'chart part')
 			assertIncludes(xml, '<c:idx val="0"/>', 'chart part')

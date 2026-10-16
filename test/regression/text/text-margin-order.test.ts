@@ -1,14 +1,4 @@
-import JSZip from 'jszip'
-import PptxTs from '../../../dist/node.js'
-import { defineRegressionSuite, assert, xmlOpeningTags, xmlAttributes } from '../../helpers.ts'
-
-async function buildSlideXml(pres: PptxTs) {
-	const buf = await pres.toBytes()
-	const zip = await JSZip.loadAsync(buf)
-	const entry = zip.file('ppt/slides/slide1.xml')
-	if (!entry) throw new Error('slide1.xml missing')
-	return entry.async('string')
-}
+import { defineRegressionSuite, assert, slideXml, xmlOpeningTags, xmlAttributes } from '../../helpers.ts'
 
 // margin is documented as [Top, Right, Bottom, Left] (CSS clockwise order); table cells and
 // slide numbers already map arrays that way. This guards that textboxes agree, i.e. index 0
@@ -18,12 +8,11 @@ defineRegressionSuite('Text box margin array order [upstream-pr-1248]', [
 	{
 		name: 'margin [T,R,B,L] maps each value to the correct bodyPr inset',
 		fn: async () => {
-			const pres = new PptxTs()
 			// Four distinct values (inches, all < 1 to avoid the legacy-points warning) so any
 			// transposition (e.g. swapping Top/Left) is caught.
-			pres.addSlide().addText('hi', { x: 1, y: 1, w: 4, h: 1, margin: [0.1, 0.2, 0.3, 0.4] })
-
-			const xml = await buildSlideXml(pres)
+			const xml = await slideXml((pres) => {
+				pres.addSlide().addText('hi', { x: 1, y: 1, w: 4, h: 1, margin: [0.1, 0.2, 0.3, 0.4] })
+			})
 			const bodyPr = xmlOpeningTags(xml, 'a:bodyPr')[0]
 			assert(bodyPr, `expected <a:bodyPr> in slide XML; got: ${xml}`)
 			const attrs = xmlAttributes(bodyPr)

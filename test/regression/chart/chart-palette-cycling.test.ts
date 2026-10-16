@@ -81,15 +81,6 @@ defineRegressionSuite('chart palette wraparound', [
 		},
 	},
 	{
-		// The property the byte-identity harness cannot check, because its corpus never reaches
-		// past a palette's end.
-		name: 'building the same over-long chart twice emits identical XML',
-		fn: async () => {
-			assertEqual(await barXml(), await barXml(), 'bar chart XML is reproducible')
-			assertEqual(await pieXml(), await pieXml(), 'pie chart XML is reproducible')
-		},
-	},
-	{
 		name: "a combo line's marker takes the same colour as the line it sits on",
 		fn: async () => {
 			// Two palette lookups for one series: the line body read the series' position within

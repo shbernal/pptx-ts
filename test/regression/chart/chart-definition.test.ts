@@ -8,7 +8,7 @@ import {
 } from '../../../dist/node.js'
 import type PptxTs from '../../../dist/node.js'
 import {
-	setDiagnosticHandler,
+	captureDiagnostics,
 	defineRegressionSuite,
 	build,
 	assert,
@@ -54,16 +54,10 @@ async function chartFrom(data: OptsChartData[] | ChartMulti[], options?: ChartOp
 	return chartXml(zip)
 }
 
-/** Build, capturing library warnings (`log.ts` routes every one through `console.warn`). */
+/** Build, with the message of every diagnostic the build raised. */
 async function buildCapturingWarnings(buildFn: (pres: PptxTs) => unknown) {
-	const warnings: string[] = []
-	setDiagnosticHandler((d) => warnings.push(d.message))
-	try {
-		const result = await build(buildFn)
-		return { ...result, warnings }
-	} finally {
-		setDiagnosticHandler(null)
-	}
+	const { result, messages } = await captureDiagnostics(() => build(buildFn))
+	return { ...result, warnings: messages }
 }
 
 const SERIES = [{ name: 'S1', labels: ['A', 'B', 'C'], values: [1, 2, 3] }]

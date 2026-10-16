@@ -1,14 +1,4 @@
-import PptxTs from '../../../dist/node.js'
-import JSZip from 'jszip'
-import { defineRegressionSuite, assert } from '../../helpers.ts'
-
-async function buildSlide1(pres: PptxTs) {
-	const buf = await pres.toBytes()
-	const zip = await JSZip.loadAsync(buf)
-	const entry = zip.file('ppt/slides/slide1.xml')
-	if (!entry) throw new Error('slide1.xml missing')
-	return entry.async('string')
-}
+import { defineRegressionSuite, assert, slideXml } from '../../helpers.ts'
 
 // Before the shadow helpers were unified onto createColorElement, the shape/image/chart
 // shadow paths hardcoded <a:srgbClr val="..."> and silently emitted invalid OOXML when the
@@ -18,20 +8,19 @@ defineRegressionSuite('Shadow scheme colors [shadow-consolidation]', [
 	{
 		name: 'image shadow with scheme color emits <a:schemeClr> inside effectLst',
 		fn: async () => {
-			const pres = new PptxTs()
-			const slide = pres.addSlide()
-			const png =
-				'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkAAIAAAoAAv/lxKUAAAAASUVORK5CYII='
-			slide.addImage({
-				data: png,
-				x: 1,
-				y: 1,
-				w: 1,
-				h: 1,
-				shadow: { type: 'outer', color: 'accent2', blur: 3, offset: 2, transparency: 60 },
+			const xml = await slideXml((pres) => {
+				const slide = pres.addSlide()
+				const png =
+					'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkAAIAAAoAAv/lxKUAAAAASUVORK5CYII='
+				slide.addImage({
+					data: png,
+					x: 1,
+					y: 1,
+					w: 1,
+					h: 1,
+					shadow: { type: 'outer', color: 'accent2', blur: 3, offset: 2, transparency: 60 },
+				})
 			})
-
-			const xml = await buildSlide1(pres)
 			const eIdx = xml.indexOf('<a:effectLst>')
 			assert(eIdx !== -1, 'expected <a:effectLst> in slide XML; got:\n' + xml)
 			const effect = xml.substring(eIdx, xml.indexOf('</a:effectLst>', eIdx) + '</a:effectLst>'.length)

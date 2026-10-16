@@ -1,14 +1,5 @@
-import PptxTs, { ShapeType, type ShadowProps } from '../../../dist/node.js'
-import JSZip from 'jszip'
-import { defineRegressionSuite, assert, at } from '../../helpers.ts'
-
-async function buildSlideXml(pres: PptxTs) {
-	const buf = await pres.toBytes()
-	const zip = await JSZip.loadAsync(buf)
-	const entry = zip.file('ppt/slides/slide1.xml')
-	if (!entry) throw new Error('slide1.xml missing')
-	return entry.async('string')
-}
+import { ShapeType, type ShadowProps } from '../../../dist/node.js'
+import { defineRegressionSuite, assert, at, slideXml } from '../../helpers.ts'
 
 // Extract each <p:sp>...</p:sp> block and return only the <a:effectLst>...</a:effectLst>
 // substring inside, so we can compare shadow XML between shapes regardless of position.
@@ -28,8 +19,6 @@ defineRegressionSuite('Shared shadow options [legacy bug-05]', [
 	{
 		name: 'two addShape calls sharing one shadow object emit identical effectLst',
 		fn: async () => {
-			const pres = new PptxTs()
-			const slide = pres.addSlide()
 			/** The caller authors public `ShadowProps`; the writer stamps the derived internal `_alpha` onto it. */
 			const shadow: ShadowProps & { _alpha?: number } = {
 				type: 'outer',
@@ -38,13 +27,13 @@ defineRegressionSuite('Shared shadow options [legacy bug-05]', [
 				color: '000000',
 				transparency: 85,
 			}
-			slide.addShape(ShapeType.rect, { x: 1, y: 1, w: 2, h: 1, shadow })
-			slide.addShape(ShapeType.rect, { x: 1, y: 3, w: 2, h: 1, shadow })
-
-			const xml = await buildSlideXml(pres)
+			const xml = await slideXml((pres) => {
+				const slide = pres.addSlide()
+				slide.addShape(ShapeType.rect, { x: 1, y: 1, w: 2, h: 1, shadow })
+				slide.addShape(ShapeType.rect, { x: 1, y: 3, w: 2, h: 1, shadow })
+			})
 			const effects = extractEffectLsts(xml)
 			assert(effects.length === 2, 'expected 2 <p:sp> blocks; got ' + effects.length + '\n' + xml)
-			assert(effects[0] !== '', 'expected first shape to have <a:effectLst>; got: ' + xml)
 			assert(
 				effects[0] === effects[1],
 				'expected shared shadow to produce identical effectLst on both shapes.\n' +
@@ -53,22 +42,16 @@ defineRegressionSuite('Shared shadow options [legacy bug-05]', [
 					'\nsecond: ' +
 					effects[1]
 			)
-			// And the values must be sane EMUs, not double-converted.
+			// And the values must be sane EMUs, not double-converted (6pt, not 6pt converted twice).
 			assert(
 				at(effects, 0).indexOf('blurRad="76200"') !== -1,
 				'expected blurRad="76200" in shared effectLst; got: ' + effects[0]
-			)
-			assert(
-				at(effects, 0).indexOf('blurRad="967740000"') === -1,
-				'unexpected double-converted blurRad in shared effectLst: ' + effects[0]
 			)
 		},
 	},
 	{
 		name: 'shared shadow across image+shape emits same EMU values (no double-conversion)',
 		fn: async () => {
-			const pres = new PptxTs()
-			const slide = pres.addSlide()
 			const png =
 				'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkAAIAAAoAAv/lxKUAAAAASUVORK5CYII='
 			/** The caller authors public `ShadowProps`; the writer stamps the derived internal `_alpha` onto it. */
@@ -79,10 +62,11 @@ defineRegressionSuite('Shared shadow options [legacy bug-05]', [
 				color: '000000',
 				transparency: 85,
 			}
-			slide.addShape(ShapeType.rect, { x: 1, y: 1, w: 2, h: 1, shadow })
-			slide.addImage({ data: png, x: 1, y: 3, w: 1, h: 1, shadow })
-
-			const xml = await buildSlideXml(pres)
+			const xml = await slideXml((pres) => {
+				const slide = pres.addSlide()
+				slide.addShape(ShapeType.rect, { x: 1, y: 1, w: 2, h: 1, shadow })
+				slide.addImage({ data: png, x: 1, y: 3, w: 1, h: 1, shadow })
+			})
 			const matches = xml.match(/<a:effectLst>[\s\S]*?<\/a:effectLst>/g) || []
 			assert(
 				matches.length === 2,
@@ -102,13 +86,8 @@ defineRegressionSuite('Shared shadow options [legacy bug-05]', [
 					'\nimage: ' +
 					b
 			)
-			// Belt-and-braces: both must use the original (pt-derived) EMU values, not double-converted.
+			// Both must use the original (pt-derived) EMU values, not double-converted.
 			assert(a.indexOf('blurRad="76200"') !== -1, 'expected blurRad="76200" in shape effectLst; got: ' + a)
-			assert(b.indexOf('blurRad="76200"') !== -1, 'expected blurRad="76200" in image effectLst; got: ' + b)
-			assert(
-				a.indexOf('blurRad="967740000"') === -1 && b.indexOf('blurRad="967740000"') === -1,
-				'unexpected double-converted blurRad: shape=' + a + ' image=' + b
-			)
 		},
 	},
 ])

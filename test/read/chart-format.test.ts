@@ -63,7 +63,6 @@ function formattedLine(pres: PptxTs) {
 describe('Chart axes — c:catAx / c:valAx', () => {
 	test('the value axis reads min/max/major-unit, title, gridlines, and number format', async () => {
 		const chart = defined(firstChart((await authorRead(formattedBar)).presentation))
-		assert(chart, 'authored bar chart is read back')
 
 		const valAxis = chart.valueAxis
 		assert(valAxis, 'chart exposes a value axis')

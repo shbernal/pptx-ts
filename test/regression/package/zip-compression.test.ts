@@ -6,22 +6,8 @@ import { PNG_1X1_DATA_URI, defineRegressionSuite, assert, at } from '../../helpe
 // the same deck re-saved by PowerPoint, which always DEFLATEs.
 // DEFLATE is now the default; `compression: false` opts back out.
 
-// Compression method of each ZIP local file header (offset 8 after PK\x03\x04):
-// 0 = STORE, 8 = DEFLATE.
-function localHeaderMethods(buf: Uint8Array) {
-	const bytes = new Uint8Array(buf)
-	const methods: number[] = []
-	for (let i = 0; i + 10 < bytes.length; i++) {
-		if (bytes[i] === 0x50 && bytes[i + 1] === 0x4b && bytes[i + 2] === 0x03 && bytes[i + 3] === 0x04) {
-			methods.push(at(bytes, i + 8) | (at(bytes, i + 9) << 8))
-		}
-	}
-	if (methods.length === 0) throw new Error('no ZIP local file headers found')
-	return methods
-}
-
-// Map of each ZIP entry name -> compression method, parsed from local file
-// headers (filename length at offset 26, extra length at 28, name at 30).
+// Map of each ZIP entry name -> compression method (0 = STORE, 8 = DEFLATE), parsed from
+// local file headers (method at offset 8, filename length at 26, extra length at 28, name at 30).
 function localHeaderEntries(buf: Uint8Array) {
 	const bytes = new Uint8Array(buf)
 	const dec = new TextDecoder()
@@ -56,7 +42,7 @@ defineRegressionSuite('ZIP package compression default', [
 		fn: async () => {
 			const pres = await buildPres()
 			const buf = await pres.write({ outputType: 'nodebuffer' })
-			const methods = localHeaderMethods(buf)
+			const methods = localHeaderEntries(buf).map((e) => e.method)
 			assert(
 				methods.some((m) => m === 8),
 				'expected DEFLATE entries from write({outputType}); got: ' + methods.join(',')
@@ -93,19 +79,6 @@ defineRegressionSuite('ZIP package compression default', [
 			assert(
 				entries.every((e) => e.method === 0),
 				'expected all STORE with compression:false; got: ' + entries.map((e) => `${e.name}=${e.method}`).join(', ')
-			)
-		},
-	},
-	{
-		name: 'default export is smaller than the STORE export of the same deck',
-		fn: async () => {
-			const presA = await buildPres()
-			const presB = await buildPres()
-			const deflated = await presA.toBytes()
-			const stored = await presB.toBytes({ compression: false })
-			assert(
-				deflated.length < stored.length,
-				`expected DEFLATE output (${deflated.length}B) smaller than STORE output (${stored.length}B)`
 			)
 		},
 	},

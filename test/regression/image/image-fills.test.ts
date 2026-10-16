@@ -3,7 +3,7 @@ import { ShapeType, type TableRow } from '../../../dist/node.js'
 import { readFixture } from '../../read/corpus.ts'
 import {
 	PNG_1X1,
-	setDiagnosticHandler,
+	captureDiagnostics,
 	defineRegressionSuite,
 	build,
 	readEntry,
@@ -33,19 +33,6 @@ function squash(xml: string) {
 /** Every `<a:tcPr>…</a:tcPr>` (or self-closed `<a:tcPr/>`) in document order. */
 function tcPrBlocks(xml: string): string[] {
 	return squash(xml).match(/<a:tcPr(?:\s[^>]*)?\/>|<a:tcPr(?:\s[^>]*)?>[\s\S]*?<\/a:tcPr>/g) || []
-}
-
-// 1x1 transparent PNG (data URI). Used to exercise the picture-fill (`<a:blipFill>`) path
-
-async function captureWarnings(fn: () => Promise<unknown>) {
-	const warnings: string[] = []
-	setDiagnosticHandler((d) => warnings.push(d.message))
-	try {
-		await fn()
-	} finally {
-		setDiagnosticHandler(null)
-	}
-	return warnings
 }
 
 defineRegressionSuite('Image (blip) fills', [
@@ -199,7 +186,7 @@ defineRegressionSuite('Image (blip) fills', [
 		name: 'SVG image fill is rejected with a warning (raster only)',
 		fn: async () => {
 			let zip: JSZip | undefined
-			const warnings = await captureWarnings(async () => {
+			const { messages: warnings } = await captureDiagnostics(async () => {
 				;({ zip } = await build((p) => {
 					const s = p.addSlide()
 					s.addShape(ShapeType.rect, {
@@ -410,7 +397,7 @@ defineRegressionSuite('Table cell image (blip) fills', [
 		name: 'a cell image fill with neither path nor data warns and emits no blipFill',
 		fn: async () => {
 			let zip: JSZip | undefined
-			const warnings = await captureWarnings(async () => {
+			const { messages: warnings } = await captureDiagnostics(async () => {
 				;({ zip } = await build((p) => {
 					p.addSlide().addTable([[{ text: 'a', options: { fill: { type: 'image', image: {} } } }]], {
 						x: 1,
@@ -433,7 +420,7 @@ defineRegressionSuite('Table cell image (blip) fills', [
 		name: 'an SVG cell image fill is rejected with a warning (raster only)',
 		fn: async () => {
 			let zip: JSZip | undefined
-			const warnings = await captureWarnings(async () => {
+			const { messages: warnings } = await captureDiagnostics(async () => {
 				;({ zip } = await build((p) => {
 					p.addSlide().addTable(
 						[[{ text: 'a', options: { fill: { type: 'image', image: { data: 'image/svg+xml;base64,PHN2Zy8+' } } } }]],

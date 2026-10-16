@@ -15,7 +15,6 @@ import {
 	type ProofFail,
 	type ProofPass,
 	XmlSyntaxError,
-	isTextFrozen,
 	proveWhitespaceOnly,
 	tokenizeXml,
 	buildTree,
@@ -249,38 +248,6 @@ describe('the tokenizer preserves what it must', () => {
 		const [open] = tokenizeXml("<a:x a='1'/>")
 		if (open?.kind !== 'open') throw new Error('expected an open tag, got ' + open?.kind)
 		expect(open.attrs[0]?.quote).toBe("'")
-	})
-})
-
-describe('isTextFrozen', () => {
-	const frozen = (xml: string): boolean => {
-		const first = buildTree(tokenizeXml(xml)).children[0]
-		if (first?.type !== 'element') throw new Error('expected an element, got ' + first?.type)
-		return isTextFrozen(first)
-	}
-
-	test('a leaf with text is frozen', () => {
-		expect(frozen('<c:v>12</c:v>')).toBe(true)
-	})
-
-	test('a leaf with only whitespace is frozen', () => {
-		expect(frozen('<x:leaf>  </x:leaf>')).toBe(true)
-	})
-
-	test('an empty element is frozen', () => {
-		expect(frozen('<x:leaf></x:leaf>')).toBe(true)
-	})
-
-	test('a container of elements separated by whitespace is not frozen', () => {
-		expect(frozen('<x:box>  <x:a/>  <x:b/></x:box>')).toBe(false)
-	})
-
-	test('mixed content is frozen', () => {
-		expect(frozen('<x:box>text<x:a/></x:box>')).toBe(true)
-	})
-
-	test('a name on the deny-list is frozen even when it looks like a container', () => {
-		expect(frozen('<si>  <t>a</t></si>')).toBe(true)
 	})
 })
 

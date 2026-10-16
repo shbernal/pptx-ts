@@ -1,6 +1,5 @@
-import type PptxTs from '../../../dist/node.js'
 import type { LineCap } from '../../../dist/node.js'
-import { assert, build, caught, defineRegressionSuite, firstXmlBlock, slideXml } from '../../helpers.ts'
+import { assert, assertRejects, build, defineRegressionSuite, firstXmlBlock, slideXml } from '../../helpers.ts'
 
 // A stroke is painted like a fill: `ShapeLineProps extends ShapeFillProps`, so `line` accepts
 // `gradient`/`pattern`/`image` as well as a solid `color`, plus its own `cap`. The emitters
@@ -20,13 +19,6 @@ function lineBlock(xml: string) {
 	const ln = firstXmlBlock(xml, 'a:ln')
 	assert(ln, 'expected an <a:ln> in:\n' + xml)
 	return ln
-}
-
-async function expectBuildError(buildFn: (pres: PptxTs) => unknown, expectedMessage: string) {
-	const err = await caught(() => build(buildFn))
-	assert(err, 'expected build to fail')
-	const message = err.message
-	assert(message.includes(expectedMessage), `expected error to include "${expectedMessage}"; got: ${message}`)
 }
 
 defineRegressionSuite('Shape line paint and cap', [
@@ -121,10 +113,14 @@ defineRegressionSuite('Shape line paint and cap', [
 			// the package as cap="INVALID" and PowerPoint would offer to repair the file. Note the
 			// chart path differs deliberately: `define/chart.ts` scrubs an unrecognized gridLine
 			// cap before emit (chart-option-validation.test.ts), so only the shape path throws.
-			await expectBuildError((p) => {
-				// @ts-expect-error 'INVALID' is not a LineCap; this case stands in for an untyped caller
-				p.addSlide().addShape('rect', { x: 1, y: 1, w: 2, h: 1, line: { color: '0070C0', cap: 'INVALID' } })
-			}, 'Invalid line cap')
+			await assertRejects(
+				() =>
+					build((p) => {
+						// @ts-expect-error 'INVALID' is not a LineCap; this case stands in for an untyped caller
+						p.addSlide().addShape('rect', { x: 1, y: 1, w: 2, h: 1, line: { color: '0070C0', cap: 'INVALID' } })
+					}),
+				/Invalid line cap/
+			)
 		},
 	},
 ])

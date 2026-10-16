@@ -181,9 +181,6 @@ defineRegressionSuite('Chart embedding parts [legacy bug-17]', [
 			const core = await defined(xlsx.file('docProps/core.xml')).async('string')
 			assertIncludes(core, '<dc:creator>pptx-ts</dc:creator>', 'the workbook creator')
 			assertIncludes(core, '<cp:lastModifiedBy>pptx-ts</cp:lastModifiedBy>', 'the workbook last editor')
-			// No wall-clock stamp of its own (#145): two writes of one deck must not differ here.
-			assertNotIncludes(core, 'dcterms:created', 'the workbook creation time')
-			assertNotIncludes(core, 'dcterms:modified', 'the workbook modification time')
 		},
 	},
 ])

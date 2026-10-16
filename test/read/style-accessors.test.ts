@@ -399,18 +399,9 @@ describe('Shape line dash / explicit no-line reads (off-fixture)', () => {
 	})
 
 	// lineGradient points the (fixture-validated, see gradient-fill.pptx) a:gradFill
-	// reader at the a:ln container instead of spPr. Explicit srgb stops resolve
-	// without a theme, so a minimal themeContext stub is enough off-fixture.
-	const spGrad = (spPr: string) => {
-		const xml = `<p:spTree xmlns:p="${P_NS}" xmlns:a="${A_NS}"><p:sp>${spPr}</p:sp></p:spTree>`
-		const spTree = defined(new DOMParser().parseFromString(xml, 'text/xml').documentElement)
-		const el = at(spTree.getElementsByTagNameNS(P_NS, 'sp'), 0)
-		// Minimal slide fake: only themeContext is exercised by these unit reads.
-		return new AutoShape(el, { themeContext: () => ({}) } as unknown as ShapeHost)
-	}
-
+	// reader at the a:ln container instead of spPr; explicit srgb stops resolve without a theme.
 	test('lineGradient reads a:ln/a:gradFill stops + linear angle', () => {
-		const shape = spGrad(
+		const shape = sp(
 			'<p:spPr><a:ln w="57150"><a:gradFill><a:gsLst>' +
 				'<a:gs pos="0"><a:srgbClr val="451DC7"/></a:gs>' +
 				'<a:gs pos="100000"><a:srgbClr val="BEADF3"/></a:gs>' +
@@ -432,9 +423,9 @@ describe('Shape line dash / explicit no-line reads (off-fixture)', () => {
 	})
 
 	test('lineGradient is null for a solid line and when there is no a:ln', () => {
-		const solid = spGrad('<p:spPr><a:ln w="12700"><a:solidFill><a:srgbClr val="000000"/></a:solidFill></a:ln></p:spPr>')
+		const solid = sp('<p:spPr><a:ln w="12700"><a:solidFill><a:srgbClr val="000000"/></a:solidFill></a:ln></p:spPr>')
 		assertEqual(solid.lineGradient, null, 'a solid-stroked line has no lineGradient')
-		const noLine = spGrad('<p:spPr/>')
+		const noLine = sp('<p:spPr/>')
 		assertEqual(noLine.lineGradient, null, 'no a:ln ⇒ null lineGradient')
 	})
 })

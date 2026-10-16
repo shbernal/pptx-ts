@@ -1,45 +1,24 @@
 import type { ImageProps } from '../../../dist/node.js'
-import { PNG_1X1, defineRegressionSuite, build, readEntry, assert, asError, type ThrownError } from '../../helpers.ts'
+import { PNG_1X1, defineRegressionSuite, build, readEntry, assert, caught } from '../../helpers.ts'
 
 async function expectCropError(sizingOpts: NonNullable<ImageProps['sizing']>, expectedFragment: string) {
-	let err: ThrownError | undefined
-	try {
-		await build((p) => {
-			const s = p.addSlide()
-			s.addImage({ data: PNG_1X1, x: 1, y: 1, w: 4, h: 3, sizing: sizingOpts })
+	const err = await caught(() =>
+		build((p) => {
+			p.addSlide().addImage({ data: PNG_1X1, x: 1, y: 1, w: 4, h: 3, sizing: sizingOpts })
 		})
-	} catch (e) {
-		err = asError(e)
-	}
+	)
 	assert(err, 'expected build to throw for out-of-bounds crop')
-	const msg = String(err?.message || err)
-	assert(msg.includes(expectedFragment), `expected error to include "${expectedFragment}"; got: ${msg}`)
+	assert(err.message.includes(expectedFragment), `expected error to include "${expectedFragment}"; got: ${err.message}`)
 }
 
 defineRegressionSuite('Image crop overflow', [
 	{
-		name: 'crop window overflowing right edge throws with right-edge description',
+		// The image box is 4x3, so each window crosses exactly one edge.
+		name: 'a crop window past any edge throws naming that edge',
 		fn: async () => {
-			// x=2 + w=3 = 5 > image w=4 → right overflow
 			await expectCropError({ type: 'crop', x: 2, y: 0, w: 3, h: 3 }, 'past right edge')
-		},
-	},
-	{
-		name: 'crop window overflowing bottom edge throws with bottom-edge description',
-		fn: async () => {
-			// y=1 + h=3 = 4 > image h=3 → bottom overflow
 			await expectCropError({ type: 'crop', x: 0, y: 1, w: 4, h: 3 }, 'past bottom edge')
-		},
-	},
-	{
-		name: 'negative x throws with left-edge description',
-		fn: async () => {
 			await expectCropError({ type: 'crop', x: -0.5, y: 0, w: 3, h: 3 }, 'past left edge')
-		},
-	},
-	{
-		name: 'negative y throws with top-edge description',
-		fn: async () => {
 			await expectCropError({ type: 'crop', x: 0, y: -0.5, w: 4, h: 2 }, 'past top edge')
 		},
 	},

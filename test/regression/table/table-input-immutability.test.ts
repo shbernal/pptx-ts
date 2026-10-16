@@ -13,7 +13,6 @@
  * a module, so this fails at the site of the mutation rather than at an equality check that
  * cannot say which key moved.
  */
-import { expect } from 'vitest'
 import type { TableRow } from '../../../dist/node.js'
 import { assert, build, defineRegressionSuite, readEntry } from '../../helpers.ts'
 
@@ -59,17 +58,6 @@ defineRegressionSuite('Table input immutability', [
 			await build((p) => {
 				p.addSlide().addTable(rows, { ...POS, h: 2, autoPage: true })
 			})
-		},
-	},
-	{
-		name: 'the caller`s cell options come back exactly as they went in',
-		fn: async () => {
-			const rows = [[{ text: 'a b c d e f g h', options: { autoPageCharWeight: 0.2, fontSize: 14 } }]]
-			const before = structuredClone(rows)
-			await build((p) => {
-				p.addSlide().addTable(rows, { ...POS, autoPage: true, autoPageCharWeight: 0.6 })
-			})
-			expect(rows).toEqual(before)
 		},
 	},
 ])

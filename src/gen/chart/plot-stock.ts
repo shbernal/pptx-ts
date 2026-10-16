@@ -102,7 +102,7 @@ export const makeStockPlot: PlotBuilder = (chartType, data, opts, valAxisId, cat
 					null,
 					raw(
 						genXmlColorSelection(
-							namedColorOr(opts.seriesOptions?.[volumeIdx]?.color, chartColors[0] ?? '4472C4', 'seriesOptions color')
+							namedColorOr(opts.seriesOptions?.[volumeIdx]?.color, paletteColor(chartColors, 0), 'seriesOptions color')
 						)
 					)
 				)
@@ -132,11 +132,7 @@ export const makeStockPlot: PlotBuilder = (chartType, data, opts, valAxisId, cat
 			// visual -- so a `seriesOptions.color` has exactly two referents on a stock chart: the
 			// volume bar above, and the dot that marks the close series where there are no up-down bars.
 			const markColor = isClose
-				? namedColorOr(
-						opts.seriesOptions?.[idx]?.color,
-						paletteColor(chartColors, idx, 'ED7D31'),
-						'seriesOptions color'
-					)
+				? namedColorOr(opts.seriesOptions?.[idx]?.color, paletteColor(chartColors, idx), 'seriesOptions color')
 				: null
 			return makeStockLineSer(idx, obj, opts, valFmtCode, markColor, sheet)
 		})

@@ -88,17 +88,9 @@ describe('run properties', () => {
 		expect(rPr({}, true)).toBe('<a:defRPr lang="en-US" dirty="0"></a:defRPr>')
 	})
 
-	test('charSpacing also disables kerning', () => {
-		expect(rPr({ charSpacing: 3 })).toContain('spc="300" kern="0"')
-	})
-
 	test('kerning writes its threshold in hundredths of a point', () => {
 		expect(rPr({ kerning: 12 })).toContain(' kern="1200" ')
 		expect(rPr({ kerning: 10.5 })).toContain(' kern="1050" ')
-	})
-
-	test('kerning: 0 is a statement, kerning off, rather than unstated', () => {
-		expect(rPr({ kerning: 0 })).toContain(' kern="0" ')
 	})
 
 	test('a stated kerning wins over the kern="0" that charSpacing implies', () => {

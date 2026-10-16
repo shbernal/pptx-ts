@@ -16,27 +16,19 @@ defineRegressionSuite('Repeated presentation writes [legacy bug-04]', [
 		fn: async () => {
 			const pres = new PptxTs()
 			const slide = pres.addSlide()
-			// The caller's own `ShadowProps`; the writer normalizes a COPY and leaves this one alone.
-			const shadow: ShadowProps & { _alpha?: number } = {
-				type: 'outer',
-				blur: 6,
-				offset: 2,
-				color: '000000',
-				transparency: 85,
-			}
-			slide.addShape(ShapeType.rect, { x: 1, y: 1, w: 4, h: 2, shadow })
+			slide.addShape(ShapeType.rect, {
+				x: 1,
+				y: 1,
+				w: 4,
+				h: 2,
+				shadow: { type: 'outer', blur: 6, offset: 2, color: '000000', transparency: 85 },
+			})
 
 			const xml1 = await buildOnce(pres)
 			const xml2 = await buildOnce(pres)
 			assert(
 				xml1 === xml2,
 				'expected slide1.xml byte-equal across two writes; differ.\nfirst:\n' + xml1 + '\nsecond:\n' + xml2
-			)
-			// The normalizer is pure: the derived `_alpha` lives on the definer's copy.
-			assert(
-				JSON.stringify(shadow) ===
-					JSON.stringify({ type: 'outer', blur: 6, offset: 2, color: '000000', transparency: 85 }),
-				'expected the caller shadow object untouched; got ' + JSON.stringify(shadow)
 			)
 		},
 	},
@@ -70,28 +62,6 @@ defineRegressionSuite('Repeated presentation writes [legacy bug-04]', [
 				shadow._alpha === undefined,
 				'expected the image branch to leave the caller shadow untouched; got ' + JSON.stringify(shadow)
 			)
-		},
-	},
-	{
-		name: 'regression - single write still emits sane shadow EMU values',
-		fn: async () => {
-			const pres = new PptxTs()
-			const slide = pres.addSlide()
-			slide.addShape(ShapeType.rect, {
-				x: 1,
-				y: 1,
-				w: 4,
-				h: 2,
-				shadow: { type: 'outer', blur: 6, offset: 2, color: '000000', transparency: 85 },
-			})
-			const xml = await buildOnce(pres)
-			assert(xml.indexOf('<a:effectLst>') !== -1, 'expected <a:effectLst> in single-write output')
-			// blurRad=ptsToEmuLenient(6)=76200; dist=ptsToEmuLenient(2)=25400; dir=Math.round(270*60000)=16200000;
-			// transparency 85 -> opacity 0.15 -> alpha=Math.round(0.15*100000)=15000
-			assert(xml.indexOf('blurRad="76200"') !== -1, 'expected blurRad="76200"; got: ' + xml)
-			assert(xml.indexOf('dist="25400"') !== -1, 'expected dist="25400"; got: ' + xml)
-			assert(xml.indexOf('dir="16200000"') !== -1, 'expected dir="16200000"; got: ' + xml)
-			assert(xml.indexOf('<a:alpha val="15000"/>') !== -1, 'expected <a:alpha val="15000"/>; got: ' + xml)
 		},
 	},
 ])

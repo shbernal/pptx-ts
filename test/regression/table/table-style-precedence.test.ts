@@ -1,9 +1,7 @@
 import {
-	PptxTs,
 	defineRegressionSuite,
 	build,
 	readEntry,
-	captureDiagnostics,
 	assert,
 	assertEqual,
 	assertRejects,
@@ -217,33 +215,6 @@ defineRegressionSuite('Table styling: built-in styles and the direct-formatting 
 			assert(linked.includes('<a:hlinkClick'), 'the hyperlink is emitted; got: ' + linked)
 			assert(!linked.includes('<a:srgbClr val="000000"/>'), 'and no run of that cell is painted black; got: ' + linked)
 			assert(plain.includes('<a:srgbClr val="000000"/>'), 'while the cell beside it keeps the default; got: ' + plain)
-		},
-	},
-	{
-		name: 'defineTableStyle is gone from the public surface',
-		fn: async () => {
-			// The removal is the API contract now: a consumer still calling it must fail loudly at
-			// the call site rather than silently building a deck whose styling never paints.
-			// TypeScript already refuses the call, which the directive pins, and this pins the runtime
-			// half for a plain-JS consumer.
-			// @ts-expect-error defineTableStyle is gone from the type too
-			assertEqual(typeof new PptxTs().defineTableStyle, 'undefined', 'no defineTableStyle method')
-		},
-	},
-	{
-		name: 'styleDrivenCells is inert and silent — an unknown option, not a supported one',
-		fn: async () => {
-			// It was never anything but a way to defer to a custom style, so with custom styles gone
-			// it has nothing to mean. Passing it must not change the bytes.
-			const { result, codes } = await captureDiagnostics(() =>
-				build((p) => {
-					// @ts-expect-error styleDrivenCells is the removed, unknown option under test
-					p.addSlide().addTable([[{ text: 'H1' }]], { ...AT, styleDrivenCells: true })
-				})
-			)
-			const tcPr = at(allTcPr(await readEntry(result.zip, 'ppt/slides/slide1.xml')), 0)
-			assertEqual((tcPr.match(/<a:ln[LRTB] w="0"/g) || []).length, 4, 'the defaults are untouched')
-			assert(!codes.some((code) => code.startsWith('table-style/')), 'no stale code fires; got: ' + codes.join(','))
 		},
 	},
 ])

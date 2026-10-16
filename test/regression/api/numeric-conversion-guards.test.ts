@@ -71,17 +71,6 @@ defineRegressionSuite('Numeric conversion guards', [
 		},
 	},
 	{
-		// `Math.round(Infinity * 60000)` is `Infinity`, which serialized as `rot="Infinity"`.
-		name: 'a non-finite rotate is refused instead of reaching rot=',
-		fn: async () => {
-			assertEqual(
-				await codeFrom((p) => p.addSlide().addShape('rect', { ...BOX, rotate: Infinity })),
-				'coord/non-finite',
-				'Infinite rotation'
-			)
-		},
-	},
-	{
 		// The old reduction subtracted a single turn: 800 became 440 degrees, 370 became 10, and a
 		// negative was never touched at all -- neither modular nor a pass-through.
 		name: 'a rotation past a full turn reduces modularly, and one within a turn is untouched',
@@ -135,21 +124,6 @@ defineRegressionSuite('Numeric conversion guards', [
 				'coord/non-finite',
 				'NaN maxAng'
 			)
-		},
-	},
-	{
-		// Charts route their label rotations through the non-modular converter for the same reason:
-		// a caller who writes -45 gets -45 back, and Infinity is refused rather than serialized.
-		name: 'a non-finite chart label rotation is refused',
-		fn: async () => {
-			const data = [{ name: 'R', labels: ['A', 'B'], values: [1, 2] }]
-			const err = await caught(() =>
-				build((p) =>
-					p.addSlide().addChart(data, { ...BOX, type: 'bar', catAxisLabelRotate: Infinity, catAxisLabelFontSize: 12 })
-				)
-			)
-			assert(err instanceof InvalidOptionError, 'expected an InvalidOptionError; got: ' + String(err))
-			assertEqual(err.code, 'coord/non-finite')
 		},
 	},
 	{

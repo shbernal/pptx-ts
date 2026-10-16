@@ -1,14 +1,4 @@
-import JSZip from 'jszip'
-import PptxTs from '../../../dist/node.js'
-import { defineRegressionSuite, assert } from '../../helpers.ts'
-
-async function buildSlideXml(pres: PptxTs) {
-	const buf = await pres.toBytes()
-	const zip = await JSZip.loadAsync(buf)
-	const entry = zip.file('ppt/slides/slide1.xml')
-	if (!entry) throw new Error('slide1.xml missing')
-	return entry.async('string')
-}
+import { defineRegressionSuite, assert, slideXml } from '../../helpers.ts'
 
 // `textWarp` maps to <a:prstTxWarp prst=".."> inside <a:bodyPr>. Per
 // CT_TextBodyProperties the warp child must come BEFORE the autofit group
@@ -17,10 +7,9 @@ defineRegressionSuite('Preset text warp (prstTxWarp) [usages-transverses-textArc
 	{
 		name: 'textWarp emits <a:prstTxWarp> with the requested preset',
 		fn: async () => {
-			const pres = new PptxTs()
-			pres.addSlide().addText('R&D', { x: 1, y: 1, w: 4, h: 1, textWarp: 'textArchUp' })
-
-			const xml = await buildSlideXml(pres)
+			const xml = await slideXml((pres) => {
+				pres.addSlide().addText('R&D', { x: 1, y: 1, w: 4, h: 1, textWarp: 'textArchUp' })
+			})
 			assert(
 				xml.includes('<a:prstTxWarp prst="textArchUp"><a:avLst/></a:prstTxWarp>'),
 				`expected prstTxWarp textArchUp; got: ${xml}`
@@ -30,10 +19,9 @@ defineRegressionSuite('Preset text warp (prstTxWarp) [usages-transverses-textArc
 	{
 		name: 'prstTxWarp precedes the autofit element when both are set',
 		fn: async () => {
-			const pres = new PptxTs()
-			pres.addSlide().addText('R&D', { x: 1, y: 1, w: 4, h: 1, textWarp: 'textArchUp', fit: 'resize' })
-
-			const xml = await buildSlideXml(pres)
+			const xml = await slideXml((pres) => {
+				pres.addSlide().addText('R&D', { x: 1, y: 1, w: 4, h: 1, textWarp: 'textArchUp', fit: 'resize' })
+			})
 			const warpAt = xml.indexOf('<a:prstTxWarp')
 			const fitAt = xml.indexOf('<a:spAutoFit')
 			assert(warpAt !== -1 && fitAt !== -1, `expected both prstTxWarp and spAutoFit; got: ${xml}`)
@@ -43,10 +31,9 @@ defineRegressionSuite('Preset text warp (prstTxWarp) [usages-transverses-textArc
 	{
 		name: 'no textWarp → no prstTxWarp emitted',
 		fn: async () => {
-			const pres = new PptxTs()
-			pres.addSlide().addText('plain', { x: 1, y: 1, w: 4, h: 1 })
-
-			const xml = await buildSlideXml(pres)
+			const xml = await slideXml((pres) => {
+				pres.addSlide().addText('plain', { x: 1, y: 1, w: 4, h: 1 })
+			})
 			assert(!xml.includes('prstTxWarp'), `expected no prstTxWarp; got: ${xml}`)
 		},
 	},

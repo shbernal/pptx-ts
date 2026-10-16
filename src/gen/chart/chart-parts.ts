@@ -403,9 +403,10 @@ export function resolveChartPalette(opts: ChartOptsInternal): string[] {
  * Every palette lookup in this directory goes through here so that a deck with more series or
  * data points than the palette has entries still emits the same bytes on every build.
  */
-export function paletteColor(palette: readonly string[], idx: number, fallback = '000000'): string {
-	if (palette.length === 0) return fallback
-	return palette[idx % palette.length] ?? fallback
+export function paletteColor(palette: readonly string[], idx: number): string {
+	// An empty palette (`idx % 0` is `NaN`) paints black: `makeSeriesDataPointsXml` can pass a
+	// caller's empty `invertedColors` straight through.
+	return palette[idx % palette.length] ?? '000000'
 }
 
 // DEF_CHART_GRIDLINE.color is optional on the type but always present on the constant.

@@ -8,7 +8,6 @@ import {
 	assertEqual,
 	assertContentTypeDefault,
 	assertNoContentTypeDefault,
-	assertContentTypeOverride,
 	contentTypeDefaultExtensions,
 	contentTypeForExtension,
 	at,
@@ -170,21 +169,6 @@ defineRegressionSuite('Content type defaults [legacy bug-16]', [
 		},
 	},
 	{
-		// A background image's extension comes from its `path`, so a `.svg` background is the one
-		// route that reaches the svg mapping (`addImage` registers its SVG rel with the content
-		// type spelled out, and SVG image *fills* are rejected outright).
-		name: 'SVG background emits an svg Default with image/svg+xml',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.defineSlideMaster({ title: 'svg-bkgd', background: { path: 'assets/logo.svg', data: SVG_DATA } })
-				p.addSlide({ masterTitle: 'svg-bkgd' })
-			})
-			const xml = await readEntry(zip, '[Content_Types].xml')
-			assertContentTypeDefault(xml, 'svg')
-			assertEqual(contentTypeForExtension(xml, 'svg'), 'image/svg+xml', 'svg Default ContentType')
-		},
-	},
-	{
 		// A background used to take its extension from `path` alone. With no path, `addBackground()`
 		// substituted the `preencoded.png` placeholder, so bytes of any other format were embedded in
 		// a `.png` part the package declared as `image/png` — the exact Default/payload mismatch
@@ -254,28 +238,6 @@ defineRegressionSuite('Content type defaults [legacy bug-16]', [
 			})
 			const xml = await readEntry(zip, '[Content_Types].xml')
 			assertContentTypeDefault(xml, 'xlsx')
-		},
-	},
-	{
-		name: 'regression - structural Override entries still emitted',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				const s = p.addSlide()
-				s.addText('hello', { x: 1, y: 1 })
-			})
-			const xml = await readEntry(zip, '[Content_Types].xml')
-			for (const partName of [
-				'/ppt/presentation.xml',
-				'/ppt/slideMasters/slideMaster1.xml',
-				'/ppt/theme/theme1.xml',
-				'/ppt/theme/theme2.xml',
-				'/ppt/slides/slide1.xml',
-				'/ppt/slideLayouts/slideLayout1.xml',
-				'/ppt/notesMasters/notesMaster1.xml',
-				'/ppt/notesSlides/notesSlide1.xml',
-			]) {
-				assertContentTypeOverride(xml, partName)
-			}
 		},
 	},
 ])

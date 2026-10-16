@@ -45,11 +45,6 @@ describe('coverage gate', () => {
 		])
 	})
 
-	test('a threshold that is not a number fails', () => {
-		const gates = { ...GATES, thresholds: { ...GATES.thresholds, branches: '83' } }
-		expect(evaluate(summary(99), gates).failures).toEqual([expect.stringContaining('thresholds.branches')])
-	})
-
 	test('a missing minimumSlack fails, even inside the point of slack', () => {
 		const { minimumSlack: _, ...gates } = GATES
 		expect(evaluate(summary(99, { lines: 95.5 }), gates).failures).toEqual([

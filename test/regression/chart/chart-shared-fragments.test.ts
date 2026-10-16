@@ -116,26 +116,6 @@ defineRegressionSuite('Shared chart fragments', [
 		},
 	},
 	{
-		name: 'every numeric-reference block emits the same shape, scatter and bubble alike',
-		fn: async () => {
-			// This case used to pin four different indentations, one of which was bubble's y-block
-			// having none where the other three had four spaces. All four are flat now,
-			// so what is left to pin is the part that was
-			// always the point: one builder, one shape, and the right formula in each block.
-			const scatter = await chartFor(ChartType.scatter, XY)
-			assertIncludes(valBlock(scatter, 'c:xVal'), '<c:numRef><c:f>Sheet1!$A$2:$A$4</c:f>', 'scatter x-block')
-			assertIncludes(valBlock(scatter, 'c:yVal'), '<c:numRef><c:f>Sheet1!$B$2:$B$4</c:f>', 'scatter y-block')
-
-			const bubble = await chartFor(ChartType.bubble, [at(XY, 0), { ...XY[1], sizes: [10, 20, 30] }])
-			assertIncludes(valBlock(bubble, 'c:xVal'), '<c:numRef><c:f>Sheet1!$A$2:$A$4</c:f>', 'bubble x-block')
-			assertIncludes(
-				valBlock(bubble, 'c:yVal'),
-				'<c:numRef><c:f>Sheet1!$B$2:$B$4</c:f>',
-				'bubble y-block, no longer the odd one out'
-			)
-		},
-	},
-	{
 		// The Y series is cached against the X series' length, so a caller who supplies fewer Y
 		// values than X gets gaps rather than a short cache: `<c:ptCount>` counts the X points and
 		// the missing `<c:pt>` entries are simply absent (a sparse idx-keyed cache is valid).

@@ -36,7 +36,7 @@ defineRegressionSuite('Presentation layouts [legacy bug-22]', [
 		},
 	},
 	{
-		name: 'standard wide layout constant matches PowerPoint widescreen',
+		name: 'standard layout constants match PowerPoint sizes',
 		fn: () => {
 			assertEqual(WIDE.layout, 'LAYOUT_WIDE', 'layout key')
 			assertEqual(WIDE.name, 'custom', 'presentation layout name')
@@ -46,6 +46,8 @@ defineRegressionSuite('Presentation layouts [legacy bug-22]', [
 			assertEqual(WIDE.heightEmu, 6858000, 'heightEmu')
 			assertEqual(inchesToEmu(WIDE.widthIn), WIDE.widthEmu, 'widthIn converts to widthEmu')
 			assertEqual(inchesToEmu(WIDE.heightIn), WIDE.heightEmu, 'heightIn converts to heightEmu')
+			assertEqual(STANDARD_LAYOUTS.LAYOUT_16x9.widthIn, 10, 'LAYOUT_16x9 .widthIn is 10in')
+			assertEqual(STANDARD_LAYOUTS.LAYOUT_16x9.heightIn, 5.625, 'LAYOUT_16x9 .heightIn is 5.625in')
 		},
 	},
 	{
@@ -73,14 +75,6 @@ defineRegressionSuite('Presentation layouts [legacy bug-22]', [
 				WIDE,
 				'custom wide layout'
 			)
-		},
-	},
-	{
-		name: 'LAYOUT_16x9 exposes its inch size (.widthIn/.heightIn)',
-		fn: () => {
-			const std = STANDARD_LAYOUTS.LAYOUT_16x9
-			assertEqual(std.widthIn, 10, 'LAYOUT_16x9 .widthIn is 10in')
-			assertEqual(std.heightIn, 5.625, 'LAYOUT_16x9 .heightIn is 5.625in')
 		},
 	},
 	{

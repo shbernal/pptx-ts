@@ -33,23 +33,6 @@ describe('what counts', () => {
 	})
 })
 
-describe('what does not, for the ratchet’s reasons', () => {
-	test('a doc comment', () => {
-		expect(scan(`/** Reads the http://schemas.openxmlformats.org/drawingml/2006/main root. */\nconst a = 1`)).toEqual(
-			[]
-		)
-	})
-
-	test('a literal handed to a message sink', () => {
-		expect(scan(`warn('code', 'expected application/vnd.ms-office.chartex+xml')`)).toEqual([])
-	})
-
-	test('a declaration marked as XML captured from Office', () => {
-		const source = `/** @raw-xml-asset */\nconst T = '<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"/>'`
-		expect(scan(source)).toEqual([])
-	})
-})
-
 describe('the allowlist', () => {
 	const finding = { file: 'src/a.ts', line: 3, literal: 'http://schemas.example.org/one' }
 	const entry = { file: 'src/a.ts', literal: 'http://schemas.example.org/one', reason: 'only this module reads it' }

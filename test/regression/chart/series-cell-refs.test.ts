@@ -8,6 +8,8 @@ import { chartXml } from './chart-parts.ts'
 // made the two sides disagree from series 1 on: a `<c:tx>` naming series A's header, a `<c:val>`
 // range running backwards over series A's column, and `Sheet1!$A$2:$$1` for the categories.
 // Rendering survives on the inconsistent cache; "Edit Data" opens onto the wrong columns.
+// `chart-worksheet-invariant.test.ts` resolves every formula of that shape through the workbook;
+// what is left here is the shape of the unlabelled series and the stock and surface plots.
 
 /** `[{ name, labels?, values }]` with labels on the first series only. */
 const FIRST_LABELLED = [
@@ -41,29 +43,6 @@ function assertWellFormedRefs(xml: string, label: string): void {
 }
 
 defineRegressionSuite('Series worksheet references', [
-	{
-		name: 'a bar chart labelled on the first series only addresses each series its own column',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.addSlide().addChart(FIRST_LABELLED, { type: ChartType.bar, x: 1, y: 1, w: 6, h: 3 })
-			})
-			const xml = await chartXml(zip)
-			assertWellFormedRefs(xml, 'bar')
-			const sers = seriesBlocks(xml)
-			// Series names sit in the header row of each series' own column: B1, C1, D1.
-			const names = sers.map((ser) => ser.match(/<c:f>(Sheet1!\$[A-Z]+\$1)<\/c:f>/)?.[1])
-			assert(
-				JSON.stringify(names) === JSON.stringify(['Sheet1!$B$1', 'Sheet1!$C$1', 'Sheet1!$D$1']),
-				'each series names its own header cell; got ' + JSON.stringify(names)
-			)
-			// And each `<c:val>` spans the three category rows of its own column.
-			const vals = sers.map((ser) => ser.match(/<c:val><c:numRef><c:f>([^<]*)<\/c:f>/)?.[1])
-			assert(
-				JSON.stringify(vals) === JSON.stringify(['Sheet1!$B$2:$B$4', 'Sheet1!$C$2:$C$4', 'Sheet1!$D$2:$D$4']),
-				'each series reads its own column over the sheet rows; got ' + JSON.stringify(vals)
-			)
-		},
-	},
 	{
 		name: 'an unlabelled series states no categories rather than an empty range',
 		fn: async () => {

@@ -1,5 +1,5 @@
 import {
-	setDiagnosticHandler,
+	captureDiagnostics,
 	build,
 	readEntry,
 	listEntries,
@@ -38,17 +38,9 @@ import type PptxTs from '../../../dist/node.js'
 
 /** Build, capturing library warnings (`log.ts` routes every one through `console.warn`). */
 async function buildCapturingWarnings(buildFn: (pres: PptxTs) => unknown) {
-	const warnings: string[] = []
-	setDiagnosticHandler((d) => warnings.push(d.message))
-	try {
-		const result = await build(buildFn)
-		return { ...result, warnings }
-	} finally {
-		setDiagnosticHandler(null)
-	}
+	const { result, messages } = await captureDiagnostics(() => build(buildFn))
+	return { ...result, warnings: messages }
 }
-
-const attrs = (tag: string): Record<string, string> => xmlAttributes(tag)
 
 /** Assert the package carries no trace of a comment: no parts, no rels target, no content type. */
 function assertNoComments(zip: JSZip, contentTypes: string) {
@@ -60,12 +52,12 @@ function assertNoComments(zip: JSZip, contentTypes: string) {
 
 /** Every `<p:cmAuthor>` in the deck-wide registry, as an attribute map. */
 async function commentAuthors(zip: JSZip) {
-	return selfClosingTags(await readEntry(zip, 'ppt/commentAuthors.xml'), 'p:cmAuthor').map(attrs)
+	return selfClosingTags(await readEntry(zip, 'ppt/commentAuthors.xml'), 'p:cmAuthor').map(xmlAttributes)
 }
 
 /** Every `<p:cm>` on slide 1, as an attribute map (the element wraps `p:pos`/`p:text`). */
 async function commentsOnSlide1(zip: JSZip) {
-	return xmlOpeningTags(await readEntry(zip, 'ppt/comments/comment1.xml'), 'p:cm').map(attrs)
+	return xmlOpeningTags(await readEntry(zip, 'ppt/comments/comment1.xml'), 'p:cm').map(xmlAttributes)
 }
 
 defineRegressionSuite('Comment definition', [

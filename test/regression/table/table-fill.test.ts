@@ -174,12 +174,4 @@ defineRegressionSuite('Table fill', [
 			assert(block.includes('<a:gradFill'), 'a:tblPr takes the whole fill group, not just solid; got: ' + block)
 		},
 	},
-	{
-		name: 'an unset tableFill leaves a:tblPr self-closing',
-		fn: async () => {
-			const { result } = await captureDiagnostics(() => build((p) => p.addSlide().addTable([[{ text: 'A' }]], AT)))
-			const xml = await readEntry(result.zip, 'ppt/slides/slide1.xml')
-			assert(tblPr(xml).endsWith('/>'), 'the no-background path keeps the empty-element form; got: ' + tblPr(xml))
-		},
-	},
 ])

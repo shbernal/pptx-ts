@@ -9,20 +9,13 @@ import {
 	assertXmlOrder,
 	captureDiagnostics,
 	firstXmlBlock,
-	asError,
-	type ThrownError,
+	caught,
 } from '../../helpers.ts'
 
 async function expectBuildError(buildFn: (pres: PptxTs) => unknown, expectedMessage: string) {
-	let err: ThrownError | undefined
-	try {
-		await build(buildFn)
-	} catch (e) {
-		err = asError(e)
-	}
+	const err = await caught(() => build(buildFn))
 	assert(err, 'expected build to fail')
-	const message = String(err?.message || err)
-	assert(message.includes(expectedMessage), `expected error to include "${expectedMessage}"; got: ${message}`)
+	assert(err.message.includes(expectedMessage), `expected error to include "${expectedMessage}"; got: ${err.message}`)
 }
 
 defineRegressionSuite('Gradient fills', [

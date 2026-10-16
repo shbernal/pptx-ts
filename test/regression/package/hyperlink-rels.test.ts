@@ -26,12 +26,6 @@ type BuildFn = (pres: PptxTs) => unknown
 // its second visit, which is right when the second visit is the same slide (a reused cell
 // object) and wrong when it is a new slide (a repeated header row), because a relationship
 // id only means anything inside the part that declares it. Both directions are pinned below.
-//
-// Two arms of the walk stay uncovered on purpose, because no caller reaches them: the bail-out
-// for a plain string/number `text`, and the fall-through for a `text` that is neither array nor
-// object. Every entry point (`addShape`, `addText`, `addTable`) hands the walker an object or an
-// array of them, and both recursive calls are guarded by `Array.isArray`. Unreachable by
-// construction per docs/contributing/testing.md, so left red rather than fenced.
 
 const relsPath = (n: number) => `ppt/slides/_rels/slide${n}.xml.rels`
 

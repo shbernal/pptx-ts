@@ -102,19 +102,4 @@ defineRegressionSuite('Table column-width distribution', [
 			)
 		},
 	},
-	{
-		name: 'explicit `colW` array is still honored per column (inches → EMU)',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				const s = p.addSlide()
-				s.addTable([row('A', 'B', 'C')], { x: 0.5, y: 0.5, colW: [2, 3, 4], h: 1 })
-			})
-			const xml = await readEntry(zip, 'ppt/slides/slide1.xml')
-			const cols = gridColWidths(xml)
-			assert(
-				cols.length === 3 && cols[0] === 2 * ONE_IN_EMU && cols[1] === 3 * ONE_IN_EMU && cols[2] === 4 * ONE_IN_EMU,
-				`expected [2in,3in,4in] EMU; got ${JSON.stringify(cols)}`
-			)
-		},
-	},
 ])

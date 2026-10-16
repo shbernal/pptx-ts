@@ -1,9 +1,4 @@
-import type JSZip from 'jszip'
-import { defineRegressionSuite, build, readEntry, assert } from '../../helpers.ts'
-
-async function getSlide1(zip: JSZip) {
-	return readEntry(zip, 'ppt/slides/slide1.xml')
-}
+import { defineRegressionSuite, assert, slideXml } from '../../helpers.ts'
 
 // Extract the first <a:t>...</a:t> block (text run text) from slide1.xml
 function firstATText(xml: string) {
@@ -23,11 +18,9 @@ defineRegressionSuite('Bullet glyph normalization [legacy bug-09]', [
 	{
 		name: 'addText("• item",{bullet:true}) strips leading bullet glyph from <a:t> while keeping <a:buChar/>',
 		fn: async () => {
-			const { zip } = await build((p) => {
-				const s = p.addSlide()
-				s.addText('\u2022 item', { x: 1, y: 1, w: 4, h: 1, bullet: true })
+			const xml = await slideXml((p) => {
+				p.addSlide().addText('\u2022 item', { x: 1, y: 1, w: 4, h: 1, bullet: true })
 			})
-			const xml = await getSlide1(zip)
 			const ppr = firstPPr(xml)
 			const tText = firstATText(xml)
 			assert(/<a:buChar char="&#x2022;"\/>/.test(ppr), 'expected <a:buChar char="&#x2022;"/> on <a:pPr>; got: ' + ppr)
@@ -40,11 +33,9 @@ defineRegressionSuite('Bullet glyph normalization [legacy bug-09]', [
 	{
 		name: 'mid-text bullet glyph "a • b" is preserved when bullet:true',
 		fn: async () => {
-			const { zip } = await build((p) => {
-				const s = p.addSlide()
-				s.addText('a \u2022 b', { x: 1, y: 1, w: 4, h: 1, bullet: true })
+			const xml = await slideXml((p) => {
+				p.addSlide().addText('a \u2022 b', { x: 1, y: 1, w: 4, h: 1, bullet: true })
 			})
-			const xml = await getSlide1(zip)
 			const tText = firstATText(xml)
 			assert(tText === 'a \u2022 b', 'expected mid-text bullet preserved; got: ' + JSON.stringify(tText))
 		},
@@ -52,11 +43,9 @@ defineRegressionSuite('Bullet glyph normalization [legacy bug-09]', [
 	{
 		name: 'bullet:false preserves leading bullet glyph (user opted out of bullet markup)',
 		fn: async () => {
-			const { zip } = await build((p) => {
-				const s = p.addSlide()
-				s.addText('\u2022 item', { x: 1, y: 1, w: 4, h: 1, bullet: false })
+			const xml = await slideXml((p) => {
+				p.addSlide().addText('\u2022 item', { x: 1, y: 1, w: 4, h: 1, bullet: false })
 			})
-			const xml = await getSlide1(zip)
 			const tText = firstATText(xml)
 			assert(tText === '\u2022 item', 'expected bullet:false preserves leading glyph; got: ' + JSON.stringify(tText))
 		},
@@ -64,16 +53,16 @@ defineRegressionSuite('Bullet glyph normalization [legacy bug-09]', [
 	{
 		name: 'variant glyphs (◦, ▪) are also stripped when bullet:true',
 		fn: async () => {
-			const { zip: zipHollow } = await build((p) => {
-				const s = p.addSlide()
-				s.addText('\u25E6 a', { x: 1, y: 1, w: 4, h: 1, bullet: true })
-			})
-			const { zip: zipSquare } = await build((p) => {
-				const s = p.addSlide()
-				s.addText('\u25AA b', { x: 1, y: 1, w: 4, h: 1, bullet: true })
-			})
-			const tHollow = firstATText(await getSlide1(zipHollow))
-			const tSquare = firstATText(await getSlide1(zipSquare))
+			const tHollow = firstATText(
+				await slideXml((p) => {
+					p.addSlide().addText('\u25E6 a', { x: 1, y: 1, w: 4, h: 1, bullet: true })
+				})
+			)
+			const tSquare = firstATText(
+				await slideXml((p) => {
+					p.addSlide().addText('\u25AA b', { x: 1, y: 1, w: 4, h: 1, bullet: true })
+				})
+			)
 			assert(tHollow === 'a', 'expected hollow-circle glyph stripped; got: ' + JSON.stringify(tHollow))
 			assert(tSquare === 'b', 'expected black-small-square glyph stripped; got: ' + JSON.stringify(tSquare))
 		},
