@@ -1,7 +1,7 @@
 ---
 doc-schema-version: 1
 title: "Agent pipeline"
-summary: "The GitHub App identities, secrets, kill switch and labels the issue-to-merge agent workflows run on."
+summary: "The GitHub App identities, labels and workflows that turn the maintainer's issues into agent pull requests, and how to pause or step in."
 read_when:
   - Changing an agent workflow or its secrets
   - Pausing the agents or stepping in on an agent issue or PR
@@ -57,3 +57,64 @@ on the same page, then delete the local `.pem`.
 | `needs-maintainer` | An agent stopped and the maintainer has to decide |
 
 The repository allows auto-merge and deletes a PR's branch once it merges.
+
+## Implementer
+
+`.github/workflows/agent-implement.yml` turns an issue labelled `agent:ready` into a PR. It
+runs when the label is added, every two hours as a sweep over the queue, and on manual
+dispatch.
+
+### What starts it
+
+The workflow only goes ahead when all of these hold:
+
+- `AGENTS_ENABLED` is `true`.
+- The issue is open and was opened by `shbernal`. Any other author is turned away, whoever
+  added the label.
+- On a label event, the label was added by `shbernal` or `pptx-ts-agents[bot]`.
+- No open PR already closes the issue.
+- Fewer than two PRs labelled `agent:pr` are open. Otherwise the issue keeps `agent:ready`
+  and the sweep takes it once one merges. The sweep picks the oldest queued issue.
+
+One run goes at a time.
+
+### What it does
+
+The issue moves from `agent:ready` to `agent:working`. Claude Code works on branch
+`agent/issue-N` with the job's read-only token. It can read the repository and issues, edit
+files and run `pnpm run` scripts, but has no credential to commit, push or open a PR. It
+ends with one of three outcomes:
+
+- `pr`: the workflow runs `pnpm run verify` itself, commits as `pptx-ts-agents[bot]` with a
+  Conventional Commit subject, pushes and opens a PR labelled `agent:pr`. The body follows
+  the PR template: AI involvement is "Mostly written by an AI agent", and the verify box is
+  ticked only if that run passed. Auto-merge (squash) is armed.
+- `blocked`: the issue needs an API or scope decision, desktop PowerPoint, or a change under
+  `.github/`.
+- `already-fixed`: the current code already does what the issue asks.
+
+On `blocked` or `already-fixed`, a fix that turned out empty, or a failed run (timeout,
+usage limit, error), the issue gets a comment with the reason or the run link, and
+`needs-maintainer`.
+
+### Protected paths
+
+A PR that changes any of these gets `needs-maintainer` and a comment listing them, and
+auto-merge stays off:
+
+- `.github/`
+- `package.json` outside `devDependencies`
+- `scripts/release*` and `scripts/sync-version.mjs`
+- `tsdown.config.ts`
+- `CHANGELOG.md`
+
+### Rerunning
+
+To run it again on an issue, for example after answering a `blocked` comment:
+
+```sh
+gh issue edit N --remove-label needs-maintainer
+gh workflow run agent-implement.yml -f issue_number=N
+```
+
+Dispatch skips the label checks but not the author, open-PR and cap checks.
