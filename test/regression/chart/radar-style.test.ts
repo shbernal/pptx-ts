@@ -1,87 +1,55 @@
 import { ChartType, type ChartOpts } from '../../../dist/node.js'
-import type JSZip from 'jszip'
-import { defineRegressionSuite, build, readEntry, listEntries, assert, captureDiagnostics } from '../../helpers.ts'
+import {
+	defineRegressionSuite,
+	build,
+	assert,
+	assertIncludes,
+	assertNotIncludes,
+	captureDiagnostics,
+} from '../../helpers.ts'
+import { chartXml } from './chart-parts.ts'
 
 const DATA = [{ name: 'Region', labels: ['North', 'South', 'East'], values: [10, 20, 30] }]
 
-function chartPart(zip: JSZip): Promise<string> {
-	const path = listEntries(zip).find((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))
-	assert(path, 'no chart part found in package: ' + listEntries(zip).join(', '))
-	return readEntry(zip, path)
-}
-
-async function radarXml(radarStyle: NonNullable<ChartOpts['radarStyle']>): Promise<string> {
-	const { zip } = await build((p) => {
-		p.addSlide().addChart(DATA, { type: ChartType.radar, radarStyle, x: 1, y: 1, w: 6, h: 4 })
+/** The radar chart part for one `radarStyle`, with the diagnostics its build raised. */
+function radarXml(radarStyle: ChartOpts['radarStyle']) {
+	return captureDiagnostics(async () => {
+		const { zip } = await build((p) => {
+			p.addSlide().addChart(DATA, { type: ChartType.radar, ...(radarStyle && { radarStyle }), x: 1, y: 1, w: 6, h: 4 })
+		})
+		return chartXml(zip)
 	})
-	return chartPart(zip)
 }
 
 defineRegressionSuite('radarStyle values', [
 	{
-		name: 'canonical \'radar\' emits ST_RadarStyle val="standard"',
+		// `radar` and `markers` are this library's spellings; `marker` and `filled` are the schema's,
+		// and `marker` is what the chart part shows, so it is the obvious guess. It used to warn and
+		// fall back to a plain radar.
+		name: 'each accepted spelling emits its ST_RadarStyle value without a diagnostic, and an absent one is standard',
 		fn: async () => {
-			const xml = await radarXml('radar')
-			assert(
-				xml.includes('<c:radarStyle val="standard"/>'),
-				'expected val="standard" from radar; got: ' + xml.slice(0, 300)
-			)
-		},
-	},
-	{
-		name: 'canonical \'markers\' emits ST_RadarStyle val="marker"',
-		fn: async () => {
-			const xml = await radarXml('markers')
-			assert(
-				xml.includes('<c:radarStyle val="marker"/>'),
-				'expected val="marker" from markers; got: ' + xml.slice(0, 300)
-			)
-		},
-	},
-	{
-		name: '\'filled\' emits ST_RadarStyle val="filled"',
-		fn: async () => {
-			const xml = await radarXml('filled')
-			assert(xml.includes('<c:radarStyle val="filled"/>'), 'expected val="filled"; got: ' + xml.slice(0, 300))
-		},
-	},
-	{
-		// The case that made this an alias rather than a typo: `marker` is what the chart part
-		// shows, so it is the obvious guess, and it used to warn and fall back to a plain radar.
-		name: "the wire spelling 'marker' is accepted as itself",
-		fn: async () => {
-			const { result: xml, codes } = await captureDiagnostics(() => radarXml('marker'))
-			assert(
-				xml.includes('<c:radarStyle val="marker"/>'),
-				'expected val="marker" from marker; got: ' + xml.slice(0, 300)
-			)
-			assert(codes.length === 0, 'a wire spelling is not a diagnostic; got ' + JSON.stringify(codes))
+			const cases: [ChartOpts['radarStyle'], string][] = [
+				['radar', 'standard'],
+				['markers', 'marker'],
+				['marker', 'marker'],
+				['filled', 'filled'],
+				[undefined, 'standard'],
+			]
+			for (const [input, wire] of cases) {
+				const { result: xml, codes } = await radarXml(input)
+				assertIncludes(xml, `<c:radarStyle val="${wire}"/>`, `${String(input)} emits ${wire}`)
+				assert(codes.length === 0, `${String(input)} is not a diagnostic; got ${JSON.stringify(codes)}`)
+			}
 		},
 	},
 	{
 		name: 'an unknown radarStyle warns and falls back to standard',
 		fn: async () => {
 			// @ts-expect-error 'spider' is not a radarStyle spelling
-			const { result: xml, codes } = await captureDiagnostics(() => radarXml('spider'))
-			assert(!xml.includes('spider'), 'the bad value must not reach the part; got: ' + xml.slice(0, 300))
-			assert(
-				xml.includes('<c:radarStyle val="standard"/>'),
-				'expected the standard fallback; got: ' + xml.slice(0, 300)
-			)
+			const { result: xml, codes } = await radarXml('spider')
+			assertNotIncludes(xml, 'spider', 'the bad value must not reach the part')
+			assertIncludes(xml, '<c:radarStyle val="standard"/>', 'the standard fallback')
 			assert(codes.includes('chart/invalid-option-value'), 'and the caller is told; got ' + JSON.stringify(codes))
-		},
-	},
-	{
-		name: 'default (no radarStyle) falls back to standard',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.addSlide().addChart(DATA, { type: ChartType.radar, x: 1, y: 1, w: 6, h: 4 })
-			})
-			const xml = await chartPart(zip)
-			assert(
-				xml.includes('<c:radarStyle val="standard"/>'),
-				'expected default val="standard"; got: ' + xml.slice(0, 300)
-			)
 		},
 	},
 ])

@@ -456,17 +456,11 @@ describe('standalone printer — the fidelity contract', () => {
 		// The honest result of this tier, stated as an assertion rather than as prose: rebuilding
 		// a deck's design from the read model loses the theme's format scheme, the master's text
 		// styles, the layouts' decoration and their placeholder definitions, and every one of
-		// those has to say so.
+		// those has to say so. `theme.fmtScheme`, `master.txStyles`, `master.placeholders` and
+		// `deck.docProps` are pinned for both tiers by script-roundtrip.test.ts; these two are not.
 		const printed = printStandaloneScript(await irFor('mixed.pptx'))
 		const constructs = new Set(printed.notes.map((note) => note.construct))
-		for (const construct of [
-			'theme.fmtScheme',
-			'master.txStyles',
-			'master.decoration',
-			'master.placeholders',
-			'master.default',
-			'deck.docProps',
-		]) {
+		for (const construct of ['master.decoration', 'master.default']) {
 			assert(constructs.has(construct), `a standalone script must declare ${construct}`)
 		}
 	})

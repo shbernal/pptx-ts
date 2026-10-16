@@ -21,7 +21,6 @@ import {
 	FIRST,
 	PNG,
 	SECOND,
-	addSlideBuild,
 	asyncBuild,
 	conciseBuild,
 	imageBuild,
@@ -30,11 +29,7 @@ import {
 } from './comparison-source.fixtures.mjs'
 
 describe('functionBody', () => {
-	test('drops the arrow wrapper and the indentation the corpus nests it in', () => {
-		expect(functionBody(addSlideBuild)).toBe('pres.addSlide()')
-	})
-
-	test('keeps relative depth inside a multi-line body', () => {
+	test('drops the arrow wrapper and keeps relative depth inside a multi-line body', () => {
 		expect(functionBody(multiLineBuild)).toBe("pres.addSlide().addText('probe', {\n\tx: 1,\n})")
 	})
 

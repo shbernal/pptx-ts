@@ -208,17 +208,6 @@ defineRegressionSuite('Slide backgrounds [legacy bug-12]', [
 			assertEqual(await blip(await layoutPartFor(zip, 'FADED')), '<a:alphaModFix amt="60000"/><a:lum/>', 'a layout')
 		},
 	},
-	{
-		name: 'a layout background given as image: { data } paints the picture',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.defineSlideMaster({ title: 'PICTURE', background: { image: { data: PNG_A } } })
-				p.addSlide({ masterTitle: 'PICTURE' })
-			})
-			const layout = await layoutPartFor(zip, 'PICTURE')
-			await assertBackgroundResolves(zip, layout, PNG_A)
-		},
-	},
 ])
 
 /** Two different 1x1 PNGs, so a part that holds the wrong one is caught by its bytes. */

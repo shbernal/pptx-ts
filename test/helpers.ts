@@ -150,12 +150,8 @@ interface RegressionCase {
 /**
  * Declare a regression suite from an array of `{ name, fn }` cases.
  *
- * **One signature.** There used to be two — a three-argument form carrying a provenance tag
- * (`'legacy bug-14'`, `'upstream-issue-1451'`) which was destructured out and then dropped on
- * the floor, so thirty-six suites recorded where their regression came from in a string that
- * reached no reporter and no reader who was not looking at the call site. Those tags are now
- * part of the suite name, where they are visible; a second positional argument is an error
- * rather than a silently ignored one.
+ * **Provenance goes in the suite name** (`'Object identity [legacy bug-21]'`), where a reporter
+ * shows it.
  *
  * **`fn` is handed to vitest as-is**, not wrapped in `async () => await fixture.fn()`. The
  * wrapper put this file at the top of every regression failure's stack, above the case that
@@ -168,17 +164,6 @@ interface RegressionCase {
  * process-wide, and their safety rests on cases within a file running serially.
  */
 function defineRegressionSuite(suiteName: string, cases: readonly RegressionCase[]): void {
-	// Tested through an `unknown` copy: `Array.isArray` narrows its argument to `any[]`, which
-	// would make every `fixture` below `any` and hide the type this signature declares.
-	const given: unknown = cases
-	if (!Array.isArray(given)) {
-		throw new Error(
-			`defineRegressionSuite(${JSON.stringify(suiteName)}, …) takes an array of test cases as its ` +
-				'second argument. The three-argument form carrying a provenance tag is gone — fold the tag ' +
-				'into the suite name, where it is actually reported.'
-		)
-	}
-
 	describe(suiteName, () => {
 		for (const fixture of cases) {
 			if (fixture.todo) {

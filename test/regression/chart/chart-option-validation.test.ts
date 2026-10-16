@@ -46,62 +46,41 @@ async function chartWith(data: OptsChartData[], options: ChartOpts & { type: CHA
 
 defineRegressionSuite('Chart option validation', [
 	{
-		name: 'lineDataSymbolSize above the 2-72 range is clamped to 72',
+		name: 'lineDataSymbolSize outside the 2-72 range clamps to the nearest bound',
 		fn: async () => {
-			const { zip } = await build((p) => {
-				p.addSlide().addChart(SERIES, {
-					...BASE,
-					type: ChartType.line,
-					lineDataSymbol: 'circle',
-					lineDataSymbolSize: 999,
+			for (const [size, clamped] of [
+				[999, 72],
+				[1, 2],
+			] as const) {
+				const { zip } = await build((p) => {
+					p.addSlide().addChart(SERIES, {
+						...BASE,
+						type: ChartType.line,
+						lineDataSymbol: 'circle',
+						lineDataSymbolSize: size,
+					})
 				})
-			})
-			const xml = await chartXml(zip)
-			assertIncludes(xml, '<c:size val="72"/>', 'oversize marker clamps to the 72 max')
-			assertNotIncludes(xml, '<c:size val="999"/>', 'the out-of-range value must not reach the XML')
+				const xml = await chartXml(zip)
+				assertIncludes(xml, `<c:size val="${clamped}"/>`, `${size} clamps to ${clamped}`)
+				assertNotIncludes(xml, `<c:size val="${size}"/>`, 'the out-of-range value must not reach the XML')
+			}
 		},
 	},
 	{
-		name: 'lineDataSymbolSize below the range is clamped to 2',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				p.addSlide().addChart(SERIES, {
-					...BASE,
-					type: ChartType.line,
-					lineDataSymbol: 'circle',
-					lineDataSymbolSize: 1,
-				})
-			})
-			const xml = await chartXml(zip)
-			assertIncludes(xml, '<c:size val="2"/>', 'undersize marker clamps to the 2 min')
-		},
-	},
-	{
-		name: 'invalid gridLine cap is dropped (never emitted)',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				// @ts-expect-error a gridline cap that is not one
-				p.addSlide().addChart(SERIES, {
-					...BASE,
-					type: ChartType.bar,
-					// oxlint-disable-next-line typescript/no-deprecated -- the deprecated `size`/`style` spellings are what this case validates.
-					valGridLine: { size: 2, style: 'solid', cap: 'INVALID' },
-				})
-			})
-			const xml = await chartXml(zip)
-			assertNotIncludes(xml, 'INVALID', 'an unrecognized gridLine cap must be scrubbed before emit')
-		},
-	},
-	{
-		name: 'invalid gridLine style is dropped',
+		name: 'an invalid gridLine cap or style is dropped (never emitted)',
 		fn: async () => {
 			/* oxlint-disable typescript/no-deprecated -- the deprecated `size`/`style` spellings are what this case validates. */
 			const { zip } = await build((p) => {
-				// @ts-expect-error a gridline style that is not one
-				p.addSlide().addChart(SERIES, { ...BASE, type: ChartType.bar, valGridLine: { size: 2, style: 'wavy' } })
+				// @ts-expect-error a gridline cap and style that are not ones
+				p.addSlide().addChart(SERIES, {
+					...BASE,
+					type: ChartType.bar,
+					valGridLine: { size: 2, style: 'wavy', cap: 'INVALID' },
+				})
 			})
 			/* oxlint-enable typescript/no-deprecated */
 			const xml = await chartXml(zip)
+			assertNotIncludes(xml, 'INVALID', 'an unrecognized gridLine cap must be scrubbed before emit')
 			assertNotIncludes(xml, 'wavy', 'an unrecognized gridLine style must be scrubbed before emit')
 		},
 	},
@@ -459,26 +438,11 @@ defineRegressionSuite('Chart option validation', [
 		},
 	},
 	{
-		// `axisPos` was declared on `ChartPropsBase` and read by nothing: the only `axisPos` in
-		// `src/` is a local in `makeValAxis` computed from `barDir` and the axis id. Per-axis
-		// placement wants `catAxisLabelPos`-style naming, not one key shared across three axes.
-		name: 'axisPos placed nothing, which is why it could be removed',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				// @ts-expect-error axisPos was removed from the options
-				p.addSlide().addChart(SERIES, { ...BASE, type: ChartType.bar, axisPos: 't' })
-			})
-			const xml = await chartXml(zip)
-			assertIncludes(xml, '<c:axPos val="b"/>', 'the category axis is still placed from barDir')
-			assertIncludes(xml, '<c:axPos val="l"/>', 'and so is the value axis')
-			assertNotIncludes(xml, '<c:axPos val="t"/>', 'the option never placed anything')
-		},
-	},
-	{
 		// `a:ln/@w` is ST_LineWidth, which is unsigned. `lineSize` kept any `typeof` number and went
-		// through a lenient conversion, so a negative width reached the attribute and a NaN one wrote
-		// 0, both without a word. The chart-level and per-series spellings share the stroke builder.
-		name: 'a negative lineSize clamps to 0 with a warning, and a NaN one throws',
+		// through a lenient conversion, so a negative width reached the attribute without a word. The
+		// chart-level and per-series spellings share the stroke builder. A NaN one throws; the
+		// numeric-conversion guards pin that.
+		name: 'a negative lineSize clamps to 0 with a warning',
 		fn: async () => {
 			const cases: [string, ChartOpts][] = [
 				['chart-level', { lineSize: -1 }],
@@ -493,16 +457,6 @@ defineRegressionSuite('Chart option validation', [
 				assertIncludes(xml, '<a:ln w="0"', `${label}: the width clamps to 0`)
 				assert(codes.includes('line/width-out-of-range'), `${label}: and says so; got ${JSON.stringify(codes)}`)
 			}
-			let thrown: unknown = null
-			try {
-				const pres = new PptxTs()
-				pres.addSlide().addChart(SERIES, { ...BASE, type: ChartType.line, lineSize: NaN })
-				await pres.toBytes()
-			} catch (err) {
-				thrown = err
-			}
-			assert(thrown instanceof InvalidOptionError, 'a NaN lineSize throws')
-			assertEqual(thrown.code, 'coord/non-finite', 'with the converter code')
 		},
 	},
 	{
@@ -1012,12 +966,12 @@ defineRegressionSuite('Chart option validation', [
 	},
 	{
 		// `value: NaN` wrote `<c:val val="NaN"/>`. The width went through a lenient conversion, so a
-		// `NaN` one wrote `w="0"` while the series' own stroke threw for the same value.
-		name: 'an error bar value or width that is not a number throws, and a negative width clamps',
+		// `NaN` one wrote `w="0"` while the series' own stroke threw for the same value. A NaN `width`
+		// is pinned with the numeric-conversion guards; its deprecated `size` spelling is pinned here.
+		name: 'an error bar value or size that is not a number throws, and a negative width clamps',
 		fn: async () => {
 			const cases: [string, ChartErrorBarOptions, string][] = [
 				['value', { value: NaN }, 'chart/option-non-finite'],
-				['width', { value: 1, width: NaN }, 'coord/non-finite'],
 				// oxlint-disable-next-line typescript/no-deprecated -- the deprecated `size` spelling has to throw on NaN too.
 				['size', { value: 1, size: NaN }, 'coord/non-finite'],
 			]

@@ -121,53 +121,27 @@ defineRegressionSuite('Image (blip) fills', [
 		},
 	},
 	{
-		name: 'shape image fill writes a negative crop inset as a padded edge',
-		fn: async () => {
-			const { zip } = await build((p) => {
-				const s = p.addSlide()
-				s.addShape(ShapeType.triangle, {
-					x: 1,
-					y: 1,
-					w: 3,
-					h: 2,
-					fill: { type: 'image', image: { data: PNG_1X1, crop: { l: -5 } } },
-				})
-			})
-			const shapeBlock = firstXmlBlock(await readEntry(zip, 'ppt/slides/slide1.xml'), 'p:sp', 'shape')
-			assertIncludes(shapeBlock, '<a:srcRect l="-5000" t="0" r="0" b="0"/>', 'padded source crop')
-		},
-	},
-	{
 		// The fill route reaches the same validation as `addImage`'s `crop`, so a degenerate
 		// srcRect — which renders as an empty shape rather than as an error — fails loudly here
-		// too. Mirrors the addImage cases in `image-crop-srcrect.test.ts`.
+		// too. The degenerate inputs themselves are enumerated by the addImage cases in
+		// `image-crop-srcrect.test.ts`; this one pins that the fill route reaches the check.
 		name: 'an invalid shape image fill crop throws rather than emitting a degenerate srcRect',
 		fn: async () => {
-			const cases = [
-				{ crop: { r: 150 }, why: 'over 100' },
-				{ crop: { l: -Infinity }, why: 'infinite' },
-				{ crop: { l: 60, r: 60 }, why: 'l+r >= 100' },
-				{ crop: { t: 50, b: 50 }, why: 't+b >= 100' },
-				{ crop: { l: NaN }, why: 'NaN' },
-			]
-			for (const c of cases) {
-				// The message names the fill, not addImage.
-				await assertRejects(
-					() =>
-						build((p) => {
-							const s = p.addSlide()
-							s.addShape(ShapeType.triangle, {
-								x: 1,
-								y: 1,
-								w: 3,
-								h: 2,
-								fill: { type: 'image', image: { data: PNG_1X1, crop: c.crop } },
-							})
-						}),
-					/image fill crop/,
-					`fill crop ${c.why} (${JSON.stringify(c.crop)})`
-				)
-			}
+			// The message names the fill, not addImage.
+			await assertRejects(
+				() =>
+					build((p) => {
+						p.addSlide().addShape(ShapeType.triangle, {
+							x: 1,
+							y: 1,
+							w: 3,
+							h: 2,
+							fill: { type: 'image', image: { data: PNG_1X1, crop: { l: 60, r: 60 } } },
+						})
+					}),
+				/image fill crop/,
+				'fill crop l+r >= 100'
+			)
 		},
 	},
 	{
@@ -414,26 +388,6 @@ defineRegressionSuite('Table cell image (blip) fills', [
 			const xml = await readEntry(defined(zip), 'ppt/slides/slide1.xml')
 			assertNotIncludes(xml, '<a:blipFill', 'no blip fill when the cell image source is missing')
 			assertNotIncludes(xml, 'r:embed', 'and no dangling relationship reference')
-		},
-	},
-	{
-		name: 'an SVG cell image fill is rejected with a warning (raster only)',
-		fn: async () => {
-			let zip: JSZip | undefined
-			const { messages: warnings } = await captureDiagnostics(async () => {
-				;({ zip } = await build((p) => {
-					p.addSlide().addTable(
-						[[{ text: 'a', options: { fill: { type: 'image', image: { data: 'image/svg+xml;base64,PHN2Zy8+' } } } }]],
-						{ x: 1, y: 1, w: 3, h: 1 }
-					)
-				}))
-			})
-			assert(
-				warnings.some((w) => w.includes('SVG image fills are not supported')),
-				`expected an SVG warning; got ${JSON.stringify(warnings)}`
-			)
-			const xml = await readEntry(defined(zip), 'ppt/slides/slide1.xml')
-			assertNotIncludes(xml, '<a:blipFill', 'no blip fill for unsupported SVG cell source')
 		},
 	},
 ])

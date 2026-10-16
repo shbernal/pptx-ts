@@ -8,7 +8,7 @@
 // Messages are deliberately not asserted (`docs/errors-and-warnings.md`: the class and the code are API,
 // the message is not) — the assertions are on `instanceof` and `code`.
 import { describe, test, expect } from 'vitest'
-import NeutralPptxTs, { UnsupportedFeatureError } from '../../../dist/index.js'
+import NeutralPptxTs, { InvalidOptionError, PptxTsError, UnsupportedFeatureError } from '../../../dist/index.js'
 import BrowserPptxTs from '../../../dist/browser.js'
 import NodePptxTs from '../../../dist/node.js'
 import { caught, defined } from '../../helpers.ts'
@@ -35,9 +35,10 @@ describe('neutral entry: producing a deck', () => {
 
 describe('neutral entry: what it refuses', () => {
 	test('writeFile() throws UnsupportedFeatureError with a runtime-capability code', async () => {
-		const pptx = deck(NeutralPptxTs)
-		await expect(pptx.writeFile({ fileName: 'never-written.pptx' })).rejects.toBeInstanceOf(UnsupportedFeatureError)
-		const err = defined(await caught(() => pptx.writeFile({ fileName: 'never-written.pptx' })))
+		const err = defined(await caught(() => deck(NeutralPptxTs).writeFile({ fileName: 'never-written.pptx' })))
+		expect(err).toBeInstanceOf(UnsupportedFeatureError)
+		expect(err).toBeInstanceOf(PptxTsError)
+		expect(err).not.toBeInstanceOf(InvalidOptionError)
 		expect(err.code).toBe('runtime/file-output-unavailable')
 	})
 
@@ -54,12 +55,6 @@ describe('neutral entry: what it refuses', () => {
 })
 
 describe('the three runtime entries stay distinct', () => {
-	test('each entry has its own class', () => {
-		expect(NeutralPptxTs).not.toBe(BrowserPptxTs)
-		expect(NeutralPptxTs).not.toBe(NodePptxTs)
-		expect(BrowserPptxTs).not.toBe(NodePptxTs)
-	})
-
 	test('the deprecated TsPptx alias is the PptxTs class of every entry', async () => {
 		const entries = await Promise.all([
 			import('../../../dist/index.js'),

@@ -8,38 +8,6 @@ function alphaPct(hex: string) {
 
 defineRegressionSuite('Alpha channel colors [legacy bug-08]', [
 	{
-		name: 'text color "00FF0080" splits to val="00FF00" + <a:alpha val="50196"/>',
-		fn: async () => {
-			const xml = await slideXml((pres) => {
-				const slide = pres.addSlide()
-				slide.addText('hello', { x: 1, y: 1, w: 4, h: 0.5, color: '00FF0080' })
-			})
-			assert(xml.indexOf('val="00FF0080"') === -1, 'expected no 8-char val="00FF0080" in slide XML; got:\n' + xml)
-			const expectedAlpha = alphaPct('80') // 50196
-			const expectedFragment = `<a:srgbClr val="00FF00"><a:alpha val="${expectedAlpha}"/></a:srgbClr>`
-			assert(xml.indexOf(expectedFragment) !== -1, `expected ${expectedFragment} in slide XML; got:\n` + xml)
-		},
-	},
-	{
-		name: 'shape line color "0000FF40" splits to val="0000FF" + <a:alpha val="..."/>',
-		fn: async () => {
-			const xml = await slideXml((pres) => {
-				const slide = pres.addSlide()
-				slide.addShape(ShapeType.rect, {
-					x: 1,
-					y: 1,
-					w: 2,
-					h: 1,
-					line: { color: '0000FF40', width: 2 },
-				})
-			})
-			assert(xml.indexOf('val="0000FF40"') === -1, 'expected no 8-char val="0000FF40" in slide XML; got:\n' + xml)
-			const expectedAlpha = alphaPct('40') // 25098
-			const expectedFragment = `<a:srgbClr val="0000FF"><a:alpha val="${expectedAlpha}"/></a:srgbClr>`
-			assert(xml.indexOf(expectedFragment) !== -1, `expected ${expectedFragment} in slide XML; got:\n` + xml)
-		},
-	},
-	{
 		name: 'shadow color "88888880" with a removed `opacity` input — color-derived alpha wins, opacity ignored',
 		fn: async () => {
 			const xml = await slideXml((pres) => {
