@@ -15,6 +15,18 @@ that acts with the default `GITHUB_TOKEN` starts no other workflow: a PR it open
 and a label it adds triggers nothing. Every hand-off between agents therefore goes through an
 app installation token.
 
+## Flow
+
+1. The maintainer opens an issue. Issue triage labels it and posts a report. If the issue is
+   suitable for an agent, triage also adds `agent:ready`.
+2. The implementer picks up the issue, opens a PR labelled `agent:pr` and arms auto-merge.
+3. The reviewer reviews the PR. Each review requesting changes, and each CI failure, starts
+   a fix round that pushes one more commit, up to three rounds.
+4. Once CI is green and the reviewer approves the latest commit, the PR squash-merges and
+   closes the issue.
+
+At any point an agent that cannot go on adds `needs-maintainer` and stops.
+
 ## Identities
 
 | App | Bot login | Repository permissions | Role |
@@ -66,12 +78,29 @@ on the same page, then delete the local `.pem`.
 
 | Label | Meaning |
 | --- | --- |
-| `agent:ready` | Issue queued for the implementer |
+| `agent:ready` | Issue queued for the implementer, by triage or the maintainer |
 | `agent:working` | The implementer is running on the issue |
 | `agent:pr` | PR opened by the implementer |
 | `needs-maintainer` | An agent stopped and the maintainer has to decide |
 
 The repository allows auto-merge and deletes a PR's branch once it merges.
+
+## Triage
+
+`.github/workflows/issue-triage.md` triages every new or reopened issue, from anyone. It
+writes as `pptx-ts-agents[bot]`, because a label added with the default token would not
+start the implementer. It adds `agent:ready` only when all of these hold:
+
+- `shbernal` opened the issue.
+- It judges the issue suitable for a coding agent: a minimal reproduction or a precise OOXML
+  target, clear success criteria, and a self-contained scope.
+- Its kind is `bug`, `enhancement` or `docs`.
+- It applies none of `needs-info`, `duplicate` or `invalid`.
+- It flags no security report, private data or unsupported setup.
+
+Triage reads issues from anyone and can be prompt-injected, so this list is not what keeps
+the agents off other people's issues: the implementer checks the author again itself. To
+queue an issue triage passed over, add `agent:ready` by hand.
 
 ## Implementer
 
