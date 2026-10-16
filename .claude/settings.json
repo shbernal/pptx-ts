@@ -1,0 +1,9 @@
+{
+	"attribution": {
+		"commit": "",
+		"pr": "",
+		"sessionUrl": false
+	},
+	"includeCoAuthoredBy": false,
+	"enabledMcpjsonServers": ["ooxml", "microsoft_learn"]
+}
