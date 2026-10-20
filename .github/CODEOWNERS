@@ -1,8 +1,9 @@
 # Changes here reach every user or the agent pipeline itself, so they need the maintainer's
 # review. Keep in step with .github/actions/agent-protected-paths and
-# docs/contributing/agent-pipeline.md.
+# docs/contributing/agent-pipeline.md. `package.json` is not listed: a devDependency update
+# may merge on the agent reviewer's approval, and the required `Protected paths` check
+# (.github/workflows/protected-paths.yml) holds every other change to it for the maintainer.
 /.github/ @shbernal
-/package.json @shbernal
 /scripts/release* @shbernal
 /scripts/sync-version.mjs @shbernal
 /tsdown.config.ts @shbernal

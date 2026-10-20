@@ -78,6 +78,21 @@
 			"groupName": "math (temml / mathml2omml)"
 		},
 		{
+			"description": "Hand devDependency updates and lock file maintenance to the agent reviewer (docs/contributing/agent-pipeline.md). `agent:deps` starts its review, and its approval with CI green merges the PR. Nothing here ships to consumers, so no human needs to look. temml and mathml2omml are excluded because they are also peer dependencies: their group edits `peerDependencies`, which stays with the maintainer.",
+			"matchDepTypes": ["devDependencies"],
+			"matchPackageNames": ["!temml", "!mathml2omml"],
+			"addLabels": ["agent:deps"],
+			"automerge": true,
+			"rebaseWhen": "conflicted"
+		},
+		{
+			"description": "Same hand-off for lock file maintenance. `rebaseWhen` overrides the `behind-base-branch` that `automerge` implies: each rebase is a push, which dismisses the approval and starts another review, and CI does not require a branch to be up to date.",
+			"matchUpdateTypes": ["lockFileMaintenance"],
+			"addLabels": ["agent:deps"],
+			"automerge": true,
+			"rebaseWhen": "conflicted"
+		},
+		{
 			"description": "Leave gh-aw lock files alone. `gh aw compile` writes them from the `.md` workflow beside them and pins their actions itself, so a Renovate edit would be silently undone by the next compile. Update them with `gh aw upgrade`.",
 			"matchFileNames": [".github/workflows/*.lock.yml"],
 			"enabled": false

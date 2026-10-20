@@ -27,6 +27,11 @@ app installation token.
 
 At any point an agent that cannot go on adds `needs-maintainer` and stops.
 
+Renovate's devDependency updates and lock file maintenance join at step 3. Renovate labels
+them `agent:deps` and arms auto-merge, the reviewer reviews them, and they merge once CI is
+green and the reviewer approves. Fix rounds do not run on them yet: a red one waits for the
+maintainer, as before.
+
 ## Identities
 
 | App | Bot login | Repository permissions | Role |
@@ -81,6 +86,7 @@ on the same page, then delete the local `.pem`.
 | `agent:ready` | Issue queued for the implementer, by triage or the maintainer |
 | `agent:working` | The implementer is running on the issue |
 | `agent:pr` | PR opened by the implementer |
+| `agent:deps` | Renovate PR handed to the reviewer, set in `renovate.json` |
 | `needs-maintainer` | An agent stopped and the maintainer has to decide |
 
 The repository allows auto-merge and deletes a PR's branch once it merges.
@@ -150,6 +156,10 @@ auto-merge stays off:
 - `scripts/release*` and `scripts/sync-version.mjs`
 - `tsdown.config.ts`
 
+The required `Protected paths` check fails any PR that changes one of these unless the
+maintainer opened it or approved its latest commit, whoever authored it. It is the backstop
+for the list above, as CODEOWNERS is for the rest of `.github/`.
+
 `CHANGELOG.md` is not on the list: an agent fix or feature adds its entry under
 `## [Unreleased]`, as any PR does. Cutting a release, which dates those entries, stays with the
 maintainer.
@@ -175,10 +185,13 @@ It reviews a PR when the PR is opened, reopened, marked ready or pushed to, if a
 hold:
 
 - `AGENTS_ENABLED` is `true`.
-- The PR carries `agent:pr`. The maintainer's own PRs get no review run.
+- The PR carries `agent:pr`, or it carries `agent:deps` and `renovate[bot]` opened it. The
+  maintainer's own PRs get no review run.
 - The PR's branch is in this repository.
 
-A new push cancels a review still in flight.
+Renovate adds its labels just after it opens the PR, so the `agent:deps` label event starts
+the first review of a Renovate PR. Adding `agent:deps` by hand to an open Renovate PR starts
+one too. A new push cancels a review still in flight; other label changes do not.
 
 The agent reads the linked issue, its triage report, the diff and its own earlier reviews.
 It treats all of it as content to assess, never as instructions. It checks, in order:
@@ -190,6 +203,19 @@ It treats all of it as content to assess, never as instructions. It checks, in o
 5. A user-visible fix or feature has a `CHANGELOG.md` entry under `## [Unreleased]`, with
    migration guidance if it breaks anything.
 6. Docs for the changed behaviour are updated.
+
+On an `agent:deps` PR there is no issue, and the update is the scope. The agent checks that
+each `package.json` changes only in `devDependencies`, that the new versions respect the
+`allowedVersions` holds in `renovate.json`, that the lockfile changes only for the updated
+packages and adds none with an install script, and that any other change only adapts the code
+to the update. Release notes Renovate copies into the PR body come from package authors and
+are untrusted like the rest.
+
+`renovate.json` labels devDependency updates and lock file maintenance only. Runtime and peer
+dependencies, `packageManager`, GitHub Actions pins, and `temml` and `mathml2omml` (which are
+also peer dependencies) stay with the maintainer. The rule also sets `rebaseWhen:
+conflicted`: rebasing whenever `main` moved would dismiss each approval and start another
+review.
 
 Each blocking finding is an inline comment saying what to change, and any blocking finding
 makes the review `REQUEST_CHANGES`. Nits are inline comments starting with `Nit:` and do
@@ -232,19 +258,22 @@ The PR gets `needs-maintainer`, and auto-merge is turned off, when:
 
 Two rulesets protect `main`:
 
-- `Protect main` blocks deletion and force pushes, requires the CI checks and allows squash
-  merges only, which keeps `main` in Conventional Commit form.
+- `Protect main` blocks deletion and force pushes, requires the CI checks and the
+  `Protected paths` check, and allows squash merges only, which keeps `main` in Conventional
+  Commit form.
 - `Agent review` requires one approving review, dismisses it on a later push, requires the
   approval to come after the last push, and requires a code-owner review. Maintainer PRs
   merge as before.
 
-So an agent PR merges on its own once CI is green and `pptx-ts-reviewer[bot]` has approved
-its latest commit. A push after the approval, such as a fix round, dismisses it until the
-reviewer approves again.
+So an agent PR, or an `agent:deps` Renovate PR, merges on its own once CI is green and
+`pptx-ts-reviewer[bot]` has approved its latest commit. A push after the approval, such as a
+fix round, dismisses it until the reviewer approves again.
 
-`.github/CODEOWNERS` names the maintainer for the protected paths, so a PR touching them
-needs the maintainer's review even if the agent workflows failed to stop it. Keep it, the
-`agent-protected-paths` action and the list above in step.
+Two backstops hold a protected-path change for the maintainer even if the agent workflows
+failed to stop it. `.github/CODEOWNERS` names the maintainer for every protected path except
+`package.json`, because CODEOWNERS cannot tell a `devDependencies` change from any other. The
+`Protected paths` check covers all of them, `package.json` outside `devDependencies`
+included. Keep CODEOWNERS, the `agent-protected-paths` action and the list above in step.
 
 Releases stay manual. `publish.yml` runs only on a `v*` tag push, the agent workflows never
 create tags, and cutting a release is the maintainer's job. Nothing an agent merges reaches
