@@ -97,10 +97,22 @@ export class Paragraph {
 		return equations
 	}
 
-	/** The fields (`a:fld`) in document order, each read like a run; see {@link Field}. */
+	/**
+	 * The fields (`a:fld`) in document order, each read like a run; see {@link Field}. Each says how
+	 * many runs precede it, so a field between runs keeps its place.
+	 */
 	get fields(): Field[] {
 		const inherited = this.#inheritedRunProps()
-		return getElements(this.element, 'a:fld').map((element) => new Field(element, this.context, inherited))
+		const fields: Field[] = []
+		let runIndex = 0
+		for (let node = this.element.firstChild; node; node = node.nextSibling) {
+			if (node.nodeType !== ELEMENT_NODE) continue
+			const element = node as Element
+			if (element.namespaceURI !== OOXML_NS.a) continue
+			if (element.localName === 'r') runIndex++
+			else if (element.localName === 'fld') fields.push(new Field(element, this.context, inherited, runIndex))
+		}
+		return fields
 	}
 
 	/**

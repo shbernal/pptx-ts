@@ -633,6 +633,16 @@ function followsTextColor(hlinkClick: Element): boolean {
  * which it recomputes on open.
  */
 export class Field extends Run {
+	constructor(
+		element: Element,
+		context: TextContext,
+		inherited: InheritedRunProps | null,
+		/** How many of the paragraph's {@link Paragraph.runs} come before it, which places it among them. */
+		readonly runIndex: number
+	) {
+		super(element, context, inherited)
+	}
+
 	/** The field type (`@type`), such as `slidenum` or `datetime1`, or `null` when unset. */
 	get type(): string | null {
 		return attr(this.element_, 'type')
