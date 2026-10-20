@@ -69,6 +69,14 @@ network:
 # Issue types are an organization feature and this repo is user-owned, so there is no
 # `set-issue-type`. The label list is the repo's own kind labels plus the triage ones.
 safe-outputs:
+  # Writes as the implementer app, because a label added with the default token starts no
+  # workflow and `agent:ready` has to start agent-implement.yml. The report comment comes
+  # from the same bot. Queueing is safe under `roles: all` and a prompt-injected agent: the
+  # implementer re-checks that the maintainer opened the issue, so the label alone cannot
+  # start work on anyone else's.
+  github-app:
+    app-id: ${{ secrets.AGENTS_APP_ID }}
+    private-key: ${{ secrets.AGENTS_APP_PRIVATE_KEY }}
   add-labels:
     allowed:
       - bug
@@ -81,6 +89,7 @@ safe-outputs:
       - priority/p2
       - duplicate
       - invalid
+      - agent:ready
     max: 4
     # Without this, a label the agent sends with a rationale becomes a GitHub suggestion
     # waiting for a maintainer to accept it, not a label on the issue.
@@ -215,6 +224,19 @@ Classify coding-agent suitability:
 
 Suggest a focused next step when the evidence supports one. Do not turn triage into a
 speculative implementation plan.
+
+### Queue for the implementer
+
+Apply `agent:ready` only when all of these hold:
+
+- the issue was opened by `shbernal`
+- coding-agent suitability is **Suitable**
+- the kind label is `bug`, `enhancement` or `docs`
+- none of `needs-info`, `duplicate` or `invalid` applies
+- nothing from section 3 applies
+
+`agent:ready` hands the issue to an implementer agent that opens a PR. When you apply it,
+add one line to the report's "Next step" saying it is queued for the implementer.
 
 ## 7. Report
 
