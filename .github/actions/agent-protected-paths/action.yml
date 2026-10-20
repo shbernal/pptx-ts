@@ -20,8 +20,9 @@ runs:
   using: composite
   steps:
     # Paths whose changes reach every user or the pipeline itself. Keep in step with
-    # .github/CODEOWNERS and docs/contributing/agent-pipeline.md. Compared from the merge base,
-    # so changes `main` gained after the branch point do not count.
+    # .github/CODEOWNERS and docs/contributing/agent-pipeline.md. The `Protected paths` check
+    # runs this on every PR. Compared from the merge base, so changes `main` gained after the
+    # branch point do not count.
     - id: check
       shell: bash
       env:

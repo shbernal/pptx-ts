@@ -1,0 +1,84 @@
+name: Protected paths
+
+# Fails a pull request that changes a protected path, unless the maintainer opened it or
+# approved its latest commit. A required check on `main`, so no agent or bot change to
+# these paths merges on an agent's approval. See docs/contributing/agent-pipeline.md.
+#
+# This stands in for a CODEOWNERS entry on `package.json`, which cannot tell a
+# `devDependencies` bump (Renovate's, handed to the agent reviewer) from a change to what
+# consumers install. The paths themselves come from the agent-protected-paths action, which
+# the agent workflows use to stop before opening or pushing such a change.
+#
+# Runs no code from the PR: the checkout is the base commit, and the head is only fetched
+# for `git diff` and `git show`.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  # The maintainer's approval turns the check green, and dismissing it turns it red again.
+  pull_request_review:
+    types: [submitted, dismissed]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: protected-paths-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Protected paths
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout the base
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      # `refs/pull/N/head` also resolves for a fork's PR, whose head is not in this repository.
+      - name: Fetch the head
+        env:
+          PR: ${{ github.event.pull_request.number }}
+        run: git fetch --no-tags "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" "refs/pull/$PR/head"
+
+      - name: List protected paths
+        id: protected
+        uses: ./.github/actions/agent-protected-paths
+        with:
+          base: ${{ github.event.pull_request.base.sha }}
+          head: ${{ github.event.pull_request.head.sha }}
+
+      - name: Require the maintainer
+        if: steps.protected.outputs.paths
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+          PATHS: ${{ steps.protected.outputs.paths }}
+        run: |
+          echo "Protected paths changed:"
+          mapfile -t paths <<<"$PATHS"
+          printf '  %s\n' "${paths[@]}"
+          if [[ $AUTHOR == shbernal ]]; then
+            echo "The maintainer opened #$PR."
+            exit 0
+          fi
+          # The maintainer's latest verdict, if it approves the commit this run checks. A later
+          # push dismisses it, and the `dismissed` event reruns this check.
+          approved=$(gh api --paginate "repos/$GH_REPO/pulls/$PR/reviews" |
+            jq -rs --arg head "$HEAD" '[.[][] | select(.user.login == "shbernal" and .state != "COMMENTED")]
+              | last // {} | select(.state == "APPROVED" and .commit_id == $head) | .id')
+          if [[ -n $approved ]]; then
+            echo "The maintainer approved $HEAD."
+            exit 0
+          fi
+          echo "::error::#$PR changes protected paths and needs the maintainer's approval of its latest commit."
+          exit 1
