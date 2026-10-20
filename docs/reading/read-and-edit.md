@@ -90,7 +90,7 @@ if (second) second.text = 'Second bullet, rewritten'
 - Leading and trailing spaces are kept (`xml:space="preserve"`).
 - Setting `text` on a shape with no text frame, such as a picture, throws `UnsupportedFeatureError` with code `shape/no-text-frame`.
 - To change one run and leave its neighbours alone, set `run.text` through `textFrame.paragraphs[i].runs[j]`.
-- A field (`a:fld`), such as a slide number or a date, is not a run. [`paragraph.fields`](../reference/api/read/classes/Paragraph.md#fields) lists them. Each [`Field`](../reference/api/read/classes/Field.md) has a run's formatting reads, plus its `type` (`slidenum`, `datetime1` and so on). Its `text` is the value PowerPoint last cached.
+- A field (`a:fld`), such as a slide number or a date, is not a run. [`paragraph.fields`](../reference/api/read/classes/Paragraph.md#fields) lists them. Each [`Field`](../reference/api/read/classes/Field.md) has a run's formatting reads, plus its `type` (`slidenum`, `datetime1` and so on) and its `runIndex`, how many of the paragraph's runs come before it. Its `text` is the value PowerPoint last cached.
 
 ## Change position, size and colour
 

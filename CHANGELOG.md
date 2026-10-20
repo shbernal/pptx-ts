@@ -119,6 +119,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Text reads for every `addText` option.** `Run` gains `language`, `eastAsianFontName`, `glow`,
   `outline`, `underlineColor` and `breaksBefore`; `Paragraph` gains `rtl` and `tabStops`;
   `BodyProperties` gains `columns`, `columnSpacingPt` and `textWarp`.
+- **`Field.runIndex` places a field among its paragraph's runs**: how many `a:r` come before the
+  `a:fld`, as `Equation.runIndex` does for an equation. A footer such as `Slide ` + slide number +
+  ` of 12` can now be put back together from `Paragraph.runs` and `Paragraph.fields`
+  ([#280](https://github.com/shbernal/pptx-ts/issues/280)).
 - **`Shape.locks` reads a shape's lock flags** (`a:spLocks`, `a:picLocks`, `a:cxnSpLocks`,
   `a:graphicFrameLocks`, `a:grpSpLocks`) as booleans keyed by attribute name.
 - **Shape paint details read back.** `Shape.linePatternFill` reads a pattern stroke

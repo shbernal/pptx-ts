@@ -331,6 +331,7 @@ describe('Field and list-style reads', () => {
 		const field = defined(paragraph.fields[0])
 		assertEqual(paragraph.fields.length, 1, 'one field')
 		assertEqual(field.type, 'slidenum', 'its @type')
+		assertEqual(field.runIndex, 0, 'no run before it')
 		assertEqual(field.text, '1', 'its cached text')
 		assertEqual(field.bold, true, 'its own a:rPr reads like a run')
 		assertEqual(field.resolvedSizePt, 20, 'and resolves through the list style')
@@ -340,6 +341,30 @@ describe('Field and list-style reads', () => {
 		assertEqual(defaults.fontName, 'Georgia', 'its a:latin')
 		assertEqual(defaults.colorRef?.scheme, 'accent2', 'its colour token')
 		assertEqual(defaults.bold, null, 'and nothing it does not state')
+	})
+
+	test('a field between runs says how many runs come before it', async () => {
+		// The write API cannot put a field beside a run, so the field PowerPoint writes in a footer
+		// ("Slide " + slidenum + " of 12") goes in by hand, between the two authored runs.
+		const { presentation } = await authorRead((pres) => {
+			pres.addSlide().addText([{ text: 'Slide ' }, { text: ' of 12' }], { x: 1, y: 1, w: 4, h: 1 })
+		})
+		const paragraph = defined(defined(firstShape(presentation, (s) => s.hasTextFrame)?.textFrame).paragraphs[0])
+		const second = at(paragraph.runs, 1).element_
+		const doc = defined(second.ownerDocument)
+		const fld = doc.createElementNS(second.namespaceURI, 'a:fld')
+		fld.setAttribute('id', '{B6F15528-21DE-4FAA-801E-634DDDAF4B2B}')
+		fld.setAttribute('type', 'slidenum')
+		const t = doc.createElementNS(second.namespaceURI, 'a:t')
+		t.appendChild(doc.createTextNode('3'))
+		fld.appendChild(t)
+		second.parentNode?.insertBefore(fld, second)
+
+		assertEqual(paragraph.runs.length, 2, 'two runs')
+		const field = at(paragraph.fields, 0)
+		assertEqual(field.text, '3', 'the field')
+		assertEqual(field.runIndex, 1, 'after the first run')
+		assertEqual(paragraph.text, 'Slide 3 of 12', 'which places it as the paragraph text does')
 	})
 
 	test('a frame with no list style states no defaults', async () => {
