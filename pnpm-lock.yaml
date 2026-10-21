@@ -255,8 +255,8 @@ importers:
         specifier: 7.0.2004
         version: 7.0.2004
       pptx-html:
-        specifier: 0.2.2-next.9.g8d98719
-        version: 0.2.2-next.9.g8d98719(mathml2omml@0.5.0)(temml@0.14.0)
+        specifier: 0.2.2-next.13.g4cf4d8e
+        version: 0.2.2-next.13.g4cf4d8e(mathml2omml@0.5.0)(temml@0.14.0)
       publint:
         specifier: ^0.3.25
         version: 0.3.25
@@ -2656,8 +2656,8 @@ packages:
     resolution: {integrity: sha512-YUbWYCgErwnMAVkjUnYa+KlMBzGpHwiIt/DE7f0G33AuX2LH9UcTk6KgWxd3zRU+pN3u/C+Xl3EnMLM4Hea7Sg==}
     engines: {node: ^10 || ^12 || >=14}
 
-  pptx-html@0.2.2-next.9.g8d98719:
-    resolution: {integrity: sha512-8xHBLRZe04+P1dxyhUhaAMQZU+Cnyjckd5Y7DafPEcLyOuyqypGmaAgiYoDa9NpGdhPuFY1+ElCNtTlkvGYw1w==}
+  pptx-html@0.2.2-next.13.g4cf4d8e:
+    resolution: {integrity: sha512-vQLvMSwTBUwcoTqpBvzv27G+JN9qmCEH2mOsNoc5T9R7GxClXimqGUsNq9yIBHvlzHh9uEtD486PxGVoSYQs5Q==}
     engines: {node: '>=24'}
 
   pptx-ts@4.1.1-next.143.ge272732:
@@ -5205,7 +5205,7 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.2
 
-  pptx-html@0.2.2-next.9.g8d98719(mathml2omml@0.5.0)(temml@0.14.0):
+  pptx-html@0.2.2-next.13.g4cf4d8e(mathml2omml@0.5.0)(temml@0.14.0):
     dependencies:
       pptx-ts: 4.1.1-next.143.ge272732(mathml2omml@0.5.0)(temml@0.14.0)
     transitivePeerDependencies:
