@@ -237,7 +237,7 @@ importers:
         specifier: ^0.5.0
         version: 0.5.0
       mermaid:
-        specifier: ^12.1.0
+        specifier: ^12.2.0
         version: 12.2.0
       micromark:
         specifier: ^4.0.3
