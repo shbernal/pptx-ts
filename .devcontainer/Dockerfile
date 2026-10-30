@@ -1,6 +1,6 @@
 # The Node version tracks `.node-version`, which is what CI's primary leg runs. Renovate
 # bumps this tag; move the major only together with `.node-version` and `engines`.
-FROM node:24.21.0-trixie
+FROM node:24.22.2-trixie
 
 # What CI's render-oracle job installs, plus `fonts-liberation`: the ubuntu-24.04 runner
 # image ships it, and the render smoke relies on Arial resolving to Liberation Sans.
