@@ -225,7 +225,7 @@
 		"pptx-html": "0.2.2-next.13.g4cf4d8e",
 		"publint": "^0.3.25",
 		"temml": "^0.14.0",
-		"tsdown": "^0.23.3",
+		"tsdown": "^0.23.4",
 		"typescript": "^7.0.2",
 		"typescript-6": "npm:typescript@6.0.3",
 		"vitepress": "2.0.0-alpha.21",
