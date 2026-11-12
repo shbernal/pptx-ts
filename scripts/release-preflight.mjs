@@ -8,15 +8,15 @@
 // waiver covers everything, so the checks it would have made, and the narrower ones a release
 // needs, are made here instead:
 //
-//   - on `main`, at the same commit as `origin/main`, so the release commit pushes cleanly
+//   - on a `release/*` branch at the same commit as `origin/main`, so the bump pull request
+//     holds the release commit and nothing else (`main` itself only takes pull requests)
 //   - no unstaged change to a tracked file, so what was gated is what gets committed
 //   - nothing staged but the release files: the changelog and the comparison refresh
 //   - the changelog and the snapshot both staged: the refresh ran and the entries are written
 //   - `package.json` still at the last tag's version, so nobody bumped it by hand
 //   - something under `[Unreleased]`
 //
-// `preversion` then runs `check:static` and `verify`, so the tag lands on a commit that already
-// passed them. The heavier gates are CI's: the publish workflow runs all of `ci.yml` first.
+// `preversion` then runs `check:static` and `verify`, so the release commit already passed them. The heavier gates are CI's: the publish workflow runs all of `ci.yml` first.
 //
 //   node scripts/release-preflight.mjs    (`pnpm run release:preflight`)
 
@@ -59,7 +59,9 @@ Checks the repository is in a state to release from. Writes nothing.`
 export function preflightProblems(state) {
 	/** @type {string[]} */
 	const problems = []
-	if (state.branch !== 'main') problems.push(`on branch ${state.branch}; release from main`)
+	if (!state.branch.startsWith('release/')) {
+		problems.push(`on branch ${state.branch}; release from a release/vX.Y.Z branch cut from origin/main`)
+	}
 	if (state.head !== state.upstream) problems.push('HEAD is not origin/main; pull, or push what is ahead in a PR first')
 	if (state.unstaged.length > 0) problems.push(`unstaged changes to tracked files: ${state.unstaged.join(', ')}`)
 	const extra = state.staged.filter((file) => !RELEASE_FILES.includes(file))

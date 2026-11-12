@@ -1,7 +1,7 @@
 ---
 doc-schema-version: 1
 title: "Release workflow"
-summary: "How a tag push reaches npm under both package names and becomes a GitHub Release, what stops a release, and how to finish a half-published one."
+summary: "How a version bump pull request and a tag push reach npm under both package names and become a GitHub Release, what stops a release, and how to finish a half-published one."
 read_when:
   - Preparing a release
   - Updating the npm publish workflow or its documentation
@@ -17,8 +17,10 @@ the alias is a second publish of the same build under a second name. `scripts/al
 stages that copy: the `name` differs, the README gains a banner naming `pptx-ts`, and the `scripts`
 block is dropped. You never bump, tag or stage the alias by hand.
 
-`.github/workflows/publish.yml` publishes both when a `vX.Y.Z` tag is pushed, then creates the
-GitHub Release for it. It also
+`main` is protected and takes changes only through pull requests, so a release is two pushes: a
+version bump pull request, squash-merged like any other, and then the `vX.Y.Z` tag on the commit
+it merged as. `.github/workflows/publish.yml` publishes both names when that tag is pushed, then
+creates the GitHub Release for it. It also
 publishes a prerelease of every push to `main` under the `next` dist-tag; see
 [The `next` channel](#the-next-channel). The
 [`release-publish` skill](https://github.com/shbernal/pptx-ts/blob/main/.agents/skills/release-publish/SKILL.md)
@@ -28,14 +30,15 @@ has the commands for each step. This page says why the steps are shaped the way 
 
 ```mermaid
 flowchart TD
-  s1["1. Write and stage the CHANGELOG entries"] --> s2["2. Refresh the comparison<br/>comparison:measure, comparison:render, comparison:diff"]
-  s2 --> s3["3. pnpm version<br/>preflight and local gate, bump, date the changelog, commit, tag"]
-  s3 --> s4["4. git push --atomic origin main vX.Y.Z"]
-  s4 --> s5["5. Workflow guards<br/>ci.yml gate, tag matches version, a name still lacks it"]
-  s5 --> s6["6. Publish pptx-ts"]
-  s6 --> s7["7. Publish @shbernal/ts-pptx"]
-  s7 --> s8["8. Create the GitHub Release<br/>notes from the CHANGELOG section"]
-  s8 --> s9["9. Comment on closed issues"]
+  s0["1. Branch release/vX.Y.Z from origin/main"] --> s1["2. Write and stage the CHANGELOG entries"]
+  s1 --> s2["3. Refresh the comparison<br/>comparison:measure, comparison:render, comparison:diff"]
+  s2 --> s3["4. pnpm version --no-git-tag-version<br/>preflight and local gate, bump, date the changelog; then commit"]
+  s3 --> s4["5. Version bump pull request<br/>CI green, squash merge"]
+  s4 --> s4b["6. Tag the merged commit, push the tag"]
+  s4b --> s5["7. Workflow guards<br/>ci.yml gate, tag matches version, a name still lacks it"]
+  s5 --> s6["8. Publish pptx-ts"]
+  s6 --> s7["9. Publish @shbernal/ts-pptx"]
+  s7 --> s8["10. Create the GitHub Release<br/>notes from the CHANGELOG section"]
   s7 -- "alias publish failed" --> retry["Re-dispatch publish.yml on the same tag"]
   retry --> s5
 ```
@@ -98,33 +101,53 @@ matches it. `VERSION` in `src/presentation.ts`, behind `pres.version`, is derive
 on a drift either way.
 
 ```bash
-pnpm version minor --message 'chore(release): v%s' --no-git-checks
+git fetch origin && git switch -c release/vX.Y.Z origin/main
+# write and stage the changelog, refresh and stage the comparison
+pnpm version minor --no-git-tag-version --no-git-checks
+git add package.json && git commit -m 'chore(release): vX.Y.Z'
 ```
 
-This runs the `preversion` lifecycle script, bumps `package.json`, runs the `version` lifecycle
-script, and makes one commit holding `package.json`, the constant, the changelog and the staged
-comparison refresh, tagged `vX.Y.Z`. The `version` script rewrites and stages the constant, and
+`pnpm version` runs the `preversion` lifecycle script, bumps `package.json` and runs the `version`
+lifecycle script. The `version` script rewrites and stages the constant, and
 `scripts/changelog.mjs --release` turns `## [Unreleased]` into
 `## [X.Y.Z](…/releases/tag/vX.Y.Z) - YYYY-MM-DD` under a fresh empty `[Unreleased]`, so neither the
-heading nor the date is typed by hand. Both flags are needed:
+heading nor the date is typed by hand. The commit then holds `package.json`, the constant, the
+changelog and the staged comparison refresh. Both flags are needed:
 
-- `--message`: pnpm's default subject is the bare version (`3.2.0`). pnpm ignores npm's `message`
-  config, so setting it in `.npmrc` does nothing, and the flag is the only control.
+- `--no-git-tag-version`: without it pnpm also commits and tags. A tag on the branch commit would
+  name a commit `main` never contains, because the squash merge makes a new one.
 - `--no-git-checks`: pnpm refuses to run on an unclean tree (`ERR_PNPM_UNCLEAN_WORKING_TREE`), and
   the staged `CHANGELOG.md` counts. Waiving the check keeps the release to one commit.
 
 The waiver covers everything, so `preversion` makes the checks a release needs instead.
-`scripts/release-preflight.mjs` (`pnpm run release:preflight`) fails unless the branch is `main` at
-the same commit as `origin/main`, no tracked file has an unstaged change, nothing is staged but the
+`scripts/release-preflight.mjs` (`pnpm run release:preflight`) fails unless the branch is a
+`release/*` branch at the same commit as `origin/main`, no tracked file has an unstaged change, nothing is staged but the
 changelog and the comparison files, both the changelog and the snapshot are staged, `package.json`
 still has the last tag's version, and `[Unreleased]` has entries. `preversion` then runs
-`check:static` and `verify`, so the tag lands on a commit that already passed them. All of this
+`check:static` and `verify`, so the release commit already passed them. All of this
 runs before pnpm changes anything, so a failure leaves the tree as it was. The heavier gates are
 CI's: the publish workflow runs every `ci.yml` leg before it publishes, so they are not repeated
 locally.
 
-Push the branch and the tag in one `git push --atomic origin main vX.Y.Z`, so a rejected `main`
-cannot leave a pushed tag behind. The tag push starts the publish.
+## The version bump pull request and the tag
+
+Push the branch and open a pull request titled `chore(release): vX.Y.Z`. CI runs on it like on
+any other change, and it merges with a squash once green. The merge publishes only the usual
+`next` prerelease of the merged commit.
+
+Then tag the merged commit and push the tag, which starts the publish:
+
+```bash
+git fetch origin main
+git log -1 --format=%s origin/main    # chore(release): vX.Y.Z (#N)
+git tag -a vX.Y.Z -m vX.Y.Z origin/main
+git push origin vX.Y.Z
+```
+
+The tag goes on after the merge, never before: a tag pushed first would point at a branch commit
+that `main` never contains. If another pull request merged on top of the release commit in the
+meantime, tag the release commit by its hash. The workflow refuses a tag whose name does not match
+`package.json#version`, so tagging the wrong commit fails before anything is published.
 
 ## What the workflow checks
 
@@ -188,17 +211,17 @@ prerelease stays on the registry, because npm restricts unpublishing.
 
 ## After publishing
 
-Comment on each issue the release closes with the version that carries the fix:
+Optionally, and only when the maintainer does it, comment on each issue the release closes with the
+version that carries the fix. Agents skip this step.
 
 ```bash
 gh issue comment <N> --repo shbernal/pptx-ts --body "Released in X.Y.Z."
 ```
 
-Issues here close when the fix merges, and merged-but-unreleased can last weeks. A consumer who
-deletes a workaround because the issue is closed breaks against the version actually installed.
-The `pptx-ts-upstream` skill tells consumers to trust the published version over the issue state,
-and this comment is what makes the two agree. `CHANGELOG.md` cites the issue numbers, so the list is
-the entry you just wrote.
+Issues here close when the fix merges, and merged-but-unreleased can last weeks. The
+`pptx-ts-upstream` skill tells consumers to trust the published version over the issue state, and
+a comment makes the two agree. `CHANGELOG.md` cites the issue numbers, so the list is the entry
+you just wrote.
 
 ### The site's deck preview
 
