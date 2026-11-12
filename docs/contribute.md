@@ -17,7 +17,7 @@ Security issues go through
 [SECURITY.md](https://github.com/shbernal/pptx-ts/blob/main/SECURITY.md), never a public issue.
 
 [CONTRIBUTING.md](https://github.com/shbernal/pptx-ts/blob/main/CONTRIBUTING.md) covers setting
-up the repository, the git hooks, the scope it is maintained for, reporting a bug or promoting a
+up the repository, the checks CI runs, the scope it is maintained for, reporting a bug or promoting a
 downstream need, and installing an unreleased build.
 
 The documentation for working on the repository is read on GitHub:
@@ -25,7 +25,7 @@ The documentation for working on the repository is read on GitHub:
 - [Development guide](https://github.com/shbernal/pptx-ts/blob/main/docs/contributing/development.md):
   setup, source layout, generated outputs, and contribution rules.
 - [Testing guide](https://github.com/shbernal/pptx-ts/blob/main/docs/contributing/testing.md):
-  the gate matrix, git hooks and CI jobs, the test suites, coverage, schema validation, and the
+  the gate matrix and CI jobs, the test suites, coverage, schema validation, and the
   oracles behind a PowerPoint claim.
 - [Architecture](https://github.com/shbernal/pptx-ts/blob/main/docs/contributing/architecture.md):
   how the library is structured and where each responsibility lives.

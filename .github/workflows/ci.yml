@@ -14,6 +14,24 @@ permissions:
   contents: read
 
 jobs:
+  # Commit messages carry no AI attribution; the rule lives in .github/cchk.toml. The
+  # disclosure goes in the pull request body instead (CONTRIBUTING.md#ai-disclosure).
+  commit-check:
+    name: Commit messages
+    runs-on: ubuntu-26.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - name: Check commit messages against .github/cchk.toml
+        uses: commit-check/commit-check-action@d68e05baf9511853193e2749f8a64bf2a221619a # v2.22.0
+        with:
+          message: true
+          branch: false
+
   # Lint, formatting and the typechecks are node-version-independent: they
   # read the same sources and the same tsconfig on every leg, so running them per
   # matrix entry was pure duplication. One run, newest supported Node.

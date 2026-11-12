@@ -190,7 +190,12 @@ jobs:
         env:
           HEAD_SHA: ${{ needs.gate.outputs.head }}
           SUBJECT: "${{ github.event.review.id && 'fix: address review' || 'fix: repair CI' }}"
+        # No git hooks run here: the workflow applies the autofixes, commits, then runs the
+        # static gates CI's `static` job runs, so a lint, format or type error stops the
+        # change before it is pushed.
         run: |
+          pnpm exec oxlint . --fix
+          pnpm run format
           git add -A
           if git diff --cached --quiet; then
             echo committed=false >> "$GITHUB_OUTPUT"
@@ -200,7 +205,7 @@ jobs:
           git config user.name 'pptx-ts-agents[bot]'
           git config user.email '343642060+pptx-ts-agents[bot]@users.noreply.github.com'
           git commit -m "$SUBJECT"
-          pnpm exec lefthook run pre-push
+          node scripts/run-steps.mjs lint lint:chars format:check typecheck typecheck:scripts typecheck:site
           git bundle create "$RUNNER_TEMP/change.bundle" "$HEAD_SHA..agent-fix"
           echo committed=true >> "$GITHUB_OUTPUT"
 

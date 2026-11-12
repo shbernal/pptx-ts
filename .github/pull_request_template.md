@@ -33,8 +33,8 @@
 ## AI involvement
 
 <!--
-  Required: tick one. This is where the disclosure goes, not the commit message: the
-  `no-ai-attribution` hook rejects attribution trailers. See CONTRIBUTING.md#ai-disclosure.
+  Required: tick one. This is where the disclosure goes, not the commit message: CI's
+  `Commit messages` check rejects attribution trailers. See CONTRIBUTING.md#ai-disclosure.
 -->
 
 - [ ] None

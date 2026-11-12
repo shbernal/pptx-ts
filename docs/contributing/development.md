@@ -11,7 +11,7 @@ doc_type: "guide"
 # Development guide
 
 [CONTRIBUTING.md](https://github.com/shbernal/pptx-ts/blob/main/CONTRIBUTING.md#setting-up)
-covers setting up the repository, the gate to run locally, and the git hooks.
+covers setting up the repository, the gate to run locally, and the checks CI runs.
 
 ## Repository layout
 
@@ -101,7 +101,7 @@ hatch is acceptable.
 | `pnpm run test` | Every Vitest suite. `test:unit`, `test:read` and `test:schema` run one part of it. |
 | `pnpm run watch:dev` and `pnpm run test:watch` | The edit-then-test loop, one per terminal. `watch:dev` rebuilds `dist/` without declarations. |
 | `pnpm run typecheck` | The `src/` TypeScript project. `typecheck:scripts`, `typecheck:test` and `typecheck:site` cover `scripts/`, `test/` and the site. |
-| `pnpm run lint`, `pnpm run lint:chars`, `pnpm run format:check` | The git hooks run these for you. `lint:chars:fix` and `format` apply fixes. |
+| `pnpm run lint`, `pnpm run lint:chars`, `pnpm run format:check` | CI's `static` job runs these. `lint:chars:fix` and `format` apply fixes. |
 | `pnpm run build` | Build `dist/` for its own sake. Gates build it when they need it. |
 | `pnpm run test:browser` | The Playwright lane in Chromium. Run `pnpm exec playwright install chromium` once first. |
 | `pnpm run docs:dev` | Serve the site with hot reload. |

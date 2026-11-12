@@ -53,8 +53,9 @@ Claude can run any code in the job it works in: `pnpm run` executes scripts it m
 edited. Code in a job can read every secret that job uses. So no job where Claude runs holds a
 write credential or an app key:
 
-- Claude's job has the read-only job token and `CLAUDE_CODE_OAUTH_TOKEN`. It commits locally,
-  through the lefthook pre-commit and pre-push gates, and hands the commit on as a git bundle.
+- Claude's job has the read-only job token and `CLAUDE_CODE_OAUTH_TOKEN`. The workflow
+  formats and lint-fixes the tree, commits locally, runs the static gates (`lint`, `lint:chars`,
+  `format:check` and the typechecks) on the result, and hands the commit on as a git bundle.
 - A separate job mints the app token, checks out `main`, accepts the bundle only if it is
   exactly one commit on top of the expected starting point, and pushes it. It runs no code
   from the agent's branch.

@@ -30,7 +30,7 @@ export function mustMatch(text, pattern, what = String(pattern)) {
 }
 
 /**
- * Write an oracle as JSON and format it the way the pre-commit hook will. `JSON.stringify`
+ * Write an oracle as JSON and format it the way `pnpm run format` will. `JSON.stringify`
  * expands every array one item per line, while oxfmt keeps a short one on a single line, so
  * without this pass re-running a builder on a clean tree rewrites committed oracles whose
  * content is unchanged.
@@ -39,7 +39,7 @@ export function mustMatch(text, pattern, what = String(pattern)) {
  */
 export function writeOracleJson(path, oracle) {
 	writeFileSync(path, JSON.stringify(oracle, null, '\t') + '\n')
-	// The `bin` entry oxfmt's own package.json declares, run directly, as `lefthook.yml` does.
+	// The `bin` entry oxfmt's own package.json declares, run directly on the current node.
 	const oxfmt = createRequire(import.meta.url)
 		.resolve('oxfmt/package.json')
 		.replace(/package\.json$/, 'bin/oxfmt')
