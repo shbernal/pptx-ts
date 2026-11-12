@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.2.0](https://github.com/shbernal/pptx-ts/releases/tag/v4.2.0) - 2026-11-12
+
 ### Added
 
 - **The types admit three inputs the writer already took.** On text, an image, a table or a chart,
@@ -177,6 +179,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `TsPptx` as `dc:creator` and `cp:lastModifiedBy`; it now writes the package name, as the deck's
   own `core.xml` does. Every chart's embedded workbook changes in those two elements and nothing
   else.
+- **Messages carry no em dash.** Runtime error and warning messages, the notes and comments the
+  script printer writes into a generated script, and the verify diff's placeholder for a missing
+  value (now `(none)`) are reworded with a colon, a comma or parentheses. Code that matches a
+  message's exact text needs the new wording.
 - **Contributors: the `TSPPTX_*` environment variables are now `PPTXTS_*`.** The old names are not
   read. Rename the keys in `tools/powerpoint-vm/.env` and in any shell export.
 - **`InternalError` links to the bug form, and the agent-report form is gone.** Agents filing
