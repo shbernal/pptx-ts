@@ -38,9 +38,9 @@ Each cell comes from `package.json` or a workflow under `.github/workflows/`.
 | `comparison:check` | ✓ | ✓ | ✓ | `static` | every change, through `verify` |
 | `census:check` | ✓ | ✓ | ✓ | `static` | every change, through `verify` |
 | `test` | ✓ | | | `test` (Node 26.x) | every change, through `verify` |
-| `test:coverage` | | ✓ | | `test` (Node 24.x) | CI; `coverage:probe` while editing |
+| `test:coverage` | | ✓ | | `test` (Node 26.x) | CI; `coverage:probe` while editing |
 | `docs:build` | | | | `docs.yml` `build`, and `browser` | a change to `docs/.vitepress/`, `www/` or a docs generator |
-| `script:roundtrip:all` | | ✓ | | `test` (Node 24.x) | CI; `script:roundtrip` while editing `src/script/` |
+| `script:roundtrip:all` | | ✓ | | `test` (Node 26.x) | CI; `script:roundtrip` while editing `src/script/` |
 | `package:lint` | | ✓ | | `package` | CI; locally only to iterate on a `package` failure |
 | `test:package` | | ✓ | | `package` | CI; locally only to iterate on a `package` failure |
 | `bundle-size:check` | | ✓ | | `package` | CI; locally to re-freeze after an import moves or a dependency arrives |
@@ -61,11 +61,11 @@ Reading the matrix:
 - `test` is `vitest run` over every `test/**/*.test.ts` file: the regression, read, schema,
   script and font-oracle suites. `test:unit`, `test:read` and `test:schema` run parts of it.
 - `test:coverage` is `test` plus the `vitest.config.ts` coverage thresholds. `verify:full` and
-  the Node 24.x leg of the `test` job run it in place of `test`, so neither runs the suite twice.
+  the Node 26.x leg of the `test` job run it in place of `test`, so neither runs the suite twice.
 - The `commit-check` job checks every commit message of a pull request against
   `.github/cchk.toml`, which forbids AI-attribution trailers.
 - `package` runs `check:package` on `ubuntu-24.04` and `windows-latest`, and `font-oracles`
-  runs on `windows-latest`. Every other job runs on `ubuntu-24.04`.
+  runs on `windows-latest`. Every other job runs on `ubuntu-26.04`.
 - `docs:build` reaches the `browser` job because `test:browser` builds the site before
   Playwright starts.
 
@@ -127,7 +127,7 @@ flowchart LR
   subgraph ci["ci.yml: pull requests, pushes to main, workflow_call"]
     commits["commit-check<br/>.github/cchk.toml"]
     static["static<br/>check:static"]
-    test["test, Node 24.x and 26.x<br/>24.x: test:coverage, script:roundtrip:all<br/>26.x: test"]
+    test["test, Node 24.x and 26.x<br/>26.x: test:coverage, script:roundtrip:all<br/>24.x: test (the engines floor)"]
     fonts["font-oracles, windows-latest<br/>test:oracles"]
     render["render-oracle<br/>test:lo"]
     browser["browser<br/>test:browser"]
@@ -146,7 +146,7 @@ flowchart LR
 ```
 
 - `ci.yml` has eight jobs. `test` and `package` are matrices, so a run has ten legs.
-- Only the Node 24.x leg of `test` collects coverage and runs the script round trip, because
+- Only the Node 26.x leg of `test`, the `.node-version` one, collects coverage and runs the script round trip, because
   neither result depends on the Node version.
 - The `test` job fetches the OOXML oracle (`pnpm exec ooxml-validate --version`) before any
   suite starts, from a cache keyed on the lockfile. A failed download then fails the job with
@@ -535,7 +535,7 @@ because almost nothing under `src/` executes directly.
 holds the merged report to them, and `vitest.config.ts` reads the same file as the Node suite's
 floor, so `test:coverage` fails early, without a browser, when the Node suite goes backwards.
 Raise them when `coverage:gate` prints that a ratchet is available, and never lower one to make
-a build pass. In CI the floor fails the Node 24.x leg of `test`, and the merged gate runs in the
+a build pass. In CI the floor fails the Node 26.x leg of `test`, and the merged gate runs in the
 `coverage` job.
 
 ### Merged coverage

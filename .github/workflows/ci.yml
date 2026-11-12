@@ -59,8 +59,9 @@ jobs:
   # The tests, unlike the static checks, are genuinely node-version-sensitive, so
   # they do run per version. Coverage thresholds produce an identical verdict on
   # both legs, so collect them once on the primary version. The primary leg's
-  # `24.x` below and in the `if:` conditions must name the version in
-  # `.node-version`, which every other job reads.
+  # `26.x` below and in the `if:` conditions must name the version in
+  # `.node-version`, which every other job reads. The `24.x` leg tests the
+  # `engines` floor.
   test:
     name: Test (Node ${{ matrix.node }})
     runs-on: ubuntu-26.04
@@ -115,11 +116,11 @@ jobs:
         run: pnpm exec ooxml-validate --version
 
       - name: Test (with coverage thresholds)
-        if: matrix.node == '24.x'
+        if: matrix.node == '26.x'
         run: pnpm run test:coverage
 
       - name: Test
-        if: matrix.node != '24.x'
+        if: matrix.node != '26.x'
         run: pnpm run test
 
       # The script round-trip is a gate, not a report: it prints a script for each read
@@ -133,13 +134,13 @@ jobs:
       # the corpus and the converter are runtime-independent, so a second Node version
       # would re-prove the same thing.
       - name: Script round-trip (both tiers)
-        if: matrix.node == '24.x'
+        if: matrix.node == '26.x'
         run: pnpm run script:roundtrip:all
 
       # For the `coverage` job below, which merges this with what the browser lane
       # executed. Only the primary leg collects coverage, so only it has one to upload.
       - name: Upload Node coverage
-        if: matrix.node == '24.x'
+        if: matrix.node == '26.x'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: coverage-node
