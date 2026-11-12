@@ -163,7 +163,7 @@ the bytes that came out.
   pptx-ts. If a large installed base matters to you more than the differences above, use
   pptxgenjs.
 - **Activity:** last commit on the default branch, 2026-11-12 for pptx-ts and 2025-06-26
-  for pptxgenjs. Last npm publish, 2026-10-11 and 2025-06-26.
+  for pptxgenjs. Last npm publish, 2026-11-12 and 2025-06-26.
 
 Where the two libraries part company is on the [comparison page](docs/comparison.md), and
 [how it was measured](docs/comparison-method.md) has every full table. Every intent as

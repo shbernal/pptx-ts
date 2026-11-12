@@ -2,7 +2,7 @@
 	"generatedAt": "2026-11-12",
 	"subjects": {
 		"pptx-ts": {
-			"version": "4.1.0",
+			"version": "4.2.0",
 			"source": "workspace dist/"
 		},
 		"pptxgenjs": {
@@ -376,7 +376,7 @@
 					"id": "Sch_AttributeValueDataTypeDetailed",
 					"type": "Schema",
 					"partUri": "/ppt/presentation.xml",
-					"description": "The attribute 'id' has invalid value '{651de505-e64f-3689-2bad-669644946d6d}'. The Pattern constraint failed. The expected pattern is \\{[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}\\}.",
+					"description": "The attribute 'id' has invalid value '{219a313d-e9f9-88fc-81c1-2c5510b26aea}'. The Pattern constraint failed. The expected pattern is \\{[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}\\}.",
 					"decks": 1
 				}
 			],
@@ -580,33 +580,33 @@
 				"modes": {
 					"deflate": {
 						"pptx-ts": {
-							"median": 4.106819,
-							"min": 2.749787,
-							"spread": 23.386494510714982,
+							"median": 2.76745,
+							"min": 2.520827,
+							"spread": 9.311929754828444,
 							"rounds": 25,
 							"bytes": 14300
 						},
 						"pptxgenjs": {
-							"median": 5.492812,
-							"min": 3.318344,
-							"spread": 36.44113434066193,
+							"median": 3.077612,
+							"min": 2.914824,
+							"spread": 26.822939343880904,
 							"rounds": 25,
-							"bytes": 14385
+							"bytes": 14386
 						},
-						"bytesAgree": 0.5908932916232186
+						"bytesAgree": 0.5978034199916585
 					},
 					"store": {
 						"pptx-ts": {
-							"median": 1.291802,
-							"min": 1.19968,
-							"spread": 7.856467167569031,
+							"median": 1.250778,
+							"min": 1.18283,
+							"spread": 7.169377779270174,
 							"rounds": 25,
 							"bytes": 50770
 						},
 						"pptxgenjs": {
-							"median": 0.755654,
-							"min": 0.679698,
-							"spread": 10.844381158572569,
+							"median": 0.708466,
+							"min": 0.632868,
+							"spread": 8.71954335140995,
 							"rounds": 25,
 							"bytes": 44738
 						},
@@ -615,7 +615,7 @@
 				},
 				"compression": {
 					"pptx-ts": 3.5503496503496503,
-					"pptxgenjs": 3.1100451859575946
+					"pptxgenjs": 3.109829000417072
 				}
 			},
 			{
@@ -626,33 +626,33 @@
 				"modes": {
 					"deflate": {
 						"pptx-ts": {
-							"median": 4.413742,
-							"min": 3.430835,
-							"spread": 42.770306918709785,
+							"median": 3.613681,
+							"min": 3.23314,
+							"spread": 17.232567014077897,
 							"rounds": 25,
-							"bytes": 18373
+							"bytes": 18371
 						},
 						"pptxgenjs": {
-							"median": 6.422091,
-							"min": 4.152839,
-							"spread": 59.71643815075185,
+							"median": 4.665339,
+							"min": 3.919476,
+							"spread": 64.94083280979152,
 							"rounds": 25,
-							"bytes": 18576
+							"bytes": 18575
 						},
-						"bytesAgree": 1.092807924203273
+						"bytesAgree": 1.098250336473755
 					},
 					"store": {
 						"pptx-ts": {
-							"median": 1.928669,
-							"min": 1.674028,
-							"spread": 26.982494144925862,
+							"median": 1.754435,
+							"min": 1.627405,
+							"spread": 16.68776557695213,
 							"rounds": 25,
 							"bytes": 60622
 						},
 						"pptxgenjs": {
-							"median": 1.2124,
-							"min": 0.949431,
-							"spread": 23.548663807324317,
+							"median": 1.069364,
+							"min": 0.910113,
+							"spread": 9.343404116839551,
 							"rounds": 25,
 							"bytes": 55125
 						},
@@ -660,8 +660,8 @@
 					}
 				},
 				"compression": {
-					"pptx-ts": 3.29951559353399,
-					"pptxgenjs": 2.9675387596899223
+					"pptx-ts": 3.299874802678134,
+					"pptxgenjs": 2.9676985195154777
 				}
 			},
 			{
@@ -672,16 +672,16 @@
 				"modes": {
 					"deflate": {
 						"pptx-ts": {
-							"median": 3.906004,
-							"min": 3.583074,
-							"spread": 10.561100295852228,
+							"median": 3.689543,
+							"min": 3.502412,
+							"spread": 10.15648821547817,
 							"rounds": 25,
 							"bytes": 14984
 						},
 						"pptxgenjs": {
-							"median": 4.012304,
-							"min": 3.630377,
-							"spread": 62.41800222515541,
+							"median": 5.38298,
+							"min": 3.39776,
+							"spread": 49.60494001463873,
 							"rounds": 25,
 							"bytes": 15052
 						},
@@ -689,16 +689,16 @@
 					},
 					"store": {
 						"pptx-ts": {
-							"median": 3.190456,
-							"min": 2.023672,
-							"spread": 13.428707369730224,
+							"median": 2.333746,
+							"min": 1.805682,
+							"spread": 9.217755488386466,
 							"rounds": 25,
 							"bytes": 67741
 						},
 						"pptxgenjs": {
-							"median": 1.589323,
-							"min": 0.867883,
-							"spread": 31.290492870234683,
+							"median": 1.064808,
+							"min": 0.802244,
+							"spread": 24.32936266444279,
 							"rounds": 25,
 							"bytes": 61700
 						},
@@ -718,33 +718,33 @@
 				"modes": {
 					"deflate": {
 						"pptx-ts": {
-							"median": 7.489451,
-							"min": 7.06216,
-							"spread": 12.399440225992537,
+							"median": 8.533131,
+							"min": 6.663719,
+							"spread": 22.328076294621507,
 							"rounds": 25,
 							"bytes": 42368
 						},
 						"pptxgenjs": {
-							"median": 9.953943,
-							"min": 9.004718,
-							"spread": 46.48350909785197,
+							"median": 9.873898,
+							"min": 8.060813,
+							"spread": 37.263155847872845,
 							"rounds": 25,
-							"bytes": 35943
+							"bytes": 35944
 						},
-						"bytesAgree": 15.164746978851964
+						"bytesAgree": 15.162386706948642
 					},
 					"store": {
 						"pptx-ts": {
-							"median": 7.415634,
-							"min": 5.092361,
-							"spread": 61.8942358805734,
+							"median": 4.738725,
+							"min": 4.527257,
+							"spread": 5.1978116476478435,
 							"rounds": 25,
 							"bytes": 96900
 						},
 						"pptxgenjs": {
-							"median": 5.981328,
-							"min": 3.467993,
-							"spread": 53.29726107646998,
+							"median": 3.26089,
+							"min": 3.003351,
+							"spread": 21.358463486962155,
 							"rounds": 25,
 							"bytes": 124086
 						},
@@ -753,7 +753,7 @@
 				},
 				"compression": {
 					"pptx-ts": 2.287103474320242,
-					"pptxgenjs": 3.4522994741674315
+					"pptxgenjs": 3.452203427553973
 				}
 			},
 			{
@@ -764,33 +764,33 @@
 				"modes": {
 					"deflate": {
 						"pptx-ts": {
-							"median": 15.826724,
-							"min": 10.482571,
-							"spread": 60.00314404926754,
+							"median": 5.952244,
+							"min": 5.311796,
+							"spread": 11.062718531027961,
 							"rounds": 25,
-							"bytes": 29401
+							"bytes": 29402
 						},
 						"pptxgenjs": {
-							"median": 21.400303,
-							"min": 12.475772,
-							"spread": 64.09483080683484,
+							"median": 7.08981,
+							"min": 5.929644,
+							"spread": 36.849520650059745,
 							"rounds": 25,
 							"bytes": 27451
 						},
-						"bytesAgree": 6.6324274684534545
+						"bytesAgree": 6.635603020202707
 					},
 					"store": {
 						"pptx-ts": {
-							"median": 8.233097,
-							"min": 7.980671,
-							"spread": 7.037497554079591,
+							"median": 3.383317,
+							"min": 3.222531,
+							"spread": 3.40514944357859,
 							"rounds": 25,
 							"bytes": 85612
 						},
 						"pptxgenjs": {
-							"median": 5.415944,
-							"min": 4.881159,
-							"spread": 31.410886080062877,
+							"median": 2.054033,
+							"min": 1.917557,
+							"spread": 8.43827728181581,
 							"rounds": 25,
 							"bytes": 91044
 						},
@@ -798,7 +798,7 @@
 					}
 				},
 				"compression": {
-					"pptx-ts": 2.9118737457909596,
+					"pptx-ts": 2.9117747092034554,
 					"pptxgenjs": 3.3166004881425084
 				}
 			},
@@ -811,42 +811,42 @@
 				"modes": {
 					"deflate": {
 						"pptx-ts": {
-							"median": 232.42117,
-							"min": 100.500571,
-							"spread": 54.44894563606234,
-							"rounds": 7,
-							"bytes": 347612
+							"median": 65.555696,
+							"min": 58.256544,
+							"spread": 26.423810678480177,
+							"rounds": 17,
+							"bytes": 347613
 						},
 						"pptxgenjs": {
-							"median": 354.224321,
-							"min": 118.60627,
-							"spread": 53.59379402974421,
-							"rounds": 7,
-							"bytes": 293393
+							"median": 79.541076,
+							"min": 75.650111,
+							"spread": 5.218675945495136,
+							"rounds": 17,
+							"bytes": 293444
 						},
-						"bytesAgree": 15.597562799903342
+						"bytesAgree": 15.583134117538759
 					},
 					"store": {
 						"pptx-ts": {
-							"median": 288.357859,
-							"min": 129.562329,
-							"spread": 70.5163685169406,
-							"rounds": 7,
+							"median": 42.014248,
+							"min": 40.330891,
+							"spread": 4.8483028900100855,
+							"rounds": 25,
 							"bytes": 861949
 						},
 						"pptxgenjs": {
-							"median": 221.544097,
-							"min": 83.346415,
-							"spread": 34.34009866667763,
-							"rounds": 7,
+							"median": 32.922054,
+							"min": 27.190665,
+							"spread": 15.592787740400407,
+							"rounds": 25,
 							"bytes": 1138912
 						},
 						"bytesAgree": 24.31820895732067
 					}
 				},
 				"compression": {
-					"pptx-ts": 2.479629587010805,
-					"pptxgenjs": 3.881864938836305
+					"pptx-ts": 2.4796224537057014,
+					"pptxgenjs": 3.8811902782132197
 				}
 			},
 			{
@@ -858,34 +858,34 @@
 				"modes": {
 					"deflate": {
 						"pptx-ts": {
-							"median": 651.19161,
-							"min": 311.875876,
-							"spread": 147.51916152605224,
+							"median": 246.373981,
+							"min": 223.904194,
+							"spread": 8.0014760162519,
 							"rounds": 7,
 							"bytes": 1355602
 						},
 						"pptxgenjs": {
-							"median": 918.706452,
-							"min": 371.259462,
-							"spread": 114.84198687221149,
+							"median": 288.273593,
+							"min": 281.395206,
+							"spread": 4.890756330913728,
 							"rounds": 7,
-							"bytes": 1138786
+							"bytes": 1138807
 						},
-						"bytesAgree": 15.99407495710393
+						"bytesAgree": 15.992525829852717
 					},
 					"store": {
 						"pptx-ts": {
-							"median": 288.914531,
-							"min": 213.411212,
-							"spread": 26.388133105011597,
-							"rounds": 7,
+							"median": 174.61164,
+							"min": 168.071514,
+							"spread": 4.743876181450439,
+							"rounds": 9,
 							"bytes": 3312215
 						},
 						"pptxgenjs": {
-							"median": 235.355046,
-							"min": 140.333551,
-							"spread": 23.80021331686255,
-							"rounds": 7,
+							"median": 129.224941,
+							"min": 124.691653,
+							"spread": 2.4739473473623,
+							"rounds": 9,
 							"bytes": 4438996
 						},
 						"bytesAgree": 25.3836903660197
@@ -893,7 +893,7 @@
 				},
 				"compression": {
 					"pptx-ts": 2.4433535801806134,
-					"pptxgenjs": 3.8980071760629302
+					"pptxgenjs": 3.8979352954451456
 				}
 			},
 			{
@@ -905,33 +905,33 @@
 				"modes": {
 					"deflate": {
 						"pptx-ts": {
-							"median": 645.26523,
-							"min": 632.365107,
-							"spread": 7.420707528282584,
+							"median": 622.880277,
+							"min": 595.670871,
+							"spread": 3.7261641373178183,
 							"rounds": 7,
-							"bytes": 3373260
+							"bytes": 3373259
 						},
 						"pptxgenjs": {
-							"median": 858.155707,
-							"min": 809.838915,
-							"spread": 8.894060469145145,
+							"median": 747.528864,
+							"min": 722.65169,
+							"spread": 4.69312526773546,
 							"rounds": 7,
-							"bytes": 2830020
+							"bytes": 2829797
 						},
-						"bytesAgree": 16.104302662706107
+						"bytesAgree": 16.11088860950197
 					},
 					"store": {
 						"pptx-ts": {
-							"median": 518.55622,
-							"min": 450.1325,
-							"spread": 12.985054638820067,
+							"median": 511.62793,
+							"min": 445.326188,
+							"spread": 14.051358181325243,
 							"rounds": 7,
 							"bytes": 8216015
 						},
 						"pptxgenjs": {
-							"median": 369.560874,
-							"min": 351.027692,
-							"spread": 9.224348922824552,
+							"median": 350.710626,
+							"min": 331.675408,
+							"spread": 22.83608338687748,
 							"rounds": 7,
 							"bytes": 11041246
 						},
@@ -939,8 +939,8 @@
 					}
 				},
 				"compression": {
-					"pptx-ts": 2.435630517659475,
-					"pptxgenjs": 3.9014727811110874
+					"pptx-ts": 2.435631239700242,
+					"pptxgenjs": 3.90178023370581
 				}
 			}
 		]
@@ -952,7 +952,7 @@
 			"lastDefaultBranchCommit": "2026-11-12",
 			"stars": 5,
 			"openIssues": 4,
-			"openPullRequests": 2,
+			"openPullRequests": 0,
 			"npm": {
 				"names": [
 					"pptx-ts",
@@ -963,13 +963,13 @@
 					"pptx-ts": 15536,
 					"@shbernal/ts-pptx": 508
 				},
-				"lastPublish": "2026-10-11"
+				"lastPublish": "2026-11-12"
 			},
 			"source": {
 				"lines": 74403,
-				"testLines": 162120,
+				"testLines": 81070,
 				"statementCoverage": {
-					"pct": 95.67,
+					"pct": 95.7,
 					"lane": "node"
 				},
 				"testEvidence": {
@@ -988,9 +988,8 @@
 						"test:com",
 						"test:lo"
 					],
-					"specFiles": 792,
+					"specFiles": 396,
 					"testDirs": [
-						".claude/worktrees/maint2-gh-aw-1/test",
 						"test"
 					]
 				}

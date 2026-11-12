@@ -7,7 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.0.0](https://github.com/shbernal/pptx-ts/releases/tag/v5.0.0) - 2026-11-12
+
+### Changed
+
+- **5.0.0 is 4.2.0 released as a major version.** 4.2.0 carried breaking changes and should have
+  been a major release, so 5.0.0 ships the same library code and the same agent skill under a major
+  version; only `pres.version` reads differently. Upgrading from 4.2.0 changes nothing. Upgrading
+  from 4.1.x or earlier, the [4.2.0](https://github.com/shbernal/pptx-ts/releases/tag/v4.2.0) entries apply, the breaking ones first:
+  a placeholder definition inherits the master's bullet and margins
+  ([#174](https://github.com/shbernal/pptx-ts/issues/174)), `HyperlinkProps` is a union with one
+  destination per arm, `CallIr` is a union discriminated on `method`, and `baseline` is a percent
+  ([#65](https://github.com/shbernal/pptx-ts/issues/65)). `TsPptx`, `TsPptxError`,
+  `TsPptxErrorOptions` and `TsPptxCode` are renamed to `PptxTs`, `PptxTsError`,
+  `PptxTsErrorOptions` and `PptxTsCode`; the old names are still exported in 5.0.0, deprecated.
+  4.2.0 is deprecated on npm in favour of this release.
+- **Contributors: a release goes through a version bump pull request.** `main` is protected, so
+  `pnpm version --no-git-tag-version` runs on a `release/vX.Y.Z` branch cut from `origin/main`, the
+  bump merges as a squash, and the annotated `vX.Y.Z` tag goes on the merged commit.
+  `release:preflight` now requires a `release/*` branch at `origin/main` instead of `main`. See
+  [Release workflow](docs/contributing/releasing.md).
+- **Contributors: CI collects coverage on the Node 26 leg**, the version `.node-version` names; the
+  Node 24 leg still tests the `engines` floor. The `gen-playbtn` check compares the embedded PNG's
+  decoded pixels, not its bytes, which depended on the CPU's zlib path. The lint and format
+  toolchain, the gh-aw agent workflows (v1.2.2) and the docs site's `pptx-html` are updated.
+
 ## [4.2.0](https://github.com/shbernal/pptx-ts/releases/tag/v4.2.0) - 2026-11-12
+
+> **Use [5.0.0](https://github.com/shbernal/pptx-ts/releases/tag/v5.0.0) instead.** This release
+> carries the breaking changes listed under Changed, so it should have been a major version. 5.0.0
+> ships the same code as a major release, and 4.2.0 is deprecated on npm.
 
 ### Added
 
