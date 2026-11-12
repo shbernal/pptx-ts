@@ -19,8 +19,7 @@ pnpm install
 pnpm run verify        # while iterating, and before pushing
 ```
 
-`pnpm install` runs `prepare`, which installs the [git hooks](#git-hooks) and builds `dist/` when it
-is missing.
+`pnpm install` runs `prepare`, which builds `dist/` when it is missing.
 
 `verify` is the only gate to run locally. It typechecks, runs the source and docs checks and every
 Vitest suite. CI runs the heavier gates on every pull request: coverage, the script round trip,
@@ -67,29 +66,16 @@ PowerPoint fixture. Both find PowerPoint the same way:
 Without PowerPoint, `test:com` reports SKIP, and fixture-gated work goes through a GitHub issue,
 as [Evidence and fixtures](docs/contributing/ooxml.md#evidence-and-fixtures) describes.
 
-## Git hooks
+## Checks in CI
 
-`pnpm install` installs the hooks through the `prepare` script (`scripts/install-hooks.mjs`). When
-`core.hooksPath` points outside this repository, the installer skips and says so, and these hooks
-then run only if that hooks path hands control back to them. Do not bypass hooks.
+There are no git hooks. Every check runs in CI on each pull request:
 
-| Hook | Job | What it runs |
-| --- | --- | --- |
-| pre-commit | `oxlint` | `oxlint --fix` on staged `*.{ts,mjs,js}` files, then re-stages the fixes |
-| pre-commit | `oxfmt` | `oxfmt --write` on staged `*.{json,jsonc,yaml,yml,mjs,mts,ts,js}` files except `pnpm-lock.yaml`, then re-stages the result |
-| pre-commit | `charcheck` | `charcheck --staged --max-warnings 0` over the staged content, when the commit touches a `*.{md,vue,ts,mts}` file |
-| commit-msg | `no-ai-attribution` | Rejects a message that carries an agent-attribution trailer or footer |
-| pre-push | `lint` | `pnpm run lint` |
-| pre-push | `lint-chars` | `pnpm run lint:chars`, over the whole repository |
-| pre-push | `format` | `pnpm run format:check` |
-| pre-push | `typecheck` | `pnpm run typecheck` |
-| pre-push | `typecheck-scripts` | `pnpm run typecheck:scripts` |
-| pre-push | `typecheck-site` | `pnpm run typecheck:site` |
-
-Pre-commit runs its jobs one after another, in the order above. Pre-push runs its jobs in parallel.
-The commit-msg rule comes from [`shbernal/lefthook-rules`](https://github.com/shbernal/lefthook-rules)
-through the `remotes:` block in `lefthook.yml`, and it skips merge and rebase commits. No hook runs
-a test suite.
+- `Static checks` runs `pnpm run check:static`: `lint`, `lint:chars` and `format:check`, then
+  the source and docs checks. `pnpm run format`, `pnpm exec oxlint --fix` and
+  `pnpm run lint:chars:fix` apply fixes locally.
+- `Commit messages` runs [commit-check](https://github.com/commit-check/commit-check-action)
+  with the rules in `.github/cchk.toml`. It rejects a commit message that carries an
+  AI-attribution trailer or footer.
 
 ## Demos
 
@@ -145,8 +131,8 @@ the work is accepted.
   it under an `### AI involvement` heading.
 - **Pull requests**: fill in the AI involvement section of the pull request template.
 
-Disclose in the issue or pull request body, never in a commit message. The `no-ai-attribution`
-commit-msg hook rejects attribution trailers, and the body is where a reviewer reads it.
+Disclose in the issue or pull request body, never in a commit message. CI's `Commit messages`
+check rejects attribution trailers, and the body is where a reviewer reads it.
 
 ### Promoting a downstream need
 

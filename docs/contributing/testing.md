@@ -1,7 +1,7 @@
 ---
 doc-schema-version: 1
 title: "Testing guide"
-summary: "The gate matrix, git hooks and CI jobs, the test suites, coverage, schema validation, and the oracles behind a PowerPoint claim."
+summary: "The gate matrix and CI jobs, the test suites, coverage, schema validation, and the oracles behind a PowerPoint claim."
 read_when:
   - Choosing verification commands
   - Adding or changing a gate, a git hook or a CI job
@@ -19,42 +19,42 @@ them. Use `pnpm` for repository scripts. The package declares Node.js `>=24`.
 
 ## Gate matrix
 
-Each cell comes from `package.json`, `lefthook.yml` or a workflow under `.github/workflows/`.
+Each cell comes from `package.json` or a workflow under `.github/workflows/`.
 `node scripts/run-steps.mjs --list <aggregate>` prints what an aggregate runs.
 
-| Gate | `verify` | `verify:full` | `check:static` | pre-commit | pre-push | CI job | Run when |
-| --- | :-: | :-: | :-: | :-: | :-: | --- | --- |
-| `typecheck` | ✓ | ✓ | ✓ | | ✓ | `static` | every change, through `verify` |
-| `typecheck:scripts` | ✓ | ✓ | ✓ | | ✓ | `static` | every change, through `verify` |
-| `typecheck:test` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
-| `typecheck:site` | ✓ | ✓ | ✓ | | ✓ | `static` | every change, through `verify` |
-| `raw-xml:check` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
-| `ooxml-literals:check` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
-| `test-imports:check` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
-| `path-refs:check` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
-| `docs:api` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
-| `docs:index` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
-| `docs:check` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
-| `comparison:check` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
-| `census:check` | ✓ | ✓ | ✓ | | | `static` | every change, through `verify` |
-| `test` | ✓ | | | | | `test` (Node 26.x) | every change, through `verify` |
-| `test:coverage` | | ✓ | | | | `test` (Node 24.x) | CI; `coverage:probe` while editing |
-| `docs:build` | | | | | | `docs.yml` `build`, and `browser` | a change to `docs/.vitepress/`, `www/` or a docs generator |
-| `script:roundtrip:all` | | ✓ | | | | `test` (Node 24.x) | CI; `script:roundtrip` while editing `src/script/` |
-| `package:lint` | | ✓ | | | | `package` | CI; locally only to iterate on a `package` failure |
-| `test:package` | | ✓ | | | | `package` | CI; locally only to iterate on a `package` failure |
-| `bundle-size:check` | | ✓ | | | | `package` | CI; locally to re-freeze after an import moves or a dependency arrives |
-| `bundle-tier:check` | | ✓ | | | | `package` | CI; locally to re-freeze after an import moves or a dependency arrives |
-| `lint` | | | ✓ | staged, fixes | ✓ | `static` | the hooks run it |
-| `lint:chars` | | | ✓ | staged | ✓ | `static` | the hooks run it |
-| `format:check` | | | ✓ | staged, writes | ✓ | `static` | the hooks run it |
-| `test:browser` | | | | | | `browser` | `src/runtime/browser.ts`, `src/browser.ts`, the zip writer, or code whose bytes could differ by runtime |
-| `coverage:gate` | | | | | | `coverage` | after `test:coverage` and `test:browser`; otherwise leave it to CI |
-| `test:oracles` | | | | | | `font-oracles` | an autofit or CJK case, the fit model or the metrics sidecar changes |
-| `test:lo` | | | | | | `render-oracle` | SmartArt text, or a construct in `scripts/libreoffice-render-smoke.mjs` |
-| `test:com` | | | | | | none | markup PowerPoint could reject, drop or leave unpainted; needs a PowerPoint transport |
-| `byte-identity:check` | | | | | | none | after each edit of a behaviour-preserving `src/gen/` refactor |
-| `schema:versions` | | | | | | none | after an `ooxml-validate` bump |
+| Gate | `verify` | `verify:full` | `check:static` | CI job | Run when |
+| --- | :-: | :-: | :-: | --- | --- |
+| `typecheck` | ✓ | ✓ | ✓ | `static` | every change, through `verify` |
+| `typecheck:scripts` | ✓ | ✓ | ✓ | `static` | every change, through `verify` |
+| `typecheck:test` | ✓ | ✓ | ✓ | `static` | every change, through `verify` |
+| `typecheck:site` | ✓ | ✓ | ✓ | `static` | every change, through `verify` |
+| `raw-xml:check` | ✓ | ✓ | ✓ | `static` | every change, through `verify` |
+| `ooxml-literals:check` | ✓ | ✓ | ✓ | `static` | every change, through `verify` |
+| `test-imports:check` | ✓ | ✓ | ✓ | `static` | every change, through `verify` |
+| `path-refs:check` | ✓ | ✓ | ✓ | `static` | every change, through `verify` |
+| `docs:api` | ✓ | ✓ | ✓ | `static` | every change, through `verify` |
+| `docs:index` | ✓ | ✓ | ✓ | `static` | every change, through `verify` |
+| `docs:check` | ✓ | ✓ | ✓ | `static` | every change, through `verify` |
+| `comparison:check` | ✓ | ✓ | ✓ | `static` | every change, through `verify` |
+| `census:check` | ✓ | ✓ | ✓ | `static` | every change, through `verify` |
+| `test` | ✓ | | | `test` (Node 26.x) | every change, through `verify` |
+| `test:coverage` | | ✓ | | `test` (Node 24.x) | CI; `coverage:probe` while editing |
+| `docs:build` | | | | `docs.yml` `build`, and `browser` | a change to `docs/.vitepress/`, `www/` or a docs generator |
+| `script:roundtrip:all` | | ✓ | | `test` (Node 24.x) | CI; `script:roundtrip` while editing `src/script/` |
+| `package:lint` | | ✓ | | `package` | CI; locally only to iterate on a `package` failure |
+| `test:package` | | ✓ | | `package` | CI; locally only to iterate on a `package` failure |
+| `bundle-size:check` | | ✓ | | `package` | CI; locally to re-freeze after an import moves or a dependency arrives |
+| `bundle-tier:check` | | ✓ | | `package` | CI; locally to re-freeze after an import moves or a dependency arrives |
+| `lint` | | | ✓ | `static` | CI; `pnpm run check:static` to run it locally |
+| `lint:chars` | | | ✓ | `static` | CI; `pnpm run check:static` to run it locally |
+| `format:check` | | | ✓ | `static` | CI; `pnpm run check:static` to run it locally |
+| `test:browser` | | | | `browser` | `src/runtime/browser.ts`, `src/browser.ts`, the zip writer, or code whose bytes could differ by runtime |
+| `coverage:gate` | | | | `coverage` | after `test:coverage` and `test:browser`; otherwise leave it to CI |
+| `test:oracles` | | | | `font-oracles` | an autofit or CJK case, the fit model or the metrics sidecar changes |
+| `test:lo` | | | | `render-oracle` | SmartArt text, or a construct in `scripts/libreoffice-render-smoke.mjs` |
+| `test:com` | | | | none | markup PowerPoint could reject, drop or leave unpainted; needs a PowerPoint transport |
+| `byte-identity:check` | | | | none | after each edit of a behaviour-preserving `src/gen/` refactor |
+| `schema:versions` | | | | none | after an `ooxml-validate` bump |
 
 Reading the matrix:
 
@@ -62,9 +62,8 @@ Reading the matrix:
   script and font-oracle suites. `test:unit`, `test:read` and `test:schema` run parts of it.
 - `test:coverage` is `test` plus the `vitest.config.ts` coverage thresholds. `verify:full` and
   the Node 24.x leg of the `test` job run it in place of `test`, so neither runs the suite twice.
-- The pre-commit cells run on staged files only. oxlint and oxfmt re-stage what they fix.
-  charcheck reads the staged content and fixes nothing.
-- A commit-msg hook also runs `no-ai-attribution` from `shbernal/lefthook-rules`.
+- The `commit-check` job checks every commit message of a pull request against
+  `.github/cchk.toml`, which forbids AI-attribution trailers.
 - `package` runs `check:package` on `ubuntu-24.04` and `windows-latest`, and `font-oracles`
   runs on `windows-latest`. Every other job runs on `ubuntu-24.04`.
 - `docs:build` reaches the `browser` job because `test:browser` builds the site before
@@ -104,8 +103,8 @@ can be reproduced by its own command.
 - `docs:api` records a digest of everything it reads and skips TypeDoc when that digest matches
   the last successful run, so an iteration that touches no `src/` file does not pay for it.
   `node scripts/docs-api.mjs --force` regenerates anyway.
-- Neither `verify` nor `verify:full` runs `lint`, `lint:chars` or `format:check`. The git hooks
-  run those.
+- Neither `verify` nor `verify:full` runs `lint`, `lint:chars` or `format:check`. CI's `static`
+  job runs those, through `check:static`.
 
 `scripts/run-steps.mjs` assembles every aggregate. It expands script names into the commands
 they run and executes them in one process tree, so no step pays a package-manager start.
@@ -121,19 +120,12 @@ node scripts/run-steps.mjs --list verify   # print the expansion, run nothing
 Every one-shot script starts with `scripts/ensure-dist.mjs`, which rebuilds `dist/` only when a
 source or build config is newer than it.
 
-### Git hooks
-
-[CONTRIBUTING.md](https://github.com/shbernal/pptx-ts/blob/main/CONTRIBUTING.md#git-hooks) lists
-the hooks, and `lefthook.yml` records why each is shaped the way it is. The pre-commit and
-pre-push columns of the [gate matrix](#gate-matrix) show where they overlap the aggregates. No
-hook runs a test, `typecheck:test`, `docs:check` or `docs:build`. `verify` runs the first three,
-and `docs.yml` builds the site.
-
 ### CI workflows
 
 ```mermaid
 flowchart LR
   subgraph ci["ci.yml: pull requests, pushes to main, workflow_call"]
+    commits["commit-check<br/>.github/cchk.toml"]
     static["static<br/>check:static"]
     test["test, Node 24.x and 26.x<br/>24.x: test:coverage, script:roundtrip:all<br/>26.x: test"]
     fonts["font-oracles, windows-latest<br/>test:oracles"]
@@ -153,7 +145,7 @@ flowchart LR
   end
 ```
 
-- `ci.yml` has seven jobs. `test` and `package` are matrices, so a run has nine legs.
+- `ci.yml` has eight jobs. `test` and `package` are matrices, so a run has ten legs.
 - Only the Node 24.x leg of `test` collects coverage and runs the script round trip, because
   neither result depends on the Node version.
 - The `test` job fetches the OOXML oracle (`pnpm exec ooxml-validate --version`) before any

@@ -62,7 +62,6 @@ are in every aggregate the repo has.
 | `gen-playbtn.mjs` | Generator | Draws the default video poster into `src/media/playbtn.ts` | manual (`media:playbtn`); asserted by `test/scripts/gen-playbtn.test.ts` |
 | `gen-builtin-table-styles.mjs` | Generator | Extracts the 74 built-in table style definitions from `test/read/fixtures/table-styles-builtin.pptx` into `src/gen/pres/builtin-table-styles.ts` | manual (`table-styles:gen`); asserted by `test/scripts/gen-builtin-table-styles.test.ts` |
 | `generate-llms-docs.mjs` | Generator | `docs/public/llms*.txt` | `docs:prepare` |
-| `install-hooks.mjs` | Library | Installs lefthook, skipping where it cannot | `prepare` |
 | `libreoffice-render-smoke.mjs` | Gate | Renders decks in LibreOffice, the one renderer here with no SmartArt layout engine, and reads the painted text back | manual, needs LibreOffice + `pdftotext` (`test:lo`) |
 | `note-census.mjs` | Diagnostic + Gate | How many fixtures raise each declared fidelity note, per tier; `--check` compares the Known losses section of `docs/reference/pptx-to-script.md` with the counts and fails on drift | manual (`script:census`); `--check` in `check:core` (`census:check`) |
 | `ooxml-version-probe.mjs` | Diagnostic | Validator error counts across Office versions; fails on a count that decreases, a target with no row, or a control row with a zero | manual (`schema:versions`); `verdict` unit-tested |

@@ -82,7 +82,7 @@
 	"types": "./dist/index.d.ts",
 	"scripts": {
 		"build": "tsdown",
-		"prepare": "node scripts/install-hooks.mjs && node scripts/ensure-dist.mjs --if-missing",
+		"prepare": "node scripts/ensure-dist.mjs --if-missing",
 		"start": "pnpm run watch",
 		"watch": "tsdown --watch",
 		"watch:dev": "tsdown --config tsdown.dev.config.ts --watch",
@@ -214,7 +214,6 @@
 		"istanbul-reports": "^3.2.0",
 		"jszip": "^3.10.2",
 		"knip": "^6.45.0",
-		"lefthook": "^2.2.2",
 		"mathml2omml": "^0.5.0",
 		"mermaid": "^12.3.0",
 		"micromark": "^4.0.3",
