@@ -12,7 +12,7 @@ type RepoState = Parameters<typeof preflightProblems>[0]
 
 function state(overrides: Partial<RepoState> = {}): RepoState {
 	return {
-		branch: 'main',
+		branch: 'release/v4.2.0',
 		head: SHA,
 		upstream: SHA,
 		unstaged: [],
@@ -25,13 +25,16 @@ function state(overrides: Partial<RepoState> = {}): RepoState {
 }
 
 describe('preflightProblems', () => {
-	test('a refreshed, staged release on main is ready', () => {
+	test('a refreshed, staged release on a release branch at origin/main is ready', () => {
 		expect(preflightProblems(state())).toEqual([])
 	})
 
-	test('another branch, or a HEAD that is not origin/main', () => {
+	test('main itself, another branch, or a HEAD that is not origin/main', () => {
+		expect(preflightProblems(state({ branch: 'main' }))).toEqual([
+			'on branch main; release from a release/vX.Y.Z branch cut from origin/main',
+		])
 		expect(preflightProblems(state({ branch: 'feat/x', head: 'abc' }))).toEqual([
-			'on branch feat/x; release from main',
+			'on branch feat/x; release from a release/vX.Y.Z branch cut from origin/main',
 			'HEAD is not origin/main; pull, or push what is ahead in a PR first',
 		])
 	})
