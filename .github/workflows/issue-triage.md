@@ -80,7 +80,7 @@ safe-outputs:
   # implementer re-checks that the maintainer opened the issue, so the label alone cannot
   # start work on anyone else's.
   github-app:
-    app-id: ${{ secrets.AGENTS_APP_ID }}
+    client-id: ${{ secrets.AGENTS_APP_ID }}
     private-key: ${{ secrets.AGENTS_APP_PRIVATE_KEY }}
   add-labels:
     allowed:
