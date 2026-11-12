@@ -1,7 +1,7 @@
 ---
 doc-schema-version: 1
 title: "How the comparison was measured"
-summary: "The corpus, the four outcomes and every full table behind the comparison of pptx-ts 4.1.0 with pptxgenjs 4.0.1: validation, installs, bundles, generation time and project health, and how each was taken."
+summary: "The corpus, the four outcomes and every full table behind the comparison of pptx-ts 4.2.0 with pptxgenjs 4.0.1: validation, installs, bundles, generation time and project health, and how each was taken."
 read_when:
   - Checking a number on the comparison page
   - Adding a probe or a program to the comparison corpus
@@ -20,7 +20,7 @@ Every figure on [pptx-ts vs PptxGenJS](comparison.md) comes from
 either page is edited by hand. This page is the method behind those figures and the full
 tables they summarise.
 
-Measured on 2026-11-12: pptx-ts 4.1.0 built from this repository, against pptxgenjs 4.0.1
+Measured on 2026-11-12: pptx-ts 4.2.0 built from this repository, against pptxgenjs 4.0.1
 installed from npm (published 2025-06-26).
 
 ## The corpus
@@ -188,7 +188,7 @@ own cannot tell them apart.
 - `/ppt/charts/chart1.xml`: `The element has unexpected child element
   'http://schemas.openxmlformats.org/drawingml/2006/chart:axId'.`
 - `/ppt/presentation.xml`: `The attribute 'id' has invalid value
-  '{651de505-e64f-3689-2bad-669644946d6d}'. The Pattern constraint failed. The expected
+  '{219a313d-e9f9-88fc-81c1-2c5510b26aea}'. The Pattern constraint failed. The expected
   pattern is \{[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}\}.`
 
 ## Package hygiene
@@ -302,14 +302,14 @@ intend to keep gets. This is the table that matters.
 
 | Deck | pptx-ts | pptxgenjs | Difference |
 |---|---|---|---|
-| Hello world | 4.1 ms | 5.5 ms | -25% |
-| Text deck | 4.4 ms | 6.4 ms | -31% |
-| Table deck | 3.9 ms | 4.0 ms | -3% |
-| Chart deck | 7.5 ms | 10.0 ms | -25% |
-| Full deck | 16 ms | 21 ms | -26% |
-| 50 slides | 232 ms | 354 ms | -34% |
-| 200 slides | 651 ms | 919 ms | -29% |
-| 500 slides | 645 ms | 858 ms | -25% |
+| Hello world | 2.8 ms | 3.1 ms | -10% |
+| Text deck | 3.6 ms | 4.7 ms | -23% |
+| Table deck | 3.7 ms | 5.4 ms | -31% |
+| Chart deck | 8.5 ms | 9.9 ms | -14% |
+| Full deck | 6.0 ms | 7.1 ms | -16% |
+| 50 slides | 66 ms | 80 ms | -18% |
+| 200 slides | 246 ms | 288 ms | -15% |
+| 500 slides | 623 ms | 748 ms | -17% |
 
 ### Stored, the control
 
@@ -318,18 +318,18 @@ library's own work: building the XML and assembling the package.
 
 | Deck | pptx-ts | pptxgenjs | Difference |
 |---|---|---|---|
-| Hello world | 1.3 ms | 0.8 ms | +71% |
-| Text deck | 1.9 ms | 1.2 ms | +59% |
-| Table deck | 3.2 ms | 1.6 ms | +101% |
-| Chart deck | 7.4 ms | 6.0 ms | +24% |
-| Full deck | 8.2 ms | 5.4 ms | +52% |
-| 50 slides | 288 ms | 222 ms | +30% |
-| 200 slides | 289 ms | 235 ms | +23% |
-| 500 slides | 519 ms | 370 ms | +40% |
+| Hello world | 1.3 ms | 0.7 ms | +77% |
+| Text deck | 1.8 ms | 1.1 ms | +64% |
+| Table deck | 2.3 ms | 1.1 ms | +119% |
+| Chart deck | 4.7 ms | 3.3 ms | +45% |
+| Full deck | 3.4 ms | 2.1 ms | +65% |
+| 50 slides | 42 ms | 33 ms | +28% |
+| 200 slides | 175 ms | 129 ms | +35% |
+| 500 slides | 512 ms | 351 ms | +46% |
 
 The two tables point in opposite directions, and that is the finding. Stored, pptx-ts is
-slower on every deck, by 50% on average, so our XML generation and package assembly cost
-more than upstream's. Compressed, pptx-ts is faster on every deck, by 25% on average,
+slower on every deck, by 60% on average, so our XML generation and package assembly cost
+more than upstream's. Compressed, pptx-ts is faster on every deck, by 18% on average,
 because fflate deflates faster than JSZip does and the compressor dominates the total. A
 consumer writing a file they intend to keep gets the first table. A consumer who has
 turned compression off gets the second, and should know that is where we are behind.

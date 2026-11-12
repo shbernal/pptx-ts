@@ -1,7 +1,7 @@
 ---
 doc-schema-version: 1
 title: "pptx-ts vs PptxGenJS"
-summary: "What pptx-ts 4.1.0 and pptxgenjs 4.0.1 each emit, how many of their decks validate, what each costs to bundle and install, and how the two projects are run."
+summary: "What pptx-ts 4.2.0 and pptxgenjs 4.0.1 each emit, how many of their decks validate, what each costs to bundle and install, and how the two projects are run."
 read_when:
   - Choosing between pptx-ts and pptxgenjs
   - Checking whether a construct is emitted by one library or by both
@@ -15,7 +15,7 @@ doc_type: "overview"
 
 # pptx-ts vs PptxGenJS
 
-pptx-ts 4.1.0 and pptxgenjs 4.0.1 were measured on 2026-11-12 by building the same 22 deck
+pptx-ts 4.2.0 and pptxgenjs 4.0.1 were measured on 2026-11-12 by building the same 22 deck
 intents with each library and reading the bytes that came out. pptx-ts descends from
 pptxgenjs, detached at its v4.0.1 ([lineage](getting-started/introduction.md#lineage)), so
 every difference below comes from running both rather than from either one describing
@@ -97,7 +97,7 @@ measured](comparison-method.md#schema-validity) lists each distinct error.
 <TimingRatio />
 
 Compressed, which is what a file you intend to keep gets, pptx-ts is faster on every deck,
-by 25% on average. Stored, with compression turned off, it is slower on every deck, by 50%
+by 18% on average. Stored, with compression turned off, it is slower on every deck, by 60%
 on average: its XML generation and package assembly cost more than pptxgenjs, and its
 compressor more than makes that back.
 
@@ -106,14 +106,14 @@ figure below 1× means pptx-ts took less time.
 
 | Deck | Compressed | Stored |
 |---|---|---|
-| Hello world | 0.75× | 1.71× |
-| Text deck | 0.69× | 1.59× |
-| Table deck | 0.97× | 2.01× |
-| Chart deck | 0.75× | 1.24× |
-| Full deck | 0.74× | 1.52× |
-| 50 slides | 0.66× | 1.30× |
-| 200 slides | 0.71× | 1.23× |
-| 500 slides | 0.75× | 1.40× |
+| Hello world | 0.90× | 1.77× |
+| Text deck | 0.77× | 1.64× |
+| Table deck | 0.69× | 2.19× |
+| Chart deck | 0.86× | 1.45× |
+| Full deck | 0.84× | 1.65× |
+| 50 slides | 0.82× | 1.28× |
+| 200 slides | 0.85× | 1.35× |
+| 500 slides | 0.83× | 1.46× |
 
 The milliseconds, the machine they were taken on, and why the two settings point in
 opposite directions are in [how the comparison was
@@ -140,15 +140,15 @@ measure history as much as merit.
 | Repository | [shbernal/pptx-ts](https://github.com/shbernal/pptx-ts) | [gitbrent/PptxGenJS](https://github.com/gitbrent/PptxGenJS) |
 | Default branch | `main` | `master` |
 | Last commit on the default branch | 2026-11-12 | 2025-06-26 |
-| Last npm publish | 2026-10-11 | 2025-06-26 |
+| Last npm publish | 2026-11-12 | 2025-06-26 |
 | Downloads, last month | 16,044 | 21,131,615 |
 | Stars | 5 | 6,375 |
 | Open issues | 4 | 238 |
-| Open pull requests | 2 | 72 |
+| Open pull requests | 0 | 72 |
 | Source lines | 74,403 | 10,125 |
-| Test lines | 162,120 | 0 |
-| Test suite | 13 test scripts, 792 spec files under `.claude/worktrees/maint2-gh-aw-1/test/`, `test/` | no test script, no spec file, no test directory |
-| Statement coverage | 95.67% (node lane only) | no automated suite |
+| Test lines | 81,070 | 0 |
+| Test suite | 13 test scripts, 396 spec files under `test/` | no test script, no spec file, no test directory |
+| Statement coverage | 95.7% (node lane only) | no automated suite |
 
 [How the comparison was measured](comparison-method.md#project-health) says how each of
 these figures is taken.
