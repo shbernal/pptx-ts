@@ -81,7 +81,7 @@ safe-outputs:
   # github-actions[bot]: its approval cannot satisfy a required review, and the review
   # event it causes starts no workflow, so the fix-up job would never run.
   github-app:
-    app-id: ${{ secrets.REVIEWER_APP_ID }}
+    client-id: ${{ secrets.REVIEWER_APP_ID }}
     private-key: ${{ secrets.REVIEWER_APP_PRIVATE_KEY }}
   create-pull-request-review-comment:
     max: 15
