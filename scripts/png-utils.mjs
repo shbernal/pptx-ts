@@ -138,7 +138,8 @@ export function encodePngRgba(w, h, rgba) {
 }
 
 /**
- * Decode an 8-bit PNG (truecolour, palette, or grey, +/- alpha) into `{w, h, rgb(x,y)}`.
+ * Decode an 8-bit PNG (truecolour, palette, or grey, +/- alpha) into `{w, h, rgb(x,y)}`, plus the
+ * unfiltered scanlines as `pixels` (`channels` bytes per pixel, in the file's own colour type).
  *
  * Hand-rolled rather than pulled in as a dependency: this script is the only consumer, PowerPoint
  * writes whichever of those colour types suits the slide (truecolour for the rendered model, an
@@ -217,5 +218,5 @@ export function decodePng(bytes) {
 		if (colour === 0 || colour === 4) return [at(out, i), at(out, i), at(out, i)]
 		return [at(out, i), at(out, i + 1), at(out, i + 2)]
 	}
-	return { w, h, rgb }
+	return { w, h, channels, pixels: new Uint8Array(out), rgb }
 }
