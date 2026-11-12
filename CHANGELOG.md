@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The deprecated `TsPptx`, `TsPptxError`, `TsPptxErrorOptions` and `TsPptxCode` aliases are
+  removed in v6, not v5.** Their `@deprecated` notes said v5; 5.0.0 kept them, so the notes now say
+  v6.
+
 ## [5.0.0](https://github.com/shbernal/pptx-ts/releases/tag/v5.0.0) - 2026-11-12
 
 ### Changed
@@ -21,7 +27,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#65](https://github.com/shbernal/pptx-ts/issues/65)). `TsPptx`, `TsPptxError`,
   `TsPptxErrorOptions` and `TsPptxCode` are renamed to `PptxTs`, `PptxTsError`,
   `PptxTsErrorOptions` and `PptxTsCode`; the old names are still exported in 5.0.0, deprecated.
-  4.2.0 is deprecated on npm in favour of this release.
 - **Contributors: a release goes through a version bump pull request.** `main` is protected, so
   `pnpm version --no-git-tag-version` runs on a `release/vX.Y.Z` branch cut from `origin/main`, the
   bump merges as a squash, and the annotated `vX.Y.Z` tag goes on the merged commit.
@@ -35,8 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [4.2.0](https://github.com/shbernal/pptx-ts/releases/tag/v4.2.0) - 2026-11-12
 
 > **Use [5.0.0](https://github.com/shbernal/pptx-ts/releases/tag/v5.0.0) instead.** This release
-> carries the breaking changes listed under Changed, so it should have been a major version. 5.0.0
-> ships the same code as a major release, and 4.2.0 is deprecated on npm.
+> contains the breaking changes listed under Changed. 5.0.0 ships the same code as a major release.
 
 ### Added
 
@@ -234,7 +238,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`TsPptx` and its error names.** The class is now `PptxTs`, and `TsPptxError`,
   `TsPptxErrorOptions` and `TsPptxCode` are now `PptxTsError`, `PptxTsErrorOptions` and
   `PptxTsCode`. The old names are still exported from every entry, as the same class and the same
-  types, so `instanceof TsPptxError` keeps matching. They carry `@deprecated` and are removed in v5.
+  types, so `instanceof TsPptxError` keeps matching. They carry `@deprecated` and are removed in v6.
   A default import (`import PptxTs from 'pptx-ts'`) names the class itself and is unaffected.
 
 ### Fixed
