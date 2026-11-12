@@ -21,12 +21,17 @@
  * un-premultiply once at the end.
  *
  *   node scripts/gen-playbtn.mjs            # rewrite src/media/playbtn.ts
- *   node scripts/gen-playbtn.mjs --check    # exit 1 if the file is not what this would write
+ *   node scripts/gen-playbtn.mjs --check    # exit 1 if the file does not match the design
+ *
+ * **The check compares pixels, not PNG bytes.** `zlib.deflateSync` is deterministic per machine,
+ * not across them: Node's bundled zlib picks CPU-dependent code paths, so the same pixels can
+ * deflate to a few dozen different bytes elsewhere. `--check` (and the test) therefore decode the
+ * committed PNG and compare its pixels with a fresh render, and compare the module text around it.
  */
 
 import fs from 'node:fs'
 import path from 'node:path'
-import { encodePngRgba } from './png-utils.mjs'
+import { decodePng, encodePngRgba } from './png-utils.mjs'
 import { ROOT, isMain, parseCliOrExit } from './script-utils.mjs'
 
 /** The module this writes. */
@@ -132,10 +137,10 @@ export function renderPlayButton(frame) {
 
 /**
  * The whole `src/media/playbtn.ts` source, artwork included.
+ * @param {Buffer} [png] - the PNG to embed; a fresh encode of {@link renderPlayButton} by default
  * @returns {string} the module text, ending in a newline
  */
-export function playbtnModule() {
-	const png = encodePngRgba(FRAME.w, FRAME.h, renderPlayButton(FRAME))
+export function playbtnModule(png = encodePngRgba(FRAME.w, FRAME.h, renderPlayButton(FRAME))) {
 	const base64 = png.toString('base64')
 	return `/**
  * The default poster frame for an embedded video: PowerPoint's play-button overlay.
@@ -158,20 +163,47 @@ export const IMG_PLAYBTN =
 `
 }
 
+/**
+ * Why `source` is not what this script would write, or `null` when it is.
+ *
+ * Two parts: the module text must equal {@link playbtnModule} built around the PNG `source`
+ * already embeds (so the prose, the size sentence and the export are generated), and that PNG
+ * must decode to exactly the pixels {@link renderPlayButton} draws. The PNG bytes themselves are
+ * not compared; see the header.
+ * @param {string} source - the module text, as on disk
+ * @param {Uint8Array} [rgba] - a render of {@link FRAME} to compare against, if one is at hand
+ * @returns {string | null} the first mismatch, or `null`
+ */
+export function playbtnMismatch(source, rgba = renderPlayButton(FRAME)) {
+	const match = /'data:image\/png;base64,([A-Za-z0-9+/=]+)'/.exec(source)
+	if (!match?.[1]) return 'no base64 PNG data URI in the module'
+	const png = Buffer.from(match[1], 'base64')
+	if (source !== playbtnModule(png)) return 'the module text around the PNG is not what the generator writes'
+	const image = decodePng(png)
+	if (image.w !== FRAME.w || image.h !== FRAME.h) return `the PNG is ${image.w}x${image.h}, not ${FRAME.w}x${FRAME.h}`
+	if (image.channels !== 4) return `the PNG has ${image.channels} channels, not RGBA`
+	const at = image.pixels.findIndex((v, i) => v !== rgba[i])
+	if (at >= 0) {
+		const p = Math.floor(at / 4)
+		return `pixel (${p % FRAME.w}, ${Math.floor(p / FRAME.w)}) differs from the render`
+	}
+	return null
+}
+
 if (isMain(import.meta.url)) {
 	const { values } = parseCliOrExit(process.argv.slice(2), {
 		options: { check: { type: 'boolean', default: false } },
 		usage: 'usage: node scripts/gen-playbtn.mjs [--check]',
 	})
-	const source = playbtnModule()
 	if (values.check) {
-		const onDisk = fs.readFileSync(PLAYBTN_PATH, 'utf8')
-		if (onDisk === source) console.log(`${path.relative(ROOT, PLAYBTN_PATH)} is up to date`)
+		const mismatch = playbtnMismatch(fs.readFileSync(PLAYBTN_PATH, 'utf8'))
+		if (mismatch === null) console.log(`${path.relative(ROOT, PLAYBTN_PATH)} is up to date`)
 		else {
-			console.error(`${path.relative(ROOT, PLAYBTN_PATH)} differs from what gen-playbtn.mjs writes`)
+			console.error(`${path.relative(ROOT, PLAYBTN_PATH)} differs from what gen-playbtn.mjs draws: ${mismatch}`)
 			process.exit(1)
 		}
 	} else {
+		const source = playbtnModule()
 		fs.writeFileSync(PLAYBTN_PATH, source)
 		console.log(`wrote ${path.relative(ROOT, PLAYBTN_PATH)}: ${FRAME.w}x${FRAME.h}, ${source.length} bytes of module`)
 	}

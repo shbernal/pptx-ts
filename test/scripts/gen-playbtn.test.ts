@@ -9,7 +9,7 @@
 
 import fs from 'node:fs'
 import { describe, expect, test } from 'vitest'
-import { FRAME, PLAYBTN_PATH, playbtnModule, renderPlayButton } from '../../scripts/gen-playbtn.mjs'
+import { FRAME, PLAYBTN_PATH, playbtnMismatch, renderPlayButton } from '../../scripts/gen-playbtn.mjs'
 import { at } from '../helpers.ts'
 
 /** The RGBA pixel at `(x, y)` of a rendered frame. */
@@ -30,7 +30,14 @@ const renderedFrame = () => (fullFrame ??= renderPlayButton(FRAME))
 
 describe('gen-playbtn', () => {
 	test('src/media/playbtn.ts is what the generator writes', () => {
-		expect(fs.readFileSync(PLAYBTN_PATH, 'utf8')).toBe(playbtnModule())
+		// Pixels and module text, not PNG bytes: deflate output differs between CPUs.
+		expect(playbtnMismatch(fs.readFileSync(PLAYBTN_PATH, 'utf8'), renderedFrame())).toBeNull()
+	})
+
+	test('a hand-edited pixel fails the check', () => {
+		const rgba = Uint8Array.from(renderedFrame())
+		rgba[0] = (rgba[0] ?? 0) ^ 1
+		expect(playbtnMismatch(fs.readFileSync(PLAYBTN_PATH, 'utf8'), rgba)).toMatch(/pixel \(0, 0\)/)
 	})
 
 	test('the poster is smaller than the artwork it replaced', () => {
