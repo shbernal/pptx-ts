@@ -45,7 +45,7 @@ class PptxTsError extends Error {
 
 `name` is the subclass name, so a stack trace labels the error `InvalidOptionError` rather than `Error`. `detail` holds structured context when the throwing site has any. Most sites give none.
 
-`TsPptxError`, `TsPptxErrorOptions` and `TsPptxCode` are deprecated names for `PptxTsError`, `PptxTsErrorOptions` and `PptxTsCode`, as `TsPptx` is for `PptxTs`. They are the same class and types, so `instanceof TsPptxError` still matches, and they are removed in v5.
+`TsPptxError`, `TsPptxErrorOptions` and `TsPptxCode` are deprecated names for `PptxTsError`, `PptxTsErrorOptions` and `PptxTsCode`, as `TsPptx` is for `PptxTs`. They are the same class and types, so `instanceof TsPptxError` still matches, and they are removed in v6.
 
 ### The error classes
 

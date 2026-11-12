@@ -36,11 +36,11 @@ export type {
 	InternalErrorCode,
 } from './codes.js'
 
-/** @deprecated Renamed to {@link PptxTsError}. This alias is removed in v5. */
+/** @deprecated Renamed to {@link PptxTsError}. This alias is removed in v6. */
 export const TsPptxError = PptxTsError
-/** @deprecated Renamed to {@link PptxTsError}. This alias is removed in v5. */
+/** @deprecated Renamed to {@link PptxTsError}. This alias is removed in v6. */
 export type TsPptxError = PptxTsError
-/** @deprecated Renamed to {@link PptxTsErrorOptions}. This alias is removed in v5. */
+/** @deprecated Renamed to {@link PptxTsErrorOptions}. This alias is removed in v6. */
 export type TsPptxErrorOptions = PptxTsErrorOptions
-/** @deprecated Renamed to {@link PptxTsCode}. This alias is removed in v5. */
+/** @deprecated Renamed to {@link PptxTsCode}. This alias is removed in v6. */
 export type TsPptxCode = PptxTsCode

@@ -48,9 +48,9 @@ export function createPresentation<const Fs extends readonly ConstructFamily[] =
 
 export { PptxTs as default }
 
-/** @deprecated Renamed to {@link PptxTs}. This alias is removed in v5. */
+/** @deprecated Renamed to {@link PptxTs}. This alias is removed in v6. */
 export const TsPptx = PptxTs
-/** @deprecated Renamed to {@link PptxTs}. This alias is removed in v5. */
+/** @deprecated Renamed to {@link PptxTs}. This alias is removed in v6. */
 export type TsPptx = PptxTs
 
 export * from './entry-surface.js'
