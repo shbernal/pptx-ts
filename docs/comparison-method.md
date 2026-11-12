@@ -1,7 +1,7 @@
 ---
 doc-schema-version: 1
 title: "How the comparison was measured"
-summary: "The corpus, the four outcomes and every full table behind the comparison of pptx-ts 4.0.1 with pptxgenjs 4.0.1: validation, installs, bundles, generation time and project health, and how each was taken."
+summary: "The corpus, the four outcomes and every full table behind the comparison of pptx-ts 4.1.0 with pptxgenjs 4.0.1: validation, installs, bundles, generation time and project health, and how each was taken."
 read_when:
   - Checking a number on the comparison page
   - Adding a probe or a program to the comparison corpus
@@ -20,7 +20,7 @@ Every figure on [pptx-ts vs PptxGenJS](comparison.md) comes from
 either page is edited by hand. This page is the method behind those figures and the full
 tables they summarise.
 
-Measured on 2026-10-11: pptx-ts 4.0.1 built from this repository, against pptxgenjs 4.0.1
+Measured on 2026-11-12: pptx-ts 4.1.0 built from this repository, against pptxgenjs 4.0.1
 installed from npm (published 2025-06-26).
 
 ## The corpus
@@ -188,7 +188,7 @@ own cannot tell them apart.
 - `/ppt/charts/chart1.xml`: `The element has unexpected child element
   'http://schemas.openxmlformats.org/drawingml/2006/chart:axId'.`
 - `/ppt/presentation.xml`: `The attribute 'id' has invalid value
-  '{393651d1-936d-0159-e81e-65cdd32acd6f}'. The Pattern constraint failed. The expected
+  '{651de505-e64f-3689-2bad-669644946d6d}'. The Pattern constraint failed. The expected
   pattern is \{[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}\}.`
 
 ## Package hygiene
@@ -199,8 +199,8 @@ is measured against a development checkout with its dependencies hoisted flat.
 
 |  | pptx-ts | pptxgenjs | Difference |
 |---|---|---|---|
-| Installed size, with dependencies | 10.8 MiB | 6.6 MiB | +63% |
-| Installed size, the package alone | 6.1 MiB | 2.5 MiB | +146% |
+| Installed size, with dependencies | 11.4 MiB | 6.6 MiB | +72% |
+| Installed size, the package alone | 6.7 MiB | 2.5 MiB | +170% |
 | Runtime dependencies, transitive | 3 | 18 | -83% |
 
 The last column is pptx-ts measured against pptxgenjs, so a positive number is ours
@@ -242,11 +242,11 @@ are on [porting from PptxGenJS](comparison-syntax.md).
 
 | Program | pptx-ts | pptxgenjs | Difference |
 |---|---|---|---|
-| Hello world | 104.6 KiB | 123.3 KiB | -15% |
-| Text deck | 104.9 KiB | 123.6 KiB | -15% |
-| Table deck | 104.7 KiB | 123.5 KiB | -15% |
-| Chart deck | 104.8 KiB | 123.5 KiB | -15% |
-| Full deck | 105.1 KiB | 123.8 KiB | -15% |
+| Hello world | 111.9 KiB | 123.1 KiB | -9% |
+| Text deck | 112.2 KiB | 123.4 KiB | -9% |
+| Table deck | 112.1 KiB | 123.3 KiB | -9% |
+| Chart deck | 112.1 KiB | 123.3 KiB | -9% |
+| Full deck | 112.4 KiB | 123.6 KiB | -9% |
 
 The column is nearly flat, and that is the result. From hello world to full deck, pptx-ts
 grows by 0.5 KiB and pptxgenjs by 0.5 KiB, which is about what the programs' own literals
@@ -302,14 +302,14 @@ intend to keep gets. This is the table that matters.
 
 | Deck | pptx-ts | pptxgenjs | Difference |
 |---|---|---|---|
-| Hello world | 3.9 ms | 5.3 ms | -25% |
-| Text deck | 3.6 ms | 4.5 ms | -20% |
-| Table deck | 3.7 ms | 3.7 ms | -1% |
-| Chart deck | 7.7 ms | 10 ms | -25% |
-| Full deck | 13 ms | 17 ms | -26% |
-| 50 slides | 81 ms | 111 ms | -26% |
-| 200 slides | 339 ms | 343 ms | -1% |
-| 500 slides | 784 ms | 1463 ms | -46% |
+| Hello world | 4.1 ms | 5.5 ms | -25% |
+| Text deck | 4.4 ms | 6.4 ms | -31% |
+| Table deck | 3.9 ms | 4.0 ms | -3% |
+| Chart deck | 7.5 ms | 10.0 ms | -25% |
+| Full deck | 16 ms | 21 ms | -26% |
+| 50 slides | 232 ms | 354 ms | -34% |
+| 200 slides | 651 ms | 919 ms | -29% |
+| 500 slides | 645 ms | 858 ms | -25% |
 
 ### Stored, the control
 
@@ -318,18 +318,18 @@ library's own work: building the XML and assembling the package.
 
 | Deck | pptx-ts | pptxgenjs | Difference |
 |---|---|---|---|
-| Hello world | 1.4 ms | 0.9 ms | +50% |
-| Text deck | 1.8 ms | 1.1 ms | +59% |
-| Table deck | 2.0 ms | 1.0 ms | +103% |
-| Chart deck | 5.9 ms | 4.3 ms | +37% |
-| Full deck | 4.6 ms | 3.0 ms | +50% |
-| 50 slides | 45 ms | 37 ms | +23% |
-| 200 slides | 206 ms | 146 ms | +41% |
-| 500 slides | 572 ms | 496 ms | +15% |
+| Hello world | 1.3 ms | 0.8 ms | +71% |
+| Text deck | 1.9 ms | 1.2 ms | +59% |
+| Table deck | 3.2 ms | 1.6 ms | +101% |
+| Chart deck | 7.4 ms | 6.0 ms | +24% |
+| Full deck | 8.2 ms | 5.4 ms | +52% |
+| 50 slides | 288 ms | 222 ms | +30% |
+| 200 slides | 289 ms | 235 ms | +23% |
+| 500 slides | 519 ms | 370 ms | +40% |
 
 The two tables point in opposite directions, and that is the finding. Stored, pptx-ts is
-slower on every deck, by 47% on average, so our XML generation and package assembly cost
-more than upstream's. Compressed, pptx-ts is faster on every deck, by 21% on average,
+slower on every deck, by 50% on average, so our XML generation and package assembly cost
+more than upstream's. Compressed, pptx-ts is faster on every deck, by 25% on average,
 because fflate deflates faster than JSZip does and the compressor dominates the total. A
 consumer writing a file they intend to keep gets the first table. A consumer who has
 turned compression off gets the second, and should know that is where we are behind.
@@ -341,7 +341,7 @@ and writing it are both inside the clock; constructing the presentation object i
 
 **The milliseconds belong to the machine that took them and do not transfer; the ratios
 mostly do.** These were taken on 12th Gen Intel(R) Core(TM) i7-1255U (12 cores) under Node
-v24.21.0 on linux, on 2026-10-11. Repeating a run on the same machine moves a difference
+v26.13.0 on linux, on 2026-11-12. Repeating a run on the same machine moves a difference
 by a few points in either direction, so read the columns for their direction and rough
 size rather than for their last digit.
 
@@ -370,12 +370,12 @@ measured here can weigh. The row is about an automated suite, and the coverage f
 beside it exists for pptx-ts only because there is a suite to instrument.
 
 pptx-ts is published under two names carrying the same bytes, `pptx-ts` and
-`@shbernal/ts-pptx`. The download figure is their sum (`pptx-ts` 447, `@shbernal/ts-pptx`
-1,468), because either name alone understates the total, and the canonical name alone
-happens to understate it by most.
+`@shbernal/ts-pptx`. The download figure is their sum (`pptx-ts` 15,536,
+`@shbernal/ts-pptx` 508), because either name alone understates the total, and the
+canonical name alone happens to understate it by most.
 
 The pptxgenjs column shows no npm release since 2025-06-26 and no commit on `master` since
 2025-06-26. That is what the two APIs report, and it is all these pages say about it: from
 outside, a stable library that has stopped needing changes looks exactly like one between
 maintainers, and this measurement cannot tell them apart. It is worth weighing either way,
-next to 233 open issues and 70 open pull requests.
+next to 238 open issues and 72 open pull requests.
