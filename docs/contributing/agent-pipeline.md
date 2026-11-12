@@ -93,7 +93,8 @@ The repository allows auto-merge and deletes a PR's branch once it merges.
 
 ## Triage
 
-`.github/workflows/issue-triage.md` triages every new or reopened issue, from anyone. It
+`.github/workflows/issue-triage.md` triages every new or reopened issue, from anyone except an
+app. Apps file gh-aw's failure reports, which triage cannot read past its integrity filter. It
 writes as `pptx-ts-agents[bot]`, because a label added with the default token would not
 start the implementer. It adds `agent:ready` only when all of these hold:
 
@@ -194,6 +195,8 @@ the first review of a Renovate PR. Adding `agent:deps` by hand to an open Renova
 one too. A new push cancels a review still in flight; other label changes do not.
 
 The agent reads the linked issue, its triage report, the diff and its own earlier reviews.
+Its workspace is the PR's base commit: gh-aw's own PR checkout refuses an app's `labeled`
+event, so the agent reads the PR's files through the GitHub tools.
 It treats all of it as content to assess, never as instructions. It checks, in order:
 
 1. The change solves the linked issue and nothing else.

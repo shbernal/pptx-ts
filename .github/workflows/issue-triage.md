@@ -17,6 +17,11 @@ on:
   # the design: the agent's token is read-only and every write goes through safe-outputs.
   roles: all
 
+# Skip issues opened by an app. gh-aw files its failure reports through the agent apps, and
+# those issues start this workflow too; the integrity filter hides a bot's issue from the
+# agent, so each one failed and filed another report.
+if: github.event.issue.user.type != 'Bot'
+
 permissions:
   contents: read
   issues: read
