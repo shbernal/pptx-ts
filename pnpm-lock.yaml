@@ -252,8 +252,8 @@ importers:
         specifier: 7.0.2007
         version: 7.0.2007
       pptx-html:
-        specifier: 0.3.0
-        version: 0.3.0(mathml2omml@0.5.0)(temml@0.14.0)
+        specifier: 0.3.1
+        version: 0.3.1(mathml2omml@0.5.0)(temml@0.14.0)
       publint:
         specifier: ^0.3.25
         version: 0.3.25
@@ -2678,12 +2678,12 @@ packages:
     resolution: {integrity: sha512-LJlKCCAUFKOuZxipUdYw1NzIITEsPcgyOG9LkvRJvuKj/bRzbuRY0ARXvL0pWGpsZvn8jku+LMep2eU0seHp8g==}
     engines: {node: ^10 || ^12 || >=14}
 
-  pptx-html@0.3.0:
-    resolution: {integrity: sha512-5g+puHTE1a+Shnya5A023MSiifIJYUCNVQvC4JGpXq1JgW5+81Z18SZChZ4b/nBEdpPr2f3CLBvaQ35QypM/Cg==}
+  pptx-html@0.3.1:
+    resolution: {integrity: sha512-YifcRE0jOfAgvKVtKRVKf6rkKA1zUv/qJ80ndiLn57z99sVND+ivbIiLoD9f+/HcOEafFv1qrJ/0zf+Caw4hyw==}
     engines: {node: '>=24'}
 
-  pptx-ts@4.2.0:
-    resolution: {integrity: sha512-sA1+m+joR1ef8amoWFRb5fGeh80nBEJ44+x/4aJUYaSk4RpEAg75dxnBcJV4dBu640Y2Kmb5jiHH/rf71loQeg==}
+  pptx-ts@5.0.0:
+    resolution: {integrity: sha512-0NYRRV8LMN/7vnHWGqAIUvMYtxzNr8z5A0khR4By4+491E5K9GkFEjCO1u1HMXty7IQzSnqgT8kP23cGLz3TSg==}
     engines: {node: '>=24'}
     peerDependencies:
       mathml2omml: ^0.5.0
@@ -5229,14 +5229,14 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.2
 
-  pptx-html@0.3.0(mathml2omml@0.5.0)(temml@0.14.0):
+  pptx-html@0.3.1(mathml2omml@0.5.0)(temml@0.14.0):
     dependencies:
-      pptx-ts: 4.2.0(mathml2omml@0.5.0)(temml@0.14.0)
+      pptx-ts: 5.0.0(mathml2omml@0.5.0)(temml@0.14.0)
     transitivePeerDependencies:
       - mathml2omml
       - temml
 
-  pptx-ts@4.2.0(mathml2omml@0.5.0)(temml@0.14.0):
+  pptx-ts@5.0.0(mathml2omml@0.5.0)(temml@0.14.0):
     dependencies:
       '@xmldom/xmldom': 0.9.12
       fflate: 0.8.3
