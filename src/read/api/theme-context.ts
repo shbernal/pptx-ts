@@ -13,6 +13,7 @@ import { applyColorTransforms, type ColorTransform } from '../oxml/color-transfo
 import { attr, boolValue, firstChild, firstChildElement, numberValue, type Element } from '../oxml/dom.js'
 import { colorValueIf } from '../oxml/fill.js'
 import {
+	FONT_SCRIPT_CHILD,
 	parseClrMap,
 	parseClrScheme,
 	resolveColor,
@@ -21,6 +22,7 @@ import {
 	styleRefLine,
 	themeElementsOfRoot,
 	type ColorContext,
+	type FontScript,
 	type ThemeContext,
 } from '../oxml/theme.js'
 import {
@@ -354,9 +356,43 @@ export function resolveInheritedRunFontFace(
 	slideLstStyle: Element | null,
 	ctx: ThemeContext
 ): string | null {
+	return resolveInheritedRunScriptFace('lt', ph, level, pPr, slideLstStyle, ctx)
+}
+
+/** {@link resolveInheritedRunFontFace} for the East Asian slot: the first `a:defRPr/a:ea` in the chain. */
+export function resolveInheritedRunEastAsianFace(
+	ph: PlaceholderRef | null,
+	level: number,
+	pPr: Element | null,
+	slideLstStyle: Element | null,
+	ctx: ThemeContext
+): string | null {
+	return resolveInheritedRunScriptFace('ea', ph, level, pPr, slideLstStyle, ctx)
+}
+
+/** {@link resolveInheritedRunFontFace} for the complex-script slot: the first `a:defRPr/a:cs` in the chain. */
+export function resolveInheritedRunComplexScriptFace(
+	ph: PlaceholderRef | null,
+	level: number,
+	pPr: Element | null,
+	slideLstStyle: Element | null,
+	ctx: ThemeContext
+): string | null {
+	return resolveInheritedRunScriptFace('cs', ph, level, pPr, slideLstStyle, ctx)
+}
+
+function resolveInheritedRunScriptFace(
+	script: FontScript,
+	ph: PlaceholderRef | null,
+	level: number,
+	pPr: Element | null,
+	slideLstStyle: Element | null,
+	ctx: ThemeContext
+): string | null {
+	const childName = FONT_SCRIPT_CHILD[script]
 	for (const defRPr of inheritedRunDefRPrs(ph, level, pPr, slideLstStyle, ctx)) {
-		const latin = firstChild(defRPr, 'a:latin')
-		const typeface = latin && attr(latin, 'typeface')
+		const face = firstChild(defRPr, childName)
+		const typeface = face && attr(face, 'typeface')
 		if (typeface) return resolveThemeFont(typeface, ctx.fontScheme ?? null)
 	}
 	return null
@@ -589,6 +625,10 @@ export interface StyleFontRef {
 	color: ResolvedColor | null
 	/** The face named by `a:fontRef/@idx` (`major`→`+mj-lt`, `minor`→`+mn-lt`) resolved through the theme `fontScheme`, or `null` for `idx="none"` / an unresolvable token. */
 	face: string | null
+	/** {@link face} for the East Asian slot (`+mj-ea`/`+mn-ea`). */
+	eastAsianFace: string | null
+	/** {@link face} for the complex-script slot (`+mj-cs`/`+mn-cs`). */
+	complexScriptFace: string | null
 }
 
 /**
@@ -605,6 +645,8 @@ export function resolveStyleFontRef(shape: Element, ctx: ThemeContext): StyleFon
 	if (!fontRef) return null
 	const color = resolveColorElement(firstChildElement(fontRef), ctx)
 	const idx = attr(fontRef, 'idx')
-	const token = idx === 'major' ? '+mj-lt' : idx === 'minor' ? '+mn-lt' : null
-	return { color, face: token ? resolveThemeFont(token, ctx.fontScheme ?? null) : null }
+	const prefix = idx === 'major' ? '+mj-' : idx === 'minor' ? '+mn-' : null
+	const face = (script: FontScript): string | null =>
+		prefix ? resolveThemeFont(prefix + script, ctx.fontScheme ?? null) : null
+	return { color, face: face('lt'), eastAsianFace: face('ea'), complexScriptFace: face('cs') }
 }

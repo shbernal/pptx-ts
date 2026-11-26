@@ -227,6 +227,15 @@ export function resolveColor(color: Element | null, ctx: ColorContext): Resolved
 }
 
 /**
+ * A run's three typeface slots, by the suffix a `+mj-*`/`+mn-*` theme-font token uses for each:
+ * `lt` is Latin (`a:latin`), `ea` East Asian (`a:ea`) and `cs` complex script (`a:cs`).
+ */
+export type FontScript = 'lt' | 'ea' | 'cs'
+
+/** The `a:rPr`/`a:defRPr` child that names the face of each {@link FontScript} slot. */
+export const FONT_SCRIPT_CHILD: Readonly<Record<FontScript, string>> = { lt: 'a:latin', ea: 'a:ea', cs: 'a:cs' }
+
+/**
  * Resolve a `+mj-*`/`+mn-*` major/minor font token against a theme `a:fontScheme`
  * to a literal typeface name. A non-token `typeface` (an already-literal face) is
  * returned verbatim. `null` when `typeface` is absent, or when a token cannot be

@@ -14,7 +14,7 @@
 
 import type { OpcPackage } from '../opc/package.js'
 import { attr, firstChild, firstChildElement, getElements, type Element } from '../oxml/dom.js'
-import { resolveThemeFont, styleRefFill, type ThemeContext } from '../oxml/theme.js'
+import { FONT_SCRIPT_CHILD, resolveThemeFont, styleRefFill, type FontScript, type ThemeContext } from '../oxml/theme.js'
 import { resolveColorElement, type ResolvedColor } from './theme-context.js'
 import { TABLE_STYLES_CONTENT_TYPE } from '../../ooxml/rel-types.js'
 
@@ -176,6 +176,10 @@ export interface TableCellTextStyle {
 	color: ResolvedColor | null
 	/** The face its `a:font/a:latin` names, or the theme font its `a:fontRef/@idx` names, resolved. */
 	face: string | null
+	/** {@link face} for the East Asian slot: `a:font/a:ea`, or the `+mj-ea`/`+mn-ea` font of its `a:fontRef`. */
+	eastAsianFace: string | null
+	/** {@link face} for the complex-script slot: `a:font/a:cs`, or the `+mj-cs`/`+mn-cs` font of its `a:fontRef`. */
+	complexScriptFace: string | null
 	/** `@b`: `on` is `true` and `off` is `false`; `def`, the schema default, states nothing. */
 	bold: boolean | null
 	/** `@i`, read the same way as {@link bold}. */
@@ -190,19 +194,22 @@ function onOff(value: string | null): boolean | null {
 	return value === 'on' ? true : value === 'off' ? false : null
 }
 
-/** The face a `tcTxStyle` names: `a:font/a:latin`, or the major or minor font of its `a:fontRef`. */
-function textStyleFace(txStyle: Element, ctx: ThemeContext): string | null {
+/**
+ * The face a `tcTxStyle` names for one script slot: `a:font/a:latin` (or `a:ea`, `a:cs`), or
+ * the major or minor font of its `a:fontRef`.
+ */
+function textStyleFace(txStyle: Element, ctx: ThemeContext, script: FontScript = 'lt'): string | null {
 	const fontScheme = ctx.fontScheme ?? null
 	const font = firstChild(txStyle, 'a:font')
 	if (font) {
-		const latin = firstChild(font, 'a:latin')
-		return resolveThemeFont(latin && attr(latin, 'typeface'), fontScheme)
+		const face = firstChild(font, FONT_SCRIPT_CHILD[script])
+		return resolveThemeFont(face && attr(face, 'typeface'), fontScheme)
 	}
 	const idx = attr(firstChild(txStyle, 'a:fontRef') ?? txStyle, 'idx')
 	return idx === 'major'
-		? resolveThemeFont('+mj-lt', fontScheme)
+		? resolveThemeFont(`+mj-${script}`, fontScheme)
 		: idx === 'minor'
-			? resolveThemeFont('+mn-lt', fontScheme)
+			? resolveThemeFont(`+mn-${script}`, fontScheme)
 			: null
 }
 
@@ -233,7 +240,14 @@ export function resolveTableCellTextStyle(
 	colCount: number,
 	ctx: ThemeContext
 ): TableCellTextStyle {
-	const out: TableCellTextStyle = { color: null, face: null, bold: null, italic: null }
+	const out: TableCellTextStyle = {
+		color: null,
+		face: null,
+		eastAsianFace: null,
+		complexScriptFace: null,
+		bold: null,
+		italic: null,
+	}
 	for (const partName of cellStyleParts(flags, row, col, rowCount, colCount)) {
 		const part = firstChild(style, partName)
 		const txStyle = part && firstChild(part, 'a:tcTxStyle')
@@ -241,6 +255,8 @@ export function resolveTableCellTextStyle(
 		out.bold ??= onOff(attr(txStyle, 'b'))
 		out.italic ??= onOff(attr(txStyle, 'i'))
 		out.face ??= textStyleFace(txStyle, ctx)
+		out.eastAsianFace ??= textStyleFace(txStyle, ctx, 'ea')
+		out.complexScriptFace ??= textStyleFace(txStyle, ctx, 'cs')
 		out.color ??= textStyleColor(txStyle, ctx)
 	}
 	return out

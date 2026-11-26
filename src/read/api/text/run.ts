@@ -94,6 +94,10 @@ export interface InheritedRunProps {
 	color(): ResolvedColor | null
 	size(): number | null
 	face(): string | null
+	/** The East Asian counterpart of {@link face}: the first `a:defRPr/a:ea` in the chain. */
+	eastAsianFace(): string | null
+	/** The complex-script counterpart of {@link face}: the first `a:defRPr/a:cs` in the chain. */
+	complexScriptFace(): string | null
 	bold(): boolean | null
 	italic(): boolean | null
 }
@@ -421,6 +425,17 @@ export class Run {
 	}
 
 	/**
+	 * The complex-script typeface (`a:rPr/a:cs/@typeface`), or `null` when unset: the face for
+	 * Arabic, Hebrew, Thai and other complex scripts. {@link fontName} is the Latin slot and
+	 * {@link eastAsianFontName} the East Asian one.
+	 */
+	get complexScriptFontName(): string | null {
+		const rPr = this.#rPr()
+		const cs = rPr && firstChild(rPr, 'a:cs')
+		return cs ? attr(cs, 'typeface') : null
+	}
+
+	/**
 	 * How many line breaks (`a:br`) sit directly before this run in its paragraph, with no run or
 	 * field between them. A soft break is not a run, so without this the runs on either side of one
 	 * read as plain neighbours. The read counterpart of the write-side `softBreakBefore` option.
@@ -533,6 +548,40 @@ export class Run {
 		if (own !== null) return resolveThemeFont(own, this.context.ctx.fontScheme ?? null)
 		const inherit = this.context.inherit
 		return inherit?.fontRef?.face ?? inherit?.tableText?.face ?? this.inherited?.face() ?? null
+	}
+
+	/**
+	 * The East Asian typeface this run effectively renders CJK text in, resolved to a literal face
+	 * name the way {@link resolvedFontFace} resolves the Latin one: the run's own `a:ea`
+	 * ({@link eastAsianFontName}), then the shape's `p:style/a:fontRef` (`+mj-ea`/`+mn-ea`), then
+	 * the placeholder/list-style chain, then `p:defaultTextStyle`, with a `+mj-ea`/`+mn-ea` token
+	 * resolved through the theme `fontScheme`. `null` when nothing names a face, or the theme's
+	 * East Asian slot is empty.
+	 */
+	get resolvedEastAsianFontFace(): string | null {
+		const own = this.eastAsianFontName
+		if (own !== null) return resolveThemeFont(own, this.context.ctx.fontScheme ?? null)
+		const inherit = this.context.inherit
+		return (
+			inherit?.fontRef?.eastAsianFace ?? inherit?.tableText?.eastAsianFace ?? this.inherited?.eastAsianFace() ?? null
+		)
+	}
+
+	/**
+	 * The complex-script typeface this run effectively renders Arabic, Hebrew, Thai and similar
+	 * text in, resolved like {@link resolvedEastAsianFontFace} but from the `a:cs` slot
+	 * ({@link complexScriptFontName}) and the `+mj-cs`/`+mn-cs` theme tokens.
+	 */
+	get resolvedComplexScriptFontFace(): string | null {
+		const own = this.complexScriptFontName
+		if (own !== null) return resolveThemeFont(own, this.context.ctx.fontScheme ?? null)
+		const inherit = this.context.inherit
+		return (
+			inherit?.fontRef?.complexScriptFace ??
+			inherit?.tableText?.complexScriptFace ??
+			this.inherited?.complexScriptFace() ??
+			null
+		)
 	}
 
 	/**
