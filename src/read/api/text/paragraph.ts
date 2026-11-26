@@ -25,6 +25,8 @@ import {
 	resolveInheritedRunBold,
 	resolveInheritedRunItalic,
 	resolveInheritedRunColor,
+	resolveInheritedRunComplexScriptFace,
+	resolveInheritedRunEastAsianFace,
 	resolveInheritedRunFontFace,
 	resolveInheritedRunSize,
 	type PlaceholderRef,
@@ -143,6 +145,8 @@ export class Paragraph {
 			color: once(resolveInheritedRunColor),
 			size: once(resolveInheritedRunSize),
 			face: once(resolveInheritedRunFontFace),
+			eastAsianFace: once(resolveInheritedRunEastAsianFace),
+			complexScriptFace: once(resolveInheritedRunComplexScriptFace),
 			bold: once(resolveInheritedRunBold),
 			italic: once(resolveInheritedRunItalic),
 		}

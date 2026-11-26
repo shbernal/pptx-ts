@@ -164,6 +164,7 @@ Every getter below takes the first tier that defines a value.
 | Vertical text anchor | [`TextFrame.resolvedAnchor`](api/read/classes/TextFrame.md#resolvedanchor) | The frame's own `a:bodyPr/@anchor`, the matching layout placeholder's, the matching master placeholder's | No |
 | Run colour | [`Run.resolvedColor`](api/read/classes/Run.md#resolvedcolor) | The run's own fill, the shape's `p:style/a:fontRef`, then the list-style tiers | No |
 | Run typeface | [`Run.resolvedFontFace`](api/read/classes/Run.md#resolvedfontface) | The run's own `a:latin`, the shape's `p:style/a:fontRef`, then the list-style tiers. A `+mj-*` or `+mn-*` token resolves through the theme font scheme. | No |
+| Run East Asian and complex-script typefaces | [`resolvedEastAsianFontFace`](api/read/classes/Run.md#resolvedeastasianfontface), [`resolvedComplexScriptFontFace`](api/read/classes/Run.md#resolvedcomplexscriptfontface) | The same tiers as the run typeface, from the `a:ea` or `a:cs` slot | No |
 | Run size, bold and italic | [`resolvedSizePt`](api/read/classes/Run.md#resolvedsizept), [`resolvedBold`](api/read/classes/Run.md#resolvedbold), [`resolvedItalic`](api/read/classes/Run.md#resolveditalic) | The run's own `a:rPr` attribute, then the list-style tiers | No |
 | Paragraph alignment, margin, indent, spacing and bullet | [`resolvedAlign`](api/read/classes/Paragraph.md#resolvedalign), [`resolvedMarginLeftPt`](api/read/classes/Paragraph.md#resolvedmarginleftpt), [`resolvedIndentPt`](api/read/classes/Paragraph.md#resolvedindentpt), [`resolvedLineSpacing`](api/read/classes/Paragraph.md#resolvedlinespacing), [`resolvedSpaceBeforePt`](api/read/classes/Paragraph.md#resolvedspacebeforept), [`resolvedSpaceAfterPt`](api/read/classes/Paragraph.md#resolvedspaceafterpt), [`resolvedBulletDetail`](api/read/classes/Paragraph.md#resolvedbulletdetail) | The paragraph's own `a:pPr`, then the list-style tiers' level element (`a:lvlNpPr`) | No |
 
@@ -395,6 +396,7 @@ A run's own getters and its resolved getters answer different questions:
 | [`fontSizePt`](api/read/classes/Run.md#fontsizept) | [`resolvedSizePt`](api/read/classes/Run.md#resolvedsizept) |
 | [`bold`](api/read/classes/Run.md#bold), [`italic`](api/read/classes/Run.md#italic) | [`resolvedBold`](api/read/classes/Run.md#resolvedbold), [`resolvedItalic`](api/read/classes/Run.md#resolveditalic) |
 | [`fontName`](api/read/classes/Run.md#fontname), possibly a theme token | [`resolvedFontFace`](api/read/classes/Run.md#resolvedfontface) |
+| [`eastAsianFontName`](api/read/classes/Run.md#eastasianfontname), [`complexScriptFontName`](api/read/classes/Run.md#complexscriptfontname) | [`resolvedEastAsianFontFace`](api/read/classes/Run.md#resolvedeastasianfontface), [`resolvedComplexScriptFontFace`](api/read/classes/Run.md#resolvedcomplexscriptfontface) |
 | [`color`](api/read/classes/Run.md#color), [`schemeColor`](api/read/classes/Run.md#schemecolor) | [`resolvedColor`](api/read/classes/Run.md#resolvedcolor) |
 
 - `bold` and `italic` are `null` when the attribute is absent, which means inherited, not `false`.
@@ -403,7 +405,7 @@ A run's own getters and its resolved getters answer different questions:
 - [`underline`](api/read/classes/Run.md#underline) takes an `ST_TextUnderlineType` token such as `sng`, and throws `text/invalid-underline` for any other value.
 - [`strike`](api/read/classes/Run.md#strike) and [`caps`](api/read/classes/Run.md#caps) report the raw token, because the attribute has three states. [`baselinePct`](api/read/classes/Run.md#baselinepct) is a percent: the write side's superscript is `30` and its subscript `-40`.
 - [`charSpacingPt`](api/read/classes/Run.md#charspacingpt) and [`highlight`](api/read/classes/Run.md#highlight) are read-only.
-- [`language`](api/read/classes/Run.md#language), [`eastAsianFontName`](api/read/classes/Run.md#eastasianfontname), [`glow`](api/read/classes/Run.md#glow), [`shadow`](api/read/classes/Run.md#shadow), [`innerShadow`](api/read/classes/Run.md#innershadow), [`outline`](api/read/classes/Run.md#outline) and [`underlineColor`](api/read/classes/Run.md#underlinecolor) are read-only and `null` when unset. `fontName` is the Latin slot, and `glow` and the two shadows are the run's own, not the shape's.
+- [`language`](api/read/classes/Run.md#language), [`eastAsianFontName`](api/read/classes/Run.md#eastasianfontname), [`complexScriptFontName`](api/read/classes/Run.md#complexscriptfontname), [`glow`](api/read/classes/Run.md#glow), [`shadow`](api/read/classes/Run.md#shadow), [`innerShadow`](api/read/classes/Run.md#innershadow), [`outline`](api/read/classes/Run.md#outline) and [`underlineColor`](api/read/classes/Run.md#underlinecolor) are read-only and `null` when unset. `fontName` is the Latin slot, and `glow` and the two shadows are the run's own, not the shape's.
 
 ### Autofit
 

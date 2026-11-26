@@ -201,6 +201,8 @@ export class TableCell {
 		const tableText = {
 			color: styled?.color ?? (tx1 ? { hex: tx1, transforms: [], effectiveHex: tx1 } : null),
 			face: styled?.face ?? resolveThemeFont('+mn-lt', ctx.fontScheme ?? null),
+			eastAsianFace: styled?.eastAsianFace ?? resolveThemeFont('+mn-ea', ctx.fontScheme ?? null),
+			complexScriptFace: styled?.complexScriptFace ?? resolveThemeFont('+mn-cs', ctx.fontScheme ?? null),
 			bold: styled?.bold ?? null,
 			italic: styled?.italic ?? null,
 		}

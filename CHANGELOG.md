@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **A run resolves its East Asian and complex-script typefaces.** `Run.resolvedEastAsianFontFace`
+  and `Run.resolvedComplexScriptFontFace` resolve the `a:ea` and `a:cs` slots through the same
+  tiers as `resolvedFontFace`, so a theme's East Asian and complex-script fonts are reachable from
+  a run that inherits them. `Run.complexScriptFontName` reads the run's own `a:cs`
+  ([#281](https://github.com/shbernal/pptx-ts/issues/281)).
+
 ### Changed
 
 - **The deprecated `TsPptx`, `TsPptxError`, `TsPptxErrorOptions` and `TsPptxCode` aliases are
